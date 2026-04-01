@@ -144,19 +144,82 @@ export default function Calculator() {
             onClick={e => e.stopPropagation()}
           >
             {/* Imagem com texto sobreposto */}
-            <div className="relative w-full" style={{ height: '320px', overflow: 'hidden' }}>
-  <img src={heroImg} alt="RedFairy" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-5 py-4">
-                <p className="text-white text-sm leading-relaxed italic">
+            <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
+              <img
+                src={heroImg}
+                alt="RedFairy"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
+              />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
+                <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.6', fontStyle: 'italic' }}>
                   Eu sou a sua fada vermelha, a sua{' '}
-                  <span className="font-bold text-red-300">HEMOGLOBINA</span>.
+                  <span style={{ fontWeight: 'bold', color: '#fca5a5' }}>HEMOGLOBINA</span>.
                   <br />
                   Eu uso poeira de estrelas para te entregar o ar.
                   <br />
-                  <span className="font-semibold">Quanto tempo você vive sem ar?</span>
+                  <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
                 </p>
               </div>
             </div>
+
+            {/* Corpo do modal */}
+            <div className="p-5">
+              {!showSaibaMais && (
+                <button
+                  onClick={() => setShowSaibaMais(true)}
+                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors mb-4"
+                >
+                  ✨ Saiba Mais
+                </button>
+              )}
+
+              {showSaibaMais && (
+                <div className="space-y-4 mb-4">
+                  <h3 className="text-red-700 font-bold text-base text-center">
+                    Vida é ventilação e perfusão
+                  </h3>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    O Ferro em você veio das estrelas, é dele o vermelho do seu sangue — a sua potência.
+                    Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais
+                    importante da sua vida.
+                  </p>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila
+                    os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células
+                    precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual
+                    você só vive alguns minutos.
+                  </p>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    Ao mesmo tempo, a Hemoglobina captura o CO₂ produzido pela queima do alimento,
+                    e o leva para que você o expire no ar do mundo.
+                  </p>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    No ambiente, uma proteína verde — a <strong>clorofila</strong>, mãe da Hemoglobina —
+                    usa a luz do sol para partir o CO₂ e fazer açúcar a partir de luz, carbono e água,
+                    devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
+                  </p>
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <p className="text-red-800 text-sm leading-relaxed font-medium">
+                      Portanto, é importante saber sobre sua Hemoglobina, o seu Ferro e a sua produção
+                      de células vermelhas — conhecer o seu Eritron.
+                    </p>
+                    <p className="text-red-700 text-sm font-bold mt-2">
+                      🧚‍♀️ Nós te ajudamos.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
             {/* Corpo do modal */}
             <div className="p-5">
