@@ -144,13 +144,12 @@ export default function Calculator() {
             onClick={e => e.stopPropagation()}
           >
             {/* Imagem com texto sobreposto */}
-            <div className="relative">
-              <img
-                src={heroImg}
-                alt="RedFairy"
-                className="w-full object-cover"
-                style={{ maxHeight: '320px' }}
-              />
+            <div className="relative w-full" style={{ height: '320px', overflow: 'hidden' }}>
+  <img
+    src={heroImg}
+    alt="RedFairy"
+    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+  />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-5 py-4">
                 <p className="text-white text-sm leading-relaxed italic">
                   Eu sou a sua fada vermelha, a sua{' '}
