@@ -13,6 +13,7 @@ export default function Calculator() {
     vcm: '',
     rdw: '',
     satTransf: '',
+    transfundido: false,
     bariatrica: false,
     vegetariano: false,
     perda: false,
@@ -100,7 +101,7 @@ export default function Calculator() {
       ferritina: '', hemoglobina: '', vcm: '', rdw: '',
       satTransf: '', bariatrica: false, vegetariano: false,
     perda: false, hipermenorreia: false, gestante: false, alcoolista: false,
-      aspirina: false, vitaminaB12: false, ferroOral: false,
+      aspirina: false, vitaminaB12: false, ferroOral: false, transfundido: false,
     });
     setResultado(null);
     setErros({});
@@ -285,6 +286,14 @@ export default function Calculator() {
   checked={inputs.alcoolista}
   onChange={handleChange}
   color="amber"
+/>
+<CheckboxCard
+  name="transfundido"
+  label="Transfundido"
+  sublabel="Transfusão de hemácias recente"
+  checked={inputs.transfundido}
+  onChange={handleChange}
+  color="red"
 />
 
               {inputs.sexo === 'F' && (

@@ -63,6 +63,7 @@ function matchesConditions(item, inputs) {
   if (c.vegetariano !== undefined && inputs.vegetariano !== c.vegetariano) return false;
   if (c.perda       !== undefined && inputs.perda       !== c.perda)       return false;
   if (c.alcoolista  !== undefined && inputs.alcoolista  !== c.alcoolista)  return false;
+  if (c.transfundido !== undefined && inputs.transfundido !== c.transfundido) return false;
 
   // Aspirina, B12, Ferro — NÃO determinam diagnóstico
   // apenas geram comentários → ignorados aqui
