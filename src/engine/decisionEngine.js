@@ -138,7 +138,13 @@ Flags: Bar=${inputs.bariatrica}, Veg=${inputs.vegetariano}, Perda=${inputs.perda
     id: resultado.id,
     label: resultado.label,
     color: resultado.color,
-    diagnostico: resultado.diagnostico,
+    diagnostico: (() => {
+  let d = resultado.diagnostico.replace('FRASE DATA', fraseData.texto);
+  if (inputs.aspirina || inputs.vitaminaB12 || inputs.ferroOral) {
+    d = d.replace('SEM SUPLEMENTAÇÃO OU MEDICAMENTOS, SUGERE BOM ESTADO DE SAÚDE, COM ESTILO DE VIDA E DIETA SAUDÁVEIS.', 'SUGERE BOM ESTADO DE SAÚDE, COM ESTILO DE VIDA E DIETA SAUDÁVEIS.');
+  }
+  return d;
+})(),
     recomendacao: isAge2
       ? resultado.recomendacaoAge2
       : resultado.recomendacaoAge1,
