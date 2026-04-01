@@ -27,7 +27,7 @@ export default function App() {
           onClick={() => setModo('home')}
           className="fixed top-4 left-4 z-50 bg-white text-red-700 border border-red-300 px-3 py-1 rounded-lg text-sm shadow flex items-center gap-1"
         >
-          ← Voltar
+          Voltar
         </button>
         <Calculator />
       </div>
@@ -40,21 +40,16 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-gray-900"
-      style={{}}
-    >
-      {/* Background texture dots */}
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-gray-900">
       <div className="absolute inset-0 pointer-events-none" style={{
         backgroundImage: 'radial-gradient(circle, rgba(185,28,28,0.1) 1px, transparent 1px)',
         backgroundSize: '32px 32px'
       }} />
 
-      {/* Glow behind logo */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(185,28,28,0.15) 0%, transparent 70%)' }}
       />
 
-      {/* Main content */}
       <div
         className="relative z-10 flex flex-col items-center"
         style={{
@@ -63,7 +58,6 @@ export default function App() {
           transition: 'opacity 0.7s ease, transform 0.7s ease'
         }}
       >
-        {/* Logo + Brand */}
         <div className="flex flex-col items-center mb-12">
           <div className="relative mb-4">
             <div className="absolute inset-0 rounded-full blur-2xl"
@@ -88,10 +82,8 @@ export default function App() {
           </p>
         </div>
 
-        {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-xl">
 
-          {/* Modo Médico */}
           <button
             onClick={() => setModo('calculadora')}
             className="group relative overflow-hidden rounded-2xl p-7 text-left transition-all duration-300"
@@ -112,14 +104,13 @@ export default function App() {
             }}
           >
             <div className="text-3xl mb-4">🩺</div>
-            <h2 className="text-lg font-bold text-white mb-2">Modo Médico</h2>
+            <h2 className="text-lg font-bold text-white mb-2">Modo Medico</h2>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Avaliação rápida sem cadastro. Insira os dados do paciente e obtenha o diagnóstico imediato.
+              Avaliacao rapida sem cadastro. Insira os dados do paciente e obtenha o diagnostico imediato.
             </p>
             <div className="absolute bottom-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-lg">→</div>
           </button>
 
-          {/* Modo Paciente */}
           <button
             onClick={() => setModo('paciente')}
             className="group relative overflow-hidden rounded-2xl p-7 text-left transition-all duration-300"
@@ -140,15 +131,14 @@ export default function App() {
             <div className="text-3xl mb-4">👤</div>
             <h2 className="text-lg font-bold text-white mb-2">Modo Paciente</h2>
             <p className="text-red-200 text-sm leading-relaxed">
-              Cadastre-se e acompanhe a evolução do seu eritron ao longo do tempo.
+              Cadastre-se e acompanhe a evolucao do seu eritron ao longo do tempo.
             </p>
             <div className="absolute bottom-4 right-4 text-red-200 opacity-0 group-hover:opacity-100 transition-opacity text-lg">→</div>
           </button>
         </div>
 
-        {/* Footer */}
         <p className="mt-12 text-gray-600 text-xs tracking-widest uppercase">
-          Hematologia · Diagnóstico · Tratamento
+          Hematologia Diagnostico Tratamento
         </p>
       </div>
     </div>
