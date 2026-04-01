@@ -13,13 +13,13 @@ export default function Calculator() {
     vcm: '',
     rdw: '',
     satTransf: '',
-    transfundido: false,
     bariatrica: false,
     vegetariano: false,
     perda: false,
-    alcoolista: false,
     hipermenorreia: false,
     gestante: false,
+    alcoolista: false,
+    transfundido: false,
     aspirina: false,
     vitaminaB12: false,
     ferroOral: false,
@@ -100,8 +100,9 @@ export default function Calculator() {
       iniciais: '', sexo: 'M', idade: '', dataColeta: '',
       ferritina: '', hemoglobina: '', vcm: '', rdw: '',
       satTransf: '', bariatrica: false, vegetariano: false,
-    perda: false, hipermenorreia: false, gestante: false, alcoolista: false,
-      aspirina: false, vitaminaB12: false, ferroOral: false, transfundido: false,
+      perda: false, hipermenorreia: false, gestante: false,
+      alcoolista: false, transfundido: false,
+      aspirina: false, vitaminaB12: false, ferroOral: false,
     });
     setResultado(null);
     setErros({});
@@ -111,30 +112,30 @@ export default function Calculator() {
     <div className="min-h-screen bg-gray-50">
 
       {/* HEADER */}
-      <header className="bg-red-700 text-white py-4 px-6 shadow-lg">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
+      <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
+        <div className="max-w-2xl mx-auto flex items-center gap-3">
           <span className="text-3xl">🧚‍♀️</span>
-          <div>
-            <h1 className="text-2xl font-bold tracking-wide">RedFairy</h1>
-            <p className="text-red-200 text-sm">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
+            <p className="text-red-200 text-xs truncate">
               Calculadora Clínica — Eritron & Metabolismo do Ferro
             </p>
           </div>
-          <div className="ml-auto bg-red-800 rounded-full px-3 py-1 text-xs font-medium">
-            MODO CALCULADORA
+          <div className="bg-red-800 rounded-full px-2 py-1 text-xs font-medium whitespace-nowrap">
+            CALCULADORA
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <main className="max-w-2xl mx-auto px-3 py-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
 
           {/* DADOS DO PACIENTE */}
-          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <span className="text-red-600">👤</span> Dados do Paciente
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-3">
 
               <div>
                 <label className="label">Iniciais</label>
@@ -170,7 +171,7 @@ export default function Calculator() {
                   name="idade"
                   value={inputs.idade}
                   onChange={handleChange}
-                  placeholder="18–100"
+                  placeholder="12–100"
                   min={12} max={100}
                   className={`input ${erros.idade ? 'border-red-500' : ''}`}
                 />
@@ -193,11 +194,11 @@ export default function Calculator() {
           </section>
 
           {/* EXAMES LABORATORIAIS */}
-          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <span className="text-red-600">🧪</span> Exames Laboratoriais
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-3">
 
               <LabInput
                 label="Ferritina"
@@ -235,25 +236,27 @@ export default function Calculator() {
                 onChange={handleChange}
                 error={erros.rdw}
               />
-              <LabInput
-                label="Sat. Transferrina"
-                unit="%"
-                name="satTransf"
-                reference="20–50"
-                value={inputs.satTransf}
-                onChange={handleChange}
-                error={erros.satTransf}
-              />
+              <div className="col-span-2">
+                <LabInput
+                  label="Sat. Transferrina"
+                  unit="%"
+                  name="satTransf"
+                  reference="20–50"
+                  value={inputs.satTransf}
+                  onChange={handleChange}
+                  error={erros.satTransf}
+                />
+              </div>
 
             </div>
           </section>
 
           {/* HISTÓRICO CLÍNICO */}
-          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <span className="text-red-600">📋</span> Histórico Clínico
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-2">
 
               <CheckboxCard
                 name="bariatrica"
@@ -273,35 +276,35 @@ export default function Calculator() {
               />
               <CheckboxCard
                 name="perda"
-                label="Perda / Hemorragia"
+                label="Hemorragia"
                 sublabel="Doações ou sangramento"
                 checked={inputs.perda}
                 onChange={handleChange}
                 color="red"
-                />
-                <CheckboxCard
-  name="alcoolista"
-  label="Alcoolista"
-  sublabel="Uso crônico de álcool"
-  checked={inputs.alcoolista}
-  onChange={handleChange}
-  color="amber"
-/>
-<CheckboxCard
-  name="transfundido"
-  label="Transfundido"
-  sublabel="Transfusão de hemácias recente"
-  checked={inputs.transfundido}
-  onChange={handleChange}
-  color="red"
-/>
+              />
+              <CheckboxCard
+                name="alcoolista"
+                label="Alcoolista"
+                sublabel="Uso crônico de álcool"
+                checked={inputs.alcoolista}
+                onChange={handleChange}
+                color="amber"
+              />
+              <CheckboxCard
+                name="transfundido"
+                label="Transfundido"
+                sublabel="Transfusão de hemácias"
+                checked={inputs.transfundido}
+                onChange={handleChange}
+                color="red"
+              />
 
               {inputs.sexo === 'F' && (
                 <>
                   <CheckboxCard
                     name="hipermenorreia"
                     label="Hipermenorreia"
-                    sublabel="Fluxo excessivo/prolongado"
+                    sublabel="Fluxo excessivo"
                     checked={inputs.hipermenorreia}
                     onChange={handleChange}
                     color="pink"
@@ -321,11 +324,11 @@ export default function Calculator() {
           </section>
 
           {/* MEDICAMENTOS */}
-          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <span className="text-red-600">💊</span> Medicamentos / Suplementos
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-2">
 
               <CheckboxCard
                 name="aspirina"
@@ -338,19 +341,21 @@ export default function Calculator() {
               <CheckboxCard
                 name="vitaminaB12"
                 label="Vitamina B12"
-                sublabel="Uso contínuo ou últimos 3 meses"
+                sublabel="Últimos 3 meses"
                 checked={inputs.vitaminaB12}
                 onChange={handleChange}
                 color="purple"
               />
-              <CheckboxCard
-                name="ferroOral"
-                label="Ferro Oral / Injetável"
-                sublabel="Nos últimos 2 anos"
-                checked={inputs.ferroOral}
-                onChange={handleChange}
-                color="orange"
-              />
+              <div className="col-span-2">
+                <CheckboxCard
+                  name="ferroOral"
+                  label="Ferro Oral / Injetável"
+                  sublabel="Nos últimos 2 anos"
+                  checked={inputs.ferroOral}
+                  onChange={handleChange}
+                  color="orange"
+                />
+              </div>
 
             </div>
           </section>
@@ -359,14 +364,14 @@ export default function Calculator() {
           <div className="flex gap-3">
             <button
               type="submit"
-              className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-md text-lg"
+              className="flex-1 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold py-4 px-6 rounded-xl transition-colors shadow-md text-base"
             >
               🧚‍♀️ Avaliar Paciente
             </button>
             <button
               type="button"
               onClick={handleLimpar}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-5 rounded-xl transition-colors"
+              className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-medium py-4 px-5 rounded-xl transition-colors"
             >
               Limpar
             </button>
@@ -376,7 +381,7 @@ export default function Calculator() {
 
         {/* RESULTADO */}
         {resultado && (
-          <div id="resultado" className="mt-8">
+          <div id="resultado" className="mt-6">
             <ResultCard
               resultado={resultado}
               onCopiar={handleCopiar}
@@ -404,7 +409,8 @@ function LabInput({ label, unit, name, reference, value, onChange, error }) {
         name={name}
         value={value}
         onChange={onChange}
-        className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${error ? 'border-red-500' : 'border-gray-200'}`}
+        inputMode="decimal"
+        className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${error ? 'border-red-500' : 'border-gray-200'}`}
       />
       <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
       {error && <p className="text-red-500 text-xs">{error}</p>}
@@ -423,17 +429,17 @@ const colorMap = {
 
 function CheckboxCard({ name, label, sublabel, checked, onChange, color }) {
   return (
-    <label className={`flex items-start gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${checked ? colorMap[color] : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+    <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${checked ? colorMap[color] : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
       <input
         type="checkbox"
         name={name}
         checked={checked}
         onChange={onChange}
-        className="mt-0.5 w-4 h-4 cursor-pointer"
+        className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0"
       />
-      <div>
-        <p className="font-medium text-sm">{label}</p>
-        <p className="text-xs opacity-70">{sublabel}</p>
+      <div className="min-w-0">
+        <p className="font-medium text-sm leading-tight">{label}</p>
+        <p className="text-xs opacity-70 leading-tight mt-0.5">{sublabel}</p>
       </div>
     </label>
   );
