@@ -24,25 +24,30 @@ export default function AuthPage() {
     setLoading(true)
     setErro('')
     const { data, error } = await supabase.auth.signUp({ email, password: senha })
-   if (error) {
-  if (error.message.includes('after')) {
-    setErro('Por segurança, aguarde alguns segundos antes de tentar novamente.')
-  } else if (error.message.includes('already registered')) {
-    setErro('Este e-mail já está cadastrado. Tente fazer login.')
-  } else if (error.message.includes('Password')) {
-    setErro('A senha deve ter pelo menos 6 caracteres.')
-  } else {
-    setErro('Erro ao cadastrar. Tente novamente.')
-  }
-  setLoading(false); return
-}
+    if (error) {
+      if (error.message.includes('after')) {
+        setErro('Por seguranca, aguarde alguns segundos antes de tentar novamente.')
+      } else if (error.message.includes('already registered')) {
+        setErro('Este e-mail ja esta cadastrado. Tente fazer login.')
+      } else if (error.message.includes('Password')) {
+        setErro('A senha deve ter pelo menos 6 caracteres.')
+      } else {
+        setErro('Erro ao cadastrar. Tente novamente.')
+      }
+      setLoading(false); return
+    }
 
     if (data.user) {
+      const partes = dataNascimento.split('/')
+      const dataFormatada = partes.length === 3
+        ? `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`
+        : dataNascimento
+
       await supabase.from('profiles').insert({
         id: data.user.id,
         nome,
         sexo,
-        data_nascimento: dataNascimento,
+        data_nascimento: dataFormatada,
       })
     }
     setSucesso('Cadastro realizado! Verifique seu e-mail para confirmar.')
@@ -53,7 +58,7 @@ export default function AuthPage() {
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <div className="text-4xl mb-2">🧚‍♀️</div>
+          <div className="text-4xl mb-2">🧚</div>
           <h2 className="text-2xl font-bold text-red-700">RedFairy</h2>
           <p className="text-gray-500 text-sm">Modo Paciente</p>
         </div>
@@ -92,8 +97,15 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Nascimento</label>
-                  <input type="date" value={dataNascimento} onChange={e => setDataNascimento(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                  <input
+                    type="text"
+                    value={dataNascimento}
+                    onChange={e => setDataNascimento(e.target.value)}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    inputMode="numeric"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                  />
                 </div>
               </div>
             </>
