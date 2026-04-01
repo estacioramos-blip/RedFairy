@@ -140,7 +140,7 @@ export default function Calculator() {
           onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}
         >
           <div
-            className="bg-white rounded-2xl overflow-hidden max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white rounded-2xl max-w-sm w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
             {/* Imagem com texto sobreposto */}
