@@ -16,6 +16,7 @@ export default function Calculator() {
     bariatrica: false,
     vegetariano: false,
     perda: false,
+    alcoolista: false,
     hipermenorreia: false,
     gestante: false,
     aspirina: false,
@@ -98,7 +99,7 @@ export default function Calculator() {
       iniciais: '', sexo: 'M', idade: '', dataColeta: '',
       ferritina: '', hemoglobina: '', vcm: '', rdw: '',
       satTransf: '', bariatrica: false, vegetariano: false,
-      perda: false, hipermenorreia: false, gestante: false,
+    perda: false, hipermenorreia: false, gestante: false, alcoolista: false,
       aspirina: false, vitaminaB12: false, ferroOral: false,
     });
     setResultado(null);
@@ -276,7 +277,15 @@ export default function Calculator() {
                 checked={inputs.perda}
                 onChange={handleChange}
                 color="red"
-              />
+                />
+                <CheckboxCard
+  name="alcoolista"
+  label="Alcoolista"
+  sublabel="Uso crônico de álcool"
+  checked={inputs.alcoolista}
+  onChange={handleChange}
+  color="amber"
+/>
 
               {inputs.sexo === 'F' && (
                 <>
