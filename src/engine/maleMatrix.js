@@ -1854,7 +1854,7 @@ export const maleMatrix = [
     label: "ERITROCITOSE / HEMOGLOBINA ACIMA DO NORMAL",
     color: "yellow",
     conditions: {
-      ferritina:   { min: 0,   max: 99999},
+      ferritina:   { min: 24,   max: 99999},
       hemoglobina: { min: 17.6,max: 99   },
       vcm:         { min: 0,   max: 999  },
       rdw:         { min: 0,   max: 999  },

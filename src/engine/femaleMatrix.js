@@ -2260,7 +2260,7 @@ export const femaleMatrix = [
     label: "HEMOGLOBINA ACIMA DO NORMAL — ERITROCITOSE",
     color: "red",
     conditions: {
-      ferritina:   { min: 0,   max: 9999 },
+      ferritina:   { min: 24,   max: 9999 },
       hemoglobina: { min: 15.6,max: 999  },
       vcm:         { min: 0,   max: 9999 },
       rdw:         { min: 0,   max: 999  },
