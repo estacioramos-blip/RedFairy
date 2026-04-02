@@ -68,21 +68,16 @@ export function avaliarPaciente(inputs) {
   if (inputs.sexo === 'F' && inputs.gestante) {
     if (inputs.hemoglobina >= 11 && inputs.hemoglobina <= 11.9) {
       inputsAjustados.hemoglobina = 12.0;
-    }
-  }
+    }}
+const matrix = inputsAjustados.sexo === 'M' ? maleMatrix : femaleMatrix;
 
-  const matrix = inputsAjustados.sexo === 'M' ? maleMatrix : femaleMatrix;
-
-    const isAge2 = inputsAjustados.sexo === 'M'
-  ? inputsAjustados.idade >= 41
-  : inputsAjustados.idade >= 40;
-
-console.log('DEBUG:', { idade: inputsAjustados.idade, sexo: inputsAjustados.sexo, isAge2 });
+  const isAge2 = inputsAjustados.sexo === 'M'
     ? inputsAjustados.idade >= 41
     : inputsAjustados.idade >= 40;
 
-  const resultado = matrix.find(item => matchesConditions(item, inputsAjustados));
+  console.log('DEBUG:', { idade: inputsAjustados.idade, sexo: inputsAjustados.sexo, isAge2 });
 
+  const resultado = matrix.find(item => matchesConditions(item, inputsAjustados));
   const dias = calcularDias(inputs.dataColeta);
   const fraseData = getFraseData(dias);
 
