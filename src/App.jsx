@@ -36,7 +36,7 @@ export default function App() {
   }
 
   if (modo === 'paciente') {
-    if (!session) return <AuthPage onLogin={() => {}} />
+    if (!session) return <AuthPage onLogin={() => {}} onVoltar={() => setModo("home")} />
     return <PatientDashboard session={session} onVoltar={() => setModo('home')} />
   }
 
