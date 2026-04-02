@@ -57,11 +57,11 @@ export default function AuthPage({ onVoltar }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 flex items-center justify-center p-6 relative">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 relative">
       <button onClick={onVoltar} className="absolute top-4 left-4 bg-white text-red-700 border border-red-300 px-3 py-1 rounded-lg text-sm shadow flex items-center gap-1">← Voltar</button>
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <div className="text-4xl mb-2">🧚</div>
+          <img src="/logo.png" alt="RedFairy" className="w-16 h-16 object-contain mx-auto mb-2" style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }} />
           <h2 className="text-2xl font-bold text-red-700">RedFairy</h2>
           <p className="text-gray-500 text-sm">Modo Paciente</p>
         </div>
