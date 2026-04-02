@@ -9,6 +9,7 @@ export default function App() {
   const [modo, setModo] = useState('home')
   const [session, setSession] = useState(null)
   const [visible, setVisible] = useState(false)
+  const [calcKey, setCalcKey] = useState(0)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -29,7 +30,7 @@ export default function App() {
         >
           Voltar
         </button>
-        <Calculator />
+        <Calculator key={Date.now()} />
       </div>
     )
   }
@@ -85,7 +86,7 @@ export default function App() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-xl">
 
           <button
-            onClick={() => setModo('calculadora')}
+            onClick={() => { setCalcKey(k => k + 1); setModo('calculadora') }}
             className="group relative overflow-hidden rounded-2xl p-7 text-left transition-all duration-300"
             style={{
               background: 'rgba(255,255,255,0.06)',
