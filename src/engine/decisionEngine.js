@@ -73,8 +73,7 @@ export function avaliarPaciente(inputs) {
 
   const matrix = inputsAjustados.sexo === 'M' ? maleMatrix : femaleMatrix;
 
-  const isAge2 = inputsAjustados.sexo === 'M'
-  const isAge2 = inputsAjustados.sexo === 'M'
+    const isAge2 = inputsAjustados.sexo === 'M'
   ? inputsAjustados.idade >= 41
   : inputsAjustados.idade >= 40;
 
