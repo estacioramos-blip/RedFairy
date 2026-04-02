@@ -8,6 +8,7 @@ export default function AuthPage() {
   const [nome, setNome] = useState('')
   const [sexo, setSexo] = useState('F')
   const [dataNascimento, setDataNascimento] = useState('')
+  const [cpf, setCpf] = useState('')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
@@ -48,6 +49,7 @@ export default function AuthPage() {
         nome,
         sexo,
         data_nascimento: dataFormatada,
+        cpf: cpf.replace(/\D/g, ''),
       })
     }
     setSucesso('Cadastro realizado! Verifique seu e-mail para confirmar.')
@@ -88,7 +90,13 @@ export default function AuthPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">CPF</label>
+                <input type="text" value={cpf} onChange={e => setCpf(e.target.value)}
+                  placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
                   <select value={sexo} onChange={e => setSexo(e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
                     <option value="F">Feminino</option>

@@ -6,6 +6,7 @@ import heroImg from '../assets/redfairy-hero.png';
 export default function Calculator() {
   const [inputs, setInputs] = useState({
     iniciais: '',
+    cpf: '',
     sexo: 'M',
     idade: '',
     dataColeta: '',
@@ -100,7 +101,7 @@ export default function Calculator() {
 
   function handleLimpar() {
     setInputs({
-      iniciais: '', sexo: 'M', idade: '', dataColeta: '',
+      iniciais: '', cpf: '', sexo: 'M', idade: '', dataColeta: ``,
       ferritina: '', hemoglobina: '', vcm: '', rdw: '',
       satTransf: '', bariatrica: false, vegetariano: false,
       perda: false, hipermenorreia: false, gestante: false,
