@@ -115,7 +115,7 @@ export default function PatientDashboard({ session, onVoltar }) {
       <header className="bg-red-700 text-white py-4 px-6 shadow-lg">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🧚</span>
+            <img src="/logo.png" alt="RedFairy" className="w-8 h-8 object-contain" style={{ filter: "drop-shadow(0 0 8px rgba(239,68,68,0.6))" }} />
             <div>
               <h1 className="text-xl font-bold">RedFairy</h1>
               <p className="text-red-200 text-xs">Ola, {profile?.nome}!</p>
