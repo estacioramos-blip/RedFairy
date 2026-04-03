@@ -273,7 +273,7 @@ export default function PatientDashboard({ session, onVoltar }) {
                 {[
                   { name: 'bariatrica', label: 'Bariátrica', sub: 'By-pass / Gastrectomia', color: 'amber' },
                   { name: 'vegetariano', label: 'Vegetariano/Vegano', sub: 'Dieta sem carne', color: 'green' },
-                  { name: 'perda', label: 'Perda / Hemorragia', sub: 'Doações ou sangramento', color: 'red' },
+                  { name: 'perda', label: 'Perda / Hemorragia', sub: 'Inclui doação de sangue, sangria, ou sangramento', color: 'red' },
                   ...(profile?.sexo === 'F' ? [
                     { name: 'hipermenorreia', label: 'Hipermenorreia', sub: 'Fluxo excessivo', color: 'pink' },
                     { name: 'gestante', label: 'Gestante', sub: 'Gravidez atual', color: 'pink' },
