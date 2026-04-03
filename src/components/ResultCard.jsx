@@ -267,10 +267,14 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
     resultado.recomendacao?.toUpperCase().includes('FERRO ENDOVENOSO');
 
   const precisaSangria =
-    resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
-    resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
-    resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
-    resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPEUTICA');
+  resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
+  resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
+  resultado.diagnostico?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
+  resultado.diagnostico?.toUpperCase().includes('SANGRIAS TERAPEUTICAS') ||
+  resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
+  resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
+  resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
+  resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPEUTICAS');
 
   const isPolicitemiaVera = resultado.id === 81;
 
