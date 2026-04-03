@@ -140,10 +140,12 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
   const scheme = colorScheme[resultado.color] || colorScheme.yellow;
 
   const precisaFerroEV =
-    resultado.diagnostico?.toUpperCase().includes('ENDOVENOSA') ||
-    resultado.diagnostico?.toUpperCase().includes('FERRO ENDOVENOSO') ||
-    resultado.recomendacao?.toUpperCase().includes('ENDOVENOSA') ||
-    resultado.recomendacao?.toUpperCase().includes('FERRO ENDOVENOSO');
+  resultado.diagnostico?.toUpperCase().includes('ENDOVENOSA') ||
+  resultado.diagnostico?.toUpperCase().includes('INTRAVENOSA') ||
+  resultado.diagnostico?.toUpperCase().includes('FERRO ENDOVENOSO') ||
+  resultado.recomendacao?.toUpperCase().includes('ENDOVENOSA') ||
+  resultado.recomendacao?.toUpperCase().includes('INTRAVENOSA') ||
+  resultado.recomendacao?.toUpperCase().includes('FERRO ENDOVENOSO');
 
   const hbAtual = resultado._inputs?.hemoglobina || 0;
   const sexo = resultado._inputs?.sexo || 'M';
