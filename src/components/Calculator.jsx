@@ -228,13 +228,10 @@ export default function Calculator({ onVoltar }) {
                     usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
                     devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
                   </p>
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <p className="text-red-800 text-sm leading-relaxed font-medium">
-                      Portanto, é importante saber sobre sua Hemoglobina, o seu Ferro e a sua produção
-                      de células vermelhas - conhecer o seu Eritron.
-                    </p>
-                    <p className="text-red-700 text-sm font-bold mt-2">Nós te ajudamos.</p>
-                  </div>
+                  <div className="mt-4 text-center">
+  <p className="text-gray-500 text-xs font-medium">RT | E.F. Ramos, M.D.</p>
+  <p className="text-red-700 text-xs mt-1">drestacioramos.com.br</p>
+</div>
                 </div>
               )}
               <button onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}
