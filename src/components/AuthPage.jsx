@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import logo from '../assets/logo.png'
 
 export default function AuthPage({ onVoltar }) {
   const [modo, setModo] = useState('login')
@@ -27,9 +28,9 @@ export default function AuthPage({ onVoltar }) {
     const { data, error } = await supabase.auth.signUp({ email, password: senha })
     if (error) {
       if (error.message.includes('after')) {
-        setErro('Por seguranca, aguarde alguns segundos antes de tentar novamente.')
+        setErro('Por segurança, aguarde alguns segundos antes de tentar novamente.')
       } else if (error.message.includes('already registered')) {
-        setErro('Este e-mail ja esta cadastrado. Tente fazer login.')
+        setErro('Este e-mail já está cadastrado. Tente fazer login.')
       } else if (error.message.includes('Password')) {
         setErro('A senha deve ter pelo menos 6 caracteres.')
       } else {
@@ -61,7 +62,12 @@ export default function AuthPage({ onVoltar }) {
       <button onClick={onVoltar} className="absolute top-4 left-4 bg-white text-red-700 border border-red-300 px-3 py-1 rounded-lg text-sm shadow flex items-center gap-1">← Voltar</button>
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <img src="/logo.png" alt="RedFairy" className="w-16 h-16 object-contain mx-auto mb-2" style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }} />
+          <img
+            src={logo}
+            alt="RedFairy"
+            className="w-16 h-16 object-contain mx-auto mb-2"
+            style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }}
+          />
           <h2 className="text-2xl font-bold text-red-700">RedFairy</h2>
           <p className="text-gray-500 text-sm">Modo Paciente</p>
         </div>
@@ -92,12 +98,12 @@ export default function AuthPage({ onVoltar }) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">CPF</label>
-                <input type="text" value={cpf} onChange={e => setCpf(e.target.value)}
-                  placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
+                  <input type="text" value={cpf} onChange={e => setCpf(e.target.value)}
+                    placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
                   <select value={sexo} onChange={e => setSexo(e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
                     <option value="F">Feminino</option>

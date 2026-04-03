@@ -2,6 +2,40 @@ import { useState } from 'react';
 import { avaliarPaciente, formatarParaCopiar } from '../engine/decisionEngine';
 import ResultCard from './ResultCard';
 import heroImg from '../assets/redfairy-hero.png';
+import logo from '../assets/logo.png';
+
+const IconPaciente = () => (
+  <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+    <circle cx="10" cy="6" r="3.5" stroke="#dc2626" strokeWidth="1.6"/>
+    <path d="M3 18C3 14.134 6.134 11 10 11C13.866 11 17 14.134 17 18" stroke="#dc2626" strokeWidth="1.6" strokeLinecap="round"/>
+  </svg>
+)
+
+const IconExames = () => (
+  <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+    <path d="M7 2H13V11L15.5 15.5C16.1 16.6 15.3 18 14 18H6C4.7 18 3.9 16.6 4.5 15.5L7 11V2Z" stroke="#dc2626" strokeWidth="1.6" strokeLinejoin="round"/>
+    <path d="M7 8H13" stroke="#dc2626" strokeWidth="1.4" strokeLinecap="round"/>
+    <circle cx="8.5" cy="14" r="1" fill="#dc2626"/>
+    <circle cx="11.5" cy="14" r="1" fill="#dc2626"/>
+  </svg>
+)
+
+const IconHistorico = () => (
+  <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+    <rect x="4" y="2" width="12" height="16" rx="2" stroke="#dc2626" strokeWidth="1.6"/>
+    <path d="M7 7H13" stroke="#dc2626" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M7 10H13" stroke="#dc2626" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M7 13H10" stroke="#dc2626" strokeWidth="1.4" strokeLinecap="round"/>
+  </svg>
+)
+
+const IconMedicamentos = () => (
+  <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
+    <rect x="3" y="8" width="14" height="8" rx="4" stroke="#dc2626" strokeWidth="1.6"/>
+    <path d="M10 8V16" stroke="#dc2626" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M7 5C7 3.9 8.1 3 9.5 3H10.5C11.9 3 13 3.9 13 5V8H7V5Z" stroke="#dc2626" strokeWidth="1.6"/>
+  </svg>
+)
 
 export default function Calculator() {
   const [inputs, setInputs] = useState({
@@ -49,19 +83,19 @@ export default function Calculator() {
     if (!inputs.iniciais.trim())
       novosErros.iniciais = 'Informe as iniciais';
     if (!inputs.idade || inputs.idade < 12 || inputs.idade > 100)
-      novosErros.idade = 'Idade invalida (12-100)';
+      novosErros.idade = 'Idade inválida (12-100)';
     if (!inputs.dataColeta)
       novosErros.dataColeta = 'Informe a data da coleta';
     if (!inputs.ferritina)
-      novosErros.ferritina = 'Campo obrigatorio';
+      novosErros.ferritina = 'Campo obrigatório';
     if (!inputs.hemoglobina)
-      novosErros.hemoglobina = 'Campo obrigatorio';
+      novosErros.hemoglobina = 'Campo obrigatório';
     if (!inputs.vcm)
-      novosErros.vcm = 'Campo obrigatorio';
+      novosErros.vcm = 'Campo obrigatório';
     if (!inputs.rdw)
-      novosErros.rdw = 'Campo obrigatorio';
+      novosErros.rdw = 'Campo obrigatório';
     if (!inputs.satTransf)
-      novosErros.satTransf = 'Campo obrigatorio';
+      novosErros.satTransf = 'Campo obrigatório';
     return novosErros;
   }
 
@@ -101,7 +135,7 @@ export default function Calculator() {
 
   function handleLimpar() {
     setInputs({
-      iniciais: '', cpf: '', sexo: 'M', idade: '', dataColeta: ``,
+      iniciais: '', cpf: '', sexo: 'M', idade: '', dataColeta: '',
       ferritina: '', hemoglobina: '', vcm: '', rdw: '',
       satTransf: '', bariatrica: false, vegetariano: false,
       perda: false, hipermenorreia: false, gestante: false,
@@ -118,11 +152,12 @@ export default function Calculator() {
       {/* HEADER */}
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <span className="text-3xl">🧚</span>
+          <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
+            style={{ filter: 'brightness(10)' }} />
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
             <p className="text-red-200 text-xs truncate">
-              Calculadora Clinica - Eritron e Metabolismo do Ferro
+              Calculadora Clínica - Eritron e Metabolismo do Ferro
             </p>
           </div>
           <button
@@ -147,9 +182,7 @@ export default function Calculator() {
             onClick={e => e.stopPropagation()}
           >
             <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
-              <img
-                src={heroImg}
-                alt="RedFairy"
+              <img src={heroImg} alt="RedFairy"
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
               />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
@@ -159,17 +192,15 @@ export default function Calculator() {
                   <br />
                   Eu uso poeira de estrelas para te entregar o ar.
                   <br />
-                  <span style={{ fontWeight: '600' }}>Quanto tempo voce vive sem ar?</span>
+                  <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
                 </p>
               </div>
             </div>
 
             <div style={{ padding: '20px' }}>
               {!showSaibaMais && (
-                <button
-                  onClick={() => setShowSaibaMais(true)}
-                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors mb-4"
-                >
+                <button onClick={() => setShowSaibaMais(true)}
+                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors mb-4">
                   Saiba Mais
                 </button>
               )}
@@ -177,35 +208,35 @@ export default function Calculator() {
               {showSaibaMais && (
                 <div style={{ marginBottom: '16px' }}>
                   <h3 className="text-red-700 font-bold text-base text-center mb-4">
-                    Vida e ventilacao e perfusao
+                    Vida e ventilação e perfusão
                   </h3>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    O Ferro em voce veio das estrelas, e dele o vermelho do seu sangue - a sua potencia.
-                    Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteina vermelha e mais
+                    O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência.
+                    Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais
                     importante da sua vida.
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    Ela sustenta a ventilacao e realiza a perfusao: capta o oxigenio do ar que ventila
-                    os pulmoes e o entrega a todas as suas celulas - vinte vezes por minuto. As celulas
-                    precisam do oxigenio para queimar o alimento e obter a energia vital, sem a qual
-                    voce so vive alguns minutos.
+                    Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila
+                    os pulmões e o entrega a todas as suas células - vinte vezes por minuto. As células
+                    precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual
+                    você só vive alguns minutos.
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
                     Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento,
-                    e o leva para que voce o expire no ar do mundo.
+                    e o leva para que você o expire no ar do mundo.
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    No ambiente, uma proteina verde - a <strong>clorofila</strong>, mae da Hemoglobina -
-                    usa a luz do sol para partir o CO2 e fazer acucar a partir de luz, carbono e agua,
-                    devolvendo o oxigenio ao ar do planeta, em um ciclo virtuoso perfeito.
+                    No ambiente, uma proteína verde - a <strong>clorofila</strong>, mãe da Hemoglobina -
+                    usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
+                    devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
                   </p>
                   <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                     <p className="text-red-800 text-sm leading-relaxed font-medium">
-                      Portanto, e importante saber sobre sua Hemoglobina, o seu Ferro e a sua producao
-                      de celulas vermelhas - conhecer o seu Eritron.
+                      Portanto, é importante saber sobre sua Hemoglobina, o seu Ferro e a sua produção
+                      de células vermelhas - conhecer o seu Eritron.
                     </p>
                     <p className="text-red-700 text-sm font-bold mt-2">
-                      Nos te ajudamos.
+                      Nós te ajudamos.
                     </p>
                   </div>
                 </div>
@@ -228,16 +259,14 @@ export default function Calculator() {
           {/* DADOS DO PACIENTE */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <span className="text-red-600">👤</span> Dados do Paciente
+              <IconPaciente /> Dados do Paciente
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label">Iniciais</label>
-                <input
-                  type="text" name="iniciais" value={inputs.iniciais}
+                <input type="text" name="iniciais" value={inputs.iniciais}
                   onChange={handleChange} placeholder="Ex: JBS" maxLength={5}
-                  className={`input ${erros.iniciais ? 'border-red-500' : ''}`}
-                />
+                  className={`input ${erros.iniciais ? 'border-red-500' : ''}`} />
                 {erros.iniciais && <p className="text-red-500 text-xs mt-1">{erros.iniciais}</p>}
               </div>
               <div>
@@ -249,20 +278,16 @@ export default function Calculator() {
               </div>
               <div>
                 <label className="label">Idade</label>
-                <input
-                  type="number" name="idade" value={inputs.idade}
+                <input type="number" name="idade" value={inputs.idade}
                   onChange={handleChange} placeholder="12-100" min={12} max={100}
-                  className={`input ${erros.idade ? 'border-red-500' : ''}`}
-                />
+                  className={`input ${erros.idade ? 'border-red-500' : ''}`} />
                 {erros.idade && <p className="text-red-500 text-xs mt-1">{erros.idade}</p>}
               </div>
               <div>
                 <label className="label">Data da Coleta</label>
-                <input
-                  type="date" name="dataColeta" value={inputs.dataColeta}
+                <input type="date" name="dataColeta" value={inputs.dataColeta}
                   onChange={handleChange}
-                  className={`input ${erros.dataColeta ? 'border-red-500' : ''}`}
-                />
+                  className={`input ${erros.dataColeta ? 'border-red-500' : ''}`} />
                 {erros.dataColeta && <p className="text-red-500 text-xs mt-1">{erros.dataColeta}</p>}
               </div>
             </div>
@@ -271,7 +296,7 @@ export default function Calculator() {
           {/* EXAMES LABORATORIAIS */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <span className="text-red-600">🧪</span> Exames Laboratoriais
+              <IconExames /> Exames Laboratoriais
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <LabInput label="Ferritina" unit="ng/mL" name="ferritina"
@@ -294,14 +319,14 @@ export default function Calculator() {
           {/* HISTORICO CLINICO */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <span className="text-red-600">📋</span> Historico Clinico
+              <IconHistorico /> Histórico Clínico
             </h2>
             <div className="grid grid-cols-2 gap-2">
-              <CheckboxCard name="bariatrica" label="Bariatrica" sublabel="By-pass / Gastrectomia" checked={inputs.bariatrica} onChange={handleChange} color="amber" />
+              <CheckboxCard name="bariatrica" label="Bariátrica" sublabel="By-pass / Gastrectomia" checked={inputs.bariatrica} onChange={handleChange} color="amber" />
               <CheckboxCard name="vegetariano" label="Vegetariano/Vegano" sublabel="Dieta sem carne" checked={inputs.vegetariano} onChange={handleChange} color="green" />
-              <CheckboxCard name="perda" label="Hemorragia" sublabel="Doacoes ou sangramento" checked={inputs.perda} onChange={handleChange} color="red" />
-              <CheckboxCard name="alcoolista" label="Alcoolista" sublabel="Uso cronico de alcool" checked={inputs.alcoolista} onChange={handleChange} color="amber" />
-              <CheckboxCard name="transfundido" label="Transfundido" sublabel="Transfusao de hemacias" checked={inputs.transfundido} onChange={handleChange} color="red" />
+              <CheckboxCard name="perda" label="Hemorragia" sublabel="Doações ou sangramento" checked={inputs.perda} onChange={handleChange} color="red" />
+              <CheckboxCard name="alcoolista" label="Alcoolista" sublabel="Uso crônico de álcool" checked={inputs.alcoolista} onChange={handleChange} color="amber" />
+              <CheckboxCard name="transfundido" label="Transfundido" sublabel="Transfusão de hemácias" checked={inputs.transfundido} onChange={handleChange} color="red" />
               {inputs.sexo === 'F' && (
                 <>
                   <CheckboxCard name="hipermenorreia" label="Hipermenorreia" sublabel="Fluxo excessivo" checked={inputs.hipermenorreia} onChange={handleChange} color="pink" />
@@ -314,29 +339,25 @@ export default function Calculator() {
           {/* MEDICAMENTOS */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <span className="text-red-600">💊</span> Medicamentos / Suplementos
+              <IconMedicamentos /> Medicamentos / Suplementos
             </h2>
             <div className="grid grid-cols-2 gap-2">
-              <CheckboxCard name="aspirina" label="Aspirina" sublabel="Uso continuo" checked={inputs.aspirina} onChange={handleChange} color="orange" />
-              <CheckboxCard name="vitaminaB12" label="Vitamina B12" sublabel="Ultimos 3 meses" checked={inputs.vitaminaB12} onChange={handleChange} color="purple" />
+              <CheckboxCard name="aspirina" label="Aspirina" sublabel="Uso contínuo" checked={inputs.aspirina} onChange={handleChange} color="orange" />
+              <CheckboxCard name="vitaminaB12" label="Vitamina B12" sublabel="Últimos 3 meses" checked={inputs.vitaminaB12} onChange={handleChange} color="purple" />
               <div className="col-span-2">
-                <CheckboxCard name="ferroOral" label="Ferro Oral / Injetavel" sublabel="Nos ultimos 2 anos" checked={inputs.ferroOral} onChange={handleChange} color="orange" />
+                <CheckboxCard name="ferroOral" label="Ferro Oral / Injetável" sublabel="Nos últimos 2 anos" checked={inputs.ferroOral} onChange={handleChange} color="orange" />
               </div>
             </div>
           </section>
 
           {/* BOTOES */}
           <div className="flex gap-3">
-            <button
-              type="submit"
-              className="flex-1 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold py-4 px-6 rounded-xl transition-colors shadow-md text-base"
-            >
+            <button type="submit"
+              className="flex-1 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold py-4 px-6 rounded-xl transition-colors shadow-md text-base">
               Avaliar Paciente
             </button>
-            <button
-              type="button" onClick={handleLimpar}
-              className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-medium py-4 px-5 rounded-xl transition-colors"
-            >
+            <button type="button" onClick={handleLimpar}
+              className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-medium py-4 px-5 rounded-xl transition-colors">
               Limpar
             </button>
           </div>
