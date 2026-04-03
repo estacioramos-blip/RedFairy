@@ -65,8 +65,8 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
         {/* RECOMENDAÇÃO */}
         <div>
           <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>
-            📋 Recomendação {resultado.isAge2 ? '(Faixa +40/+41)' : '(Faixa Jovem)'}
-          </h4>
+  📋 Recomendação
+</h4>
           <p className="text-gray-700 text-sm leading-relaxed bg-white rounded-xl p-4 border border-gray-100">
             {resultado.recomendacao}
           </p>
