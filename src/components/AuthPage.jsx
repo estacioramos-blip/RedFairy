@@ -17,14 +17,10 @@ export default function AuthPage({ onVoltar }) {
   const [sucesso, setSucesso] = useState('')
   const [avaliacoesPendentes, setAvaliacoesPendentes] = useState(0)
 
-  // estados de validação em tempo real
-  const [emailTouched, setEmailTouched] = useState(false)
-  const [senhaTouched, setSenhaTouched] = useState(false)
-
   const emailOk = emailConfirm && email === emailConfirm
-  const emailErro = emailTouched && emailConfirm && email !== emailConfirm
+  const emailErro = emailConfirm && email !== emailConfirm
   const senhaOk = senhaConfirm && senha === senhaConfirm
-  const senhaErro = senhaTouched && senhaConfirm && senha !== senhaConfirm
+  const senhaErro = senhaConfirm && senha !== senhaConfirm
 
   async function handleCPF() {
     if (!cpf.trim()) { setErro('Informe o CPF.'); return }
@@ -33,10 +29,7 @@ export default function AuthPage({ onVoltar }) {
     const cpfLimpo = cpf.replace(/\D/g, '')
 
     const { data: perfil } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('cpf', cpfLimpo)
-      .single()
+      .from('profiles').select('id').eq('cpf', cpfLimpo).single()
 
     const { count } = await supabase
       .from('avaliacoes')
@@ -57,8 +50,7 @@ export default function AuthPage({ onVoltar }) {
 
     if (data.user && avaliacoesPendentes > 0) {
       const cpfLimpo = cpf.replace(/\D/g, '')
-      await supabase
-        .from('avaliacoes')
+      await supabase.from('avaliacoes')
         .update({ user_id: data.user.id })
         .eq('cpf', cpfLimpo)
         .is('user_id', null)
@@ -74,15 +66,10 @@ export default function AuthPage({ onVoltar }) {
 
     const { data, error } = await supabase.auth.signUp({ email, password: senha })
     if (error) {
-      if (error.message.includes('after')) {
-        setErro('Por segurança, aguarde alguns segundos antes de tentar novamente.')
-      } else if (error.message.includes('already registered')) {
-        setErro('Este e-mail já está cadastrado. Tente fazer login.')
-      } else if (error.message.includes('Password')) {
-        setErro('A senha deve ter pelo menos 6 caracteres.')
-      } else {
-        setErro('Erro ao cadastrar. Tente novamente.')
-      }
+      if (error.message.includes('after')) setErro('Por segurança, aguarde alguns segundos.')
+      else if (error.message.includes('already registered')) setErro('E-mail já cadastrado. Tente fazer login.')
+      else if (error.message.includes('Password')) setErro('A senha deve ter pelo menos 6 caracteres.')
+      else setErro('Erro ao cadastrar. Tente novamente.')
       setLoading(false); return
     }
 
@@ -94,22 +81,18 @@ export default function AuthPage({ onVoltar }) {
         : dataNascimento
 
       await supabase.from('profiles').insert({
-        id: data.user.id,
-        nome,
-        sexo,
+        id: data.user.id, nome, sexo,
         data_nascimento: dataFormatada,
         cpf: cpfLimpo,
       })
 
       if (avaliacoesPendentes > 0) {
-        await supabase
-          .from('avaliacoes')
+        await supabase.from('avaliacoes')
           .update({ user_id: data.user.id })
           .eq('cpf', cpfLimpo)
           .is('user_id', null)
       }
     }
-
     setSucesso('Cadastro realizado! Verifique seu e-mail para confirmar.')
     setLoading(false)
   }
@@ -118,10 +101,12 @@ export default function AuthPage({ onVoltar }) {
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 relative">
+
       <button onClick={onVoltar}
-        className="absolute top-4 left-4 bg-white text-red-700 border border-red-300 px-3 py-1 rounded-lg text-sm shadow flex items-center gap-1">
-        ← Voltar
-      </button>
+  className="absolute top-4 left-4 text-white px-3 py-1 rounded-lg text-xs font-medium shadow transition-colors"
+  style={{ backgroundColor: '#991b1b' }}>
+  Voltar
+</button>
 
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
 
@@ -142,12 +127,10 @@ export default function AuthPage({ onVoltar }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">CPF</label>
-              <input
-                type="text" value={cpf}
+              <input type="text" value={cpf}
                 onChange={e => { setCpf(e.target.value); setErro('') }}
                 placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
-                className={inputClass}
-              />
+                className={inputClass} />
             </div>
             {erro && <p className="text-red-500 text-sm">{erro}</p>}
             <button onClick={handleCPF} disabled={loading}
@@ -169,13 +152,11 @@ export default function AuthPage({ onVoltar }) {
             <p className="text-center text-gray-500 text-sm">Bem-vindo de volta! Entre com sua senha.</p>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                className={inputClass} />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
-              <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
-                className={inputClass} />
+              <input type="password" value={senha} onChange={e => setSenha(e.target.value)} className={inputClass} />
             </div>
             {erro && <p className="text-red-500 text-sm">{erro}</p>}
             <button onClick={handleLogin} disabled={loading}
@@ -201,13 +182,10 @@ export default function AuthPage({ onVoltar }) {
             {avaliacoesPendentes === 0 && (
               <p className="text-center text-gray-500 text-sm">Crie sua conta para acompanhar sua evolução.</p>
             )}
-
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
-              <input type="text" value={nome} onChange={e => setNome(e.target.value)}
-                className={inputClass} />
+              <input type="text" value={nome} onChange={e => setNome(e.target.value)} className={inputClass} />
             </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
@@ -224,57 +202,40 @@ export default function AuthPage({ onVoltar }) {
                   className={inputClass} />
               </div>
             </div>
-
-            {/* E-MAIL com confirmação inline */}
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                className={inputClass} />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} />
             </div>
             {email && (
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Confirme o e-mail</label>
-                <input
-                  type="email" value={emailConfirm}
+                <input type="email" value={emailConfirm}
                   onChange={e => setEmailConfirm(e.target.value)}
-                  onBlur={() => setEmailTouched(true)}
-                  className={`${inputClass} ${emailErro ? 'border-red-400 focus:ring-red-400' : emailOk ? 'border-green-400 focus:ring-green-400' : ''}`}
-                />
+                  className={`${inputClass} ${emailErro ? 'border-red-400' : emailOk ? 'border-green-400' : ''}`} />
                 {emailErro && <p className="text-red-500 text-xs mt-1">Os e-mails não coincidem.</p>}
                 {emailOk && <p className="text-green-500 text-xs mt-1">✓ E-mails conferem.</p>}
               </div>
             )}
-
-            {/* SENHA com confirmação inline */}
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
-              <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
-                className={inputClass} />
+              <input type="password" value={senha} onChange={e => setSenha(e.target.value)} className={inputClass} />
             </div>
             {senha && (
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Confirme a senha</label>
-                <input
-                  type="password" value={senhaConfirm}
+                <input type="password" value={senhaConfirm}
                   onChange={e => setSenhaConfirm(e.target.value)}
-                  onBlur={() => setSenhaTouched(true)}
-                  className={`${inputClass} ${senhaErro ? 'border-red-400 focus:ring-red-400' : senhaOk ? 'border-green-400 focus:ring-green-400' : ''}`}
-                />
+                  className={`${inputClass} ${senhaErro ? 'border-red-400' : senhaOk ? 'border-green-400' : ''}`} />
                 {senhaErro && <p className="text-red-500 text-xs mt-1">As senhas não coincidem.</p>}
                 {senhaOk && <p className="text-green-500 text-xs mt-1">✓ Senhas conferem.</p>}
               </div>
             )}
-
             {erro && <p className="text-red-500 text-sm">{erro}</p>}
             {sucesso && <p className="text-green-600 text-sm">{sucesso}</p>}
-
-            <button
-              onClick={handleCadastro}
-              disabled={loading || !emailOk || !senhaOk}
+            <button onClick={handleCadastro} disabled={loading || !emailOk || !senhaOk}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? 'Aguarde...' : 'Criar conta'}
             </button>
-
             <button onClick={() => { setEtapa('cpf'); setErro('') }}
               className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors">
               ← Voltar

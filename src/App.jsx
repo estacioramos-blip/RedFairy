@@ -26,9 +26,9 @@ export default function App() {
 }
 
   if (modo === 'paciente') {
-    if (!session) return <AuthPage onLogin={() => {}} onVoltar={() => setModo('home')} />
-    return <PatientDashboard session={session} onVoltar={() => setModo('home')} />
-  }
+  if (!session) return <AuthPage onLogin={() => {}} onVoltar={() => setModo('home')} />
+  return <PatientDashboard session={session} onVoltar={() => setModo('home')} />
+}
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-gray-900">
