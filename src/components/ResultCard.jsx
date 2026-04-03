@@ -25,18 +25,13 @@ function calcularFerroEV(hbAtual, sexo) {
 function calcularSangria(ferritina, satTransf, sexo, peso, hbAtual, isPolicitemiaVera) {
   const ferritinAlvo = sexo === 'M' ? 150 : 100;
   const hbMin = sexo === 'M' ? 13.0 : 12.0;
-
   const volume = peso >= 65 ? 450 : peso >= 50 ? 400 : 350;
-
   let intervalo = 30;
   if (sexo === 'M' && ferritina >= 1200) intervalo = 25;
   if (sexo === 'F' && ferritina >= 800)  intervalo = 25;
-
   const sangriaEstimadas = Math.max(Math.ceil((ferritina - ferritinAlvo) / 100), 1);
   const penultima = Math.max(sangriaEstimadas - 1, 1);
-  const hbSegura = hbAtual >= hbMin;
-
-  return { volume, intervalo, sangriaEstimadas, penultima, ferritinAlvo, hbMin, hbSegura };
+  return { volume, intervalo, sangriaEstimadas, penultima, ferritinAlvo, hbMin };
 }
 
 function ModalFerroEV({ onClose, hbAtual, sexo }) {
@@ -131,6 +126,7 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
 
   const hbMin = sexo === 'M' ? 13.0 : 12.0;
   const hbSegura = hbAtual >= hbMin;
+  const isotonico = sexo === 'M' ? '500 mL' : '300 mL';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -149,7 +145,7 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
           {!hbSegura && (
             <div className="bg-red-50 border border-red-400 rounded-xl p-4 text-sm text-red-800">
               <p className="font-bold">⛔ Atenção!</p>
-              <p>A Hb atual ({hbAtual} g/dL) está abaixo do mínimo seguro ({hbMin} g/dL) para sangria. <strong>Não realizar sangria</strong> até normalização da Hb.</p>
+              <p>A Hb atual ({hbAtual} g/dL) está abaixo do mínimo seguro ({hbMin} g/dL). <strong>Não realizar sangria</strong> até normalização da Hb.</p>
             </div>
           )}
 
@@ -167,12 +163,10 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
               <p className="text-sm text-gray-600">Informe o peso do paciente para calcular o volume por sessão:</p>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Peso (kg)</label>
-                <input
-                  type="number" value={peso}
+                <input type="number" value={peso}
                   onChange={e => setPeso(e.target.value)}
                   placeholder="Ex: 70"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-                />
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
               </div>
               <button onClick={handleCalcular}
                 disabled={!peso || Number(peso) < 30}
@@ -196,9 +190,9 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
                 </div>
               </div>
 
-              {/* Intervalo */}
+              {/* Intervalo e estimativa */}
               <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
-                <p className="font-semibold text-gray-800">Intervalo entre Sessões</p>
+                <p className="font-semibold text-gray-800">Planejamento</p>
                 <p>• Intervalo recomendado: <strong>{resultado.intervalo} dias</strong></p>
                 <p>• Ferritina atual: <strong>{ferritina} ng/mL</strong></p>
                 <p>• Ferritina alvo: <strong>{resultado.ferritinAlvo} ng/mL</strong></p>
@@ -212,8 +206,9 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800 space-y-2">
                 <p className="font-semibold">⚠️ Segurança:</p>
                 <p>• Suspender se Hb cair abaixo de <strong>{resultado.hbMin} g/dL</strong></p>
-                <p>• Verificar Hb antes de cada sessão</p>
-                <p>• Hidratar bem o paciente antes da sangria</p>
+                <p>• Verificar Hb e pressão arterial antes de cada sessão</p>
+                <p>• <strong>Não realizar</strong> se pressão arterial sistólica &gt; <strong>160 mmHg</strong></p>
+                <p>• O paciente deve consumir <strong>{isotonico}</strong> de bebida isotônica (Gatorade, Powerade ou similar) <strong>30 minutos antes</strong> do procedimento, para reduzir o risco de queda pressórica</p>
                 <p>• Observar por <strong>15–30 min</strong> após o procedimento</p>
               </div>
 
@@ -267,17 +262,16 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
     resultado.recomendacao?.toUpperCase().includes('FERRO ENDOVENOSO');
 
   const precisaSangria =
-  resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
-  resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
-  resultado.diagnostico?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
-  resultado.diagnostico?.toUpperCase().includes('SANGRIAS TERAPEUTICAS') ||
-  resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
-  resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
-  resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
-  resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPEUTICAS');
+    resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
+    resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
+    resultado.diagnostico?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
+    resultado.diagnostico?.toUpperCase().includes('SANGRIAS TERAPEUTICAS') ||
+    resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
+    resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
+    resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
+    resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPEUTICAS');
 
   const isPolicitemiaVera = resultado.id === 81;
-
   const hbAtual = resultado._inputs?.hemoglobina || 0;
   const sexo = resultado._inputs?.sexo || 'M';
   const ferritina = resultado._inputs?.ferritina || 0;
