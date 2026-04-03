@@ -179,11 +179,11 @@ export default function PatientDashboard({ session, onVoltar }) {
                     para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento,
-                    e o leva para que você o expire no ar do mundo.
+                    Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células,
+                    e o leva aos seus pulmões para que você o expire no ar do mundo.
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    No ambiente, uma proteína verde - a <strong>clorofila</strong>, mãe da Hemoglobina -
+                    No ambiente, uma proteína verde - a clorofila, mãe da Hemoglobina -
                     usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
                     devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
                   </p>

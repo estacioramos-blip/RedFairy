@@ -63,7 +63,7 @@ export default function App() {
             <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
           </h1>
           <p className="text-red-300 text-sm tracking-widest uppercase font-medium">
-            Conhecer o seu Eritron
+            Cuidar do seu Eritron
           </p>
         </div>
 
