@@ -33,7 +33,6 @@ function ModalFerroEV({ onClose, hbAtual, sexo }) {
         style={{ maxHeight: '90vh' }}
         onClick={e => e.stopPropagation()}>
 
-        {/* Header */}
         <div className="bg-red-700 text-white px-6 py-4 rounded-t-2xl">
           <h2 className="text-lg font-bold">💉 Reposição de Ferro Endovenoso</h2>
           <p className="text-red-200 text-xs mt-1">Estimativa baseada na Fórmula de Ganzoni</p>
@@ -57,22 +56,33 @@ function ModalFerroEV({ onClose, hbAtual, sexo }) {
             <div className="bg-red-700 text-white rounded-lg px-4 py-2 text-center mt-2">
               <p className="text-xs opacity-80">Dose Total Estimada</p>
               <p className="text-2xl font-black">{doseTotal} mg</p>
-              <p className="text-xs opacity-80">{sessoes} sessão(ões) de 200 mg</p>
             </div>
           </div>
 
-          {/* Preparo */}
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Protocolo Prático</p>
+          {/* Protocolo */}
+          <div className="space-y-3">
+            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Opções de Reposição</p>
 
+            {/* Opção 1 — Ferro Sacarato */}
             <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
-              <p className="font-semibold text-gray-800">Preparação da infusão:</p>
-              <p>• <strong>200 mg</strong> de ferro (sacarato ou carboximaltose) diluídos em <strong>100 mL de SF 0,9%</strong></p>
+              <p className="font-semibold text-gray-800">Opção 1 — Ferro Sacarato (200 mg/ampola)</p>
+              <p>• Diluir <strong>200 mg</strong> em <strong>100 mL de SF 0,9%</strong></p>
               <p>• Infundir em <strong>30–60 minutos</strong></p>
               <p>• Intervalo mínimo entre sessões: <strong>48–72 horas</strong></p>
+              <p>• Sessões necessárias: <strong>{sessoes} sessão(ões) de 200 mg</strong></p>
             </div>
 
-            {/* Vitamina D — destaque */}
+            {/* Opção 2 — Ferrinject */}
+            <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
+              <p className="font-semibold text-gray-800">Opção 2 — Ferrinject® Carboximaltose (500 mg/ampola)</p>
+              <p>• Cada ampola contém <strong>500 mg</strong> de ferro</p>
+              <p>• Pode-se infundir <strong>até 1.000 mg</strong> (2 ampolas) em sessão única</p>
+              <p>• Diluir em <strong>250 mL de SF 0,9%</strong> e infundir em <strong>15–30 minutos</strong></p>
+              <p>• Sessões necessárias: <strong>{Math.ceil(doseTotal / 1000)} sessão(ões) de 1.000 mg</strong> ou <strong>{Math.ceil(doseTotal / 500)} de 500 mg</strong></p>
+              <p>• Intervalo mínimo entre sessões: <strong>7 dias</strong></p>
+            </div>
+
+            {/* Vitamina D */}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 space-y-2">
               <p className="font-semibold">☀️ Vitamina D — Importante!</p>
               <p>
@@ -83,6 +93,7 @@ function ModalFerroEV({ onClose, hbAtual, sexo }) {
               </p>
             </div>
 
+            {/* Precauções */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800 space-y-2">
               <p className="font-semibold">⚠️ Precauções:</p>
               <p>• Ter disponível adrenalina e anti-histamínico</p>
@@ -91,6 +102,7 @@ function ModalFerroEV({ onClose, hbAtual, sexo }) {
               <p>• Não infundir com outros medicamentos na mesma via</p>
             </div>
 
+            {/* Monitoramento */}
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-800 space-y-2">
               <p className="font-semibold">✅ Monitoramento:</p>
               <p>• Repetir hemograma após <strong>4 semanas</strong></p>
@@ -99,7 +111,6 @@ function ModalFerroEV({ onClose, hbAtual, sexo }) {
             </div>
           </div>
 
-          {/* Aviso */}
           <p className="text-xs text-gray-400 text-center">
             * Estimativa para paciente de 70 kg. Dose final deve ser ajustada pelo médico assistente conforme peso real e resposta clínica.
           </p>
@@ -149,7 +160,6 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
 
       <div className={`rounded-2xl border-2 ${scheme.border} ${scheme.bg} shadow-lg overflow-hidden`}>
 
-        {/* HEADER */}
         <div className={`${scheme.badge} text-white px-6 py-4 flex items-center justify-between`}>
           <div>
             <p className="text-xs uppercase tracking-widest opacity-80 mb-1">Diagnóstico</p>
@@ -166,7 +176,6 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
 
         <div className="p-6 space-y-5">
 
-          {/* FRASE DATA */}
           <div className={`rounded-xl border px-4 py-3 text-sm ${fraseDataColor[resultado.fraseData.tipo]}`}>
             <span className="font-semibold">
               📅 {resultado.diasDesdeColeta} dia(s) desde a coleta
@@ -174,7 +183,6 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
             <p className="mt-1">{resultado.fraseData.texto}</p>
           </div>
 
-          {/* DIAGNÓSTICO */}
           <div>
             <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>
               🏷️ Diagnóstico
@@ -184,7 +192,6 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
             </p>
           </div>
 
-          {/* RECOMENDAÇÃO */}
           <div>
             <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>
               📋 Recomendação
@@ -194,7 +201,6 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
             </p>
           </div>
 
-          {/* BOTÃO FERRO EV */}
           {precisaFerroEV && (
             <button
               onClick={() => setShowFerroEV(true)}
@@ -203,7 +209,6 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
             </button>
           )}
 
-          {/* HIPERMENORREIA */}
           {resultado.fraseHipermenorreia && (
             <div>
               <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-pink-700">
@@ -215,7 +220,6 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
             </div>
           )}
 
-          {/* COMENTÁRIOS DE MEDICAMENTOS */}
           {resultado.comentarios.length > 0 && (
             <div>
               <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>
@@ -232,7 +236,6 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
             </div>
           )}
 
-          {/* PRÓXIMOS EXAMES */}
           <div>
             <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>
               🧪 Próximos Exames Sugeridos
@@ -249,7 +252,6 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
             </div>
           </div>
 
-          {/* BOTÃO COPIAR GRANDE */}
           <button
             onClick={onCopiar}
             className={`w-full py-3 rounded-xl font-bold text-sm transition-all
