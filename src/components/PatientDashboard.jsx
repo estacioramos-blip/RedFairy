@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { avaliarPaciente } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
 import heroImg from '../assets/redfairy-hero.png'
+import logo from '../assets/logo.png'
 
 export default function PatientDashboard({ session, onVoltar }) {
   const [profile, setProfile] = useState(null)
@@ -46,7 +47,7 @@ export default function PatientDashboard({ session, onVoltar }) {
     const idade = calcularIdade(profile.data_nascimento)
     const inputsNumericos = {
       ...inputs,
-      iniciais: profile.nome.substring(0, 3).toUpperCase(),
+      cpf: profile.cpf || '',
       sexo: profile.sexo,
       idade,
       ferritina: Number(inputs.ferritina),
@@ -112,55 +113,51 @@ export default function PatientDashboard({ session, onVoltar }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-red-700 text-white py-4 px-6 shadow-lg">
+
+      {/* HEADER — mesmo padrão do Calculator */}
+      <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <button onClick={onVoltar}
+            className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+            Voltar
+          </button>
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="RedFairy" className="w-8 h-8 object-contain"
+            <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
               style={{ filter: 'brightness(10)' }} />
             <div>
               <h1 className="text-xl font-bold">RedFairy</h1>
               <p className="text-red-200 text-xs">Olá, {profile?.nome}!</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button onClick={() => setShowSobre(true)}
-              className="bg-red-800 px-3 py-1 rounded-lg text-xs">Sobre</button>
-            <button onClick={onVoltar}
-              className="bg-red-800 px-3 py-1 rounded-lg text-xs">Início</button>
-            <button onClick={handleLogout}
-              className="bg-red-800 px-3 py-1 rounded-lg text-xs">Sair</button>
-          </div>
+          <button onClick={() => setShowSobre(true)}
+            className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+            Sobre
+          </button>
         </div>
       </header>
 
       {/* MODAL SOBRE */}
       {showSobre && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.7)' }}
-          onClick={() => { setShowSobre(false); setShowSaibaMais(false) }}
-        >
-          <div
-            className="bg-white rounded-2xl max-w-sm w-full shadow-2xl"
+          onClick={() => { setShowSobre(false); setShowSaibaMais(false) }}>
+          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl"
             style={{ maxHeight: '90vh', overflowY: 'auto' }}
-            onClick={e => e.stopPropagation()}
-          >
+            onClick={e => e.stopPropagation()}>
             <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
               <img src={heroImg} alt="RedFairy"
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
-              />
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
-                <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.6', fontStyle: 'italic', margin: 0 }}>
+                <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
                   Eu sou a sua fada vermelha, a sua{' '}
                   <span style={{ fontWeight: 'bold', color: '#fca5a5' }}>HEMOGLOBINA</span>.
                   <br />
-                  Eu uso poeira de estrelas para te entregar o ar.
+                  Eu uso a poeira das estrelas para te entregar o ar.
                   <br />
                   <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
                 </p>
               </div>
             </div>
-
             <div style={{ padding: '20px' }}>
               {!showSaibaMais && (
                 <button onClick={() => setShowSaibaMais(true)}
@@ -168,22 +165,17 @@ export default function PatientDashboard({ session, onVoltar }) {
                   Saiba Mais
                 </button>
               )}
-
               {showSaibaMais && (
                 <div style={{ marginBottom: '16px' }}>
-                  <h3 className="text-red-700 font-bold text-base text-center mb-4">
-                    Vida e ventilação e perfusão
-                  </h3>
+                  <h3 className="text-red-700 font-bold text-base text-center mb-4">Vida e ventilação e perfusão</h3>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
                     O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência.
-                    Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais
-                    importante da sua vida.
+                    Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais importante da sua vida.
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila
-                    os pulmões e o entrega a todas as suas células - vinte vezes por minuto. As células
-                    precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual
-                    você só vive alguns minutos.
+                    Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões
+                    e o entrega a todas as suas células - vinte vezes por minuto. As células precisam do oxigênio
+                    para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
                     Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento,
@@ -199,17 +191,12 @@ export default function PatientDashboard({ session, onVoltar }) {
                       Portanto, é importante saber sobre sua Hemoglobina, o seu Ferro e a sua produção
                       de células vermelhas - conhecer o seu Eritron.
                     </p>
-                    <p className="text-red-700 text-sm font-bold mt-2">
-                      Nós te ajudamos.
-                    </p>
+                    <p className="text-red-700 text-sm font-bold mt-2">Nós te ajudamos.</p>
                   </div>
                 </div>
               )}
-
-              <button
-                onClick={() => { setShowSobre(false); setShowSaibaMais(false) }}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors"
-              >
+              <button onClick={() => { setShowSobre(false); setShowSaibaMais(false) }}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
                 Fechar
               </button>
             </div>
@@ -233,7 +220,7 @@ export default function PatientDashboard({ session, onVoltar }) {
           <div className="space-y-3">
             {avaliacoes.length === 0 ? (
               <div className="bg-white rounded-2xl p-8 text-center text-gray-400 border">
-                <img src="/logo.png" alt="RedFairy" className="w-12 h-12 object-contain mx-auto mb-3"
+                <img src={logo} alt="RedFairy" className="w-12 h-12 object-contain mx-auto mb-3"
                   style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.4))' }} />
                 <p>Nenhuma avaliação ainda.</p>
                 <button onClick={() => setTela('nova')}
@@ -262,13 +249,11 @@ export default function PatientDashboard({ session, onVoltar }) {
         {tela === 'nova' && (
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
             <h2 className="font-semibold text-gray-700">Nova Avaliação</h2>
-
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Data da Coleta</label>
               <input type="date" name="dataColeta" value={inputs.dataColeta} onChange={handleChange}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
             </div>
-
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
                 { label: 'Ferritina (ng/mL)', name: 'ferritina' },
@@ -284,7 +269,6 @@ export default function PatientDashboard({ session, onVoltar }) {
                 </div>
               ))}
             </div>
-
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Histórico Clínico</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -313,7 +297,6 @@ export default function PatientDashboard({ session, onVoltar }) {
                 ))}
               </div>
             </div>
-
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Medicamentos / Suplementos</h3>
               <div className="grid grid-cols-2 gap-2">
@@ -336,7 +319,6 @@ export default function PatientDashboard({ session, onVoltar }) {
                 ))}
               </div>
             </div>
-
             <button onClick={handleAvaliar}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
               Avaliar

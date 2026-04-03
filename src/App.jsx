@@ -18,18 +18,12 @@ export default function App() {
   }, [])
 
   if (modo === 'calculadora') {
-    return (
-      <div>
-        <button
-          onClick={() => setModo('home')}
-          className="fixed top-4 left-4 z-50 bg-red-800 text-white px-3 py-1 rounded-lg text-xs font-medium shadow"
-        >
-          Voltar
-        </button>
-        <Calculator key={Date.now()} />
-      </div>
-    )
-  }
+  return (
+    <div>
+      <Calculator key={Date.now()} onVoltar={() => setModo('home')} />
+    </div>
+  )
+}
 
   if (modo === 'paciente') {
     if (!session) return <AuthPage onLogin={() => {}} onVoltar={() => setModo('home')} />

@@ -38,7 +38,7 @@ const IconMedicamentos = () => (
   </svg>
 )
 
-export default function Calculator() {
+export default function Calculator({ onVoltar }) {
   const [inputs, setInputs] = useState({
     cpf: '',
     sexo: 'M',
@@ -160,7 +160,10 @@ export default function Calculator() {
 
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div style={{ width: '56px' }} />
+          <button onClick={onVoltar}
+            className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+            Voltar
+          </button>
           <div className="flex items-center gap-3">
             <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
               style={{ filter: 'brightness(10)' }} />
