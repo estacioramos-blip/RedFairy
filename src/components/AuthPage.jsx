@@ -3,28 +3,75 @@ import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 
 export default function AuthPage({ onVoltar }) {
-  const [modo, setModo] = useState('login')
+  const [etapa, setEtapa] = useState('cpf')
+  const [cpf, setCpf] = useState('')
   const [email, setEmail] = useState('')
+  const [emailConfirm, setEmailConfirm] = useState('')
   const [senha, setSenha] = useState('')
+  const [senhaConfirm, setSenhaConfirm] = useState('')
   const [nome, setNome] = useState('')
   const [sexo, setSexo] = useState('F')
   const [dataNascimento, setDataNascimento] = useState('')
-  const [cpf, setCpf] = useState('')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
+  const [avaliacoesPendentes, setAvaliacoesPendentes] = useState(0)
+
+  // estados de validação em tempo real
+  const [emailTouched, setEmailTouched] = useState(false)
+  const [senhaTouched, setSenhaTouched] = useState(false)
+
+  const emailOk = emailConfirm && email === emailConfirm
+  const emailErro = emailTouched && emailConfirm && email !== emailConfirm
+  const senhaOk = senhaConfirm && senha === senhaConfirm
+  const senhaErro = senhaTouched && senhaConfirm && senha !== senhaConfirm
+
+  async function handleCPF() {
+    if (!cpf.trim()) { setErro('Informe o CPF.'); return }
+    setLoading(true)
+    setErro('')
+    const cpfLimpo = cpf.replace(/\D/g, '')
+
+    const { data: perfil } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('cpf', cpfLimpo)
+      .single()
+
+    const { count } = await supabase
+      .from('avaliacoes')
+      .select('*', { count: 'exact', head: true })
+      .eq('cpf', cpfLimpo)
+      .is('user_id', null)
+
+    setAvaliacoesPendentes(count || 0)
+    setEtapa(perfil ? 'login' : 'cadastro')
+    setLoading(false)
+  }
 
   async function handleLogin() {
     setLoading(true)
     setErro('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
-    if (error) setErro('E-mail ou senha incorretos.')
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha })
+    if (error) { setErro('E-mail ou senha incorretos.'); setLoading(false); return }
+
+    if (data.user && avaliacoesPendentes > 0) {
+      const cpfLimpo = cpf.replace(/\D/g, '')
+      await supabase
+        .from('avaliacoes')
+        .update({ user_id: data.user.id })
+        .eq('cpf', cpfLimpo)
+        .is('user_id', null)
+    }
     setLoading(false)
   }
 
   async function handleCadastro() {
+    if (!emailOk) { setErro('Os e-mails não coincidem.'); return }
+    if (!senhaOk) { setErro('As senhas não coincidem.'); return }
     setLoading(true)
     setErro('')
+
     const { data, error } = await supabase.auth.signUp({ email, password: senha })
     if (error) {
       if (error.message.includes('after')) {
@@ -40,6 +87,7 @@ export default function AuthPage({ onVoltar }) {
     }
 
     if (data.user) {
+      const cpfLimpo = cpf.replace(/\D/g, '')
       const partes = dataNascimento.split('/')
       const dataFormatada = partes.length === 3
         ? `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`
@@ -50,104 +98,190 @@ export default function AuthPage({ onVoltar }) {
         nome,
         sexo,
         data_nascimento: dataFormatada,
-        cpf: cpf.replace(/\D/g, ''),
+        cpf: cpfLimpo,
       })
+
+      if (avaliacoesPendentes > 0) {
+        await supabase
+          .from('avaliacoes')
+          .update({ user_id: data.user.id })
+          .eq('cpf', cpfLimpo)
+          .is('user_id', null)
+      }
     }
+
     setSucesso('Cadastro realizado! Verifique seu e-mail para confirmar.')
     setLoading(false)
   }
 
+  const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 relative">
-      <button onClick={onVoltar} className="absolute top-4 left-4 bg-white text-red-700 border border-red-300 px-3 py-1 rounded-lg text-sm shadow flex items-center gap-1">← Voltar</button>
+      <button onClick={onVoltar}
+        className="absolute top-4 left-4 bg-white text-red-700 border border-red-300 px-3 py-1 rounded-lg text-sm shadow flex items-center gap-1">
+        ← Voltar
+      </button>
+
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+
         <div className="text-center mb-6">
-          <img
-            src={logo}
-            alt="RedFairy"
+          <img src={logo} alt="RedFairy"
             className="w-16 h-16 object-contain mx-auto mb-2"
-            style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }}
-          />
+            style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }} />
           <h2 className="text-2xl font-bold text-red-700">RedFairy</h2>
           <p className="text-gray-500 text-sm">Modo Paciente</p>
         </div>
 
-        <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
-          <button
-            onClick={() => setModo('login')}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${modo === 'login' ? 'bg-white shadow text-red-700' : 'text-gray-500'}`}
-          >
-            Entrar
-          </button>
-          <button
-            onClick={() => setModo('cadastro')}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${modo === 'cadastro' ? 'bg-white shadow text-red-700' : 'text-gray-500'}`}
-          >
-            Cadastrar
-          </button>
-        </div>
+        {/* ETAPA 1 — CPF */}
+        {etapa === 'cpf' && (
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
+              <p className="text-red-700 text-sm font-medium">Entre com seu CPF para começar</p>
+              <p className="text-gray-500 text-xs mt-1">Verificamos se seu médico já fez uma avaliação para você</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">CPF</label>
+              <input
+                type="text" value={cpf}
+                onChange={e => { setCpf(e.target.value); setErro('') }}
+                placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
+                className={inputClass}
+              />
+            </div>
+            {erro && <p className="text-red-500 text-sm">{erro}</p>}
+            <button onClick={handleCPF} disabled={loading}
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
+              {loading ? 'Verificando...' : 'Continuar'}
+            </button>
+          </div>
+        )}
 
-        <div className="space-y-4">
-          {modo === 'cadastro' && (
-            <>
+        {/* ETAPA 2 — LOGIN */}
+        {etapa === 'login' && (
+          <div className="space-y-4">
+            {avaliacoesPendentes > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                <p className="text-green-700 text-sm font-bold">🎉 Encontramos {avaliacoesPendentes} avaliação{avaliacoesPendentes > 1 ? 'ões' : ''} do seu médico!</p>
+                <p className="text-green-600 text-xs mt-1">Entre com sua conta para acessá-la{avaliacoesPendentes > 1 ? 's' : ''}.</p>
+              </div>
+            )}
+            <p className="text-center text-gray-500 text-sm">Bem-vindo de volta! Entre com sua senha.</p>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
+              <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
+                className={inputClass} />
+            </div>
+            {erro && <p className="text-red-500 text-sm">{erro}</p>}
+            <button onClick={handleLogin} disabled={loading}
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
+              {loading ? 'Aguarde...' : 'Entrar'}
+            </button>
+            <button onClick={() => { setEtapa('cpf'); setErro('') }}
+              className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors">
+              ← Voltar
+            </button>
+          </div>
+        )}
+
+        {/* ETAPA 3 — CADASTRO */}
+        {etapa === 'cadastro' && (
+          <div className="space-y-4">
+            {avaliacoesPendentes > 0 && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+                <p className="text-green-700 text-sm font-bold">🎉 Encontramos {avaliacoesPendentes} avaliação{avaliacoesPendentes > 1 ? 'ões' : ''} do seu médico!</p>
+                <p className="text-green-600 text-xs mt-1">Crie sua conta para acessá-la{avaliacoesPendentes > 1 ? 's' : ''} e acompanhar sua evolução.</p>
+              </div>
+            )}
+            {avaliacoesPendentes === 0 && (
+              <p className="text-center text-gray-500 text-sm">Crie sua conta para acompanhar sua evolução.</p>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
+              <input type="text" value={nome} onChange={e => setNome(e.target.value)}
+                className={inputClass} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
-                <input type="text" value={nome} onChange={e => setNome(e.target.value)}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
+                <select value={sexo} onChange={e => setSexo(e.target.value)} className={inputClass}>
+                  <option value="F">Feminino</option>
+                  <option value="M">Masculino</option>
+                </select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">CPF</label>
-                  <input type="text" value={cpf} onChange={e => setCpf(e.target.value)}
-                    placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
-                  <select value={sexo} onChange={e => setSexo(e.target.value)}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
-                    <option value="F">Feminino</option>
-                    <option value="M">Masculino</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Nascimento</label>
-                  <input
-                    type="text"
-                    value={dataNascimento}
-                    onChange={e => setDataNascimento(e.target.value)}
-                    placeholder="DD/MM/AAAA"
-                    maxLength={10}
-                    inputMode="numeric"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Nascimento</label>
+                <input type="text" value={dataNascimento}
+                  onChange={e => setDataNascimento(e.target.value)}
+                  placeholder="DD/MM/AAAA" maxLength={10} inputMode="numeric"
+                  className={inputClass} />
               </div>
-            </>
-          )}
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+            {/* E-MAIL com confirmação inline */}
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                className={inputClass} />
+            </div>
+            {email && (
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Confirme o e-mail</label>
+                <input
+                  type="email" value={emailConfirm}
+                  onChange={e => setEmailConfirm(e.target.value)}
+                  onBlur={() => setEmailTouched(true)}
+                  className={`${inputClass} ${emailErro ? 'border-red-400 focus:ring-red-400' : emailOk ? 'border-green-400 focus:ring-green-400' : ''}`}
+                />
+                {emailErro && <p className="text-red-500 text-xs mt-1">Os e-mails não coincidem.</p>}
+                {emailOk && <p className="text-green-500 text-xs mt-1">✓ E-mails conferem.</p>}
+              </div>
+            )}
+
+            {/* SENHA com confirmação inline */}
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
+              <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
+                className={inputClass} />
+            </div>
+            {senha && (
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Confirme a senha</label>
+                <input
+                  type="password" value={senhaConfirm}
+                  onChange={e => setSenhaConfirm(e.target.value)}
+                  onBlur={() => setSenhaTouched(true)}
+                  className={`${inputClass} ${senhaErro ? 'border-red-400 focus:ring-red-400' : senhaOk ? 'border-green-400 focus:ring-green-400' : ''}`}
+                />
+                {senhaErro && <p className="text-red-500 text-xs mt-1">As senhas não coincidem.</p>}
+                {senhaOk && <p className="text-green-500 text-xs mt-1">✓ Senhas conferem.</p>}
+              </div>
+            )}
+
+            {erro && <p className="text-red-500 text-sm">{erro}</p>}
+            {sucesso && <p className="text-green-600 text-sm">{sucesso}</p>}
+
+            <button
+              onClick={handleCadastro}
+              disabled={loading || !emailOk || !senhaOk}
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {loading ? 'Aguarde...' : 'Criar conta'}
+            </button>
+
+            <button onClick={() => { setEtapa('cpf'); setErro('') }}
+              className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors">
+              ← Voltar
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
-            <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
-          </div>
+        )}
 
-          {erro && <p className="text-red-500 text-sm">{erro}</p>}
-          {sucesso && <p className="text-green-600 text-sm">{sucesso}</p>}
-
-          <button
-            onClick={modo === 'login' ? handleLogin : handleCadastro}
-            disabled={loading}
-            className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors"
-          >
-            {loading ? 'Aguarde...' : modo === 'login' ? 'Entrar' : 'Criar conta'}
-          </button>
-        </div>
       </div>
     </div>
   )

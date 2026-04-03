@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from '../lib/supabase';
 import { avaliarPaciente, formatarParaCopiar } from '../engine/decisionEngine';
 import ResultCard from './ResultCard';
 import heroImg from '../assets/redfairy-hero.png';
@@ -39,7 +40,6 @@ const IconMedicamentos = () => (
 
 export default function Calculator() {
   const [inputs, setInputs] = useState({
-    iniciais: '',
     cpf: '',
     sexo: 'M',
     idade: '',
@@ -69,43 +69,29 @@ export default function Calculator() {
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
-    setInputs(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    if (erros[name]) {
-      setErros(prev => ({ ...prev, [name]: null }));
-    }
+    setInputs(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
   }
 
   function validar() {
     const novosErros = {};
-    if (!inputs.iniciais.trim())
-      novosErros.iniciais = 'Informe as iniciais';
     if (!inputs.idade || inputs.idade < 12 || inputs.idade > 100)
       novosErros.idade = 'Idade inválida (12-100)';
     if (!inputs.dataColeta)
       novosErros.dataColeta = 'Informe a data da coleta';
-    if (!inputs.ferritina)
-      novosErros.ferritina = 'Campo obrigatório';
-    if (!inputs.hemoglobina)
-      novosErros.hemoglobina = 'Campo obrigatório';
-    if (!inputs.vcm)
-      novosErros.vcm = 'Campo obrigatório';
-    if (!inputs.rdw)
-      novosErros.rdw = 'Campo obrigatório';
-    if (!inputs.satTransf)
-      novosErros.satTransf = 'Campo obrigatório';
+    if (!inputs.ferritina)   novosErros.ferritina = 'Campo obrigatório';
+    if (!inputs.hemoglobina) novosErros.hemoglobina = 'Campo obrigatório';
+    if (!inputs.vcm)         novosErros.vcm = 'Campo obrigatório';
+    if (!inputs.rdw)         novosErros.rdw = 'Campo obrigatório';
+    if (!inputs.satTransf)   novosErros.satTransf = 'Campo obrigatório';
     return novosErros;
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const novosErros = validar();
-    if (Object.keys(novosErros).length > 0) {
-      setErros(novosErros);
-      return;
-    }
+    if (Object.keys(novosErros).length > 0) { setErros(novosErros); return; }
+
     const inputsNumericos = {
       ...inputs,
       idade:       Number(inputs.idade),
@@ -115,12 +101,35 @@ export default function Calculator() {
       rdw:         Number(inputs.rdw),
       satTransf:   Number(inputs.satTransf),
     };
+
     const res = avaliarPaciente(inputsNumericos);
     setResultado({ ...res, _inputs: inputsNumericos });
     setCopiado(false);
+
+    if (inputs.cpf.trim() && res.encontrado) {
+      await supabase.from('avaliacoes').insert({
+        cpf: inputs.cpf.replace(/\D/g, ''),
+        data_coleta: inputs.dataColeta,
+        ferritina: Number(inputs.ferritina),
+        hemoglobina: Number(inputs.hemoglobina),
+        vcm: Number(inputs.vcm),
+        rdw: Number(inputs.rdw),
+        sat_transf: Number(inputs.satTransf),
+        bariatrica: inputs.bariatrica,
+        vegetariano: inputs.vegetariano,
+        perda: inputs.perda,
+        hipermenorreia: inputs.hipermenorreia,
+        gestante: inputs.gestante,
+        aspirina: inputs.aspirina,
+        vitamina_b12: inputs.vitaminaB12,
+        ferro_oral: inputs.ferroOral,
+        diagnostico_label: res.label,
+        diagnostico_color: res.color,
+      });
+    }
+
     setTimeout(() => {
-      document.getElementById('resultado')
-        ?.scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   }
 
@@ -135,7 +144,7 @@ export default function Calculator() {
 
   function handleLimpar() {
     setInputs({
-      iniciais: '', cpf: '', sexo: 'M', idade: '', dataColeta: '',
+      cpf: '', sexo: 'M', idade: '', dataColeta: '',
       ferritina: '', hemoglobina: '', vcm: '', rdw: '',
       satTransf: '', bariatrica: false, vegetariano: false,
       perda: false, hipermenorreia: false, gestante: false,
@@ -146,57 +155,80 @@ export default function Calculator() {
     setErros({});
   }
 
+  const modalTexto = (
+    <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
+      Eu sou a sua fada vermelha, a sua{' '}
+      <span style={{ fontWeight: 'bold', color: '#fca5a5' }}>HEMOGLOBINA</span>.
+      <br />
+      Eu uso a poeira das estrelas para te entregar o ar.
+      <br />
+      <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
+    </p>
+  )
+
+  const modalSaibaMais = (
+    <div style={{ marginBottom: '16px' }}>
+      <h3 className="text-red-700 font-bold text-base text-center mb-4">Vida é ventilação e perfusão</h3>
+      <p className="text-gray-700 text-sm leading-relaxed mb-3">
+        O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência.
+        Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais importante da sua vida.
+      </p>
+      <p className="text-gray-700 text-sm leading-relaxed mb-3">
+        Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões
+        e o entrega a todas as suas células - vinte vezes por minuto. As células precisam do oxigênio
+        para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.
+      </p>
+      <p className="text-gray-700 text-sm leading-relaxed mb-3">
+        Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento,
+        e o leva para que você o expire no ar do mundo.
+      </p>
+      <p className="text-gray-700 text-sm leading-relaxed mb-3">
+        No ambiente, uma proteína verde - a clorofila - a mãe da Hemoglobina,
+        usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
+        devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
+      </p>
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+        <p className="text-red-800 text-sm leading-relaxed font-medium">
+          Portanto, é importante saber sobre sua Hemoglobina, o seu Ferro e a sua produção
+          de células vermelhas - conhecer o seu Eritron.
+        </p>
+        <p className="text-red-700 text-sm font-bold mt-2">Nós te ajudamos.</p>
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* HEADER */}
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
             style={{ filter: 'brightness(10)' }} />
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
-            <p className="text-red-200 text-xs truncate">
-              Calculadora Clínica - Eritron e Metabolismo do Ferro
-            </p>
+            <p className="text-red-200 text-xs truncate">Calculadora Clínica - Eritron e Metabolismo do Ferro</p>
           </div>
-          <button
-            onClick={() => setShowSobre(true)}
-            className="bg-red-800 hover:bg-red-900 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors"
-          >
+          <button onClick={() => setShowSobre(true)}
+            className="bg-red-800 hover:bg-red-900 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors">
             Sobre
           </button>
         </div>
       </header>
 
-      {/* MODAL SOBRE */}
       {showSobre && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.7)' }}
-          onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}
-        >
-          <div
-            className="bg-white rounded-2xl max-w-sm w-full shadow-2xl"
+          onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}>
+          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl"
             style={{ maxHeight: '90vh', overflowY: 'auto' }}
-            onClick={e => e.stopPropagation()}
-          >
+            onClick={e => e.stopPropagation()}>
             <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
               <img src={heroImg} alt="RedFairy"
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
-              />
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
-                <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.6', fontStyle: 'italic', margin: 0 }}>
-                  Eu sou a sua fada vermelha, a sua{' '}
-                  <span style={{ fontWeight: 'bold', color: '#fca5a5' }}>HEMOGLOBINA</span>.
-                  <br />
-                  Eu uso poeira de estrelas para te entregar o ar.
-                  <br />
-                  <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
-                </p>
+                {modalTexto}
               </div>
             </div>
-
             <div style={{ padding: '20px' }}>
               {!showSaibaMais && (
                 <button onClick={() => setShowSaibaMais(true)}
@@ -204,48 +236,9 @@ export default function Calculator() {
                   Saiba Mais
                 </button>
               )}
-
-              {showSaibaMais && (
-                <div style={{ marginBottom: '16px' }}>
-                  <h3 className="text-red-700 font-bold text-base text-center mb-4">
-                    Vida e ventilação e perfusão
-                  </h3>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência.
-                    Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais
-                    importante da sua vida.
-                  </p>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila
-                    os pulmões e o entrega a todas as suas células - vinte vezes por minuto. As células
-                    precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual
-                    você só vive alguns minutos.
-                  </p>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento,
-                    e o leva para que você o expire no ar do mundo.
-                  </p>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    No ambiente, uma proteína verde - a <strong>clorofila</strong>, mãe da Hemoglobina -
-                    usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
-                    devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
-                  </p>
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <p className="text-red-800 text-sm leading-relaxed font-medium">
-                      Portanto, é importante saber sobre sua Hemoglobina, o seu Ferro e a sua produção
-                      de células vermelhas - conhecer o seu Eritron.
-                    </p>
-                    <p className="text-red-700 text-sm font-bold mt-2">
-                      Nós te ajudamos.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <button
-                onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors"
-              >
+              {showSaibaMais && modalSaibaMais}
+              <button onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
                 Fechar
               </button>
             </div>
@@ -256,18 +249,17 @@ export default function Calculator() {
       <main className="max-w-2xl mx-auto px-3 py-5">
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* DADOS DO PACIENTE */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <IconPaciente /> Dados do Paciente
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="label">Iniciais</label>
-                <input type="text" name="iniciais" value={inputs.iniciais}
-                  onChange={handleChange} placeholder="Ex: JBS" maxLength={5}
-                  className={`input ${erros.iniciais ? 'border-red-500' : ''}`} />
-                {erros.iniciais && <p className="text-red-500 text-xs mt-1">{erros.iniciais}</p>}
+                <label className="label">CPF</label>
+                <input type="text" name="cpf" value={inputs.cpf}
+                  onChange={handleChange} placeholder="000.000.000-00" maxLength={14}
+                  inputMode="numeric" className="input" />
+                <p className="text-xs text-gray-400 mt-0.5">Opcional — vincula ao paciente</p>
               </div>
               <div>
                 <label className="label">Sexo</label>
@@ -293,7 +285,6 @@ export default function Calculator() {
             </div>
           </section>
 
-          {/* EXAMES LABORATORIAIS */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <IconExames /> Exames Laboratoriais
@@ -316,7 +307,6 @@ export default function Calculator() {
             </div>
           </section>
 
-          {/* HISTORICO CLINICO */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <IconHistorico /> Histórico Clínico
@@ -336,7 +326,6 @@ export default function Calculator() {
             </div>
           </section>
 
-          {/* MEDICAMENTOS */}
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <IconMedicamentos /> Medicamentos / Suplementos
@@ -350,7 +339,6 @@ export default function Calculator() {
             </div>
           </section>
 
-          {/* BOTOES */}
           <div className="flex gap-3">
             <button type="submit"
               className="flex-1 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold py-4 px-6 rounded-xl transition-colors shadow-md text-base">
@@ -380,8 +368,7 @@ function LabInput({ label, unit, name, reference, value, onChange, error }) {
       <label className="block text-sm font-medium text-gray-600 mb-1">
         {label} <span className="text-xs text-gray-400">({unit})</span>
       </label>
-      <input
-        type="number" step="0.1" name={name} value={value}
+      <input type="number" step="0.1" name={name} value={value}
         onChange={onChange} inputMode="decimal"
         className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${error ? 'border-red-500' : 'border-gray-200'}`}
       />
