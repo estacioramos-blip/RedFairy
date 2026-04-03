@@ -155,61 +155,22 @@ export default function Calculator() {
     setErros({});
   }
 
-  const modalTexto = (
-    <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
-      Eu sou a sua fada vermelha, a sua{' '}
-      <span style={{ fontWeight: 'bold', color: '#fca5a5' }}>HEMOGLOBINA</span>.
-      <br />
-      Eu uso a poeira das estrelas para te entregar o ar.
-      <br />
-      <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
-    </p>
-  )
-
-  const modalSaibaMais = (
-    <div style={{ marginBottom: '16px' }}>
-      <h3 className="text-red-700 font-bold text-base text-center mb-4">Vida é ventilação e perfusão</h3>
-      <p className="text-gray-700 text-sm leading-relaxed mb-3">
-        O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência.
-        Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais importante da sua vida.
-      </p>
-      <p className="text-gray-700 text-sm leading-relaxed mb-3">
-        Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões
-        e o entrega a todas as suas células - vinte vezes por minuto. As células precisam do oxigênio
-        para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.
-      </p>
-      <p className="text-gray-700 text-sm leading-relaxed mb-3">
-        Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento,
-        e o leva para que você o expire no ar do mundo.
-      </p>
-      <p className="text-gray-700 text-sm leading-relaxed mb-3">
-        No ambiente, uma proteína verde - a clorofila - a mãe da Hemoglobina,
-        usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
-        devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
-      </p>
-      <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-        <p className="text-red-800 text-sm leading-relaxed font-medium">
-          Portanto, é importante saber sobre sua Hemoglobina, o seu Ferro e a sua produção
-          de células vermelhas - conhecer o seu Eritron.
-        </p>
-        <p className="text-red-700 text-sm font-bold mt-2">Nós te ajudamos.</p>
-      </div>
-    </div>
-  )
-
   return (
     <div className="min-h-screen bg-gray-50">
 
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
-            style={{ filter: 'brightness(10)' }} />
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
-            <p className="text-red-200 text-xs truncate">Calculadora Clínica - Eritron e Metabolismo do Ferro</p>
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <div style={{ width: '56px' }} />
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
+              style={{ filter: 'brightness(10)' }} />
+            <div>
+              <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
+              <p className="text-red-200 text-xs">Calculadora Clínica - Eritron e Metabolismo do Ferro</p>
+            </div>
           </div>
           <button onClick={() => setShowSobre(true)}
-            className="bg-red-800 hover:bg-red-900 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors">
+            className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
             Sobre
           </button>
         </div>
@@ -226,7 +187,14 @@ export default function Calculator() {
               <img src={heroImg} alt="RedFairy"
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
-                {modalTexto}
+                <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
+                  Eu sou a sua fada vermelha, a sua{' '}
+                  <span style={{ fontWeight: 'bold', color: '#fca5a5' }}>HEMOGLOBINA</span>.
+                  <br />
+                  Eu uso a poeira das estrelas para te entregar o ar.
+                  <br />
+                  <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
+                </p>
               </div>
             </div>
             <div style={{ padding: '20px' }}>
@@ -236,7 +204,36 @@ export default function Calculator() {
                   Saiba Mais
                 </button>
               )}
-              {showSaibaMais && modalSaibaMais}
+              {showSaibaMais && (
+                <div style={{ marginBottom: '16px' }}>
+                  <h3 className="text-red-700 font-bold text-base text-center mb-4">Vida e ventilação e perfusão</h3>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
+                    O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência.
+                    Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais importante da sua vida.
+                  </p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
+                    Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões
+                    e o entrega a todas as suas células - vinte vezes por minuto. As células precisam do oxigênio
+                    para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.
+                  </p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
+                    Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento,
+                    e o leva para que você o expire no ar do mundo.
+                  </p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
+                    No ambiente, uma proteína verde - a <strong>clorofila</strong>, mãe da Hemoglobina -
+                    usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
+                    devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
+                  </p>
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <p className="text-red-800 text-sm leading-relaxed font-medium">
+                      Portanto, é importante saber sobre sua Hemoglobina, o seu Ferro e a sua produção
+                      de células vermelhas - conhecer o seu Eritron.
+                    </p>
+                    <p className="text-red-700 text-sm font-bold mt-2">Nós te ajudamos.</p>
+                  </div>
+                </div>
+              )}
               <button onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
                 Fechar
