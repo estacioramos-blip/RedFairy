@@ -186,16 +186,20 @@ export default function Calculator({ onVoltar }) {
           <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl"
             style={{ maxHeight: '90vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
-  <div style={{ textAlign: 'center' }}>
-    <div style={{ color: '#fca5a5', fontSize: '48px', lineHeight: '0.5', marginBottom: '8px', fontFamily: 'Georgia, serif' }}>"</div>
-    <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
-      Eu sou a sua fada vermelha, a sua <span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>.
-      <br />
-      Eu uso a poeira das estrelas para te entregar o ar.
-      <br />
-      <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
-    </p>
+           <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
+  <img src={heroImg} alt="RedFairy"
+    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
+<div style={{ textAlign: 'left' }}>
+
+      <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
+        Eu sou a sua fada vermelha, a sua <span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>.
+        <br />
+        Eu uso a poeira das estrelas para te entregar o ar.
+        <br />
+        <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
+      </p>
+    </div>
   </div>
 </div>
             <div style={{ padding: '20px' }}>
