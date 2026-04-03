@@ -65,12 +65,12 @@ function ModalFerroEV({ onClose, hbAtual, sexo }) {
 
             {/* Opção 1 — Ferro Sacarato */}
             <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
-              <p className="font-semibold text-gray-800">Opção 1 — Ferro Sacarato (200 mg/ampola)</p>
-              <p>• Diluir <strong>200 mg</strong> em <strong>100 mL de SF 0,9%</strong></p>
-              <p>• Infundir em <strong>30–60 minutos</strong></p>
-              <p>• Intervalo mínimo entre sessões: <strong>48–72 horas</strong></p>
-              <p>• Sessões necessárias: <strong>{sessoes} sessão(ões) de 200 mg</strong></p>
-            </div>
+  <p className="font-semibold text-gray-800">Opção 1 — Ferro Sacarato (100 mg/ampola)</p>
+  <p>• Usar <strong>2 ampolas (200 mg)</strong> por sessão, diluídas em <strong>100 mL de SF 0,9%</strong></p>
+  <p>• Infundir em <strong>30–60 minutos</strong></p>
+  <p>• Intervalo mínimo entre sessões: <strong>48–72 horas</strong></p>
+  <p>• Sessões necessárias: <strong>{sessoes} sessão(ões) de 200 mg</strong></p>
+</div>
 
             {/* Opção 2 — Ferrinject */}
             <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
