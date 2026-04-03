@@ -47,7 +47,7 @@ export default function App() {
       />
 
       <div
-        className="relative z-10 flex flex-col items-center"
+        className="relative z-10 flex flex-col items-center w-full"
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? 'translateY(0)' : 'translateY(24px)',
@@ -75,7 +75,6 @@ export default function App() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-xl items-stretch">
 
-          {/* Modo Médico */}
           <button
             onClick={() => { setCalcKey(k => k + 1); setModo('calculadora') }}
             className="group relative overflow-hidden rounded-2xl p-7 text-left transition-all duration-300 flex flex-col"
@@ -94,7 +93,6 @@ export default function App() {
             <div className="absolute bottom-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-lg">→</div>
           </button>
 
-          {/* Modo Paciente */}
           <button
             onClick={() => setModo('paciente')}
             className="group relative overflow-hidden rounded-2xl p-7 text-left transition-all duration-300 flex flex-col"
@@ -113,6 +111,13 @@ export default function App() {
             <div className="absolute bottom-4 right-4 text-red-200 opacity-0 group-hover:opacity-100 transition-opacity text-lg">→</div>
           </button>
         </div>
+
+        {/* RODAPÉ */}
+        <div className="mt-10 flex flex-col items-center gap-1">
+          <p className="text-gray-500 text-xs tracking-wide">by cytomica.com</p>
+          <p className="text-gray-500 text-xs">© 2026</p>
+        </div>
+
       </div>
     </div>
   )
