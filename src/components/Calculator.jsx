@@ -209,7 +209,7 @@ export default function Calculator({ onVoltar }) {
               )}
               {showSaibaMais && (
                 <div style={{ marginBottom: '16px' }}>
-                  <h3 className="text-red-700 font-bold text-base text-center mb-4">Vida e ventilação e perfusão</h3>
+                  <h3 className="text-red-700 font-bold text-base text-center mb-4">Vida é ventilação e perfusão</h3>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
                     O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência.
                     Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais importante da sua vida.
