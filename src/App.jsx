@@ -106,9 +106,10 @@ export default function App() {
           </button>
         </div>
 
-        <div className="mt-10 flex flex-col items-center gap-1">
-          <p className="text-gray-500 text-xs tracking-wide">by cytomica.com</p>
-          <p className="text-gray-500 text-xs">© 2026</p>
+        <div className="mt-10 flex flex-col items-center gap-1 text-center">
+          <p className="text-gray-500 text-xs tracking-wide">by cytomica.com | © 2026</p>
+          <p className="text-gray-600 text-xs">E.F. Ramos, M.D. CRM 6302 BA | RQE 5830 * 5643 * 27847</p>
+          <p className="text-red-700 text-xs">drestacioramos.com.br</p>
         </div>
 
       </div>
