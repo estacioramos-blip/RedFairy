@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { avaliarPaciente } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
 import heroImg from '../assets/redfairy-hero.png'
 import logo from '../assets/logo.png'
@@ -44,6 +43,7 @@ export default function PatientDashboard({ session, onVoltar }) {
   }
 
   async function handleAvaliar() {
+     if (!profile) return 
     const idade = calcularIdade(profile.data_nascimento)
     const inputsNumericos = {
       ...inputs,
