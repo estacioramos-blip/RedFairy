@@ -28,6 +28,11 @@ export default function PatientDashboard({ session, onVoltar }) {
     setLoading(true)
     const { data: prof } = await supabase
       .from('profiles').select('*').eq('id', session.user.id).single()
+    if (!prof) {
+      await supabase.auth.signOut()
+      onVoltar()
+      return
+    }
     setProfile(prof)
     const { data: avals } = await supabase
       .from('avaliacoes').select('*')
