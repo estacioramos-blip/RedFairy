@@ -140,8 +140,6 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
         </div>
 
         <div className="p-6 space-y-4">
-
-          {/* Alerta Hb */}
           {!hbSegura && (
             <div className="bg-red-50 border border-red-400 rounded-xl p-4 text-sm text-red-800">
               <p className="font-bold">⛔ Atenção!</p>
@@ -149,7 +147,6 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
             </div>
           )}
 
-          {/* Policitemia Vera */}
           {isPolicitemiaVera && (
             <div className="bg-orange-50 border border-orange-300 rounded-xl p-4 text-sm text-orange-800">
               <p className="font-bold">⚠️ Policitemia Vera</p>
@@ -157,7 +154,6 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
             </div>
           )}
 
-          {/* Peso */}
           {!calculado && (
             <div className="space-y-3">
               <p className="text-sm text-gray-600">Informe o peso do paciente para calcular o volume por sessão:</p>
@@ -176,11 +172,8 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
             </div>
           )}
 
-          {/* Resultado */}
           {calculado && resultado && (
             <div className="space-y-3">
-
-              {/* Volume */}
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-2">
                 <p className="text-xs font-bold text-red-700 uppercase tracking-wide">Volume por Sessão</p>
                 <div className="bg-red-700 text-white rounded-lg px-4 py-2 text-center">
@@ -190,7 +183,6 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
                 </div>
               </div>
 
-              {/* Intervalo e estimativa */}
               <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
                 <p className="font-semibold text-gray-800">Planejamento</p>
                 <p>• Intervalo recomendado: <strong>{resultado.intervalo} dias</strong></p>
@@ -202,17 +194,15 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
                 </p>
               </div>
 
-              {/* Segurança */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800 space-y-2">
                 <p className="font-semibold">⚠️ Segurança:</p>
                 <p>• Suspender se Hb cair abaixo de <strong>{resultado.hbMin} g/dL</strong></p>
                 <p>• Verificar Hb e pressão arterial antes de cada sessão</p>
                 <p>• <strong>Não realizar</strong> se pressão arterial sistólica &gt; <strong>160 mmHg</strong></p>
-                <p>• O paciente deve consumir <strong>{isotonico}</strong> de bebida isotônica (Gatorade, Powerade ou similar) <strong>30 minutos antes</strong> do procedimento, para reduzir o risco de queda pressórica</p>
+                <p>• O paciente deve consumir <strong>{isotonico}</strong> de bebida isotônica (Gatorade, Powerade ou similar) <strong>30 minutos antes</strong> do procedimento</p>
                 <p>• Observar por <strong>15–30 min</strong> após o procedimento</p>
               </div>
 
-              {/* Técnica */}
               <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
                 <p className="font-semibold text-gray-800">Técnica:</p>
                 <p>• Acesso venoso periférico calibroso</p>
@@ -242,11 +232,50 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
+  // ── Combinação não reconhecida ────────────────────────────────────────────
   if (!resultado.encontrado) {
     return (
-      <div className="bg-gray-100 border border-gray-300 rounded-2xl p-6 text-center text-gray-600">
-        <p className="text-lg font-medium">⚠️ Combinação não encontrada</p>
-        <p className="text-sm mt-2">{resultado.mensagem}</p>
+      <div className="bg-white border-2 border-amber-300 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-amber-50 px-6 py-5 flex items-start gap-4">
+          <span style={{ fontSize: '28px', lineHeight: 1 }}>🔍</span>
+          <div>
+            <p className="font-semibold text-amber-800 text-base">
+              Combinação não reconhecida pelo algoritmo
+            </p>
+            <p className="text-amber-700 text-sm mt-1 leading-relaxed">
+              Os valores informados não correspondem a nenhum padrão catalogado.
+              Isso pode indicar um resultado laboratorial atípico, um erro de digitação,
+              ou uma combinação que ainda não está mapeada no RedFairy.
+            </p>
+          </div>
+        </div>
+        <div className="px-6 py-4 space-y-3">
+          <p className="text-sm font-semibold text-gray-600">O que fazer:</p>
+          <div className="space-y-2">
+            <div className="flex items-start gap-3 text-sm text-gray-700">
+              <span className="text-amber-500 mt-0.5">①</span>
+              <span>Confira se os valores foram digitados corretamente, comparando com o laudo original.</span>
+            </div>
+            <div className="flex items-start gap-3 text-sm text-gray-700">
+              <span className="text-amber-500 mt-0.5">②</span>
+              <span>Verifique se o laboratório utilizou as mesmas unidades de medida (ng/mL, g/dL, fL, %).</span>
+            </div>
+            <div className="flex items-start gap-3 text-sm text-gray-700">
+              <span className="text-amber-500 mt-0.5">③</span>
+              <span>Se os valores estiverem corretos, consulte seu médico — resultados muito atípicos podem indicar erro laboratorial ou condição clínica rara.</span>
+            </div>
+          </div>
+          <div className="bg-gray-50 rounded-xl p-3 mt-2 border border-gray-100">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Valores informados</p>
+            <p className="text-xs text-gray-500 font-mono leading-relaxed">
+              Hb: {resultado.mensagem.match(/Hb=([\d.]+)/)?.[1] ?? '—'} g/dL &nbsp;|&nbsp;
+              Ferritina: {resultado.mensagem.match(/Ferritina=([\d.]+)/)?.[1] ?? '—'} ng/mL &nbsp;|&nbsp;
+              VCM: {resultado.mensagem.match(/VCM=([\d.]+)/)?.[1] ?? '—'} fL<br/>
+              RDW: {resultado.mensagem.match(/RDW=([\d.]+)/)?.[1] ?? '—'} % &nbsp;|&nbsp;
+              Sat: {resultado.mensagem.match(/Sat=([\d.]+)/)?.[1] ?? '—'} %
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
