@@ -230,10 +230,14 @@ export default function Calculator({ onVoltar }) {
                     usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
                     devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
                   </p>
+                  <div className="mt-4 bg-pink-50 border-2 border-red-400 rounded-xl p-4 text-center">
+                    <p className="text-black font-bold text-sm">Portanto, é importante que você cuide da sua Hemoglobina.</p>
+                    <p className="text-black font-bold text-sm mt-2">Nós ajudamos.</p>
+                  </div>
                   <div className="mt-4 text-center">
-  <p className="text-gray-500 text-xs font-medium">RT | E.F. Ramos, M.D.</p>
-  <p className="text-red-700 text-xs mt-1">drestacioramos.com.br</p>
-</div>
+                    <p className="text-gray-500 text-xs font-medium">RT | E.F. Ramos, M.D.</p>
+                    <p className="text-red-700 text-xs mt-1">drestacioramos.com.br</p>
+                  </div>
                 </div>
               )}
               <button onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}
