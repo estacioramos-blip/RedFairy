@@ -93,7 +93,7 @@ function CadastraMedico({ onConcluir }) {
     if (existing) {
       // Já cadastrado — salva no localStorage e vai para calculadora
       localStorage.setItem('medico_crm', crmLimpo)
-      onConcluir()
+      onConcluir(existing.nome || '', crmLimpo)
       return
     }
 
@@ -112,8 +112,9 @@ function CadastraMedico({ onConcluir }) {
     }
 
     localStorage.setItem('medico_crm', crmLimpo)
+    localStorage.setItem('medico_nome', nome.trim())
     setSucesso(true)
-    setTimeout(() => onConcluir(), 2500)
+    setTimeout(() => onConcluir(nome.trim(), crmLimpo), 2500)
   }
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -222,24 +223,33 @@ function CadastraMedico({ onConcluir }) {
 
 // ─── Calculator principal ────────────────────────────────────────────────────
 export default function Calculator({ onVoltar }) {
-  const [cadastrado, setCadastrado] = useState(null) // null = carregando
+  const [cadastrado, setCadastrado] = useState(null)
+  const [medicoNome, setMedicoNome] = useState('')
+  const [medicoCRM, setMedicoCRM] = useState('')
 
   useEffect(() => {
     const crm = localStorage.getItem('medico_crm')
+    const nome = localStorage.getItem('medico_nome')
     setCadastrado(!!crm)
+    setMedicoNome(nome || '')
+    setMedicoCRM(crm || '')
   }, [])
 
-  if (cadastrado === null) return null // carregando
+  if (cadastrado === null) return null
 
   if (!cadastrado) {
-    return <CadastraMedico onConcluir={() => setCadastrado(true)} />
+    return <CadastraMedico onConcluir={(nome, crm) => {
+      setMedicoNome(nome)
+      setMedicoCRM(crm)
+      setCadastrado(true)
+    }} />
   }
 
-  return <CalculatorForm onVoltar={onVoltar} />
+  return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} />
 }
 
 // ─── Formulário da calculadora ───────────────────────────────────────────────
-function CalculatorForm({ onVoltar }) {
+function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
   const [inputs, setInputs] = useState({
     cpf: '',
     sexo: 'M',
@@ -373,10 +383,21 @@ function CalculatorForm({ onVoltar }) {
               <p className="text-red-200 text-xs">Calculadora Clínica - Eritron e Metabolismo do Ferro</p>
             </div>
           </div>
-          <button onClick={() => setShowSobre(true)}
-            className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
-            Sobre
-          </button>
+          <div className="flex items-center gap-2">
+            {medicoNome && (
+              <div title={`${medicoNome} | ${medicoCRM}`}
+                className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 cursor-default"
+                style={{ border: '2px solid rgba(255,255,255,0.4)' }}>
+                <span className="text-red-700 font-black text-xs">
+                  {medicoNome.split(' ').slice(0,2).map(p => p[0]).join('').toUpperCase()}
+                </span>
+              </div>
+            )}
+            <button onClick={() => setShowSobre(true)}
+              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+              Sobre
+            </button>
+          </div>
         </div>
       </header>
 
