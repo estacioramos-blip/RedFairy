@@ -245,7 +245,7 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
             <p className="text-amber-700 text-sm mt-1 leading-relaxed">
               Os valores informados não correspondem a nenhum padrão catalogado.
               Isso pode indicar um resultado laboratorial atípico, um erro de digitação,
-              ou uma combinação que ainda não está mapeada no RedFairy, ou corresponder ao efeito de medicamentos ministrados recentemente, alterando os parâmetros de forma incomum.
+              ou uma combinação que ainda não está mapeada no RedFairy.
             </p>
           </div>
         </div>

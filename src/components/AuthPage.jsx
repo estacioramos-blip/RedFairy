@@ -2,6 +2,65 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 
+// ─── VALIDAÇÃO REAL DE CPF ───────────────────────────────────────────────────
+function validarCPF(cpf) {
+  const c = cpf.replace(/\D/g, '')
+  if (c.length !== 11) return false
+  if (/^(\d)\1{10}$/.test(c)) return false // todos iguais
+  let soma = 0
+  for (let i = 0; i < 9; i++) soma += Number(c[i]) * (10 - i)
+  let r = (soma * 10) % 11
+  if (r === 10 || r === 11) r = 0
+  if (r !== Number(c[9])) return false
+  soma = 0
+  for (let i = 0; i < 10; i++) soma += Number(c[i]) * (11 - i)
+  r = (soma * 10) % 11
+  if (r === 10 || r === 11) r = 0
+  return r === Number(c[10])
+}
+
+// ─── MÁSCARA CPF ─────────────────────────────────────────────────────────────
+function mascaraCPF(valor) {
+  return valor
+    .replace(/\D/g, '')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+    .slice(0, 14)
+}
+
+// ─── MÁSCARA DATA ─────────────────────────────────────────────────────────────
+function mascaraData(valor) {
+  return valor
+    .replace(/\D/g, '')
+    .replace(/(\d{2})(\d)/, '$1/$2')
+    .replace(/(\d{2})(\d)/, '$1/$2')
+    .slice(0, 10)
+}
+
+// ─── VALIDAR DATA E IDADE ────────────────────────────────────────────────────
+function validarDataIdade(dataStr) {
+  const partes = dataStr.split('/')
+  if (partes.length !== 3 || partes[2].length !== 4) return { ok: false, msg: 'Data inválida.' }
+  const [dia, mes, ano] = partes.map(Number)
+  const data = new Date(ano, mes - 1, dia)
+  if (data.getDate() !== dia || data.getMonth() !== mes - 1 || data.getFullYear() !== ano)
+    return { ok: false, msg: 'Data inválida.' }
+  const hoje = new Date()
+  let idade = hoje.getFullYear() - ano
+  const m = hoje.getMonth() - (mes - 1)
+  if (m < 0 || (m === 0 && hoje.getDate() < dia)) idade--
+  if (idade < 12) return { ok: false, msg: 'Idade mínima: 12 anos.' }
+  if (idade > 100) return { ok: false, msg: 'Data de nascimento inválida.' }
+  return { ok: true, idade }
+}
+
+// ─── FORMATAR DATA PARA BANCO ────────────────────────────────────────────────
+function formatarDataParaBanco(dataStr) {
+  const [dia, mes, ano] = dataStr.split('/')
+  return `${ano}-${mes.padStart(2,'0')}-${dia.padStart(2,'0')}`
+}
+
 export default function AuthPage({ onVoltar }) {
   const [etapa, setEtapa] = useState('cpf')
   const [cpf, setCpf] = useState('')
@@ -16,25 +75,52 @@ export default function AuthPage({ onVoltar }) {
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
   const [avaliacoesPendentes, setAvaliacoesPendentes] = useState(0)
+  const [cpfValido, setCpfValido] = useState(null)
+  const [dataValida, setDataValida] = useState(null)
 
   const emailOk = emailConfirm && email === emailConfirm
   const emailErro = emailConfirm && email !== emailConfirm
   const senhaOk = senhaConfirm && senha === senhaConfirm
   const senhaErro = senhaConfirm && senha !== senhaConfirm
 
+  function handleCpfChange(e) {
+    const masked = mascaraCPF(e.target.value)
+    setCpf(masked)
+    setErro('')
+    const limpo = masked.replace(/\D/g, '')
+    if (limpo.length === 11) {
+      setCpfValido(validarCPF(limpo))
+    } else {
+      setCpfValido(null)
+    }
+  }
+
+  function handleDataChange(e) {
+    const masked = mascaraData(e.target.value)
+    setDataNascimento(masked)
+    setErro('')
+    if (masked.length === 10) {
+      const result = validarDataIdade(masked)
+      setDataValida(result)
+    } else {
+      setDataValida(null)
+    }
+  }
+
   async function handleCPF() {
-    if (!cpf.trim()) { setErro('Informe o CPF.'); return }
+    const limpo = cpf.replace(/\D/g, '')
+    if (limpo.length !== 11) { setErro('CPF incompleto.'); return }
+    if (!validarCPF(limpo)) { setErro('CPF inválido.'); return }
     setLoading(true)
     setErro('')
-    const cpfLimpo = cpf.replace(/\D/g, '')
 
     const { data: perfil } = await supabase
-      .from('profiles').select('id').eq('cpf', cpfLimpo).single()
+      .from('profiles').select('id').eq('cpf', limpo).single()
 
     const { count } = await supabase
       .from('avaliacoes')
       .select('*', { count: 'exact', head: true })
-      .eq('cpf', cpfLimpo)
+      .eq('cpf', limpo)
       .is('user_id', null)
 
     setAvaliacoesPendentes(count || 0)
@@ -61,6 +147,9 @@ export default function AuthPage({ onVoltar }) {
   async function handleCadastro() {
     if (!emailOk) { setErro('Os e-mails não coincidem.'); return }
     if (!senhaOk) { setErro('As senhas não coincidem.'); return }
+    if (!dataValida || !dataValida.ok) { setErro(dataValida?.msg || 'Data de nascimento inválida.'); return }
+    if (!nome.trim()) { setErro('Informe o nome completo.'); return }
+
     setLoading(true)
     setErro('')
 
@@ -75,14 +164,11 @@ export default function AuthPage({ onVoltar }) {
 
     if (data.user) {
       const cpfLimpo = cpf.replace(/\D/g, '')
-      const partes = dataNascimento.split('/')
-      const dataFormatada = partes.length === 3
-        ? `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`
-        : dataNascimento
-
       await supabase.from('profiles').insert({
-        id: data.user.id, nome, sexo,
-        data_nascimento: dataFormatada,
+        id: data.user.id,
+        nome,
+        sexo,
+        data_nascimento: formatarDataParaBanco(dataNascimento),
         cpf: cpfLimpo,
       })
 
@@ -103,10 +189,10 @@ export default function AuthPage({ onVoltar }) {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 relative">
 
       <button onClick={onVoltar}
-  className="absolute top-4 left-4 text-white px-3 py-1 rounded-lg text-xs font-medium shadow transition-colors"
-  style={{ backgroundColor: '#991b1b' }}>
-  Voltar
-</button>
+        className="absolute top-4 left-4 text-white px-3 py-1 rounded-lg text-xs font-medium shadow transition-colors"
+        style={{ backgroundColor: '#991b1b' }}>
+        Voltar
+      </button>
 
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
 
@@ -128,13 +214,15 @@ export default function AuthPage({ onVoltar }) {
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">CPF</label>
               <input type="text" value={cpf}
-                onChange={e => { setCpf(e.target.value); setErro('') }}
+                onChange={handleCpfChange}
                 placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
-                className={inputClass} />
+                className={`${inputClass} ${cpfValido === false ? 'border-red-400' : cpfValido === true ? 'border-green-400' : ''}`} />
+              {cpfValido === false && <p className="text-red-500 text-xs mt-1">CPF inválido.</p>}
+              {cpfValido === true && <p className="text-green-500 text-xs mt-1">✓ CPF válido.</p>}
             </div>
             {erro && <p className="text-red-500 text-sm">{erro}</p>}
-            <button onClick={handleCPF} disabled={loading}
-              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
+            <button onClick={handleCPF} disabled={loading || !cpfValido}
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? 'Verificando...' : 'Continuar'}
             </button>
           </div>
@@ -197,9 +285,11 @@ export default function AuthPage({ onVoltar }) {
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Nascimento</label>
                 <input type="text" value={dataNascimento}
-                  onChange={e => setDataNascimento(e.target.value)}
+                  onChange={handleDataChange}
                   placeholder="DD/MM/AAAA" maxLength={10} inputMode="numeric"
-                  className={inputClass} />
+                  className={`${inputClass} ${dataValida && !dataValida.ok ? 'border-red-400' : dataValida?.ok ? 'border-green-400' : ''}`} />
+                {dataValida && !dataValida.ok && <p className="text-red-500 text-xs mt-1">{dataValida.msg}</p>}
+                {dataValida?.ok && <p className="text-green-500 text-xs mt-1">✓ {dataValida.idade} anos.</p>}
               </div>
             </div>
             <div>
@@ -232,7 +322,8 @@ export default function AuthPage({ onVoltar }) {
             )}
             {erro && <p className="text-red-500 text-sm">{erro}</p>}
             {sucesso && <p className="text-green-600 text-sm">{sucesso}</p>}
-            <button onClick={handleCadastro} disabled={loading || !emailOk || !senhaOk}
+            <button onClick={handleCadastro}
+              disabled={loading || !emailOk || !senhaOk || !dataValida?.ok || !nome.trim()}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? 'Aguarde...' : 'Criar conta'}
             </button>
