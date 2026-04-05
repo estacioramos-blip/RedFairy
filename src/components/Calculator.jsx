@@ -114,7 +114,6 @@ function CadastraMedico({ onConcluir }) {
     localStorage.setItem('medico_crm', crmLimpo)
     localStorage.setItem('medico_nome', nome.trim())
     setSucesso(true)
-    setTimeout(() => onConcluir(nome.trim(), crmLimpo), 2500)
   }
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -122,13 +121,17 @@ function CadastraMedico({ onConcluir }) {
   if (sucesso) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center space-y-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center space-y-5">
           <div className="text-5xl">🎉</div>
           <h2 className="text-xl font-bold text-red-700">Bem-vindo ao RedFairy!</h2>
           <p className="text-gray-600 text-sm leading-relaxed">
             Obrigado pelo cadastro. Em breve entraremos em contato para mostrar como você pode se beneficiar ao ajudar os seus pacientes.
           </p>
-          <p className="text-gray-400 text-xs">Abrindo a calculadora...</p>
+          <button
+            onClick={() => onConcluir(nome.trim(), crm.trim().toUpperCase())}
+            className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
+            Vamos lá! →
+          </button>
         </div>
       </div>
     )
