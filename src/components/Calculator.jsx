@@ -40,6 +40,7 @@ const IconMedicamentos = () => (
 
 // ─── Tela de cadastro do médico ──────────────────────────────────────────────
 function CadastraMedico({ onConcluir }) {
+  const [nome, setNome] = useState('')
   const [crm, setCrm] = useState('')
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
@@ -64,6 +65,9 @@ function CadastraMedico({ onConcluir }) {
     const crmLimpo = crm.trim().toUpperCase()
     const celularDigits = celular.replace(/\D/g, '')
 
+    if (!nome.trim() || nome.trim().length < 5) {
+      setErro('Informe seu nome completo'); return
+    }
     if (!crmLimpo || !crmLimpo.includes('/')) {
       setErro('Informe o CRM no formato NÚMERO/UF (ex: 6302/BA)'); return
     }
@@ -94,6 +98,7 @@ function CadastraMedico({ onConcluir }) {
     }
 
     const { error } = await supabase.from('medicos').insert({
+      nome: nome.trim(),
       crm: crmLimpo,
       uf,
       celular: celularDigits,
@@ -148,6 +153,17 @@ function CadastraMedico({ onConcluir }) {
         </div>
 
         <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
+            <input
+              type="text"
+              value={nome}
+              onChange={e => setNome(e.target.value)}
+              placeholder="Dr. João da Silva"
+              className={inputClass}
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">CRM/UF</label>
             <input
