@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { avaliarPaciente, formatarParaCopiar } from '../engine/decisionEngine';
 import ResultCard from './ResultCard';
@@ -38,7 +38,192 @@ const IconMedicamentos = () => (
   </svg>
 )
 
+// ─── Tela de cadastro do médico ──────────────────────────────────────────────
+function CadastraMedico({ onConcluir }) {
+  const [crm, setCrm] = useState('')
+  const [celular, setCelular] = useState('')
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [erro, setErro] = useState('')
+  const [sucesso, setSucesso] = useState(false)
+
+  function formatarCelular(valor) {
+    const digits = valor.replace(/\D/g, '').slice(0, 11)
+    if (digits.length <= 2) return `(${digits}`
+    if (digits.length <= 7) return `(${digits.slice(0,2)}) ${digits.slice(2)}`
+    return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`
+  }
+
+  function formatarCRM(valor) {
+    // Permite apenas números e barra, ex: 6302/BA
+    return valor.toUpperCase().replace(/[^0-9/A-Z]/g, '').slice(0, 10)
+  }
+
+  async function handleSubmit() {
+    setErro('')
+    const crmLimpo = crm.trim().toUpperCase()
+    const celularDigits = celular.replace(/\D/g, '')
+
+    if (!crmLimpo || !crmLimpo.includes('/')) {
+      setErro('Informe o CRM no formato NÚMERO/UF (ex: 6302/BA)'); return
+    }
+    if (celularDigits.length < 10) {
+      setErro('Informe um celular válido com DDD'); return
+    }
+    if (!email || !email.includes('@')) {
+      setErro('Informe um e-mail válido'); return
+    }
+
+    setLoading(true)
+    const partes = crmLimpo.split('/')
+    const numero = partes[0]
+    const uf = partes[1]
+
+    // Verifica se já existe
+    const { data: existing } = await supabase
+      .from('medicos')
+      .select('id')
+      .eq('crm', crmLimpo)
+      .single()
+
+    if (existing) {
+      // Já cadastrado — salva no localStorage e vai para calculadora
+      localStorage.setItem('medico_crm', crmLimpo)
+      onConcluir()
+      return
+    }
+
+    const { error } = await supabase.from('medicos').insert({
+      crm: crmLimpo,
+      uf,
+      celular: celularDigits,
+      email: email.trim().toLowerCase(),
+    })
+
+    setLoading(false)
+
+    if (error) {
+      setErro('Erro ao salvar. Tente novamente.'); return
+    }
+
+    localStorage.setItem('medico_crm', crmLimpo)
+    setSucesso(true)
+    setTimeout(() => onConcluir(), 2500)
+  }
+
+  const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+
+  if (sucesso) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+        <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center space-y-4">
+          <div className="text-5xl">🎉</div>
+          <h2 className="text-xl font-bold text-red-700">Bem-vindo ao RedFairy!</h2>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            Obrigado pelo cadastro. Em breve entraremos em contato para mostrar como você pode se beneficiar ao ajudar os seus pacientes.
+          </p>
+          <p className="text-gray-400 text-xs">Abrindo a calculadora...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md space-y-5">
+
+        <div className="text-center">
+          <img src={logo} alt="RedFairy"
+            className="w-16 h-16 object-contain mx-auto mb-3"
+            style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }} />
+          <h2 className="text-xl font-bold text-red-700">Olá, Doutor!</h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Parece que é a sua primeira vez aqui.
+          </p>
+        </div>
+
+        <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-800 leading-relaxed">
+          Informe seus dados para começar. É totalmente seguro.
+          Depois entraremos em contato para você saber como vai se beneficiar ao ajudar os seus pacientes.
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">CRM/UF</label>
+            <input
+              type="text"
+              value={crm}
+              onChange={e => setCrm(formatarCRM(e.target.value))}
+              placeholder="Ex: 6302/BA"
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
+            <input
+              type="tel"
+              value={celular}
+              onChange={e => setCelular(formatarCelular(e.target.value))}
+              placeholder="(00) 00000-0000"
+              inputMode="numeric"
+              maxLength={15}
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        {erro && <p className="text-red-500 text-sm">{erro}</p>}
+
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+          {loading ? 'Aguarde...' : 'Continuar para a Calculadora →'}
+        </button>
+
+        <button
+          onClick={onConcluir}
+          className="w-full text-gray-400 text-xs hover:text-gray-600 transition-colors">
+          Pular por agora
+        </button>
+
+      </div>
+    </div>
+  )
+}
+
+// ─── Calculator principal ────────────────────────────────────────────────────
 export default function Calculator({ onVoltar }) {
+  const [cadastrado, setCadastrado] = useState(null) // null = carregando
+
+  useEffect(() => {
+    const crm = localStorage.getItem('medico_crm')
+    setCadastrado(!!crm)
+  }, [])
+
+  if (cadastrado === null) return null // carregando
+
+  if (!cadastrado) {
+    return <CadastraMedico onConcluir={() => setCadastrado(true)} />
+  }
+
+  return <CalculatorForm onVoltar={onVoltar} />
+}
+
+// ─── Formulário da calculadora ───────────────────────────────────────────────
+function CalculatorForm({ onVoltar }) {
   const [inputs, setInputs] = useState({
     cpf: '',
     sexo: 'M',
@@ -190,8 +375,7 @@ export default function Calculator({ onVoltar }) {
   <img src={heroImg} alt="RedFairy"
     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
-<div style={{ textAlign: 'left' }}>
-
+    <div style={{ textAlign: 'left' }}>
       <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
         Eu sou a sua fada vermelha, a sua <span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>.
         <br />
