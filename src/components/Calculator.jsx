@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { avaliarPaciente, formatarParaCopiar } from '../engine/decisionEngine';
 import ResultCard from './ResultCard';
@@ -280,6 +280,66 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
   const [erros, setErros] = useState({});
   const [showSobre, setShowSobre] = useState(false);
   const [showSaibaMais, setShowSaibaMais] = useState(false);
+  const [showDemoMenu, setShowDemoMenu] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
+  const logoClickTimer = useRef(null);
+
+
+  function carregarDemo(sexo) {
+    const hoje = new Date().toISOString().split('T')[0];
+    if (sexo === 'F') {
+      setInputs({
+        cpf: '', sexo: 'F', idade: '35', dataColeta: hoje,
+        ferritina: '8', hemoglobina: '10.5', vcm: '72', rdw: '16.5', satTransf: '8',
+        bariatrica: false, vegetariano: false, perda: true,
+        hipermenorreia: false, gestante: false, alcoolista: false,
+        transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: true,
+      });
+    } else {
+      setInputs({
+        cpf: '', sexo: 'M', idade: '42', dataColeta: hoje,
+        ferritina: '12', hemoglobina: '11.5', vcm: '75', rdw: '17', satTransf: '10',
+        bariatrica: false, vegetariano: false, perda: true,
+        hipermenorreia: false, gestante: false, alcoolista: false,
+        transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: true,
+      });
+    }
+    setResultado(null); setErros({});
+    setShowDemoMenu(false);
+  }
+
+  function handleLogoTripleClick() {
+    setLogoClicks(prev => {
+      const next = prev + 1;
+      if (logoClickTimer.current) clearTimeout(logoClickTimer.current);
+      logoClickTimer.current = setTimeout(() => setLogoClicks(0), 600);
+      if (next >= 3) {
+        setLogoClicks(0);
+        setShowDemoMenu(true);
+      }
+      return next;
+    });
+  }
+
+  // ─── Atalhos de teclado demo ─────────────────────────────────────────────
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (!e.ctrlKey || !e.shiftKey) return;
+      const hoje = new Date().toISOString().split('T')[0];
+      if (e.key === 'F' || e.key === 'f') {
+        e.preventDefault();
+        carregarDemo('F');
+      }
+
+      if (e.key === 'M' || e.key === 'm') {
+        e.preventDefault();
+        carregarDemo('M');
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -380,7 +440,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
           </button>
           <div className="flex items-center gap-3">
             <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
-              style={{ filter: 'brightness(10)' }} />
+              style={{ filter: 'brightness(10)', cursor: 'default' }}
+              onClick={handleLogoTripleClick} />
             <div>
               <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
               <p className="text-red-200 text-xs">Calculadora Clínica - Eritron e Metabolismo do Ferro</p>
@@ -403,6 +464,29 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
           </div>
         </div>
       </header>
+
+      {showDemoMenu && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowDemoMenu(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-64 space-y-4"
+            onClick={e => e.stopPropagation()}>
+            <p className="text-center text-sm font-bold text-gray-700">🧪 Modo Demo</p>
+            <p className="text-center text-xs text-gray-400">Escolha o perfil de teste</p>
+            <button onClick={() => carregarDemo('F')}
+              className="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-xl transition-colors">
+              👩 Paciente Feminina
+            </button>
+            <button onClick={() => carregarDemo('M')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
+              👨 Paciente Masculino
+            </button>
+            <button onClick={() => setShowDemoMenu(false)}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm py-2 rounded-xl transition-colors">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {showSobre && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
