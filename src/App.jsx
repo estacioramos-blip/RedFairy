@@ -5,7 +5,7 @@ import AuthPage from './components/AuthPage'
 import PatientDashboard from './components/PatientDashboard'
 import AdminPage from './components/AdminPage'
 import logo from './assets/logo.png'
-
+import LandingPage from './components/LandingPage'
 export default function App() {
   const [modo, setModo] = useState('home')
   const [session, setSession] = useState(null)
@@ -58,7 +58,14 @@ export default function App() {
   if (modo === 'admin') {
     return <AdminPage onVoltar={() => setModo('home')} />
   }
-
+if (modo === 'home') {
+  return (
+    <LandingPage
+      onModoMedico={() => { setCalcKey(k => k + 1); setModo('calculadora') }}
+      onModoPaciente={() => setModo('paciente')}
+    />
+  )
+}
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-gray-900">
       <div className="absolute inset-0 pointer-events-none" style={{
