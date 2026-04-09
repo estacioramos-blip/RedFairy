@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import logo from '../assets/logo.png'
-import filosofiaBg from '../../redfairy-filosofia-bg..png'
+import filosofiaBg from '../../redfairy-filosofia-bg.png'
 import fairy3 from '../../redfairy3.png'
 
 // ─── CSS injetado via useEffect ───────────────────────────────────────────────
