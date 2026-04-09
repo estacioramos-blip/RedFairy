@@ -19,6 +19,7 @@ const LANDING_CSS = `
   html { scroll-behavior: smooth; }
   body { font-family: 'DM Sans', -apple-system, sans-serif; color: var(--text); background: var(--white); line-height: 1.65; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
+  /* NAV */
   nav { position: fixed; top: 0; width: 100%; z-index: 100; padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; }
   nav.scrolled { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); box-shadow: 0 1px 8px rgba(0,0,0,0.04); }
   .nav-brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
@@ -33,28 +34,36 @@ const LANDING_CSS = `
   .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; flex-direction: column; gap: 4px; }
   .hamburger span { display: block; width: 20px; height: 2px; background: var(--text); border-radius: 2px; }
 
+  /* BUTTONS */
   .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.25s; font-family: inherit; }
   .btn-primary { background: var(--wine); color: var(--white); }
-  .btn-primary:hover { background: var(--cherry); transform: translateY(-2px); }
+  .btn-primary:hover { background: var(--cherry); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(123,30,30,0.3); }
   .btn-secondary { background: #9CA3AF; color: var(--white); border: 1.5px solid #9CA3AF; }
   .btn-secondary:hover { background: #374151; border-color: #374151; transform: translateY(-2px); }
 
+  /* WHATSAPP BUTTON */
+  .whatsapp-btn { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; width: 56px; height: 56px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; }
+  .whatsapp-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(37,211,102,0.5); }
+  .whatsapp-btn svg { width: 30px; height: 30px; fill: white; }
+
+  /* HERO */
   .hero { min-height: 100vh; display: flex; align-items: center; padding: 7rem 2rem 4rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); }
-  .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 4rem; align-items: center; }
+  .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 4rem; align-items: start; padding-top: 2rem; }
   .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: #374151; color: var(--white); padding: 0.6rem 1.5rem; border-radius: 10px; font-size: 0.82rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.5px; }
   .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--white); animation: pDot 2s ease-in-out infinite; }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-bottom: 1.2rem; font-weight: 700; }
   .hero h1 { font-size: 3.2rem; line-height: 1.15; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
   .hero h1 .red { color: var(--cherry); }
-  .hero-philosophy { font-style: italic; font-size: 1.15rem; color: var(--wine); margin-bottom: 0.8rem; line-height: 1.6; }
   .hero-desc { font-size: 1.05rem; color: var(--text-sec); max-width: 500px; line-height: 1.75; margin-bottom: 2rem; }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
   .trust-i { display: flex; align-items: center; gap: 0.35rem; }
   .trust-i svg { width: 15px; height: 15px; color: var(--cherry); }
   .trust-i span { font-size: 0.8rem; color: var(--text-light); }
-  .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+
+  /* HERO VISUAL — fada mais alta */
+  .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 1.2rem; padding-top: 1rem; }
   .fairy-showcase { width: 200px; height: 200px; }
   .fairy-showcase img { width: 100%; height: 100%; object-fit: contain; animation: floatFairy 4s ease-in-out infinite; }
   @keyframes floatFairy { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
@@ -62,42 +71,54 @@ const LANDING_CSS = `
   .fairy-quote p { font-size: 0.88rem; color: var(--wine); line-height: 1.6; }
   .fairy-quote .question { font-weight: 700; margin-top: 0.5rem; }
 
+  /* OBA HOME BTN */
   .oba-home-btn { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue-dark)); border-radius: 12px; padding: 1rem 1.5rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.2rem; transition: transform 0.2s, box-shadow 0.2s; width: 100%; max-width: 300px; box-shadow: 0 6px 25px rgba(232,114,12,0.3); }
   .oba-home-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(232,114,12,0.4); }
   .oba-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--oba-orange-light); font-weight: 700; }
   .oba-sub { font-size: 1rem; color: white; font-weight: 700; }
   .oba-link { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
 
+  /* HERO TEXTBOX — retângulo branco com frase em negrito */
   .hero-textbox { background: white; border: 1px solid var(--border2); border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow); transition: border-color 0.3s; margin-bottom: 1.5rem; cursor: default; position: relative; overflow: hidden; }
   .hero-textbox.reveal-img { border-color: var(--cherry); }
   .htb-content { position: relative; z-index: 1; }
+  .hero-philosophy { font-style: normal; font-weight: 700; font-size: 1.15rem; color: var(--wine); margin-top: 0.8rem; line-height: 1.6; }
 
+  /* CONTAINER */
   .container { max-width: 1140px; margin: 0 auto; padding: 0 2rem; }
   section { padding: 5.5rem 2rem; }
   .center { text-align: center; }
   .tag { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--wine); margin-bottom: 0.6rem; }
   .stitle { font-family: 'DM Serif Display', serif; font-size: 2.4rem; line-height: 1.25; color: var(--text); margin-bottom: 0.8rem; }
   .sdesc { font-size: 1rem; color: var(--text-sec); max-width: 580px; line-height: 1.75; }
+  .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
+  /* FILOSOFIA */
   .filosofia { position: relative; overflow: hidden; cursor: default; background: linear-gradient(170deg, #FEF2F2 0%, #FFF 60%); transition: background 0.5s; }
   .filosofia.reveal-img { background: linear-gradient(170deg, rgba(123,30,30,0.08) 0%, rgba(220,38,38,0.04) 60%); }
   .filosofia .container { position: relative; z-index: 1; }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; margin-top: 2.5rem; align-items: start; }
-  .filosofia-text p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; }
+  .filosofia-text p { font-size: 0.95rem; font-weight: 700; color: var(--text); line-height: 1.85; margin-bottom: 1rem; }
   .highlight-box { background: var(--wine); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
   .highlight-box p { color: white; font-weight: 700; font-size: 1rem; margin: 0; }
+
+  /* CICLO DA VIDA */
   .cycle-card { background: white; border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
   .cycle-card h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); margin-bottom: 1.2rem; font-weight: 700; }
   .cycle-step { display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
   .cycle-step:last-child { border-bottom: none; }
-  .cycle-step .icon { font-size: 1.2rem; min-width: 40px; text-align: center; display: flex; align-items: center; justify-content: center; }
+  .cycle-step .icon { font-size: 1.2rem; min-width: 36px; width: 36px; text-align: center; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .cycle-step .desc { font-size: 0.85rem; color: var(--text-sec); line-height: 1.6; padding-top: 0.1rem; }
-  .fairy-mini { width: 36px; height: 36px; object-fit: contain; }
+  .fairy-mini { width: 30px; height: 30px; object-fit: contain; }
 
-  .indicacoes-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 2rem; }
-  .ind { background: white; border: 1px solid var(--border2); border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; color: var(--text-sec); font-weight: 500; transition: all 0.2s; }
+  /* INDICAÇÕES — retângulos iguais com bolinha */
+  .indicacoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.6rem; margin-top: 2rem; }
+  .ind { background: white; border: 1px solid var(--border2); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-sec); font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+  .ind::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--wine-dark); display: block; }
   .ind:hover { border-color: var(--cherry); color: var(--cherry); background: var(--cherry-bg); }
+  .ind:hover::before { background: var(--cherry); }
 
+  /* TERAPÊUTICA */
   .terapeutica { background: var(--gray-bg); }
   .terap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.2rem; margin-top: 2.5rem; }
   .terap-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.8rem; transition: all 0.2s; }
@@ -106,17 +127,20 @@ const LANDING_CSS = `
   .terap-card h4 { font-size: 0.95rem; margin-bottom: 0.3rem; }
   .terap-card p { font-size: 0.83rem; color: var(--text-sec); }
 
+  /* COMO FUNCIONA */
   .como { background: var(--gray-bg); }
   .como-tabs-wrap { display: flex; justify-content: center; margin-top: 2rem; margin-bottom: 2.5rem; }
   .como-tabs { display: inline-flex; gap: 0.5rem; background: var(--border2); border-radius: 10px; padding: 4px; }
-  .como-tab { padding: 0.65rem 2.5rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer; background: none; color: var(--text-sec); transition: all 0.2s; font-family: inherit; }
-  .como-tab.active { background: white; color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .como-tab { padding: 0.85rem 2.5rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; background: none; color: var(--text-sec); transition: all 0.25s; font-family: inherit; }
+  .como-tab.active { background: var(--wine); color: white; box-shadow: 0 4px 14px rgba(123,30,30,0.25); }
+  .como-tab:not(.active):hover { background: #9CA3AF; color: white; transform: translateY(-1px); }
   .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
   .flow-step { text-align: center; }
   .flow-num { width: 40px; height: 40px; border-radius: 50%; background: var(--wine); color: white; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; }
   .flow-step h4 { font-size: 0.92rem; margin-bottom: 0.4rem; }
   .flow-step p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
 
+  /* REWARD BANNER */
   .reward-banner { background: linear-gradient(135deg, #1a3a1a, #22863A); border-radius: 14px; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
   .reward-text h4 { color: white; font-size: 1rem; margin-bottom: 0.3rem; }
   .reward-text p { color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.6; }
@@ -125,6 +149,7 @@ const LANDING_CSS = `
   .reward-klipbit span { color: white; font-size: 0.8rem; font-weight: 700; }
   .reward-amount { font-size: 2.2rem; font-weight: 800; color: #86EFAC; white-space: nowrap; }
 
+  /* PATIENT */
   .patient-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
   .pf-card { background: white; border-radius: 12px; padding: 1.2rem; text-align: center; border: 1px solid var(--border); }
   .pf-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
@@ -136,6 +161,7 @@ const LANDING_CSS = `
   .pix-methods { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
   .pix-tag { background: var(--gray-bg); border: 1px solid var(--border2); border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 0.8rem; color: var(--text-sec); }
 
+  /* PROJETO OBA */
   .oba { background: linear-gradient(170deg, var(--oba-blue-dark) 0%, #334155 60%, #1E293B 100%); color: var(--white); position: relative; overflow: hidden; }
   .oba::before { content: ''; position: absolute; top: -30%; right: -15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(232,114,12,0.12), transparent 70%); border-radius: 50%; }
   .oba .container { position: relative; z-index: 2; }
@@ -156,6 +182,7 @@ const LANDING_CSS = `
   .btn-oba-main { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue-dark)); color: var(--white); box-shadow: 0 6px 25px rgba(232,114,12,0.3); }
   .btn-oba-main:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(232,114,12,0.4); }
 
+  /* CTA FINAL */
   .cta-final { background: var(--gray-bg); }
   .cta-final .tag { color: var(--cherry); }
   .cta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
@@ -175,12 +202,14 @@ const LANDING_CSS = `
   .cta-doc li::before { content: '✓'; color: var(--cherry); font-weight: 700; }
   .cta-pat li { font-size: 0.84rem; color: rgba(255,255,255,0.9); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem; }
   .cta-pat li::before { content: '✓'; color: rgba(255,255,255,0.6); font-weight: 700; }
-  .btn-cta { width: 100%; display: flex; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.25s; }
-  .btn-cta-doc { background: var(--wine); color: var(--white); }
-  .btn-cta-doc:hover { background: var(--cherry); transform: translateY(-2px); }
-  .btn-cta-pat { background: rgba(255,255,255,0.15); color: var(--white); border: 1.5px solid rgba(255,255,255,0.3) !important; }
-  .btn-cta-pat:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); }
+  /* Botão Médico: vinho igual btn-primary */
+  .btn-cta-doc { width: 100%; display: flex; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.25s; background: var(--wine); color: var(--white); }
+  .btn-cta-doc:hover { background: var(--cherry); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(123,30,30,0.3); }
+  /* Botão Paciente: cinza igual btn-secondary */
+  .btn-cta-pat { width: 100%; display: flex; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: 1.5px solid #9CA3AF; cursor: pointer; font-family: inherit; transition: all 0.25s; background: #9CA3AF; color: var(--white); }
+  .btn-cta-pat:hover { background: #374151; border-color: #374151; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(55,65,81,0.3); }
 
+  /* FOOTER */
   footer { padding: 2.5rem 2rem; text-align: center; border-top: 1px solid var(--border); }
   .foot-brand { display: inline-flex; align-items: center; gap: 0.4rem; }
   .foot-brand img { height: 28px; }
@@ -191,11 +220,13 @@ const LANDING_CSS = `
   footer a { color: var(--text-sec); text-decoration: none; }
   footer a:hover { color: var(--wine); }
 
+  /* REVEAL */
   .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.65s ease, transform 0.65s ease; }
   .reveal.show { opacity: 1; transform: translateY(0); }
 
+  /* RESPONSIVE */
   @media (max-width: 900px) {
-    .hero-wrap { grid-template-columns: 1fr; text-align: center; }
+    .hero-wrap { grid-template-columns: 1fr; text-align: center; padding-top: 0; }
     .hero h1 { font-size: 2.5rem; }
     .hero-desc { margin: 0 auto 2rem; }
     .hero-actions { justify-content: center; }
@@ -209,18 +240,20 @@ const LANDING_CSS = `
     .flow { grid-template-columns: 1fr 1fr; }
     .patient-features { grid-template-columns: 1fr; }
     .reward-banner { flex-direction: column; text-align: center; }
+    .indicacoes-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
   }
 `
 
+// ─── Matriz RedFairy ──────────────────────────────────────────────────────────
 function rfInRange(v, r) { return v >= r.min && v <= r.max }
 function rfMatch(matrix, inp) {
   return matrix.find(id => {
     const c = id.conditions
-    if (!rfInRange(inp.ferritina,   c.ferritina))   return false
-    if (!rfInRange(inp.hemoglobina, c.hemoglobina)) return false
-    if (!rfInRange(inp.vcm,         c.vcm))         return false
-    if (!rfInRange(inp.rdw,         c.rdw))         return false
-    if (!rfInRange(inp.satTransf,   c.satTransf))   return false
+    if (!rfInRange(inp.ferritina,    c.ferritina))   return false
+    if (!rfInRange(inp.hemoglobina,  c.hemoglobina)) return false
+    if (!rfInRange(inp.vcm,          c.vcm))         return false
+    if (!rfInRange(inp.rdw,          c.rdw))         return false
+    if (!rfInRange(inp.satTransf,    c.satTransf))   return false
     if ((c.bariatrica  ?? false) !== (inp.bariatrica  ?? false)) return false
     if ((c.vegetariano ?? false) !== (inp.vegetariano ?? false)) return false
     if ((c.perda       ?? false) !== (inp.perda       ?? false)) return false
@@ -279,7 +312,7 @@ const rfMatrix = [
     conditions:{ ferritina:{min:0,max:24}, hemoglobina:{min:7.0,max:9.9}, vcm:{min:0,max:79}, rdw:{min:15.1,max:999}, satTransf:{min:0,max:19}, bariatrica:false, vegetariano:false, perda:true, alcoolista:false, transfundido:false },
     diag:'Anemia importante por deficiência de ferro possivelmente causada pela hemorragia, com sideropenia grave.',
     rec:'Avaliação urgente com hematologista. Ferro endovenoso indicado. Investigar causa do sangramento.' },
-  { id:82, label:'ANEMIA MACROCÍTICA — PROVÁVEL DÉFICIT DE FOLATOS', color:'orange',
+  { id:82, label:'ANEMIA MACROCÍTICA — DÉFICIT DE FOLATOS', color:'orange',
     conditions:{ ferritina:{min:25,max:150}, hemoglobina:{min:8.0,max:11.9}, vcm:{min:101,max:999}, rdw:{min:15.1,max:999}, satTransf:{min:20,max:50}, bariatrica:false, vegetariano:false, perda:false, alcoolista:true, transfundido:false },
     diag:'Anemia macrocítica em alcoolista — padrão compatível com deficiência de ácido fólico.',
     rec:'Avaliação com hematologista. Suplementação de ácido fólico essencial. Suspender o álcool.' },
@@ -297,11 +330,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
   const [navOpen,     setNavOpen]     = useState(false)
   const [activeTab,   setActiveTab]   = useState('medico')
   const [showFilImg,  setShowFilImg]  = useState(false)
-  const [showHtbImg,  setShowHtbImg] = useState(false)
-  const [rfSexo,      setRfSexo]     = useState('F')
+  const [showHtbImg,  setShowHtbImg]  = useState(false)
+  const [rfSexo,      setRfSexo]      = useState('F')
   const [rfResultado, setRfResultado] = useState(null)
-  const [rfErro,      setRfErro]     = useState('')
-  const [rfForm,      setRfForm]     = useState({
+  const [rfErro,      setRfErro]      = useState('')
+  const [rfForm,      setRfForm]      = useState({
     idade:'', hb:'', ferritina:'', vcm:'', rdw:'', sat:'',
     bariatrica:false, vegetariano:false, perda:false,
     alcoolista:false, transfundido:false,
@@ -320,7 +353,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
     }
     if (!document.getElementById('landing-fonts')) {
       const link = document.createElement('link')
-      link.id  = 'landing-fonts'
+      link.id   = 'landing-fonts'
       link.href = 'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=DM+Serif+Display:ital@0;1&display=swap'
       link.rel  = 'stylesheet'
       document.head.appendChild(link)
@@ -387,6 +420,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
   return (
     <div style={{ fontFamily:"'DM Sans', sans-serif" }}>
 
+      {/* WHATSAPP FLUTUANTE */}
+      <a href="https://wa.me/5573991012332" target="_blank" rel="noopener noreferrer" className="whatsapp-btn" aria-label="WhatsApp">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+      </a>
+
       {/* NAV */}
       <nav id="nav" className={navScrolled ? 'scrolled' : ''}>
         <a href="#" className="nav-brand">
@@ -409,11 +449,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       {/* HERO */}
       <section className="hero">
         <div className="hero-wrap">
+          {/* Coluna esquerda */}
           <div className="reveal">
             <div className="hero-badge"><div className="dot" />Doutor, avalie o seu paciente</div>
             <p className="hero-badge-sub">Você vai precisar de algumas informações do eritrograma:<br />Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina</p>
 
-            {/* hero-textbox: hover mostra redfairy-filosofia-bg */}
+            {/* Retângulo branco com h1 + frase em negrito */}
             <div className={`hero-textbox${showHtbImg ? ' reveal-img' : ''}`} onMouseEnter={showHtb} onTouchStart={showHtb}>
               <img src={filosofiaBg} alt="" aria-hidden="true" style={{
                 position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', borderRadius:14,
@@ -448,6 +489,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </div>
           </div>
 
+          {/* Coluna direita — fada + quote + OBA */}
           <div className="hero-visual reveal" style={{ transitionDelay:'0.15s' }}>
             <div className="fairy-showcase">
               <img src={logo} alt="RedFairy — A Fada Vermelha" />
@@ -465,7 +507,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
         </div>
       </section>
 
-      {/* FILOSOFIA: hover mostra redfairy3 */}
+      {/* FILOSOFIA — hover mostra redfairy3 */}
       <section className={`filosofia${showFilImg ? ' reveal-img' : ''}`} id="filosofia" onMouseEnter={showFil} onTouchStart={showFil}>
         <img src={fairy3} alt="" aria-hidden="true" style={{
           position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover',
@@ -479,6 +521,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <h2 className="stitle">Vida é ventilação e perfusão</h2>
           </div>
           <div className="filosofia-grid">
+            {/* Texto em negrito */}
             <div className="filosofia-text reveal">
               <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
               <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto.</p>
@@ -489,15 +532,42 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <div className="filosofia-visual reveal" style={{ transitionDelay:'0.1s' }}>
               <div className="cycle-card">
                 <h4>O ciclo da vida</h4>
-                <div className="cycle-step"><div className="icon">⭐</div><div className="desc">Ferro — é poeira das estrelas, dá poder ao seu sangue.</div></div>
+                {/* Ferro */}
                 <div className="cycle-step">
-                  <div className="icon"><img src={logo} className="fairy-mini" alt="Fadinha" /></div>
+                  <div className="icon">⭐</div>
+                  <div className="desc">Ferro — é poeira das estrelas, dá poder ao seu sangue.</div>
+                </div>
+                {/* Fadinha — ícone alinhado à esquerda como os demais */}
+                <div className="cycle-step">
+                  <div className="icon">
+                    <img src={logo} className="fairy-mini" alt="Fadinha" />
+                  </div>
                   <div className="desc">Hemoglobina — A fada vermelha, que com o ferro faz você respirar.</div>
                 </div>
-                <div className="cycle-step"><div className="icon">🫁</div><div className="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div></div>
-                <div className="cycle-step"><div className="icon" style={{ color:'#DC2626' }}>❤️</div><div className="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico.</div></div>
-                <div className="cycle-step"><div className="icon">🌿</div><div className="desc">Clorofila — No meio ambiente, a mãe verde recicla o gás carbônico em oxigênio.</div></div>
-                <div className="cycle-step"><div className="icon">♻️</div><div className="desc">Ciclo perfeito — O vermelho e o verde sustentam a vida no planeta azul.</div></div>
+                {/* Ventilação — nuvem restaurada */}
+                <div className="cycle-step">
+                  <div className="icon">
+                    <svg width="22" height="18" viewBox="0 0 64 40" fill="#6B7280">
+                      <path d="M51.2 17.6C49.6 10.4 43.2 5 35.8 5c-5.6 0-10.6 2.9-13.4 7.3C20.6 11.4 18.4 11 16 11 9.4 11 4 16.4 4 23s5.4 12 12 12h34.6C56.4 35 61 30.4 61 24.8c0-5.1-3.8-9.4-8.8-10.4-.4-.3-.7-.5-1-.8z"/>
+                    </svg>
+                  </div>
+                  <div className="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div>
+                </div>
+                {/* Perfusão */}
+                <div className="cycle-step">
+                  <div className="icon" style={{ color:'#DC2626' }}>❤️</div>
+                  <div className="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico.</div>
+                </div>
+                {/* Clorofila */}
+                <div className="cycle-step">
+                  <div className="icon">🌿</div>
+                  <div className="desc">Clorofila — No meio ambiente, a mãe verde recicla o gás carbônico em oxigênio.</div>
+                </div>
+                {/* Ciclo perfeito — azul claro */}
+                <div className="cycle-step">
+                  <div className="icon" style={{ color:'#38BDF8' }}>♻️</div>
+                  <div className="desc" style={{ color:'#38BDF8', fontWeight:600 }}>Ciclo perfeito — O vermelho e o verde sustentam a vida no planeta azul.</div>
+                </div>
               </div>
             </div>
           </div>
@@ -510,8 +580,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="reveal">
             <span className="tag">Indicações</span>
             <h2 className="stitle">Para quem é o RedFairy?</h2>
-            <p className="sdesc">Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
+            {/* Negrito */}
+            <p className="sdesc-bold">Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
           </div>
+          {/* Retângulos iguais com bolinha vinho escuro */}
           <div className="indicacoes-grid reveal">
             {['Anemias','Sangramentos Crônicos','Bariátricos','Vegetarianos','Gestantes','Celíacos','Deficiência de Ferro','Doadores de Sangue','Ferritina Alta','Uso de Testosterona','Endometriose | Mioma','Menstruação Excessiva','Hemoglobina Alta','Alcoolistas','Regime de Sangrias'].map(i => (
               <div key={i} className="ind">{i}</div>
@@ -526,7 +598,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="reveal">
             <span className="tag">Orientações Terapêuticas</span>
             <h2 className="stitle">Muito além do diagnóstico</h2>
-            <p className="sdesc">O RedFairy é um algoritmo médico, que não apenas avalia: ele orienta. Gera recomendações personalizadas com base no perfil completo do paciente.</p>
+            {/* Negrito com quebra após "orienta." */}
+            <p className="sdesc-bold">
+              O RedFairy é um algoritmo médico, que não apenas avalia: ele orienta.<br />
+              Gera recomendações personalizadas com base no perfil completo do paciente.
+            </p>
           </div>
           <div className="terap-grid reveal">
             <div className="terap-card"><div className="tc-icon">💉</div><h4>Cálculo de dose para infusão de ferro</h4><p>Dose ideal de ferro endovenoso baseada no déficit estimado e peso do paciente.</p></div>
@@ -544,6 +620,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <span className="tag">Como Funciona</span>
             <h2 className="stitle">Simples para médicos e pacientes</h2>
           </div>
+          {/* Tabs com mesma formatação dos botões principais */}
           <div className="como-tabs-wrap reveal">
             <div className="como-tabs">
               <button className={`como-tab${activeTab==='medico'?' active':''}`} onClick={() => setActiveTab('medico')}>Para Médicos</button>
@@ -551,6 +628,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </div>
           </div>
 
+          {/* PARA MÉDICOS */}
           {activeTab === 'medico' && (
             <div>
               <div className="flow reveal">
@@ -570,6 +648,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </div>
           )}
 
+          {/* PARA PACIENTES */}
           {activeTab === 'paciente' && (
             <div>
               <div className="flow reveal">
@@ -603,7 +682,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="center reveal" style={{ marginBottom:'2.5rem' }}>
             <span className="tag" style={{ color:'var(--cherry-light)' }}>Experimente Agora</span>
             <h2 className="stitle" style={{ color:'white' }}>Faça uma avaliação gratuita</h2>
-            <p className="sdesc" style={{ color:'rgba(255,255,255,0.55)', margin:'0 auto' }}>Insira os dados laboratoriais e obtenha o diagnóstico. Sem cadastro.</p>
+            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', margin:'0 auto', maxWidth:580 }}>Insira os dados laboratoriais e obtenha o diagnóstico. Sem cadastro.</p>
           </div>
           <div style={{ maxWidth:720, margin:'0 auto' }}>
             <div style={{ background:'var(--dark-card)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:16, padding:'2rem', marginBottom:'1.5rem' }}>
@@ -636,7 +715,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <input type="number" step="0.1" placeholder="Ex: 25" value={rfForm.sat} onChange={e => handleFormChange('sat', e.target.value)} style={inputStyle} />
                 </div>
               </div>
-
               <div style={{ marginBottom:'1rem' }}>
                 <label style={labelStyle}>Contexto clínico</label>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px,1fr))', gap:'0.5rem' }}>
@@ -654,7 +732,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   ))}
                 </div>
               </div>
-
               <div style={{ marginBottom:'1.5rem' }}>
                 <label style={labelStyle}>Medicamentos / Suplementos</label>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px,1fr))', gap:'0.5rem' }}>
@@ -670,7 +747,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   ))}
                 </div>
               </div>
-
               <button onClick={rfAvaliar} style={{ width:'100%', background:'var(--wine)', color:'white', border:'none', borderRadius:10, padding:'1rem', fontSize:'1rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
                 🔬 Avaliar Eritron
               </button>
@@ -760,7 +836,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 <li>Orientações terapêuticas com dosagens</li>
                 <li>Ganhe 10 USDC por paciente cadastrado</li>
               </ul>
-              <button className="btn-cta btn-cta-doc" onClick={onModoMedico}>Acessar como Médico</button>
+              <button className="btn-cta-doc" onClick={onModoMedico}>Acessar como Médico</button>
             </div>
             <div className="cta-c cta-pat">
               <div className="ci">❤️</div>
@@ -772,7 +848,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 <li>Orientações em linguagem acessível</li>
                 <li>R$ 149,90/ano via PIX</li>
               </ul>
-              <button className="btn-cta btn-cta-pat" onClick={onModoPaciente}>Acessar como Paciente</button>
+              <button className="btn-cta-pat" onClick={onModoPaciente}>Acessar como Paciente</button>
             </div>
           </div>
         </div>
