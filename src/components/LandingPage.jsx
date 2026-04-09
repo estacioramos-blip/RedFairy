@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import logo from '../assets/logo.png'
+import filosofiaBg from '../../redfairy-filosofia-bg..png'
+import fairy3 from '../../redfairy3.png'
 
 // ─── CSS injetado via useEffect ───────────────────────────────────────────────
 const LANDING_CSS = `
@@ -70,8 +72,11 @@ const LANDING_CSS = `
   .oba-link { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
 
   /* HERO TEXTBOX */
-  .hero-textbox { background: white; border: 1px solid var(--border2); border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow); transition: all 0.3s; margin-bottom: 1.5rem; cursor: default; }
-  .hero-textbox.reveal-img { background: linear-gradient(135deg, rgba(123,30,30,0.05), rgba(220,38,38,0.08)); border-color: var(--cherry); }
+  .hero-textbox { background: white; border: 1px solid var(--border2); border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow); transition: all 0.5s; margin-bottom: 1.5rem; cursor: default; position: relative; overflow: hidden; }
+  .hero-textbox::before { content: ''; position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 0.5s ease; border-radius: 16px; }
+  .hero-textbox.reveal-img::before { opacity: 0.18; }
+  .hero-textbox.reveal-img { border-color: var(--cherry); }
+  .hero-textbox .htb-content { position: relative; z-index: 1; }
 
   /* CONTAINER */
   .container { max-width: 1140px; margin: 0 auto; padding: 0 2rem; }
@@ -82,8 +87,11 @@ const LANDING_CSS = `
   .sdesc { font-size: 1rem; color: var(--text-sec); max-width: 580px; line-height: 1.75; }
 
   /* FILOSOFIA */
-  .filosofia { background: linear-gradient(170deg, #FEF2F2 0%, #FFF 60%); position: relative; overflow: hidden; cursor: default; }
-  .filosofia.reveal-img { background: linear-gradient(170deg, rgba(123,30,30,0.12) 0%, rgba(220,38,38,0.06) 60%); }
+  .filosofia { background: linear-gradient(170deg, #FEF2F2 0%, #FFF 60%); position: relative; overflow: hidden; cursor: default; transition: background 0.5s; }
+  .filosofia::before { content: ''; position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
+  .filosofia.reveal-img::before { opacity: 0.12; }
+  .filosofia.reveal-img { background: linear-gradient(170deg, rgba(123,30,30,0.08) 0%, rgba(220,38,38,0.04) 60%); }
+  .filosofia .container { position: relative; z-index: 1; }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; margin-top: 2.5rem; align-items: start; }
   .filosofia-text p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; }
   .highlight-box { background: var(--wine); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
@@ -455,7 +463,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               onMouseEnter={showHtb}
               onTouchStart={showHtb}
             >
-              <div className="htb-content">
+              <img src={fairy3} alt="" aria-hidden="true" style={{
+                position:'absolute', inset:0, width:'100%', height:'100%',
+                objectFit:'cover', borderRadius:16,
+                opacity: showHtbImg ? 0.15 : 0,
+                transition:'opacity 0.5s ease', pointerEvents:'none',
+              }} />
+              <div className="htb-content" style={{ position:'relative', zIndex:1 }}>
                 <h1>Eu sou a sua fada vermelha, a sua <span className="red">Hemoglobina</span></h1>
                 <p className="hero-philosophy">
                   Eu uso a poeira das estrelas para te entregar o ar.<br />
@@ -519,6 +533,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
         onMouseEnter={showFil}
         onTouchStart={showFil}
       >
+        <img src={filosofiaBg} alt="" aria-hidden="true" style={{
+          position:'absolute', inset:0, width:'100%', height:'100%',
+          objectFit:'cover',
+          opacity: showFilImg ? 0.12 : 0,
+          transition:'opacity 0.5s ease', pointerEvents:'none',
+        }} />
         <div className="container">
           <div className="reveal">
             <span className="tag">Filosofia</span>
