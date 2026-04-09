@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedFairy — Cuidar do Seu Eritron</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --wine: #7B1E1E;
+            --wine-dark: #5C1515;
+            --cherry: #DC2626;
+            --cherry-light: #EF4444;
+            --cherry-bg: #FEF2F2;
+            --cherry-bg2: #FEE2E2;
+            --dark-bg: #0F1219;
+            --dark-card: #181D27;
+            --oba-orange: #E8720C;
+            --oba-orange-light: #FB923C;
+            --oba-blue: #64748B;
+            --oba-blue-dark: #475569;
+            --green-dollar: #22863A;
+            --green-dollar-dark: #1B6E30;
+            --gray-bg: #F0F0F3;
+            --gray-section: #E8E8EC;
+            --text: #1F2937;
+            --text-sec: #6B7280;
+            --text-light: #9CA3AF;
+            --bg: #FAFAFA;
+            --white: #FFFFFF;
+            --border: #F3F4F6;
+            --border2: #E5E7EB;
+            --radius: 14px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.06);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.08);
+            --shadow-red: 0 8px 30px rgba(220,38,38,0.18);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'DM Sans', -apple-system, sans-serif;
+            color: var(--text); background: var(--white);
+            line-height: 1.65; overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: 0.75rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.3s;
+        }
+        nav.scrolled {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border); box-shadow: 0 1px 8px rgba(0,0,0,0.04);
+        }
+        .nav-brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .nav-brand img { height: 36px; }
+        .nav-brand span { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--wine); }
+        .nav-brand em { font-style: normal; color: var(--cherry); }
+        .nav-links { display: flex; gap: 1.8rem; align-items: center; }
+        .nav-links a { text-decoration: none; font-size: 0.87rem; font-weight: 500; color: var(--text-sec); transition: color 0.2s; }
+        .nav-links a:hover { color: var(--text); }
+        .btn-sm { padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; }
+        .btn-wine { background: var(--wine); color: var(--white) !important; }
+        .btn-wine:hover { background: var(--cherry); }
+        .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+        .hamburger span { display: block; width: 20px; height: 2px; background: var(--text); margin: 4px 0; border-radius: 2px; transition: 0.3s; }
+
+        /* BUTTONS */
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.25s; }
+        .btn-primary { background: var(--wine); color: var(--white); }
+        .btn-primary:hover { background: var(--cherry); transform: translateY(-2px); }
+        .btn-secondary { background: #9CA3AF; color: var(--white); border: 1.5px solid #9CA3AF; transition: all 0.25s; }
+        .btn-secondary:hover { background: #374151; border-color: #374151; color: var(--white); transform: translateY(-2px); }
+        .btn-white { background: var(--white); color: var(--wine); font-weight: 700; }
+        .btn-white:hover { background: rgba(255,255,255,0.9); }
+        .btn-ghost-w { background: transparent; color: var(--white); border: 1.5px solid rgba(255,255,255,0.25); }
+        .btn-ghost-w:hover { border-color: var(--white); background: rgba(255,255,255,0.05); }
+        .btn-ghost-dark { background: transparent; color: var(--text); border: 1.5px solid var(--border2); }
+        .btn-ghost-dark:hover { border-color: var(--text); }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center;
+            padding: 7rem 2rem 4rem;
+            background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%);
+            position: relative; overflow: hidden;
+        }
+        .hero-wrap {
+            max-width: 1200px; margin: 0 auto;
+            display: grid; grid-template-columns: 1.1fr 0.9fr;
+            gap: 4rem; align-items: center; position: relative; z-index: 2;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: #374151;
+            color: var(--white);
+            padding: 0.6rem 1.5rem; border-radius: 10px;
+            font-size: 0.82rem; font-weight: 700; margin-bottom: 1.2rem;
+            letter-spacing: 0.5px;
+        }
+        .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--white); animation: pDot 2s ease-in-out infinite; }
+        @keyframes pDot { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:0.4; transform: scale(1.5); } }
+        .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.6rem; margin-bottom: 1.2rem; font-style: normal; font-weight: 700; }
+        .hero h1 { font-family: 'DM Sans', sans-serif; font-size: 3.2rem; line-height: 1.15; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
+        .hero h1 .red { color: var(--cherry); }
+        .hero-philosophy { font-family: 'DM Sans', sans-serif; font-style: italic; font-size: 1.15rem; color: var(--wine); margin-bottom: 0.8rem; line-height: 1.6; font-weight: 400; }
+        .hero-desc { font-size: 1.05rem; color: var(--text-sec); max-width: 500px; line-height: 1.75; margin-bottom: 2rem; }
+        .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
+        .trust-i { display: flex; align-items: center; gap: 0.35rem; }
+        .trust-i svg { width: 15px; height: 15px; color: var(--cherry); }
+        .trust-i span { font-size: 0.8rem; color: var(--text-light); }
+        .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+        .fairy-showcase { position: relative; width: 200px; height: 200px; }
+        .fairy-showcase img { width: 100%; height: 100%; object-fit: contain; animation: floatFairy 4s ease-in-out infinite; }
+        @keyframes floatFairy { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        /* Fairy SVG with flapping wings */
+        .fairy-svg-wrap { width: 100%; height: 100%; animation: floatFairy 4s ease-in-out infinite; }
+        .fairy-svg-wrap svg { width: 100%; height: 100%; }
+        .wing-left { animation: flapLeft 0.8s ease-in-out infinite; transform-origin: 50px 55px; }
+        .wing-right { animation: flapRight 0.8s ease-in-out infinite; transform-origin: 50px 55px; }
+        @keyframes flapLeft {
+            0%, 100% { transform: rotate(0deg) scaleX(1); }
+            50% { transform: rotate(12deg) scaleX(0.85); }
+        }
+        @keyframes flapRight {
+            0%, 100% { transform: rotate(0deg) scaleX(1); }
+            50% { transform: rotate(-12deg) scaleX(0.85); }
+        }
+        .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; }
+        .fairy-quote p { font-family: 'DM Sans', sans-serif; font-style: normal; font-size: 0.92rem; color: var(--text); line-height: 1.6; font-weight: 600; }
+        .fairy-quote .question { color: var(--cherry); font-weight: 600; font-style: normal; margin-top: 0.5rem; font-size: 1.02rem; }
+
+        /* HERO TEXT BOX with image hover */
+        .hero-textbox {
+            background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+            padding: 2rem 2.5rem; box-shadow: var(--shadow);
+            position: relative; overflow: hidden; cursor: pointer;
+            margin-bottom: 1.2rem;
+        }
+        .hero-textbox::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: url('redfairy-filosofia-bg.png') center/cover no-repeat;
+            filter: blur(12px); opacity: 0.18;
+            transition: filter 0.6s ease, opacity 0.6s ease;
+            z-index: 0;
+        }
+        .hero-textbox.reveal-img::before { filter: blur(0px); opacity: 0.9; }
+        .hero-textbox .htb-content { position: relative; z-index: 1; transition: opacity 0.6s ease; }
+        .hero-textbox.reveal-img .htb-content { opacity: 0; }
+
+        /* OBA HOME BUTTON */
+        .oba-home-btn {
+            margin-top: 2rem;
+            display: flex; flex-direction: column; align-items: center;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue));
+            border-radius: 16px;
+            padding: 1.2rem 2rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(232,114,12,0.2);
+            width: 100%; max-width: 380px;
+        }
+        .oba-home-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(232,114,12,0.3); }
+        .oba-home-btn .oba-title { font-size: 1.1rem; font-weight: 800; color: var(--white); letter-spacing: 1px; }
+        .oba-home-btn .oba-sub { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.9); margin-top: 0.15rem; font-weight: 700; }
+        .oba-home-btn .oba-link { font-size: 0.78rem; color: rgba(255,255,255,0.85); margin-top: 0.5rem; text-decoration: underline; text-underline-offset: 3px; }
+
+        /* SECTIONS */
+        section { padding: 5.5rem 2rem; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .tag { display: inline-block; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--cherry); margin-bottom: 0.6rem; }
+        .stitle { font-family: 'DM Sans', sans-serif; font-size: 2.3rem; color: var(--text); margin-bottom: 0.7rem; font-weight: 800; }
+        .sdesc { font-size: 1.02rem; color: var(--text-sec); max-width: 580px; line-height: 1.7; font-weight: 600; }
+        .center { text-align: center; }
+        .center .sdesc { margin: 0 auto; }
+
+        /* FILOSOFIA */
+        .filosofia { background: var(--gray-bg); color: var(--text); position: relative; overflow: hidden; }
+        .filosofia::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: url('redfairy3.png') center/cover no-repeat;
+            filter: blur(12px);
+            opacity: 0.18;
+            transition: filter 0.6s ease, opacity 0.6s ease;
+            z-index: 0;
+        }
+        .filosofia.reveal-img::before {
+            filter: blur(0px);
+            opacity: 0.85;
+        }
+        .filosofia .container { position: relative; z-index: 1; transition: opacity 0.6s ease; }
+        .filosofia.reveal-img .container { opacity: 0; pointer-events: none; }
+        .filosofia .tag { color: var(--cherry); }
+        .filosofia .stitle { color: var(--text); }
+        .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-top: 3rem; }
+        .filosofia-text p { color: var(--text-sec); font-size: 0.95rem; line-height: 1.8; margin-bottom: 1.2rem; font-weight: 600; }
+        .highlight-box { background: var(--wine); border: 2px solid var(--wine-dark); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
+        .highlight-box p { color: var(--white); font-weight: 600; font-size: 1rem; margin: 0; text-align: center; }
+
+        /* Cycle card - light theme */
+        .cycle-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; width: 100%; box-shadow: var(--shadow); }
+        .cycle-card h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cherry); margin-bottom: 1.2rem; }
+        .cycle-step { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
+        .cycle-step:last-child { border: none; }
+        .cycle-step .icon { font-size: 1.3rem; width: 42px; min-width: 42px; text-align: center; display: flex; align-items: center; justify-content: center; }
+        .cycle-step .desc { font-size: 0.88rem; color: var(--text-sec); }
+        .fairy-mini { height: 38px; width: 38px; object-fit: contain; vertical-align: middle; opacity: 0.85; margin-left: -4px; }
+
+        /* COMO FUNCIONA */
+        .como { background: var(--bg); }
+        .como-tabs { display: flex; gap: 0.5rem; margin: 2rem 0 2.5rem; justify-content: center; }
+        .como-tab { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.25s; text-decoration: none; }
+        .como-tab[data-tab="medico"] { background: var(--wine); color: var(--white); }
+        .como-tab[data-tab="medico"]:hover { background: var(--cherry); transform: translateY(-2px); }
+        .como-tab[data-tab="paciente"] { background: #9CA3AF; color: var(--white); border: 1.5px solid #9CA3AF; }
+        .como-tab[data-tab="paciente"]:hover { background: #374151; border-color: #374151; color: var(--white); transform: translateY(-2px); }
+        .como-tab.active { opacity: 1; }
+        .como-tab:not(.active) { opacity: 0.55; }
+        .como-panel { display: none; }
+        .como-panel.active { display: block; }
+        .flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; }
+        .flow-step { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.8rem 1.5rem; text-align: center; transition: all 0.25s; }
+        .flow-step:hover { box-shadow: var(--shadow); transform: translateY(-3px); border-color: var(--cherry-bg2); }
+        .flow-num { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; margin-bottom: 0.8rem; background: var(--wine); color: var(--white); }
+        .flow-step h4 { font-size: 0.95rem; margin-bottom: 0.4rem; }
+        .flow-step p { font-size: 0.83rem; color: var(--text-sec); }
+
+        /* Reward banner - GREEN */
+        .reward-banner {
+            margin-top: 2rem;
+            background: linear-gradient(135deg, var(--green-dollar) 0%, #2EA043 50%, #8FD9A0 100%);
+            border-radius: var(--radius);
+            padding: 1.5rem 2rem;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 1.5rem; flex-wrap: wrap;
+        }
+        .reward-banner .reward-text h4 { color: var(--white); font-size: 1.1rem; }
+        .reward-banner .reward-text p { color: rgba(255,255,255,0.8); font-size: 0.88rem; }
+        .reward-banner .reward-right { display: flex; align-items: center; gap: 1rem; }
+        .reward-banner .reward-amount { font-family: 'DM Sans', sans-serif; font-size: 2rem; font-weight: 800; color: var(--white); white-space: nowrap; }
+        .klipbit-logo { height: 36px; opacity: 0.9; }
+
+        .patient-features { margin-top: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .pf-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; transition: all 0.2s; }
+        .pf-card:hover { box-shadow: var(--shadow); border-color: var(--cherry-bg2); }
+        .pf-card .pf-icon { font-size: 1.5rem; margin-bottom: 0.6rem; }
+        .pf-card h4 { font-size: 0.92rem; margin-bottom: 0.3rem; }
+        .pf-card p { font-size: 0.82rem; color: var(--text-sec); }
+        .pricing-box { margin-top: 2rem; background: var(--cherry-bg); border: 1px solid var(--cherry-bg2); border-radius: var(--radius); padding: 2rem; text-align: center; }
+        .pricing-box .price { font-family: 'DM Sans', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--wine); }
+        .pricing-box .price-sub { font-size: 0.88rem; color: var(--text-sec); margin-top: 0.2rem; }
+        .pricing-box .pix-methods { display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+        .pix-tag { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--white); border: 1px solid var(--border2); border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 0.8rem; color: var(--text-sec); }
+
+        /* INDICACOES */
+        .indicacoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.75rem; margin-top: 2.5rem; }
+        .ind { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; transition: all 0.2s; }
+        .ind:hover { border-color: var(--cherry); background: var(--cherry-bg); }
+        .ind::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: linear-gradient(135deg, var(--wine), var(--cherry)); }
+
+        /* TERAPEUTICA */
+        .terapeutica { background: var(--bg); }
+        .terap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.2rem; margin-top: 2.5rem; }
+        .terap-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.8rem; transition: all 0.2s; }
+        .terap-card:hover { box-shadow: var(--shadow); }
+        .terap-card .tc-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 0.8rem; background: var(--cherry-bg); }
+        .terap-card h4 { font-size: 0.95rem; margin-bottom: 0.3rem; }
+        .terap-card p { font-size: 0.83rem; color: var(--text-sec); }
+
+        /* PROJETO OBA */
+        .oba { background: linear-gradient(170deg, var(--oba-blue-dark) 0%, #334155 60%, #1E293B 100%); color: var(--white); position: relative; overflow: hidden; }
+        .oba::before { content: ''; position: absolute; top: -30%; right: -15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(232,114,12,0.12), transparent 70%); border-radius: 50%; }
+        .oba .container { position: relative; z-index: 2; }
+        .oba .tag { color: var(--oba-orange-light); }
+        .oba .stitle { color: var(--white); }
+        .oba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: start; margin-top: 2.5rem; }
+        .oba-narrative p { color: rgba(255,255,255,0.7); font-size: 0.93rem; line-height: 1.8; margin-bottom: 1rem; }
+        .oba-narrative strong { color: var(--oba-orange-light); }
+        .oba-metaphor { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border: none; border-radius: 12px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+        .oba-metaphor p { font-family: 'DM Sans', sans-serif; font-style: normal; font-size: 1rem; font-weight: 600; color: var(--white); text-align: center; margin: 0; line-height: 1.5; }
+        .oba-features { display: flex; flex-direction: column; gap: 1rem; }
+        .oba-feat { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 1.3rem; display: flex; gap: 0.8rem; align-items: flex-start; transition: all 0.2s; }
+        .oba-feat:hover { border-color: rgba(232,114,12,0.3); background: rgba(232,114,12,0.05); }
+        .oba-feat .of-icon { width: 38px; height: 38px; min-width: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: rgba(232,114,12,0.15); }
+        .oba-feat h4 { font-size: 0.9rem; color: var(--white); margin-bottom: 0.2rem; }
+        .oba-feat p { font-size: 0.82rem; color: rgba(255,255,255,0.55); }
+        .oba-cta-row { margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+        .btn-oba-main { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); color: var(--white); box-shadow: 0 6px 25px rgba(232,114,12,0.3); }
+        .btn-oba-main:hover { background: linear-gradient(135deg, var(--oba-orange-light), var(--oba-blue)); transform: translateY(-2px); }
+
+        /* CTA FINAL - GRAY background */
+        .cta-final { background: var(--gray-bg); position: relative; overflow: hidden; }
+        .cta-final .tag { color: var(--cherry); }
+        .cta-final .stitle { color: var(--text); }
+        .cta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
+        .cta-c { border-radius: 16px; padding: 1.8rem; transition: transform 0.25s; }
+        .cta-c:hover { transform: translateY(-4px); }
+        .cta-doc { background: #D1D5DB; border: 1px solid #9CA3AF; box-shadow: var(--shadow); }
+        .cta-pat { background: var(--wine); border: 1px solid var(--wine-dark); box-shadow: 0 8px 30px rgba(123,30,30,0.2); }
+        .cta-c .ci { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 0.8rem; }
+        .cta-doc .ci { background: var(--cherry-bg); }
+        .cta-pat .ci { background: rgba(255,255,255,0.18); }
+        .cta-doc h3 { color: var(--text); font-size: 1.25rem; margin-bottom: 0.4rem; }
+        .cta-pat h3 { color: var(--white); font-size: 1.25rem; margin-bottom: 0.4rem; }
+        .cta-doc p { color: var(--text-sec); font-size: 0.88rem; margin-bottom: 1.2rem; line-height: 1.6; }
+        .cta-pat p { color: rgba(255,255,255,0.8); font-size: 0.88rem; margin-bottom: 1.2rem; line-height: 1.6; }
+        .cta-c ul { list-style: none; margin-bottom: 1.5rem; }
+        .cta-doc li { font-size: 0.84rem; color: var(--text-sec); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem; }
+        .cta-doc li::before { content: '\2713'; color: var(--cherry); font-weight: 700; font-size: 0.75rem; }
+        .cta-pat li { font-size: 0.84rem; color: rgba(255,255,255,0.9); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem; }
+        .cta-pat li::before { content: '\2713'; color: rgba(255,255,255,0.6); font-weight: 700; font-size: 0.75rem; }
+        .btn-doc-cta { background: var(--wine); color: var(--white); width: 100%; justify-content: center; }
+        .btn-doc-cta:hover { background: var(--cherry); transform: translateY(-2px); }
+        .btn-pat-cta { background: #9CA3AF; color: var(--white); width: 100%; justify-content: center; border: 1.5px solid #9CA3AF; }
+        .btn-pat-cta:hover { background: #374151; border-color: #374151; color: var(--white); transform: translateY(-2px); }
+
+        /* FOOTER */
+        footer { padding: 2.5rem 2rem; text-align: center; border-top: 1px solid var(--border); }
+        .foot-brand { display: inline-flex; align-items: center; gap: 0.4rem; }
+        .foot-brand img { height: 28px; }
+        .foot-brand span { font-family: 'DM Serif Display', serif; font-size: 1.15rem; color: var(--wine); }
+        .foot-brand em { font-style: normal; color: var(--cherry); }
+        footer .foot-tag { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-light); margin-top: 0.15rem; font-weight: 700; }
+        footer .credits { font-size: 0.77rem; color: var(--text-light); margin-top: 1rem; line-height: 1.6; }
+        footer a { color: var(--text-sec); text-decoration: none; }
+        footer a:hover { color: var(--wine); }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .hero-wrap { grid-template-columns: 1fr; text-align: center; }
+            .hero h1 { font-size: 2.5rem; }
+            .hero-desc { margin: 0 auto 2rem; }
+            .hero-actions { justify-content: center; }
+            .trust { justify-content: center; }
+            .fairy-showcase { width: 140px; height: 140px; }
+            .filosofia-grid, .oba-grid, .cta-cards { grid-template-columns: 1fr; }
+            .stitle { font-size: 1.85rem; }
+            .nav-links { display: none; }
+            .hamburger { display: block; }
+            .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 2rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
+            .oba-home-btn { align-self: center; }
+        }
+        .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.65s ease, transform 0.65s ease; }
+        .reveal.show { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+    <a href="#" class="nav-brand">
+        <img src="https://www.redfairy.bio/assets/logo-BGJKSAeL.png" alt="RedFairy">
+        <span>Red<em>Fairy</em></span>
+    </a>
+    <div class="nav-links" id="navLinks">
+        <a href="#filosofia">Filosofia</a>
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#indicacoes">Indicações</a>
+        <a href="#oba">Projeto OBA</a>
+        <a href="#acesso" class="btn-sm btn-wine">Acessar</a>
+    </div>
+    <button class="hamburger" id="hamb" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-wrap">
+        <div class="reveal">
+            <div class="hero-badge"><div class="dot"></div>Doutor, avalie o seu paciente</div>
+            <p class="hero-badge-sub">Você vai precisar de algumas informações do eritrograma:<br>Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina</p>
+            <div class="hero-textbox">
+                <div class="htb-content">
+                    <h1>Eu sou a sua fada vermelha, a sua <span class="red">Hemoglobina</span></h1>
+                    <p class="hero-philosophy">Eu uso a poeira das estrelas para te entregar o ar.<br>Quanto tempo você vive sem ar?</p>
+                </div>
+            </div>
+            <p class="hero-desc">Avalie o eritron e o metabolismo do ferro com precisão clínica. Com apenas alguns dados laboratoriais e de contexto de vida, monitore a evolução da sua hemoglobina e receba orientações terapêuticas ajustadas às suas necessidades. Viva melhor para viver mais!</p>
+            <div class="hero-actions">
+                <a href="#acesso" class="btn btn-primary">Sou Médico</a>
+                <a href="#acesso" class="btn btn-secondary">Sou Paciente</a>
+            </div>
+            <div class="trust">
+                <div class="trust-i"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg><span>17 variáveis clínicas</span></div>
+                <div class="trust-i"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Resultado imediato</span></div>
+                <div class="trust-i"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span>Médico ganha 10 USDC por paciente</span></div>
+            </div>
+        </div>
+        <div class="hero-visual reveal" style="transition-delay:0.15s;">
+            <div class="fairy-showcase">
+                <!-- Troque o src abaixo por um GIF animado da fadinha quando disponível -->
+                <img src="https://www.redfairy.bio/assets/logo-BGJKSAeL.png" alt="RedFairy — A Fada Vermelha">
+            </div>
+            <div class="fairy-quote">
+                <p>O Ferro em você veio das estrelas, é dele o vermelho do seu sangue — a sua potência.</p>
+                <p class="question">Cuide da sua Hemoglobina, ela é a sua vida.</p>
+            </div>
+            <!-- Projeto OBA button -->
+            <a href="#oba" class="oba-home-btn">
+                <span class="oba-title">Projeto OBA</span>
+                <span class="oba-sub">Otimizar o Bariátrico</span>
+                <span class="oba-link">Saiba mais</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- FILOSOFIA -->
+<section class="filosofia" id="filosofia">
+    <div class="container">
+        <div class="reveal">
+            <span class="tag">Filosofia</span>
+            <h2 class="stitle">Vida é ventilação e perfusão</h2>
+        </div>
+        <div class="filosofia-grid">
+            <div class="filosofia-text reveal">
+                <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
+                <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
+                <p>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
+                <p>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
+                <div class="highlight-box"><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
+            </div>
+            <div class="filosofia-visual reveal" style="transition-delay:0.1s;">
+                <div class="cycle-card">
+                    <h4>O ciclo da vida</h4>
+                    <div class="cycle-step">
+                        <div class="icon">⭐</div>
+                        <div class="desc">Ferro — é poeira das estrelas, dá poder ao seu sangue.</div>
+                    </div>
+                    <div class="cycle-step">
+                        <div class="icon"><img src="https://www.redfairy.bio/assets/logo-BGJKSAeL.png" class="fairy-mini" alt="Fadinha"></div>
+                        <div class="desc">Hemoglobina — A fada vermelha, que com o ferro faz você respirar.</div>
+                    </div>
+                    <div class="cycle-step">
+                        <div class="icon">☁️</div>
+                        <div class="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div>
+                    </div>
+                    <div class="cycle-step">
+                        <div class="icon" style="color:#DC2626;">❤️</div>
+                        <div class="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico do metabolismo para que seja devolvido ao ar.</div>
+                    </div>
+                    <div class="cycle-step">
+                        <div class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="#22C55E" xmlns="http://www.w3.org/2000/svg"><path d="M17.8 2c-1.5 0-3 .5-4.3 1.4C12.5 2 11.5 1.5 10.3 1.5 7.5 1.5 5 4 5 7c0 .5.1 1 .2 1.5C3.2 10 2 12.5 2 15.5 2 20 5.5 22 9 22c1.5 0 3-.5 4-1.5 1 1 2.5 1.5 4 1.5 3.5 0 7-2 7-6.5 0-3-1.2-5.5-3.2-7C20.9 8 21 7.5 21 7c0-3-2.5-5-5.2-5z" fill="none" stroke="#22C55E" stroke-width="1.8"/><path d="M12 22V8" stroke="#22C55E" stroke-width="1.5"/><path d="M12 12l4-3" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round"/><path d="M12 15l-3-2.5" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                        <div class="desc">Clorofila — No meio ambiente, a mãe verde recicla o gás carbônico em oxigênio.</div>
+                    </div>
+                    <div class="cycle-step">
+                        <div class="icon" style="font-size:1.5rem; color:#3B82F6;">♻️</div>
+                        <div class="desc">Ciclo perfeito — O vermelho e o verde sustentam a vida no planeta azul.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- INDICAÇÕES -->
+<section id="indicacoes">
+    <div class="container">
+        <div class="reveal">
+            <span class="tag">Indicações</span>
+            <h2 class="stitle">Para quem é o RedFairy?</h2>
+            <p class="sdesc">Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
+        </div>
+        <div class="indicacoes-grid reveal">
+            <div class="ind">Anemias</div>
+            <div class="ind">Sangramentos Crônicos</div>
+            <div class="ind">Bariátricos</div>
+            <div class="ind">Vegetarianos</div>
+            <div class="ind">Gestantes</div>
+            <div class="ind">Celíacos</div>
+            <div class="ind">Deficiência de Ferro</div>
+            <div class="ind">Doadores de Sangue</div>
+            <div class="ind">Ferritina Alta</div>
+            <div class="ind">Uso de Testosterona</div>
+            <div class="ind">Endometriose | Mioma</div>
+            <div class="ind">Menstruação Excessiva</div>
+            <div class="ind">Hemoglobina Alta</div>
+            <div class="ind">Alcoolistas</div>
+            <div class="ind">Regime de Sangrias</div>
+        </div>
+    </div>
+</section>
+
+<!-- ORIENTAÇÕES TERAPÊUTICAS -->
+<section class="terapeutica">
+    <div class="container">
+        <div class="reveal">
+            <span class="tag">Orientações Terapêuticas</span>
+            <h2 class="stitle">Muito além do diagnóstico</h2>
+            <p class="sdesc">O RedFairy é um algoritmo médico, que não apenas avalia: ele orienta.<br>Gera recomendações personalizadas para tratamento com base no perfil completo do paciente.</p>
+        </div>
+        <div class="terap-grid reveal">
+            <div class="terap-card">
+                <div class="tc-icon">💉</div>
+                <h4>Cálculo de dose para infusão de ferro</h4>
+                <p>Dose ideal de ferro endovenoso baseada no déficit estimado e peso do paciente.</p>
+            </div>
+            <div class="terap-card">
+                <div class="tc-icon">🩸</div>
+                <h4>Sangrias terapêuticas</h4>
+                <p>Número de sessões, volume e intervalo entre sangrias para siderose e poliglobulia.</p>
+            </div>
+            <div class="terap-card">
+                <div class="tc-icon">💊</div>
+                <h4>Reposição de ferro oral</h4>
+                <p>Dose, tipo de sal de ferro, horário e duração do tratamento via oral.</p>
+            </div>
+            <div class="terap-card">
+                <div class="tc-icon">📊</div>
+                <h4>Gráfico multiparamétrico</h4>
+                <p>Acompanhamento evolutivo do eritron ao longo do tempo para cada paciente.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- COMO FUNCIONA -->
+<section class="como" id="como-funciona">
+    <div class="container">
+        <div class="center reveal">
+            <span class="tag">Como Funciona</span>
+            <h2 class="stitle">Simples para médicos e pacientes</h2>
+        </div>
+        <div class="como-tabs reveal">
+            <button class="como-tab active" data-tab="medico">Para Médicos</button>
+            <button class="como-tab" data-tab="paciente">Para Pacientes</button>
+        </div>
+        <!-- MÉDICO -->
+        <div class="como-panel active" id="panel-medico">
+            <div class="flow reveal">
+                <div class="flow-step"><div class="flow-num">1</div><h4>Acesse o Modo Médico</h4><p>Gratuito, sem cadastro. Use o seu CRM para acesso imediato à calculadora clínica.</p></div>
+                <div class="flow-step"><div class="flow-num">2</div><h4>Insira o CPF do paciente</h4><p>Única informação de identificação. Vincula os dados ao paciente automaticamente, quando ele se cadastra.</p></div>
+                <div class="flow-step"><div class="flow-num">3</div><h4>Preencha os parâmetros</h4><p>Apenas cinco parâmetros laboratoriais, e marcar algumas caixinhas com dados clínicos e medicamentos.</p></div>
+                <div class="flow-step"><div class="flow-num">4</div><h4>Avalie e oriente</h4><p>Diagnóstico, orientações terapêuticas e dosagens. Dados automaticamente salvos no CPF do paciente.</p></div>
+            </div>
+            <div class="reward-banner reveal">
+                <div class="reward-text">
+                    <h4>Ganhe por cada paciente que se cadastrar</h4>
+                    <p>Quando o paciente que você avaliou se cadastra, você recebe DEZ DÓLARES DIGITAIS diretamente na sua wallet <strong>KlipBit</strong>.</p>
+                </div>
+                <div class="reward-right">
+                    <div class="reward-amount">10 USDC</div>
+                    <a href="https://www.klipbit.com/en" target="_blank" rel="noopener"><img src="https://klipbit.com/favicon.ico" alt="KlipBit" class="klipbit-logo"></a>
+                </div>
+            </div>
+        </div>
+        <!-- PACIENTE -->
+        <div class="como-panel" id="panel-paciente">
+            <div class="flow reveal">
+                <div class="flow-step"><div class="flow-num">1</div><h4>Informe seu CPF</h4><p>Se seu médico já fez a primeira avaliação, seus dados já estarão aqui.</p></div>
+                <div class="flow-step"><div class="flow-num">2</div><h4>Complete o cadastro</h4><p>Cadastro simples com e-mail, uma senha simples e celular. Rápido e seguro.</p></div>
+                <div class="flow-step"><div class="flow-num">3</div><h4>Assine via PIX</h4><p>R$ 149,90/ano via QR Code, Chave PIX ou Copie e Cole. Acesso por 12 meses.</p></div>
+                <div class="flow-step"><div class="flow-num">4</div><h4>Acompanhe seu eritron</h4><p>Novas avaliações geram o gráfico multiparamétrico da sua saúde eritrocitária.</p></div>
+            </div>
+            <div class="patient-features reveal">
+                <div class="pf-card"><div class="pf-icon">📈</div><h4>Gráfico evolutivo</h4><p>Acompanhe a evolução dos parâmetros ao longo do tempo em um painel visual.</p></div>
+                <div class="pf-card"><div class="pf-icon">💡</div><h4>Orientações claras e Prescrições</h4><p>Resultados em linguagem acessível, com recomendações práticas, emissão de receitas médicas, e pedidos de exames. Tudo que você precisa para cuidar da sua hemoglobina.</p></div>
+                <div class="pf-card"><div class="pf-icon">🩺</div><h4>Conectado ao seu médico</h4><p>A avaliação do médico já está no seu perfil quando você se cadastrar.</p></div>
+            </div>
+            <div class="pricing-box reveal">
+                <div class="price">R$ 149,90</div>
+                <div class="price-sub" style="font-weight:700; color:var(--wine);">por ano — acesso completo à plataforma</div>
+                <div class="pix-methods">
+                    <div class="pix-tag">📱 QR Code PIX</div>
+                    <div class="pix-tag">🔑 Chave PIX</div>
+                    <div class="pix-tag">📋 Copie e Cole</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PROJETO OBA -->
+<section class="oba" id="oba">
+    <div class="container">
+        <div class="reveal">
+            <span class="tag">Projeto OBA</span>
+            <h2 class="stitle">Otimizar o Bariátrico</h2>
+            <p style="color:rgba(255,255,255,0.55); font-size:1rem; max-width:580px; line-height:1.7; font-weight:700;">Milhares de bariátricos vivem desassistidos. O Projeto OBA é um sub-algoritmo especializado dentro do RedFairy que cuida especificamente de quem fez cirurgia bariátrica.</p>
+        </div>
+        <div class="oba-grid">
+            <div class="oba-narrative reveal">
+                <div class="oba-metaphor"><p>A cirurgia bariátrica corta as asas da sua fada vermelha.<br>Ela continua com seus superpoderes, mas para voar precisa da ajuda do RedFairy.</p></div>
+                <p>O bypass gástrico e a gastrectomia causam uma <strong>síndrome disabsortiva</strong> que prejudica a absorção de ferro, vitamina B12 e outros elementos essenciais. Sem acompanhamento, o bariátrico desenvolve deficiências que comprometem severamente sua qualidade de vida.</p>
+                <p>O Projeto OBA oferece um <strong>tratamento de manutenção indefinido</strong>: monitoramento contínuo, cálculo de reposição personalizado e orientações específicas para cada perfil de paciente bariátrico.</p>
+                <p>Com o RedFairy, o acompanhamento custa muito menos que consultas complexas e recorrentes, e garante que o bariátrico tenha a orientação necessária para manter a qualidade de vida conquistada com a cirurgia.</p>
+                <div class="oba-cta-row">
+                    <a href="#acesso" class="btn btn-oba-main">Sou Bariátrico — Começar</a>
+                    <a href="#como-funciona" class="btn btn-secondary">Como funciona</a>
+                </div>
+            </div>
+            <div class="oba-features reveal" style="transition-delay:0.1s;">
+                <div class="oba-feat"><div class="of-icon">🔬</div><div><h4>Mini-anamnese especializada</h4><p>Informações adicionais fundamentais para que o algoritmo cuide de você especificamente.</p></div></div>
+                <div class="oba-feat"><div class="of-icon">💊</div><div><h4>Reposição personalizada</h4><p>Cálculo de ferro, B12 e outros elementos prejudicados pela síndrome disabsortiva.</p></div></div>
+                <div class="oba-feat"><div class="of-icon">📊</div><div><h4>Monitoramento contínuo</h4><p>Evolução dos parâmetros com gráficos e alertas personalizados.</p></div></div>
+                <div class="oba-feat"><div class="of-icon">💰</div><div><h4>Muito mais acessível</h4><p>Custa uma fração do acompanhamento médico tradicional recorrente.</p></div></div>
+                <div class="oba-feat"><div class="of-icon">🛡️</div><div><h4>Manutenção indefinida</h4><p>O bariátrico precisa de cuidado contínuo. O RedFairy está sempre ao seu lado.</p></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-final" id="acesso">
+    <div class="container">
+        <div class="center reveal" style="margin-bottom:2.5rem;">
+            <span class="tag">Comece Agora</span>
+            <h2 class="stitle">Cuide da sua Hemoglobina, ela é a sua vida.</h2>
+        </div>
+        <div class="cta-cards reveal">
+            <div class="cta-c cta-doc">
+                <div class="ci">🩺</div>
+                <h3>Modo Médico</h3>
+                <p>Avaliação rápida sem cadastro. Insira o CPF e os dados do paciente e obtenha diagnóstico com orientações terapêuticas.</p>
+                <ul>
+                    <li>Acesso 100% gratuito</li>
+                    <li>Sem cadastro necessário</li>
+                    <li>Orientações terapêuticas com dosagens</li>
+                    <li>Ganhe 10 USDC por paciente cadastrado</li>
+                </ul>
+                <a href="https://www.redfairy.bio" class="btn btn-doc-cta">Acessar como Médico</a>
+            </div>
+            <div class="cta-c cta-pat">
+                <div class="ci">❤️</div>
+                <h3>Modo Paciente</h3>
+                <p>Cadastre-se e acompanhe a evolução do seu eritron ao longo do tempo. Se o médico já te avaliou, seus dados já estarão aqui.</p>
+                <ul>
+                    <li>Primeira avaliação já disponível</li>
+                    <li>Gráfico evolutivo multiparamétrico</li>
+                    <li>Orientações em linguagem acessível</li>
+                    <li>R$ 149,90/ano via PIX</li>
+                </ul>
+                <a href="https://www.redfairy.bio" class="btn btn-pat-cta">Acessar como Paciente</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="foot-brand">
+        <img src="https://www.redfairy.bio/assets/logo-BGJKSAeL.png" alt="RedFairy">
+        <span>Red<em>Fairy</em></span>
+    </div>
+    <p class="foot-tag">Cuidar do Seu Eritron</p>
+    <p class="credits">
+        by <a href="https://cytomica.com">cytomica.com</a> | &copy; 2026<br>
+        E.F. Ramos, M.D. CRM 6302 BA | RQE 5830 &bull; 5643 &bull; 27847<br>
+        <a href="https://drestacioramos.com.br">drestacioramos.com.br</a>
+    </p>
+</footer>
+
+<script>
+    // Nav scroll
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40));
+    // Mobile menu
+    document.getElementById('hamb').addEventListener('click', () => document.getElementById('navLinks').classList.toggle('open'));
+    // Tabs
+    document.querySelectorAll('.como-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.como-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.como-panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+        });
+    });
+    // Scroll reveal
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('show'); });
+    }, { threshold: 0.07 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    // Filosofia: reveal image for 3 seconds on hover or tap
+    const fil = document.querySelector('.filosofia');
+    let filTimer = null;
+    function showFilImg() {
+        if (filTimer) clearTimeout(filTimer);
+        fil.classList.add('reveal-img');
+        filTimer = setTimeout(() => fil.classList.remove('reveal-img'), 2000);
+    }
+    fil.addEventListener('mouseenter', showFilImg);
+    fil.addEventListener('touchstart', showFilImg, { passive: true });
+
+    // Hero textbox: reveal image for 2 seconds on hover or tap
+    const htb = document.querySelector('.hero-textbox');
+    let htbTimer = null;
+    function showHtbImg() {
+        if (htbTimer) clearTimeout(htbTimer);
+        htb.classList.add('reveal-img');
+        htbTimer = setTimeout(() => htb.classList.remove('reveal-img'), 2000);
+    }
+    htb.addEventListener('mouseenter', showHtbImg);
+    htb.addEventListener('touchstart', showHtbImg, { passive: true });
+</script>
+</body>
+</html>

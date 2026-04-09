@@ -17,6 +17,20 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
     supabase.auth.onAuthStateChange((_event, session) => setSession(session))
     setTimeout(() => setVisible(true), 100)
+
+    // Lê parâmetro ?modo= da URL para deep link da landing page
+    const params = new URLSearchParams(window.location.search)
+    const modoParam = params.get('modo')
+    if (modoParam === 'medico') {
+      setCalcKey(k => k + 1)
+      setModo('calculadora')
+    } else if (modoParam === 'paciente') {
+      setModo('paciente')
+    }
+    // Limpa o parâmetro da URL sem reload
+    if (modoParam) {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
   }, [])
 
   function handleLogoClick() {
