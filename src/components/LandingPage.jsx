@@ -116,10 +116,11 @@ const LANDING_CSS = `
     background-repeat: no-repeat;
     filter: blur(12px); opacity: 0.18;
     transition: filter 0.6s ease, opacity 0.6s ease;
-    z-index: 0;
+    z-index: 1;
   }
+  .filosofia .container { position: relative; z-index: 2; transition: opacity 0.6s ease; }
   @media (max-width: 900px) {
-    .filosofia-bg { background-size: 200% auto; background-position: center center; }
+    .filosofia-bg { background-size: 220% auto; background-position: center center; }
   }
   .filosofia.reveal-img .filosofia-bg { filter: blur(0px); opacity: 0.85; }
   .filosofia .container { position: relative; z-index: 1; transition: opacity 0.6s ease; }
@@ -403,14 +404,14 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
   function onHtbEnter() {
     if (htbTimer.current) clearTimeout(htbTimer.current)
     setShowHtb(true)
-    htbTimer.current = setTimeout(() => setShowHtb(false), 2000)
+    htbTimer.current = setTimeout(() => setShowHtb(false), 1000)
   }
 
   // Filosofia hover: mostra imagem E esconde container por 2s
   function onFilEnter() {
     if (filTimer.current) clearTimeout(filTimer.current)
     setShowFil(true)
-    filTimer.current = setTimeout(() => setShowFil(false), 2000)
+    filTimer.current = setTimeout(() => setShowFil(false), 1000)
   }
 
   function handleFormChange(field, value) {
