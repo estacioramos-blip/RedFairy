@@ -120,7 +120,7 @@ const LANDING_CSS = `
   }
   .filosofia .container { position: relative; z-index: 2; transition: opacity 0.6s ease; }
   @media (max-width: 900px) {
-    .filosofia-bg { background-size: 220% auto; background-position: center center; }
+    .filosofia-bg { background-size: 215% auto; background-position: center 20%; }
   }
   .filosofia.reveal-img .filosofia-bg { filter: blur(0px); opacity: 0.85; }
   .filosofia .container { position: relative; z-index: 1; transition: opacity 0.6s ease; }
