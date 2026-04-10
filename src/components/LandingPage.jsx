@@ -134,12 +134,12 @@ const LANDING_CSS = `
   .cycle-step .desc { font-size: 0.88rem; color: var(--text-sec); }
   .fairy-mini { height: 38px; width: 38px; object-fit: contain; opacity: 0.85; }
 
-  /* INDICAÇÕES — bolinhas vermelho escuro */
-  .indicacoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.6rem; margin-top: 2rem; }
+  /* INDICAÇÕES — bolinhas vermelhas, grid 5 colunas */
+  .indicacoes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; margin-top: 2rem; }
   .ind { background: white; border: 1px solid var(--border2); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-sec); font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
-  .ind::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: #5C1515; display: block; flex-shrink: 0; }
+  .ind::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--cherry); display: block; flex-shrink: 0; }
   .ind:hover { border-color: var(--cherry); color: var(--cherry); background: var(--cherry-bg); }
-  .ind:hover::before { background: var(--cherry); }
+  @media (max-width: 900px) { .indicacoes-grid { grid-template-columns: repeat(2, 1fr); } }
 
   /* TERAPÊUTICA */
   .terapeutica { background: var(--gray-bg); }
@@ -151,36 +151,39 @@ const LANDING_CSS = `
   .terap-card p { font-size: 0.83rem; color: var(--text-sec); }
 
   /* COMO FUNCIONA */
-  .como { background: var(--gray-bg); }
+  .como { background: var(--white); }
   .como-tabs-wrap { display: flex; justify-content: center; margin-top: 2rem; margin-bottom: 2.5rem; }
-  .como-tabs { display: inline-flex; gap: 0.5rem; background: var(--border2); border-radius: 10px; padding: 4px; }
+  .como-tabs { display: inline-flex; gap: 0.5rem; }
   .como-tab { padding: 0.85rem 2.5rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; background: #9CA3AF; color: white; transition: all 0.25s; font-family: inherit; }
   .como-tab:hover { background: #374151; }
   .como-tab.active { background: var(--wine); color: white; box-shadow: 0 4px 14px rgba(123,30,30,0.25); }
   .como-tab.active:hover { background: var(--cherry); }
   .como-content { min-height: 300px; }
   .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
-  .flow-step { text-align: center; }
-  .flow-num { width: 40px; height: 40px; border-radius: 50%; background: var(--wine); color: white; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; }
-  .flow-step h4 { font-size: 0.92rem; margin-bottom: 0.4rem; }
+  .flow-step { text-align: center; background: white; border: 1px solid var(--border2); border-radius: 14px; padding: 1.5rem 1rem; }
+  .flow-num { width: 44px; height: 44px; border-radius: 50%; background: var(--wine); color: white; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; }
+  .flow-step h4 { font-size: 0.92rem; margin-bottom: 0.4rem; font-weight: 700; }
   .flow-step p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
-  .reward-banner { background: linear-gradient(135deg, #1a3a1a, #22863A); border-radius: 14px; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
-  .reward-text h4 { color: white; font-size: 1rem; margin-bottom: 0.3rem; }
-  .reward-text p { color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.6; }
+  /* Reward banner com logo K */
+  .reward-banner { background: linear-gradient(135deg, #22863A, #2da44e); border-radius: 14px; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
+  .reward-text h4 { color: white; font-size: 1rem; margin-bottom: 0.3rem; font-weight: 700; }
+  .reward-text p { color: rgba(255,255,255,0.85); font-size: 0.85rem; line-height: 1.6; }
   .reward-text strong { color: #86EFAC; }
-  .reward-klipbit { display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; padding: 0.3rem 0.8rem; margin-top: 0.6rem; }
-  .reward-klipbit span { color: white; font-size: 0.8rem; font-weight: 700; }
-  .reward-amount { font-size: 2.2rem; font-weight: 800; color: #86EFAC; white-space: nowrap; }
+  .reward-right { display: flex; align-items: center; gap: 0.5rem; }
+  .reward-amount { font-size: 2rem; font-weight: 800; color: white; white-space: nowrap; }
+  .klipbit-k { width: 36px; height: 36px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 900; color: var(--wine); font-family: serif; }
+  /* Patient features com ícones SVG */
   .patient-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
-  .pf-card { background: white; border-radius: 12px; padding: 1.2rem; text-align: center; border: 1px solid var(--border); }
-  .pf-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
-  .pf-card h4 { font-size: 0.9rem; margin-bottom: 0.3rem; }
-  .pf-card p { font-size: 0.8rem; color: var(--text-sec); }
-  .pricing-box { background: linear-gradient(135deg, #FFF1F2, #FFE4E6); border: 1px solid #FECDD3; border-radius: 14px; padding: 2rem; text-align: center; margin-top: 1.5rem; }
-  .price { font-size: 3rem; font-weight: 800; color: var(--wine); }
-  .price-sub { font-size: 1rem; font-weight: 700; color: var(--wine); margin-bottom: 1.2rem; }
+  .pf-card { background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border2); }
+  .pf-icon { width: 36px; height: 36px; margin-bottom: 0.8rem; color: var(--wine); }
+  .pf-card h4 { font-size: 0.9rem; margin-bottom: 0.3rem; font-weight: 700; }
+  .pf-card p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
+  /* Pricing box rosa */
+  .pricing-box { background: #FFF1F2; border: 1px solid #FECDD3; border-radius: 14px; padding: 2.5rem 2rem; text-align: center; margin-top: 1.5rem; }
+  .price { font-size: 3.5rem; font-weight: 800; color: var(--wine); }
+  .price-sub { font-size: 0.95rem; color: var(--wine); margin-bottom: 1.2rem; font-weight: 400; }
   .pix-methods { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
-  .pix-tag { background: white; border: 1px solid #FECDD3; border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 0.8rem; color: var(--wine); font-weight: 600; }
+  .pix-tag { background: white; border: 1px solid #FECDD3; border-radius: 8px; padding: 0.4rem 0.9rem; font-size: 0.82rem; color: var(--wine); font-weight: 500; display: flex; align-items: center; gap: 0.4rem; }
 
   /* PROJETO OBA */
   .oba { background: linear-gradient(170deg, var(--oba-blue-dark) 0%, #334155 60%, #1E293B 100%); color: var(--white); position: relative; overflow: hidden; }
@@ -609,7 +612,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="reveal">
             <span className="tag">Indicações</span>
             <h2 className="stitle">Para quem é o RedFairy?</h2>
-            <p className="sdesc-bold">Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
+            <p className="sdesc">Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
           </div>
           <div className="indicacoes-grid reveal">
             {['Anemias','Sangramentos Crônicos','Bariátricos','Vegetarianos','Gestantes','Celíacos','Deficiência de Ferro','Doadores de Sangue','Ferritina Alta','Uso de Testosterona','Endometriose | Mioma','Menstruação Excessiva','Hemoglobina Alta','Alcoolistas','Regime de Sangrias'].map(i => (
@@ -664,10 +667,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 <div className="reward-banner">
                   <div className="reward-text">
                     <h4>Ganhe por cada paciente que se cadastrar</h4>
-                    <p>Quando o paciente que você avaliou se cadastra, você recebe <strong>DEZ DÓLARES DIGITAIS</strong> na sua wallet.</p>
-                    <div className="reward-klipbit"><span>⚡ KlipBit Wallet</span></div>
+                    <p>Quando o paciente que você avaliou se cadastra, você recebe <strong>DEZ DÓLARES DIGITAIS</strong> diretamente na sua wallet <strong>KlipBit</strong>.</p>
                   </div>
-                  <div className="reward-amount">10 USDC</div>
+                  <div className="reward-right">
+                    <div className="reward-amount">10 USDC</div>
+                    <div className="klipbit-k">K</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -680,17 +685,38 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <div className="flow-step"><div className="flow-num">4</div><h4>Acompanhe seu eritron</h4><p>Novas avaliações geram o gráfico multiparamétrico da sua saúde eritrocitária.</p></div>
                 </div>
                 <div className="patient-features">
-                  <div className="pf-card"><div className="pf-icon">📊</div><h4>Gráfico evolutivo</h4><p>Acompanhe a evolução dos parâmetros ao longo do tempo.</p></div>
-                  <div className="pf-card"><div className="pf-icon">💡</div><h4>Orientações claras</h4><p>Resultados em linguagem acessível, com recomendações práticas.</p></div>
-                  <div className="pf-card"><div className="pf-icon">🩺</div><h4>Conectado ao seu médico</h4><p>A avaliação do médico já está no seu perfil quando você se cadastrar.</p></div>
+                  <div className="pf-card">
+                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    <h4>Gráfico evolutivo</h4>
+                    <p>Acompanhe a evolução dos parâmetros ao longo do tempo em um painel visual.</p>
+                  </div>
+                  <div className="pf-card">
+                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-3 9H8c0-3-3-5-3-9a7 7 0 0 1 7-7z"/><path d="M9 21h6M10 17h4"/></svg>
+                    <h4>Orientações claras e Prescrições</h4>
+                    <p>Resultados em linguagem acessível, com recomendações práticas, emissão de receitas médicas, e pedidos de exames.</p>
+                  </div>
+                  <div className="pf-card">
+                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <h4>Conectado ao seu médico</h4>
+                    <p>A avaliação do médico já está no seu perfil quando você se cadastrar.</p>
+                  </div>
                 </div>
                 <div className="pricing-box">
                   <div className="price">R$ 149,90</div>
                   <div className="price-sub">por ano — acesso completo à plataforma</div>
                   <div className="pix-methods">
-                    <div className="pix-tag">📱 QR Code PIX</div>
-                    <div className="pix-tag">🔑 Chave PIX</div>
-                    <div className="pix-tag">📋 Copie e Cole</div>
+                    <div className="pix-tag">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M17 14h3M14 17v3M17 20h3"/></svg>
+                      QR Code PIX
+                    </div>
+                    <div className="pix-tag">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                      Chave PIX
+                    </div>
+                    <div className="pix-tag">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      Copie e Cole
+                    </div>
                   </div>
                 </div>
               </div>
