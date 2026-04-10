@@ -37,7 +37,7 @@ const LANDING_CSS = `
   /* BUTTONS */
   .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.25s; font-family: inherit; }
   .btn-primary { background: var(--wine); color: var(--white); }
-  .btn-primary:hover { background: var(--cherry); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(123,30,30,0.3); }
+  .btn-primary:hover { background: var(--cherry); transform: translateY(-2px); }
   .btn-secondary { background: #9CA3AF; color: var(--white); border: 1.5px solid #9CA3AF; }
   .btn-secondary:hover { background: #374151; border-color: #374151; transform: translateY(-2px); }
 
@@ -47,35 +47,32 @@ const LANDING_CSS = `
   .whatsapp-btn svg { width: 30px; height: 30px; fill: white; }
 
   /* HERO */
-  .hero { min-height: 100vh; display: flex; align-items: center; padding: 7rem 2rem 4rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); }
-  .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 4rem; align-items: start; padding-top: 2rem; }
-
-  /* COLUNA ESQUERDA */
+  .hero { min-height: 100vh; display: flex; align-items: center; padding: 7rem 2rem 4rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
+  .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 4rem; align-items: center; position: relative; z-index: 2; }
   .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: #374151; color: var(--white); padding: 0.6rem 1.5rem; border-radius: 10px; font-size: 0.82rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.5px; }
   .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--white); animation: pDot 2s ease-in-out infinite; }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
-  .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-bottom: 1.2rem; font-weight: 700; }
+  .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.6rem; margin-bottom: 1.2rem; font-weight: 700; }
+
+  /* HERO TEXTBOX — coluna esquerda, hover mostra imagem E esconde texto */
+  .hero-textbox {
+    background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+    padding: 2rem 2.5rem; box-shadow: var(--shadow);
+    position: relative; overflow: hidden; cursor: pointer; margin-bottom: 1.2rem;
+  }
+  .hero-textbox-bg {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-size: cover; background-position: center;
+    filter: blur(12px); opacity: 0.18;
+    transition: filter 0.6s ease, opacity 0.6s ease;
+    z-index: 0;
+  }
+  .hero-textbox.reveal-img .hero-textbox-bg { filter: blur(0px); opacity: 0.9; }
+  .hero-textbox .htb-content { position: relative; z-index: 1; transition: opacity 0.6s ease; }
+  .hero-textbox.reveal-img .htb-content { opacity: 0; }
   .hero h1 { font-size: 3.2rem; line-height: 1.15; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
   .hero h1 .red { color: var(--cherry); }
-
-  /* Retângulo branco ESQUERDO — frase em negrito preto, sem hover de imagem */
-  .hero-quote-box {
-    background: white;
-    border-radius: 16px;
-    padding: 1.6rem 2rem;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border2);
-    margin-bottom: 1.5rem;
-  }
-  .hero-quote-text {
-    font-size: 1.25rem;
-    font-weight: 800;
-    font-style: normal;
-    color: #1F2937;
-    line-height: 1.5;
-    margin: 0;
-  }
-
+  .hero-philosophy { font-style: italic; font-size: 1.15rem; color: var(--wine); margin-bottom: 0; line-height: 1.6; font-weight: 400; }
   .hero-desc { font-size: 1.05rem; color: var(--text-sec); max-width: 500px; line-height: 1.75; margin-bottom: 2rem; }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
@@ -83,73 +80,61 @@ const LANDING_CSS = `
   .trust-i svg { width: 15px; height: 15px; color: var(--cherry); }
   .trust-i span { font-size: 0.8rem; color: var(--text-light); }
 
-  /* COLUNA DIREITA */
-  .hero-visual { display: flex; flex-direction: column; align-items: stretch; gap: 1.2rem; padding-top: 0; }
-  .fairy-showcase { width: 180px; height: 180px; align-self: center; }
+  /* HERO VISUAL — coluna direita */
+  .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+  .fairy-showcase { width: 200px; height: 200px; }
   .fairy-showcase img { width: 100%; height: 100%; object-fit: contain; animation: floatFairy 4s ease-in-out infinite; }
   @keyframes floatFairy { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
 
-  /* Retângulo branco DIREITO — com hover de imagem, texto vinho */
-  .hero-right-box {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border2);
-    position: relative;
-    overflow: hidden;
-    cursor: default;
-  }
-  .hero-right-box .box-content { position: relative; z-index: 1; }
-  .hero-right-text {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-sec);
-    line-height: 1.75;
-    margin-bottom: 1rem;
-  }
-  .hero-right-tagline {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: var(--wine);
-    line-height: 1.5;
-    margin: 0;
-  }
+  /* fairy-quote — retângulo branco direito com texto */
+  .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 100%; }
+  .fairy-quote p { font-size: 0.92rem; color: var(--text); line-height: 1.6; font-weight: 600; }
+  .fairy-quote .question { color: var(--cherry); font-weight: 600; margin-top: 0.5rem; font-size: 1.02rem; }
 
   /* OBA HOME BTN */
-  .oba-home-btn { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue-dark)); border-radius: 12px; padding: 1rem 1.5rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.2rem; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 6px 25px rgba(232,114,12,0.3); }
-  .oba-home-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(232,114,12,0.4); }
-  .oba-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--oba-orange-light); font-weight: 700; }
-  .oba-sub { font-size: 1rem; color: white; font-weight: 700; }
-  .oba-link { font-size: 0.8rem; color: rgba(255,255,255,0.6); }
+  .oba-home-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 16px; padding: 1.2rem 2rem; transition: all 0.3s; box-shadow: 0 4px 20px rgba(232,114,12,0.2); width: 100%; max-width: 380px; }
+  .oba-home-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(232,114,12,0.3); }
+  .oba-home-btn .oba-title { font-size: 1.1rem; font-weight: 800; color: var(--white); letter-spacing: 1px; }
+  .oba-home-btn .oba-sub { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.9); margin-top: 0.15rem; font-weight: 700; }
+  .oba-home-btn .oba-link { font-size: 0.78rem; color: rgba(255,255,255,0.85); margin-top: 0.5rem; text-decoration: underline; }
 
   /* CONTAINER / SECTIONS */
-  .container { max-width: 1140px; margin: 0 auto; padding: 0 2rem; }
+  .container { max-width: 1100px; margin: 0 auto; }
   section { padding: 5.5rem 2rem; }
   .center { text-align: center; }
-  .tag { display: inline-block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--wine); margin-bottom: 0.6rem; }
-  .stitle { font-family: 'DM Serif Display', serif; font-size: 2.4rem; line-height: 1.25; color: var(--text); margin-bottom: 0.8rem; }
-  .sdesc { font-size: 1rem; color: var(--text-sec); max-width: 580px; line-height: 1.75; }
+  .tag { display: inline-block; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--cherry); margin-bottom: 0.6rem; }
+  .stitle { font-size: 2.3rem; color: var(--text); margin-bottom: 0.7rem; font-weight: 800; }
+  .sdesc { font-size: 1.02rem; color: var(--text-sec); max-width: 580px; line-height: 1.7; font-weight: 600; }
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
-  /* FILOSOFIA */
-  .filosofia { position: relative; overflow: hidden; cursor: default; background: linear-gradient(170deg, #FEF2F2 0%, #FFF 60%); }
-  .filosofia .container { position: relative; z-index: 1; }
-  .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; margin-top: 2.5rem; align-items: start; }
-  .filosofia-text p { font-size: 0.95rem; font-weight: 700; color: var(--text); line-height: 1.85; margin-bottom: 1rem; }
-  .highlight-box { background: var(--wine); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
-  .highlight-box p { color: white; font-weight: 700; font-size: 1rem; margin: 0; }
+  /* FILOSOFIA — hover mostra redfairy3 E esconde container */
+  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; overflow: hidden; }
+  .filosofia-bg {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-size: cover; background-position: center;
+    filter: blur(12px); opacity: 0.18;
+    transition: filter 0.6s ease, opacity 0.6s ease;
+    z-index: 0;
+  }
+  .filosofia.reveal-img .filosofia-bg { filter: blur(0px); opacity: 0.85; }
+  .filosofia .container { position: relative; z-index: 1; transition: opacity 0.6s ease; }
+  .filosofia.reveal-img .container { opacity: 0; pointer-events: none; }
+  .filosofia .tag { color: var(--cherry); }
+  .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-top: 3rem; }
+  .filosofia-text p { color: var(--text-sec); font-size: 0.95rem; line-height: 1.8; margin-bottom: 1.2rem; font-weight: 600; }
+  .highlight-box { background: var(--wine); border: 2px solid var(--wine-dark); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
+  .highlight-box p { color: var(--white); font-weight: 600; font-size: 1rem; margin: 0; text-align: center; }
 
   /* CICLO DA VIDA */
-  .cycle-card { background: white; border-radius: 16px; padding: 1.8rem; box-shadow: var(--shadow); border: 1px solid var(--border); }
-  .cycle-card h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-light); margin-bottom: 1.2rem; font-weight: 700; }
-  .cycle-step { display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
-  .cycle-step:last-child { border-bottom: none; }
-  .cycle-step .icon { font-size: 1.2rem; min-width: 36px; width: 36px; text-align: center; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .cycle-step .desc { font-size: 0.85rem; color: var(--text-sec); line-height: 1.6; padding-top: 0.1rem; }
-  .fairy-mini { width: 30px; height: 30px; object-fit: contain; }
+  .cycle-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; width: 100%; box-shadow: var(--shadow); }
+  .cycle-card h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cherry); margin-bottom: 1.2rem; }
+  .cycle-step { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
+  .cycle-step:last-child { border: none; }
+  .cycle-step .icon { font-size: 1.3rem; width: 42px; min-width: 42px; text-align: center; display: flex; align-items: center; justify-content: center; }
+  .cycle-step .desc { font-size: 0.88rem; color: var(--text-sec); }
+  .fairy-mini { height: 38px; width: 38px; object-fit: contain; opacity: 0.85; }
 
-  /* INDICAÇÕES — bolinhas VERMELHO ESCURO */
+  /* INDICAÇÕES — bolinhas vermelho escuro */
   .indicacoes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.6rem; margin-top: 2rem; }
   .ind { background: white; border: 1px solid var(--border2); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-sec); font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
   .ind::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: #5C1515; display: block; flex-shrink: 0; }
@@ -179,8 +164,6 @@ const LANDING_CSS = `
   .flow-num { width: 40px; height: 40px; border-radius: 50%; background: var(--wine); color: white; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; }
   .flow-step h4 { font-size: 0.92rem; margin-bottom: 0.4rem; }
   .flow-step p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
-
-  /* REWARD BANNER */
   .reward-banner { background: linear-gradient(135deg, #1a3a1a, #22863A); border-radius: 14px; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
   .reward-text h4 { color: white; font-size: 1rem; margin-bottom: 0.3rem; }
   .reward-text p { color: rgba(255,255,255,0.7); font-size: 0.85rem; line-height: 1.6; }
@@ -188,15 +171,11 @@ const LANDING_CSS = `
   .reward-klipbit { display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; padding: 0.3rem 0.8rem; margin-top: 0.6rem; }
   .reward-klipbit span { color: white; font-size: 0.8rem; font-weight: 700; }
   .reward-amount { font-size: 2.2rem; font-weight: 800; color: #86EFAC; white-space: nowrap; }
-
-  /* PATIENT FEATURES */
   .patient-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
   .pf-card { background: white; border-radius: 12px; padding: 1.2rem; text-align: center; border: 1px solid var(--border); }
   .pf-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
   .pf-card h4 { font-size: 0.9rem; margin-bottom: 0.3rem; }
   .pf-card p { font-size: 0.8rem; color: var(--text-sec); }
-
-  /* PRICING BOX — fundo rose/pink */
   .pricing-box { background: linear-gradient(135deg, #FFF1F2, #FFE4E6); border: 1px solid #FECDD3; border-radius: 14px; padding: 2rem; text-align: center; margin-top: 1.5rem; }
   .price { font-size: 3rem; font-weight: 800; color: var(--wine); }
   .price-sub { font-size: 1rem; font-weight: 700; color: var(--wine); margin-bottom: 1.2rem; }
@@ -222,7 +201,7 @@ const LANDING_CSS = `
   .oba-feat p { font-size: 0.82rem; color: rgba(255,255,255,0.55); margin: 0; }
   .oba-cta-row { margin-top: 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap; }
   .btn-oba-main { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue-dark)); color: var(--white); box-shadow: 0 6px 25px rgba(232,114,12,0.3); }
-  .btn-oba-main:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(232,114,12,0.4); }
+  .btn-oba-main:hover { transform: translateY(-2px); }
 
   /* CTA FINAL */
   .cta-final { background: var(--gray-bg); }
@@ -266,7 +245,7 @@ const LANDING_CSS = `
 
   /* RESPONSIVE */
   @media (max-width: 900px) {
-    .hero-wrap { grid-template-columns: 1fr; text-align: center; padding-top: 0; }
+    .hero-wrap { grid-template-columns: 1fr; text-align: center; }
     .hero h1 { font-size: 2.5rem; }
     .hero-desc { margin: 0 auto 2rem; }
     .hero-actions { justify-content: center; }
@@ -368,8 +347,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
   const [navScrolled, setNavScrolled] = useState(false)
   const [navOpen,     setNavOpen]     = useState(false)
   const [activeTab,   setActiveTab]   = useState('medico')
-  const [showFilImg,  setShowFilImg]  = useState(false)
-  const [showRightImg, setShowRightImg] = useState(false)
+  const [showHtb,     setShowHtb]     = useState(false)
+  const [showFil,     setShowFil]     = useState(false)
   const [rfSexo,      setRfSexo]      = useState('F')
   const [rfResultado, setRfResultado] = useState(null)
   const [rfErro,      setRfErro]      = useState('')
@@ -380,8 +359,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
     aspirina:false, b12:false, ferroMed:false,
     hiper:false, gestante:false,
   })
-  const filTimer   = useRef(null)
-  const rightTimer = useRef(null)
+  const htbTimer = useRef(null)
+  const filTimer = useRef(null)
 
   useEffect(() => {
     if (!document.getElementById('landing-css')) {
@@ -412,18 +391,18 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
     }
   }, [])
 
-  // Hover filosofia: desfocado → nítido 2s → desfocado
-  function showFil() {
-    if (filTimer.current) clearTimeout(filTimer.current)
-    setShowFilImg(true)
-    filTimer.current = setTimeout(() => setShowFilImg(false), 2000)
+  // Hero textbox hover: mostra imagem E esconde texto por 2s
+  function onHtbEnter() {
+    if (htbTimer.current) clearTimeout(htbTimer.current)
+    setShowHtb(true)
+    htbTimer.current = setTimeout(() => setShowHtb(false), 2000)
   }
 
-  // Hover retângulo direito: desfocado → nítido 2s → desfocado
-  function showRight() {
-    if (rightTimer.current) clearTimeout(rightTimer.current)
-    setShowRightImg(true)
-    rightTimer.current = setTimeout(() => setShowRightImg(false), 2000)
+  // Filosofia hover: mostra imagem E esconde container por 2s
+  function onFilEnter() {
+    if (filTimer.current) clearTimeout(filTimer.current)
+    setShowFil(true)
+    filTimer.current = setTimeout(() => setShowFil(false), 2000)
   }
 
   function handleFormChange(field, value) {
@@ -489,26 +468,37 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       <section className="hero">
         <div className="hero-wrap">
 
-          {/* ── COLUNA ESQUERDA ── */}
+          {/* COLUNA ESQUERDA */}
           <div className="reveal">
             <div className="hero-badge"><div className="dot" />Doutor, avalie o seu paciente</div>
             <p className="hero-badge-sub">
               Você vai precisar de algumas informações do eritrograma:<br />
               Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
             </p>
-            <h1>Eu sou a sua fada vermelha, a sua <span className="red">Hemoglobina</span></h1>
 
-            {/* Retângulo branco ESQUERDO — frase em negrito preto, SEM imagem */}
-            <div className="hero-quote-box">
-              <p className="hero-quote-text">
-                Eu uso a poeira das estrelas para te entregar o ar.<br />
-                Quanto tempo você vive sem ar?
-              </p>
+            {/* Hero textbox: hover revela imagem E esconde texto (fiel ao Cowork) */}
+            <div
+              className={`hero-textbox${showHtb ? ' reveal-img' : ''}`}
+              onMouseEnter={onHtbEnter}
+              onTouchStart={onHtbEnter}
+            >
+              <div
+                className="hero-textbox-bg"
+                style={{ backgroundImage: `url(${filosofiaBg})` }}
+              />
+              <div className="htb-content">
+                <h1>Eu sou a sua fada vermelha, a sua <span className="red">Hemoglobina</span></h1>
+                <p className="hero-philosophy">
+                  Eu uso a poeira das estrelas para te entregar o ar.<br />
+                  Quanto tempo você vive sem ar?
+                </p>
+              </div>
             </div>
 
             <p className="hero-desc">
-              Avalie o eritron e o metabolismo do ferro com precisão clínica. Monitore a evolução
-              da sua hemoglobina e receba orientações terapêuticas ajustadas às suas necessidades.
+              Avalie o eritron e o metabolismo do ferro com precisão clínica. Com apenas alguns dados
+              laboratoriais e de contexto de vida, monitore a evolução da sua hemoglobina e receba
+              orientações terapêuticas ajustadas às suas necessidades. Viva melhor para viver mais!
             </p>
             <div className="hero-actions">
               <button className="btn btn-primary" onClick={onModoMedico}>Sou Médico</button>
@@ -516,87 +506,49 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </div>
             <div className="trust">
               <div className="trust-i">
-                <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
+                <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 <span>17 variáveis clínicas</span>
               </div>
               <div className="trust-i">
-                <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+                <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Resultado imediato</span>
               </div>
               <div className="trust-i">
-                <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+                <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 <span>Médico ganha 10 USDC por paciente</span>
               </div>
             </div>
           </div>
 
-          {/* ── COLUNA DIREITA ── */}
+          {/* COLUNA DIREITA */}
           <div className="hero-visual reveal" style={{ transitionDelay:'0.15s' }}>
-
-            {/* Fada flutuante no topo */}
             <div className="fairy-showcase">
               <img src={logo} alt="RedFairy — A Fada Vermelha" />
             </div>
-
-            {/* Retângulo branco DIREITO com hover de imagem (fairy3) */}
-            <div
-              className="hero-right-box"
-              onMouseEnter={showRight}
-              onTouchStart={showRight}
-            >
-              {/* Imagem fairy3: sempre desfocada, nítida no hover */}
-              <img
-                src={fairy3}
-                alt=""
-                aria-hidden="true"
-                style={{
-                  position:'absolute', inset:0, width:'100%', height:'100%',
-                  objectFit:'cover', borderRadius:14, pointerEvents:'none',
-                  opacity: 0.15,
-                  filter: showRightImg ? 'blur(0px)' : 'blur(8px)',
-                  transition: showRightImg ? 'filter 0.1s ease' : 'filter 1.8s ease',
-                }}
-              />
-              <div className="box-content">
-                <p className="hero-right-text">
-                  O Ferro em você veio das estrelas, é dele o vermelho do seu sangue — a sua potência.
-                  Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.
-                </p>
-                <p className="hero-right-tagline">
-                  Cuide da sua Hemoglobina, ela é a sua vida.
-                </p>
-              </div>
+            {/* fairy-quote: retângulo branco simples, sem hover */}
+            <div className="fairy-quote">
+              <p>O Ferro em você veio das estrelas, é dele o vermelho do seu sangue — a sua potência.</p>
+              <p className="question">Cuide da sua Hemoglobina, ela é a sua vida.</p>
             </div>
-
-            {/* Botão OBA */}
             <a href="#oba" className="oba-home-btn">
               <span className="oba-title">Projeto OBA</span>
               <span className="oba-sub">Otimizar o Bariátrico</span>
-              <span className="oba-link">Saiba mais →</span>
+              <span className="oba-link">Saiba mais</span>
             </a>
           </div>
         </div>
       </section>
 
-      {/* FILOSOFIA — hover: imagem filosofiaBg desfocada → nítida 2s → desfocada */}
-      <section className="filosofia" id="filosofia" onMouseEnter={showFil} onTouchStart={showFil}>
-        <img
-          src={filosofiaBg}
-          alt=""
-          aria-hidden="true"
-          style={{
-            position:'absolute', inset:0, width:'100%', height:'100%',
-            objectFit:'cover', pointerEvents:'none',
-            opacity: 0.12,
-            filter: showFilImg ? 'blur(0px)' : 'blur(8px)',
-            transition: showFilImg ? 'filter 0.1s ease' : 'filter 1.8s ease',
-          }}
+      {/* FILOSOFIA — hover revela redfairy3 E esconde container (fiel ao Cowork) */}
+      <section
+        className={`filosofia${showFil ? ' reveal-img' : ''}`}
+        id="filosofia"
+        onMouseEnter={onFilEnter}
+        onTouchStart={onFilEnter}
+      >
+        <div
+          className="filosofia-bg"
+          style={{ backgroundImage: `url(${fairy3})` }}
         />
         <div className="container">
           <div className="reveal">
@@ -606,9 +558,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="filosofia-grid">
             <div className="filosofia-text reveal">
               <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
-              <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto.</p>
+              <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
               <p>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
-              <p>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para fazer açúcar, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
+              <p>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
               <div className="highlight-box"><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
             </div>
             <div className="filosofia-visual reveal" style={{ transitionDelay:'0.1s' }}>
@@ -622,26 +574,27 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <div className="icon"><img src={logo} className="fairy-mini" alt="Fadinha" /></div>
                   <div className="desc">Hemoglobina — A fada vermelha, que com o ferro faz você respirar.</div>
                 </div>
-                {/* Nuvem SVG branca com contorno preto */}
                 <div className="cycle-step">
-                  <div className="icon">
-                    <svg width="26" height="20" viewBox="0 0 64 44" fill="white" stroke="#1F2937" strokeWidth="3.5" strokeLinejoin="round">
-                      <path d="M51 20C49.4 13 43.2 8 36 8c-5.6 0-10.5 3-13.3 7.5C21 14.6 19 14 16.5 14 10 14 4.5 19.5 4.5 26S10 38 16.5 38H50c5.5 0 10-4.5 10-10 0-4.8-3.4-8.8-8-9.8C51.7 17.8 51.4 18.9 51 20z"/>
-                    </svg>
-                  </div>
+                  <div className="icon">🫁</div>
                   <div className="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div>
                 </div>
                 <div className="cycle-step">
                   <div className="icon" style={{ color:'#DC2626' }}>❤️</div>
-                  <div className="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico.</div>
+                  <div className="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico do metabolismo.</div>
                 </div>
                 <div className="cycle-step">
-                  <div className="icon">🌿</div>
+                  <div className="icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="1.8">
+                      <path d="M17.8 2c-1.5 0-3 .5-4.3 1.4C12.5 2 11.5 1.5 10.3 1.5 7.5 1.5 5 4 5 7c0 .5.1 1 .2 1.5C3.2 10 2 12.5 2 15.5 2 20 5.5 22 9 22c1.5 0 3-.5 4-1.5 1 1 2.5 1.5 4 1.5 3.5 0 7-2 7-6.5 0-3-1.2-5.5-3.2-7"/>
+                      <path d="M12 22V8" strokeWidth="1.5"/>
+                      <path d="M12 12l4-3" strokeWidth="1.5" strokeLinecap="round"/>
+                      <path d="M12 15l-3-2.5" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
                   <div className="desc">Clorofila — No meio ambiente, a mãe verde recicla o gás carbônico em oxigênio.</div>
                 </div>
-                {/* Ícone azul claro, texto cor normal */}
                 <div className="cycle-step">
-                  <div className="icon" style={{ color:'#38BDF8' }}>♻️</div>
+                  <div className="icon" style={{ color:'#3B82F6' }}>♻️</div>
                   <div className="desc">Ciclo perfeito — O vermelho e o verde sustentam a vida no planeta azul.</div>
                 </div>
               </div>
@@ -695,42 +648,18 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           </div>
           <div className="como-tabs-wrap reveal">
             <div className="como-tabs">
-              <button
-                className={`como-tab${activeTab === 'medico' ? ' active' : ''}`}
-                onClick={() => setActiveTab('medico')}
-              >Para Médicos</button>
-              <button
-                className={`como-tab${activeTab === 'paciente' ? ' active' : ''}`}
-                onClick={() => setActiveTab('paciente')}
-              >Para Pacientes</button>
+              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}>Para Médicos</button>
+              <button className={`como-tab${activeTab === 'paciente' ? ' active' : ''}`} onClick={() => setActiveTab('paciente')}>Para Pacientes</button>
             </div>
           </div>
-
           <div className="como-content">
-            {/* ABA MÉDICO */}
             {activeTab === 'medico' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step">
-                    <div className="flow-num">1</div>
-                    <h4>Acesse o Modo Médico</h4>
-                    <p>Gratuito, sem cadastro. Use o seu CRM para acesso imediato à calculadora clínica.</p>
-                  </div>
-                  <div className="flow-step">
-                    <div className="flow-num">2</div>
-                    <h4>Insira o CPF do paciente</h4>
-                    <p>Única informação de identificação. Vincula os dados ao paciente automaticamente.</p>
-                  </div>
-                  <div className="flow-step">
-                    <div className="flow-num">3</div>
-                    <h4>Preencha os parâmetros</h4>
-                    <p>Apenas cinco parâmetros laboratoriais e algumas caixinhas com dados clínicos.</p>
-                  </div>
-                  <div className="flow-step">
-                    <div className="flow-num">4</div>
-                    <h4>Avalie e oriente</h4>
-                    <p>Diagnóstico, orientações terapêuticas e dosagens em segundos.</p>
-                  </div>
+                  <div className="flow-step"><div className="flow-num">1</div><h4>Acesse o Modo Médico</h4><p>Gratuito, sem cadastro. Use o seu CRM para acesso imediato à calculadora clínica.</p></div>
+                  <div className="flow-step"><div className="flow-num">2</div><h4>Insira o CPF do paciente</h4><p>Única informação de identificação. Vincula os dados ao paciente automaticamente.</p></div>
+                  <div className="flow-step"><div className="flow-num">3</div><h4>Preencha os parâmetros</h4><p>Apenas cinco parâmetros laboratoriais e algumas caixinhas com dados clínicos.</p></div>
+                  <div className="flow-step"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>Diagnóstico, orientações terapêuticas e dosagens em segundos.</p></div>
                 </div>
                 <div className="reward-banner">
                   <div className="reward-text">
@@ -742,48 +671,18 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 </div>
               </div>
             )}
-
-            {/* ABA PACIENTE */}
             {activeTab === 'paciente' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step">
-                    <div className="flow-num">1</div>
-                    <h4>Informe seu CPF</h4>
-                    <p>Se seu médico já fez a primeira avaliação, seus dados já estarão aqui.</p>
-                  </div>
-                  <div className="flow-step">
-                    <div className="flow-num">2</div>
-                    <h4>Complete o cadastro</h4>
-                    <p>Cadastro simples com e-mail, senha e celular. Rápido e seguro.</p>
-                  </div>
-                  <div className="flow-step">
-                    <div className="flow-num">3</div>
-                    <h4>Assine via PIX</h4>
-                    <p>R$ 149,90/ano via QR Code, Chave PIX ou Copie e Cole.</p>
-                  </div>
-                  <div className="flow-step">
-                    <div className="flow-num">4</div>
-                    <h4>Acompanhe seu eritron</h4>
-                    <p>Novas avaliações geram o gráfico multiparamétrico da sua saúde eritrocitária.</p>
-                  </div>
+                  <div className="flow-step"><div className="flow-num">1</div><h4>Informe seu CPF</h4><p>Se seu médico já fez a primeira avaliação, seus dados já estarão aqui.</p></div>
+                  <div className="flow-step"><div className="flow-num">2</div><h4>Complete o cadastro</h4><p>Cadastro simples com e-mail, senha e celular. Rápido e seguro.</p></div>
+                  <div className="flow-step"><div className="flow-num">3</div><h4>Assine via PIX</h4><p>R$ 149,90/ano via QR Code, Chave PIX ou Copie e Cole.</p></div>
+                  <div className="flow-step"><div className="flow-num">4</div><h4>Acompanhe seu eritron</h4><p>Novas avaliações geram o gráfico multiparamétrico da sua saúde eritrocitária.</p></div>
                 </div>
                 <div className="patient-features">
-                  <div className="pf-card">
-                    <div className="pf-icon">📊</div>
-                    <h4>Gráfico evolutivo</h4>
-                    <p>Acompanhe a evolução dos parâmetros ao longo do tempo.</p>
-                  </div>
-                  <div className="pf-card">
-                    <div className="pf-icon">💡</div>
-                    <h4>Orientações claras</h4>
-                    <p>Resultados em linguagem acessível, com recomendações práticas.</p>
-                  </div>
-                  <div className="pf-card">
-                    <div className="pf-icon">🩺</div>
-                    <h4>Conectado ao seu médico</h4>
-                    <p>A avaliação do médico já está no seu perfil quando você se cadastrar.</p>
-                  </div>
+                  <div className="pf-card"><div className="pf-icon">📊</div><h4>Gráfico evolutivo</h4><p>Acompanhe a evolução dos parâmetros ao longo do tempo.</p></div>
+                  <div className="pf-card"><div className="pf-icon">💡</div><h4>Orientações claras</h4><p>Resultados em linguagem acessível, com recomendações práticas.</p></div>
+                  <div className="pf-card"><div className="pf-icon">🩺</div><h4>Conectado ao seu médico</h4><p>A avaliação do médico já está no seu perfil quando você se cadastrar.</p></div>
                 </div>
                 <div className="pricing-box">
                   <div className="price">R$ 149,90</div>
@@ -806,9 +705,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="center reveal" style={{ marginBottom:'2.5rem' }}>
             <span className="tag" style={{ color:'var(--cherry-light)' }}>Experimente Agora</span>
             <h2 className="stitle" style={{ color:'white' }}>Faça uma avaliação gratuita</h2>
-            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', margin:'0 auto', maxWidth:580 }}>
-              Insira os dados laboratoriais e obtenha o diagnóstico. Sem cadastro.
-            </p>
+            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', margin:'0 auto', maxWidth:580 }}>Insira os dados laboratoriais e obtenha o diagnóstico. Sem cadastro.</p>
           </div>
           <div style={{ maxWidth:720, margin:'0 auto' }}>
             <div style={{ background:'var(--dark-card)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:16, padding:'2rem', marginBottom:'1.5rem' }}>
@@ -878,7 +775,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               </button>
               {rfErro && <p style={{ color:'#F87171', fontSize:'0.85rem', marginTop:'0.75rem', textAlign:'center' }}>{rfErro}</p>}
             </div>
-
             {rfResultado && (() => {
               const c = colorMap[rfResultado.color] || colorMap.yellow
               return (
@@ -919,15 +815,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="reveal">
             <span className="tag">Projeto OBA</span>
             <h2 className="stitle">Otimizar o Bariátrico</h2>
-            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', maxWidth:580, lineHeight:1.7, fontWeight:700 }}>
-              Milhares de bariátricos vivem desassistidos. O Projeto OBA é um sub-algoritmo especializado dentro do RedFairy que cuida especificamente de quem fez cirurgia bariátrica.
-            </p>
+            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', maxWidth:580, lineHeight:1.7, fontWeight:700 }}>Milhares de bariátricos vivem desassistidos. O Projeto OBA é um sub-algoritmo especializado dentro do RedFairy que cuida especificamente de quem fez cirurgia bariátrica.</p>
           </div>
           <div className="oba-grid">
             <div className="oba-narrative reveal">
-              <div className="oba-metaphor">
-                <p>A cirurgia bariátrica corta as asas da sua fada vermelha.<br />Ela continua com seus superpoderes, mas para voar precisa da ajuda do RedFairy.</p>
-              </div>
+              <div className="oba-metaphor"><p>A cirurgia bariátrica corta as asas da sua fada vermelha.<br />Ela continua com seus superpoderes, mas para voar precisa da ajuda do RedFairy.</p></div>
               <p>O bypass gástrico e a gastrectomia causam uma <strong>síndrome disabsortiva</strong> que prejudica a absorção de ferro, vitamina B12 e outros elementos essenciais.</p>
               <p>O Projeto OBA oferece um <strong>tratamento de manutenção indefinido</strong>: monitoramento contínuo, cálculo de reposição personalizado e orientações específicas.</p>
               <div className="oba-cta-row">
