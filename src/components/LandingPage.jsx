@@ -111,15 +111,16 @@ const LANDING_CSS = `
   .filosofia { background: var(--gray-bg); color: var(--text); position: relative; overflow: hidden; }
   .filosofia-bg {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-size: contain;
-    background-position: center;
+    background-size: cover;
+    background-position: center center;
     background-repeat: no-repeat;
     filter: blur(12px); opacity: 0.18;
     transition: filter 0.6s ease, opacity 0.6s ease;
     z-index: 0;
   }
   @media (max-width: 900px) {
-    .filosofia-bg { background-size: contain; }
+    .filosofia { min-height: 100vw; }
+    .filosofia-bg { background-size: 100% auto; background-position: center center; }
   }
   .filosofia.reveal-img .filosofia-bg { filter: blur(0px); opacity: 0.85; }
   .filosofia .container { position: relative; z-index: 1; transition: opacity 0.6s ease; }
