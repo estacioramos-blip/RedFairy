@@ -671,7 +671,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   </div>
                   <div className="reward-right">
                     <div className="reward-amount">10 USDC</div>
-                    <div className="klipbit-k">K</div>
+                    <a href="https://www.klipbit.com/en" target="_blank" rel="noopener" style={{display:'flex',alignItems:'center'}}>
+                      <img src="https://klipbit.com/favicon.ico" alt="KlipBit" style={{height:36, width:36, borderRadius:8, opacity:0.9}} />
+                    </a>
                   </div>
                 </div>
               </div>
@@ -694,6 +696,14 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                     <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-3 9H8c0-3-3-5-3-9a7 7 0 0 1 7-7z"/><path d="M9 21h6M10 17h4"/></svg>
                     <h4>Orientações claras e Prescrições</h4>
                     <p>Resultados em linguagem acessível, com recomendações práticas, emissão de receitas médicas, e pedidos de exames.</p>
+                    <p style={{marginTop:'0.6rem', display:'flex', alignItems:'flex-start', gap:'0.4rem'}}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" style={{flexShrink:0, marginTop:'2px'}}>
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="#DC2626"/>
+                        <line x1="12" y1="9" x2="12" y2="13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                      <span style={{color:'#5C1515', fontSize:'0.78rem', fontWeight:600}}>ATENÇÃO: Haverá uma pequena taxa a pagar pela emissão de receitas médicas e pedidos de exames.</span>
+                    </p>
                   </div>
                   <div className="pf-card">
                     <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
