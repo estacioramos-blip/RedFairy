@@ -119,8 +119,7 @@ const LANDING_CSS = `
     z-index: 0;
   }
   @media (max-width: 900px) {
-    .filosofia { min-height: 100vw; }
-    .filosofia-bg { background-size: 100% auto; background-position: center center; }
+    .filosofia-bg { background-size: 200% auto; background-position: center center; }
   }
   .filosofia.reveal-img .filosofia-bg { filter: blur(0px); opacity: 0.85; }
   .filosofia .container { position: relative; z-index: 1; transition: opacity 0.6s ease; }
@@ -171,12 +170,12 @@ const LANDING_CSS = `
   .flow-step h4 { font-size: 0.92rem; margin-bottom: 0.4rem; font-weight: 700; }
   .flow-step p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
   /* Reward banner com logo K */
-  .reward-banner { background: linear-gradient(to right, #14532d, #22863A, #86efac); border-radius: 14px; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
+  .reward-banner { background: #22863A; border-radius: 14px; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
   .reward-text h4 { color: white; font-size: 1rem; margin-bottom: 0.3rem; font-weight: 700; }
   .reward-text p { color: rgba(255,255,255,0.9); font-size: 0.85rem; line-height: 1.6; }
   .reward-text strong { color: white; }
   .reward-right { display: flex; align-items: center; gap: 0.5rem; }
-  .reward-amount { font-size: 2rem; font-weight: 800; color: #14532d; white-space: nowrap; }
+  .reward-amount { font-size: 2rem; font-weight: 800; color: white; white-space: nowrap; }
   .klipbit-k { width: 36px; height: 36px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 900; color: var(--wine); font-family: serif; }
   /* Patient features com ícones SVG */
   .patient-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
