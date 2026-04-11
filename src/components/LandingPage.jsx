@@ -549,7 +549,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
         </div>
       </section>
 
-      {/* FILOSOFIA — texto esquerda, retângulo imagem direita */}
+
+      {/* FILOSOFIA */}
       <section className="filosofia" id="filosofia">
         <div className="container">
           <div className="reveal">
@@ -557,60 +558,61 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <h2 className="stitle">Vida é ventilação e perfusão</h2>
           </div>
           <div className="filosofia-grid">
-            {/* Coluna esquerda: texto */}
+            {/* Coluna esquerda: texto + retângulo imagem abaixo */}
             <div className="filosofia-text reveal">
               <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
               <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
               <p>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
               <p>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
               <div className="highlight-box"><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
-            </div>
-            {/* Coluna direita: retângulo com imagem hover */}
-            <div className="reveal" style={{ transitionDelay:'0.1s', marginTop:'-2rem' }}>
+              {/* Retângulo imagem abaixo do texto */}
               <div
                 className={`fil-img-box${showFil ? ' reveal-img' : ''}`}
+                style={{ marginTop:'1.5rem' }}
                 onMouseEnter={onFilEnter}
                 onTouchStart={onFilEnter}
               >
-                <div
-                  className="fil-img-box-bg"
-                  style={{ backgroundImage: `url(${fairy3})` }}
-                />
-                <div className="fil-content">
-                  <div className="cycle-card" style={{ boxShadow:'none', border:'none', background:'transparent', padding:0 }}>
-                    <h4 style={{ color:'var(--cherry)' }}>O ciclo da vida</h4>
-                    <div className="cycle-step">
-                      <div className="icon">⭐</div>
-                      <div className="desc">Ferro — é poeira das estrelas, dá poder ao seu sangue.</div>
-                    </div>
-                    <div className="cycle-step">
-                      <div className="icon"><img src={logo} className="fairy-mini" alt="Fadinha" /></div>
-                      <div className="desc">Hemoglobina — A fada vermelha, que com o ferro faz você respirar.</div>
-                    </div>
-                    <div className="cycle-step">
-                      <div className="icon">🫁</div>
-                      <div className="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div>
-                    </div>
-                    <div className="cycle-step">
-                      <div className="icon" style={{ color:'#DC2626' }}>❤️</div>
-                      <div className="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico do metabolismo.</div>
-                    </div>
-                    <div className="cycle-step">
-                      <div className="icon">
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="1.8">
-                          <path d="M17.8 2c-1.5 0-3 .5-4.3 1.4C12.5 2 11.5 1.5 10.3 1.5 7.5 1.5 5 4 5 7c0 .5.1 1 .2 1.5C3.2 10 2 12.5 2 15.5 2 20 5.5 22 9 22c1.5 0 3-.5 4-1.5 1 1 2.5 1.5 4 1.5 3.5 0 7-2 7-6.5 0-3-1.2-5.5-3.2-7"/>
-                          <path d="M12 22V8" strokeWidth="1.5"/>
-                          <path d="M12 12l4-3" strokeWidth="1.5" strokeLinecap="round"/>
-                          <path d="M12 15l-3-2.5" strokeWidth="1.5" strokeLinecap="round"/>
-                        </svg>
-                      </div>
-                      <div className="desc">Clorofila — No meio ambiente, a mãe verde recicla o gás carbônico em oxigênio.</div>
-                    </div>
-                    <div className="cycle-step">
-                      <div className="icon" style={{ color:'#3B82F6' }}>♻️</div>
-                      <div className="desc">Ciclo perfeito — O vermelho e o verde sustentam a vida no planeta azul.</div>
-                    </div>
+                <div className="fil-img-box-bg" style={{ backgroundImage: `url(${fairy3})` }} />
+                <div className="fil-content" />
+              </div>
+            </div>
+            {/* Coluna direita: Ciclo da Vida em retângulo branco vertical */}
+            <div className="reveal" style={{ transitionDelay:'0.1s' }}>
+              <div className="cycle-card" style={{ height:'100%' }}>
+                <h4>O ciclo da vida</h4>
+                <div className="cycle-step">
+                  <div className="icon">⭐</div>
+                  <div className="desc">Ferro — é poeira das estrelas, dá poder ao seu sangue.</div>
+                </div>
+                <div className="cycle-step">
+                  <div className="icon"><img src={logo} className="fairy-mini" alt="Fadinha" /></div>
+                  <div className="desc">Hemoglobina — A fada vermelha, que com o ferro faz você respirar.</div>
+                </div>
+                <div className="cycle-step">
+                  <div className="icon">
+                    {/* Pulmão SVG */}
+                    <svg width="26" height="26" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M32 8 C32 8 28 12 28 20 L28 40 C28 48 20 52 14 50 C8 48 6 42 8 36 C10 30 16 28 20 30 L20 20 C20 12 26 6 32 6 C38 6 44 12 44 20 L44 30 C48 28 54 30 56 36 C58 42 56 48 50 50 C44 52 36 48 36 40 L36 20 C36 12 32 8 32 8 Z" fill="#6B7280" opacity="0.7"/>
+                    </svg>
                   </div>
+                  <div className="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div>
+                </div>
+                <div className="cycle-step">
+                  <div className="icon" style={{ color:'#DC2626' }}>❤️</div>
+                  <div className="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico do metabolismo.</div>
+                </div>
+                <div className="cycle-step">
+                  <div className="icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="1.8">
+                      <path d="M17.8 2c-1.5 0-3 .5-4.3 1.4C12.5 2 11.5 1.5 10.3 1.5 7.5 1.5 5 4 5 7c0 .5.1 1 .2 1.5C3.2 10 2 12.5 2 15.5 2 20 5.5 22 9 22c1.5 0 3-.5 4-1.5 1 1 2.5 1.5 4 1.5 3.5 0 7-2 7-6.5 0-3-1.2-5.5-3.2-7"/>
+                      <path d="M12 22V8" strokeWidth="1.5"/><path d="M12 12l4-3" strokeWidth="1.5" strokeLinecap="round"/><path d="M12 15l-3-2.5" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div className="desc">Clorofila — No meio ambiente, a mãe verde recicla o gás carbônico em oxigênio.</div>
+                </div>
+                <div className="cycle-step">
+                  <div className="icon" style={{ color:'#3B82F6' }}>♻️</div>
+                  <div className="desc">Ciclo perfeito — O vermelho e o verde sustentam a vida no planeta azul.</div>
                 </div>
               </div>
             </div>
@@ -627,8 +629,27 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <p className="sdesc">Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
           </div>
           <div className="indicacoes-grid reveal">
-            {['Anemias','Sangramentos Crônicos','Bariátricos','Vegetarianos','Gestantes','Celíacos','Deficiência de Ferro','Doadores de Sangue','Ferritina Alta','Uso de Testosterona','Endometriose | Mioma','Menstruação Excessiva','Hemoglobina Alta','Alcoolistas','Regime de Sangrias'].map(i => (
-              <div key={i} className="ind">{i}</div>
+            {/* Bariátricos — bolinha amarela + subtexto OBA */}
+            <div className="ind" style={{ flexDirection:'column', alignItems:'flex-start', gap:'0.2rem' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}>
+                <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0 }} />
+                <strong>Bariátricos</strong>
+              </div>
+              <span style={{ fontSize:'0.72rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', paddingLeft:'1.1rem' }}>OBA — Otimizar o Bariátrico</span>
+            </div>
+            {/* Deficiência de G-6-PD */}
+            <div className="ind"><strong>Deficiência de G-6-PD</strong></div>
+            {/* Deficiência / Excesso de Ferro com subtexto */}
+            <div className="ind" style={{ flexDirection:'column', alignItems:'flex-start', gap:'0.2rem' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}>
+                <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0 }} />
+                <strong>Deficiência / Excesso de Ferro</strong>
+              </div>
+              <span style={{ fontSize:'0.72rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', paddingLeft:'1.1rem' }}>Ferritina Baixa / Alta</span>
+            </div>
+            {/* Demais indicações normais em negrito */}
+            {['Anemias','Sangramentos Crônicos','Vegetarianos','Gestantes','Celíacos','Doadores de Sangue','Uso de Testosterona','Endometriose | Mioma','Menstruação Excessiva','Hemoglobina Alta','Alcoolistas','Regime de Sangrias'].map(i => (
+              <div key={i} className="ind"><strong>{i}</strong></div>
             ))}
           </div>
         </div>
