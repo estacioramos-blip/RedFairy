@@ -111,7 +111,7 @@ const LANDING_CSS = `
   .filosofia { background: var(--gray-bg); color: var(--text); position: relative; }
   .filosofia .tag { color: var(--cherry); }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 3rem; }
-  .filosofia-text p { color: var(--text-sec); font-size: 0.95rem; line-height: 1.8; margin-bottom: 1.2rem; font-weight: 600; }
+  .fil-img-box .fil-content p { font-size: 1.05rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
   .highlight-box { background: var(--wine); border: 2px solid var(--wine-dark); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
   .highlight-box p { color: var(--white); font-weight: 600; font-size: 1rem; margin: 0; text-align: center; }
   /* Retângulo da imagem filosofia */
@@ -132,13 +132,12 @@ const LANDING_CSS = `
   .fil-img-box .fil-content { position: relative; z-index: 1; transition: opacity 0.6s ease; padding: 1.5rem; }
   .fil-img-box.reveal-img .fil-content { opacity: 0; }
 
-  /* CICLO DA VIDA */
   .cycle-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; width: 100%; box-shadow: var(--shadow); }
-  .cycle-card h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cherry); margin-bottom: 1.2rem; }
+  .cycle-card h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cherry); margin-bottom: 1.2rem; font-weight: 800; }
   .cycle-step { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
   .cycle-step:last-child { border: none; }
   .cycle-step .icon { font-size: 1.3rem; width: 42px; min-width: 42px; text-align: center; display: flex; align-items: center; justify-content: center; }
-  .cycle-step .desc { font-size: 0.88rem; color: var(--text-sec); }
+  .cycle-step .desc { font-size: 0.95rem; color: var(--text-sec); font-weight: 700; }
   .fairy-mini { height: 38px; width: 38px; object-fit: contain; opacity: 0.85; }
 
   /* INDICAÇÕES — bolinhas vermelhas, grid 5 colunas */
@@ -717,7 +716,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 </div>
                 <div className="reward-banner">
                   <div className="reward-text">
-                    <h4>Ganhe por cada paciente que se cadastrar</h4>
+                    <h4>Doutor: Ganhe por cada paciente que você avaliar</h4>
                     <p>Quando o paciente que você avaliou se cadastra, você recebe <strong>DEZ DÓLARES DIGITAIS</strong> diretamente na sua wallet <strong>KlipBit</strong>.</p>
                   </div>
                   <div className="reward-right">
@@ -739,12 +738,20 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 </div>
                 <div className="patient-features">
                   <div className="pf-card">
-                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                    {/* Gráfico evolutivo - ícone de linha de gráfico */}
+                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
                     <h4>Gráfico evolutivo</h4>
                     <p>Acompanhe a evolução dos parâmetros ao longo do tempo em um painel visual.</p>
                   </div>
                   <div className="pf-card">
-                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2a7 7 0 0 1 7 7c0 4-3 6-3 9H8c0-3-3-5-3-9a7 7 0 0 1 7-7z"/><path d="M9 21h6M10 17h4"/></svg>
+                    {/* Orientações - ícone de documento com check */}
+                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <polyline points="9 15 11 17 15 13"/>
+                    </svg>
                     <h4>Orientações claras e Prescrições</h4>
                     <p>Resultados em linguagem acessível, com recomendações práticas, emissão de receitas médicas, e pedidos de exames.</p>
                     <p style={{marginTop:'0.6rem', display:'flex', alignItems:'flex-start', gap:'0.4rem'}}>
@@ -757,14 +764,18 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                     </p>
                   </div>
                   <div className="pf-card">
-                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    {/* Conectado ao médico - ícone de coração + pulso */}
+                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                      <path d="M18.364 5.636a9 9 0 0 1 0 12.728" strokeDasharray="2 2"/>
+                    </svg>
                     <h4>Conectado ao seu médico</h4>
                     <p>A avaliação do médico já está no seu perfil quando você se cadastrar.</p>
                   </div>
                 </div>
                 <div className="pricing-box">
                   <div className="price">R$ 149,90</div>
-                  <div className="price-sub">por ano — acesso completo à plataforma</div>
+                  <div className="price-sub">Por um ano de avaliações na plataforma</div>
                   <div className="pix-methods">
                     <div className="pix-tag">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M17 14h3M14 17v3M17 20h3"/></svg>
@@ -828,7 +839,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <div style={{ marginBottom:'1rem' }}>
                 <label style={labelStyle}>Contexto clínico</label>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px,1fr))', gap:'0.5rem' }}>
-                  {[['bariatrica','Bariátrica'],['vegetariano','Vegetariano/Vegano'],['perda','Hemorragia'],['alcoolista','Alcoolista'],['transfundido','Transfundido'],
+                  {[['bariatrica','Bariátrica'],['vegetariano','Vegetariano/Vegano'],['perda','Hemorragia'],['alcoolista','Alcoolista'],['transfundido','Transfundido'],['hemoAlta','Hemoglobina Alta'],
                     ...(rfSexo==='F' ? [['hiper','Hipermenorreia'],['gestante','Gestante']] : [])
                   ].map(([field, lbl]) => (
                     <label key={field} style={{ display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.6rem 0.8rem',
