@@ -69,7 +69,7 @@ const LANDING_CSS = `
     .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 0.6rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
 
     /* Hero */
-    .hero { padding: 5rem 0.6rem 3rem; }
+    .hero { padding: 5rem 0 3rem; }
     .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; }
     .hero h1 { font-size: 2rem; white-space: normal !important; }
     .hero-desc { margin: 0 auto 1.5rem; }
