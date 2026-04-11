@@ -44,6 +44,7 @@ function CadastraMedico({ onConcluir }) {
   const [crm, setCrm] = useState('')
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState(false)
@@ -56,7 +57,6 @@ function CadastraMedico({ onConcluir }) {
   }
 
   function formatarCRM(valor) {
-    // Permite apenas números e barra, ex: 6302/BA
     return valor.toUpperCase().replace(/[^0-9/A-Z]/g, '').slice(0, 10)
   }
 
@@ -77,22 +77,23 @@ function CadastraMedico({ onConcluir }) {
     if (!email || !email.includes('@')) {
       setErro('Informe um e-mail válido'); return
     }
+    if (!senha || senha.length < 6) {
+      setErro('A senha deve ter pelo menos 6 caracteres'); return
+    }
 
     setLoading(true)
     const partes = crmLimpo.split('/')
-    const numero = partes[0]
     const uf = partes[1]
 
-    // Verifica se já existe
     const { data: existing } = await supabase
       .from('medicos')
-      .select('id')
+      .select('id, nome')
       .eq('crm', crmLimpo)
       .single()
 
     if (existing) {
-      // Já cadastrado — salva no localStorage e vai para calculadora
       localStorage.setItem('medico_crm', crmLimpo)
+      localStorage.setItem('medico_nome', existing.nome || '')
       onConcluir(existing.nome || '', crmLimpo)
       return
     }
@@ -103,6 +104,7 @@ function CadastraMedico({ onConcluir }) {
       uf,
       celular: celularDigits,
       email: email.trim().toLowerCase(),
+      senha_klipbit: senha,
     })
 
     setLoading(false)
@@ -122,7 +124,7 @@ function CadastraMedico({ onConcluir }) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center space-y-5">
-          <div className="text-5xl">🎉</div>
+          <div className="text-5xl">🧝</div>
           <h2 className="text-xl font-bold text-red-700">Bem-vindo ao RedFairy!</h2>
           <p className="text-gray-600 text-sm leading-relaxed">
             Obrigado pelo cadastro. Em breve entraremos em contato para mostrar como você pode se beneficiar ao ajudar os seus pacientes.
@@ -159,62 +161,54 @@ function CadastraMedico({ onConcluir }) {
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
-            <input
-              type="text"
-              value={nome}
-              onChange={e => setNome(e.target.value)}
-              placeholder="Dr. João da Silva"
-              className={inputClass}
-            />
+            <input type="text" value={nome} onChange={e => setNome(e.target.value)}
+              placeholder="Dr. João da Silva" className={inputClass} />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">CRM/UF</label>
-            <input
-              type="text"
-              value={crm}
-              onChange={e => setCrm(formatarCRM(e.target.value))}
-              placeholder="Ex: 6302/BA"
-              className={inputClass}
-            />
+            <input type="text" value={crm} onChange={e => setCrm(formatarCRM(e.target.value))}
+              placeholder="Ex: 6302/BA" className={inputClass} />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
-            <input
-              type="tel"
-              value={celular}
-              onChange={e => setCelular(formatarCelular(e.target.value))}
-              placeholder="(00) 00000-0000"
-              inputMode="numeric"
-              maxLength={15}
-              className={inputClass}
-            />
+            <input type="tel" value={celular} onChange={e => setCelular(formatarCelular(e.target.value))}
+              placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} />
+          </div>
+
+          {/* Separador KlipBit */}
+          <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-green-700 font-bold text-sm">⚡ Conta KlipBit</span>
+            </div>
+            <p className="text-green-700 text-xs leading-relaxed">
+              Precisamos do seu e-mail e de uma senha para criar a sua conta KlipBit — onde você receberá os seus 10 USDC por cada paciente cadastrado.
+            </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              className={inputClass}
-            />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+              placeholder="seu@email.com" className={inputClass} />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Senha KlipBit</label>
+            <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
+              placeholder="Mínimo 6 caracteres" className={inputClass} />
+            <p className="text-xs text-gray-400 mt-1">Esta senha será usada na sua wallet KlipBit.</p>
           </div>
         </div>
 
         {erro && <p className="text-red-500 text-sm">{erro}</p>}
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
+        <button onClick={handleSubmit} disabled={loading}
           className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
           {loading ? 'Aguarde...' : 'Continuar para a Calculadora →'}
         </button>
 
-        <button
-          onClick={onConcluir}
+        <button onClick={() => onConcluir('', '')}
           className="w-full text-gray-400 text-xs hover:text-gray-600 transition-colors">
           Pular por agora
         </button>
@@ -238,6 +232,14 @@ export default function Calculator({ onVoltar }) {
     setMedicoCRM(crm || '')
   }, [])
 
+  function handleLogout() {
+    localStorage.removeItem('medico_crm')
+    localStorage.removeItem('medico_nome')
+    setCadastrado(false)
+    setMedicoNome('')
+    setMedicoCRM('')
+  }
+
   if (cadastrado === null) return null
 
   if (!cadastrado) {
@@ -248,31 +250,17 @@ export default function Calculator({ onVoltar }) {
     }} />
   }
 
-  return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} />
+  return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} onLogout={handleLogout} />
 }
 
 // ─── Formulário da calculadora ───────────────────────────────────────────────
-function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
+function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   const [inputs, setInputs] = useState({
-    cpf: '',
-    sexo: 'M',
-    idade: '',
-    dataColeta: '',
-    ferritina: '',
-    hemoglobina: '',
-    vcm: '',
-    rdw: '',
-    satTransf: '',
-    bariatrica: false,
-    vegetariano: false,
-    perda: false,
-    hipermenorreia: false,
-    gestante: false,
-    alcoolista: false,
-    transfundido: false,
-    aspirina: false,
-    vitaminaB12: false,
-    ferroOral: false,
+    cpf: '', sexo: 'M', idade: '', dataColeta: '',
+    ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '',
+    bariatrica: false, vegetariano: false, perda: false,
+    hipermenorreia: false, gestante: false, alcoolista: false,
+    transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false,
   });
 
   const [resultado, setResultado] = useState(null);
@@ -281,28 +269,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
   const [showSobre, setShowSobre] = useState(false);
   const [showSaibaMais, setShowSaibaMais] = useState(false);
   const [showDemoMenu, setShowDemoMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoClicks, setLogoClicks] = useState(0);
   const logoClickTimer = useRef(null);
-
 
   function carregarDemo(sexo) {
     const hoje = new Date().toISOString().split('T')[0];
     if (sexo === 'F') {
-      setInputs({
-        cpf: '', sexo: 'F', idade: '35', dataColeta: hoje,
-        ferritina: '8', hemoglobina: '10.5', vcm: '72', rdw: '16.5', satTransf: '8',
-        bariatrica: false, vegetariano: false, perda: true,
-        hipermenorreia: false, gestante: false, alcoolista: false,
-        transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: true,
-      });
+      setInputs({ cpf: '', sexo: 'F', idade: '35', dataColeta: hoje, ferritina: '8', hemoglobina: '10.5', vcm: '72', rdw: '16.5', satTransf: '8', bariatrica: false, vegetariano: false, perda: true, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: true });
     } else {
-      setInputs({
-        cpf: '', sexo: 'M', idade: '42', dataColeta: hoje,
-        ferritina: '12', hemoglobina: '11.5', vcm: '75', rdw: '17', satTransf: '10',
-        bariatrica: false, vegetariano: false, perda: true,
-        hipermenorreia: false, gestante: false, alcoolista: false,
-        transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: true,
-      });
+      setInputs({ cpf: '', sexo: 'M', idade: '42', dataColeta: hoje, ferritina: '12', hemoglobina: '11.5', vcm: '75', rdw: '17', satTransf: '10', bariatrica: false, vegetariano: false, perda: true, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: true });
     }
     setResultado(null); setErros({});
     setShowDemoMenu(false);
@@ -313,30 +289,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
       const next = prev + 1;
       if (logoClickTimer.current) clearTimeout(logoClickTimer.current);
       logoClickTimer.current = setTimeout(() => setLogoClicks(0), 600);
-      if (next >= 3) {
-        setLogoClicks(0);
-        setShowDemoMenu(true);
-      }
+      if (next >= 3) { setLogoClicks(0); setShowDemoMenu(true); }
       return next;
     });
   }
 
-  // ─── Atalhos de teclado demo ─────────────────────────────────────────────
   useEffect(() => {
     function handleKeyDown(e) {
       if (!e.ctrlKey || !e.shiftKey) return;
       const hoje = new Date().toISOString().split('T')[0];
-      if (e.key === 'F' || e.key === 'f') {
-        e.preventDefault();
-        carregarDemo('F');
-      }
-
-      if (e.key === 'M' || e.key === 'm') {
-        e.preventDefault();
-        carregarDemo('M');
-      }
+      if (e.key === 'F' || e.key === 'f') { e.preventDefault(); carregarDemo('F'); }
+      if (e.key === 'M' || e.key === 'm') { e.preventDefault(); carregarDemo('M'); }
     }
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
@@ -349,10 +313,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
 
   function validar() {
     const novosErros = {};
-    if (!inputs.idade || inputs.idade < 12 || inputs.idade > 100)
-      novosErros.idade = 'Idade inválida (12-100)';
-    if (!inputs.dataColeta)
-      novosErros.dataColeta = 'Informe a data da coleta';
+    if (!inputs.idade || inputs.idade < 12 || inputs.idade > 100) novosErros.idade = 'Idade inválida (12-100)';
+    if (!inputs.dataColeta) novosErros.dataColeta = 'Informe a data da coleta';
     if (!inputs.ferritina)   novosErros.ferritina = 'Campo obrigatório';
     if (!inputs.hemoglobina) novosErros.hemoglobina = 'Campo obrigatório';
     if (!inputs.vcm)         novosErros.vcm = 'Campo obrigatório';
@@ -366,15 +328,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
     const novosErros = validar();
     if (Object.keys(novosErros).length > 0) { setErros(novosErros); return; }
 
-    const inputsNumericos = {
-      ...inputs,
-      idade:       Number(inputs.idade),
-      ferritina:   Number(inputs.ferritina),
-      hemoglobina: Number(inputs.hemoglobina),
-      vcm:         Number(inputs.vcm),
-      rdw:         Number(inputs.rdw),
-      satTransf:   Number(inputs.satTransf),
-    };
+    const inputsNumericos = { ...inputs, idade: Number(inputs.idade), ferritina: Number(inputs.ferritina), hemoglobina: Number(inputs.hemoglobina), vcm: Number(inputs.vcm), rdw: Number(inputs.rdw), satTransf: Number(inputs.satTransf) };
 
     const res = avaliarPaciente(inputsNumericos);
     setResultado({ ...res, _inputs: inputsNumericos });
@@ -402,31 +356,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
       });
     }
 
-    setTimeout(() => {
-      document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    setTimeout(() => { document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' }); }, 100);
   }
 
   function handleCopiar() {
     if (!resultado) return;
     const texto = formatarParaCopiar(resultado, resultado._inputs);
-    navigator.clipboard.writeText(texto).then(() => {
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 3000);
-    });
+    navigator.clipboard.writeText(texto).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 3000); });
   }
 
   function handleLimpar() {
-    setInputs({
-      cpf: '', sexo: 'M', idade: '', dataColeta: '',
-      ferritina: '', hemoglobina: '', vcm: '', rdw: '',
-      satTransf: '', bariatrica: false, vegetariano: false,
-      perda: false, hipermenorreia: false, gestante: false,
-      alcoolista: false, transfundido: false,
-      aspirina: false, vitaminaB12: false, ferroOral: false,
-    });
-    setResultado(null);
-    setErros({});
+    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false });
+    setResultado(null); setErros({});
   }
 
   return (
@@ -457,6 +398,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
                 </span>
               </div>
             )}
+            {/* Botão Logout */}
+            <button onClick={() => setShowLogoutConfirm(true)}
+              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors"
+              title="Trocar médico">
+              Sair
+            </button>
             <button onClick={() => setShowSobre(true)}
               className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
               Sobre
@@ -465,25 +412,34 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
         </div>
       </header>
 
-      {showDemoMenu && (
+      {/* Modal confirmação logout */}
+      {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowDemoMenu(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-64 space-y-4"
-            onClick={e => e.stopPropagation()}>
-            <p className="text-center text-sm font-bold text-gray-700">🧪 Modo Demo</p>
-            <p className="text-center text-xs text-gray-400">Escolha o perfil de teste</p>
-            <button onClick={() => carregarDemo('F')}
-              className="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-xl transition-colors">
-              👩 Paciente Feminina
+          style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowLogoutConfirm(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-72 space-y-4" onClick={e => e.stopPropagation()}>
+            <p className="text-center text-base font-bold text-gray-700">Trocar médico?</p>
+            <p className="text-center text-sm text-gray-500">Você será desconectado e voltará à tela de login.</p>
+            <button onClick={() => { setShowLogoutConfirm(false); onLogout(); }}
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
+              Sim, sair
             </button>
-            <button onClick={() => carregarDemo('M')}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
-              👨 Paciente Masculino
-            </button>
-            <button onClick={() => setShowDemoMenu(false)}
+            <button onClick={() => setShowLogoutConfirm(false)}
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm py-2 rounded-xl transition-colors">
               Cancelar
             </button>
+          </div>
+        </div>
+      )}
+
+      {showDemoMenu && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowDemoMenu(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-64 space-y-4" onClick={e => e.stopPropagation()}>
+            <p className="text-center text-sm font-bold text-gray-700">🎭 Modo Demo</p>
+            <p className="text-center text-xs text-gray-400">Escolha o perfil de teste</p>
+            <button onClick={() => carregarDemo('F')} className="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-xl transition-colors">👩 Paciente Feminina</button>
+            <button onClick={() => carregarDemo('M')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">👨 Paciente Masculino</button>
+            <button onClick={() => setShowDemoMenu(false)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm py-2 rounded-xl transition-colors">Cancelar</button>
           </div>
         </div>
       )}
@@ -492,52 +448,28 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.7)' }}
           onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}>
-          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl"
-            style={{ maxHeight: '90vh', overflowY: 'auto' }}
-            onClick={e => e.stopPropagation()}>
-           <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
-  <img src={heroImg} alt="RedFairy"
-    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
-  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
-    <div style={{ textAlign: 'left' }}>
-      <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
-        Eu sou a sua fada vermelha, a sua <span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>.
-        <br />
-        Eu uso a poeira das estrelas para te entregar o ar.
-        <br />
-        <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
-      </p>
-    </div>
-  </div>
-</div>
+          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl" style={{ maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
+              <img src={heroImg} alt="RedFairy" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
+                <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
+                  Eu sou a sua fada vermelha, a sua <span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>.<br />
+                  Eu uso a poeira das estrelas para te entregar o ar.<br />
+                  <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
+                </p>
+              </div>
+            </div>
             <div style={{ padding: '20px' }}>
               {!showSaibaMais && (
-                <button onClick={() => setShowSaibaMais(true)}
-                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors mb-4">
-                  Saiba Mais
-                </button>
+                <button onClick={() => setShowSaibaMais(true)} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors mb-4">Saiba Mais</button>
               )}
               {showSaibaMais && (
                 <div style={{ marginBottom: '16px' }}>
                   <h3 className="text-red-700 font-bold text-base text-center mb-4">Vida é ventilação e perfusão</h3>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência.
-                    Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais importante da sua vida.
-                  </p>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões
-                    e o entrega a todas as suas células - vinte vezes por minuto. As células precisam do oxigênio
-                    para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.
-                  </p>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células,
-                    e o leva aos seus pulmões para que você o expire no ar do mundo.
-                  </p>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    No ambiente, uma proteína verde - a <strong>clorofila</strong>, mãe da Hemoglobina -
-                    usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
-                    devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
-                  </p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência. Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais importante da sua vida.</p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células - vinte vezes por minuto.</p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">No ambiente, uma proteína verde - a <strong>clorofila</strong>, mãe da Hemoglobina - usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
                   <div className="mt-4 bg-pink-50 border-2 border-red-400 rounded-xl p-4 text-center">
                     <p className="text-black font-bold text-sm">Portanto, é importante que você cuide da sua Hemoglobina.</p>
                     <p className="text-black font-bold text-sm mt-2">Nós ajudamos.</p>
@@ -548,10 +480,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
                   </div>
                 </div>
               )}
-              <button onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
-                Fechar
-              </button>
+              <button onClick={() => { setShowSobre(false); setShowSaibaMais(false); }} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">Fechar</button>
             </div>
           </div>
         </div>
@@ -567,9 +496,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label">CPF</label>
-                <input type="text" name="cpf" value={inputs.cpf}
-                  onChange={handleChange} placeholder="000.000.000-00" maxLength={14}
-                  inputMode="numeric" className="input" />
+                <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className="input" />
                 <p className="text-xs text-gray-400 mt-0.5">Opcional — vincula ao paciente</p>
               </div>
               <div>
@@ -581,16 +508,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
               </div>
               <div>
                 <label className="label">Idade</label>
-                <input type="number" name="idade" value={inputs.idade}
-                  onChange={handleChange} placeholder="12-100" min={12} max={100}
-                  className={`input ${erros.idade ? 'border-red-500' : ''}`} />
+                <input type="number" name="idade" value={inputs.idade} onChange={handleChange} placeholder="12-100" min={12} max={100} className={`input ${erros.idade ? 'border-red-500' : ''}`} />
                 {erros.idade && <p className="text-red-500 text-xs mt-1">{erros.idade}</p>}
               </div>
               <div>
                 <label className="label">Data da Coleta</label>
-                <input type="date" name="dataColeta" value={inputs.dataColeta}
-                  onChange={handleChange}
-                  className={`input ${erros.dataColeta ? 'border-red-500' : ''}`} />
+                <input type="date" name="dataColeta" value={inputs.dataColeta} onChange={handleChange} className={`input ${erros.dataColeta ? 'border-red-500' : ''}`} />
                 {erros.dataColeta && <p className="text-red-500 text-xs mt-1">{erros.dataColeta}</p>}
               </div>
             </div>
@@ -601,19 +524,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
               <IconExames /> Exames Laboratoriais
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              <LabInput label="Ferritina" unit="ng/mL" name="ferritina"
-                reference={inputs.sexo === 'M' ? '24-336' : '25-150'}
-                value={inputs.ferritina} onChange={handleChange} error={erros.ferritina} />
-              <LabInput label="Hemoglobina" unit="g/dL" name="hemoglobina"
-                reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'}
-                value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} />
-              <LabInput label="VCM" unit="fL" name="vcm" reference="80-100"
-                value={inputs.vcm} onChange={handleChange} error={erros.vcm} />
-              <LabInput label="RDW-CV" unit="%" name="rdw" reference="11.5-15"
-                value={inputs.rdw} onChange={handleChange} error={erros.rdw} />
+              <LabInput label="Ferritina" unit="ng/mL" name="ferritina" reference={inputs.sexo === 'M' ? '24-336' : '25-150'} value={inputs.ferritina} onChange={handleChange} error={erros.ferritina} />
+              <LabInput label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} />
+              <LabInput label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} />
+              <LabInput label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} />
               <div className="col-span-2">
-                <LabInput label="Sat. Transferrina" unit="%" name="satTransf" reference="20-50"
-                  value={inputs.satTransf} onChange={handleChange} error={erros.satTransf} />
+                <LabInput label="Sat. Transferrina" unit="%" name="satTransf" reference="20-50" value={inputs.satTransf} onChange={handleChange} error={erros.satTransf} />
               </div>
             </div>
           </section>
@@ -651,12 +567,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM }) {
           </section>
 
           <div className="flex gap-3">
-            <button type="submit"
-              className="flex-1 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold py-4 px-6 rounded-xl transition-colors shadow-md text-base">
+            <button type="submit" className="flex-1 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold py-4 px-6 rounded-xl transition-colors shadow-md text-base">
               Avaliar Paciente
             </button>
-            <button type="button" onClick={handleLimpar}
-              className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-medium py-4 px-5 rounded-xl transition-colors">
+            <button type="button" onClick={handleLimpar} className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-medium py-4 px-5 rounded-xl transition-colors">
               Limpar
             </button>
           </div>
@@ -679,10 +593,8 @@ function LabInput({ label, unit, name, reference, value, onChange, error }) {
       <label className="block text-sm font-medium text-gray-600 mb-1">
         {label} <span className="text-xs text-gray-400">({unit})</span>
       </label>
-      <input type="number" step="0.1" name={name} value={value}
-        onChange={onChange} inputMode="decimal"
-        className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${error ? 'border-red-500' : 'border-gray-200'}`}
-      />
+      <input type="number" step="0.1" name={name} value={value} onChange={onChange} inputMode="decimal"
+        className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${error ? 'border-red-500' : 'border-gray-200'}`} />
       <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
       {error && <p className="text-red-500 text-xs">{error}</p>}
     </div>
