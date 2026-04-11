@@ -107,29 +107,30 @@ const LANDING_CSS = `
   .sdesc { font-size: 1.02rem; color: var(--text-sec); max-width: 580px; line-height: 1.7; font-weight: 600; }
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
-  /* FILOSOFIA — hover mostra redfairy3 E esconde container */
-  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; overflow: hidden; }
-  .filosofia-bg {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    filter: blur(12px); opacity: 0.18;
-    transition: filter 0.6s ease, opacity 0.6s ease;
-    z-index: 1;
-  }
-  .filosofia .container { position: relative; z-index: 2; transition: opacity 0.6s ease; }
-  @media (max-width: 900px) {
-    .filosofia-bg { background-size: 215% auto; background-position: center 0%; }
-  }
-  .filosofia.reveal-img .filosofia-bg { filter: blur(0px); opacity: 0.85; }
-  .filosofia .container { position: relative; z-index: 1; transition: opacity 0.6s ease; }
-  .filosofia.reveal-img .container { opacity: 0; pointer-events: none; }
+  /* FILOSOFIA — novo layout: texto esquerda, retângulo imagem direita */
+  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; }
   .filosofia .tag { color: var(--cherry); }
-  .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; margin-top: 3rem; }
+  .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 3rem; }
   .filosofia-text p { color: var(--text-sec); font-size: 0.95rem; line-height: 1.8; margin-bottom: 1.2rem; font-weight: 600; }
   .highlight-box { background: var(--wine); border: 2px solid var(--wine-dark); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
   .highlight-box p { color: var(--white); font-weight: 600; font-size: 1rem; margin: 0; text-align: center; }
+  /* Retângulo da imagem filosofia */
+  .fil-img-box {
+    background: white; border-radius: 16px; box-shadow: var(--shadow);
+    border: 1px solid var(--border2);
+    position: relative; overflow: hidden; cursor: default;
+    aspect-ratio: 3/4; width: 100%;
+  }
+  .fil-img-box-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    background-size: cover; background-position: center;
+    filter: blur(12px); opacity: 0.18;
+    transition: filter 0.6s ease, opacity 0.6s ease;
+    z-index: 0;
+  }
+  .fil-img-box.reveal-img .fil-img-box-bg { filter: blur(0px); opacity: 0.9; }
+  .fil-img-box .fil-content { position: relative; z-index: 1; transition: opacity 0.6s ease; padding: 1.5rem; }
+  .fil-img-box.reveal-img .fil-content { opacity: 0; }
 
   /* CICLO DA VIDA */
   .cycle-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; width: 100%; box-shadow: var(--shadow); }
@@ -548,23 +549,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
         </div>
       </section>
 
-      {/* FILOSOFIA — hover revela redfairy3 E esconde container (fiel ao Cowork) */}
-      <section
-        className={`filosofia${showFil ? ' reveal-img' : ''}`}
-        id="filosofia"
-        onMouseEnter={onFilEnter}
-        onTouchStart={onFilEnter}
-      >
-        <div
-          className="filosofia-bg"
-          style={{ backgroundImage: `url(${fairy3})` }}
-        />
+      {/* FILOSOFIA — texto esquerda, retângulo imagem direita */}
+      <section className="filosofia" id="filosofia">
         <div className="container">
           <div className="reveal">
             <span className="tag">Filosofia</span>
             <h2 className="stitle">Vida é ventilação e perfusão</h2>
           </div>
           <div className="filosofia-grid">
+            {/* Coluna esquerda: texto */}
             <div className="filosofia-text reveal">
               <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
               <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
@@ -572,39 +565,52 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <p>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
               <div className="highlight-box"><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
             </div>
-            <div className="filosofia-visual reveal" style={{ transitionDelay:'0.1s' }}>
-              <div className="cycle-card">
-                <h4>O ciclo da vida</h4>
-                <div className="cycle-step">
-                  <div className="icon">⭐</div>
-                  <div className="desc">Ferro — é poeira das estrelas, dá poder ao seu sangue.</div>
-                </div>
-                <div className="cycle-step">
-                  <div className="icon"><img src={logo} className="fairy-mini" alt="Fadinha" /></div>
-                  <div className="desc">Hemoglobina — A fada vermelha, que com o ferro faz você respirar.</div>
-                </div>
-                <div className="cycle-step">
-                  <div className="icon">🫁</div>
-                  <div className="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div>
-                </div>
-                <div className="cycle-step">
-                  <div className="icon" style={{ color:'#DC2626' }}>❤️</div>
-                  <div className="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico do metabolismo.</div>
-                </div>
-                <div className="cycle-step">
-                  <div className="icon">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="1.8">
-                      <path d="M17.8 2c-1.5 0-3 .5-4.3 1.4C12.5 2 11.5 1.5 10.3 1.5 7.5 1.5 5 4 5 7c0 .5.1 1 .2 1.5C3.2 10 2 12.5 2 15.5 2 20 5.5 22 9 22c1.5 0 3-.5 4-1.5 1 1 2.5 1.5 4 1.5 3.5 0 7-2 7-6.5 0-3-1.2-5.5-3.2-7"/>
-                      <path d="M12 22V8" strokeWidth="1.5"/>
-                      <path d="M12 12l4-3" strokeWidth="1.5" strokeLinecap="round"/>
-                      <path d="M12 15l-3-2.5" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
+            {/* Coluna direita: retângulo com imagem hover */}
+            <div className="reveal" style={{ transitionDelay:'0.1s' }}>
+              <div
+                className={`fil-img-box${showFil ? ' reveal-img' : ''}`}
+                onMouseEnter={onFilEnter}
+                onTouchStart={onFilEnter}
+              >
+                <div
+                  className="fil-img-box-bg"
+                  style={{ backgroundImage: `url(${fairy3})` }}
+                />
+                <div className="fil-content">
+                  <div className="cycle-card" style={{ boxShadow:'none', border:'none', background:'transparent', padding:0 }}>
+                    <h4 style={{ color:'var(--cherry)' }}>O ciclo da vida</h4>
+                    <div className="cycle-step">
+                      <div className="icon">⭐</div>
+                      <div className="desc">Ferro — é poeira das estrelas, dá poder ao seu sangue.</div>
+                    </div>
+                    <div className="cycle-step">
+                      <div className="icon"><img src={logo} className="fairy-mini" alt="Fadinha" /></div>
+                      <div className="desc">Hemoglobina — A fada vermelha, que com o ferro faz você respirar.</div>
+                    </div>
+                    <div className="cycle-step">
+                      <div className="icon">🫁</div>
+                      <div className="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div>
+                    </div>
+                    <div className="cycle-step">
+                      <div className="icon" style={{ color:'#DC2626' }}>❤️</div>
+                      <div className="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico do metabolismo.</div>
+                    </div>
+                    <div className="cycle-step">
+                      <div className="icon">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="1.8">
+                          <path d="M17.8 2c-1.5 0-3 .5-4.3 1.4C12.5 2 11.5 1.5 10.3 1.5 7.5 1.5 5 4 5 7c0 .5.1 1 .2 1.5C3.2 10 2 12.5 2 15.5 2 20 5.5 22 9 22c1.5 0 3-.5 4-1.5 1 1 2.5 1.5 4 1.5 3.5 0 7-2 7-6.5 0-3-1.2-5.5-3.2-7"/>
+                          <path d="M12 22V8" strokeWidth="1.5"/>
+                          <path d="M12 12l4-3" strokeWidth="1.5" strokeLinecap="round"/>
+                          <path d="M12 15l-3-2.5" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <div className="desc">Clorofila — No meio ambiente, a mãe verde recicla o gás carbônico em oxigênio.</div>
+                    </div>
+                    <div className="cycle-step">
+                      <div className="icon" style={{ color:'#3B82F6' }}>♻️</div>
+                      <div className="desc">Ciclo perfeito — O vermelho e o verde sustentam a vida no planeta azul.</div>
+                    </div>
                   </div>
-                  <div className="desc">Clorofila — No meio ambiente, a mãe verde recicla o gás carbônico em oxigênio.</div>
-                </div>
-                <div className="cycle-step">
-                  <div className="icon" style={{ color:'#3B82F6' }}>♻️</div>
-                  <div className="desc">Ciclo perfeito — O vermelho e o verde sustentam a vida no planeta azul.</div>
                 </div>
               </div>
             </div>
