@@ -127,7 +127,7 @@ const LANDING_CSS = `
   .hero-textbox.reveal-img .htb-content { opacity: 0; }
   .hero h1 { font-size: 3.2rem; line-height: 1.15; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
   .hero h1 .red { color: var(--cherry); }
-  .hero-philosophy { font-style: italic; font-size: 1.15rem; color: var(--wine); margin-bottom: 0; line-height: 1.6; font-weight: 400; }
+  .hero-philosophy { font-style: normal; font-size: 1.15rem; color: var(--wine); margin-bottom: 0; line-height: 1.6; font-weight: 700; }
   .hero-desc { font-size: 1.05rem; color: var(--text-sec); max-width: 500px; line-height: 1.75; margin-bottom: 2rem; }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
@@ -633,12 +633,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <div className="desc">Hemoglobina — A fada vermelha, que com o ferro faz você respirar.</div>
                 </div>
                 <div className="cycle-step">
-                  <div className="icon">
-                    {/* Pulmão SVG */}
-                    <svg width="26" height="26" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M32 8 C32 8 28 12 28 20 L28 40 C28 48 20 52 14 50 C8 48 6 42 8 36 C10 30 16 28 20 30 L20 20 C20 12 26 6 32 6 C38 6 44 12 44 20 L44 30 C48 28 54 30 56 36 C58 42 56 48 50 50 C44 52 36 48 36 40 L36 20 C36 12 32 8 32 8 Z" fill="#6B7280" opacity="0.7"/>
-                    </svg>
-                  </div>
+                  <div className="icon">🫁</div>
                   <div className="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div>
                 </div>
                 <div className="cycle-step">
@@ -872,7 +867,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <input type="number" step="0.1" placeholder="Ex: 15" value={rfForm.ferritina} onChange={e => handleFormChange('ferritina', e.target.value)} style={inputStyle} />
                 </div>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'1rem', marginBottom:'1.5rem' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(80px, 1fr))', gap:'0.8rem', marginBottom:'1.5rem' }}>
                 <div><label style={labelStyle}>VCM (fL)</label>
                   <input type="number" step="0.1" placeholder="Ex: 82" value={rfForm.vcm} onChange={e => handleFormChange('vcm', e.target.value)} style={inputStyle} />
                 </div>
