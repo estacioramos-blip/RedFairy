@@ -627,12 +627,19 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <p className="sdesc">Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
           </div>
           <div className="indicacoes-grid reveal">
-            {/* Bariátricos — bolinha AMARELA (substituição, sem ::before vermelho) */}
+            {/* Bariátricos — bolinha amarela */}
             <div className="ind" style={{ alignItems:'flex-start' }}>
               <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0, marginTop:4 }} />
               <div>
                 <strong>Bariátricos</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.1rem' }}>OBA — Otimizar o Bariátrico</div>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>OBA — Otimizar o Bariátrico</div>
+              </div>
+            </div>
+            {/* Anemias — subtexto */}
+            <div className="ind auto-dot" style={{ alignItems:'flex-start' }}>
+              <div>
+                <strong>Anemias</strong>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Crônicas ou Agudas</div>
               </div>
             </div>
             {/* Deficiência de Ferro */}
@@ -640,7 +647,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:4 }} />
               <div>
                 <strong>Deficiência de Ferro</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.1rem' }}>Ferritina Baixa</div>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Ferritina Baixa</div>
               </div>
             </div>
             {/* Excesso de Ferro */}
@@ -648,13 +655,18 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:4 }} />
               <div>
                 <strong>Excesso de Ferro</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.1rem' }}>Ferritina Alta</div>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Ferritina Alta</div>
               </div>
             </div>
-            {/* Deficiência de G-6-PD */}
-            <div className="ind auto-dot"><strong>Deficiência de G-6-PD</strong></div>
+            {/* Hemoglobina Alta + Regime de Sangrias */}
+            <div className="ind auto-dot" style={{ alignItems:'flex-start' }}>
+              <div>
+                <strong>Hemoglobina Alta</strong>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Regime de Sangrias</div>
+              </div>
+            </div>
             {/* Demais em negrito */}
-            {['Anemias','Sangramentos Crônicos','Vegetarianos','Gestantes','Celíacos','Doadores de Sangue','Uso de Testosterona','Endometriose | Mioma','Menstruação Excessiva','Hemoglobina Alta','Alcoolistas','Regime de Sangrias'].map(i => (
+            {['Sangramentos Crônicos','Vegetarianos','Gestantes','Celíacos','Doadores de Sangue','Uso de Testosterona','Endometriose | Mioma','Menstruação Excessiva','Deficiência de G-6-PD','Alcoolistas'].map(i => (
               <div key={i} className="ind auto-dot"><strong>{i}</strong></div>
             ))}
           </div>
