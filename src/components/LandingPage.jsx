@@ -52,8 +52,29 @@ const LANDING_CSS = `
   .hero-badge { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 1.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; }
   .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
   .hero-badge .badge-main { display: flex; align-items: center; gap: 0.5rem; }
-  .hero-badge .badge-sub { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.55); padding-left: 1.3rem; cursor: pointer; }
+  .hero-badge .badge-sub { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.55); padding-left: 1.3rem; cursor: pointer; text-align: center; width: 100%; }
   .hero-badge .badge-sub:hover { color: rgba(255,255,255,0.85); }
+
+  /* MOBILE — margens uniformes */
+  @media (max-width: 900px) {
+    .hero { padding: 6rem 1rem 3rem; }
+    .hero-wrap { gap: 2rem; }
+    section { padding: 4rem 1rem; }
+    .container { padding: 0 1rem; }
+    .filosofia-grid { gap: 1.5rem; }
+    .cycle-card { width: 100%; }
+    .fil-img-box { width: 100%; }
+    .indicacoes-grid { grid-template-columns: repeat(2, 1fr); }
+    .flow { grid-template-columns: 1fr 1fr; }
+    .patient-features { grid-template-columns: 1fr; }
+    .reward-banner { flex-direction: column; text-align: center; }
+    .filosofia-grid, .oba-grid, .cta-cards { grid-template-columns: 1fr; }
+    .stitle { font-size: 1.85rem; }
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 1rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
+    .fairy-showcase { width: 140px; height: 140px; }
+  }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.6rem; margin-bottom: 1.2rem; font-weight: 700; }
 
@@ -255,24 +276,7 @@ const LANDING_CSS = `
   .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.65s ease, transform 0.65s ease; }
   .reveal.show { opacity: 1; transform: translateY(0); }
 
-  /* RESPONSIVE */
-  @media (max-width: 900px) {
-    .hero-wrap { grid-template-columns: 1fr; text-align: center; }
-    .hero h1 { font-size: 2.5rem; }
-    .hero-desc { margin: 0 auto 2rem; }
-    .hero-actions { justify-content: center; }
-    .trust { justify-content: center; }
-    .fairy-showcase { width: 140px; height: 140px; }
-    .filosofia-grid, .oba-grid, .cta-cards { grid-template-columns: 1fr; }
-    .stitle { font-size: 1.85rem; }
-    .nav-links { display: none; }
-    .hamburger { display: flex; }
-    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 2rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
-    .flow { grid-template-columns: 1fr 1fr; }
-    .patient-features { grid-template-columns: 1fr; }
-    .reward-banner { flex-direction: column; text-align: center; }
-    .indicacoes-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-  }
+  /* fim CSS */
 `
 
 function rfInRange(v, r) { return v >= r.min && v <= r.max }
