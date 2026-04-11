@@ -61,16 +61,16 @@ const LANDING_CSS = `
     html, body { overflow-x: hidden; max-width: 100vw; }
     * { box-sizing: border-box; }
     section { padding: 2.5rem 0; }
-    .container { padding: 0 0.3rem; max-width: 100%; }
+    .container { padding: 0 0.6rem; max-width: 100%; }
 
     /* Nav */
     .nav-links { display: none; }
     .hamburger { display: flex; }
     .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 0.6rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
 
-    /* Hero */
+    /* Hero — padding zero, hero-wrap ocupa 100% com padding interno */
     .hero { padding: 5rem 0 3rem; }
-    .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; }
+    .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; max-width: 100% !important; padding: 0 0.6rem; }
     .hero h1 { font-size: 2rem; white-space: normal !important; }
     .hero-desc { margin: 0 auto 1.5rem; }
     .hero-actions { justify-content: center; }
