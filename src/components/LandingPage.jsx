@@ -566,7 +566,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <div className="highlight-box"><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
             </div>
             {/* Coluna direita: retângulo com imagem hover */}
-            <div className="reveal" style={{ transitionDelay:'0.1s' }}>
+            <div className="reveal" style={{ transitionDelay:'0.1s', marginTop:'-2rem' }}>
               <div
                 className={`fil-img-box${showFil ? ' reveal-img' : ''}`}
                 onMouseEnter={onFilEnter}
