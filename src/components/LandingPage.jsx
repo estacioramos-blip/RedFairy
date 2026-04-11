@@ -779,8 +779,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             {activeTab === 'paciente' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step"><div className="flow-num">1</div><h4>Informe seu CPF</h4><p>Se seu médico já fez a primeira avaliação, seus dados já estarão aqui.</p></div>
-                  <div className="flow-step"><div className="flow-num">2</div><h4>Complete o cadastro</h4><p>Cadastro simples com e-mail, senha e celular. Rápido e seguro.</p></div>
+                  <div className="flow-step"><div className="flow-num">1</div><h4>Informe seu CPF</h4><p>Se o seu médico já fez a primeira avaliação, seus dados já estarão aqui. Se ele não fez, você mesmo faz. Tenha em mãos o seu Hemograma, a Ferritina e a Saturação da Transferrina.</p></div>
+                  <div className="flow-step"><div className="flow-num">2</div><h4>Complete ou Faça um Novo Cadastro</h4><p>Cadastro simples com e-mail, senha e celular. Rápido e seguro.</p></div>
                   <div className="flow-step"><div className="flow-num">3</div><h4>Assine via PIX</h4><p>R$ 149,90/ano via QR Code, Chave PIX ou Copie e Cole.</p></div>
                   <div className="flow-step"><div className="flow-num">4</div><h4>Acompanhe seu eritron</h4><p>Novas avaliações geram o gráfico multiparamétrico da sua saúde eritrocitária.</p></div>
                 </div>
@@ -970,8 +970,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <p>O bypass gástrico e a gastrectomia causam uma <strong>síndrome disabsortiva</strong> que prejudica a absorção de ferro, vitamina B12 e outros elementos essenciais.</p>
               <p>O Projeto OBA oferece um <strong>tratamento de manutenção indefinido</strong>: monitoramento contínuo, cálculo de reposição personalizado e orientações específicas.</p>
               <div className="oba-cta-row">
-                <button className="btn btn-oba-main" onClick={onModoPaciente}>Sou Bariátrico — Começar</button>
-                <a href="#como-funciona" className="btn btn-secondary">Como funciona</a>
+                <button className="btn btn-oba-main" onClick={onModoPaciente} style={{ flexDirection:'column', gap:'0.2rem', alignItems:'center' }}>
+                  <span>Sou Bariátrico — Começar</span>
+                  <span style={{ fontSize:'0.65rem', textTransform:'uppercase', letterSpacing:'1px', opacity:0.8, fontWeight:700 }}>Entra em Modo Paciente | Siga as Instruções</span>
+                </button>
               </div>
             </div>
             <div className="oba-features reveal" style={{ transitionDelay:'0.1s' }}>
