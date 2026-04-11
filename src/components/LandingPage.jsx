@@ -61,7 +61,7 @@ const LANDING_CSS = `
     html, body { overflow-x: hidden; max-width: 100vw; }
     * { box-sizing: border-box; }
     section { padding: 2.5rem 0; }
-    .container { padding: 0 0.6rem; max-width: 100%; }
+    .container { padding: 0 0.3rem; max-width: 100%; }
 
     /* Nav */
     .nav-links { display: none; }
