@@ -56,24 +56,53 @@ const LANDING_CSS = `
   .hero-badge .badge-sub:hover { color: rgba(255,255,255,0.85); }
 
   /* MOBILE — margens uniformes */
-  @media (max-width: 900px) {
-    .hero { padding: 6rem 1rem 3rem; }
-    .hero-wrap { gap: 2rem; }
-    section { padding: 4rem 1rem; }
-    .container { padding: 0 1rem; }
-    .filosofia-grid { gap: 1.5rem; }
-    .cycle-card { width: 100%; }
-    .fil-img-box { width: 100%; }
-    .indicacoes-grid { grid-template-columns: repeat(2, 1fr); }
-    .flow { grid-template-columns: 1fr 1fr; }
-    .patient-features { grid-template-columns: 1fr; }
-    .reward-banner { flex-direction: column; text-align: center; }
-    .filosofia-grid, .oba-grid, .cta-cards { grid-template-columns: 1fr; }
-    .stitle { font-size: 1.85rem; }
+  @media (max-width: 768px) {
+    /* Layout geral */
+    body { overflow-x: hidden; }
+    section { padding: 3rem 1rem; }
+    .container { padding: 0 1rem; max-width: 100%; }
+
+    /* Nav */
     .nav-links { display: none; }
     .hamburger { display: flex; }
-    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 1rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
-    .fairy-showcase { width: 140px; height: 140px; }
+    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
+
+    /* Hero */
+    .hero { padding: 5rem 1rem 3rem; }
+    .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: left; }
+    .hero h1 { font-size: 2.2rem; }
+    .hero-desc { margin-bottom: 1.5rem; }
+    .hero-actions { justify-content: flex-start; }
+    .trust { justify-content: flex-start; flex-direction: column; gap: 0.8rem; }
+    .hero-visual { display: none; }
+
+    /* Filosofia */
+    .filosofia-grid { grid-template-columns: 1fr !important; gap: 1.5rem; }
+    .fil-img-box { width: 100%; }
+    .cycle-card { width: 100%; }
+
+    /* Títulos */
+    .stitle { font-size: 1.7rem; }
+
+    /* Indicações */
+    .indicacoes-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+    /* Como funciona */
+    .como-tabs { flex-direction: row; }
+    .como-tab { padding: 0.7rem 1.2rem; font-size: 0.85rem; }
+    .flow { grid-template-columns: 1fr 1fr !important; gap: 0.8rem; }
+    .flow-step { padding: 1rem 0.6rem; }
+    .patient-features { grid-template-columns: 1fr !important; }
+    .reward-banner { flex-direction: column; text-align: center; }
+
+    /* OBA */
+    .oba-grid { grid-template-columns: 1fr !important; }
+
+    /* CTA */
+    .cta-cards { grid-template-columns: 1fr !important; }
+
+    /* Experimente agora */
+    #avaliar .container { padding: 0 1rem; }
   }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.6rem; margin-bottom: 1.2rem; font-weight: 700; }
