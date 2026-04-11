@@ -57,38 +57,43 @@ const LANDING_CSS = `
 
   /* MOBILE — margens uniformes */
   @media (max-width: 768px) {
-    /* Layout geral */
-    body { overflow-x: hidden; }
-    section { padding: 3rem 1rem; }
-    .container { padding: 0 1rem; max-width: 100%; }
+    /* Layout geral - sem overflow horizontal */
+    html, body { overflow-x: hidden; max-width: 100vw; }
+    * { box-sizing: border-box; }
+    section { padding: 3rem 1.2rem; }
+    .container { padding: 0 1.2rem; max-width: 100%; }
 
     /* Nav */
     .nav-links { display: none; }
     .hamburger { display: flex; }
-    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
+    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
 
-    /* Hero */
-    .hero { padding: 5rem 1rem 3rem; }
-    .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: left; }
-    .hero h1 { font-size: 2.2rem; }
-    .hero-desc { margin-bottom: 1.5rem; }
-    .hero-actions { justify-content: flex-start; }
-    .trust { justify-content: flex-start; flex-direction: column; gap: 0.8rem; }
+    /* Hero - coluna única centralizada */
+    .hero { padding: 5rem 1.2rem 3rem; }
+    .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; }
+    .hero h1 { font-size: 2rem; white-space: normal !important; }
+    .hero-desc { margin: 0 auto 1.5rem; }
+    .hero-actions { justify-content: center; }
+    .trust { justify-content: center; flex-wrap: wrap; gap: 1rem; }
     .hero-visual { display: none; }
+    .hero-textbox { padding: 1.5rem; }
+    .hero-textbox h1, .hero-textbox h2 { white-space: normal !important; font-size: 1.6rem !important; }
+    .hero-quote-box { text-align: center; }
 
-    /* Filosofia */
+    /* Filosofia - coluna única, texto justificado */
     .filosofia-grid { grid-template-columns: 1fr !important; gap: 1.5rem; }
     .fil-img-box { width: 100%; }
+    .fil-img-box h2 { white-space: normal !important; font-size: 1.6rem !important; }
+    .fil-content p { text-align: justify; }
     .cycle-card { width: 100%; }
 
     /* Títulos */
-    .stitle { font-size: 1.7rem; }
+    .stitle { font-size: 1.6rem; }
 
     /* Indicações */
     .indicacoes-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
     /* Como funciona */
-    .como-tabs { flex-direction: row; }
     .como-tab { padding: 0.7rem 1.2rem; font-size: 0.85rem; }
     .flow { grid-template-columns: 1fr 1fr !important; gap: 0.8rem; }
     .flow-step { padding: 1rem 0.6rem; }
@@ -100,9 +105,6 @@ const LANDING_CSS = `
 
     /* CTA */
     .cta-cards { grid-template-columns: 1fr !important; }
-
-    /* Experimente agora */
-    #avaliar .container { padding: 0 1rem; }
   }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.6rem; margin-bottom: 1.2rem; font-weight: 700; }
@@ -609,7 +611,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               >
                 <div className="fil-img-box-bg" style={{ backgroundImage: `url(${fairy3})` }} />
                 <div className="fil-content">
-                  <h2 style={{ fontSize:'2.2rem', fontWeight:800, color:'var(--text)', lineHeight:1.2, marginBottom:'1rem', whiteSpace:'nowrap' }}>Vida é ventilação e perfusão</h2>
+                  <h2 style={{ fontSize:'2.2rem', fontWeight:800, color:'var(--text)', lineHeight:1.2, marginBottom:'1rem' }}>Vida é ventilação e perfusão</h2>
                   <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
                   <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
                   <p>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
