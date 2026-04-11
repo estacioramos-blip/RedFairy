@@ -123,7 +123,7 @@ const LANDING_CSS = `
   }
   .fil-img-box-bg {
     position: absolute; inset: 0; width: 100%; height: 100%;
-    background-size: cover; background-position: center;
+    background-size: cover; background-position: center 15%;
     filter: blur(12px); opacity: 0.18;
     transition: filter 0.6s ease, opacity 0.6s ease;
     z-index: 0;
@@ -565,7 +565,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               >
                 <div className="fil-img-box-bg" style={{ backgroundImage: `url(${fairy3})` }} />
                 <div className="fil-content">
-                  <h2 style={{ fontSize:'1.9rem', fontWeight:800, color:'var(--text)', lineHeight:1.2, marginBottom:'1rem', whiteSpace:'nowrap' }}>Vida é ventilação e perfusão</h2>
+                  <h2 style={{ fontSize:'2.2rem', fontWeight:800, color:'var(--text)', lineHeight:1.2, marginBottom:'1rem', whiteSpace:'nowrap' }}>Vida é ventilação e perfusão</h2>
                   <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
                   <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
                   <p>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
