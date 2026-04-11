@@ -60,16 +60,16 @@ const LANDING_CSS = `
     /* Layout geral - sem overflow horizontal */
     html, body { overflow-x: hidden; max-width: 100vw; }
     * { box-sizing: border-box; }
-    section { padding: 3rem 1.2rem; }
-    .container { padding: 0 1.2rem; max-width: 100%; }
+    section { padding: 2.5rem 0; }
+    .container { padding: 0 1rem; max-width: 100%; }
 
     /* Nav */
     .nav-links { display: none; }
     .hamburger { display: flex; }
-    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
+    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 1rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
 
-    /* Hero - coluna única centralizada, mesma largura */
-    .hero { padding: 5rem 1.2rem 3rem; }
+    /* Hero */
+    .hero { padding: 5rem 1rem 3rem; }
     .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; }
     .hero h1 { font-size: 2rem; white-space: normal !important; }
     .hero-desc { margin: 0 auto 1.5rem; }
