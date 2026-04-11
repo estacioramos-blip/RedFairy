@@ -177,6 +177,10 @@ const LANDING_CSS = `
     position: relative; overflow: hidden; cursor: default;
     aspect-ratio: 3/4; width: 100%;
   }
+  @media (max-width: 768px) {
+    .fil-img-box { aspect-ratio: auto !important; min-height: auto !important; }
+    .fil-img-box-bg { background-position: center top !important; }
+  }
   .fil-img-box-bg {
     position: absolute; inset: 0; width: 100%; height: 100%;
     background-size: cover; background-position: center 15%;
@@ -543,7 +547,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               />
               <div className="htb-content">
                 <h1>Eu sou a sua fada vermelha, a sua <span className="red">Hemoglobina</span></h1>
-                <p className="hero-philosophy">
+                <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:800, textAlign:'center' }}>
                   Eu uso a poeira das estrelas para te entregar o ar.<br />
                   Quanto tempo você vive sem ar?
                 </p>
@@ -867,16 +871,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <input type="number" step="0.1" placeholder="Ex: 15" value={rfForm.ferritina} onChange={e => handleFormChange('ferritina', e.target.value)} style={inputStyle} />
                 </div>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(80px, 1fr))', gap:'0.8rem', marginBottom:'1.5rem' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem', marginBottom:'0.8rem' }}>
                 <div><label style={labelStyle}>VCM (fL)</label>
                   <input type="number" step="0.1" placeholder="Ex: 82" value={rfForm.vcm} onChange={e => handleFormChange('vcm', e.target.value)} style={inputStyle} />
                 </div>
                 <div><label style={labelStyle}>RDW (%)</label>
                   <input type="number" step="0.1" placeholder="Ex: 13.5" value={rfForm.rdw} onChange={e => handleFormChange('rdw', e.target.value)} style={inputStyle} />
                 </div>
-                <div><label style={labelStyle}>Sat. Transf. (%)</label>
-                  <input type="number" step="0.1" placeholder="Ex: 25" value={rfForm.sat} onChange={e => handleFormChange('sat', e.target.value)} style={inputStyle} />
-                </div>
+              </div>
+              <div style={{ marginBottom:'1.5rem' }}>
+                <label style={labelStyle}>Saturação da Transferrina (%)</label>
+                <input type="number" step="0.1" placeholder="Ex: 25" value={rfForm.sat} onChange={e => handleFormChange('sat', e.target.value)} style={inputStyle} />
               </div>
               <div style={{ marginBottom:'1rem' }}>
                 <label style={labelStyle}>Contexto clínico</label>
