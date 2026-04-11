@@ -111,7 +111,8 @@ const LANDING_CSS = `
   .filosofia { background: var(--gray-bg); color: var(--text); position: relative; }
   .filosofia .tag { color: var(--cherry); }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 3rem; }
-  .fil-img-box .fil-content p { font-size: 1.05rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
+  .fil-img-box .fil-content p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
+  .fil-img-box .fil-content .highlight-box p { color: var(--white); font-size: 1rem; margin: 0; font-weight: 600; }
   .highlight-box { background: var(--wine); border: 2px solid var(--wine-dark); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
   .highlight-box p { color: var(--white); font-weight: 600; font-size: 1rem; margin: 0; text-align: center; }
   /* Retângulo da imagem filosofia */
