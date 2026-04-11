@@ -556,9 +556,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <span className="tag">Filosofia</span>
           </div>
           <div className="filosofia-grid">
-            {/* Coluna esquerda: highlight box + retângulo com título, texto e imagem */}
+            {/* Coluna esquerda: retângulo com título, texto e imagem. Highlight acima do retângulo removido */}
             <div className="reveal">
-              <div className="highlight-box" style={{ marginBottom:'1.5rem' }}><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
               <div
                 className={`fil-img-box${showFil ? ' reveal-img' : ''}`}
                 onMouseEnter={onFilEnter}
@@ -571,6 +570,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
                   <p>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
                   <p>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
+                  <div className="highlight-box"><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
                 </div>
               </div>
             </div>
