@@ -68,7 +68,7 @@ const LANDING_CSS = `
     .hamburger { display: flex; }
     .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
 
-    /* Hero - coluna única centralizada */
+    /* Hero - coluna única centralizada, mesma largura */
     .hero { padding: 5rem 1.2rem 3rem; }
     .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; }
     .hero h1 { font-size: 2rem; white-space: normal !important; }
@@ -76,15 +76,18 @@ const LANDING_CSS = `
     .hero-actions { justify-content: center; }
     .trust { justify-content: center; flex-wrap: wrap; gap: 1rem; }
     .hero-visual { display: none; }
-    .hero-textbox { padding: 1.5rem; }
-    .hero-textbox h1, .hero-textbox h2 { white-space: normal !important; font-size: 1.6rem !important; }
+    /* hero-textbox sem padding extra para ter mesma largura das demais seções */
+    .hero-textbox { padding: 1.2rem; margin-left: 0; margin-right: 0; }
+    .hero-textbox h1 { font-size: 1.6rem !important; white-space: normal !important; }
+    /* Fonte menor na frase filosofia, sem corte */
+    .hero-philosophy { font-size: 1rem !important; white-space: normal !important; }
     .hero-quote-box { text-align: center; }
 
     /* Filosofia - coluna única, texto justificado */
     .filosofia-grid { grid-template-columns: 1fr !important; gap: 1.5rem; }
     .fil-img-box { width: 100%; }
-    .fil-img-box h2 { white-space: normal !important; font-size: 1.6rem !important; }
-    .fil-content p { text-align: justify; }
+    .fil-img-box h2 { white-space: normal !important; font-size: 1.5rem !important; }
+    .fil-content p { text-align: justify; font-size: 0.9rem !important; }
     .cycle-card { width: 100%; }
 
     /* Títulos */
@@ -548,8 +551,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <div className="htb-content">
                 <h1>Eu sou a sua fada vermelha, a sua <span className="red">Hemoglobina</span></h1>
                 <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:800, textAlign:'center' }}>
-                  Eu uso a poeira das estrelas para te entregar o ar.<br />
-                  Quanto tempo você vive sem ar?
+                  Eu uso a poeira das estrelas para te entregar o ar. Quanto tempo você vive sem ar?
                 </p>
               </div>
             </div>
