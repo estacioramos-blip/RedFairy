@@ -60,8 +60,8 @@ const LANDING_CSS = `
     /* Layout geral - sem overflow horizontal */
     html, body { overflow-x: hidden; max-width: 100vw; }
     * { box-sizing: border-box; }
-    section { padding: 2.5rem 0; }
-    .container { padding: 0 0.6rem; max-width: 100% !important; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
+    section { padding: 2.5rem 0.6rem; }
+    .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
 
     /* Nav */
     .nav-links { display: none; }
