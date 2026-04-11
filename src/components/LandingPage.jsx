@@ -128,7 +128,7 @@ const LANDING_CSS = `
   .hero h1 { font-size: 3.2rem; line-height: 1.15; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
   .hero h1 .red { color: var(--cherry); }
   .hero-philosophy { font-style: normal; font-size: 1.15rem; color: var(--wine); margin-bottom: 0; line-height: 1.6; font-weight: 700; }
-  .hero-desc { font-size: 1.05rem; color: var(--text-sec); max-width: 500px; line-height: 1.75; margin-bottom: 2rem; }
+  .hero-desc { font-size: 0.95rem; color: var(--text-sec); max-width: 500px; line-height: 1.75; margin-bottom: 2rem; font-weight: 700; }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
   .trust-i { display: flex; align-items: center; gap: 0.35rem; }
@@ -163,9 +163,9 @@ const LANDING_CSS = `
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
   /* FILOSOFIA — novo layout: texto esquerda, retângulo imagem direita */
-  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; }
-  .filosofia .tag { color: var(--cherry); }
-  .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 3rem; }
+  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; padding-top: 2.5rem; padding-bottom: 3rem; }
+  .filosofia .tag { color: var(--cherry); margin-bottom: 0.3rem; }
+  .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; margin-top: 1.5rem; }
   .fil-img-box .fil-content p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
   .fil-img-box .fil-content .highlight-box p { color: var(--white); font-size: 1rem; margin: 0; font-weight: 600; }
   .highlight-box { background: var(--wine); border: 2px solid var(--wine-dark); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
@@ -988,7 +988,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
         <div className="container">
           <div className="center reveal" style={{ marginBottom:'2.5rem' }}>
             <span className="tag">Comece Agora</span>
-            <h2 className="stitle">Cuide da sua Hemoglobina, ela é a sua vida.</h2>
+            <h2 style={{ fontSize:'1.6rem', fontWeight:800, color:'var(--wine)', marginBottom:'0.8rem' }}>Cuide da sua Hemoglobina, ela é a sua vida.</h2>
           </div>
           <div className="cta-cards reveal">
             <div className="cta-c cta-doc">
