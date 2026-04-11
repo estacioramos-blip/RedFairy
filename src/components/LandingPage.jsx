@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import logo from '../assets/logo.png'
 import filosofiaBg from '../../redfairy-filosofia-bg.png'
 import fairy3 from '../../redfairy3.png'
+import OBAModal from './OBAModal'
 
 const LANDING_CSS = `
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -403,6 +404,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
   const [activeTab,   setActiveTab]   = useState('medico')
   const [showHtb,     setShowHtb]     = useState(false)
   const [showFil,     setShowFil]     = useState(false)
+  const [showOBA,     setShowOBA]     = useState(false)
+  const [sexoOBA,     setSexoOBA]     = useState('M')
   const [rfSexo,      setRfSexo]      = useState('F')
   const [rfResultado, setRfResultado] = useState(null)
   const [rfErro,      setRfErro]      = useState('')
@@ -493,6 +496,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
   return (
     <div style={{ fontFamily:"'DM Sans', sans-serif" }}>
+
+      {/* MODAL OBA */}
+      {showOBA && (
+        <OBAModal
+          sexo={sexoOBA}
+          cpf={null}
+          onConcluir={() => { setShowOBA(false); onModoPaciente() }}
+          onFechar={() => setShowOBA(false)}
+        />
+      )}
 
       {/* WHATSAPP */}
       <a href="https://wa.me/5573991012332" target="_blank" rel="noopener noreferrer" className="whatsapp-btn" aria-label="WhatsApp">
@@ -970,7 +983,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <p>O bypass gástrico e a gastrectomia causam uma <strong>síndrome disabsortiva</strong> que prejudica a absorção de ferro, vitamina B12 e outros elementos essenciais.</p>
               <p>O Projeto OBA oferece um <strong>tratamento de manutenção indefinido</strong>: monitoramento contínuo, cálculo de reposição personalizado e orientações específicas.</p>
               <div className="oba-cta-row">
-                <button className="btn btn-oba-main" onClick={onModoPaciente} style={{ flexDirection:'column', gap:'0.2rem', alignItems:'center' }}>
+                <button className="btn btn-oba-main" onClick={() => setShowOBA(true)} style={{ flexDirection:'column', gap:'0.2rem', alignItems:'center' }}>
                   <span>Sou Bariátrico — Começar</span>
                   <span style={{ fontSize:'0.65rem', textTransform:'uppercase', letterSpacing:'1px', opacity:0.8, fontWeight:700 }}>Entra em Modo Paciente | Siga as Instruções</span>
                 </button>

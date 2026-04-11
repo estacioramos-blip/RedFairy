@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 
@@ -22,6 +22,20 @@ export default function AuthPage({ onVoltar }) {
   const emailErro = emailConfirm && email !== emailConfirm
   const senhaOk = senhaConfirm && senha === senhaConfirm
   const senhaErro = senhaConfirm && senha !== senhaConfirm
+
+  // Atalho secreto Ctrl+Shift+P — pula para cadastro sem CPF
+  useEffect(() => {
+    function handleKey(e) {
+      if (e.ctrlKey && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+        e.preventDefault()
+        setCpf('00000000000')
+        setAvaliacoesPendentes(0)
+        setEtapa('cadastro')
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [])
 
   function formatarCelular(valor) {
     const digits = valor.replace(/\D/g, '').slice(0, 11)
@@ -221,15 +235,10 @@ export default function AuthPage({ onVoltar }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular (WhatsApp)</label>
-              <input
-                type="tel"
-                value={celular}
+              <input type="tel" value={celular}
                 onChange={e => setCelular(formatarCelular(e.target.value))}
-                placeholder="(00) 00000-0000"
-                inputMode="numeric"
-                maxLength={15}
-                className={inputClass}
-              />
+                placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15}
+                className={inputClass} />
               <p className="text-xs text-gray-400 mt-1">Necessário para receber documentos médicos via WhatsApp</p>
             </div>
 
