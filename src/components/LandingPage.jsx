@@ -49,8 +49,11 @@ const LANDING_CSS = `
   /* HERO */
   .hero { min-height: 100vh; display: flex; align-items: center; padding: 7rem 2rem 4rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
   .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 4rem; align-items: center; position: relative; z-index: 2; }
-  .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; background: #374151; color: var(--white); padding: 0.6rem 1.5rem; border-radius: 10px; font-size: 0.82rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.5px; }
-  .hero-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--white); animation: pDot 2s ease-in-out infinite; }
+  .hero-badge { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 1.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; }
+  .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
+  .hero-badge .badge-main { display: flex; align-items: center; gap: 0.5rem; }
+  .hero-badge .badge-sub { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.55); padding-left: 1.3rem; cursor: pointer; }
+  .hero-badge .badge-sub:hover { color: rgba(255,255,255,0.85); }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.6rem; margin-bottom: 1.2rem; font-weight: 700; }
 
@@ -479,7 +482,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
           {/* COLUNA ESQUERDA */}
           <div className="reveal">
-            <div className="hero-badge"><div className="dot" />Doutor, avalie o seu paciente</div>
+            <div className="hero-badge">
+              <div className="badge-main">
+                <div className="dot" />
+                Doutor, avalie o seu paciente e ganhe dez dólares digitais.
+              </div>
+              <span className="badge-sub" onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior:'smooth' })}>
+                Conheça as regras
+              </span>
+            </div>
             <p className="hero-badge-sub">
               Você vai precisar de algumas informações do eritrograma:<br />
               Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
