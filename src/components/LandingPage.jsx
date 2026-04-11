@@ -144,9 +144,8 @@ const LANDING_CSS = `
   /* INDICAÇÕES — bolinhas vermelhas, grid 5 colunas */
   .indicacoes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; margin-top: 2rem; }
   .ind { background: white; border: 1px solid var(--border2); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-sec); font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
-  .ind::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--cherry); display: block; flex-shrink: 0; }
+  .ind.auto-dot::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--cherry); display: block; flex-shrink: 0; }
   .ind:hover { border-color: var(--cherry); color: var(--cherry); background: var(--cherry-bg); }
-  @media (max-width: 900px) { .indicacoes-grid { grid-template-columns: repeat(2, 1fr); } }
 
   /* TERAPÊUTICA */
   .terapeutica { background: var(--gray-bg); }
@@ -558,22 +557,21 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <h2 className="stitle">Vida é ventilação e perfusão</h2>
           </div>
           <div className="filosofia-grid">
-            {/* Coluna esquerda: texto + retângulo imagem abaixo */}
-            <div className="filosofia-text reveal">
-              <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
-              <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
-              <p>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
-              <p>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
-              <div className="highlight-box"><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
-              {/* Retângulo imagem abaixo do texto */}
+            {/* Coluna esquerda: retângulo com imagem sobreposta ao texto */}
+            <div className="reveal">
               <div
                 className={`fil-img-box${showFil ? ' reveal-img' : ''}`}
-                style={{ marginTop:'1.5rem' }}
                 onMouseEnter={onFilEnter}
                 onTouchStart={onFilEnter}
               >
                 <div className="fil-img-box-bg" style={{ backgroundImage: `url(${fairy3})` }} />
-                <div className="fil-content" />
+                <div className="fil-content">
+                  <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
+                  <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
+                  <p>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
+                  <p>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
+                  <div className="highlight-box"><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
+                </div>
               </div>
             </div>
             {/* Coluna direita: Ciclo da Vida em retângulo branco vertical */}
@@ -629,27 +627,35 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <p className="sdesc">Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
           </div>
           <div className="indicacoes-grid reveal">
-            {/* Bariátricos — bolinha amarela + subtexto OBA */}
-            <div className="ind" style={{ flexDirection:'column', alignItems:'flex-start', gap:'0.2rem' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}>
-                <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0 }} />
+            {/* Bariátricos — bolinha AMARELA (substituição, sem ::before vermelho) */}
+            <div className="ind" style={{ alignItems:'flex-start' }}>
+              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0, marginTop:4 }} />
+              <div>
                 <strong>Bariátricos</strong>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.1rem' }}>OBA — Otimizar o Bariátrico</div>
               </div>
-              <span style={{ fontSize:'0.72rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', paddingLeft:'1.1rem' }}>OBA — Otimizar o Bariátrico</span>
+            </div>
+            {/* Deficiência de Ferro */}
+            <div className="ind" style={{ alignItems:'flex-start' }}>
+              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:4 }} />
+              <div>
+                <strong>Deficiência de Ferro</strong>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.1rem' }}>Ferritina Baixa</div>
+              </div>
+            </div>
+            {/* Excesso de Ferro */}
+            <div className="ind" style={{ alignItems:'flex-start' }}>
+              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:4 }} />
+              <div>
+                <strong>Excesso de Ferro</strong>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.1rem' }}>Ferritina Alta</div>
+              </div>
             </div>
             {/* Deficiência de G-6-PD */}
-            <div className="ind"><strong>Deficiência de G-6-PD</strong></div>
-            {/* Deficiência / Excesso de Ferro com subtexto */}
-            <div className="ind" style={{ flexDirection:'column', alignItems:'flex-start', gap:'0.2rem' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:'0.5rem' }}>
-                <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0 }} />
-                <strong>Deficiência / Excesso de Ferro</strong>
-              </div>
-              <span style={{ fontSize:'0.72rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', paddingLeft:'1.1rem' }}>Ferritina Baixa / Alta</span>
-            </div>
-            {/* Demais indicações normais em negrito */}
+            <div className="ind auto-dot"><strong>Deficiência de G-6-PD</strong></div>
+            {/* Demais em negrito */}
             {['Anemias','Sangramentos Crônicos','Vegetarianos','Gestantes','Celíacos','Doadores de Sangue','Uso de Testosterona','Endometriose | Mioma','Menstruação Excessiva','Hemoglobina Alta','Alcoolistas','Regime de Sangrias'].map(i => (
-              <div key={i} className="ind"><strong>{i}</strong></div>
+              <div key={i} className="ind auto-dot"><strong>{i}</strong></div>
             ))}
           </div>
         </div>
