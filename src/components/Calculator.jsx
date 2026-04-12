@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { avaliarPaciente, formatarParaCopiar } from '../engine/decisionEngine';
 import { avaliarOBA } from '../engine/obaEngine';
+import OBAModal from './OBAModal';
 import ResultCard from './ResultCard';
 import heroImg from '../assets/redfairy-hero.png';
 import logo from '../assets/logo.png';
@@ -265,6 +266,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
 
   const [resultado, setResultado] = useState(null);
   const [copiado, setCopiado] = useState(false);
+  const [showOBA, setShowOBA] = useState(false);
+  const [dadosOBAColetados, setDadosOBAColetados] = useState(null);
   const [erros, setErros] = useState({});
   const [showSobre, setShowSobre] = useState(false);
   const [showSaibaMais, setShowSaibaMais] = useState(false);
@@ -309,6 +312,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     const { name, value, type, checked } = e.target;
     setInputs(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
+    // Abre o OBAModal quando bariátrica é marcada
+    if (name === 'bariatrica') {
+      if (checked) setShowOBA(true);
+      else setDadosOBAColetados(null);
+    }
   }
 
   function validar() {
@@ -340,14 +348,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
 
     const res = avaliarPaciente(inputsNumericos);
 
-    // ── OBA: buscar anamnese do Supabase se for bariátrico com CPF ───────────
+    // ── OBA: usar dados já coletados pelo OBAModal ───────────────────────────
     let obaResult = null;
     if (inputs.bariatrica) {
       let dadosOBA = null;
       let examesOBA = null;
 
-      // Tentar buscar dados OBA do Supabase pelo CPF
-      if (inputs.cpf.trim()) {
+      if (dadosOBAColetados) {
+        // Dados vindos direto do OBAModal — caminho principal
+        dadosOBA  = dadosOBAColetados.dadosOBA;
+        examesOBA = dadosOBAColetados.examesOBA;
+      } else if (inputs.cpf.trim()) {
+        // Fallback: buscar no Supabase pelo CPF (paciente já cadastrado)
         const cpfLimpo = inputs.cpf.replace(/\D/g, '');
         const { data: obaRow } = await supabase
           .from('oba_anamnese')
@@ -359,80 +371,61 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
 
         if (obaRow) {
           dadosOBA = {
-            sexo:               obaRow.sexo,
-            idade:              inputs.idade,
-            tipo_cirurgia:      obaRow.tipo_cirurgia,
+            sexo: obaRow.sexo, idade: inputs.idade,
+            tipo_cirurgia: obaRow.tipo_cirurgia,
             meses_pos_cirurgia: obaRow.meses_pos_cirurgia,
-            peso_antes:         obaRow.peso_antes,
-            peso_atual:         obaRow.peso_atual,
-            peso_minimo_pos:    obaRow.peso_minimo_pos,
-            ganhou_peso_apos:   obaRow.ganhou_peso_apos,
+            peso_antes: obaRow.peso_antes, peso_atual: obaRow.peso_atual,
+            peso_minimo_pos: obaRow.peso_minimo_pos,
+            ganhou_peso_apos: obaRow.ganhou_peso_apos,
             fez_plasma_argonio: obaRow.fez_plasma_argonio,
-            status_glicemico:   obaRow.status_glicemico,
-            status_pressorico:  obaRow.status_pressorico,
-            status_osseo:       obaRow.status_osseo,
-            status_dental:      obaRow.status_dental,
+            status_glicemico: obaRow.status_glicemico,
+            status_pressorico: obaRow.status_pressorico,
+            status_osseo: obaRow.status_osseo,
+            status_dental: obaRow.status_dental,
             status_gestacional: obaRow.status_gestacional,
-            semanas_gestacao:   obaRow.semanas_gestacao,
-            compulsoes:         obaRow.compulsoes || [],
-            medicamentos:       obaRow.medicamentos || [],
-            atividade_fisica:   obaRow.atividade_fisica || [],
-            emagrecedores:      obaRow.emagrecedores || {},
-            trombose:           obaRow.trombose,
+            semanas_gestacao: obaRow.semanas_gestacao,
+            compulsoes: obaRow.compulsoes || [],
+            medicamentos: obaRow.medicamentos || [],
+            atividade_fisica: obaRow.atividade_fisica || [],
+            emagrecedores: obaRow.emagrecedores || {},
+            trombose: obaRow.trombose,
             investigou_trombose: obaRow.investigou_trombose,
             usa_anticoagulante: obaRow.usa_anticoagulante,
             usou_anticoagulante: obaRow.usou_anticoagulante,
-            varizes:            obaRow.varizes,
-            varizes_grau:       obaRow.varizes_grau,
-            varizes_esofago:    obaRow.varizes_esofago,
+            varizes: obaRow.varizes, varizes_grau: obaRow.varizes_grau,
+            varizes_esofago: obaRow.varizes_esofago,
             operou_varizes_esofago: obaRow.operou_varizes_esofago,
-            meta_peso:          obaRow.meta_peso,
-            meta_kg:            obaRow.meta_kg,
-            projetos_vida:      obaRow.projetos_vida || [],
+            meta_peso: obaRow.meta_peso, meta_kg: obaRow.meta_kg,
+            projetos_vida: obaRow.projetos_vida || [],
           };
           examesOBA = {
-            vitamina_b12:  obaRow.vitamina_b12,
-            vitamina_d:    obaRow.vitamina_d,
-            zinco:         obaRow.zinco,
-            vitamina_a:    obaRow.vitamina_a,
-            vitamina_e:    obaRow.vitamina_e,
-            tiamina:       obaRow.tiamina,
-            selenio:       obaRow.selenio,
-            folatos:       obaRow.folatos,
-            hb_glicada:    obaRow.hb_glicada,
-            glicemia:      obaRow.glicemia,
-            insulina:      obaRow.insulina,
-            triglicerides: obaRow.triglicerides,
-            ast:           obaRow.ast,
-            alt:           obaRow.alt,
-            gama_gt:       obaRow.gama_gt,
-            creatinina:    obaRow.creatinina,
-            acido_urico:   obaRow.acido_urico,
-            tsh:           obaRow.tsh,
-            testosterona:  obaRow.testosterona,
-            estradiol:     obaRow.estradiol,
-            psa_total:     obaRow.psa_total,
-            ca199:         obaRow.ca199,
-            cea:           obaRow.cea,
+            vitamina_b12: obaRow.vitamina_b12, vitamina_d: obaRow.vitamina_d,
+            zinco: obaRow.zinco, vitamina_a: obaRow.vitamina_a,
+            vitamina_e: obaRow.vitamina_e, tiamina: obaRow.tiamina,
+            selenio: obaRow.selenio, folatos: obaRow.folatos,
+            hb_glicada: obaRow.hb_glicada, glicemia: obaRow.glicemia,
+            insulina: obaRow.insulina, triglicerides: obaRow.triglicerides,
+            ast: obaRow.ast, alt: obaRow.alt, gama_gt: obaRow.gama_gt,
+            creatinina: obaRow.creatinina, acido_urico: obaRow.acido_urico,
+            tsh: obaRow.tsh, testosterona: obaRow.testosterona,
+            estradiol: obaRow.estradiol, psa_total: obaRow.psa_total,
+            ca199: obaRow.ca199, cea: obaRow.cea,
           };
         }
       }
 
-      // Fallback: dados mínimos via inputs do formulário principal
+      // Fallback mínimo se nada foi encontrado
       if (!dadosOBA) {
         dadosOBA = {
-          sexo:               inputs.sexo,
-          idade:              inputs.idade,
-          tipo_cirurgia:      'NÃO SEI',
-          meses_pos_cirurgia: 0,
+          sexo: inputs.sexo, idade: inputs.idade,
+          tipo_cirurgia: 'NÃO SEI', meses_pos_cirurgia: 0,
           status_gestacional: inputs.gestante ? 'GRÁVIDA' : null,
-          compulsoes:         inputs.alcoolista ? ['ÁLCOOL'] : [],
-          medicamentos:       [
-            ...(inputs.vitaminaB12 ? ['VIT B12 SUBLINGUAL'] : []),
-            ...(inputs.ferroOral   ? ['FERRO ORAL']         : []),
+          compulsoes: inputs.alcoolista ? ['ÁLCOOL'] : [],
+          medicamentos: [
+            ...(inputs.vitaminaB12 ? ['VIT. B12 SUBLINGUAL'] : []),
+            ...(inputs.ferroOral   ? ['FERRO ORAL']          : []),
           ],
-          atividade_fisica:   [],
-          emagrecedores:      {},
+          atividade_fisica: [], emagrecedores: {},
         };
         examesOBA = {};
       }
@@ -477,11 +470,25 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
 
   function handleLimpar() {
     setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false });
-    setResultado(null); setErros({});
+    setResultado(null); setErros({}); setDadosOBAColetados(null);
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
+
+      {/* ── OBAModal ── */}
+      {showOBA && (
+        <OBAModal
+          sexo={inputs.sexo}
+          cpf={inputs.cpf}
+          idade={inputs.idade || '0'}
+          onConcluir={(dadosOBA, examesOBA) => {
+            setDadosOBAColetados({ dadosOBA, examesOBA });
+            setShowOBA(false);
+          }}
+          onFechar={() => setShowOBA(false)}
+        />
+      )}
 
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
@@ -663,14 +670,22 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
             {/* Banner OBA quando bariátrica está marcada */}
             {inputs.bariatrica && (
               <div className="mt-3 bg-purple-50 border border-purple-200 rounded-xl p-3">
-                <p className="text-purple-700 text-xs font-semibold">
-                  🔬 Avaliação OBA ativada
-                </p>
-                <p className="text-purple-600 text-xs mt-0.5">
-                  {inputs.cpf.trim()
-                    ? 'Os dados da anamnese OBA serão buscados automaticamente pelo CPF.'
-                    : 'Informe o CPF para carregar os dados completos da anamnese OBA. Sem CPF, uma avaliação básica será gerada.'}
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-700 text-xs font-semibold">
+                      🔬 Avaliação OBA {dadosOBAColetados ? '✓ dados coletados' : '— pendente'}
+                    </p>
+                    <p className="text-purple-600 text-xs mt-0.5">
+                      {dadosOBAColetados
+                        ? `${dadosOBAColetados.dadosOBA.tipo_cirurgia} · ${dadosOBAColetados.dadosOBA.meses_pos_cirurgia} meses pós-op`
+                        : 'Preencha a anamnese para ativar os 13 módulos clínicos.'}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => setShowOBA(true)}
+                    className="ml-3 flex-shrink-0 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+                    {dadosOBAColetados ? 'Editar' : 'Preencher'}
+                  </button>
+                </div>
               </div>
             )}
           </section>

@@ -166,10 +166,19 @@ const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.75
 const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:560, boxShadow:'0 20px 60px rgba(0,0,0,0.3)', marginBottom:'2rem' }
 const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PROPS:
+//   sexo, cpf, idade  — dados do paciente já preenchidos na calculadora
+//   onConcluir(dadosOBA, examesOBA) — callback com os dados para o obaEngine
+//   onFechar()        — fecha sem salvar
+// ─────────────────────────────────────────────────────────────────────────────
 export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
   const [etapa, setEtapa] = useState('anamnese')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
+
+  // Dados da anamnese já salvos (passados para etapa 2)
+  const [anamneseSalva, setAnamneseSalva] = useState(null)
 
   const saudacao = sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo'
   const isFem = sexo === 'F'
@@ -179,33 +188,21 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
   const todosExames = [...EXAMES_BASE, ...examesExtras]
 
   const [form, setForm] = useState({
-    // Data da cirurgia
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
-    // Status ponderal
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
     ganhou_peso_apos: false, fez_plasma_argonio: false,
-    // Cirurgia
     tipo_cirurgia: '',
-    // Acompanhamento
     acompanhamento: '', especialistas: [],
-    // Gestacional (F)
     status_gestacional: '', semanas_gestacao: '',
-    // Glicêmico / Pressórico
     status_glicemico: '', status_pressorico: '',
-    // Vascular
     trombose: null, investigou_trombose: false,
     usou_anticoagulante: false, usa_anticoagulante: false,
     varizes: null, varizes_grau: '',
     varizes_esofago: false, operou_varizes_esofago: false,
-    // Dental / Ósseo
     status_dental: '', status_osseo: '',
-    // Covid
     teve_covid: false, vacina_covid: [],
-    // Atividade / Cirurgia plástica
     atividade_fisica: [], cirurgia_plastica: null,
-    // Projeto de vida
     meta_peso: '', meta_kg: '', projetos_vida: [],
-    // Compulsões / Medicamentos
     compulsoes: [], medicamentos: [], emagrecedores: {},
   })
 
@@ -216,17 +213,15 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
   const sf = (f, v) => setForm(p => ({ ...p, [f]: v }))
   const tog = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
 
-  // Calcula meses pós-cirurgia — ANO obrigatório, MÊS e DIA opcionais
   function calcMesesPos() {
     const ano = parseInt(form.cirurgia_ano)
     if (!ano || ano < 1990 || ano > new Date().getFullYear()) return null
     const hoje = new Date()
-    const mes = parseInt(form.cirurgia_mes) || 1   // sem mês → assume janeiro
-    const dia = parseInt(form.cirurgia_dia) || 1   // sem dia → assume dia 1
+    const mes = parseInt(form.cirurgia_mes) || 1
+    const dia = parseInt(form.cirurgia_dia) || 1
     const dataC = new Date(ano, mes - 1, dia)
     if (isNaN(dataC) || dataC > hoje) return null
     const meses = (hoje.getFullYear() - dataC.getFullYear()) * 12 + (hoje.getMonth() - dataC.getMonth())
-    // Se não informou o mês, arredonda para anos completos
     if (!parseInt(form.cirurgia_mes)) return Math.floor(meses / 12) * 12
     return meses > 0 ? meses : 0
   }
@@ -243,12 +238,63 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
     else if (!form.atividade_fisica.includes('SEDENTÁRIO')) sf('atividade_fisica', tog(form.atividade_fisica, val))
   }
 
+  // ── Monta objeto dadosOBA para o obaEngine ────────────────────────────────
+  function buildDadosOBA() {
+    return {
+      sexo,
+      idade: idadeNum,
+      tipo_cirurgia:      form.tipo_cirurgia || 'NÃO SEI',
+      meses_pos_cirurgia: mesesPos || 0,
+      peso_antes:         pesoAntes || null,
+      peso_atual:         pesoAtual || null,
+      peso_minimo_pos:    pesoMin || null,
+      ganhou_peso_apos:   form.ganhou_peso_apos,
+      fez_plasma_argonio: form.fez_plasma_argonio,
+      status_glicemico:   form.status_glicemico || null,
+      status_pressorico:  form.status_pressorico || null,
+      status_osseo:       form.status_osseo || null,
+      status_dental:      form.status_dental || null,
+      status_gestacional: form.status_gestacional || null,
+      semanas_gestacao:   form.semanas_gestacao ? parseFloat(form.semanas_gestacao) : null,
+      compulsoes:         form.compulsoes,
+      medicamentos:       form.medicamentos,
+      atividade_fisica:   form.atividade_fisica,
+      emagrecedores:      form.emagrecedores,
+      trombose:           form.trombose,
+      investigou_trombose: form.investigou_trombose,
+      usa_anticoagulante: form.usa_anticoagulante,
+      usou_anticoagulante: form.usou_anticoagulante,
+      varizes:            form.varizes,
+      varizes_grau:       form.varizes_grau || null,
+      varizes_esofago:    form.varizes_esofago,
+      operou_varizes_esofago: form.operou_varizes_esofago,
+      meta_peso:          form.meta_peso || null,
+      meta_kg:            form.meta_kg ? parseFloat(form.meta_kg) : null,
+      projetos_vida:      form.projetos_vida,
+    }
+  }
+
+  // ── Monta objeto examesOBA para o obaEngine ───────────────────────────────
+  function buildExamesOBA() {
+    return Object.fromEntries(
+      todosExames.map(e => [e.key, exames[e.key] ? parseFloat(exames[e.key]) : null])
+    )
+  }
+
+  // ── Salvar anamnese e avançar para exames ─────────────────────────────────
   async function salvarAnamnese() {
     setErro('')
-    if (!form.cirurgia_ano || !calcMesesPos()) { setErro('Informe pelo menos o ANO da cirurgia para calcular o tempo pós-operatório.'); return }
-    if (!form.tipo_cirurgia) { setErro('Selecione o tipo de cirurgia.'); return }
-    if (!form.acompanhamento) { setErro('Selecione a opção de acompanhamento.'); return }
+    if (!form.cirurgia_ano || !calcMesesPos()) {
+      setErro('Informe pelo menos o ANO da cirurgia.'); return
+    }
+    if (!form.tipo_cirurgia) {
+      setErro('Selecione o tipo de cirurgia.'); return
+    }
+    if (!form.acompanhamento) {
+      setErro('Selecione a opção de acompanhamento.'); return
+    }
     setLoading(true)
+
     const projetos = [
       form.meta_peso === 'MANTER' ? 'QUERO MANTER O PESO ATUAL' :
       form.meta_peso === 'PERDER' ? `QUERO PERDER ${form.meta_kg} kg` :
@@ -256,7 +302,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
       ...form.projetos_vida
     ].filter(Boolean)
 
-    const { error } = await supabase.from('oba_anamnese').insert({
+    const dadosAnamnese = {
       cpf: cpf || null, sexo,
       cirurgia_dia: form.cirurgia_dia ? parseInt(form.cirurgia_dia) : null,
       cirurgia_mes: form.cirurgia_mes ? parseInt(form.cirurgia_mes) : null,
@@ -293,25 +339,49 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
       compulsoes: form.compulsoes,
       medicamentos: form.medicamentos,
       emagrecedores: Object.keys(form.emagrecedores).length ? form.emagrecedores : null,
-    })
+    }
+
+    await supabase.from('oba_anamnese').insert(dadosAnamnese)
     setLoading(false)
-    if (error) { setErro('Erro ao salvar. Tente novamente.'); return }
+    setAnamneseSalva(dadosAnamnese)
     setEtapa('exames')
   }
 
+  // ── Salvar exames e chamar onConcluir com TUDO ────────────────────────────
   async function salvarExames() {
     setLoading(true)
-    await supabase.from('oba_anamnese').insert({
-      cpf: cpf || null, sexo,
-      data_exames: dataExames || null,
-      dias_exames: diasExames,
-      ...Object.fromEntries(todosExames.map(e => [e.key, exames[e.key] ? parseFloat(exames[e.key]) : null]))
-    })
+    const examesObj = buildExamesOBA()
+
+    // Atualiza o registro mais recente com os exames (pelo CPF)
+    if (cpf) {
+      const cpfLimpo = cpf.replace(/\D/g, '')
+      const { data: rows } = await supabase
+        .from('oba_anamnese')
+        .select('id')
+        .eq('cpf', cpfLimpo)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (rows && rows.length > 0) {
+        await supabase.from('oba_anamnese').update({
+          data_exames: dataExames || null,
+          dias_exames: diasExames,
+          ...Object.fromEntries(todosExames.map(e => [e.key, examesObj[e.key] !== undefined ? examesObj[e.key] : null]))
+        }).eq('id', rows[0].id)
+      }
+    }
+
     setLoading(false)
-    onConcluir()
+    // Entrega os dados diretamente para o Calculator, sem nova busca no Supabase
+    onConcluir(buildDadosOBA(), examesObj)
   }
 
-  // ── HEADER compartilhado ──
+  // ── Pular exames — entrega só a anamnese ─────────────────────────────────
+  function pularExames() {
+    onConcluir(buildDadosOBA(), {})
+  }
+
+  // ── HEADER ───────────────────────────────────────────────────────────────
   const Header = ({ sub }) => (
     <div style={HD}>
       <img src={logo} alt="OBA" style={{ width:48, height:48, objectFit:'contain', filter:'brightness(10)' }} />
@@ -322,15 +392,21 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
     </div>
   )
 
-  // ── ETAPA EXAMES ──
+  // ════════════════════════════════════════════════════════════════════════════
+  // ETAPA 2: EXAMES
+  // ════════════════════════════════════════════════════════════════════════════
   if (etapa === 'exames') return (
-    <div style={OV} onClick={onConcluir}>
+    <div style={OV} onClick={pularExames}>
       <div style={CD} onClick={e => e.stopPropagation()}>
         <Header sub="Exames Complementares — etapa final" />
         <div style={{ padding:'1.5rem' }}>
-          <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
-            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#92400E', fontWeight:700 }}>
-              Preencha os que tiver em mãos. Pode pular os que não tem agora.
+
+          <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
+            <p style={{ fontSize:'0.8rem', fontWeight:700, color:'#166534', margin:0 }}>
+              ✓ Anamnese salva com sucesso!
+            </p>
+            <p style={{ fontSize:'0.75rem', color:'#15803D', marginTop:'0.3rem' }}>
+              Preencha os exames que tiver em mãos. Pode pular se não tiver agora.
             </p>
           </div>
 
@@ -350,7 +426,8 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
                 <span style={{ fontSize:'0.85rem', fontWeight:600, color:'#374151' }}>{ex.label}</span>
                 <span style={{ fontSize:'0.7rem', color:'#9CA3AF', marginLeft:'0.4rem' }}>({ex.unit})</span>
               </div>
-              <input style={{ width:90, border:'1.5px solid #E5E7EB', borderRadius:6, padding:'0.4rem 0.6rem', fontSize:'0.85rem', outline:'none', textAlign:'right', fontFamily:'inherit' }}
+              <input
+                style={{ width:90, border:'1.5px solid #E5E7EB', borderRadius:6, padding:'0.4rem 0.6rem', fontSize:'0.85rem', outline:'none', textAlign:'right', fontFamily:'inherit' }}
                 type="number" step="0.01" placeholder="—"
                 value={exames[ex.key] || ''}
                 onChange={e => setExames(p => ({ ...p, [ex.key]: e.target.value }))} />
@@ -365,19 +442,26 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
             </div>
           )}
 
-          <button style={btnP} onClick={salvarExames} disabled={loading}>{loading ? 'Salvando...' : 'Concluir e ir para a Avaliação →'}</button>
-          <button style={btnS} onClick={onConcluir}>Pular exames e ir para a Avaliação</button>
+          <button style={btnP} onClick={salvarExames} disabled={loading}>
+            {loading ? 'Salvando...' : 'Concluir e ir para a Avaliação →'}
+          </button>
+          <button style={btnS} onClick={pularExames}>
+            Pular exames e ir para a Avaliação
+          </button>
         </div>
       </div>
     </div>
   )
 
-  // ── ETAPA ANAMNESE ──
+  // ════════════════════════════════════════════════════════════════════════════
+  // ETAPA 1: ANAMNESE
+  // ════════════════════════════════════════════════════════════════════════════
   return (
     <div style={OV} onClick={onFechar}>
       <div style={CD} onClick={e => e.stopPropagation()}>
         <Header sub="Otimizar o Bariátrico" />
         <div style={{ padding:'1.5rem' }}>
+
           <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
             <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>O bariátrico é um paciente complexo.</p>
             <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>Precisamos de mais informações para cuidar de você. Marque as caixinhas e preencha os campos:</p>
@@ -411,7 +495,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
                 {mesesPos >= 12 && <span style={{ fontWeight:400, fontSize:'0.8rem', marginLeft:'0.4rem', color:'#0284C7' }}>
                   ({Math.floor(mesesPos/12)} ano{Math.floor(mesesPos/12) > 1 ? 's' : ''}{mesesPos % 12 > 0 ? ` e ${mesesPos % 12} meses` : ''})
                 </span>}
-                {!parseInt(form.cirurgia_mes) && <span style={{ fontSize:'0.75rem', color:'#64748B', marginLeft:'0.4rem' }}>(estimado — mês não informado)</span>}
+                {!parseInt(form.cirurgia_mes) && <span style={{ fontSize:'0.75rem', color:'#64748B', marginLeft:'0.4rem' }}>(estimado)</span>}
               </p>
             </div>
           ) : form.cirurgia_ano ? (
@@ -458,7 +542,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Especialistas que me acompanham:</label>
           {ESPECIALISTAS.map(e => <CheckRow key={e} label={e} checked={form.especialistas.includes(e)} onClick={() => sf('especialistas', tog(form.especialistas, e))} />)}
 
-          {/* ── STATUS GESTACIONAL (só mulher) ── */}
+          {/* ── STATUS GESTACIONAL ── */}
           {isFem && idadeNum >= 15 && (
             <>
               <SectionTitle>Status Gestacional</SectionTitle>
@@ -508,7 +592,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
             ))}
           </div>
           {form.varizes && (
-            <div style={{ display:'flex', gap:'0.5rem', marginBottom:'0.6rem' }}>
+            <div style={{ display:'flex', gap:'0.3rem', marginBottom:'0.6rem' }}>
               {['LEVE', 'MODERADA', 'SEVERA'].map(g => (
                 <div key={g} onClick={() => sf('varizes_grau', g)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.4rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.varizes_grau === g ? '#DC2626' : '#E5E7EB'}`, background: form.varizes_grau === g ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.varizes_grau === g ? 700 : 500, color: form.varizes_grau === g ? '#7B1E1E' : '#374151', fontSize:'0.82rem' }}>
                   <Radio16 active={form.varizes_grau === g} />{g}
@@ -532,13 +616,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
           {/* ── STATUS ÓSSEO ── */}
           <SectionTitle>Status Ósseo</SectionTitle>
           {['DENSITOMETRIA ÓSSEA NORMAL', 'OSTEOPENIA', 'OSTEOPOROSE', 'NÃO FIZ DENSITOMETRIA'].map(op => (
-            <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{
-              display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem',
-              borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`,
-              background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem',
-              fontSize:'0.85rem', fontWeight: form.status_osseo === op ? 700 : 500,
-              color: form.status_osseo === op ? '#7B1E1E' : '#374151',
-            }}>
+            <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem', borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem', fontSize:'0.85rem', fontWeight: form.status_osseo === op ? 700 : 500, color: form.status_osseo === op ? '#7B1E1E' : '#374151' }}>
               <Radio16 active={form.status_osseo === op} />{op}
             </div>
           ))}
@@ -618,7 +696,10 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
           ))}
 
           {erro && <p style={{ color:'#DC2626', fontSize:'0.85rem', marginTop:'0.8rem' }}>{erro}</p>}
-          <button style={btnP} onClick={salvarAnamnese} disabled={loading}>{loading ? 'Salvando...' : 'Avançar para os Exames →'}</button>
+
+          <button style={btnP} onClick={salvarAnamnese} disabled={loading}>
+            {loading ? 'Salvando...' : 'Avançar para os Exames →'}
+          </button>
           <button style={btnS} onClick={onFechar}>Agora não</button>
         </div>
       </div>
