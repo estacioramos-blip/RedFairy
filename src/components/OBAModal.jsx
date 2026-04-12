@@ -456,7 +456,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
           {ESPECIALISTAS.map(e => <CheckRow key={e} label={e} checked={form.especialistas.includes(e)} onClick={() => sf('especialistas', tog(form.especialistas, e))} />)}
 
           {/* ── STATUS GESTACIONAL (só mulher) ── */}
-          {isFem && (
+          {isFem && idadeNum >= 15 && (
             <>
               <SectionTitle>Status Gestacional</SectionTitle>
               <CheckRow label="ESTOU GRÁVIDA" checked={form.status_gestacional === 'GRÁVIDA'} onClick={() => sf('status_gestacional', form.status_gestacional === 'GRÁVIDA' ? '' : 'GRÁVIDA')} />
