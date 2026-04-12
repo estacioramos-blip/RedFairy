@@ -214,17 +214,19 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
   const sf = (f, v) => setForm(p => ({ ...p, [f]: v }))
   const tog = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
 
-  // Calcula meses pós-cirurgia a partir de dia/mês/ano
+  // Calcula meses pós-cirurgia — ANO obrigatório, MÊS e DIA opcionais
   function calcMesesPos() {
     const ano = parseInt(form.cirurgia_ano)
-    const mes = parseInt(form.cirurgia_mes)
-    const dia = parseInt(form.cirurgia_dia)
-    if (!ano) return null
+    if (!ano || ano < 1990 || ano > new Date().getFullYear()) return null
     const hoje = new Date()
-    const dataC = new Date(ano, mes ? mes - 1 : 0, dia || 1)
-    if (isNaN(dataC)) return null
+    const mes = parseInt(form.cirurgia_mes) || 1   // sem mês → assume janeiro
+    const dia = parseInt(form.cirurgia_dia) || 1   // sem dia → assume dia 1
+    const dataC = new Date(ano, mes - 1, dia)
+    if (isNaN(dataC) || dataC > hoje) return null
     const meses = (hoje.getFullYear() - dataC.getFullYear()) * 12 + (hoje.getMonth() - dataC.getMonth())
-    return meses > 0 ? meses : null
+    // Se não informou o mês, arredonda para anos completos
+    if (!parseInt(form.cirurgia_mes)) return Math.floor(meses / 12) * 12
+    return meses > 0 ? meses : 0
   }
   const mesesPos = calcMesesPos()
 
@@ -241,7 +243,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
 
   async function salvarAnamnese() {
     setErro('')
-    if (!form.tempo_pos_cirurgia) { setErro('Informe o tempo pós-cirurgia.'); return }
+    if (!form.cirurgia_ano || !calcMesesPos()) { setErro('Informe pelo menos o ANO da cirurgia para calcular o tempo pós-operatório.'); return }
     if (!form.tipo_cirurgia) { setErro('Selecione o tipo de cirurgia.'); return }
     if (!form.acompanhamento) { setErro('Selecione a opção de acompanhamento.'); return }
     setLoading(true)
@@ -381,30 +383,39 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
           {/* ── DADOS DA CIRURGIA ── */}
           <SectionTitle>Dados da Cirurgia</SectionTitle>
 
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>Data da cirurgia</label>
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>
+            Data da cirurgia <span style={{ color:'#DC2626' }}>*</span>
+            <span style={{ color:'#9CA3AF', fontWeight:400, marginLeft:'0.4rem' }}>(ANO obrigatório — DIA e MÊS opcionais)</span>
+          </label>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem', marginBottom:'0.4rem' }}>
             <div>
-              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>DIA</label>
+              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>DIA (opcional)</label>
               <input style={inp} type="number" min="1" max="31" placeholder="DD" value={form.cirurgia_dia} onChange={e => sf('cirurgia_dia', e.target.value)} />
             </div>
             <div>
-              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>MÊS</label>
+              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>MÊS (opcional)</label>
               <input style={inp} type="number" min="1" max="12" placeholder="MM" value={form.cirurgia_mes} onChange={e => sf('cirurgia_mes', e.target.value)} />
             </div>
             <div>
-              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>ANO</label>
-              <input style={inp} type="number" min="2000" max="2030" placeholder="AAAA" value={form.cirurgia_ano} onChange={e => sf('cirurgia_ano', e.target.value)} />
+              <label style={{ fontSize:'0.7rem', color:'#DC2626', fontWeight:700 }}>ANO ✱</label>
+              <input style={{ ...inp, borderColor: form.cirurgia_ano ? '#E5E7EB' : '#FCA5A5' }} type="number" min="2000" max="2030" placeholder="AAAA" value={form.cirurgia_ano} onChange={e => sf('cirurgia_ano', e.target.value)} />
             </div>
           </div>
-          {mesesPos !== null && (
-            <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:8, padding:'0.5rem 0.9rem', marginBottom:'0.4rem' }}>
-              <p style={{ color:'#0369A1', fontSize:'0.85rem', fontWeight:700 }}>
-                {mesesPos >= 12
-                  ? `${Math.floor(mesesPos/12)} ano${Math.floor(mesesPos/12) > 1 ? 's' : ''} e ${mesesPos % 12} meses pós-cirurgia`
-                  : `${mesesPos} meses pós-cirurgia`}
+          {mesesPos !== null ? (
+            <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:8, padding:'0.6rem 0.9rem', marginBottom:'0.5rem' }}>
+              <p style={{ color:'#0369A1', fontSize:'0.9rem', fontWeight:800, margin:0 }}>
+                ✓ {mesesPos} meses pós-cirurgia
+                {mesesPos >= 12 && <span style={{ fontWeight:400, fontSize:'0.8rem', marginLeft:'0.4rem', color:'#0284C7' }}>
+                  ({Math.floor(mesesPos/12)} ano{Math.floor(mesesPos/12) > 1 ? 's' : ''}{mesesPos % 12 > 0 ? ` e ${mesesPos % 12} meses` : ''})
+                </span>}
+                {!parseInt(form.cirurgia_mes) && <span style={{ fontSize:'0.75rem', color:'#64748B', marginLeft:'0.4rem' }}>(estimado — mês não informado)</span>}
               </p>
             </div>
-          )}
+          ) : form.cirurgia_ano ? (
+            <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:8, padding:'0.5rem 0.9rem', marginBottom:'0.5rem' }}>
+              <p style={{ color:'#DC2626', fontSize:'0.82rem', fontWeight:600, margin:0 }}>Verifique o ano informado.</p>
+            </div>
+          ) : null}
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Tipo de cirurgia</label>
           <RadioGroup options={TIPOS_CIRURGIA} value={form.tipo_cirurgia} onChange={v => sf('tipo_cirurgia', v)} />
