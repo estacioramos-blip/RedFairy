@@ -225,8 +225,8 @@ function buildModB12(ex, dados, disab, alertas, suger) {
   const linhas = []
   let nivel = NORMAL
   const meds = dados.medicamentos || []
-  const usaB12IM = meds.includes('VIT B12 IM')
-  const usaB12Sub = meds.includes('VIT B12 SUBLINGUAL')
+  const usaB12IM  = meds.some(m => m.includes('B12') && (m.includes('INTRAMUSCULAR') || m.includes(' IM')))
+  const usaB12Sub = meds.some(m => m.includes('B12') && m.includes('SUBLINGUAL'))
 
   linhas.push(`VITAMINA B12: ${b12} pg/mL`)
 
