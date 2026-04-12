@@ -13,6 +13,20 @@ const fraseDataColor = {
   C: 'bg-red-100    text-red-800    border-red-300',
 };
 
+const obaLevelScheme = {
+  grave:    { bg: 'bg-red-50',    border: 'border-red-400',    badge: 'bg-red-600',    text: 'text-red-800',    dot: 'bg-red-500'    },
+  moderado: { bg: 'bg-orange-50', border: 'border-orange-400', badge: 'bg-orange-500', text: 'text-orange-800', dot: 'bg-orange-500' },
+  leve:     { bg: 'bg-yellow-50', border: 'border-yellow-300', badge: 'bg-yellow-500', text: 'text-yellow-800', dot: 'bg-yellow-400' },
+  normal:   { bg: 'bg-green-50',  border: 'border-green-300',  badge: 'bg-green-600',  text: 'text-green-800', dot: 'bg-green-500'  },
+};
+
+const obaLevelLabel = {
+  grave:    '🔴 URGENTE',
+  moderado: '🟠 ATENÇÃO',
+  leve:     '🟡 MONITORAR',
+  normal:   '🟢 NORMAL',
+};
+
 function calcularFerroEV(hbAtual, sexo) {
   const pesoReferencia = 70;
   const hbAlvo = sexo === 'M' ? 14.0 : 12.5;
@@ -133,12 +147,10 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
       style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
       <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-y-auto"
         style={{ maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
-
         <div className="bg-red-800 text-white px-6 py-4 rounded-t-2xl">
           <h2 className="text-lg font-bold">🩸 Sangria Terapêutica</h2>
           <p className="text-red-200 text-xs mt-1">Protocolo individualizado</p>
         </div>
-
         <div className="p-6 space-y-4">
           {!hbSegura && (
             <div className="bg-red-50 border border-red-400 rounded-xl p-4 text-sm text-red-800">
@@ -146,32 +158,26 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
               <p>A Hb atual ({hbAtual} g/dL) está abaixo do mínimo seguro ({hbMin} g/dL). <strong>Não realizar sangria</strong> até normalização da Hb.</p>
             </div>
           )}
-
           {isPolicitemiaVera && (
             <div className="bg-orange-50 border border-orange-300 rounded-xl p-4 text-sm text-orange-800">
               <p className="font-bold">⚠️ Policitemia Vera</p>
               <p>Na policitemia vera as sangrias são indicadas mesmo na ausência de siderose. O objetivo é manter o hematócrito abaixo de 45%.</p>
             </div>
           )}
-
           {!calculado && (
             <div className="space-y-3">
               <p className="text-sm text-gray-600">Informe o peso do paciente para calcular o volume por sessão:</p>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Peso (kg)</label>
-                <input type="number" value={peso}
-                  onChange={e => setPeso(e.target.value)}
-                  placeholder="Ex: 70"
+                <input type="number" value={peso} onChange={e => setPeso(e.target.value)} placeholder="Ex: 70"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
               </div>
-              <button onClick={handleCalcular}
-                disabled={!peso || Number(peso) < 30}
+              <button onClick={handleCalcular} disabled={!peso || Number(peso) < 30}
                 className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
                 Calcular Protocolo
               </button>
             </div>
           )}
-
           {calculado && resultado && (
             <div className="space-y-3">
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-2">
@@ -182,18 +188,14 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
                   <p className="text-xs opacity-80">por sessão</p>
                 </div>
               </div>
-
               <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
                 <p className="font-semibold text-gray-800">Planejamento</p>
                 <p>• Intervalo recomendado: <strong>{resultado.intervalo} dias</strong></p>
                 <p>• Ferritina atual: <strong>{ferritina} ng/mL</strong></p>
                 <p>• Ferritina alvo: <strong>{resultado.ferritinAlvo} ng/mL</strong></p>
                 <p>• Sangrias estimadas até o alvo: <strong>~{resultado.sangriaEstimadas} sessão(ões)</strong></p>
-                <p className="text-orange-700 font-medium">
-                  • Dosar ferritina + sat. transferrina antes da {resultado.penultima}ª sangria
-                </p>
+                <p className="text-orange-700 font-medium">• Dosar ferritina + sat. transferrina antes da {resultado.penultima}ª sangria</p>
               </div>
-
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800 space-y-2">
                 <p className="font-semibold">⚠️ Segurança:</p>
                 <p>• Suspender se Hb cair abaixo de <strong>{resultado.hbMin} g/dL</strong></p>
@@ -202,7 +204,6 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
                 <p>• O paciente deve consumir <strong>{isotonico}</strong> de bebida isotônica (Gatorade, Powerade ou similar) <strong>30 minutos antes</strong> do procedimento</p>
                 <p>• Observar por <strong>15–30 min</strong> após o procedimento</p>
               </div>
-
               <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
                 <p className="font-semibold text-gray-800">Técnica:</p>
                 <p>• Acesso venoso periférico calibroso</p>
@@ -210,14 +211,12 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
                 <p>• Duração: <strong>20–40 minutos</strong></p>
                 <p>• Pode ser feita em clínica de hematologia ou banco de sangue</p>
               </div>
-
               <button onClick={() => { setCalculado(false); setPeso(''); }}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm py-2 rounded-xl transition-colors">
                 ← Recalcular com outro peso
               </button>
             </div>
           )}
-
           <button onClick={onClose}
             className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
             Fechar
@@ -228,20 +227,128 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
   );
 }
 
+// ── Seção OBA ─────────────────────────────────────────────────────────────────
+function OBASection({ oba }) {
+  const [expandido, setExpandido] = useState(null);
+
+  const alertasGraves = oba.alertas?.filter(a => a.nivel === 'grave') || [];
+  const alertasMod    = oba.alertas?.filter(a => a.nivel === 'moderado') || [];
+
+  return (
+    <div className="mt-6 rounded-2xl border-2 border-purple-300 bg-purple-50 shadow-lg overflow-hidden">
+
+      {/* Header */}
+      <div className="bg-purple-700 text-white px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-widest opacity-70 mb-1">Extensão Bariátrica</p>
+            <h3 className="text-xl font-bold">Avaliação OBA</h3>
+            <p className="text-purple-200 text-xs mt-1">
+              {oba.tipoCirurgia} · {oba.mesesPosCirurgia} meses pós-cirurgia
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-purple-300 text-xs mb-1">Disabsorção</p>
+            <div className="flex gap-1 justify-end">
+              {[1,2,3].map(n => (
+                <div key={n}
+                  className={`w-4 h-4 rounded-sm ${n <= oba.grauDisabsorcao ? 'bg-white' : 'bg-purple-500'}`} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Alertas graves e moderados sempre visíveis */}
+      {(alertasGraves.length > 0 || alertasMod.length > 0) && (
+        <div className="px-4 pt-4 space-y-2">
+          {alertasGraves.map((a, i) => (
+            <div key={i} className="flex items-start gap-3 bg-red-100 border border-red-300 rounded-xl px-4 py-3">
+              <span className="text-red-600 font-black text-lg leading-none mt-0.5">!</span>
+              <p className="text-red-800 text-sm font-semibold leading-snug">{a.texto}</p>
+            </div>
+          ))}
+          {alertasMod.map((a, i) => (
+            <div key={i} className="flex items-start gap-3 bg-orange-100 border border-orange-300 rounded-xl px-4 py-3">
+              <span className="text-orange-600 font-bold text-sm leading-none mt-0.5">▲</span>
+              <p className="text-orange-800 text-sm font-medium leading-snug">{a.texto}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Módulos accordion */}
+      <div className="p-4 space-y-2">
+        {oba.modulos.map((mod, i) => {
+          const scheme = obaLevelScheme[mod.nivel] || obaLevelScheme.normal;
+          const aberto = expandido === i;
+          return (
+            <div key={i} className={`rounded-xl border ${scheme.border} ${scheme.bg} overflow-hidden`}>
+              <button
+                onClick={() => setExpandido(aberto ? null : i)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${scheme.dot}`} />
+                  <span className={`font-semibold text-sm truncate ${scheme.text}`}>{mod.titulo}</span>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full text-white whitespace-nowrap ${scheme.badge}`}>
+                    {obaLevelLabel[mod.nivel] || mod.nivel}
+                  </span>
+                  <span className={`text-xl leading-none font-light ${scheme.text} transition-transform duration-200 ${aberto ? 'rotate-90' : ''}`}>
+                    ›
+                  </span>
+                </div>
+              </button>
+              {aberto && (
+                <div className="px-4 pb-4 space-y-2 border-t border-white/60 pt-3">
+                  {mod.linhas.map((linha, j) => (
+                    <p key={j} className={`text-sm leading-relaxed ${scheme.text}`}>
+                      {linha}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Exames OBA */}
+      {oba.examesComplementares?.length > 0 && (
+        <div className="px-4 pb-4">
+          <div className="bg-white rounded-xl border border-purple-200 p-4">
+            <p className="text-xs font-bold text-purple-700 uppercase tracking-wide mb-3">
+              🧪 Exames Complementares OBA
+            </p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              {oba.examesComplementares.map((ex, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                  <span className="text-purple-400 mt-0.5 flex-shrink-0">•</span>
+                  <span>{ex}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// ── ResultCard principal ──────────────────────────────────────────────────────
 export default function ResultCard({ resultado, onCopiar, copiado }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
-  // ── Combinação não reconhecida ────────────────────────────────────────────
   if (!resultado.encontrado) {
     return (
       <div className="bg-white border-2 border-amber-300 rounded-2xl overflow-hidden shadow-sm">
         <div className="bg-amber-50 px-6 py-5 flex items-start gap-4">
           <span style={{ fontSize: '28px', lineHeight: 1 }}>🔍</span>
           <div>
-            <p className="font-semibold text-amber-800 text-base">
-              Combinação não reconhecida pelo algoritmo
-            </p>
+            <p className="font-semibold text-amber-800 text-base">Combinação não reconhecida pelo algoritmo</p>
             <p className="text-amber-700 text-sm mt-1 leading-relaxed">
               Os valores informados não correspondem a nenhum padrão catalogado.
               Isso pode indicar um resultado laboratorial atípico, um erro de digitação,
@@ -301,27 +408,24 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
     resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPEUTICAS');
 
   const isPolicitemiaVera = resultado.id === 81;
-  const hbAtual = resultado._inputs?.hemoglobina || 0;
-  const sexo = resultado._inputs?.sexo || 'M';
+  const hbAtual   = resultado._inputs?.hemoglobina || 0;
+  const sexo      = resultado._inputs?.sexo || 'M';
   const ferritina = resultado._inputs?.ferritina || 0;
   const satTransf = resultado._inputs?.satTransf || 0;
+  const oba       = resultado._oba || null;
 
   return (
     <>
-      {showFerroEV && (
-        <ModalFerroEV onClose={() => setShowFerroEV(false)} hbAtual={hbAtual} sexo={sexo} />
-      )}
+      {showFerroEV && <ModalFerroEV onClose={() => setShowFerroEV(false)} hbAtual={hbAtual} sexo={sexo} />}
       {showSangria && (
         <ModalSangria
           onClose={() => setShowSangria(false)}
-          ferritina={ferritina}
-          satTransf={satTransf}
-          sexo={sexo}
-          hbAtual={hbAtual}
-          isPolicitemiaVera={isPolicitemiaVera}
+          ferritina={ferritina} satTransf={satTransf}
+          sexo={sexo} hbAtual={hbAtual} isPolicitemiaVera={isPolicitemiaVera}
         />
       )}
 
+      {/* ── SEÇÃO 1: ERITRON ─────────────────────────────────────────────────── */}
       <div className={`rounded-2xl border-2 ${scheme.border} ${scheme.bg} shadow-lg overflow-hidden`}>
 
         <div className={`${scheme.badge} text-white px-6 py-4 flex items-center justify-between`}>
@@ -416,6 +520,9 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
 
         </div>
       </div>
+
+      {/* ── SEÇÃO 2: OBA (só aparece se paciente é bariátrico) ───────────────── */}
+      {oba && <OBASection oba={oba} />}
     </>
   );
 }

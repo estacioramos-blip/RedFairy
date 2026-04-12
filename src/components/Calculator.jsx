@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { avaliarPaciente, formatarParaCopiar } from '../engine/decisionEngine';
+import { avaliarOBA } from '../engine/obaEngine';
 import ResultCard from './ResultCard';
 import heroImg from '../assets/redfairy-hero.png';
 import logo from '../assets/logo.png';
@@ -177,7 +178,6 @@ function CadastraMedico({ onConcluir }) {
               placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} />
           </div>
 
-          {/* Separador KlipBit */}
           <div className="bg-green-50 border border-green-200 rounded-xl p-3">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-green-700 font-bold text-sm">⚡ Conta KlipBit</span>
@@ -328,10 +328,120 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     const novosErros = validar();
     if (Object.keys(novosErros).length > 0) { setErros(novosErros); return; }
 
-    const inputsNumericos = { ...inputs, idade: Number(inputs.idade), ferritina: Number(inputs.ferritina), hemoglobina: Number(inputs.hemoglobina), vcm: Number(inputs.vcm), rdw: Number(inputs.rdw), satTransf: Number(inputs.satTransf) };
+    const inputsNumericos = {
+      ...inputs,
+      idade: Number(inputs.idade),
+      ferritina: Number(inputs.ferritina),
+      hemoglobina: Number(inputs.hemoglobina),
+      vcm: Number(inputs.vcm),
+      rdw: Number(inputs.rdw),
+      satTransf: Number(inputs.satTransf),
+    };
 
     const res = avaliarPaciente(inputsNumericos);
-    setResultado({ ...res, _inputs: inputsNumericos });
+
+    // ── OBA: buscar anamnese do Supabase se for bariátrico com CPF ───────────
+    let obaResult = null;
+    if (inputs.bariatrica) {
+      let dadosOBA = null;
+      let examesOBA = null;
+
+      // Tentar buscar dados OBA do Supabase pelo CPF
+      if (inputs.cpf.trim()) {
+        const cpfLimpo = inputs.cpf.replace(/\D/g, '');
+        const { data: obaRow } = await supabase
+          .from('oba_anamnese')
+          .select('*')
+          .eq('cpf', cpfLimpo)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (obaRow) {
+          dadosOBA = {
+            sexo:               obaRow.sexo,
+            idade:              inputs.idade,
+            tipo_cirurgia:      obaRow.tipo_cirurgia,
+            meses_pos_cirurgia: obaRow.meses_pos_cirurgia,
+            peso_antes:         obaRow.peso_antes,
+            peso_atual:         obaRow.peso_atual,
+            peso_minimo_pos:    obaRow.peso_minimo_pos,
+            ganhou_peso_apos:   obaRow.ganhou_peso_apos,
+            fez_plasma_argonio: obaRow.fez_plasma_argonio,
+            status_glicemico:   obaRow.status_glicemico,
+            status_pressorico:  obaRow.status_pressorico,
+            status_osseo:       obaRow.status_osseo,
+            status_dental:      obaRow.status_dental,
+            status_gestacional: obaRow.status_gestacional,
+            semanas_gestacao:   obaRow.semanas_gestacao,
+            compulsoes:         obaRow.compulsoes || [],
+            medicamentos:       obaRow.medicamentos || [],
+            atividade_fisica:   obaRow.atividade_fisica || [],
+            emagrecedores:      obaRow.emagrecedores || {},
+            trombose:           obaRow.trombose,
+            investigou_trombose: obaRow.investigou_trombose,
+            usa_anticoagulante: obaRow.usa_anticoagulante,
+            usou_anticoagulante: obaRow.usou_anticoagulante,
+            varizes:            obaRow.varizes,
+            varizes_grau:       obaRow.varizes_grau,
+            varizes_esofago:    obaRow.varizes_esofago,
+            operou_varizes_esofago: obaRow.operou_varizes_esofago,
+            meta_peso:          obaRow.meta_peso,
+            meta_kg:            obaRow.meta_kg,
+            projetos_vida:      obaRow.projetos_vida || [],
+          };
+          examesOBA = {
+            vitamina_b12:  obaRow.vitamina_b12,
+            vitamina_d:    obaRow.vitamina_d,
+            zinco:         obaRow.zinco,
+            vitamina_a:    obaRow.vitamina_a,
+            vitamina_e:    obaRow.vitamina_e,
+            tiamina:       obaRow.tiamina,
+            selenio:       obaRow.selenio,
+            folatos:       obaRow.folatos,
+            hb_glicada:    obaRow.hb_glicada,
+            glicemia:      obaRow.glicemia,
+            insulina:      obaRow.insulina,
+            triglicerides: obaRow.triglicerides,
+            ast:           obaRow.ast,
+            alt:           obaRow.alt,
+            gama_gt:       obaRow.gama_gt,
+            creatinina:    obaRow.creatinina,
+            acido_urico:   obaRow.acido_urico,
+            tsh:           obaRow.tsh,
+            testosterona:  obaRow.testosterona,
+            estradiol:     obaRow.estradiol,
+            psa_total:     obaRow.psa_total,
+            ca199:         obaRow.ca199,
+            cea:           obaRow.cea,
+          };
+        }
+      }
+
+      // Fallback: dados mínimos via inputs do formulário principal
+      if (!dadosOBA) {
+        dadosOBA = {
+          sexo:               inputs.sexo,
+          idade:              inputs.idade,
+          tipo_cirurgia:      'NÃO SEI',
+          meses_pos_cirurgia: 0,
+          status_gestacional: inputs.gestante ? 'GRÁVIDA' : null,
+          compulsoes:         inputs.alcoolista ? ['ÁLCOOL'] : [],
+          medicamentos:       [
+            ...(inputs.vitaminaB12 ? ['VIT B12 SUBLINGUAL'] : []),
+            ...(inputs.ferroOral   ? ['FERRO ORAL']         : []),
+          ],
+          atividade_fisica:   [],
+          emagrecedores:      {},
+        };
+        examesOBA = {};
+      }
+
+      obaResult = avaliarOBA(res, dadosOBA, examesOBA);
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    setResultado({ ...res, _inputs: inputsNumericos, _oba: obaResult });
     setCopiado(false);
 
     if (inputs.cpf.trim() && res.encontrado) {
@@ -398,7 +508,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
                 </span>
               </div>
             )}
-            {/* Botão Logout */}
             <button onClick={() => setShowLogoutConfirm(true)}
               className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors"
               title="Trocar médico">
@@ -412,7 +521,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
         </div>
       </header>
 
-      {/* Modal confirmação logout */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowLogoutConfirm(false)}>
@@ -551,6 +659,20 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
                 </>
               )}
             </div>
+
+            {/* Banner OBA quando bariátrica está marcada */}
+            {inputs.bariatrica && (
+              <div className="mt-3 bg-purple-50 border border-purple-200 rounded-xl p-3">
+                <p className="text-purple-700 text-xs font-semibold">
+                  🔬 Avaliação OBA ativada
+                </p>
+                <p className="text-purple-600 text-xs mt-0.5">
+                  {inputs.cpf.trim()
+                    ? 'Os dados da anamnese OBA serão buscados automaticamente pelo CPF.'
+                    : 'Informe o CPF para carregar os dados completos da anamnese OBA. Sem CPF, uma avaliação básica será gerada.'}
+                </p>
+              </div>
+            )}
           </section>
 
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
