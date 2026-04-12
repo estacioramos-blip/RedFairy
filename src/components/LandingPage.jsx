@@ -406,6 +406,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
   const [showFil,     setShowFil]     = useState(false)
   const [showOBA,     setShowOBA]     = useState(false)
   const [sexoOBA,     setSexoOBA]     = useState('M')
+  const [idadeOBA,    setIdadeOBA]    = useState(0)
   const [rfSexo,      setRfSexo]      = useState('F')
   const [rfResultado, setRfResultado] = useState(null)
   const [rfErro,      setRfErro]      = useState('')
@@ -501,6 +502,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       {showOBA && (
         <OBAModal
           sexo={sexoOBA}
+          idade={idadeOBA}
           cpf={null}
           onConcluir={() => { setShowOBA(false); onModoPaciente() }}
           onFechar={() => setShowOBA(false)}
