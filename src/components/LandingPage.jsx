@@ -49,7 +49,7 @@ const LANDING_CSS = `
 
   /* HERO */
   .hero { min-height: 100vh; display: flex; align-items: center; padding: 7rem 2rem 4rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
-  .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 4rem; align-items: center; position: relative; z-index: 2; }
+  .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; position: relative; z-index: 2; }
   .hero-badge { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 1.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; }
   .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
   .hero-badge .badge-main { display: flex; align-items: center; gap: 0.5rem; }
@@ -169,7 +169,7 @@ const LANDING_CSS = `
   /* FILOSOFIA — novo layout: texto esquerda, retângulo imagem direita */
   .filosofia { background: var(--gray-bg); color: var(--text); position: relative; padding-top: 2.5rem; padding-bottom: 3rem; }
   .filosofia .tag { color: var(--cherry); margin-bottom: 0.3rem; }
-  .filosofia-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 4rem; align-items: start; margin-top: 1.5rem; }
+  .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 1.5rem; }
   .fil-img-box .fil-content p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
   .fil-img-box .fil-content .highlight-box p { color: var(--white); font-size: 1rem; margin: 0; font-weight: 600; }
   .highlight-box { background: var(--wine); border: 2px solid var(--wine-dark); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
