@@ -59,6 +59,8 @@ const MEDICAMENTOS = [
   'ANTICOAGULANTE',
   'ANTIDEPRESSIVO', 'REMÉDIO PARA DORMIR', 'LAXANTES', 'REMÉDIO PARA PRESSÃO',
   'REMÉDIO PARA DORES', 'REMÉDIO PARA BAIXAR A GLICEMIA', 'REMÉDIO PARA COLESTEROL', 'REMÉDIO PARA TRIGLICÉRIDES',
+  'TOPIRAMATO', 'FENTERMINA', 'NALTREXONA', 'BUPROPIONA', 'ORLISTAT (XENICAL)',
+  'DOMPERIDONA (MOTILIUM)', 'BROMOPRIDA',
 ]
 
 const EMAGRECEDORES = ['Ozempic', 'Rybelsus', 'Wegovy', 'Mounjaro', 'Saxenda', 'Victoza', 'Trulicity', 'Xultophi']
@@ -195,8 +197,8 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
     usou_anticoagulante: false, usa_anticoagulante: false,
     varizes: null, varizes_grau: '',
     varizes_esofago: false, operou_varizes_esofago: false,
-    // Dental
-    status_dental: '',
+    // Dental / Ósseo
+    status_dental: '', status_osseo: '',
     // Covid
     teve_covid: false, vacina_covid: [],
     // Atividade / Cirurgia plástica
@@ -282,6 +284,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
       varizes_esofago: form.varizes_esofago,
       operou_varizes_esofago: form.operou_varizes_esofago,
       status_dental: form.status_dental || null,
+      status_osseo: form.status_osseo || null,
       teve_covid: form.teve_covid,
       vacina_covid: form.vacina_covid,
       atividade_fisica: form.atividade_fisica,
@@ -523,6 +526,20 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
           {['BOA SAÚDE ORAL, DENTIÇÃO OK.', 'PRECISO TRATAMENTO ODONTOLÓGICO', 'PERDI MAIS DE UM DENTE APÓS A CIRURGIA'].map(op => (
             <div key={op} onClick={() => sf('status_dental', form.status_dental === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem', borderRadius:8, border:`1.5px solid ${form.status_dental === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_dental === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem', fontSize:'0.85rem', fontWeight: form.status_dental === op ? 700 : 500, color: form.status_dental === op ? '#7B1E1E' : '#374151' }}>
               <Radio16 active={form.status_dental === op} />{op}
+            </div>
+          ))}
+
+          {/* ── STATUS ÓSSEO ── */}
+          <SectionTitle>Status Ósseo</SectionTitle>
+          {['DENSITOMETRIA ÓSSEA NORMAL', 'OSTEOPENIA', 'OSTEOPOROSE', 'NÃO FIZ DENSITOMETRIA'].map(op => (
+            <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{
+              display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem',
+              borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`,
+              background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem',
+              fontSize:'0.85rem', fontWeight: form.status_osseo === op ? 700 : 500,
+              color: form.status_osseo === op ? '#7B1E1E' : '#374151',
+            }}>
+              <Radio16 active={form.status_osseo === op} />{op}
             </div>
           ))}
 
