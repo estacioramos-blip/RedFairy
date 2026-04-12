@@ -158,7 +158,7 @@ const LANDING_CSS = `
   .oba-home-btn .oba-link { font-size: 0.78rem; color: rgba(255,255,255,0.85); margin-top: 0.5rem; text-decoration: underline; }
 
   /* CONTAINER / SECTIONS */
-  .container { max-width: 1100px; margin: 0 auto; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
   section { padding: 5.5rem 2rem; }
   .center { text-align: center; }
   .tag { display: inline-block; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--cherry); margin-bottom: 0.6rem; }
@@ -635,10 +635,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   style={{ backgroundImage: `url(${fairy3})` }}
                 />
                 <div className="htb-content">
-                  <h1 style={{ fontSize:'2.2rem', lineHeight:1.2, marginBottom:'0.8rem' }}>
-                    Vida é ventilação e perfusão. É a sua <span className="red">Hemoglobina</span> que faz isso.
+                  <h1 style={{ fontSize:'2.2rem', lineHeight:1.2, marginBottom:'0.8rem', color:'#1F2937', fontWeight:800 }}>
+                    Vida é ventilação e perfusão. É a sua <span style={{ color:'#DC2626' }}>Hemoglobina</span> que faz isso.
                   </h1>
-                  <p className="hero-philosophy" style={{ fontSize:'0.9rem' }}>
+                  <p style={{ fontStyle:'normal', fontWeight:700, fontSize:'0.9rem', color:'#7B1E1E', lineHeight:1.6 }}>
                     Cuide dela. Saiba mais:
                   </p>
                 </div>
