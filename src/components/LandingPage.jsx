@@ -621,8 +621,20 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <span className="tag">Filosofia</span>
           </div>
           <div className="filosofia-grid">
-            {/* Coluna esquerda: retângulo com título, texto e imagem. Highlight acima do retângulo removido */}
+            {/* Coluna esquerda: quadro igual ao hero-textbox + imagem com hover abaixo */}
             <div className="reveal">
+              {/* Quadro igual ao hero-textbox */}
+              <div className="hero-textbox" style={{ marginBottom:'1rem', cursor:'default' }}>
+                <div className="htb-content">
+                  <h1 style={{ fontSize:'2.2rem' }}>
+                    Vida é ventilação e perfusão, e é a sua <span className="red">Hemoglobina</span> que faz isso.
+                  </h1>
+                  <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:700, fontSize:'0.95rem', marginTop:'0.8rem' }}>
+                    Cuide da sua Hemoglobina. Nós ajudamos.
+                  </p>
+                </div>
+              </div>
+              {/* Imagem com hover abaixo */}
               <div
                 className={`fil-img-box${showFil ? ' reveal-img' : ''}`}
                 onMouseEnter={onFilEnter}
@@ -630,12 +642,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               >
                 <div className="fil-img-box-bg" style={{ backgroundImage: `url(${fairy3})` }} />
                 <div className="fil-content">
-                  <h2 style={{ fontSize:'2.2rem', fontWeight:800, color:'var(--text)', lineHeight:1.2, marginBottom:'1rem' }}>Vida é ventilação e perfusão</h2>
                   <p>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
                   <p>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto. As células precisam do oxigênio para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.</p>
                   <p>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
                   <p>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
-                  <div className="highlight-box"><p>Cuide da sua Hemoglobina. Nós ajudamos.</p></div>
                 </div>
               </div>
             </div>
