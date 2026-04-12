@@ -647,7 +647,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               </div>
               {/* Texto abaixo do quadro */}
               <div style={{ padding:'0.5rem 0' }}>
-                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>O Ferro em você veio das estrelas, e dele o vermelho do seu sangue — a sua potência. Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
+                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
                 <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto.</p>
                 <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
                 <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, fontWeight:600 }}>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
