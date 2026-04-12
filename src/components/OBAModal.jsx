@@ -56,6 +56,7 @@ const COMPULSOES = ['DOCES', 'COMIDA', 'GELO', 'ÁLCOOL', 'JOGO', 'TRABALHO', 'O
 
 const MEDICAMENTOS = [
   'FERRO VENOSO', 'VIT. B12 INTRAMUSCULAR', 'VIT. B12 SUBLINGUAL', 'POLIVITAMÍNICO ORAL',
+  'ANTICOAGULANTE',
   'ANTIDEPRESSIVO', 'REMÉDIO PARA DORMIR', 'LAXANTES', 'REMÉDIO PARA PRESSÃO',
   'REMÉDIO PARA DORES', 'REMÉDIO PARA BAIXAR A GLICEMIA', 'REMÉDIO PARA COLESTEROL', 'REMÉDIO PARA TRIGLICÉRIDES',
 ]
@@ -176,11 +177,13 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
   const todosExames = [...EXAMES_BASE, ...examesExtras]
 
   const [form, setForm] = useState({
+    // Data da cirurgia
+    cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     // Status ponderal
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
     ganhou_peso_apos: false, fez_plasma_argonio: false,
     // Cirurgia
-    tempo_pos_cirurgia: '', tipo_cirurgia: '',
+    tipo_cirurgia: '',
     // Acompanhamento
     acompanhamento: '', especialistas: [],
     // Gestacional (F)
@@ -189,6 +192,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
     status_glicemico: '', status_pressorico: '',
     // Vascular
     trombose: null, investigou_trombose: false,
+    usou_anticoagulante: false, usa_anticoagulante: false,
     varizes: null, varizes_grau: '',
     varizes_esofago: false, operou_varizes_esofago: false,
     // Dental
@@ -209,6 +213,20 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
 
   const sf = (f, v) => setForm(p => ({ ...p, [f]: v }))
   const tog = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
+
+  // Calcula meses pós-cirurgia a partir de dia/mês/ano
+  function calcMesesPos() {
+    const ano = parseInt(form.cirurgia_ano)
+    const mes = parseInt(form.cirurgia_mes)
+    const dia = parseInt(form.cirurgia_dia)
+    if (!ano) return null
+    const hoje = new Date()
+    const dataC = new Date(ano, mes ? mes - 1 : 0, dia || 1)
+    if (isNaN(dataC)) return null
+    const meses = (hoje.getFullYear() - dataC.getFullYear()) * 12 + (hoje.getMonth() - dataC.getMonth())
+    return meses > 0 ? meses : null
+  }
+  const mesesPos = calcMesesPos()
 
   const pesoAntes = parseFloat(form.peso_antes)
   const pesoMin   = parseFloat(form.peso_minimo_pos)
@@ -236,7 +254,10 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
 
     const { error } = await supabase.from('oba_anamnese').insert({
       cpf: cpf || null, sexo,
-      tempo_pos_cirurgia: form.tempo_pos_cirurgia,
+      cirurgia_dia: form.cirurgia_dia ? parseInt(form.cirurgia_dia) : null,
+      cirurgia_mes: form.cirurgia_mes ? parseInt(form.cirurgia_mes) : null,
+      cirurgia_ano: form.cirurgia_ano ? parseInt(form.cirurgia_ano) : null,
+      meses_pos_cirurgia: mesesPos,
       tipo_cirurgia: form.tipo_cirurgia,
       peso_antes: pesoAntes || null,
       peso_minimo_pos: pesoMin || null,
@@ -252,6 +273,8 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
       status_pressorico: form.status_pressorico || null,
       trombose: form.trombose,
       investigou_trombose: form.trombose ? form.investigou_trombose : null,
+      usou_anticoagulante: form.trombose ? form.usou_anticoagulante : null,
+      usa_anticoagulante: form.trombose ? form.usa_anticoagulante : null,
       varizes: form.varizes,
       varizes_grau: form.varizes ? form.varizes_grau : null,
       varizes_esofago: form.varizes_esofago,
@@ -358,8 +381,30 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
           {/* ── DADOS DA CIRURGIA ── */}
           <SectionTitle>Dados da Cirurgia</SectionTitle>
 
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>Tempo pós-cirurgia</label>
-          <input style={inp} placeholder="Ex: 2 anos e 3 meses" value={form.tempo_pos_cirurgia} onChange={e => sf('tempo_pos_cirurgia', e.target.value)} />
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>Data da cirurgia</label>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem', marginBottom:'0.4rem' }}>
+            <div>
+              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>DIA</label>
+              <input style={inp} type="number" min="1" max="31" placeholder="DD" value={form.cirurgia_dia} onChange={e => sf('cirurgia_dia', e.target.value)} />
+            </div>
+            <div>
+              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>MÊS</label>
+              <input style={inp} type="number" min="1" max="12" placeholder="MM" value={form.cirurgia_mes} onChange={e => sf('cirurgia_mes', e.target.value)} />
+            </div>
+            <div>
+              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>ANO</label>
+              <input style={inp} type="number" min="2000" max="2030" placeholder="AAAA" value={form.cirurgia_ano} onChange={e => sf('cirurgia_ano', e.target.value)} />
+            </div>
+          </div>
+          {mesesPos !== null && (
+            <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:8, padding:'0.5rem 0.9rem', marginBottom:'0.4rem' }}>
+              <p style={{ color:'#0369A1', fontSize:'0.85rem', fontWeight:700 }}>
+                {mesesPos >= 12
+                  ? `${Math.floor(mesesPos/12)} ano${Math.floor(mesesPos/12) > 1 ? 's' : ''} e ${mesesPos % 12} meses pós-cirurgia`
+                  : `${mesesPos} meses pós-cirurgia`}
+              </p>
+            </div>
+          )}
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Tipo de cirurgia</label>
           <RadioGroup options={TIPOS_CIRURGIA} value={form.tipo_cirurgia} onChange={v => sf('tipo_cirurgia', v)} />
@@ -433,7 +478,11 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
             ))}
           </div>
           {form.trombose && (
-            <CheckRow label="INVESTIGUEI AS CAUSAS DA TROMBOSE" checked={form.investigou_trombose} onClick={() => sf('investigou_trombose', !form.investigou_trombose)} />
+            <>
+              <CheckRow label="INVESTIGUEI AS CAUSAS DA TROMBOSE" checked={form.investigou_trombose} onClick={() => sf('investigou_trombose', !form.investigou_trombose)} />
+              <CheckRow label="USEI ANTICOAGULANTE" checked={form.usou_anticoagulante} onClick={() => sf('usou_anticoagulante', !form.usou_anticoagulante)} />
+              <CheckRow label="USO ANTICOAGULANTE ATUALMENTE" checked={form.usa_anticoagulante} onClick={() => sf('usa_anticoagulante', !form.usa_anticoagulante)} />
+            </>
           )}
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Varizes</label>
@@ -470,7 +519,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
           <SectionTitle>Status COVID-19</SectionTitle>
           <CheckRow label="TIVE COVID-19" checked={form.teve_covid} onClick={() => sf('teve_covid', !form.teve_covid)} />
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.6rem' }}>Vacina:</label>
-          {['VACINA PFIZER', 'VACINA JANSSEN', 'VACINA ASTRAZENECA', 'NÃO TOMEI VACINA'].map(v => (
+          {['VACINA PFIZER', 'VACINA JANSSEN', 'VACINA ASTRAZENECA', 'VACINA CORONAVAC', 'NÃO TOMEI VACINA'].map(v => (
             <CheckRow key={v} label={v}
               checked={form.vacina_covid.includes(v)}
               disabled={v !== 'NÃO TOMEI VACINA' && form.vacina_covid.includes('NÃO TOMEI VACINA') || v === 'NÃO TOMEI VACINA' && form.vacina_covid.length > 0 && !form.vacina_covid.includes('NÃO TOMEI VACINA')}
