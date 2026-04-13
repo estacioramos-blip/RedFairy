@@ -133,7 +133,7 @@ const LANDING_CSS = `
   .hero h1 .red { color: var(--cherry); }
   .hero-philosophy { font-style: normal; font-size: 1.3rem; color: var(--wine); margin-bottom: 0; line-height: 1.65; font-weight: 700; }
   .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 100%; line-height: 1.7; margin-bottom: 1.2rem; font-weight: 700; text-align: justify; }
-  .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
   .trust-i { display: flex; align-items: center; gap: 0.35rem; }
   .trust-i svg { width: 15px; height: 15px; color: var(--cherry); }
@@ -301,7 +301,7 @@ const LANDING_CSS = `
   .btn-cta-pat:hover { background: #374151; border-color: #374151; transform: translateY(-2px); }
 
   /* FOOTER */
-  footer { padding: 2.5rem 2rem; text-align: center; border-top: 1px solid var(--border); }
+  footer { text-align: center; }
   .foot-brand { display: inline-flex; align-items: center; gap: 0.4rem; }
   .foot-brand img { height: 28px; }
   .foot-brand span { font-family: 'DM Serif Display', serif; font-size: 1.15rem; color: var(--wine); }
@@ -1056,7 +1056,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
       {/* FOOTER */}
       <footer style={{ padding:'0.8rem 1rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
-        <p style={{ fontSize:'0.65rem', color:'var(--text-light)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:'0 0 0.3rem' }}>
+        <p style={{ fontSize:'0.65rem', color:'var(--text-light)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:'0 0 0.3rem', letterSpacing:'-0.01em' }}>
           <img src={logo} alt="" style={{ height:14, verticalAlign:'middle', marginRight:4 }} />
           <span style={{ fontFamily:"'DM Serif Display',serif", color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em></span>
           {' · '}Cuidar do Seu Eritron{' · '}by <a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a> © 2026{' · '}E.F. Ramos, M.D. CRM 6302 BA{' · '}<a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a>
