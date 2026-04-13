@@ -72,16 +72,16 @@ const LANDING_CSS = `
     /* Hero — padding zero, hero-wrap ocupa 100% com padding interno */
     .hero { padding: 5rem 0 3rem; }
     .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; max-width: 100% !important; padding: 0 0.6rem; }
-    .hero h1 { font-size: 2rem; white-space: normal !important; }
+    .hero h1 { font-size: 2.6rem; white-space: normal !important; }
     .hero-desc { margin: 0 auto 1.5rem; }
     .hero-actions { justify-content: center; }
     .trust { justify-content: center; flex-wrap: wrap; gap: 1rem; }
     .hero-visual { display: none; }
     /* hero-textbox sem padding extra para ter mesma largura das demais seções */
     .hero-textbox { padding: 1.2rem; margin-left: 0; margin-right: 0; }
-    .hero-textbox h1 { font-size: 1.6rem !important; white-space: normal !important; }
+    .hero-textbox h1 { font-size: 2rem !important; white-space: normal !important; }
     /* Fonte menor na frase filosofia, sem corte */
-    .hero-philosophy { font-size: 1rem !important; white-space: normal !important; }
+    .hero-philosophy { font-size: 1.15rem !important; white-space: normal !important; }
     .hero-quote-box { text-align: center; }
 
     /* Filosofia - coluna única, texto justificado */
@@ -129,10 +129,10 @@ const LANDING_CSS = `
   .hero-textbox.reveal-img .hero-textbox-bg { filter: blur(0px); opacity: 0.9; }
   .hero-textbox .htb-content { position: relative; z-index: 1; transition: opacity 0.6s ease; }
   .hero-textbox.reveal-img .htb-content { opacity: 0; }
-  .hero h1 { font-size: 3.2rem; line-height: 1.15; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
+  .hero h1 { font-size: 3.6rem; line-height: 1.12; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
   .hero h1 .red { color: var(--cherry); }
-  .hero-philosophy { font-style: normal; font-size: 1.15rem; color: var(--wine); margin-bottom: 0; line-height: 1.6; font-weight: 700; }
-  .hero-desc { font-size: 0.95rem; color: var(--text-sec); max-width: 500px; line-height: 1.75; margin-bottom: 2rem; font-weight: 700; }
+  .hero-philosophy { font-style: normal; font-size: 1.3rem; color: var(--wine); margin-bottom: 0; line-height: 1.65; font-weight: 700; }
+  .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 500px; line-height: 1.8; margin-bottom: 2rem; font-weight: 700; }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
   .trust-i { display: flex; align-items: center; gap: 0.35rem; }
@@ -141,14 +141,14 @@ const LANDING_CSS = `
 
   /* HERO VISUAL — coluna direita */
   .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
-  .fairy-showcase { width: 200px; height: 200px; }
+  .fairy-showcase { width: 240px; height: 240px; }
   .fairy-showcase img { width: 100%; height: 100%; object-fit: contain; animation: floatFairy 4s ease-in-out infinite; }
   @keyframes floatFairy { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
 
   /* fairy-quote — retângulo branco direito com texto */
-  .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 100%; }
-  .fairy-quote p { font-size: 0.92rem; color: var(--text); line-height: 1.6; font-weight: 600; }
-  .fairy-quote .question { color: var(--cherry); font-weight: 600; margin-top: 0.5rem; font-size: 1.02rem; }
+  .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 2rem 2rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 100%; }
+  .fairy-quote p { font-size: 1.1rem; color: var(--text); line-height: 1.7; font-weight: 600; }
+  .fairy-quote .question { color: var(--cherry); font-weight: 700; margin-top: 0.75rem; font-size: 1.2rem; }
 
   /* OBA HOME BTN */
   .oba-home-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 16px; padding: 1.2rem 2rem; transition: all 0.3s; box-shadow: 0 4px 20px rgba(232,114,12,0.2); width: 100%; max-width: 380px; }
