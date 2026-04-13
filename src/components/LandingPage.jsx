@@ -279,7 +279,7 @@ const LANDING_CSS = `
   .cta-final { background: var(--gray-bg); }
   .cta-final .tag { color: var(--cherry); }
   .cta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
-  .cta-c { border-radius: 16px; padding: 1.8rem; transition: transform 0.25s; }
+  .cta-c { border-radius: 16px; padding: 1.8rem; transition: transform 0.25s; display: flex; flex-direction: column; justify-content: space-between; }
   .cta-c:hover { transform: translateY(-4px); }
   .cta-doc { background: #D1D5DB; border: 1px solid #9CA3AF; box-shadow: var(--shadow); }
   .cta-pat { background: var(--wine); border: 1px solid var(--wine-dark); box-shadow: 0 8px 30px rgba(123,30,30,0.2); }
@@ -1055,19 +1055,14 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ padding:'1.5rem 2rem' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', flexWrap:'wrap', gap:'1rem' }}>
-          <div className="foot-brand">
-            <img src={logo} alt="RedFairy" style={{ height:24 }} />
-            <span>Red<em>Fairy</em></span>
+      <footer style={{ padding:'1.2rem 2rem', borderTop:'1px solid var(--border)' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', flexWrap:'wrap', gap:'0.5rem 1.2rem' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'0.4rem' }}>
+            <img src={logo} alt="RedFairy" style={{ height:20 }} />
+            <span style={{ fontFamily:"'DM Serif Display',serif", fontSize:'0.95rem', color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em></span>
+            <span style={{ color:'var(--text-light)', fontSize:'0.7rem', fontWeight:700, letterSpacing:'1px' }}>· CUIDAR DO SEU ERITRON</span>
           </div>
-          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>Cuidar do Seu Eritron</span>
-          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>·</span>
-          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>by <a href="https://cytomica.com">cytomica.com</a> © 2026</span>
-          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>·</span>
-          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>E.F. Ramos, M.D. CRM 6302 BA | RQE 5830 · 5643 · 27847</span>
-          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>·</span>
-          <a href="https://drestacioramos.com.br" style={{ color:'var(--text-sec)', fontSize:'0.75rem' }}>drestacioramos.com.br</a>
+          <span style={{ color:'var(--text-light)', fontSize:'0.7rem' }}>by <a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a> © 2026 · E.F. Ramos, M.D. CRM 6302 BA · <a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a></span>
         </div>
       </footer>
 
