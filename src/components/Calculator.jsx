@@ -364,9 +364,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     setLogoClicks(prev => {
       const next = prev + 1;
       if (logoClickTimer.current) clearTimeout(logoClickTimer.current);
-      logoClickTimer.current = setTimeout(() => setLogoClicks(0), 1500);
-      if (next >= 5) { setLogoClicks(0); setShowAdminConfig(true); }
-      else if (next >= 3) { setLogoClicks(0); setShowDemoMenu(true); }
+      if (next >= 5) {
+        logoClickTimer.current = null;
+        setShowAdminConfig(true);
+        return 0;
+      }
+      if (next === 3) {
+        logoClickTimer.current = setTimeout(() => {
+          setLogoClicks(c => { if (c === 3) setShowDemoMenu(true); return 0; });
+        }, 600);
+      } else {
+        logoClickTimer.current = setTimeout(() => setLogoClicks(0), 1500);
+      }
       return next;
     });
   }
