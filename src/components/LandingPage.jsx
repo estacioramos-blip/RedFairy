@@ -543,7 +543,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <div className="hero-badge">
               <div className="badge-main">
                 <div className="dot" />
-                Doutor* você ganha DEZ DÓLARES DIGITAIS por paciente avaliado.
+                Doutor* ganhe DEZ DÓLARES DIGITAIS por paciente avaliado!
               </div>
               <span className="badge-sub" onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior:'smooth' })}>
                 Conheça as regras
