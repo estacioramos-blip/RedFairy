@@ -205,9 +205,9 @@ const LANDING_CSS = `
   .fairy-mini { height: 38px; width: 38px; object-fit: contain; opacity: 0.85; }
 
   /* INDICAÇÕES — bolinhas vermelhas, grid 5 colunas */
-  .indicacoes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; margin-top: 2rem; }
+  .indicacoes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; margin-top: 2rem; align-items: start; }
   .ind { background: white; border: 1px solid var(--border2); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-sec); font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
-  .ind.auto-dot::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--cherry); display: block; flex-shrink: 0; margin-top: 4px; }
+  .ind.auto-dot::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--cherry); display: block; flex-shrink: 0; margin-top: 3px; }
   .ind:hover { border-color: var(--cherry); color: var(--cherry); background: var(--cherry-bg); }
 
   /* TERAPÊUTICA */
@@ -703,7 +703,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="indicacoes-grid reveal">
             {/* Bariátricos — bolinha amarela */}
             <div className="ind" style={{ alignItems:'flex-start' }}>
-              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0, marginTop:4 }} />
+              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0, marginTop:3 }} />
               <div>
                 <strong>Bariátricos</strong>
                 <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>OBA — Otimizar o Bariátrico</div>
@@ -718,7 +718,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </div>
             {/* Deficiência de Ferro */}
             <div className="ind" style={{ alignItems:'flex-start' }}>
-              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:4 }} />
+              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:3 }} />
               <div>
                 <strong>Deficiência de Ferro</strong>
                 <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Ferritina Baixa</div>
@@ -726,7 +726,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </div>
             {/* Excesso de Ferro */}
             <div className="ind" style={{ alignItems:'flex-start' }}>
-              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:4 }} />
+              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:3 }} />
               <div>
                 <strong>Excesso de Ferro</strong>
                 <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Ferritina Alta</div>
