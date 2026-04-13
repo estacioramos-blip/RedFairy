@@ -521,6 +521,7 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function AbaConfig() {
   const [valor, setValor] = useState('');
+  const [valorDoc, setValorDoc] = useState('');
   const [pixChave, setPixChave] = useState('');
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
@@ -530,9 +531,12 @@ function AbaConfig() {
     async function carregar() {
       const { data: valConfig } = await supabase
         .from('config').select('valor').eq('chave', 'valor_solicitacao_medica').single();
+      const { data: docConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'valor_documento_medico').single();
       const { data: pixConfig } = await supabase
         .from('config').select('valor').eq('chave', 'pix_chave').single();
       setValor(valConfig?.valor || '');
+      setValorDoc(docConfig?.valor || '');
       setPixChave(pixConfig?.valor || '');
       setLoading(false);
     }
@@ -543,6 +547,10 @@ function AbaConfig() {
     setSalvando(true); setSucesso('');
     await supabase.from('config').upsert(
       { chave: 'valor_solicitacao_medica', valor, descricao: 'Valor em R$ da solicitação médica via Pix' },
+      { onConflict: 'chave' }
+    );
+    await supabase.from('config').upsert(
+      { chave: 'valor_documento_medico', valor: valorDoc, descricao: 'Valor em R$ da geração de documento médico (prescrição/pedido de exames)' },
       { onConflict: 'chave' }
     );
     await supabase.from('config').upsert(
@@ -572,6 +580,13 @@ function AbaConfig() {
             <input type="number" step="0.01" min="0" value={valor}
               onChange={e => setValor(e.target.value)} placeholder="Ex: 50.00" className={inputClass} />
             <p className="text-xs text-gray-400 mt-1">Valor único cobrado para emissão de qualquer solicitação médica.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Valor da Geração de Documento Médico (R$)</label>
+            <input type="number" step="0.01" min="0" value={valorDoc}
+              onChange={e => setValorDoc(e.target.value)} placeholder="Ex: 29.90" className={inputClass} />
+            <p className="text-xs text-gray-400 mt-1">Valor cobrado por documento médico gerado via WhatsApp (prescrição, pedido de exames).</p>
           </div>
 
           <div>

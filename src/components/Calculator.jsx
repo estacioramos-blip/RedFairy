@@ -724,7 +724,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
 
         {resultado && (
           <div id="resultado" className="mt-6">
-            <ResultCard resultado={resultado} onCopiar={handleCopiar} copiado={copiado} />
+            <ResultCard resultado={resultado} onCopiar={handleCopiar} copiado={copiado} modoPaciente={true} />
           </div>
         )}
       </main>

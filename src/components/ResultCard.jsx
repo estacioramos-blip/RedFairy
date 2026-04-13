@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 const colorScheme = {
   green:  { bg: 'bg-green-50',  border: 'border-green-400',  badge: 'bg-green-600',  text: 'text-green-800'  },
@@ -338,7 +339,298 @@ function OBASection({ oba }) {
 }
 
 // ── ResultCard principal ──────────────────────────────────────────────────────
-export default function ResultCard({ resultado, onCopiar, copiado }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPONENTE: Oferta de Documento Médico via WhatsApp
+// ─────────────────────────────────────────────────────────────────────────────
+const WHATSAPP_MEDICO = '5571999230288';
+
+function DocumentoMedicoPanel({ resultado, modoPaciente }) {
+  const [valorDoc, setValorDoc] = useState(null);
+  const [pixChave, setPixChave] = useState('');
+  const [etapa, setEtapa] = useState('oferta'); // oferta | dados | pix | aguardando | concluido
+  const [dadosPaciente, setDadosPaciente] = useState({ nome: '', dataNasc: '', celular: '', cpf: '' });
+  const [tiposDoc, setTiposDoc] = useState({ exames: false, prescricao: false });
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState('');
+
+  // Tipos de documento disponíveis baseados no resultado
+  const temExames = resultado.proximosExames && resultado.proximosExames.length > 0;
+  const temPrescricao = resultado.recomendacao && (
+    resultado.recomendacao.includes('FERRO') ||
+    resultado.recomendacao.includes('VITAMINA') ||
+    resultado.recomendacao.includes('ÁCIDO FÓLICO') ||
+    resultado.recomendacao.includes('SUPLEMENTA') ||
+    resultado.recomendacao.includes('PRESCRI') ||
+    (resultado._oba && resultado._oba.alertas && resultado._oba.alertas.length > 0)
+  );
+
+  useEffect(() => {
+    async function carregarTudo() {
+      // Config de valor e pix
+      const { data: docConf } = await supabase.from('config').select('valor').eq('chave', 'valor_documento_medico').single();
+      const { data: pixConf } = await supabase.from('config').select('valor').eq('chave', 'pix_chave').single();
+      if (docConf?.valor) setValorDoc(parseFloat(docConf.valor));
+      if (pixConf?.valor) setPixChave(pixConf.valor);
+
+      // Buscar dados do paciente no profiles via CPF
+      const cpfInput = resultado?._inputs?.cpf?.replace(/\D/g, '');
+      if (cpfInput) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('nome, data_nascimento, celular, cpf')
+          .eq('cpf', cpfInput)
+          .single();
+        if (profile) {
+          setDadosPaciente({
+            nome:      profile.nome || '',
+            dataNasc:  profile.data_nascimento || '',
+            celular:   profile.celular || '',
+            cpf:       profile.cpf || cpfInput,
+          });
+        } else {
+          // Pré-preencher o CPF mesmo sem perfil completo
+          setDadosPaciente(p => ({ ...p, cpf: cpfInput }));
+        }
+      }
+    }
+    carregarTudo();
+  }, []);
+
+  // Montar texto dos documentos
+  function montarTextoExames() {
+    if (!resultado.proximosExames?.length) return '';
+    return 'PEDIDO DE EXAMES:\n' + resultado.proximosExames.map(e => `- ${e}`).join('\n');
+  }
+
+  function montarTextoPrescricao() {
+    const linhas = [];
+    // Coletar recomendações de suplementação do resultado e do OBA
+    if (resultado.recomendacao) {
+      const frases = resultado.recomendacao.split('\n').filter(l =>
+        l.includes('FERRO') || l.includes('VITAMINA') || l.includes('ÁCIDO FÓLICO') ||
+        l.includes('SUPLEMENTA') || l.includes('REPOSIÇÃO')
+      );
+      linhas.push(...frases);
+    }
+    if (resultado._oba?.modulos) {
+      resultado._oba.modulos.forEach(mod => {
+        mod.linhas?.forEach(l => {
+          if (l.includes('mg') || l.includes('µg') || l.includes('UI') || l.includes('COMPRIMIDO') || l.includes('SUBLINGUAL') || l.includes('INJETÁVEL') || l.includes('ENDOVENOSO')) {
+            linhas.push(l);
+          }
+        });
+      });
+    }
+    if (!linhas.length) return '';
+    return 'PRESCRIÇÃO MÉDICA:\n' + linhas.join('\n');
+  }
+
+  async function enviarWhatsApp() {
+    if (!dadosPaciente.nome.trim()) { setErro('Informe seu nome completo.'); return; }
+    if (!dadosPaciente.dataNasc.trim()) { setErro('Informe sua data de nascimento.'); return; }
+    if (!dadosPaciente.celular.trim()) { setErro('Informe seu celular com DDD.'); return; }
+    if (!tiposDoc.exames && !tiposDoc.prescricao) { setErro('Selecione pelo menos um documento.'); return; }
+
+    setEnviando(true); setErro('');
+
+    const documentos = [];
+    if (tiposDoc.exames && temExames) documentos.push(montarTextoExames());
+    if (tiposDoc.prescricao && temPrescricao) documentos.push(montarTextoPrescricao());
+
+    const total = (valorDoc || 0) * documentos.length;
+    const msgs = [
+      'ATENÇÃO | RedFairy!',
+      `CPF: ${dadosPaciente.cpf || 'Não informado'}`,
+      `PACIENTE: ${dadosPaciente.nome.trim().toUpperCase()}`,
+      `NASCIMENTO: ${dadosPaciente.dataNasc}`,
+      `CELULAR: ${dadosPaciente.celular}`,
+      ...documentos,
+    ];
+
+    // Enviar cada mensagem via WhatsApp API (wa.me com texto)
+    // Como não temos API de envio direto, abrimos o WhatsApp Web com a primeira mensagem
+    // e registramos no Supabase para controle
+    const textoCompleto = msgs.join('\n---\n');
+
+    // Salvar pedido no Supabase
+    await supabase.from('pedidos_documento').insert({
+      cpf: dadosPaciente.cpf || null,
+      nome: dadosPaciente.nome.trim(),
+      data_nascimento: dadosPaciente.dataNasc,
+      celular: dadosPaciente.celular,
+      tipos_documento: documentos.map((_, i) => tiposDoc.exames && i === 0 ? 'exames' : 'prescricao'),
+      texto_documentos: textoCompleto,
+      valor_total: total,
+      status: 'aguardando_pagamento',
+      created_at: new Date().toISOString(),
+    }).catch(() => {}); // falha silenciosa se tabela não existir ainda
+
+    // Abrir WhatsApp com mensagem para o médico
+    const urlWA = `https://wa.me/${WHATSAPP_MEDICO}?text=${encodeURIComponent(msgs.join('%0A---%0A'))}`;
+    window.open(urlWA, '_blank');
+
+    setEnviando(false);
+    setEtapa('pix');
+  }
+
+  async function confirmarPagamento() {
+    // Disparar mensagem de PAGO para o médico
+    const msgPago = `${dadosPaciente.nome.trim().toUpperCase()} — PAGO. Emita o(s) documento(s).`;
+    const urlPago = `https://wa.me/${WHATSAPP_MEDICO}?text=${encodeURIComponent(msgPago)}`;
+    window.open(urlPago, '_blank');
+
+    // Atualizar status no Supabase
+    await supabase.from('pedidos_documento')
+      .update({ status: 'pago', pago_em: new Date().toISOString() })
+      .eq('celular', dadosPaciente.celular)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .catch(() => {});
+
+    setEtapa('concluido');
+  }
+
+  if (!modoPaciente) return null;
+  if (!temExames && !temPrescricao) return null;
+  if (valorDoc === null) return null;
+
+  const inputStyle = { width: '100%', border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.9rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' };
+
+  // ── CONCLUÍDO ──
+  if (etapa === 'concluido') return (
+    <div className="mt-4 bg-green-50 border border-green-200 rounded-2xl p-5 text-center space-y-2">
+      <p className="text-2xl">✅</p>
+      <p className="font-bold text-green-800">Pedido enviado com sucesso!</p>
+      <p className="text-sm text-green-700">O médico do Projeto RedFairy receberá seus documentos em breve via WhatsApp.</p>
+    </div>
+  );
+
+  // ── PIX ──
+  if (etapa === 'pix') return (
+    <div className="mt-4 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-red-700 px-4 py-3">
+        <p className="text-white font-bold text-sm">💳 Efetue o pagamento via Pix</p>
+      </div>
+      <div className="p-4 space-y-4">
+        <p className="text-gray-600 text-sm">Valor: <strong className="text-red-700 text-lg">R$ {((valorDoc || 0) * ([tiposDoc.exames, tiposDoc.prescricao].filter(Boolean).length || 1)).toFixed(2)}</strong></p>
+        {pixChave && (
+          <>
+            <div className="flex justify-center">
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pixChave)}`}
+                alt="QR Code Pix" className="rounded-xl border border-gray-200" width={180} height={180} />
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3 text-center">
+              <p className="text-xs text-gray-500 mb-1">Chave Pix (Copia e Cola):</p>
+              <p className="text-xs font-mono text-gray-700 break-all select-all">{pixChave}</p>
+            </div>
+          </>
+        )}
+        <p className="text-xs text-gray-500 text-center">Após o pagamento, clique no botão abaixo para confirmar.</p>
+        <button onClick={confirmarPagamento}
+          className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors text-sm">
+          ✅ Já paguei — Confirmar pagamento
+        </button>
+        <button onClick={() => setEtapa('oferta')}
+          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs py-2 rounded-xl transition-colors">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── DADOS DO PACIENTE ──
+  if (etapa === 'dados') return (
+    <div className="mt-4 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-red-700 px-4 py-3">
+        <p className="text-white font-bold text-sm">📋 Seus dados para o documento</p>
+      </div>
+      <div className="p-4 space-y-3">
+        <div>
+          <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Nome completo</label>
+          <input style={inputStyle} type="text" placeholder="Como no RG" value={dadosPaciente.nome} onChange={e => setDadosPaciente(p => ({ ...p, nome: e.target.value }))} />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Data de nascimento</label>
+          <input style={inputStyle} type="date" value={dadosPaciente.dataNasc} onChange={e => setDadosPaciente(p => ({ ...p, dataNasc: e.target.value }))} />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Celular com DDD</label>
+          <input style={inputStyle} type="tel" placeholder="(00) 00000-0000" value={dadosPaciente.celular} onChange={e => setDadosPaciente(p => ({ ...p, celular: e.target.value }))} />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">CPF (opcional)</label>
+          <input style={inputStyle} type="text" placeholder="000.000.000-00" value={dadosPaciente.cpf} onChange={e => setDadosPaciente(p => ({ ...p, cpf: e.target.value }))} />
+        </div>
+        {erro && <p className="text-red-500 text-xs">{erro}</p>}
+        <button onClick={enviarWhatsApp} disabled={enviando}
+          className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 text-sm">
+          {enviando ? 'Enviando...' : '📲 Enviar pedido via WhatsApp →'}
+        </button>
+        <button onClick={() => setEtapa('oferta')}
+          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs py-2 rounded-xl transition-colors">
+          Voltar
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── OFERTA ──
+  return (
+    <div className="mt-4 bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-red-700 px-4 py-3 flex items-center gap-2">
+        <span className="text-xl">📄</span>
+        <div>
+          <p className="text-white font-bold text-sm">Quer que um médico emita os documentos?</p>
+          <p className="text-red-200 text-xs">Pedido de exames e/ou prescrição via WhatsApp</p>
+        </div>
+      </div>
+      <div className="p-4 space-y-3">
+        <p className="text-gray-600 text-sm">Um médico do Projeto RedFairy gera e envia por WhatsApp:</p>
+        <div className="space-y-2">
+          {temExames && (
+            <label className="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+              style={{ borderColor: tiposDoc.exames ? '#DC2626' : '#E5E7EB', background: tiposDoc.exames ? '#FEF2F2' : 'white' }}>
+              <input type="checkbox" checked={tiposDoc.exames} onChange={e => setTiposDoc(p => ({ ...p, exames: e.target.checked }))}
+                className="w-4 h-4 cursor-pointer" />
+              <div>
+                <p className="font-bold text-sm text-gray-700">📋 Pedido de Exames</p>
+                <p className="text-xs text-gray-500">{resultado.proximosExames?.length} exame(s) sugeridos</p>
+              </div>
+              <span className="ml-auto font-bold text-red-700">R$ {valorDoc?.toFixed(2)}</span>
+            </label>
+          )}
+          {temPrescricao && (
+            <label className="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
+              style={{ borderColor: tiposDoc.prescricao ? '#DC2626' : '#E5E7EB', background: tiposDoc.prescricao ? '#FEF2F2' : 'white' }}>
+              <input type="checkbox" checked={tiposDoc.prescricao} onChange={e => setTiposDoc(p => ({ ...p, prescricao: e.target.checked }))}
+                className="w-4 h-4 cursor-pointer" />
+              <div>
+                <p className="font-bold text-sm text-gray-700">💊 Prescrição Médica</p>
+                <p className="text-xs text-gray-500">Suplementos e medicamentos indicados</p>
+              </div>
+              <span className="ml-auto font-bold text-red-700">R$ {valorDoc?.toFixed(2)}</span>
+            </label>
+          )}
+        </div>
+        {(tiposDoc.exames || tiposDoc.prescricao) && (
+          <p className="text-center font-bold text-red-700">
+            Total: R$ {((valorDoc || 0) * [tiposDoc.exames, tiposDoc.prescricao].filter(Boolean).length).toFixed(2)}
+          </p>
+        )}
+        <button
+          onClick={() => { if (!tiposDoc.exames && !tiposDoc.prescricao) { setErro('Selecione pelo menos um documento.'); return; } setErro(''); setEtapa('dados'); }}
+          className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors text-sm">
+          Quero receber os documentos →
+        </button>
+        {erro && <p className="text-red-500 text-xs text-center">{erro}</p>}
+        <p className="text-xs text-gray-400 text-center">Pagamento via Pix · Documento entregue em até 24h</p>
+      </div>
+    </div>
+  );
+}
+
+
+export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
@@ -523,6 +815,9 @@ export default function ResultCard({ resultado, onCopiar, copiado }) {
 
       {/* ── SEÇÃO 2: OBA (só aparece se paciente é bariátrico) ───────────────── */}
       {oba && <OBASection oba={oba} />}
+
+      {/* ── SEÇÃO 3: Documento Médico via WhatsApp ───────────────────────────── */}
+      <DocumentoMedicoPanel resultado={resultado} modoPaciente={modoPaciente} />
     </>
   );
 }
