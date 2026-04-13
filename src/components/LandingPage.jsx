@@ -576,7 +576,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               laboratoriais e de contexto de vida, monitore a evolução da sua hemoglobina e receba
               orientações terapêuticas ajustadas às suas necessidades. Viva melhor para viver mais!
             </p>
-            <div className="hero-actions" style={{ justifyContent:'flex-start' }}>
+            <div className="hero-actions" style={{ justifyContent:'flex-start', alignItems:'center' }}>
               <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", width:200, height:60, justifyContent:"center", alignItems:"center" }}>
                 <span>Sou Médico</span>
                 <span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span>
@@ -597,10 +597,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 <span>Profissional de Saúde ganha 10 USDC por paciente avaliado e que se cadastra.</span>
               </div>
             </div>
-            <p style={{ marginTop:'0.75rem', fontSize:'0.78rem', color:'var(--text-light)', lineHeight:1.5, maxWidth:480 }}>
-              <span style={{ color:'var(--cherry)', fontWeight:700 }}>*</span>{' '}
-              Válido para todos os profissionais de saúde com registro profissional em Conselho Regional/Federal.
-            </p>
+
           </div>
 
           {/* COLUNA DIREITA */}
@@ -1059,10 +1056,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
       {/* FOOTER */}
       <footer style={{ padding:'0.8rem 1rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
-        <p style={{ fontSize:'0.65rem', color:'var(--text-light)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:0 }}>
+        <p style={{ fontSize:'0.65rem', color:'var(--text-light)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:'0 0 0.3rem' }}>
           <img src={logo} alt="" style={{ height:14, verticalAlign:'middle', marginRight:4 }} />
           <span style={{ fontFamily:"'DM Serif Display',serif", color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em></span>
           {' · '}Cuidar do Seu Eritron{' · '}by <a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a> © 2026{' · '}E.F. Ramos, M.D. CRM 6302 BA{' · '}<a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a>
+        </p>
+        <p style={{ fontSize:'0.62rem', color:'var(--text-light)', margin:0 }}>
+          <span style={{ color:'var(--cherry)', fontWeight:700 }}>*</span>{' '}Válido para todos os profissionais de saúde com registro profissional em Conselho Regional/Federal.
         </p>
       </footer>
 
