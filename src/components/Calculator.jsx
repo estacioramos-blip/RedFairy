@@ -220,6 +220,74 @@ function CadastraMedico({ onConcluir }) {
 }
 
 // ─── Calculator principal ────────────────────────────────────────────────────
+
+
+// ─── AdminConfigModal ──────────────────────────────────────────────────────
+function AdminConfigModal({ onFechar }) {
+  const [valor, setValor] = useState('');
+  const [valorDoc, setValorDoc] = useState('');
+  const [pixChave, setPixChave] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [sucesso, setSucesso] = useState('');
+
+  useEffect(() => {
+    async function carregar() {
+      const { data: v1 } = await supabase.from('config').select('valor').eq('chave', 'valor_solicitacao_medica').single();
+      const { data: v2 } = await supabase.from('config').select('valor').eq('chave', 'valor_documento_medico').single();
+      const { data: v3 } = await supabase.from('config').select('valor').eq('chave', 'pix_chave').single();
+      setValor(v1?.valor || '');
+      setValorDoc(v2?.valor || '');
+      setPixChave(v3?.valor || '');
+      setLoading(false);
+    }
+    carregar();
+  }, []);
+
+  async function salvar() {
+    setSalvando(true);
+    await supabase.from('config').upsert({ chave: 'valor_solicitacao_medica', valor, descricao: 'Valor R$ solicitação médica' }, { onConflict: 'chave' });
+    await supabase.from('config').upsert({ chave: 'valor_documento_medico', valor: valorDoc, descricao: 'Valor R$ documento médico' }, { onConflict: 'chave' });
+    await supabase.from('config').upsert({ chave: 'pix_chave', valor: pixChave, descricao: 'Chave Pix' }, { onConflict: 'chave' });
+    setSalvando(false);
+    setSucesso('Salvo!');
+    setTimeout(() => { setSucesso(''); onFechar(); }, 1500);
+  }
+
+  const inp = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onFechar}>
+      <div className="bg-white rounded-2xl shadow-2xl p-6 w-80 space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <p className="font-bold text-gray-700 text-sm">⚙️ Configurações</p>
+          <button onClick={onFechar} className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+        </div>
+        {loading ? <p className="text-gray-400 text-sm text-center">Carregando...</p> : (
+          <>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Valor Solicitação Médica (R$)</label>
+              <input type="number" step="0.01" value={valor} onChange={e => setValor(e.target.value)} placeholder="Ex: 50.00" className={inp} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Valor Documento Médico (R$)</label>
+              <input type="number" step="0.01" value={valorDoc} onChange={e => setValorDoc(e.target.value)} placeholder="Ex: 29.90" className={inp} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Chave Pix</label>
+              <input type="text" value={pixChave} onChange={e => setPixChave(e.target.value)} placeholder="E-mail, CPF ou código" className={inp} />
+            </div>
+            {sucesso && <p className="text-green-600 text-sm text-center font-bold">✅ {sucesso}</p>}
+            <button onClick={salvar} disabled={salvando} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl transition-colors disabled:opacity-50 text-sm">
+              {salvando ? 'Salvando...' : 'Salvar'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Calculator({ onVoltar }) {
   const [cadastrado, setCadastrado] = useState(null)
   const [medicoNome, setMedicoNome] = useState('')
@@ -274,6 +342,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   const [showSobre, setShowSobre] = useState(false);
   const [showSaibaMais, setShowSaibaMais] = useState(false);
   const [showDemoMenu, setShowDemoMenu] = useState(false);
+  const [showAdminConfig, setShowAdminConfig] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoClicks, setLogoClicks] = useState(0);
   const logoClickTimer = useRef(null);
@@ -293,8 +362,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     setLogoClicks(prev => {
       const next = prev + 1;
       if (logoClickTimer.current) clearTimeout(logoClickTimer.current);
-      logoClickTimer.current = setTimeout(() => setLogoClicks(0), 600);
-      if (next >= 3) { setLogoClicks(0); setShowDemoMenu(true); }
+      logoClickTimer.current = setTimeout(() => setLogoClicks(0), 1500);
+      if (next >= 5) { setLogoClicks(0); setShowAdminConfig(true); }
+      else if (next >= 3) { setLogoClicks(0); setShowDemoMenu(true); }
       return next;
     });
   }
@@ -500,7 +570,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
           </button>
           <div className="flex items-center gap-3">
             <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
-              style={{ filter: 'brightness(10)', cursor: 'default' }}
+              style={{ filter: 'brightness(10)', cursor: 'pointer' }}
               onClick={handleLogoTripleClick} />
             <div>
               <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
@@ -546,6 +616,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
             </button>
           </div>
         </div>
+      )}
+
+      {showAdminConfig && (
+        <AdminConfigModal onFechar={() => setShowAdminConfig(false)} />
       )}
 
       {showDemoMenu && (
