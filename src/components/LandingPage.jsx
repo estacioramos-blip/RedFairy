@@ -50,7 +50,7 @@ const LANDING_CSS = `
   /* HERO */
   .hero { min-height: auto; display: flex; align-items: center; padding: 5.5rem 2rem 1.5rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
   .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; position: relative; z-index: 2; }
-  .hero-badge { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 1.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; }
+  .hero-badge { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 1.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; min-width: 440px; text-align: center; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
   .hero-badge .badge-main { display: flex; align-items: center; gap: 0.5rem; }
   .hero-badge .badge-sub { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.55); padding-left: 1.3rem; cursor: pointer; text-align: center; width: 100%; }
@@ -745,7 +745,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               </div>
             </div>
             {/* Demais em negrito */}
-            {['Sangramentos Crônicos','Vegetarianos','Gestantes','Celíacos','Doadores de Sangue','Uso de Testosterona','Endometriose | Mioma','Menstruação Excessiva','Deficiência de G-6-PD','Alcoolistas'].map(i => (
+            {['Sangramentos Crônicos','Vegetarianos','Gestantes','Celíacos','Doadores de Sangue','Uso de Testosterona','Endometriose e Miomas','Menstruação Excessiva','Deficiência de G-6-PD','Alcoolistas'].map(i => (
               <div key={i} className="ind auto-dot"><strong>{i}</strong></div>
             ))}
           </div>
