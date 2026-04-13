@@ -576,12 +576,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               laboratoriais e de contexto de vida, monitore a evolução da sua hemoglobina e receba
               orientações terapêuticas ajustadas às suas necessidades. Viva melhor para viver mais!
             </p>
-            <div style={{ display:'flex', gap:'0.75rem', flexWrap:'wrap', marginBottom:'1rem' }}>
-              <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", width:200, height:60, justifyContent:"center", alignItems:"center", display:"inline-flex" }}>
+            <div style={{ display:'flex', gap:'0.75rem', marginBottom:'1rem', maxWidth:480 }}>
+              <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", flex:1, height:60, justifyContent:"center", alignItems:"center", display:"inline-flex" }}>
                 <span>Sou Médico</span>
                 <span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span>
               </button>
-              <button className="btn btn-secondary" onClick={onModoPaciente} style={{ width:200, height:60, justifyContent:"center", alignItems:"center", display:"inline-flex" }}>Sou Paciente</button>
+              <button className="btn btn-secondary" onClick={onModoPaciente} style={{ flex:1, height:60, justifyContent:"center", alignItems:"center", display:"inline-flex" }}>Sou Paciente</button>
             </div>
             <div className="trust">
               <div className="trust-i">
