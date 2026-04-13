@@ -132,7 +132,7 @@ const LANDING_CSS = `
   .hero h1 { font-size: 3.6rem; line-height: 1.12; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
   .hero h1 .red { color: var(--cherry); }
   .hero-philosophy { font-style: normal; font-size: 1.3rem; color: var(--wine); margin-bottom: 0; line-height: 1.65; font-weight: 700; }
-  .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 480px; line-height: 1.7; margin-bottom: 1.2rem; font-weight: 700; text-align: justify; }
+  .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 100%; line-height: 1.7; margin-bottom: 1.2rem; font-weight: 700; text-align: justify; }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
   .trust-i { display: flex; align-items: center; gap: 0.35rem; }
