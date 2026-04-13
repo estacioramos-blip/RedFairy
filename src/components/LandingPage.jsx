@@ -131,7 +131,7 @@ const LANDING_CSS = `
   .hero-textbox.reveal-img .htb-content { opacity: 0; }
   .hero h1 { font-size: 3.6rem; line-height: 1.12; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
   .hero h1 .red { color: var(--cherry); }
-  .hero-philosophy { font-style: normal; font-size: 1.3rem; color: var(--wine); margin-bottom: 0; line-height: 1.65; font-weight: 700; }
+  .hero-philosophy { font-style: normal; font-size: 1.15rem; color: var(--wine); margin-bottom: 0; line-height: 1.65; font-weight: 700; }
   .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 100%; line-height: 1.7; margin-bottom: 1.2rem; font-weight: 700; text-align: justify; }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
@@ -566,7 +566,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <div className="htb-content">
                 <h1>Eu sou a sua fada vermelha, a sua <span className="red">Hemoglobina</span></h1>
                 <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:800, textAlign:'center' }}>
-                  Eu uso a poeira das estrelas para te entregar o ar. Quanto tempo você vive sem ar?
+                  Eu uso a poeira das estrelas para te entregar o ar.<br/>Quanto tempo você vive sem ar?
                 </p>
               </div>
             </div>
@@ -576,7 +576,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               laboratoriais e de contexto de vida, monitore a evolução da sua hemoglobina e receba
               orientações terapêuticas ajustadas às suas necessidades. Viva melhor para viver mais!
             </p>
-            <div style={{ display:'flex', gap:'0.75rem', marginBottom:'1rem', maxWidth:480 }}>
+            <div style={{ display:'flex', gap:'0.75rem', marginBottom:'1rem', maxWidth:480, alignItems:'center' }}>
               <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", flex:1, height:60, justifyContent:"center", alignItems:"center", display:"inline-flex" }}>
                 <span>Sou Médico</span>
                 <span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span>
