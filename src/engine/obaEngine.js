@@ -471,6 +471,7 @@ function buildModGlico(ex, dados, alertas, suger) {
   const alt  = parseFloat(ex.alt)
   const ggt  = parseFloat(ex.gama_gt)
   const stGli = dados.status_glicemico || ''
+  const temDumping = stGli.includes('DUMPING')
   const meds  = dados.medicamentos || []
   const emag  = dados.emagrecedores || {}
 
@@ -559,6 +560,19 @@ function buildModGlico(ex, dados, alertas, suger) {
   const emagAtivos = Object.entries(emag || {}).filter(([, v]) => v === 'ESTOU USANDO').map(([k]) => k)
   if (emagAtivos.length > 0) {
     linhas.push(`USO ATUAL DE MEDICAMENTOS EMAGRECEDORES: ${emagAtivos.join(', ').toUpperCase()}. OS AGONISTAS DE GLP-1 PODEM PRODUZIR NÁUSEAS E VÔMITOS, AGRAVANDO DEFICIÊNCIAS NUTRICIONAIS JÁ EXISTENTES NO BARIÁTRICO. MONITORAMENTO NUTRICIONAL REFORÇADO NECESSÁRIO.`)
+  }
+
+  // ── Síndrome de Dumping ──────────────────────────────────────────────────
+  if (temDumping) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = MODERADO
+    linhas.push('EPISÓDIOS DE DUMPING RELATADOS: A SÍNDROME DE DUMPING É FREQUENTE APÓS BYPASS GÁSTRICO E PODE SE APRESENTAR COMO DUMPING PRECOCE (SUDORESE, TAQUICARDIA, NÁUSEAS E DIARREIA LOGO APÓS AS REFEIÇÕES) OU TARDIO (HIPOGLICEMIA REATIVA 1-3 HORAS APÓS COMER). PODE CAUSAR DESNUTRIÇÃO PROGRESSIVA SE NÃO TRATADO.')
+    linhas.push('ORIENTAÇÕES PARA CONTROLE: EVITAR AÇÚCARES SIMPLES E ULTRAPROCESSADOS. PREFERIR REFEIÇÕES PEQUENAS E FREQUENTES (5-6/DIA). NÃO BEBER DURANTE AS REFEIÇÕES — AGUARDAR 30 MIN APÓS. PRIORIZAR PROTEÍNAS E GORDURAS BOAS. DEITAR 20-30 MIN APÓS COMER REDUZ OS SINTOMAS DO DUMPING PRECOCE.')
+    linhas.push('EM CASOS GRAVES: OCTREOTIDE OU REVISÃO CIRÚRGICA PODEM SER INDICADOS. AVALIAÇÃO COM GASTROPLASTIATRA OU NUTRÓLOGO BARIÁTRICO É FORTEMENTE RECOMENDADA.')
+    alertas.push({ nivel: MODERADO, texto: 'DUMPING RELATADO: AJUSTAR DIETA E AVALIAR COM ESPECIALISTA.' })
+    suger.push('AVALIAÇÃO COM GASTROPLASTIATRA OU NUTRÓLOGO BARIÁTRICO')
+    suger.push('GLICEMIA PÓS-PRANDIAL 1H E 2H (PESQUISA DE HIPOGLICEMIA REATIVA)')
+    suger.push('TESTE DE TOLERÂNCIA À GLICOSE 75G (DUMPING TARDIO)')
   }
 
   if (!temAlgo) return null
