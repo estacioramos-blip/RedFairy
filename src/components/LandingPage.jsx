@@ -146,9 +146,9 @@ const LANDING_CSS = `
   @keyframes floatFairy { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
 
   /* fairy-quote — retângulo branco direito com texto */
-  .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 2rem 2rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 100%; }
-  .fairy-quote p { font-size: 1.1rem; color: var(--text); line-height: 1.7; font-weight: 600; }
-  .fairy-quote .question { color: var(--cherry); font-weight: 700; margin-top: 0.75rem; font-size: 1.2rem; }
+  .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem 2rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 100%; }
+  .fairy-quote p { font-size: 1.45rem; color: var(--text); line-height: 1.5; font-weight: 800; font-family: 'DM Serif Display', serif; }
+  .fairy-quote .question { color: var(--wine); font-weight: 700; margin-top: 1rem; font-size: 1.05rem; font-family: 'DM Sans', sans-serif; font-style: italic; }
 
   /* OBA HOME BTN */
   .oba-home-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 16px; padding: 1.2rem 2rem; transition: all 0.3s; box-shadow: 0 4px 20px rgba(232,114,12,0.2); width: 100%; max-width: 380px; }
