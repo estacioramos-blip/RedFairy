@@ -48,8 +48,8 @@ const LANDING_CSS = `
   .whatsapp-btn svg { width: 30px; height: 30px; fill: white; }
 
   /* HERO */
-  .hero { min-height: auto; display: flex; align-items: center; padding: 6rem 2rem 2.5rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
-  .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; position: relative; z-index: 2; }
+  .hero { min-height: auto; display: flex; align-items: center; padding: 5.5rem 2rem 1.5rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
+  .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; position: relative; z-index: 2; }
   .hero-badge { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 1.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
   .hero-badge .badge-main { display: flex; align-items: center; gap: 0.5rem; }
@@ -111,13 +111,13 @@ const LANDING_CSS = `
     .cta-cards { grid-template-columns: 1fr !important; }
   }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
-  .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.6rem; margin-bottom: 1.2rem; font-weight: 700; }
+  .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.4rem; margin-bottom: 0.8rem; font-weight: 700; }
 
   /* HERO TEXTBOX — coluna esquerda, hover mostra imagem E esconde texto */
   .hero-textbox {
     background: var(--white); border: 1px solid var(--border); border-radius: 16px;
     padding: 2rem 2.5rem; box-shadow: var(--shadow);
-    position: relative; overflow: hidden; cursor: pointer; margin-bottom: 1.2rem;
+    position: relative; overflow: hidden; cursor: pointer; margin-bottom: 0.8rem;
   }
   .hero-textbox-bg {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -132,7 +132,7 @@ const LANDING_CSS = `
   .hero h1 { font-size: 3.6rem; line-height: 1.12; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
   .hero h1 .red { color: var(--cherry); }
   .hero-philosophy { font-style: normal; font-size: 1.3rem; color: var(--wine); margin-bottom: 0; line-height: 1.65; font-weight: 700; }
-  .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 500px; line-height: 1.8; margin-bottom: 2rem; font-weight: 700; }
+  .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 480px; line-height: 1.8; margin-bottom: 1.5rem; font-weight: 700; }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
   .trust-i { display: flex; align-items: center; gap: 0.35rem; }
@@ -140,7 +140,7 @@ const LANDING_CSS = `
   .trust-i span { font-size: 0.8rem; color: var(--text-light); }
 
   /* HERO VISUAL — coluna direita */
-  .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+  .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
   .fairy-showcase { width: 220px; height: 220px; }
   .fairy-showcase img { width: 100%; height: 100%; object-fit: contain; animation: floatFairy 4s ease-in-out infinite; }
   @keyframes floatFairy { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
@@ -548,7 +548,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 Conheça as regras
               </span>
             </div>
-            <p className="hero-badge-sub">
+            <p className="hero-badge-sub" style={{ textAlign:'center', maxWidth:'480px' }}>
               Você vai precisar de algumas informações do eritrograma:<br />
               Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
             </p>
