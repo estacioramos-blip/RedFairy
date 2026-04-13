@@ -577,8 +577,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               orientações terapêuticas ajustadas às suas necessidades. Viva melhor para viver mais!
             </p>
             <div className="hero-actions" style={{ justifyContent:'flex-start' }}>
-              <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem", minWidth:180 }}>Sou Médico<span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.15rem" }}>PROFISSIONAIS DE SAÚDE</span></button>
-              <button className="btn btn-secondary" onClick={onModoPaciente} style={{ minWidth:180, justifyContent:'center' }}>Sou Paciente</button>
+              <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", width:200, height:60, justifyContent:"center", alignItems:"center" }}>
+                <span>Sou Médico</span>
+                <span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span>
+              </button>
+              <button className="btn btn-secondary" onClick={onModoPaciente} style={{ width:200, height:60, justifyContent:"center", alignItems:"center" }}>Sou Paciente</button>
             </div>
             <div className="trust">
               <div className="trust-i">
@@ -1055,17 +1058,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ padding:'1rem 2rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', flexWrap:'nowrap' }}>
-          <img src={logo} alt="RedFairy" style={{ height:18 }} />
-          <span style={{ fontFamily:"'DM Serif Display',serif", fontSize:'0.88rem', color:'var(--wine)', whiteSpace:'nowrap' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em></span>
-          <span style={{ color:'var(--border2)', fontSize:'0.7rem' }}>|</span>
-          <span style={{ color:'var(--text-light)', fontSize:'0.68rem', whiteSpace:'nowrap' }}>by <a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a> © 2026</span>
-          <span style={{ color:'var(--border2)', fontSize:'0.7rem' }}>|</span>
-          <span style={{ color:'var(--text-light)', fontSize:'0.68rem', whiteSpace:'nowrap' }}>E.F. Ramos, M.D. CRM 6302 BA</span>
-          <span style={{ color:'var(--border2)', fontSize:'0.7rem' }}>|</span>
-          <a href="https://drestacioramos.com.br" style={{ color:'var(--text-sec)', fontSize:'0.68rem', whiteSpace:'nowrap' }}>drestacioramos.com.br</a>
-        </div>
+      <footer style={{ padding:'0.8rem 1rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
+        <p style={{ fontSize:'0.65rem', color:'var(--text-light)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:0 }}>
+          <img src={logo} alt="" style={{ height:14, verticalAlign:'middle', marginRight:4 }} />
+          <span style={{ fontFamily:"'DM Serif Display',serif", color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em></span>
+          {' · '}Cuidar do Seu Eritron{' · '}by <a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a> © 2026{' · '}E.F. Ramos, M.D. CRM 6302 BA{' · '}<a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a>
+        </p>
       </footer>
 
     </div>
