@@ -14,32 +14,38 @@ export function getFraseData(dias) {
       tipo: 'A',
       texto: `OS EXAMES FORAM REALIZADOS HÁ ${dias} DIA(S), E DEVEM REPRESENTAR O ATUAL ESTADO DO SEU ERITRON.`
     };
-  } else if (dias <= 40) {
+  } else if (dias <= 30) {
     return {
       tipo: 'B',
-      texto: `CONSIDERE QUE OS EXAMES FORAM REALIZADOS HÁ ${dias} DIAS E PODEM NÃO REPRESENTAR CORRETAMENTE A REALIDADE ATUAL DO SEU ERITRON. REPITA-OS QUANDO POSSÍVEL E FAÇA NOVA AVALIAÇÃO NESSE ALGORITMO.`
+      texto: `OS EXAMES FORAM REALIZADOS HÁ ${dias} DIAS. AINDA SÃO VÁLIDOS PARA A AVALIAÇÃO, MAS REPITA-OS EM BREVE E FAÇA NOVA AVALIAÇÃO NESTE ALGORITMO.`
+    };
+  } else if (dias <= 60) {
+    return {
+      tipo: 'B',
+      texto: `OS EXAMES FORAM REALIZADOS HÁ ${dias} DIAS E PODEM NÃO REPRESENTAR CORRETAMENTE A REALIDADE ATUAL DO SEU ERITRON. REPITA-OS QUANDO POSSÍVEL E FAÇA NOVA AVALIAÇÃO NESTE ALGORITMO.`
     };
   } else {
     return {
       tipo: 'C',
-      texto: `OS EXAMES FORAM REALIZADOS HÁ ${dias} DIAS E NÃO SÃO CONFIÁVEIS PARA ESTABELECER A SITUAÇÃO ATUAL DO SEU ERITRON. REPITA-OS ASSIM QUE POSSÍVEL E FAÇA NOVA AVALIAÇÃO NESSE ALGORITMO.`
+      texto: `OS EXAMES FORAM REALIZADOS HÁ ${dias} DIAS E NÃO SÃO CONFIÁVEIS PARA ESTABELECER A SITUAÇÃO ATUAL DO SEU ERITRON. REPITA-OS ASSIM QUE POSSÍVEL E FAÇA NOVA AVALIAÇÃO NESTE ALGORITMO.`
     };
   }
 }
 
 export function getFraseHipermenorreia(idade) {
   if (idade < 15) {
-    return 'HIPERMENORREIA NESSA FAIXA É GERALMENTE DISFUNCIONAL, MAS PODE HAVER DISTÚRBIO DA HEMOSTASE. PODE LEVAR A DEFICIÊNCIA DE FERRO E ANEMIA, OU AGRAVAR ESSAS CONDIÇÕES. RECOMENDÁVEL AVALIAÇÃO COM GINECOLOGISTA E HEMATOLOGISTA.';
+    return 'HIPERMENORREIA NESSA FAIXA ETÁRIA É GERALMENTE DISFUNCIONAL, MAS PODE HAVER DISTÚRBIO DA HEMOSTASE. PODE LEVAR A DEFICIÊNCIA DE FERRO E ANEMIA, OU AGRAVAR ESSAS CONDIÇÕES. RECOMENDÁVEL AVALIAÇÃO COM GINECOLOGISTA E HEMATOLOGISTA.';
   } else if (idade <= 18) {
-    return 'HIPERMENORREIA NESSA FAIXA É GERALMENTE DISFUNCIONAL, MAS É PRECISO AFASTAR DISTÚRBIO DA HEMOSTASE E ENDOMETRIOSE. PODE LEVAR A DEFICIÊNCIA DE FERRO E ANEMIA. RECOMENDÁVEL AVALIAÇÃO COM GINECOLOGISTA E HEMATOLOGISTA.';
+    return 'HIPERMENORREIA NESSA FAIXA ETÁRIA É GERALMENTE DISFUNCIONAL, MAS É PRECISO AFASTAR DISTÚRBIO DA HEMOSTASE E ENDOMETRIOSE. PODE LEVAR A DEFICIÊNCIA DE FERRO E ANEMIA. RECOMENDÁVEL AVALIAÇÃO COM GINECOLOGISTA E HEMATOLOGISTA.';
   } else if (idade <= 35) {
-    return 'HIPERMENORREIA NESSA FAIXA PODE RESULTAR DE USO DE DIU, ENDOMETRIOSE, DISTÚRBIO HORMONAL, MIOMATOSE. PODE LEVAR A DEFICIÊNCIA DE FERRO E ANEMIA. RECOMENDÁVEL AVALIAÇÃO COM MÉDICO GINECOLOGISTA.';
+    return 'HIPERMENORREIA NESSA FAIXA ETÁRIA PODE RESULTAR DE USO DE DIU, ENDOMETRIOSE, DISTÚRBIO HORMONAL, MIOMATOSE. PODE LEVAR A DEFICIÊNCIA DE FERRO E ANEMIA. RECOMENDÁVEL AVALIAÇÃO COM MÉDICO GINECOLOGISTA.';
   } else if (idade <= 39) {
-    return 'HIPERMENORREIA NESSA FAIXA PODE RESULTAR DE USO DE DIU, LIGADURA DE TROMPAS, ENDOMETRIOSE, DISTÚRBIO HORMONAL, MIOMATOSE E OUTRAS DOENÇAS. RECOMENDÁVEL AVALIAÇÃO COM MÉDICO GINECOLOGISTA.';
+    return 'HIPERMENORREIA NESSA FAIXA ETÁRIA PODE RESULTAR DE USO DE DIU, LIGADURA DE TROMPAS, ENDOMETRIOSE, DISTÚRBIO HORMONAL, MIOMATOSE E OUTRAS DOENÇAS. RECOMENDÁVEL AVALIAÇÃO COM MÉDICO GINECOLOGISTA.';
   } else if (idade <= 55) {
-    return 'HIPERMENORREIA NESSA FAIXA PODE RESULTAR DE USO DE DIU, LIGADURA DE TROMPAS, ENDOMETRIOSE, PRÉ-MENOPAUSA, MIOMATOSE E OUTRAS DOENÇAS. RECOMENDÁVEL AVALIAÇÃO GINECOLÓGICA.';
+    return 'HIPERMENORREIA NESSA FAIXA ETÁRIA PODE RESULTAR DE USO DE DIU, LIGADURA DE TROMPAS, ENDOMETRIOSE, PRÉ-MENOPAUSA, MIOMATOSE E OUTRAS DOENÇAS. RECOMENDÁVEL AVALIAÇÃO GINECOLÓGICA.';
   } else {
-    return 'SANGRAMENTO GENITAL PODE OCORRER NA PRÉ-MENOPAUSA. NO CLIMATÉRIO PODE RESULTAR DE REPOSIÇÃO HORMONAL, MIOMATOSE E OUTRAS DOENÇAS. RECOMENDÁVEL AVALIAÇÃO GINECOLÓGICA.';
+    // CORRIGIDO: sangramento pós-menopausa é sinal de alerta para neoplasia endometrial
+    return 'SANGRAMENTO GENITAL APÓS A MENOPAUSA NÃO É NORMAL E EXIGE INVESTIGAÇÃO URGENTE. PODE INDICAR NEOPLASIA DO ENDOMÉTRIO, PÓLIPO, ATROFIA ENDOMETRIAL OU OUTRA DOENÇA GRAVE. AVALIAÇÃO GINECOLÓGICA URGENTE COM ULTRASSOM TRANSVAGINAL E AVALIAÇÃO DO ENDOMÉTRIO É MANDATÓRIA.';
   }
 }
 
@@ -66,12 +72,10 @@ function matchesConditions(item, inputs) {
 }
 
 export function avaliarPaciente(inputs) {
+  // CORREÇÃO: ajuste gestante simplificado — sem alteração artificial de Hb
+  // A OMS define anemia na gestação como Hb < 11.0 g/dL
+  // Mantemos o valor original e deixamos as matrizes tratarem
   const inputsAjustados = { ...inputs };
-  if (inputs.sexo === 'F' && inputs.gestante) {
-    if (inputs.hemoglobina >= 11 && inputs.hemoglobina <= 11.9) {
-      inputsAjustados.hemoglobina = 12.0;
-    }
-  }
 
   const matrix = inputsAjustados.sexo === 'M' ? maleMatrix : femaleMatrix;
 
@@ -97,15 +101,36 @@ export function avaliarPaciente(inputs) {
   if (inputs.ferroOral && resultado?.comentarioFerro) {
     comentarios.push({ titulo: 'FERRO ORAL / INJETÁVEL', texto: resultado.comentarioFerro });
   }
+  // ── Medicamentos que podem causar macrocitose ──────────────────────────────
+  if (inputs.metformina) {
+    comentarios.push({ titulo: 'METFORMINA', texto: 'A METFORMINA REDUZ A ABSORÇÃO DE VITAMINA B12 NO ÍLEO TERMINAL. USO PROLONGADO PODE PRODUZIR DÉFICIT DE B12 E MACROCITOSE. RECOMENDA-SE DOSAR A VITAMINA B12 ANUALMENTE E SUPLEMENTAR SE NECESSÁRIO.' });
+  }
+  if (inputs.ibp) {
+    comentarios.push({ titulo: 'IBP (OMEPRAZOL / PANTOPRAZOL)', texto: 'O USO PROLONGADO DE INIBIDORES DA BOMBA DE PRÓTONS REDUZ A ABSORÇÃO DE VITAMINA B12 AO DIMINUIR A ACIDEZ GÁSTRICA. PODE CONTRIBUIR PARA MACROCITOSE E DEFICIT NEUROLÓGICO. AVALIAR A NECESSIDADE DE SUPLEMENTAÇÃO.' });
+  }
+  if (inputs.tiroxina) {
+    comentarios.push({ titulo: 'TIROXINA / T4', texto: 'O HIPOTIREOIDISMO PODE CAUSAR ANEMIA NORMOCÍTICA OU MACROCÍTICA. A REPOSIÇÃO COM TIROXINA COSTUMA CORRIGIR A ANEMIA GRADUALMENTE. MONITORAR TSH E HEMOGRAMA A CADA 6 MESES.' });
+  }
+  if (inputs.hidroxiureia) {
+    comentarios.push({ titulo: 'HIDROXIUREIA', texto: 'A HIDROXIUREIA INIBE A SÍNTESE DE DNA E PRODUZ MACROCITOSE DOSE-DEPENDENTE. ESSE ACHADO É ESPERADO E NÃO INDICA DÉFICIT NUTRICIONAL. NÃO SUSPENDER SEM ORIENTAÇÃO DO HEMATOLOGISTA.' });
+  }
+  if (inputs.anticonvulsivante) {
+    comentarios.push({ titulo: 'ANTICONVULSIVANTE', texto: 'FENITOÍNA, ÁCIDO VALPROICO E CARBAMAZEPINA PODEM INTERFERIR NO METABOLISMO DO ÁCIDO FÓLICO E PRODUZIR MACROCITOSE. AVALIAR DOSAGEM DE FOLATOS E VITAMINA B12. SUPLEMENTAÇÃO PROFILÁTICA DE ÁCIDO FÓLICO PODE SER INDICADA.' });
+  }
+  if (inputs.methotrexato) {
+    comentarios.push({ titulo: 'METOTREXATO', texto: 'O METOTREXATO É UM ANTAGONISTA DO ÁCIDO FÓLICO E PRODUZ MACROCITOSE E ANEMIA MEGALOBLÁSTICA. A SUPLEMENTAÇÃO COM ÁCIDO FÓLICO (5 mg/semana) É PADRÃO DE CUIDADO E REDUZ A TOXICIDADE SEM COMPROMETER A EFICÁCIA.' });
+  }
+  if (inputs.hivTratamento) {
+    comentarios.push({ titulo: 'ANTIRRETROVIRAIS (HIV)', texto: 'ALGUNS ANTIRRETROVIRAIS, ESPECIALMENTE ZIDOVUDINA (AZT), PRODUZEM MACROCITOSE E ANEMIA MEGALOBLÁSTICA POR INIBIÇÃO DA SÍNTESE DE DNA ERITROIDE. MONITORAR HEMOGRAMA E CONSIDERAR AJUSTE DO ESQUEMA COM O INFECTOLOGISTA.' });
+  }
 
   if (!resultado) {
     return {
       encontrado: false,
-      mensagem: `Combinação não encontrada na base de dados. Valores: Ferritina=${inputs.ferritina}, Hb=${inputs.hemoglobina}, VCM=${inputs.vcm}, RDW=${inputs.rdw}, Sat=${inputs.satTransf} Flags: Bar=${inputs.bariatrica}, Veg=${inputs.vegetariano}, Perda=${inputs.perda}`,
+      mensagem: `Combinação não encontrada na base de dados. Valores: Ferritina=${inputs.ferritina}, Hb=${inputs.hemoglobina}, VCM=${inputs.vcm}, RDW=${inputs.rdw}, Sat=${inputs.satTransf} Flags: Bar=${inputs.bariatrica}, Veg=${inputs.vegetariano}, Perda=${inputs.perda}, Alc=${inputs.alcoolista}, Transf=${inputs.transfundido}`,
     };
   }
 
-  // Remove FRASE DATA do diagnóstico (já aparece separado no card)
   let diagnosticoFinal = resultado.diagnostico.replace('FRASE DATA', '').trim();
 
   if (inputs.aspirina || inputs.vitaminaB12 || inputs.ferroOral) {
@@ -115,7 +140,6 @@ export function avaliarPaciente(inputs) {
     );
   }
 
-  // Monta recomendação e substitui frase de doação quando perda=true
   let recomendacaoFinal = isAge2 ? resultado.recomendacaoAge2 : resultado.recomendacaoAge1;
 
   if (inputs.perda) {

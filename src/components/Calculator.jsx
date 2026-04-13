@@ -262,6 +262,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     bariatrica: false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false,
+    tiroxina: false, hidroxiureia: false, anticonvulsivante: false,
+    methotrexato: false, hivTratamento: false, metformina: false, ibp: false,
   });
 
   const [resultado, setResultado] = useState(null);
@@ -469,7 +471,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   }
 
   function handleLimpar() {
-    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false });
+    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
     setResultado(null); setErros({}); setDadosOBAColetados(null);
   }
 
@@ -694,12 +696,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <IconMedicamentos /> Medicamentos / Suplementos
             </h2>
+            <p className="text-xs text-gray-400 mb-2">Marque os que o paciente usa ou usou recentemente</p>
             <div className="grid grid-cols-2 gap-2">
               <CheckboxCard name="aspirina" label="Aspirina" sublabel="Uso contínuo" checked={inputs.aspirina} onChange={handleChange} color="orange" />
               <CheckboxCard name="vitaminaB12" label="Vitamina B12" sublabel="Últimos 3 meses" checked={inputs.vitaminaB12} onChange={handleChange} color="purple" />
-              <div className="col-span-2">
-                <CheckboxCard name="ferroOral" label="Ferro Oral / Injetável" sublabel="Nos últimos 2 anos" checked={inputs.ferroOral} onChange={handleChange} color="orange" />
-              </div>
+              <CheckboxCard name="ferroOral" label="Ferro Oral / Injetável" sublabel="Nos últimos 2 anos" checked={inputs.ferroOral} onChange={handleChange} color="orange" />
+              <CheckboxCard name="metformina" label="Metformina" sublabel="Reduz absorção de B12" checked={inputs.metformina} onChange={handleChange} color="blue" />
+              <CheckboxCard name="ibp" label="IBP (Omeprazol etc.)" sublabel="Pantoprazol, Omeprazol — reduz B12" checked={inputs.ibp} onChange={handleChange} color="blue" />
+              <CheckboxCard name="tiroxina" label="Tiroxina / T4" sublabel="Tratamento tireoidiano" checked={inputs.tiroxina} onChange={handleChange} color="teal" />
+              <CheckboxCard name="hidroxiureia" label="Hidroxiureia" sublabel="Pode causar macrocitose" checked={inputs.hidroxiureia} onChange={handleChange} color="purple" />
+              <CheckboxCard name="anticonvulsivante" label="Anticonvulsivante" sublabel="Fenitoína, VPA etc." checked={inputs.anticonvulsivante} onChange={handleChange} color="purple" />
+              <CheckboxCard name="methotrexato" label="Metotrexato" sublabel="Antagonista do folato" checked={inputs.methotrexato} onChange={handleChange} color="purple" />
+              <CheckboxCard name="hivTratamento" label="Trat. HIV / ARV" sublabel="Antirretrovirais" checked={inputs.hivTratamento} onChange={handleChange} color="purple" />
             </div>
           </section>
 
@@ -745,6 +753,8 @@ const colorMap = {
   pink:   'border-pink-400   bg-pink-50   text-pink-700',
   orange: 'border-orange-400 bg-orange-50 text-orange-700',
   purple: 'border-purple-400 bg-purple-50 text-purple-700',
+  blue:   'border-blue-400   bg-blue-50   text-blue-700',
+  teal:   'border-teal-400   bg-teal-50   text-teal-700',
 };
 
 function CheckboxCard({ name, label, sublabel, checked, onChange, color }) {
