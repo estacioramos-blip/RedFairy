@@ -223,7 +223,7 @@ const LANDING_CSS = `
   .como { background: var(--white); }
   .como-tabs-wrap { display: flex; justify-content: center; margin-top: 2rem; margin-bottom: 2.5rem; }
   .como-tabs { display: inline-flex; gap: 0.5rem; }
-  .como-tab { padding: 0.85rem 2.5rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; background: #9CA3AF; color: white; transition: all 0.25s; font-family: inherit; }
+  .como-tab { padding: 0.85rem 0; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; background: #9CA3AF; color: white; transition: all 0.25s; font-family: inherit; width: 200px; text-align: center; }
   .como-tab:hover { background: #374151; }
   .como-tab.active { background: var(--wine); color: white; box-shadow: 0 4px 14px rgba(123,30,30,0.25); }
   .como-tab.active:hover { background: var(--cherry); }
@@ -295,9 +295,9 @@ const LANDING_CSS = `
   .cta-doc li::before { content: '✓'; color: var(--cherry); font-weight: 700; }
   .cta-pat li { font-size: 0.84rem; color: rgba(255,255,255,0.9); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem; }
   .cta-pat li::before { content: '✓'; color: rgba(255,255,255,0.6); font-weight: 700; }
-  .btn-cta-doc { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.25s; background: var(--wine); color: var(--white); min-height: 60px; }
+  .btn-cta-doc { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.25s; background: var(--wine); color: var(--white); height: 60px; }
   .btn-cta-doc:hover { background: var(--cherry); transform: translateY(-2px); }
-  .btn-cta-pat { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: 1.5px solid #9CA3AF; cursor: pointer; font-family: inherit; transition: all 0.25s; background: #9CA3AF; color: var(--white); min-height: 60px; }
+  .btn-cta-pat { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: 1.5px solid #9CA3AF; cursor: pointer; font-family: inherit; transition: all 0.25s; background: #9CA3AF; color: var(--white); height: 60px; }
   .btn-cta-pat:hover { background: #374151; border-color: #374151; transform: translateY(-2px); }
 
   /* FOOTER */
@@ -548,7 +548,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 Conheça as regras
               </span>
             </div>
-            <p className="hero-badge-sub" style={{ textAlign:'center', maxWidth:'480px' }}>
+            <p className="hero-badge-sub" style={{ textAlign:'center', width:'100%' }}>
               Você vai precisar de algumas informações do eritrograma:<br />
               Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
             </p>
@@ -576,9 +576,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               laboratoriais e de contexto de vida, monitore a evolução da sua hemoglobina e receba
               orientações terapêuticas ajustadas às suas necessidades. Viva melhor para viver mais!
             </p>
-            <div className="hero-actions">
-              <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>Sou Médico<span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.15rem" }}>PROFISSIONAIS DE SAÚDE</span></button>
-              <button className="btn btn-secondary" onClick={onModoPaciente}>Sou Paciente</button>
+            <div className="hero-actions" style={{ justifyContent:'flex-start' }}>
+              <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem", minWidth:180 }}>Sou Médico<span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.15rem" }}>PROFISSIONAIS DE SAÚDE</span></button>
+              <button className="btn btn-secondary" onClick={onModoPaciente} style={{ minWidth:180, justifyContent:'center' }}>Sou Paciente</button>
             </div>
             <div className="trust">
               <div className="trust-i">
@@ -1055,17 +1055,20 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       </section>
 
       {/* FOOTER */}
-      <footer>
-        <div className="foot-brand">
-          <img src={logo} alt="RedFairy" style={{ height:28 }} />
-          <span>Red<em>Fairy</em></span>
+      <footer style={{ padding:'1.5rem 2rem' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', flexWrap:'wrap', gap:'1rem' }}>
+          <div className="foot-brand">
+            <img src={logo} alt="RedFairy" style={{ height:24 }} />
+            <span>Red<em>Fairy</em></span>
+          </div>
+          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>Cuidar do Seu Eritron</span>
+          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>·</span>
+          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>by <a href="https://cytomica.com">cytomica.com</a> © 2026</span>
+          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>·</span>
+          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>E.F. Ramos, M.D. CRM 6302 BA | RQE 5830 · 5643 · 27847</span>
+          <span style={{ color:'var(--text-light)', fontSize:'0.75rem' }}>·</span>
+          <a href="https://drestacioramos.com.br" style={{ color:'var(--text-sec)', fontSize:'0.75rem' }}>drestacioramos.com.br</a>
         </div>
-        <p className="foot-tag">Cuidar do Seu Eritron</p>
-        <p className="credits">
-          by <a href="https://cytomica.com">cytomica.com</a> | © 2026<br />
-          E.F. Ramos, M.D. CRM 6302 BA | RQE 5830 · 5643 · 27847<br />
-          <a href="https://drestacioramos.com.br">drestacioramos.com.br</a>
-        </p>
       </footer>
 
     </div>
