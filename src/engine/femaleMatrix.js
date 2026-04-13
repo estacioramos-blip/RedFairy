@@ -807,7 +807,7 @@ export const femaleMatrix = [
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 24   },
-      hemoglobina: { min: 8.0.4  },
+      hemoglobina: { min: 8.0, max: 12.4 },
       vcm:         { min: 0,   max: 79   },
       rdw:         { min: 15.1,max: 999  },
       satTransf:   { min: 0,   max: 50   },
