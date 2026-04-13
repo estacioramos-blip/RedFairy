@@ -577,7 +577,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               orientações terapêuticas ajustadas às suas necessidades. Viva melhor para viver mais!
             </p>
             <div className="hero-actions">
-              <button className="btn btn-primary" onClick={onModoMedico}>Sou Médico</button>
+              <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>Sou Médico<span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.15rem" }}>PROFISSIONAIS DE SAÚDE</span></button>
               <button className="btn btn-secondary" onClick={onModoPaciente}>Sou Paciente</button>
             </div>
             <div className="trust">
@@ -780,7 +780,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           </div>
           <div className="como-tabs-wrap reveal">
             <div className="como-tabs">
-              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}>Para Médicos</button>
+              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}><span>Para Médicos</span><span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.1rem" }}>PROFISSIONAIS DE SAÚDE</span></button>
               <button className={`como-tab${activeTab === 'paciente' ? ' active' : ''}`} onClick={() => setActiveTab('paciente')}>Para Pacientes</button>
             </div>
           </div>
@@ -788,7 +788,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             {activeTab === 'medico' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step"><div className="flow-num">1</div><h4>Acesse o Modo Médico</h4><p>Gratuito, sem cadastro. Use o seu CRM para acesso imediato à calculadora clínica.</p></div>
+                  <div className="flow-step"><div className="flow-num">1</div><h4>Acesse o Modo Médico<br/><span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", color:"var(--cherry)", textTransform:"uppercase" }}>Profissionais de Saúde</span></h4><p>Gratuito, sem cadastro. Use o seu CRM para acesso imediato à calculadora clínica.</p></div>
                   <div className="flow-step"><div className="flow-num">2</div><h4>Insira o CPF do paciente</h4><p>Única informação de identificação. Vincula os dados ao paciente automaticamente.</p></div>
                   <div className="flow-step"><div className="flow-num">3</div><h4>Preencha os parâmetros</h4><p>Apenas cinco parâmetros laboratoriais e algumas caixinhas com dados clínicos.</p></div>
                   <div className="flow-step"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>Diagnóstico, orientações terapêuticas e dosagens em segundos.</p></div>
@@ -1028,7 +1028,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="cta-cards reveal">
             <div className="cta-c cta-doc">
               <div className="ci">🩺</div>
-              <h3>Modo Médico</h3>
+              <h3>Modo Médico<br/><span style={{ fontSize:"0.65rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span></h3>
               <p>Avaliação rápida sem cadastro. Insira o CPF e os dados do paciente e obtenha diagnóstico com orientações terapêuticas.</p>
               <ul>
                 <li>Acesso 100% gratuito</li>
@@ -1036,7 +1036,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 <li>Orientações terapêuticas com dosagens</li>
                 <li>Ganhe 10 USDC por paciente cadastrado</li>
               </ul>
-              <button className="btn-cta-doc" onClick={onModoMedico}>Acessar como Médico</button>
+              <button className="btn-cta-doc" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>Acessar como Médico<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span></button>
             </div>
             <div className="cta-c cta-pat">
               <div className="ci">❤️</div>
