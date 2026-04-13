@@ -36,7 +36,7 @@ const LANDING_CSS = `
   .hamburger span { display: block; width: 20px; height: 2px; background: var(--text); border-radius: 2px; }
 
   /* BUTTONS */
-  .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.25s; font-family: inherit; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.25s; font-family: inherit; min-width: 180px; height: 60px; }
   .btn-primary { background: var(--wine); color: var(--white); }
   .btn-primary:hover { background: var(--cherry); transform: translateY(-2px); }
   .btn-secondary { background: #9CA3AF; color: var(--white); border: 1.5px solid #9CA3AF; }
@@ -1055,14 +1055,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ padding:'1.2rem 2rem', borderTop:'1px solid var(--border)' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', flexWrap:'wrap', gap:'0.5rem 1.2rem' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'0.4rem' }}>
-            <img src={logo} alt="RedFairy" style={{ height:20 }} />
-            <span style={{ fontFamily:"'DM Serif Display',serif", fontSize:'0.95rem', color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em></span>
-            <span style={{ color:'var(--text-light)', fontSize:'0.7rem', fontWeight:700, letterSpacing:'1px' }}>· CUIDAR DO SEU ERITRON</span>
-          </div>
-          <span style={{ color:'var(--text-light)', fontSize:'0.7rem' }}>by <a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a> © 2026 · E.F. Ramos, M.D. CRM 6302 BA · <a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a></span>
+      <footer style={{ padding:'1rem 2rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', flexWrap:'nowrap' }}>
+          <img src={logo} alt="RedFairy" style={{ height:18 }} />
+          <span style={{ fontFamily:"'DM Serif Display',serif", fontSize:'0.88rem', color:'var(--wine)', whiteSpace:'nowrap' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em></span>
+          <span style={{ color:'var(--border2)', fontSize:'0.7rem' }}>|</span>
+          <span style={{ color:'var(--text-light)', fontSize:'0.68rem', whiteSpace:'nowrap' }}>by <a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a> © 2026</span>
+          <span style={{ color:'var(--border2)', fontSize:'0.7rem' }}>|</span>
+          <span style={{ color:'var(--text-light)', fontSize:'0.68rem', whiteSpace:'nowrap' }}>E.F. Ramos, M.D. CRM 6302 BA</span>
+          <span style={{ color:'var(--border2)', fontSize:'0.7rem' }}>|</span>
+          <a href="https://drestacioramos.com.br" style={{ color:'var(--text-sec)', fontSize:'0.68rem', whiteSpace:'nowrap' }}>drestacioramos.com.br</a>
         </div>
       </footer>
 
