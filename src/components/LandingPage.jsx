@@ -140,8 +140,8 @@ const LANDING_CSS = `
   .trust-i span { font-size: 0.8rem; color: var(--text-light); }
 
   /* HERO VISUAL — coluna direita */
-  .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
-  .fairy-showcase { width: 220px; height: 220px; }
+  .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+  .fairy-showcase { width: 260px; height: 260px; }
   .fairy-showcase img { width: 100%; height: 100%; object-fit: contain; animation: floatFairy 4s ease-in-out infinite; }
   @keyframes floatFairy { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
 
@@ -576,12 +576,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               laboratoriais e de contexto de vida, monitore a evolução da sua hemoglobina e receba
               orientações terapêuticas ajustadas às suas necessidades. Viva melhor para viver mais!
             </p>
-            <div className="hero-actions" style={{ justifyContent:'flex-start', alignItems:'center' }}>
-              <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", width:200, height:60, justifyContent:"center", alignItems:"center" }}>
+            <div style={{ display:'flex', gap:'0.75rem', flexWrap:'wrap', marginBottom:'1rem', alignItems:'stretch' }}>
+              <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", width:200, minHeight:60, justifyContent:"center", alignItems:"center" }}>
                 <span>Sou Médico</span>
                 <span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span>
               </button>
-              <button className="btn btn-secondary" onClick={onModoPaciente} style={{ width:200, height:60, justifyContent:"center", alignItems:"center" }}>Sou Paciente</button>
+              <button className="btn btn-secondary" onClick={onModoPaciente} style={{ width:200, minHeight:60, justifyContent:"center", alignItems:"center" }}>Sou Paciente</button>
             </div>
             <div className="trust">
               <div className="trust-i">
