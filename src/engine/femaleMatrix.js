@@ -2029,7 +2029,7 @@ export const femaleMatrix = [
       hemoglobina: { min: 10.0,max: 11.9 },
       vcm:         { min: 0,   max: 79   },
       rdw:         { min: 15.1,max: 999  },
-      satTransf:   { min: 0,   max: 19   },
+      satTransf:   { min: 0,   max: 50   },
       bariatrica:  false,
       vegetariano: false,
       perda:       true,
@@ -2054,7 +2054,7 @@ export const femaleMatrix = [
       hemoglobina: { min: 10.0,max: 13.9 },
       vcm:         { min: 80,  max: 105  },
       rdw:         { min: 15.1,max: 999  },
-      satTransf:   { min: 0,   max: 19   },
+      satTransf:   { min: 0,   max: 50   },
       bariatrica:  false,
       vegetariano: false,
       perda:       true,
@@ -2119,6 +2119,33 @@ export const femaleMatrix = [
     comentarioB12: "A REPOSIÇÃO DE VITAMINA B12 ORAL NÃO FUNCIONA NA BARIÁTRICA. SE A MACROCITOSE NÃO CORRIGIR COM VIA SUBLINGUAL, USE VIA PARENTERAL. A DOSAGEM NO SANGUE DEVE SER USADA PARA AJUSTES.",
     comentarioFerro: "A FERRITINA E A SATURAÇÃO DA TRANSFERRINA NORMAIS SINALIZAM QUE A REPOSIÇÃO FOI ADEQUADA PARA O FERRO. O PROBLEMA AQUI É A VITAMINA B12, NÃO O FERRO. CUIDADO AO REPOR FERRO, ESPECIALMENTE SE PARENTERAL: O EXCESSO É NOCIVO.",
     proximosExames: ["HEMOGRAMA","RETICULÓCITOS","FERRITINA","SATURAÇÃO DA TRANSFERRINA","VITAMINA B12","FOLATOS","ZINCO","ANTI-FATOR INTRÍNSECO","ANTI-CÉLULAS PARIETAIS","COLONOSCOPIA DE ROTINA","CEA","CA 15.3","CA 125"],
+  },
+
+
+  // ─── ID 100F — ANEMIA FERROPRIVA COM HEMORRAGIA E INFLAMAÇÃO ASSOCIADA ────
+  {
+    id: 100,
+    label: "ANEMIA FERROPRIVA COM HEMORRAGIA E INFLAMAÇÃO ASSOCIADA",
+    color: "red",
+    conditions: {
+      ferritina:   { min: 24,  max: 400  },
+      hemoglobina: { min: 8.0, max: 12.4 },
+      vcm:         { min: 0,   max: 79   },
+      rdw:         { min: 15.1,max: 999  },
+      satTransf:   { min: 0,   max: 50   },
+      bariatrica:  false,
+      vegetariano: false,
+      perda:       true,
+      alcoolista:  false,
+      transfundido: false,
+    },
+    diagnostico: "ANEMIA MICROCÍTICA IMPORTANTE COM HISTÓRICO DE HEMORRAGIA E FERRITINA NORMAL OU ELEVADA. A FERRITINA PODE ESTAR FALSAMENTE ELEVADA COMO PROTEÍNA DE FASE AGUDA ASSOCIADA À INFLAMAÇÃO, MASCARANDO A DEPLEÇÃO REAL DE FERRO. A SATURAÇÃO DA TRANSFERRINA BAIXA OU NORMAL REFORÇA O COMPONENTE FERROPÊNICO. REQUERE INVESTIGAÇÃO E INTERVENÇÃO MÉDICA IMEDIATA.\nFRASE DATA",
+    recomendacaoAge1: "AVALIAÇÃO URGENTE COM HEMATOLOGISTA.\nPARA EXAMES ENDOSCÓPICOS, A HEMOGLOBINA MÍNIMA É 10 g/dL, ABAIXO DESSE NÍVEL SERÁ NECESSÁRIO TRANSFUNDIR.\nVOCÊ NÃO PODERIA DOAR SANGUE.",
+    recomendacaoAge2: "AVALIAÇÃO URGENTE COM HEMATOLOGISTA.\nNESSA FAIXA ETÁRIA, A ANEMIA IMPÕE MAIOR IMPACTO METABÓLICO.\nVOCÊ NÃO PODERIA DOAR SANGUE.",
+    comentarioAspirina: "ASPIRINA PRODUZ PEQUENA PERDA CRÔNICA DE SANGUE EM MUITOS USUÁRIOS. PODE REDUZIR A RESERVA DE FERRO E AGRAVAR A ANEMIA. ASPIRINA PODE AGRAVAR OUTRAS HEMORRAGIAS. CONSIDERE REVER A PRESCRIÇÃO.",
+    comentarioB12: "A REPOSIÇÃO DE VITAMINA B12 DEVE TER SIDO DESNECESSÁRIA, MAS DIFICILMENTE PRODUZIRIA ALGUM DANO. NA VIGÊNCIA DE HEMORRAGIA, A NECESSIDADE BIOLÓGICA ESTARÁ AUMENTADA.",
+    comentarioFerro: "A DOSE DE FERRO FOI INSUFICIENTE PARA CORRIGIR A ANEMIA. A FERRITINA ELEVADA NÃO EXCLUI DEFICIÊNCIA DE FERRO SE HÁ INFLAMAÇÃO — A SATURAÇÃO DA TRANSFERRINA É MAIS FIDEDIGNA NESSE CONTEXTO. MAS CUIDADO AO REPOR FERRO, ESPECIALMENTE SE PARENTERAL: O EXCESSO É NOCIVO.",
+    proximosExames: ["HEMOGRAMA","RETICULÓCITOS","FERRITINA","SATURAÇÃO DA TRANSFERRINA","PCR","VHS","SANGUE NAS FEZES","VITAMINA B12","HAPTOGLOBINA","LDH","COOMBS DIRETO","CEA","CA 19.9","CREATININA","ENDOSCOPIA DIGESTIVA","COLONOSCOPIA","CA 125"],
   },
 
 ];
