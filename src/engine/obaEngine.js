@@ -71,18 +71,32 @@ const DISAB = {
   'FOBI-CAPELLA':           { grau: 3, nomeCurto: 'Fobi-Capella'     },
   'SLEEVE':                 { grau: 2, nomeCurto: 'Sleeve'           },
   'BANDA GÁSTRICA AJUSTÁVEL':{ grau: 1, nomeCurto: 'Banda Gástrica'  },
-  'NÃO SEI':                { grau: 2, nomeCurto: 'cirurgia'         },
+  'NÃO SEI':                { grau: 2, nomeCurto: 'Bariátrica'       },
+}
+
+// Normaliza tipo de cirurgia — aceita variações de nome do OBAModal
+function normalizarCirurgia(tipo) {
+  if (!tipo) return 'NÃO SEI'
+  const t = tipo.toUpperCase()
+  if (t.includes('ROUX') || t.includes('BYPASS') || t.includes('FOBI') || t.includes('CAPELLA')) {
+    return t.includes('FOBI') || t.includes('CAPELLA') ? 'FOBI-CAPELLA' : 'Y DE ROUX'
+  }
+  if (t.includes('SLEEVE') || t.includes('GASTRECTOMIA') || t.includes('VERTICAL')) return 'SLEEVE'
+  if (t.includes('BANDA')) return 'BANDA GÁSTRICA AJUSTÁVEL'
+  return DISAB[tipo] ? tipo : 'NÃO SEI'
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FUNÇÃO PRINCIPAL
 // ─────────────────────────────────────────────────────────────────────────────
 export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
-  if (!resultadoEritron || !dadosOBA || !examesOBA) return null
+  if (!resultadoEritron || !dadosOBA) return null
+  // examesOBA pode ser {} (vazio) — normalizar
+  examesOBA = examesOBA || {}
 
   const sexo       = dadosOBA.sexo        || 'F'
   const idade      = parseInt(dadosOBA.idade) || 0
-  const tipoCir    = dadosOBA.tipo_cirurgia || 'NÃO SEI'
+  const tipoCir    = normalizarCirurgia(dadosOBA.tipo_cirurgia)
   const mesesPos   = parseInt(dadosOBA.meses_pos_cirurgia) || 0
   const disab      = DISAB[tipoCir] || DISAB['NÃO SEI']
 
@@ -1081,7 +1095,7 @@ function buildModComportamental(dados) {
 
   if (meds.includes('REMÉDIO PARA DORMIR')) {
     temAlgo = true
-    linhas.push('USO DE MEDICAMENTOS PARA DORMIR: INVESTIGAR APNEIA DO SONO, ANSIEDA E HÁBITOS DE SONO. A PERDA DE PESO FREQUENTEMENTE MELHORA OU RESOLVE A APNEIA OBSTRUTIVA DO SONO.')
+    linhas.push('USO DE MEDICAMENTOS PARA DORMIR: INVESTIGAR APNEIA DO SONO, ANSIEDADE E HÁBITOS DE SONO. A PERDA DE PESO FREQUENTEMENTE MELHORA OU RESOLVE A APNEIA OBSTRUTIVA DO SONO.')
   }
 
   if (meds.includes('LAXANTES')) {
