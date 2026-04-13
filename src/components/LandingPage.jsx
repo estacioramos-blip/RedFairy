@@ -48,7 +48,7 @@ const LANDING_CSS = `
   .whatsapp-btn svg { width: 30px; height: 30px; fill: white; }
 
   /* HERO */
-  .hero { min-height: 100vh; display: flex; align-items: center; padding: 7rem 2rem 4rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
+  .hero { min-height: auto; display: flex; align-items: center; padding: 6rem 2rem 2.5rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
   .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; position: relative; z-index: 2; }
   .hero-badge { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 1.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
@@ -141,12 +141,12 @@ const LANDING_CSS = `
 
   /* HERO VISUAL — coluna direita */
   .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
-  .fairy-showcase { width: 180px; height: 180px; }
+  .fairy-showcase { width: 220px; height: 220px; }
   .fairy-showcase img { width: 100%; height: 100%; object-fit: contain; animation: floatFairy 4s ease-in-out infinite; }
   @keyframes floatFairy { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
 
   /* fairy-quote — retângulo branco direito com texto */
-  .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem 2rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 100%; }
+  .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 1.8rem 2rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 100%; }
   .fairy-quote p { font-size: 1.45rem; color: var(--text); line-height: 1.5; font-weight: 800; font-family: 'DM Sans', sans-serif; }
   .fairy-quote .question { color: var(--wine); font-weight: 700; margin-top: 1rem; font-size: 1.2rem; font-family: 'DM Sans', sans-serif; font-style: normal; }
 
