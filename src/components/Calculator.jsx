@@ -292,7 +292,6 @@ export default function Calculator({ onVoltar }) {
   const [cadastrado, setCadastrado] = useState(null)
   const [medicoNome, setMedicoNome] = useState('')
   const [medicoCRM, setMedicoCRM] = useState('')
-  const [showAdminFromUrl, setShowAdminFromUrl] = useState(false)
 
   useEffect(() => {
     const crm = localStorage.getItem('medico_crm')
@@ -300,10 +299,7 @@ export default function Calculator({ onVoltar }) {
     setCadastrado(!!crm)
     setMedicoNome(nome || '')
     setMedicoCRM(crm || '')
-    // Acesso admin via URL ?admin=redfairy
-    if (window.location.search.includes('admin=redfairy')) {
-      setShowAdminFromUrl(true)
-    }
+
   }, [])
 
   function handleLogout() {
@@ -316,12 +312,6 @@ export default function Calculator({ onVoltar }) {
 
   if (cadastrado === null) return null
 
-  if (showAdminFromUrl) {
-    return <AdminConfigModal onFechar={() => {
-      setShowAdminFromUrl(false)
-      window.history.replaceState({}, '', window.location.pathname)
-    }} />
-  }
 
   if (!cadastrado) {
     return <CadastraMedico onConcluir={(nome, crm) => {
