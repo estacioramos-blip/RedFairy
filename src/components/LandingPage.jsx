@@ -51,7 +51,7 @@ const LANDING_CSS = `
   .hero { min-height: 100vh; display: flex; align-items: center; padding: 7rem 2rem 4rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
   .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; position: relative; z-index: 2; }
   .hero-badge { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 1.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; }
-  .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
+  .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
   .hero-badge .badge-main { display: flex; align-items: center; gap: 0.5rem; }
   .hero-badge .badge-sub { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.55); padding-left: 1.3rem; cursor: pointer; text-align: center; width: 100%; }
   .hero-badge .badge-sub:hover { color: rgba(255,255,255,0.85); }
@@ -542,7 +542,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <div className="hero-badge">
               <div className="badge-main">
                 <div className="dot" />
-                Doutor, avalie o seu paciente e ganhe dez dólares digitais.
+                Doutor* você ganha DEZ DÓLARES DIGITAIS por paciente avaliado.
               </div>
               <span className="badge-sub" onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior:'smooth' })}>
                 Conheça as regras
@@ -591,9 +591,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               </div>
               <div className="trust-i">
                 <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <span>Médico ganha 10 USDC por paciente</span>
+                <span>Profissional de Saúde ganha 10 USDC por paciente avaliado e que se cadastra.</span>
               </div>
             </div>
+            <p style={{ marginTop:'0.75rem', fontSize:'0.78rem', color:'var(--text-light)', lineHeight:1.5, maxWidth:480 }}>
+              <span style={{ color:'var(--cherry)', fontWeight:700 }}>*</span>{' '}
+              Válido para todos os profissionais de saúde com registro profissional em Conselho Regional/Federal.
+            </p>
           </div>
 
           {/* COLUNA DIREITA */}
