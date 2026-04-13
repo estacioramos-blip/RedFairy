@@ -147,8 +147,8 @@ const LANDING_CSS = `
 
   /* fairy-quote — retângulo branco direito com texto */
   .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 2.5rem 2rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 100%; }
-  .fairy-quote p { font-size: 1.45rem; color: var(--text); line-height: 1.5; font-weight: 800; font-family: 'DM Serif Display', serif; }
-  .fairy-quote .question { color: var(--wine); font-weight: 700; margin-top: 1rem; font-size: 1.05rem; font-family: 'DM Sans', sans-serif; font-style: italic; }
+  .fairy-quote p { font-size: 1.45rem; color: var(--text); line-height: 1.5; font-weight: 800; font-family: 'DM Sans', sans-serif; }
+  .fairy-quote .question { color: var(--wine); font-weight: 700; margin-top: 1rem; font-size: 1.2rem; font-family: 'DM Sans', sans-serif; font-style: normal; }
 
   /* OBA HOME BTN */
   .oba-home-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 16px; padding: 1.2rem 2rem; transition: all 0.3s; box-shadow: 0 4px 20px rgba(232,114,12,0.2); width: 100%; max-width: 380px; }
