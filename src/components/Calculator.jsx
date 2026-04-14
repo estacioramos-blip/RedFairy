@@ -41,7 +41,7 @@ const IconMedicamentos = () => (
 )
 
 // ─── Tela de login/cadastro do médico ────────────────────────────────────────
-function AuthMedico({ onConcluir }) {
+function AuthMedico({ onConcluir, onVoltar }) {
   const [modo, setModo] = useState('login') // 'login' | 'cadastro'
 
   // Login
@@ -163,7 +163,14 @@ function AuthMedico({ onConcluir }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 relative">
+      {onVoltar && (
+        <button onClick={onVoltar}
+          className="absolute top-4 left-4 text-white px-3 py-1 rounded-lg text-xs font-medium shadow transition-colors"
+          style={{ backgroundColor: '#991b1b' }}>
+          ← Voltar
+        </button>
+      )}
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md space-y-5">
 
         <div className="text-center">
@@ -366,7 +373,7 @@ export default function Calculator({ onVoltar }) {
   if (cadastrado === null) return null
 
   if (!cadastrado) {
-    return <AuthMedico onConcluir={(nome, crm) => {
+    return <AuthMedico onVoltar={onVoltar} onConcluir={(nome, crm) => {
       setMedicoNome(nome)
       setMedicoCRM(crm)
       setCadastrado(true)
