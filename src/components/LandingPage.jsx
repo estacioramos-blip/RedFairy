@@ -113,7 +113,7 @@ const LANDING_CSS = `
     .cta-cards { grid-template-columns: 1fr !important; }
   }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
-  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(232,114,12,0.5);}50%{box-shadow:0 0 0 10px rgba(232,114,12,0);} }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(220,38,38,0.8), 0 0 0 0 rgba(220,38,38,0.4);}70%{box-shadow:0 0 0 12px rgba(220,38,38,0), 0 0 0 24px rgba(220,38,38,0);}100%{box-shadow:0 0 0 0 rgba(220,38,38,0), 0 0 0 0 rgba(220,38,38,0);} }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.4rem; margin-bottom: 0.8rem; font-weight: 700; }
 
   /* HERO TEXTBOX — coluna esquerda, hover mostra imagem E esconde texto */
@@ -1004,7 +1004,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <p>O bypass gástrico e a gastrectomia causam uma <strong>síndrome disabsortiva</strong> que prejudica a absorção de ferro, vitamina B12 e outros elementos essenciais.</p>
               <p>O Projeto OBA oferece um <strong>tratamento de manutenção indefinido</strong>: monitoramento contínuo, cálculo de reposição personalizado e orientações específicas.</p>
               <div className="oba-cta-row">
-                <button className="btn btn-oba-main" onClick={() => setShowOBA(true)} style={{ flexDirection:'column', gap:'0.2rem', alignItems:'center', animation:'pulse 1.8s ease-in-out infinite' }}>
+                <button className="btn btn-oba-main" onClick={() => setShowOBA(true)} style={{ flexDirection:'column', gap:'0.2rem', alignItems:'center', animation:'pulse 1.5s ease-out infinite', margin:'0 auto', display:'flex', border:'2px solid rgba(220,38,38,0.8)' }}>
                   <span>Sou Bariátrico — Começar</span>
                   <span style={{ fontSize:'0.65rem', textTransform:'uppercase', letterSpacing:'1px', opacity:0.8, fontWeight:700 }}>Entra em Modo Paciente | Siga as Instruções</span>
                 </button>
