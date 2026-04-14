@@ -21,7 +21,7 @@ const LANDING_CSS = `
   body { font-family: 'DM Sans', -apple-system, sans-serif; color: var(--text); background: var(--white); line-height: 1.65; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
   /* NAV */
-  #landing-nav { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; max-width: 100vw !important; z-index: 1000 !important; padding: 0.75rem 2rem !important; display: flex !important; justify-content: space-between !important; align-items: center !important; transition: all 0.3s; box-sizing: border-box !important; }
+  #landing-nav { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100vw !important; max-width: 100vw !important; z-index: 1000 !important; padding: 0.75rem 2rem !important; display: flex !important; justify-content: space-between !important; align-items: center !important; transition: all 0.3s; box-sizing: border-box !important; overflow: hidden !important; }
   #landing-nav.scrolled { background: rgba(255,255,255,0.95) !important; backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); box-shadow: 0 1px 8px rgba(0,0,0,0.04); }
   nav { position: fixed; top: 0; left: 0; right: 0; width: 100% !important; max-width: 100vw !important; z-index: 1000; padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; box-sizing: border-box; }
 
