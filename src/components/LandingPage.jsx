@@ -18,7 +18,7 @@ const LANDING_CSS = `
     --shadow: 0 4px 20px rgba(0,0,0,0.06);
   }
   html { scroll-behavior: smooth; }
-  body { font-family: 'DM Sans', -apple-system, sans-serif; color: var(--text); background: var(--white); line-height: 1.65; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  body { font-family: 'DM Sans', -apple-system, sans-serif; color: var(--text); background: var(--white); line-height: 1.65; overflow-x: hidden; -webkit-font-smoothing: antialiased; scrollbar-gutter: stable; }
 
   /* NAV */
   #landing-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; box-sizing: border-box; }
