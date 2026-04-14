@@ -777,7 +777,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
               <div>
                 <label className="label">CPF</label>
                 <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className="input" />
-                <p className="text-xs text-gray-400 mt-0.5">Opcional — vincula ao paciente</p>
+                <p className="text-xs text-gray-400 mt-0.5">Vincula ao paciente</p>
                 <p className="text-xs text-orange-500 mt-0.5">Digite apenas os números, sem pontos ou hífen</p>
                 
               </div>
