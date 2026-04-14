@@ -646,6 +646,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
           sexo={inputs.sexo}
           cpf={inputs.cpf}
           idade={inputs.idade || '0'}
+          examesRedFairy={{
+            ferritina: inputs.ferritina,
+            hemoglobina: inputs.hemoglobina,
+            vcm: inputs.vcm,
+            rdw: inputs.rdw,
+            satTransf: inputs.satTransf,
+            dataColeta: inputs.dataColeta,
+          }}
           onConcluir={(dadosOBA, examesOBA) => {
             setDadosOBAColetados({ dadosOBA, examesOBA });
             setShowOBA(false);

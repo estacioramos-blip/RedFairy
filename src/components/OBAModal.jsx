@@ -173,7 +173,7 @@ const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.
 //   onConcluir(dadosOBA, examesOBA) — callback com os dados para o obaEngine
 //   onFechar()        — fecha sem salvar
 // ─────────────────────────────────────────────────────────────────────────────
-export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
+export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir, onFechar }) {
   const [etapa, setEtapa] = useState('anamnese')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
@@ -410,6 +410,30 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
               Preencha os exames que tiver em mãos. Pode pular se não tiver agora.
             </p>
           </div>
+
+          {/* ── Exames já registrados no RedFairy — somente leitura ── */}
+          {examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && (
+            <div style={{ background:'#FEF2F2', border:'1.5px solid #DC2626', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
+              <p style={{ fontSize:'0.72rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', marginBottom:'0.6rem' }}>
+                🔒 Exames registrados na avaliação RedFairy — somente leitura
+              </p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem' }}>
+                {[
+                  { label:'Ferritina', value: examesRedFairy.ferritina, unit:'ng/mL' },
+                  { label:'Hemoglobina', value: examesRedFairy.hemoglobina, unit:'g/dL' },
+                  { label:'VCM', value: examesRedFairy.vcm, unit:'fL' },
+                  { label:'RDW', value: examesRedFairy.rdw, unit:'%' },
+                  { label:'Sat. Transferrina', value: examesRedFairy.satTransf, unit:'%' },
+                  { label:'Data da coleta', value: examesRedFairy.dataColeta, unit:'' },
+                ].filter(f => f.value).map(f => (
+                  <div key={f.label} style={{ background:'white', borderRadius:8, padding:'0.5rem 0.7rem', border:'1px solid #FECDD3' }}>
+                    <p style={{ fontSize:'0.65rem', fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', marginBottom:'0.2rem' }}>{f.label}</p>
+                    <p style={{ fontSize:'0.9rem', fontWeight:800, color:'#DC2626' }}>{f.value} <span style={{ fontSize:'0.7rem', fontWeight:400, color:'#9CA3AF' }}>{f.unit}</span></p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#374151', marginBottom:'0.5rem' }}>Data dos exames</label>
           <input style={inp} type="date" value={dataExames} onChange={e => setDataExames(e.target.value)} />
