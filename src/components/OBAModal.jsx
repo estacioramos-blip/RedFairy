@@ -249,7 +249,7 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
       peso_antes:         pesoAntes || null,
       peso_atual:         pesoAtual || null,
       peso_minimo_pos:    pesoMin || null,
-      ganhou_peso_apos:   form.ganhou_peso_apos,
+      ganhou_peso_apos:   (kgGanhou !== null && kgGanhou > 0) ? true : form.ganhou_peso_apos,
       fez_plasma_argonio: form.fez_plasma_argonio,
       status_glicemico:   form.status_glicemico || null,
       status_pressorico:  form.status_pressorico || null,
@@ -532,7 +532,9 @@ export default function OBAModal({ sexo, cpf, idade, onConcluir, onFechar }) {
           )}
 
           <div style={{ marginTop:'0.8rem' }}>
-            <CheckRow label="PERDI MAS GANHEI PESO NOVAMENTE" checked={form.ganhou_peso_apos} onClick={() => sf('ganhou_peso_apos', !form.ganhou_peso_apos)} />
+            {!(kgGanhou !== null && kgGanhou > 0) && (
+              <CheckRow label="PERDI MAS GANHEI PESO NOVAMENTE" checked={form.ganhou_peso_apos} onClick={() => sf('ganhou_peso_apos', !form.ganhou_peso_apos)} />
+            )}
             <CheckRow label="FIZ PLASMA DE ARGÔNIO" checked={form.fez_plasma_argonio} onClick={() => sf('fez_plasma_argonio', !form.fez_plasma_argonio)} />
           </div>
 
