@@ -458,9 +458,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  function formatarCPF(valor) {
+    const digits = valor.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return digits.slice(0,3) + '.' + digits.slice(3);
+    if (digits.length <= 9) return digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6);
+    return digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6,9) + '-' + digits.slice(9);
+  }
+
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
-    setInputs(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    const novoValor = name === 'cpf' ? formatarCPF(value) : (type === 'checkbox' ? checked : value);
+    setInputs(prev => ({ ...prev, [name]: novoValor }));
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
     if (name === 'bariatrica') {
       if (checked) setShowOBA(true);
@@ -769,7 +778,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
                 <label className="label">CPF</label>
                 <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className="input" />
                 <p className="text-xs text-gray-400 mt-0.5">Opcional — vincula ao paciente</p>
-                <p className="text-xs text-orange-500 mt-0.5">Só números, sem ponto ou traço. Ex: 12345678900</p>
+                <p className="text-xs text-orange-500 mt-0.5">Digite apenas os números, sem pontos ou hífen</p>
+                
               </div>
               <div>
                 <label className="label">Sexo</label>
