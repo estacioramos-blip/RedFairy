@@ -480,6 +480,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     return novosErros;
   }
 
+  function sanitizarNumero(valor) {
+    if (!valor && valor !== 0) return valor;
+    const str = String(valor).trim();
+    // Remove ponto de milhar (ex: "1.000" → "1000", "1.500" → "1500")
+    // Regra: ponto seguido de exatamente 3 dígitos é milhar
+    const semMilhar = str.replace(/\.(\d{3})(?!\d)/g, '$1');
+    // Vírgula como decimal → ponto (ex: "13,5" → "13.5")
+    const comPontoDecimal = semMilhar.replace(',', '.');
+    return comPontoDecimal;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const novosErros = validar();
@@ -488,11 +499,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     const inputsNumericos = {
       ...inputs,
       idade: Number(inputs.idade),
-      ferritina: Number(inputs.ferritina),
-      hemoglobina: Number(inputs.hemoglobina),
-      vcm: Number(inputs.vcm),
-      rdw: Number(inputs.rdw),
-      satTransf: Number(inputs.satTransf),
+      ferritina:   Number(sanitizarNumero(inputs.ferritina)),
+      hemoglobina: Number(sanitizarNumero(inputs.hemoglobina)),
+      vcm:         Number(sanitizarNumero(inputs.vcm)),
+      rdw:         Number(sanitizarNumero(inputs.rdw)),
+      satTransf:   Number(sanitizarNumero(inputs.satTransf)),
     };
 
     const res = avaliarPaciente(inputsNumericos);
@@ -758,6 +769,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
                 <label className="label">CPF</label>
                 <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className="input" />
                 <p className="text-xs text-gray-400 mt-0.5">Opcional — vincula ao paciente</p>
+                <p className="text-xs text-orange-500 mt-0.5">Só números, sem ponto ou traço. Ex: 12345678900</p>
               </div>
               <div>
                 <label className="label">Sexo</label>
@@ -784,7 +796,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
               <IconExames /> Exames Laboratoriais
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              <LabInput label="Ferritina" unit="ng/mL" name="ferritina" reference={inputs.sexo === 'M' ? '24-336' : '25-150'} value={inputs.ferritina} onChange={handleChange} error={erros.ferritina} />
+              <LabInput label="Ferritina" unit="ng/mL" name="ferritina" reference={inputs.sexo === 'M' ? '24-336' : '25-150'} value={inputs.ferritina} onChange={handleChange} error={erros.ferritina} hint="Sem ponto ou vírgula. Ex: 1140" />
               <LabInput label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} />
               <LabInput label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} />
               <LabInput label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} />
@@ -883,15 +895,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   );
 }
 
-function LabInput({ label, unit, name, reference, value, onChange, error }) {
+function LabInput({ label, unit, name, reference, value, onChange, error, hint }) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-600 mb-1">
         {label} <span className="text-xs text-gray-400">({unit})</span>
       </label>
-      <input type="number" step="0.1" name={name} value={value} onChange={onChange} inputMode="decimal"
+      <input type="text" inputMode="decimal" name={name} value={value} onChange={onChange} placeholder="0"
         className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${error ? 'border-red-500' : 'border-gray-200'}`} />
       <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
+      {hint && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
       {error && <p className="text-red-500 text-xs">{error}</p>}
     </div>
   );
