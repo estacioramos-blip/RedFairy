@@ -40,16 +40,25 @@ const IconMedicamentos = () => (
   </svg>
 )
 
-// ─── Tela de cadastro do médico ──────────────────────────────────────────────
-function CadastraMedico({ onConcluir }) {
+// ─── Tela de login/cadastro do médico ────────────────────────────────────────
+function AuthMedico({ onConcluir }) {
+  const [modo, setModo] = useState('login') // 'login' | 'cadastro'
+
+  // Login
+  const [loginConselho, setLoginConselho] = useState('')
+  const [loginSenha, setLoginSenha] = useState('')
+  const [loginErro, setLoginErro] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
+
+  // Cadastro
   const [nome, setNome] = useState('')
-  const [crm, setCrm] = useState('')
+  const [conselho, setConselho] = useState('')
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [erro, setErro] = useState('')
-  const [sucesso, setSucesso] = useState(false)
+  const [cadErro, setCadErro] = useState('')
+  const [cadLoading, setCadLoading] = useState(false)
+  const [cadSucesso, setCadSucesso] = useState(false)
 
   function formatarCelular(valor) {
     const digits = valor.replace(/\D/g, '').slice(0, 11)
@@ -58,81 +67,93 @@ function CadastraMedico({ onConcluir }) {
     return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`
   }
 
-  function formatarCRM(valor) {
-    return valor.toUpperCase().replace(/[^0-9/A-Z]/g, '').slice(0, 10)
+  function formatarConselho(valor) {
+    return valor.toUpperCase().replace(/[^0-9/A-Z]/g, '').slice(0, 12)
   }
 
-  async function handleSubmit() {
-    setErro('')
-    const crmLimpo = crm.trim().toUpperCase()
+  async function handleLogin() {
+    setLoginErro('')
+    const conselhoLimpo = loginConselho.trim().toUpperCase()
+    if (!conselhoLimpo) { setLoginErro('Informe o número do conselho de classe.'); return }
+    if (!loginSenha) { setLoginErro('Informe a senha.'); return }
+
+    setLoginLoading(true)
+    const { data: medico } = await supabase
+      .from('medicos')
+      .select('id, nome, crm, senha_klipbit')
+      .eq('crm', conselhoLimpo)
+      .single()
+
+    setLoginLoading(false)
+
+    if (!medico) { setLoginErro('Conselho não encontrado. Verifique ou cadastre-se.'); return }
+    if (medico.senha_klipbit !== loginSenha) { setLoginErro('Senha incorreta.'); return }
+
+    localStorage.setItem('medico_crm', medico.crm)
+    localStorage.setItem('medico_nome', medico.nome || '')
+    onConcluir(medico.nome || '', medico.crm)
+  }
+
+  async function handleCadastro() {
+    setCadErro('')
+    const conselhoLimpo = conselho.trim().toUpperCase()
     const celularDigits = celular.replace(/\D/g, '')
 
-    if (!nome.trim() || nome.trim().length < 5) {
-      setErro('Informe seu nome completo'); return
-    }
-    if (!crmLimpo || !crmLimpo.includes('/')) {
-      setErro('Informe o CRM no formato NÚMERO/UF (ex: 6302/BA)'); return
-    }
-    if (celularDigits.length < 10) {
-      setErro('Informe um celular válido com DDD'); return
-    }
-    if (!email || !email.includes('@')) {
-      setErro('Informe um e-mail válido'); return
-    }
-    if (!senha || senha.length < 6) {
-      setErro('A senha deve ter pelo menos 6 caracteres'); return
-    }
+    if (!nome.trim() || nome.trim().length < 5) { setCadErro('Informe seu nome completo.'); return }
+    if (!conselhoLimpo) { setCadErro('Informe o número do conselho de classe/UF.'); return }
+    if (celularDigits.length < 10) { setCadErro('Informe um celular válido com DDD.'); return }
+    if (!email || !email.includes('@')) { setCadErro('Informe um e-mail válido.'); return }
+    if (!senha || senha.length < 6) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
 
-    setLoading(true)
-    const partes = crmLimpo.split('/')
-    const uf = partes[1]
+    setCadLoading(true)
 
+    // Verifica se já existe
     const { data: existing } = await supabase
       .from('medicos')
-      .select('id, nome')
-      .eq('crm', crmLimpo)
+      .select('id, nome, crm')
+      .eq('crm', conselhoLimpo)
       .single()
 
     if (existing) {
-      localStorage.setItem('medico_crm', crmLimpo)
-      localStorage.setItem('medico_nome', existing.nome || '')
-      onConcluir(existing.nome || '', crmLimpo)
+      setCadLoading(false)
+      setCadErro('Este conselho já está cadastrado. Faça login.')
       return
     }
 
+    const partes = conselhoLimpo.split('/')
+    const uf = partes[1] || ''
+
     const { error } = await supabase.from('medicos').insert({
       nome: nome.trim(),
-      crm: crmLimpo,
+      crm: conselhoLimpo,
       uf,
       celular: celularDigits,
       email: email.trim().toLowerCase(),
       senha_klipbit: senha,
     })
 
-    setLoading(false)
+    setCadLoading(false)
 
-    if (error) {
-      setErro('Erro ao salvar. Tente novamente.'); return
-    }
+    if (error) { setCadErro('Erro ao salvar. Tente novamente.'); return }
 
-    localStorage.setItem('medico_crm', crmLimpo)
+    localStorage.setItem('medico_crm', conselhoLimpo)
     localStorage.setItem('medico_nome', nome.trim())
-    setSucesso(true)
+    setCadSucesso(true)
   }
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
 
-  if (sucesso) {
+  if (cadSucesso) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center space-y-5">
           <div className="text-5xl">🧝</div>
           <h2 className="text-xl font-bold text-red-700">Bem-vindo ao RedFairy!</h2>
           <p className="text-gray-600 text-sm leading-relaxed">
-            Obrigado pelo cadastro. Em breve entraremos em contato para mostrar como você pode se beneficiar ao ajudar os seus pacientes.
+            Cadastro realizado com sucesso. A partir de agora, faça login com seu número de conselho e senha.
           </p>
           <button
-            onClick={() => onConcluir(nome.trim(), crm.trim().toUpperCase())}
+            onClick={() => onConcluir(nome.trim(), conselho.trim().toUpperCase())}
             className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
             Vamos lá! →
           </button>
@@ -149,78 +170,111 @@ function CadastraMedico({ onConcluir }) {
           <img src={logo} alt="RedFairy"
             className="w-16 h-16 object-contain mx-auto mb-3"
             style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }} />
-          <h2 className="text-xl font-bold text-red-700">Olá, Doutor!</h2>
+          <h2 className="text-xl font-bold text-red-700">
+            {modo === 'login' ? 'Acesso Médico' : 'Primeiro Acesso'}
+          </h2>
           <p className="text-gray-500 text-sm mt-1">
-            Parece que é a sua primeira vez aqui.
+            {modo === 'login' ? 'Entre com seu conselho e senha' : 'Crie seu acesso ao RedFairy'}
           </p>
         </div>
 
-        <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-800 leading-relaxed">
-          Informe seus dados para começar. É totalmente seguro.
-          Depois entraremos em contato para você saber como vai se beneficiar ao ajudar os seus pacientes.
+        {/* Abas login / cadastro */}
+        <div className="flex rounded-xl overflow-hidden border border-gray-200">
+          <button
+            onClick={() => { setModo('login'); setLoginErro(''); setCadErro('') }}
+            className={`flex-1 py-2 text-sm font-bold transition-colors ${modo === 'login' ? 'bg-red-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
+            Entrar
+          </button>
+          <button
+            onClick={() => { setModo('cadastro'); setLoginErro(''); setCadErro('') }}
+            className={`flex-1 py-2 text-sm font-bold transition-colors ${modo === 'cadastro' ? 'bg-red-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
+            Primeiro acesso
+          </button>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
-            <input type="text" value={nome} onChange={e => setNome(e.target.value)}
-              placeholder="Dr. João da Silva" className={inputClass} />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">CRM/UF</label>
-            <input type="text" value={crm} onChange={e => setCrm(formatarCRM(e.target.value))}
-              placeholder="Ex: 6302/BA" className={inputClass} />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
-            <input type="tel" value={celular} onChange={e => setCelular(formatarCelular(e.target.value))}
-              placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} />
-          </div>
-
-          <div className="bg-green-50 border border-green-200 rounded-xl p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-green-700 font-bold text-sm">⚡ Conta KlipBit</span>
+        {/* LOGIN */}
+        {modo === 'login' && (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Número do Conselho/UF</label>
+              <input type="text" value={loginConselho}
+                onChange={e => setLoginConselho(formatarConselho(e.target.value))}
+                placeholder="Ex: 6302/BA ou COREN-12345/SP"
+                className={inputClass} />
             </div>
-            <p className="text-green-700 text-xs leading-relaxed">
-              Precisamos do seu e-mail e de uma senha para criar a sua conta KlipBit — onde você receberá os seus 10 USDC por cada paciente cadastrado.
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
+              <input type="password" value={loginSenha}
+                onChange={e => setLoginSenha(e.target.value)}
+                placeholder="Sua senha"
+                className={inputClass}
+                onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+            </div>
+            {loginErro && <p className="text-red-500 text-sm">{loginErro}</p>}
+            <button onClick={handleLogin} disabled={loginLoading}
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+              {loginLoading ? 'Verificando...' : 'Entrar →'}
+            </button>
+            <p className="text-center text-xs text-gray-400">
+              Primeiro acesso?{' '}
+              <button onClick={() => setModo('cadastro')} className="text-red-600 font-semibold hover:underline">
+                Cadastre-se
+              </button>
             </p>
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-              placeholder="seu@email.com" className={inputClass} />
+        {/* CADASTRO */}
+        {modo === 'cadastro' && (
+          <div className="space-y-3">
+            <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-xs text-red-800 leading-relaxed">
+              Informe seus dados para criar seu acesso. Depois entre sempre com conselho + senha.
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
+              <input type="text" value={nome} onChange={e => setNome(e.target.value)}
+                placeholder="Dr. João da Silva" className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Número do Conselho/UF</label>
+              <input type="text" value={conselho} onChange={e => setConselho(formatarConselho(e.target.value))}
+                placeholder="Ex: 6302/BA ou COREN-12345/SP" className={inputClass} />
+              <p className="text-xs text-gray-400 mt-0.5">Este será seu login permanente</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
+              <input type="tel" value={celular} onChange={e => setCelular(formatarCelular(e.target.value))}
+                placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} />
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+              <p className="text-green-700 text-xs font-bold mb-1">⚡ Conta KlipBit</p>
+              <p className="text-green-700 text-xs leading-relaxed">
+                Usaremos seu e-mail e senha para criar sua wallet — onde você receberá 10 USDC por cada paciente cadastrado.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="seu@email.com" className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
+              <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
+                placeholder="Mínimo 6 caracteres" className={inputClass} />
+              <p className="text-xs text-gray-400 mt-0.5">Será sua senha de login e da wallet KlipBit.</p>
+            </div>
+            {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
+            <button onClick={handleCadastro} disabled={cadLoading}
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+              {cadLoading ? 'Cadastrando...' : 'Criar acesso →'}
+            </button>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Senha KlipBit</label>
-            <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
-              placeholder="Mínimo 6 caracteres" className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">Esta senha será usada na sua wallet KlipBit.</p>
-          </div>
-        </div>
-
-        {erro && <p className="text-red-500 text-sm">{erro}</p>}
-
-        <button onClick={handleSubmit} disabled={loading}
-          className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
-          {loading ? 'Aguarde...' : 'Continuar para a Calculadora →'}
-        </button>
-
-        <button onClick={() => onConcluir('', '')}
-          className="w-full text-gray-400 text-xs hover:text-gray-600 transition-colors">
-          Pular por agora
-        </button>
+        )}
 
       </div>
     </div>
   )
 }
-
-// ─── Calculator principal ────────────────────────────────────────────────────
-
 
 // ─── AdminConfigModal ──────────────────────────────────────────────────────
 function AdminConfigModal({ onFechar }) {
@@ -299,7 +353,6 @@ export default function Calculator({ onVoltar }) {
     setCadastrado(!!crm)
     setMedicoNome(nome || '')
     setMedicoCRM(crm || '')
-
   }, [])
 
   function handleLogout() {
@@ -312,9 +365,8 @@ export default function Calculator({ onVoltar }) {
 
   if (cadastrado === null) return null
 
-
   if (!cadastrado) {
-    return <CadastraMedico onConcluir={(nome, crm) => {
+    return <AuthMedico onConcluir={(nome, crm) => {
       setMedicoNome(nome)
       setMedicoCRM(crm)
       setCadastrado(true)
@@ -348,6 +400,22 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoClicks, setLogoClicks] = useState(0);
   const logoClickTimer = useRef(null);
+
+  // Dados do médico para uso no resultado (nome, crm, celular)
+  const [medicoDados, setMedicoDados] = useState(null);
+
+  useEffect(() => {
+    async function carregarMedico() {
+      if (!medicoCRM) return;
+      const { data } = await supabase
+        .from('medicos')
+        .select('nome, crm, celular')
+        .eq('crm', medicoCRM)
+        .single();
+      if (data) setMedicoDados(data);
+    }
+    carregarMedico();
+  }, [medicoCRM]);
 
   function carregarDemo(sexo) {
     const hoje = new Date().toISOString().split('T')[0];
@@ -383,7 +451,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   useEffect(() => {
     function handleKeyDown(e) {
       if (!e.ctrlKey || !e.shiftKey) return;
-      const hoje = new Date().toISOString().split('T')[0];
       if (e.key === 'F' || e.key === 'f') { e.preventDefault(); carregarDemo('F'); }
       if (e.key === 'M' || e.key === 'm') { e.preventDefault(); carregarDemo('M'); }
     }
@@ -395,7 +462,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     const { name, value, type, checked } = e.target;
     setInputs(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
-    // Abre o OBAModal quando bariátrica é marcada
     if (name === 'bariatrica') {
       if (checked) setShowOBA(true);
       else setDadosOBAColetados(null);
@@ -431,18 +497,15 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
 
     const res = avaliarPaciente(inputsNumericos);
 
-    // ── OBA: usar dados já coletados pelo OBAModal ───────────────────────────
     let obaResult = null;
     if (inputs.bariatrica) {
       let dadosOBA = null;
       let examesOBA = null;
 
       if (dadosOBAColetados) {
-        // Dados vindos direto do OBAModal — caminho principal
         dadosOBA  = dadosOBAColetados.dadosOBA;
         examesOBA = dadosOBAColetados.examesOBA;
       } else if (inputs.cpf.trim()) {
-        // Fallback: buscar no Supabase pelo CPF (paciente já cadastrado)
         const cpfLimpo = inputs.cpf.replace(/\D/g, '');
         const { data: obaRow } = await supabase
           .from('oba_anamnese')
@@ -497,7 +560,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
         }
       }
 
-      // Fallback mínimo se nada foi encontrado
       if (!dadosOBA) {
         dadosOBA = {
           sexo: inputs.sexo, idade: inputs.idade,
@@ -515,9 +577,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
 
       obaResult = avaliarOBA(res, dadosOBA, examesOBA);
     }
-    // ────────────────────────────────────────────────────────────────────────
 
-    setResultado({ ...res, _inputs: inputsNumericos, _oba: obaResult });
+    setResultado({ ...res, _inputs: inputsNumericos, _oba: obaResult, _medicoDados: medicoDados });
     setCopiado(false);
 
     if (inputs.cpf.trim() && res.encontrado) {
@@ -539,6 +600,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
         ferro_oral: inputs.ferroOral,
         diagnostico_label: res.label,
         diagnostico_color: res.color,
+        medico_crm: medicoCRM || null,
       });
     }
 
@@ -559,7 +621,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* ── OBAModal ── */}
       {showOBA && (
         <OBAModal
           sexo={inputs.sexo}
@@ -599,8 +660,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
               </div>
             )}
             <button onClick={() => setShowLogoutConfirm(true)}
-              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors"
-              title="Trocar médico">
+              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
               Sair
             </button>
             <button onClick={() => setShowSobre(true)}
@@ -629,9 +689,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
         </div>
       )}
 
-      {showAdminConfig && (
-        <AdminConfigModal onFechar={() => setShowAdminConfig(false)} />
-      )}
+      {showAdminConfig && <AdminConfigModal onFechar={() => setShowAdminConfig(false)} />}
 
       {showDemoMenu && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -754,7 +812,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
               )}
             </div>
 
-            {/* Banner OBA quando bariátrica está marcada */}
             {inputs.bariatrica && (
               <div className="mt-3 bg-purple-50 border border-purple-200 rounded-xl p-3">
                 <div className="flex items-center justify-between">
@@ -809,7 +866,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
 
         {resultado && (
           <div id="resultado" className="mt-6">
-            <ResultCard resultado={resultado} onCopiar={handleCopiar} copiado={copiado} modoPaciente={true} />
+            {/* modoPaciente=false — modo médico nunca exibe módulo de documentos */}
+            <ResultCard
+              resultado={resultado}
+              onCopiar={handleCopiar}
+              copiado={copiado}
+              modoPaciente={false}
+              medicoNome={medicoNome}
+              medicoCRM={medicoCRM}
+              medicoDados={medicoDados}
+            />
           </div>
         )}
       </main>

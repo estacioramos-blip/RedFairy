@@ -28,6 +28,8 @@ const obaLevelLabel = {
   normal:   '🟢 NORMAL',
 };
 
+const WHATSAPP_MEDICO = '5571999230288';
+
 function calcularFerroEV(hbAtual, sexo) {
   const pesoReferencia = 70;
   const hbAlvo = sexo === 'M' ? 14.0 : 12.5;
@@ -237,8 +239,6 @@ function OBASection({ oba }) {
 
   return (
     <div className="mt-6 rounded-2xl border-2 border-purple-300 bg-purple-50 shadow-lg overflow-hidden">
-
-      {/* Header */}
       <div className="bg-purple-700 text-white px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
@@ -260,7 +260,6 @@ function OBASection({ oba }) {
         </div>
       </div>
 
-      {/* Alertas graves e moderados sempre visíveis */}
       {(alertasGraves.length > 0 || alertasMod.length > 0) && (
         <div className="px-4 pt-4 space-y-2">
           {alertasGraves.map((a, i) => (
@@ -278,7 +277,6 @@ function OBASection({ oba }) {
         </div>
       )}
 
-      {/* Módulos accordion */}
       <div className="p-4 space-y-2">
         {oba.modulos.map((mod, i) => {
           const scheme = obaLevelScheme[mod.nivel] || obaLevelScheme.normal;
@@ -315,7 +313,6 @@ function OBASection({ oba }) {
         })}
       </div>
 
-      {/* Exames OBA */}
       {oba.examesComplementares?.length > 0 && (
         <div className="px-4 pb-4">
           <div className="bg-white rounded-xl border border-purple-200 p-4">
@@ -333,27 +330,103 @@ function OBASection({ oba }) {
           </div>
         </div>
       )}
-
     </div>
   );
 }
 
-// ── ResultCard principal ──────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────────
-// COMPONENTE: Oferta de Documento Médico via WhatsApp
-// ─────────────────────────────────────────────────────────────────────────────
-const WHATSAPP_MEDICO = '5571999230288';
+// ── Painel do Médico (substitui DocumentoMedicoPanel no modo médico) ──────────
+function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
+  const [querReceber, setQuerReceber] = useState(false)
+  const [salvando, setSalvando] = useState(false)
+  const [salvo, setSalvo] = useState(false)
 
-function DocumentoMedicoPanel({ resultado, modoPaciente }) {
+  const isSaudavel = resultado.color === 'green'
+  const sexo = resultado._inputs?.sexo || 'M'
+  const pronome = sexo === 'F' ? 'a sua' : 'o seu'
+
+  async function salvarPreferencia() {
+    if (!medicoCRM) return
+    setSalvando(true)
+    const cpf = resultado._inputs?.cpf?.replace(/\D/g, '') || null
+    await supabase.from('avaliacoes')
+      .update({ medico_quer_receber: true })
+      .eq('medico_crm', medicoCRM)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .catch(() => {})
+    setSalvando(false)
+    setSalvo(true)
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 overflow-hidden shadow-sm">
+      <div className="bg-blue-700 px-4 py-3">
+        <p className="text-white font-bold text-sm">🩺 Orientação ao Médico</p>
+      </div>
+      <div className="p-4 space-y-4">
+
+        {/* Mensagem principal conforme resultado */}
+        {isSaudavel ? (
+          <div className="bg-white rounded-xl border border-green-200 p-4">
+            <p className="text-gray-700 text-sm leading-relaxed">
+              Doutor, oriente {pronome} paciente a se cadastrar no RedFairy para futuras avaliações e acompanhamento.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-orange-200 p-4">
+            <p className="text-gray-700 text-sm leading-relaxed">
+              Doutor: esse paciente precisa de reavaliação e prescrição médica. Quando ele se cadastrar na plataforma o sistema irá sinalizar, e ele terá a sua avaliação revisada por HEMATOLOGISTA, que emitirá os documentos. Você receberá um WhatsApp com essas informações.
+            </p>
+          </div>
+        )}
+
+        {/* Checkbox: quero receber futuras avaliações */}
+        <div className="bg-white rounded-xl border border-blue-100 p-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={querReceber}
+              onChange={e => {
+                setQuerReceber(e.target.checked)
+                if (e.target.checked) salvarPreferencia()
+              }}
+              className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0"
+            />
+            <div>
+              <p className="font-bold text-sm text-gray-700">Quero receber as avaliações futuras deste paciente</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Se marcar, você receberá o resultado das novas avaliações por WhatsApp.
+              </p>
+            </div>
+          </label>
+          {salvo && (
+            <p className="text-green-600 text-xs font-semibold mt-2 ml-7">✅ Preferência salva!</p>
+          )}
+        </div>
+
+        {/* Info KlipBit */}
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-start gap-3">
+          <span className="text-green-600 text-lg flex-shrink-0">💰</span>
+          <p className="text-green-800 text-xs leading-relaxed">
+            Quando este paciente se cadastrar no RedFairy, você receberá uma notificação por WhatsApp e um crédito de <strong>10 dólares digitais</strong> na sua carteira KlipBit.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
+// ── Painel do Paciente (modo paciente — com documentos) ───────────────────────
+function DocumentoMedicoPanel({ resultado }) {
   const [valorDoc, setValorDoc] = useState(null);
   const [pixChave, setPixChave] = useState('');
-  const [etapa, setEtapa] = useState('oferta'); // oferta | dados | pix | aguardando | concluido
+  const [etapa, setEtapa] = useState('oferta');
   const [dadosPaciente, setDadosPaciente] = useState({ nome: '', dataNasc: '', celular: '', cpf: '' });
   const [tiposDoc, setTiposDoc] = useState({ exames: false, prescricao: false });
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState('');
 
-  // Tipos de documento disponíveis baseados no resultado
   const temExames = resultado.proximosExames && resultado.proximosExames.length > 0;
   const temPrescricao = resultado.recomendacao && (
     resultado.recomendacao.includes('FERRO') ||
@@ -366,13 +439,11 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
 
   useEffect(() => {
     async function carregarTudo() {
-      // Config de valor e pix
       const { data: docConf } = await supabase.from('config').select('valor').eq('chave', 'valor_documento_medico').single();
       const { data: pixConf } = await supabase.from('config').select('valor').eq('chave', 'pix_chave').single();
       if (docConf?.valor) setValorDoc(parseFloat(docConf.valor));
       if (pixConf?.valor) setPixChave(pixConf.valor);
 
-      // Buscar dados do paciente no profiles via CPF
       const cpfInput = resultado?._inputs?.cpf?.replace(/\D/g, '');
       if (cpfInput) {
         const { data: profile } = await supabase
@@ -388,7 +459,6 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
             cpf:       profile.cpf || cpfInput,
           });
         } else {
-          // Pré-preencher o CPF mesmo sem perfil completo
           setDadosPaciente(p => ({ ...p, cpf: cpfInput }));
         }
       }
@@ -396,7 +466,6 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
     carregarTudo();
   }, []);
 
-  // Montar texto dos documentos
   function montarTextoExames() {
     if (!resultado.proximosExames?.length) return '';
     return 'PEDIDO DE EXAMES:\n' + resultado.proximosExames.map(e => `- ${e}`).join('\n');
@@ -404,7 +473,6 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
 
   function montarTextoPrescricao() {
     const linhas = [];
-    // Coletar recomendações de suplementação do resultado e do OBA
     if (resultado.recomendacao) {
       const frases = resultado.recomendacao.split('\n').filter(l =>
         l.includes('FERRO') || l.includes('VITAMINA') || l.includes('ÁCIDO FÓLICO') ||
@@ -447,12 +515,8 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
       ...documentos,
     ];
 
-    // Enviar cada mensagem via WhatsApp API (wa.me com texto)
-    // Como não temos API de envio direto, abrimos o WhatsApp Web com a primeira mensagem
-    // e registramos no Supabase para controle
     const textoCompleto = msgs.join('\n---\n');
 
-    // Salvar pedido no Supabase
     await supabase.from('pedidos_documento').insert({
       cpf: dadosPaciente.cpf || null,
       nome: dadosPaciente.nome.trim(),
@@ -463,9 +527,8 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
       valor_total: total,
       status: 'aguardando_pagamento',
       created_at: new Date().toISOString(),
-    }).catch(() => {}); // falha silenciosa se tabela não existir ainda
+    }).catch(() => {});
 
-    // Abrir WhatsApp com mensagem para o médico
     const urlWA = `https://wa.me/${WHATSAPP_MEDICO}?text=${encodeURIComponent(msgs.join('%0A---%0A'))}`;
     window.open(urlWA, '_blank');
 
@@ -474,12 +537,10 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
   }
 
   async function confirmarPagamento() {
-    // Disparar mensagem de PAGO para o médico
     const msgPago = `${dadosPaciente.nome.trim().toUpperCase()} — PAGO. Emita o(s) documento(s).`;
     const urlPago = `https://wa.me/${WHATSAPP_MEDICO}?text=${encodeURIComponent(msgPago)}`;
     window.open(urlPago, '_blank');
 
-    // Atualizar status no Supabase
     await supabase.from('pedidos_documento')
       .update({ status: 'pago', pago_em: new Date().toISOString() })
       .eq('celular', dadosPaciente.celular)
@@ -490,13 +551,11 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
     setEtapa('concluido');
   }
 
-  if (!modoPaciente) return null;
   if (!temExames && !temPrescricao) return null;
   if (valorDoc === null) return null;
 
   const inputStyle = { width: '100%', border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.9rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' };
 
-  // ── CONCLUÍDO ──
   if (etapa === 'concluido') return (
     <div className="mt-4 bg-green-50 border border-green-200 rounded-2xl p-5 text-center space-y-2">
       <p className="text-2xl">✅</p>
@@ -505,7 +564,6 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
     </div>
   );
 
-  // ── PIX ──
   if (etapa === 'pix') return (
     <div className="mt-4 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
       <div className="bg-red-700 px-4 py-3">
@@ -538,7 +596,6 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
     </div>
   );
 
-  // ── DADOS DO PACIENTE ──
   if (etapa === 'dados') return (
     <div className="mt-4 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
       <div className="bg-red-700 px-4 py-3">
@@ -574,7 +631,6 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
     </div>
   );
 
-  // ── OFERTA ──
   return (
     <div className="mt-4 bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-2xl overflow-hidden shadow-sm">
       <div className="bg-red-700 px-4 py-3 flex items-center gap-2">
@@ -629,8 +685,8 @@ function DocumentoMedicoPanel({ resultado, modoPaciente }) {
   );
 }
 
-
-export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false }) {
+// ── ResultCard principal ──────────────────────────────────────────────────────
+export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, medicoNome, medicoCRM, medicoDados }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
@@ -813,11 +869,22 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
         </div>
       </div>
 
-      {/* ── SEÇÃO 2: OBA (só aparece se paciente é bariátrico) ───────────────── */}
+      {/* ── SEÇÃO 2: OBA ─────────────────────────────────────────────────────── */}
       {oba && <OBASection oba={oba} />}
 
-      {/* ── SEÇÃO 3: Documento Médico via WhatsApp ───────────────────────────── */}
-      <DocumentoMedicoPanel resultado={resultado} modoPaciente={modoPaciente} />
+      {/* ── SEÇÃO 3: Painel conforme modo ────────────────────────────────────── */}
+      {!modoPaciente ? (
+        // MODO MÉDICO — orientações + checkbox
+        <PainelMedico
+          resultado={resultado}
+          medicoNome={medicoNome}
+          medicoCRM={medicoCRM}
+          medicoDados={medicoDados}
+        />
+      ) : (
+        // MODO PACIENTE — oferta de documentos
+        <DocumentoMedicoPanel resultado={resultado} />
+      )}
     </>
   );
 }
