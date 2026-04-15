@@ -391,7 +391,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     bariatrica: false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false,
-    tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false,
+    tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false,
     methotrexato: false, hivTratamento: false, metformina: false, ibp: false,
   });
 
@@ -676,7 +676,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   }
 
   function handleLimpar() {
-    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
+    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
     setResultado(null); setErros({}); setDadosOBAColetados(null);
   }
 
@@ -882,6 +882,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
               <CheckboxCard name="perda" label="Hemorragia" sublabel="Inclui doação de sangue, sangria, ou sangramento" checked={inputs.perda} onChange={handleChange} color="red" />
               <CheckboxCard name="alcoolista" label="Alcoolista" sublabel="Uso crônico de álcool" checked={inputs.alcoolista} onChange={handleChange} color="amber" />
               <CheckboxCard name="transfundido" label="Transfundido" sublabel="Transfusão de hemácias" checked={inputs.transfundido} onChange={handleChange} color="red" />
+              <CheckboxCard name="anemiaPrevia" label="Anemia Crônica / Prévia" sublabel="Diagnóstico anterior de anemia" checked={inputs.anemiaPrevia} onChange={handleChange} color="red" />
+              <CheckboxCard name="sideropenia" label="Deficiência de Ferro" sublabel="Histórico de ferritina baixa" checked={inputs.sideropenia} onChange={handleChange} color="orange" />
+              <CheckboxCard name="sobrecargaFerro" label="Excesso de Ferro / Hemocromatose" sublabel="Histórico de ferritina alta" checked={inputs.sobrecargaFerro} onChange={handleChange} color="orange" />
+              <CheckboxCard name="hbAlta" label="Hemoglobina Alta / Policitemia" sublabel="Histórico de Hb elevada ou sangrias" checked={inputs.hbAlta} onChange={handleChange} color="red" />
+              <CheckboxCard name="doadorSangue" label="Doador de Sangue" sublabel="Doações frequentes" checked={inputs.doadorSangue} onChange={handleChange} color="red" />
+              <CheckboxCard name="celiaco" label="Celíaco" sublabel="Doença celíaca — má absorção" checked={inputs.celiaco} onChange={handleChange} color="yellow" />
+              <CheckboxCard name="g6pd" label="Deficiência de G-6-PD" sublabel="Favismo — risco de hemólise" checked={inputs.g6pd} onChange={handleChange} color="purple" />
               {inputs.sexo === 'F' && (
                 <>
                   <CheckboxCard name="hipermenorreia" label="Hipermenorreia" sublabel="Fluxo excessivo" checked={inputs.hipermenorreia} onChange={handleChange} color="pink" />
@@ -921,6 +928,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
               <CheckboxCard name="aspirina" label="Aspirina" sublabel="Uso contínuo" checked={inputs.aspirina} onChange={handleChange} color="orange" />
               <CheckboxCard name="vitaminaB12" label="Vitamina B12" sublabel="Últimos 3 meses" checked={inputs.vitaminaB12} onChange={handleChange} color="purple" />
               <CheckboxCard name="ferroOral" label="Ferro Oral / Injetável" sublabel="Nos últimos 2 anos" checked={inputs.ferroOral} onChange={handleChange} color="orange" />
+              <CheckboxCard name="testosterona" label="Testosterona / Anabolizante" sublabel="Uso exógeno — causa eritrocitose" checked={inputs.testosterona} onChange={handleChange} color="orange" />
               <CheckboxCard name="hidroxiureia" label="Hidroxiureia" sublabel="Pode causar macrocitose" checked={inputs.hidroxiureia} onChange={handleChange} color="purple" />
               <CheckboxCard name="anticonvulsivante" label="Anticonvulsivante" sublabel="Fenitoína, VPA etc." checked={inputs.anticonvulsivante} onChange={handleChange} color="purple" />
             </div>
