@@ -540,14 +540,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
       setShowOBA(true);
       return;
     }
-    // Se bariatrica mas dadosOBAColetados já existe, continua normalmente
-
-    // Se bariátrico e ainda não preencheu o OBAModal → abrir agora
-    if (inputs.bariatrica && !dadosOBARef.current && !dadosOBAColetados) {
-      setShowOBA(true);
-      return;
-    }
-    // Se bariatrica mas dadosOBAColetados já existe, continua normalmente
 
     const inputsNumericos = {
       ...inputs,
