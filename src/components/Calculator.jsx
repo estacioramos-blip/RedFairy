@@ -464,7 +464,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
         setInputs(p => ({ ...p, sexo:'M', idade:'20', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
         setResultado(null); setErros({});
       }
-      if (e.key === 'n' || e.key === 'N') {
+      if (e.key === 'b' || e.key === 'B') {
         e.preventDefault();
         setInputs(p => ({ ...p, sexo:'M', idade:'50', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
         setResultado(null); setErros({});
