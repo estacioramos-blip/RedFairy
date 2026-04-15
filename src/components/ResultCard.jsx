@@ -841,6 +841,15 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
             </div>
           )}
 
+          {resultado.g6pdAlerta && (
+            <div>
+              <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-purple-700">⚠️ G-6-PD</h4>
+              <p className="text-gray-700 text-sm leading-relaxed bg-purple-50 rounded-xl p-4 border border-purple-200">
+                {resultado.g6pdAlerta}
+              </p>
+            </div>
+          )}
+
           {resultado.comentarios.length > 0 && (
             <div>
               <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>💊 Medicamentos / Suplementos</h4>
