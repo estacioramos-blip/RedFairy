@@ -105,7 +105,7 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const examesSuger = []
 
   // ── 1. MÓDULO ERITRON BARIÁTRICO ────────────────────────────────────────
-  const modEritron = buildModEritron(resultadoEritron, dadosOBA, mesesPos, disab, tipoCir)
+  const modEritron = buildModEritron(resultadoEritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir, alertas, examesSuger)
   modulos.push(modEritron)
 
   // ── 2. MÓDULO B12 ────────────────────────────────────────────────────────
@@ -177,7 +177,7 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
 // ─────────────────────────────────────────────────────────────────────────────
 // MÓDULO 1 — ERITRON BARIÁTRICO
 // ─────────────────────────────────────────────────────────────────────────────
-function buildModEritron(eritron, dadosOBA, mesesPos, disab, tipoCir) {
+function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir, alertas, examesSuger) {
   const linhas = []
   const label  = eritron.label || ''
   const color  = eritron.color || 'green'
@@ -223,8 +223,8 @@ function buildModEritron(eritron, dadosOBA, mesesPos, disab, tipoCir) {
   if (!isNaN(ferrOBA) && ferrOBA > 400) {
     linhas.push(`FERRITINA ELEVADA NO CONTEXTO BARIÁTRICO: ${ferrOBA} ng/mL. FERRITINA MUITO ACIMA DE 400 ng/mL PODE INDICAR SIDEROSE HEPÁTICA, INFLAMAÇÃO CRÔNICA OU SÍNDROME DE SOBRECARGA DE FERRO. NO BARIÁTRICO, A REPOSIÇÃO PARENTERAL DE FERRO SEM MONITORAMENTO ADEQUADO É UMA CAUSA FREQUENTE. AVALIAR SATURAÇÃO DA TRANSFERRINA — SE > 45%, INVESTIGAR HEMOCROMATOSE.`)
     alertas.push({ nivel: MODERADO, texto: `FERRITINA MUITO ELEVADA: ${ferrOBA} ng/mL — AVALIAR SOBRECARGA DE FERRO E INFLAMAÇÃO CRÔNICA.` })
-    suger.push('SATURAÇÃO DA TRANSFERRINA (AVALIAR SOBRECARGA DE FERRO)')
-    suger.push('AVALIAÇÃO COM HEPATOLOGISTA')
+    examesSuger.push('SATURAÇÃO DA TRANSFERRINA (AVALIAR SOBRECARGA DE FERRO)')
+    examesSuger.push('AVALIAÇÃO COM HEPATOLOGISTA')
   }
 
   return {
