@@ -436,6 +436,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   }
 
   function handleLogoTripleClick() {
+    // Demo por cliques na fada desativado — use Ctrl+M/N/F/G
     setLogoClicks(prev => {
       const next = prev + 1;
       if (logoClickTimer.current) clearTimeout(logoClickTimer.current);
@@ -444,13 +445,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
         setShowAdminConfig(true);
         return 0;
       }
-      if (next === 3) {
-        logoClickTimer.current = setTimeout(() => {
-          setLogoClicks(c => { if (c === 3) setShowDemoMenu(true); return 0; });
-        }, 600);
-      } else {
-        logoClickTimer.current = setTimeout(() => setLogoClicks(0), 1500);
-      }
+      logoClickTimer.current = setTimeout(() => setLogoClicks(0), 1500);
       return next;
     });
   }
