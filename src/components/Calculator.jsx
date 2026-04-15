@@ -536,6 +536,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     if (Object.keys(novosErros).length > 0) { setErros(novosErros); return; }
 
     // Se bariátrico e ainda não preencheu o OBAModal → abrir agora
+    console.log('handleSubmit bariatrica check:', inputs.bariatrica, 'ref:', dadosOBARef.current, 'state:', dadosOBAColetados);
     if (inputs.bariatrica && !dadosOBARef.current && !dadosOBAColetados) {
       setShowOBA(true);
       return;
@@ -692,10 +693,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
             dataColeta: inputs.dataColeta,
           }}
           onConcluir={(dadosOBA, examesOBA) => {
+            console.log('OBA onConcluir chamado', dadosOBA, examesOBA);
             const dados = { dadosOBA, examesOBA };
             dadosOBARef.current = dados;
             setDadosOBAColetados(dados);
             setShowOBA(false);
+            console.log('dadosOBARef após set:', dadosOBARef.current);
           }}
           onFechar={() => setShowOBA(false)}
         />
