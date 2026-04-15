@@ -727,7 +727,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
               onClick={() => sf(field, !form[field])} />
           ))}
 
-          {/* ── EMAGRECEDORES ── */}}
+          {/* ── EMAGRECEDORES ── */}
           <SectionTitle>Medicamentos Emagrecedores</SectionTitle>
           <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.6rem' }}>Para cada medicamento, marque a situação:</p>
           {EMAGRECEDORES.map(med => (
