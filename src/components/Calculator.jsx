@@ -541,6 +541,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
       return;
     }
 
+    // Se bariátrico e ainda não preencheu o OBAModal → abrir agora
+    if (inputs.bariatrica && !dadosOBAColetados) {
+      setShowOBA(true);
+      return;
+    }
+
     const inputsNumericos = {
       ...inputs,
       idade: Number(inputs.idade),
