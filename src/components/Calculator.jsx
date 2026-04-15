@@ -699,9 +699,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
               className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
               Voltar
             </button>
-            <div className="hidden sm:flex flex-col gap-0.5" title="Atalhos de perfil demo">
-              <span className="text-red-300 text-[9px] font-mono leading-tight">Ctrl+M ♂20  Ctrl+B ♂50</span>
-              <span className="text-red-300 text-[9px] font-mono leading-tight">Ctrl+F ♀20  Ctrl+G ♀50</span>
+            <div style={{ display:'flex', flexDirection:'column', gap:2 }} title="Atalhos de perfil demo">
+              <span style={{ color:'#fca5a5', fontSize:'9px', fontFamily:'monospace', lineHeight:1.3 }}>Ctrl+M ♂20  Ctrl+B ♂50</span>
+              <span style={{ color:'#fca5a5', fontSize:'9px', fontFamily:'monospace', lineHeight:1.3 }}>Ctrl+F ♀20  Ctrl+G ♀50</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
