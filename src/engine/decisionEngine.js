@@ -149,16 +149,6 @@ export function avaliarPaciente(inputs) {
     );
   }
 
-  // ── Modificador G-6-PD pós-matching ────────────────────────────────────
-  let g6pdAlerta = null
-  if (inputs.g6pd) {
-    const idsHemoliticos = [77, 78, 79, 62, 63, 64]
-    if (idsHemoliticos.includes(resultado.id)) {
-      g6pdAlerta = 'DEFICIÊNCIA DE G-6-PD: O PADRÃO LABORATORIAL ATUAL É COMPATÍVEL COM CRISE HEMOLÍTICA. A G-6-PD É A CAUSA MAIS PROVÁVEL. IDENTIFICAR E ELIMINAR O GATILHO (MEDICAMENTO, INFECÇÃO OU ALIMENTO). MONITORAR LDH, BILIRRUBINAS E RETICULÓCITOS.'
-    } else if (['green', 'yellow'].includes(resultado.color)) {
-      g6pdAlerta = 'DEFICIÊNCIA DE G-6-PD: O ERITRON ESTÁ COMPENSADO NO MOMENTO, MAS O RISCO DE CRISE HEMOLÍTICA PERMANECE. EVITAR MEDICAMENTOS OXIDANTES (PRIMAQUINA, DAPSONA, NITROFURANTOÍNA, SULFAS) E INGESTÃO DE FAVA.'
-    }
-  }
 
   // ── Modificador G-6-PD pós-matching ────────────────────────────────────
   let g6pdAlerta = null
@@ -182,7 +172,6 @@ export function avaliarPaciente(inputs) {
     proximosExames: resultado.proximosExames,
     fraseData,
     fraseHipermenorreia: fraseHiper,
-    g6pdAlerta,
     g6pdAlerta,
     isAge2,
     diasDesdeColeta: dias,
