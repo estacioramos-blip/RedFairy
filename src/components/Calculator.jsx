@@ -391,7 +391,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     bariatrica: false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false,
-    tiroxina: false, hidroxiureia: false, anticonvulsivante: false,
+    tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false,
     methotrexato: false, hivTratamento: false, metformina: false, ibp: false,
   });
 
@@ -676,7 +676,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   }
 
   function handleLimpar() {
-    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
+    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
     setResultado(null); setErros({}); setDadosOBAColetados(null);
   }
 
