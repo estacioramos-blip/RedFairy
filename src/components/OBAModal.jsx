@@ -192,6 +192,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
     ganhou_peso_apos: false, fez_plasma_argonio: false,
+    metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
     tipo_cirurgia: '',
     acompanhamento: '', especialistas: [],
     status_gestacional: '', semanas_gestacao: '',
@@ -272,6 +273,11 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
       meta_peso:          form.meta_peso || null,
       meta_kg:            form.meta_kg ? parseFloat(form.meta_kg) : null,
       projetos_vida:      form.projetos_vida,
+      metformina:         form.metformina,
+      ibp:                form.ibp,
+      tiroxina:           form.tiroxina,
+      methotrexato:       form.methotrexato,
+      hivTratamento:      form.hivTratamento,
     }
   }
 
@@ -705,7 +711,23 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
           <SectionTitle>Medicamentos em Uso</SectionTitle>
           {MEDICAMENTOS.map(m => <CheckRow key={m} label={m} checked={form.medicamentos.includes(m)} onClick={() => sf('medicamentos', tog(form.medicamentos, m))} />)}
 
-          {/* ── EMAGRECEDORES ── */}
+          {/* ── MEDICAMENTOS ADICIONAIS ── */}
+          <SectionTitle>Medicamentos que Afetam o Eritron</SectionTitle>
+          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.6rem' }}>Marque os que usa ou usou nos últimos 2 anos:</p>
+          {[
+            { field: 'metformina',    label: 'Metformina',           sub: 'Reduz absorção de vitamina B12' },
+            { field: 'ibp',           label: 'IBP (Omeprazol etc.)', sub: 'Pantoprazol, Omeprazol — reduz B12' },
+            { field: 'tiroxina',      label: 'Tiroxina / T4',        sub: 'Hipotireoidismo — pode causar anemia' },
+            { field: 'methotrexato',  label: 'Metotrexato',          sub: 'Antagonista do folato — causa macrocitose' },
+            { field: 'hivTratamento', label: 'Trat. HIV / ARV',      sub: 'AZT e outros — podem causar macrocitose' },
+          ].map(({ field, label, sub }) => (
+            <CheckRow key={field}
+              label={label + ' — ' + sub}
+              checked={!!form[field]}
+              onClick={() => sf(field, !form[field])} />
+          ))}
+
+          {/* ── EMAGRECEDORES ── */}}
           <SectionTitle>Medicamentos Emagrecedores</SectionTitle>
           <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.6rem' }}>Para cada medicamento, marque a situação:</p>
           {EMAGRECEDORES.map(med => (

@@ -909,13 +909,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
               <CheckboxCard name="aspirina" label="Aspirina" sublabel="Uso contínuo" checked={inputs.aspirina} onChange={handleChange} color="orange" />
               <CheckboxCard name="vitaminaB12" label="Vitamina B12" sublabel="Últimos 3 meses" checked={inputs.vitaminaB12} onChange={handleChange} color="purple" />
               <CheckboxCard name="ferroOral" label="Ferro Oral / Injetável" sublabel="Nos últimos 2 anos" checked={inputs.ferroOral} onChange={handleChange} color="orange" />
-              <CheckboxCard name="metformina" label="Metformina" sublabel="Reduz absorção de B12" checked={inputs.metformina} onChange={handleChange} color="blue" />
-              <CheckboxCard name="ibp" label="IBP (Omeprazol etc.)" sublabel="Pantoprazol, Omeprazol — reduz B12" checked={inputs.ibp} onChange={handleChange} color="blue" />
-              <CheckboxCard name="tiroxina" label="Tiroxina / T4" sublabel="Tratamento tireoidiano" checked={inputs.tiroxina} onChange={handleChange} color="teal" />
               <CheckboxCard name="hidroxiureia" label="Hidroxiureia" sublabel="Pode causar macrocitose" checked={inputs.hidroxiureia} onChange={handleChange} color="purple" />
               <CheckboxCard name="anticonvulsivante" label="Anticonvulsivante" sublabel="Fenitoína, VPA etc." checked={inputs.anticonvulsivante} onChange={handleChange} color="purple" />
-              <CheckboxCard name="methotrexato" label="Metotrexato" sublabel="Antagonista do folato" checked={inputs.methotrexato} onChange={handleChange} color="purple" />
-              <CheckboxCard name="hivTratamento" label="Trat. HIV / ARV" sublabel="Antirretrovirais" checked={inputs.hivTratamento} onChange={handleChange} color="purple" />
             </div>
           </section>
 
