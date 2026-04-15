@@ -421,6 +421,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
     hiper:false, gestante:false,
   })
   const htbTimer = useRef(null)
+  const [fadaClicks, setFadaClicks] = useState(0)
+  const fadaTimer = useRef(null)
   const filTimer = useRef(null)
 
   useEffect(() => {
@@ -453,6 +455,21 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
   }, [])
 
   // Hero textbox hover: mostra imagem E esconde texto por 2s
+  function handleFadaClick() {
+    const next = fadaClicks + 1
+    setFadaClicks(next)
+    if (fadaTimer.current) clearTimeout(fadaTimer.current)
+    if (next >= 5) {
+      setFadaClicks(0)
+      // Entra direto na calculadora em modo demo
+      localStorage.setItem('medico_crm', 'DEMO/BA')
+      localStorage.setItem('medico_nome', 'Dr. Demo RedFairy')
+      onModoMedico()
+      return
+    }
+    fadaTimer.current = setTimeout(() => setFadaClicks(0), 2000)
+  }
+
   function onHtbEnter() {
     if (htbTimer.current) clearTimeout(htbTimer.current)
     setShowHtb(true)
@@ -605,7 +622,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
           {/* COLUNA DIREITA */}
           <div className="hero-visual reveal" style={{ transitionDelay:'0.15s' }}>
-            <div className="fairy-showcase">
+            <div className="fairy-showcase" onClick={handleFadaClick} style={{ cursor:'pointer' }}>
               <img src={logo} alt="RedFairy — A Fada Vermelha" />
             </div>
             {/* fairy-quote: retângulo branco simples, sem hover */}
