@@ -502,8 +502,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     setInputs(prev => ({ ...prev, [name]: novoValor }));
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
     if (name === 'bariatrica') {
-      if (checked) setShowOBA(true);
-      else setDadosOBAColetados(null);
+      if (!checked) setDadosOBAColetados(null);
     }
   }
 

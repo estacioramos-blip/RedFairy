@@ -749,7 +749,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
           <button style={btnP} onClick={salvarAnamnese} disabled={loading}>
             {loading ? 'Salvando...' : 'Avançar para os Exames →'}
           </button>
-          <button style={btnS} onClick={onFechar}>Agora não</button>
+          <button style={btnS} onClick={onFechar}>← Voltar</button>
         </div>
       </div>
     </div>
