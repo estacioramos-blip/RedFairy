@@ -44,6 +44,14 @@ export default function AuthPage({ onVoltar }) {
     return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`
   }
 
+  function formatarCPF(valor) {
+    const digits = valor.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return digits.slice(0,3) + '.' + digits.slice(3);
+    if (digits.length <= 9) return digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6);
+    return digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6,9) + '-' + digits.slice(9);
+  }
+
   async function handleCPF() {
     if (!cpf.trim()) { setErro('Informe o CPF.'); return }
     setLoading(true)
@@ -156,7 +164,7 @@ export default function AuthPage({ onVoltar }) {
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">CPF</label>
               <input type="text" value={cpf}
-                onChange={e => { setCpf(e.target.value); setErro('') }}
+                onChange={e => { setCpf(formatarCPF(e.target.value)); setErro('') }}
                 placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
                 className={inputClass} />
             </div>
