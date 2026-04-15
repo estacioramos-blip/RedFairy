@@ -536,7 +536,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     if (Object.keys(novosErros).length > 0) { setErros(novosErros); return; }
 
     // Se bariátrico e ainda não preencheu o OBAModal → abrir agora
-    console.log('handleSubmit bariatrica check:', inputs.bariatrica, 'ref:', dadosOBARef.current, 'state:', dadosOBAColetados);
     if (inputs.bariatrica && !dadosOBARef.current && !dadosOBAColetados) {
       setShowOBA(true);
       return;
@@ -693,12 +692,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
             dataColeta: inputs.dataColeta,
           }}
           onConcluir={(dadosOBA, examesOBA) => {
-            console.log('OBA onConcluir chamado', dadosOBA, examesOBA);
             const dados = { dadosOBA, examesOBA };
             dadosOBARef.current = dados;
             setDadosOBAColetados(dados);
             setShowOBA(false);
-            console.log('dadosOBARef após set:', dadosOBARef.current);
+            // Chamar avaliação automaticamente com os dados OBA recém coletados
+            setTimeout(() => {
+              document.getElementById('btn-avaliar-paciente')?.click();
+            }, 100);
           }}
           onFechar={() => setShowOBA(false)}
         />
@@ -935,7 +936,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
           </section>
 
           <div className="flex gap-3">
-            <button type="submit" className="flex-1 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold py-4 px-6 rounded-xl transition-colors shadow-md text-base">
+            <button id="btn-avaliar-paciente" type="submit" className="flex-1 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold py-4 px-6 rounded-xl transition-colors shadow-md text-base">
               Avaliar Paciente
             </button>
             <button type="button" onClick={handleLimpar} className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-medium py-4 px-5 rounded-xl transition-colors">
