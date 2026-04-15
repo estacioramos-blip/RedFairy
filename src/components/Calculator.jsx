@@ -407,6 +407,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [logoClicks, setLogoClicks] = useState(0);
   const logoClickTimer = useRef(null);
+  const dadosOBARef = useRef(null);
 
   // Dados do médico para uso no resultado (nome, crm, celular)
   const [medicoDados, setMedicoDados] = useState(null);
@@ -535,16 +536,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
     if (Object.keys(novosErros).length > 0) { setErros(novosErros); return; }
 
     // Se bariátrico e ainda não preencheu o OBAModal → abrir agora
-    if (inputs.bariatrica && !dadosOBAColetados) {
+    if (inputs.bariatrica && !dadosOBARef.current && !dadosOBAColetados) {
       setShowOBA(true);
       return;
     }
+    // Se bariatrica mas dadosOBAColetados já existe, continua normalmente
 
     // Se bariátrico e ainda não preencheu o OBAModal → abrir agora
-    if (inputs.bariatrica && !dadosOBAColetados) {
+    if (inputs.bariatrica && !dadosOBARef.current && !dadosOBAColetados) {
       setShowOBA(true);
       return;
     }
+    // Se bariatrica mas dadosOBAColetados já existe, continua normalmente
 
     const inputsNumericos = {
       ...inputs,
@@ -563,9 +566,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
       let dadosOBA = null;
       let examesOBA = null;
 
-      if (dadosOBAColetados) {
-        dadosOBA  = dadosOBAColetados.dadosOBA;
-        examesOBA = dadosOBAColetados.examesOBA;
+      const obaDisponivel = dadosOBAColetados || dadosOBARef.current;
+      if (obaDisponivel) {
+        dadosOBA  = obaDisponivel.dadosOBA;
+        examesOBA = obaDisponivel.examesOBA;
       } else if (inputs.cpf.trim()) {
         const cpfLimpo = inputs.cpf.replace(/\D/g, '');
         const { data: obaRow } = await supabase
@@ -696,7 +700,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
             dataColeta: inputs.dataColeta,
           }}
           onConcluir={(dadosOBA, examesOBA) => {
-            setDadosOBAColetados({ dadosOBA, examesOBA });
+            const dados = { dadosOBA, examesOBA };
+            dadosOBARef.current = dados;
+            setDadosOBAColetados(dados);
             setShowOBA(false);
           }}
           onFechar={() => setShowOBA(false)}

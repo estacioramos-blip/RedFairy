@@ -430,7 +430,9 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
                   { label:'VCM', value: examesRedFairy.vcm, unit:'fL' },
                   { label:'RDW', value: examesRedFairy.rdw, unit:'%' },
                   { label:'Sat. Transferrina', value: examesRedFairy.satTransf, unit:'%' },
-                  { label:'Data da coleta', value: examesRedFairy.dataColeta, unit:'' },
+                  { label:'Data da coleta', value: examesRedFairy.dataColeta
+    ? examesRedFairy.dataColeta.split('-').reverse().join('/')
+    : null, unit:'' },
                 ].filter(f => f.value).map(f => (
                   <div key={f.label} style={{ background:'white', borderRadius:8, padding:'0.5rem 0.7rem', border:'1px solid #FECDD3' }}>
                     <p style={{ fontSize:'0.65rem', fontWeight:700, color:'#9CA3AF', textTransform:'uppercase', marginBottom:'0.2rem' }}>{f.label}</p>
