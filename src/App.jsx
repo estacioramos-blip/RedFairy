@@ -12,6 +12,10 @@ export default function App() {
   const [visible, setVisible] = useState(false)
   const [calcKey, setCalcKey] = useState(0)
   const [adminClicks, setAdminClicks] = useState(0)
+  const [demoMedicoClicks, setDemoMedicoClicks] = useState(0)
+  const [demoPacienteClicks, setDemoPacienteClicks] = useState(0)
+  const [demoMedicoTimer, setDemoMedicoTimer] = useState(null)
+  const [demoPacienteTimer, setDemoPacienteTimer] = useState(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -42,6 +46,41 @@ export default function App() {
     }
   }
 
+  function handleDemoMedico() {
+    const next = demoMedicoClicks + 1
+    setDemoMedicoClicks(next)
+    if (demoMedicoTimer) clearTimeout(demoMedicoTimer)
+    if (next >= 5) {
+      setDemoMedicoClicks(0)
+      localStorage.setItem('medico_crm', 'DEMO/BA')
+      localStorage.setItem('medico_nome', 'Dr. Demo RedFairy')
+      setCalcKey(k => k + 1)
+      setModo('calculadora')
+      return
+    }
+    const t = setTimeout(() => setDemoMedicoClicks(0), 2000)
+    setDemoMedicoTimer(t)
+    setCalcKey(k => k + 1)
+    setModo('calculadora')
+  }
+
+  function handleDemoPaciente() {
+    const next = demoPacienteClicks + 1
+    setDemoPacienteClicks(next)
+    if (demoPacienteTimer) clearTimeout(demoPacienteTimer)
+    if (next >= 5) {
+      setDemoPacienteClicks(0)
+      localStorage.setItem('medico_crm', 'DEMO/BA')
+      localStorage.setItem('medico_nome', 'Dr. Demo RedFairy')
+      setCalcKey(k => k + 1)
+      setModo('calculadora')
+      return
+    }
+    const t = setTimeout(() => setDemoPacienteClicks(0), 2000)
+    setDemoPacienteTimer(t)
+    setModo('paciente')
+  }
+
   if (modo === 'calculadora') {
     return (
       <div>
@@ -61,8 +100,8 @@ export default function App() {
 if (modo === 'home') {
   return (
     <LandingPage
-      onModoMedico={() => { setCalcKey(k => k + 1); setModo('calculadora') }}
-      onModoPaciente={() => setModo('paciente')}
+      onModoMedico={handleDemoMedico}
+      onModoPaciente={handleDemoPaciente}
     />
   )
 }

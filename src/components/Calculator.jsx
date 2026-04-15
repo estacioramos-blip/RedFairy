@@ -456,8 +456,36 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
       if (e.key === 'F' || e.key === 'f') { e.preventDefault(); carregarDemo('F'); }
       if (e.key === 'M' || e.key === 'm') { e.preventDefault(); carregarDemo('M'); }
     }
+    function handleDemoKey(e) {
+      if (!e.ctrlKey || e.shiftKey || e.altKey) return;
+      const hoje = new Date().toISOString().split('T')[0];
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        setInputs(p => ({ ...p, sexo:'M', idade:'20', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
+        setResultado(null); setErros({});
+      }
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        setInputs(p => ({ ...p, sexo:'M', idade:'50', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
+        setResultado(null); setErros({});
+      }
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        setInputs(p => ({ ...p, sexo:'F', idade:'20', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
+        setResultado(null); setErros({});
+      }
+      if (e.key === 'g' || e.key === 'G') {
+        e.preventDefault();
+        setInputs(p => ({ ...p, sexo:'F', idade:'50', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
+        setResultado(null); setErros({});
+      }
+    }
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleDemoKey);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleDemoKey);
+    };
   }, []);
 
   function formatarCPF(valor) {
