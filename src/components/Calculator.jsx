@@ -694,10 +694,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
 
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <button onClick={onVoltar}
-            className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
-            Voltar
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={onVoltar}
+              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+              Voltar
+            </button>
+            <div className="hidden sm:flex flex-col gap-0.5" title="Atalhos de perfil demo">
+              <span className="text-red-300 text-[9px] font-mono leading-tight">Ctrl+M ♂20  Ctrl+B ♂50</span>
+              <span className="text-red-300 text-[9px] font-mono leading-tight">Ctrl+F ♀20  Ctrl+G ♀50</span>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
               style={{ filter: 'brightness(10)', cursor: 'pointer' }}
