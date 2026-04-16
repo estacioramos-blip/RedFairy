@@ -789,6 +789,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <div className="terap-card"><div className="tc-icon">📈</div><h4>Gráfico multiparamétrico</h4><p>Acompanhamento evolutivo do eritron ao longo do tempo para cada paciente.</p></div>
           </div>
         </div>
+      </section>
       {/* Dupla linha vermelha + texto eritrograma após Terapêutica */}
       <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 2rem 1.5rem' }}>
         <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.6rem' }} />
