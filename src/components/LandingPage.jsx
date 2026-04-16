@@ -719,10 +719,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       {/* INDICAÇÕES */}
       <section id="indicacoes">
         <div className="container">
-          <div className="reveal">
+          <div className="reveal center">
             <span className="tag">Indicações</span>
             <h2 className="stitle">Para quem é o RedFairy?</h2>
-            <p className="sdesc">Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
+            <p className="sdesc" style={{ margin:"0 auto" }}>Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
           </div>
           <div className="indicacoes-grid reveal">
             {/* Bariátricos — bolinha amarela */}
@@ -774,10 +774,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       {/* TERAPÊUTICA */}
       <section className="terapeutica">
         <div className="container">
-          <div className="reveal">
+          <div className="reveal center">
             <span className="tag">Orientações Terapêuticas</span>
             <h2 className="stitle">Muito além do diagnóstico</h2>
-            <p className="sdesc-bold">
+            <p className="sdesc-bold" style={{ margin:"0 auto" }}>
               O RedFairy é um algoritmo médico, que não apenas avalia: ele orienta.<br />
               Gera recomendações personalizadas com base no perfil completo do paciente.
             </p>
@@ -788,28 +788,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <div className="terap-card"><div className="tc-icon">💊</div><h4>Reposição de ferro oral</h4><p>Dose, tipo de sal de ferro, horário e duração do tratamento via oral.</p></div>
             <div className="terap-card"><div className="tc-icon">📈</div><h4>Gráfico multiparamétrico</h4><p>Acompanhamento evolutivo do eritron ao longo do tempo para cada paciente.</p></div>
           </div>
-          {/* Dupla linha vermelha + texto eritrograma */}
-          <div style={{ marginTop:'2rem' }}>
-            <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.6rem' }} />
-            <p style={{ color:'#1F2937', fontSize:'0.92rem', fontWeight:600, textAlign:'center', margin:'0.4rem 0 0.3rem' }}>
-              Para fazer uma avaliação você vai precisar de algumas informações do eritrograma:
-            </p>
-            <p style={{ color:'#6B7280', fontSize:'0.85rem', fontWeight:600, textAlign:'center', margin:'0 0 0.4rem' }}>
-              Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
-            </p>
-            <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
-          </div>
-          {/* Dupla linha vermelha + texto eritrograma */}
-          <div style={{ marginTop:'2rem' }}>
-            <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.6rem' }} />
-            <p style={{ color:'#1F2937', fontSize:'0.92rem', fontWeight:600, textAlign:'center', margin:'0.4rem 0 0.3rem' }}>
-              Para fazer uma avaliação você vai precisar de algumas informações do eritrograma:
-            </p>
-            <p style={{ color:'#6B7280', fontSize:'0.85rem', fontWeight:600, textAlign:'center', margin:'0 0 0.4rem' }}>
-              Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
-            </p>
-            <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
-          </div>
+
+
         </div>
       </section>
 
@@ -835,17 +815,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <div className="flow-step"><div className="flow-num">3</div><h4>Preencha os parâmetros</h4><p>Apenas cinco parâmetros laboratoriais e algumas caixinhas com dados clínicos.</p></div>
                   <div className="flow-step"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>Diagnóstico, orientações terapêuticas e dosagens em segundos.</p></div>
                 </div>
-                <div style={{ margin:'1rem 0' }}>
-                  <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.6rem' }} />
-                  <p style={{ color:'#1F2937', fontSize:'0.95rem', fontWeight:600, textAlign:'center', margin:'0.4rem 0 0.2rem' }}>
-                    O Programa de Afiliados RedFairy beneficia quem beneficia os seus pacientes.
-                  </p>
-                  <p style={{ color:'#6B7280', fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', textAlign:'center', margin:'0.2rem 0 0.4rem', cursor:'pointer' }}
-                     onClick={() => document.getElementById('acesso')?.scrollIntoView({ behavior:'smooth' })}>
-                    CONHEÇA AS REGRAS
-                  </p>
-                  <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
-                </div>
+
               </div>
             )}
             {activeTab === 'paciente' && (
