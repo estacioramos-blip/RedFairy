@@ -50,7 +50,7 @@ const LANDING_CSS = `
   .whatsapp-btn svg { width: 30px; height: 30px; fill: white; }
 
   /* HERO */
-  .hero { min-height: auto; display: flex; align-items: center; padding: 5.5rem 2rem 1.5rem; background: linear-gradient(170deg, var(--white) 0%, var(--gray-bg) 45%, var(--white) 100%); position: relative; overflow: hidden; }
+  .hero { min-height: auto; display: flex; align-items: center; padding: 5.5rem 2rem 1.5rem; background: var(--white); position: relative; overflow: hidden; }
   .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; position: relative; z-index: 2; }
   .hero-badge { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 2.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; text-align: center; width: 100%; max-width: 480px; box-sizing: border-box; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
@@ -144,7 +144,7 @@ const LANDING_CSS = `
 
   /* HERO VISUAL — coluna direita */
   .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-  .fairy-showcase { width: 260px; height: 260px; }
+  .fairy-showcase { width: 208px; height: 208px; }
   .fairy-showcase img { width: 100%; height: 100%; object-fit: contain; animation: floatFairy 4s ease-in-out infinite; }
   @keyframes floatFairy { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
 
@@ -170,7 +170,7 @@ const LANDING_CSS = `
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
   /* FILOSOFIA — novo layout: texto esquerda, retângulo imagem direita */
-  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; padding-top: 2.5rem; padding-bottom: 3rem; }
+  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; padding-top: 1.5rem; padding-bottom: 2rem; }
   .filosofia .tag { color: var(--cherry); margin-bottom: 0.3rem; }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 1.5rem; }
   .fil-img-box .fil-content p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
@@ -201,7 +201,7 @@ const LANDING_CSS = `
 
   .cycle-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; width: 100%; box-shadow: var(--shadow); }
   .cycle-card h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--cherry); margin-bottom: 1.2rem; font-weight: 800; }
-  .cycle-step { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
+  .cycle-step { display: flex; align-items: center; gap: 0.8rem; padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
   .cycle-step:last-child { border: none; }
   .cycle-step .icon { font-size: 1.3rem; width: 42px; min-width: 42px; text-align: center; display: flex; align-items: center; justify-content: center; }
   .cycle-step .desc { font-size: 0.95rem; color: var(--text-sec); font-weight: 700; }
@@ -282,7 +282,7 @@ const LANDING_CSS = `
   .cta-final { background: var(--gray-bg); }
   .cta-final .tag { color: var(--cherry); }
   .cta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
-  .cta-c { border-radius: 16px; padding: 1.8rem; transition: transform 0.25s; display: flex; flex-direction: column; justify-content: space-between; }
+  .cta-c { border-radius: 16px; padding: 1rem 1.5rem; transition: transform 0.25s; display: flex; flex-direction: column; justify-content: space-between; }
   .cta-c:hover { transform: translateY(-4px); }
   .cta-doc { background: #D1D5DB; border: 1px solid #9CA3AF; box-shadow: var(--shadow); }
   .cta-pat { background: var(--wine); border: 1px solid var(--wine-dark); box-shadow: 0 8px 30px rgba(123,30,30,0.2); }
@@ -559,19 +559,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
           {/* COLUNA ESQUERDA */}
           <div className="reveal">
-            <div className="hero-badge">
-              <div className="badge-main">
-                <div className="dot" />
-                Doutor* — Profissional de Saúde
-              </div>
-              <span className="badge-sub" onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior:'smooth' })}>
-                Conheça as regras
-              </span>
-            </div>
-            <p className="hero-badge-sub" style={{ textAlign:'center', width:'100%' }}>
-              Você vai precisar de algumas informações do eritrograma:<br />
-              Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
-            </p>
+
 
             {/* Hero textbox: hover revela imagem E esconde texto (fiel ao Cowork) */}
             <div
@@ -603,6 +591,18 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               </button>
               <button className="btn btn-secondary" onClick={onModoPaciente} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>Sou Paciente</button>
             </div>
+            {/* Dupla linha vermelha + texto afiliados */}
+            <div style={{ margin:'0.5rem 0 0.8rem', textAlign:'center' }}>
+              <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.5rem' }} />
+              <p style={{ color:'#1F2937', fontSize:'0.88rem', fontWeight:600, margin:'0.3rem 0 0.2rem' }}>
+                Avalie um paciente e torne-se membro do Programa de Afiliados patrocinado.
+              </p>
+              <p style={{ color:'#6B7280', fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', margin:'0.2rem 0 0.3rem' }}>
+                VÁLIDO PARA PROFISSIONAIS DE SAÚDE COM REGISTRO EM CONSELHO
+              </p>
+              <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
+            </div>
+
             <div className="trust">
               <div className="trust-i">
                 <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
@@ -727,7 +727,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="indicacoes-grid reveal">
             {/* Bariátricos — bolinha amarela */}
             <div className="ind" style={{ alignItems:'flex-start' }}>
-              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0, marginTop:3 }} />
+              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0, marginTop:8 }} />
               <div>
                 <strong>Bariátricos</strong>
                 <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>OBA — Otimizar o Bariátrico</div>
@@ -789,9 +789,19 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <div className="terap-card"><div className="tc-icon">📈</div><h4>Gráfico multiparamétrico</h4><p>Acompanhamento evolutivo do eritron ao longo do tempo para cada paciente.</p></div>
           </div>
         </div>
-      </section>
+      {/* Dupla linha vermelha + texto eritrograma após Terapêutica */}
+      <div style={{ maxWidth:1200, margin:'0 auto', padding:'0 2rem 1.5rem' }}>
+        <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.6rem' }} />
+        <p style={{ color:'#1F2937', fontSize:'0.92rem', fontWeight:600, textAlign:'center', margin:'0.4rem 0 0.3rem' }}>
+          Para fazer uma avaliação você vai precisar de algumas informações do eritrograma:
+        </p>
+        <p style={{ color:'#6B7280', fontSize:'0.85rem', fontWeight:600, textAlign:'center', margin:'0 0 0.4rem' }}>
+          Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
+        </p>
+        <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
+      </div>
 
-      {/* COMO FUNCIONA */}
+      {/* COMO FUNCIONA */}}
       <section className="como" id="como-funciona">
         <div className="container">
           <div className="center reveal">
@@ -813,17 +823,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <div className="flow-step"><div className="flow-num">3</div><h4>Preencha os parâmetros</h4><p>Apenas cinco parâmetros laboratoriais e algumas caixinhas com dados clínicos.</p></div>
                   <div className="flow-step"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>Diagnóstico, orientações terapêuticas e dosagens em segundos.</p></div>
                 </div>
-                <div className="reward-banner">
-                  <div className="reward-text">
-                    <h4>Doutor: Ganhe por cada paciente que você avaliar</h4>
-                    <p>Quando o paciente que você avaliou se cadastra, você recebe <strong>DEZ DÓLARES DIGITAIS</strong> diretamente na sua wallet <strong>KlipBit</strong>.</p>
-                  </div>
-                  <div className="reward-right">
-                    <div className="reward-amount">10 USDC</div>
-                    <a href="https://www.klipbit.com/en" target="_blank" rel="noopener" style={{display:'flex',alignItems:'center'}}>
-                      <img src="https://klipbit.com/favicon.ico" alt="KlipBit" style={{height:36, width:36, borderRadius:8, opacity:0.9}} />
-                    </a>
-                  </div>
+                <div style={{ margin:'1rem 0' }}>
+                  <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.6rem' }} />
+                  <p style={{ color:'#1F2937', fontSize:'0.95rem', fontWeight:600, textAlign:'center', margin:'0.4rem 0 0.2rem' }}>
+                    O Programa de Afiliados RedFairy beneficia quem beneficia os seus pacientes.
+                  </p>
+                  <p style={{ color:'#6B7280', fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', textAlign:'center', margin:'0.2rem 0 0.4rem', cursor:'pointer' }}
+                     onClick={() => document.getElementById('acesso')?.scrollIntoView({ behavior:'smooth' })}>
+                    CONHEÇA AS REGRAS
+                  </p>
+                  <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
                 </div>
               </div>
             )}
