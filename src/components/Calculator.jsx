@@ -254,9 +254,9 @@ function AuthMedico({ onConcluir, onVoltar }) {
                 placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} />
             </div>
             <div className="bg-green-50 border border-green-200 rounded-xl p-3">
-              <p className="text-green-700 text-xs font-bold mb-1">⚡ Conta KlipBit</p>
+              <p className="text-green-700 text-xs font-bold mb-1">⚡ Programa de Afiliados</p>
               <p className="text-green-700 text-xs leading-relaxed">
-                Usaremos seu e-mail e senha para criar sua wallet — onde você receberá 10 USDC por cada paciente cadastrado.
+                Ao avaliar pacientes você passa a integrar o nosso Programa de Afiliados, com suporte dos nossos patrocinadores. Ao beneficiar pacientes, você também passa a auferir benefícios.
               </p>
             </div>
             <div>
@@ -268,7 +268,7 @@ function AuthMedico({ onConcluir, onVoltar }) {
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
               <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
                 placeholder="Mínimo 6 caracteres" className={inputClass} />
-              <p className="text-xs text-gray-400 mt-0.5">Será sua senha de login e da wallet KlipBit.</p>
+              <p className="text-xs text-gray-400 mt-0.5">Será sua senha de acesso ao RedFairy.</p>
             </div>
             {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
             <button onClick={handleCadastro} disabled={cadLoading}
