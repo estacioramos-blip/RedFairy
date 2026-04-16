@@ -801,7 +801,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
         <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
       </div>
 
-      {/* COMO FUNCIONA */}}
+      {/* COMO FUNCIONA */}
       <section className="como" id="como-funciona">
         <div className="container">
           <div className="center reveal">
