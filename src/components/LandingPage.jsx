@@ -799,6 +799,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </p>
             <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
           </div>
+          {/* Dupla linha vermelha + texto eritrograma */}
+          <div style={{ marginTop:'2rem' }}>
+            <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.6rem' }} />
+            <p style={{ color:'#1F2937', fontSize:'0.92rem', fontWeight:600, textAlign:'center', margin:'0.4rem 0 0.3rem' }}>
+              Para fazer uma avaliação você vai precisar de algumas informações do eritrograma:
+            </p>
+            <p style={{ color:'#6B7280', fontSize:'0.85rem', fontWeight:600, textAlign:'center', margin:'0 0 0.4rem' }}>
+              Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
+            </p>
+            <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
+          </div>
         </div>
       </section>
 
