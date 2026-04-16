@@ -184,7 +184,7 @@ const inp = { width:'100%', border:'1.5px solid #E5E7EB', borderRadius:8, paddin
 const btnP = { width:'100%', background:'#7B1E1E', color:'white', border:'none', borderRadius:10, padding:'0.9rem', fontSize:'1rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit', marginTop:'1.5rem' }
 const btnS = { width:'100%', background:'#F3F4F6', color:'#374151', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginTop:'0.5rem' }
 const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'1.5rem 1rem' }
-const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:560, boxShadow:'0 20px 60px rgba(0,0,0,0.3)', marginBottom:'2rem' }
+const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, boxShadow:'0 20px 60px rgba(0,0,0,0.3)', marginBottom:'2rem' }
 const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -489,22 +489,22 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
             </div>
           )}
 
-          {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => (
-            <div key={ex.key} style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:'0.5rem', alignItems:'center', marginBottom:'0.5rem', padding:'0.3rem 0', borderBottom:'1px solid #F3F4F6' }}>
-              <div>
-                <span style={{ fontSize:'0.85rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#374151' }}>{ex.label}</span>
-                <span style={{ fontSize:'0.7rem', color:'#9CA3AF', marginLeft:'0.4rem' }}>({ex.unit})</span>
-                {ex.ref && <p style={{ fontSize:'0.68rem', color:'#6B7280', margin:'0.1rem 0 0', fontStyle:'italic' }}>V.R.: {ex.ref}</p>}
-                {ex.hint && <p style={{ fontSize:'0.68rem', color:'#F97316', margin:'0.1rem 0 0' }}>{ex.hint}</p>}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem' }}>
+            {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => (
+              <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : 'white', border:'1.5px solid #F3F4F6', borderRadius:8, padding:'0.5rem 0.7rem' }}>
+                <span style={{ fontSize:'0.8rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#374151' }}>{ex.label}</span>
+                <span style={{ fontSize:'0.65rem', color:'#9CA3AF' }}>({ex.unit})</span>
+                {ex.ref && <span style={{ fontSize:'0.62rem', color:'#6B7280', fontStyle:'italic' }}>V.R.: {ex.ref}</span>}
+                {ex.hint && <span style={{ fontSize:'0.62rem', color:'#F97316' }}>{ex.hint}</span>}
+                <input
+                  style={{ marginTop:'0.4rem', width:'100%', border:'1.5px solid #E5E7EB', borderRadius:6, padding:'0.35rem 0.5rem', fontSize:'0.9rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : 'white', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
+                  type="number" step="0.01" placeholder={ex.readOnly ? 'auto' : '—'}
+                  readOnly={ex.readOnly}
+                  value={exames[ex.key] || ''}
+                  onChange={e => !ex.readOnly && handleExameChange(ex.key, e.target.value)} />
               </div>
-              <input
-                style={{ width:90, border:'1.5px solid #E5E7EB', borderRadius:6, padding:'0.4rem 0.6rem', fontSize:'0.85rem', outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F9FAFB' : 'white', color: ex.readOnly ? '#6B7280' : 'inherit' }}
-                type="number" step="0.01" placeholder={ex.readOnly ? 'auto' : '—'}
-                readOnly={ex.readOnly}
-                value={exames[ex.key] || ''}
-                onChange={e => !ex.readOnly && handleExameChange(ex.key, e.target.value)} />
-            </div>
-          ))}
+            ))}
+          </div>
 
           {idadeNum >= 40 && (
             <div style={{ background:'#FEF9EC', border:'1px solid #FDE68A', borderRadius:8, padding:'0.5rem 0.9rem', margin:'0.5rem 0' }}>
@@ -614,7 +614,9 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
           <RadioGroup options={ACOMPANHAMENTO_OPS} value={form.acompanhamento} onChange={v => sf('acompanhamento', v)} />
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Especialistas que me acompanham:</label>
-          {ESPECIALISTAS.map(e => <CheckRow key={e} label={e} checked={form.especialistas.includes(e)} onClick={() => sf('especialistas', tog(form.especialistas, e))} />)}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {ESPECIALISTAS.map(e => <CheckRow key={e} label={e} checked={form.especialistas.includes(e)} onClick={() => sf('especialistas', tog(form.especialistas, e))} />)}
+          </div>
 
           {/* ── STATUS GESTACIONAL ── */}
           {isFem && idadeNum >= 15 && (
@@ -702,31 +704,37 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
           {/* ── STATUS FIBROMIÁLGICO ── */}
           <SectionTitle>Status Fibromiálgico</SectionTitle>
           <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.5rem' }}>Marque os sintomas que apresenta com frequência:</p>
-          {STATUS_FIBROMIALGIA_OPS.map(op => (
-            <CheckRow key={op} label={op}
-              checked={form.status_fibromialgia.includes(op)}
-              onClick={() => sf('status_fibromialgia', tog(form.status_fibromialgia, op))} />
-          ))}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_FIBROMIALGIA_OPS.map(op => (
+              <CheckRow key={op} label={op}
+                checked={form.status_fibromialgia.includes(op)}
+                onClick={() => sf('status_fibromialgia', tog(form.status_fibromialgia, op))} />
+            ))}
+          </div>
 
           {/* ── STATUS COVID ── */}
           <SectionTitle>Status COVID-19</SectionTitle>
           <CheckRow label="TIVE COVID-19" checked={form.teve_covid} onClick={() => sf('teve_covid', !form.teve_covid)} />
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.6rem' }}>Vacina:</label>
-          {['VACINA PFIZER', 'VACINA JANSSEN', 'VACINA ASTRAZENECA', 'VACINA CORONAVAC', 'NÃO TOMEI VACINA'].map(v => (
-            <CheckRow key={v} label={v}
-              checked={form.vacina_covid.includes(v)}
-              disabled={v !== 'NÃO TOMEI VACINA' && form.vacina_covid.includes('NÃO TOMEI VACINA') || v === 'NÃO TOMEI VACINA' && form.vacina_covid.length > 0 && !form.vacina_covid.includes('NÃO TOMEI VACINA')}
-              onClick={() => sf('vacina_covid', tog(form.vacina_covid, v))} />
-          ))}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {['VACINA PFIZER', 'VACINA JANSSEN', 'VACINA ASTRAZENECA', 'VACINA CORONAVAC', 'NÃO TOMEI VACINA'].map(v => (
+              <CheckRow key={v} label={v}
+                checked={form.vacina_covid.includes(v)}
+                disabled={v !== 'NÃO TOMEI VACINA' && form.vacina_covid.includes('NÃO TOMEI VACINA') || v === 'NÃO TOMEI VACINA' && form.vacina_covid.length > 0 && !form.vacina_covid.includes('NÃO TOMEI VACINA')}
+                onClick={() => sf('vacina_covid', tog(form.vacina_covid, v))} />
+            ))}
+          </div>
 
           {/* ── ATIVIDADE FÍSICA ── */}
           <SectionTitle>Atividade Física</SectionTitle>
           <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.5rem' }}>Se marcar SEDENTÁRIO, os demais são desmarcados.</p>
-          {ATIVIDADES.map(at => {
-            const sedMarcado = form.atividade_fisica.includes('SEDENTÁRIO')
-            const disabled = at !== 'SEDENTÁRIO' && sedMarcado
-            return <CheckRow key={at} label={at} checked={form.atividade_fisica.includes(at)} disabled={disabled} onClick={() => toggleAtividade(at)} />
-          })}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {ATIVIDADES.map(at => {
+              const sedMarcado = form.atividade_fisica.includes('SEDENTÁRIO')
+              const disabled = at !== 'SEDENTÁRIO' && sedMarcado
+              return <CheckRow key={at} label={at} checked={form.atividade_fisica.includes(at)} disabled={disabled} onClick={() => toggleAtividade(at)} />
+            })}
+          </div>
 
           {/* ── CIRURGIA PLÁSTICA ── */}
           <SectionTitle>Cirurgia Plástica Pós-Bariátrica</SectionTitle>
@@ -753,7 +761,9 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
               <span style={{ fontSize:'0.85rem', color:'#6B7280' }}>kg</span>
             </div>
           )}
-          {PROJETOS.map(p => <CheckRow key={p} label={p} checked={form.projetos_vida.includes(p)} onClick={() => sf('projetos_vida', tog(form.projetos_vida, p))} />)}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {PROJETOS.map(p => <CheckRow key={p} label={p} checked={form.projetos_vida.includes(p)} onClick={() => sf('projetos_vida', tog(form.projetos_vida, p))} />)}
+          </div>
 
           {/* ── COMPULSÕES ── */}
           <SectionTitle>Compulsões</SectionTitle>
@@ -763,23 +773,27 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
 
           {/* ── MEDICAMENTOS ── */}
           <SectionTitle>Medicamentos em Uso</SectionTitle>
-          {MEDICAMENTOS.map(m => <CheckRow key={m} label={m} checked={form.medicamentos.includes(m)} onClick={() => sf('medicamentos', tog(form.medicamentos, m))} />)}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {MEDICAMENTOS.map(m => <CheckRow key={m} label={m} checked={form.medicamentos.includes(m)} onClick={() => sf('medicamentos', tog(form.medicamentos, m))} />)}
+          </div>
 
           {/* ── MEDICAMENTOS ADICIONAIS ── */}
           <SectionTitle>Medicamentos que Afetam o Eritron</SectionTitle>
           <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.6rem' }}>Marque os que usa ou usou nos últimos 2 anos:</p>
-          {[
-            { field: 'metformina',    label: 'Metformina',           sub: 'Reduz absorção de vitamina B12' },
-            { field: 'ibp',           label: 'IBP (Omeprazol etc.)', sub: 'Pantoprazol, Omeprazol — reduz B12' },
-            { field: 'tiroxina',      label: 'Tiroxina / T4',        sub: 'Hipotireoidismo — pode causar anemia' },
-            { field: 'methotrexato',  label: 'Metotrexato',          sub: 'Antagonista do folato — causa macrocitose' },
-            { field: 'hivTratamento', label: 'Trat. HIV / ARV',      sub: 'AZT e outros — podem causar macrocitose' },
-          ].map(({ field, label, sub }) => (
-            <CheckRow key={field}
-              label={label + ' — ' + sub}
-              checked={!!form[field]}
-              onClick={() => sf(field, !form[field])} />
-          ))}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {[
+              { field: 'metformina',    label: 'Metformina',           sub: 'Reduz absorção de B12' },
+              { field: 'ibp',           label: 'IBP (Omeprazol etc.)', sub: 'Reduz B12' },
+              { field: 'tiroxina',      label: 'Tiroxina / T4',        sub: 'Pode causar anemia' },
+              { field: 'methotrexato',  label: 'Metotrexato',          sub: 'Antagonista do folato' },
+              { field: 'hivTratamento', label: 'Trat. HIV / ARV',      sub: 'Macrocitose' },
+            ].map(({ field, label, sub }) => (
+              <CheckRow key={field}
+                label={label + ' — ' + sub}
+                checked={!!form[field]}
+                onClick={() => sf(field, !form[field])} />
+            ))}
+          </div>
 
           {/* ── EMAGRECEDORES ── */}
           <SectionTitle>Medicamentos Emagrecedores</SectionTitle>
