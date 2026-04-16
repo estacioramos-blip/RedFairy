@@ -84,7 +84,7 @@ export default function App() {
   if (modo === 'calculadora') {
     return (
       <div>
-        <Calculator key={calcKey} onVoltar={() => setModo('home')} />
+        <Calculator key={calcKey} onVoltar={() => setModo('home')} modoDemo={!localStorage.getItem('medico_crm')} />
       </div>
     )
   }

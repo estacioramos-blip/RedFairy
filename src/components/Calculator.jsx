@@ -349,18 +349,24 @@ function AdminConfigModal({ onFechar }) {
   );
 }
 
-export default function Calculator({ onVoltar }) {
+export default function Calculator({ onVoltar, modoDemo }) {
   const [cadastrado, setCadastrado] = useState(null)
   const [medicoNome, setMedicoNome] = useState('')
   const [medicoCRM, setMedicoCRM] = useState('')
 
   useEffect(() => {
+    if (modoDemo) {
+      setCadastrado(true)
+      setMedicoNome('Dr. Demo RedFairy')
+      setMedicoCRM('DEMO/BA')
+      return
+    }
     const crm = localStorage.getItem('medico_crm')
     const nome = localStorage.getItem('medico_nome')
     setCadastrado(!!crm)
     setMedicoNome(nome || '')
     setMedicoCRM(crm || '')
-  }, [])
+  }, [modoDemo])
 
   function handleLogout() {
     localStorage.removeItem('medico_crm')
