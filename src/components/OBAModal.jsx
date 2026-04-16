@@ -66,6 +66,26 @@ const MEDICAMENTOS = [
 
 const EMAGRECEDORES = ['Ozempic', 'Rybelsus', 'Wegovy', 'Mounjaro', 'Saxenda', 'Victoza', 'Trulicity', 'Xultophi']
 
+const STATUS_INTESTINAL_OPS = [
+  'INTESTINO FUNCIONA BEM',
+  'OBSTIPAÇÃO CRÔNICA (PRISÃO DE VENTRE)',
+  'INTESTINO IRRITÁVEL (DIARREIA FREQUENTE)',
+]
+
+const STATUS_FIBROMIALGIA_OPS = [
+  'FUI DIAGNOSTICADO COM FIBROMIALGIA',
+  'DORES NO CORPO',
+  'DOR DE CABEÇA / ENXAQUECAS',
+  'INSÔNIA',
+  'PROBLEMAS DE MEMÓRIA',
+  'DIFICULDADE DE CONCENTRAÇÃO',
+  'DEPRESSÃO OU MELANCOLIA',
+  'ZUMBIDOS',
+  'DESEQUILÍBRIO',
+  'VARIAÇÃO DO HUMOR',
+  'SINTO FRIO OU CALOR EXCESSIVO',
+]
+
 const EXAMES_BASE = [
   { key: 'leucocitos',     label: 'Leucócitos (Total)',       unit: '/uL',    ref: '4.000–11.000', hint: 'Sem ponto ou vírgula. Ex: 7500' },
   { key: 'neutrofilos',    label: 'Neutrófilos Segmentados',  unit: '%',      ref: '40–70%' },
@@ -193,6 +213,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
     ganhou_peso_apos: false, fez_plasma_argonio: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
+    status_intestinal: '', status_fibromialgia: [],
     tipo_cirurgia: '',
     acompanhamento: '', especialistas: [],
     status_gestacional: '', semanas_gestacao: '',
@@ -286,6 +307,8 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
       meta_peso:          form.meta_peso || null,
       meta_kg:            form.meta_kg ? parseFloat(form.meta_kg) : null,
       projetos_vida:      form.projetos_vida,
+      status_intestinal:  form.status_intestinal || null,
+      status_fibromialgia: form.status_fibromialgia,
       metformina:         form.metformina,
       ibp:                form.ibp,
       tiroxina:           form.tiroxina,
@@ -670,6 +693,19 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
             <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem', borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem', fontSize:'0.85rem', fontWeight: form.status_osseo === op ? 700 : 500, color: form.status_osseo === op ? '#7B1E1E' : '#374151' }}>
               <Radio16 active={form.status_osseo === op} />{op}
             </div>
+          ))}
+
+          {/* ── STATUS INTESTINAL ── */}
+          <SectionTitle>Status Intestinal</SectionTitle>
+          <RadioGroup options={STATUS_INTESTINAL_OPS} value={form.status_intestinal} onChange={v => sf('status_intestinal', form.status_intestinal === v ? '' : v)} />
+
+          {/* ── STATUS FIBROMIÁLGICO ── */}
+          <SectionTitle>Status Fibromiálgico</SectionTitle>
+          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.5rem' }}>Marque os sintomas que apresenta com frequência:</p>
+          {STATUS_FIBROMIALGIA_OPS.map(op => (
+            <CheckRow key={op} label={op}
+              checked={form.status_fibromialgia.includes(op)}
+              onClick={() => sf('status_fibromialgia', tog(form.status_fibromialgia, op))} />
           ))}
 
           {/* ── STATUS COVID ── */}
