@@ -12,14 +12,16 @@ const ACOMPANHAMENTO_OPS = [
 ]
 
 const ESPECIALISTAS = [
-  'FAÇO ACOMPANHAMENTO COM O CIRURGIÃO',
-  'SOU ACOMPANHADO POR UM CLÍNICO',
-  'SOU ACOMPANHADO POR GASTROENTEROLOGISTA',
-  'RECEBI ORIENTAÇÃO DE NUTRÓLOGO',
-  'SOU ACOMPANHADO POR ENDOCRINOLOGISTA',
-  'SOU ACOMPANHADO POR ANGIOLOGISTA',
-  'SOU ACOMPANHADO POR CARDIOLOGISTA',
-  'SOU ACOMPANHADO POR OUTRO ESPECIALISTA',
+  'CIRURGIÃO',
+  'CLÍNICO',
+  'HEMATOLOGISTA',
+  'GASTROENTEROLOGISTA',
+  'NUTRÓLOGO',
+  'ENDOCRINOLOGISTA',
+  'CARDIOLOGISTA',
+  'NEUROLOGISTA',
+  'PSIQUIATRA',
+  'OUTRO',
 ]
 
 const STATUS_GLICEMICO_OPS = [
@@ -183,8 +185,8 @@ function calcDias(dataStr) {
 const inp = { width:'100%', border:'1.5px solid #E5E7EB', borderRadius:8, padding:'0.65rem 0.9rem', fontSize:'0.92rem', outline:'none', fontFamily:'inherit', boxSizing:'border-box' }
 const btnP = { width:'100%', background:'#7B1E1E', color:'white', border:'none', borderRadius:10, padding:'0.9rem', fontSize:'1rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit', marginTop:'1.5rem' }
 const btnS = { width:'100%', background:'#F3F4F6', color:'#374151', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginTop:'0.5rem' }
-const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'1.5rem 1rem' }
-const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, boxShadow:'0 20px 60px rgba(0,0,0,0.3)', marginBottom:'2rem' }
+const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'1.5rem 1rem', boxSizing:'border-box' }
+const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, boxShadow:'0 20px 60px rgba(0,0,0,0.3)', marginBottom:'2rem', boxSizing:'border-box' }
 const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -442,7 +444,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
     <div style={OV} onClick={pularExames}>
       <div style={CD} onClick={e => e.stopPropagation()}>
         <Header sub="Exames Complementares — etapa final" />
-        <div style={{ padding:'1.5rem' }}>
+        <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
           <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
             <p style={{ fontSize:'0.8rem', fontWeight:700, color:'#166534', margin:0 }}>
@@ -532,7 +534,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
     <div style={OV} onClick={onFechar}>
       <div style={CD} onClick={e => e.stopPropagation()}>
         <Header sub="Otimizar o Bariátrico" />
-        <div style={{ padding:'1.5rem' }}>
+        <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
           <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
             <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>O bariátrico é um paciente complexo.</p>
@@ -802,7 +804,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
             <div key={med} style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:'0.5rem', alignItems:'center', marginBottom:'0.5rem', padding:'0.3rem 0', borderBottom:'1px solid #F3F4F6' }}>
               <span style={{ fontSize:'0.85rem', fontWeight:600, color:'#374151' }}>{med}</span>
               <div style={{ display:'flex', gap:'0.3rem' }}>
-                {['JÁ USEI','NUNCA USEI','ESTOU USANDO'].map(op => (
+                {['JÁ USEI','ESTOU USANDO'].map(op => (
                   <button key={op} onClick={() => sf('emagrecedores', { ...form.emagrecedores, [med]: form.emagrecedores[med] === op ? null : op })}
                     style={{ padding:'0.25rem 0.45rem', fontSize:'0.68rem', fontWeight:700, borderRadius:6, border:`1.5px solid ${form.emagrecedores[med] === op ? '#DC2626' : '#E5E7EB'}`, background: form.emagrecedores[med] === op ? '#FEF2F2' : '#FAFAFA', color: form.emagrecedores[med] === op ? '#7B1E1E' : '#6B7280', cursor:'pointer', whiteSpace:'nowrap', fontFamily:'inherit' }}>
                     {op}
