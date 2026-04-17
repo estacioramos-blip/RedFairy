@@ -452,7 +452,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
   const [inputs, setInputs] = useState({
     cpf: '', sexo: 'M', idade: '', dataColeta: '',
     ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '',
-    bariatrica: false, vegetariano: false, perda: false,
+    bariatrica: preFlag === 'bariatrica', vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false,
     tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false,
@@ -948,7 +948,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
               <IconHistorico /> Histórico Clínico
             </h2>
             <div className="grid grid-cols-2 gap-2">
-              <CheckboxCard name="bariatrica" label="Bariátrica" sublabel="By-pass / Gastrectomia" checked={inputs.bariatrica} onChange={handleChange} color="amber" />
+              <CheckboxCard name="bariatrica" label="Bariátrica" sublabel="By-pass / Gastrectomia" checked={inputs.bariatrica} onChange={handleChange} color="amber" highlight={preFlag === 'bariatrica'} />
               <CheckboxCard name="vegetariano" label="Vegetariano/Vegano" sublabel="Dieta sem carne" checked={inputs.vegetariano} onChange={handleChange} color="green" />
               <CheckboxCard name="perda" label="Hemorragia" sublabel="Inclui doação de sangue, sangria, ou sangramento" checked={inputs.perda} onChange={handleChange} color="red" />
               <CheckboxCard name="alcoolista" label="Alcoolista" sublabel="Uso crônico de álcool" checked={inputs.alcoolista} onChange={handleChange} color="amber" />
@@ -1064,9 +1064,10 @@ const colorMap = {
   teal:   'border-teal-400   bg-teal-50   text-teal-700',
 };
 
-function CheckboxCard({ name, label, sublabel, checked, onChange, color }) {
+function CheckboxCard({ name, label, sublabel, checked, onChange, color, highlight }) {
   return (
-    <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${checked ? colorMap[color] : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+    <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${checked ? colorMap[color] : 'border-gray-200 bg-gray-50 text-gray-600'}`}
+      style={highlight && !checked ? { borderColor:'#7B1E1E', boxShadow:'0 0 0 2px rgba(123,30,30,0.3)' } : highlight && checked ? { borderColor:'#7B1E1E', boxShadow:'0 0 0 3px rgba(123,30,30,0.4)' } : {}}>
       <input type="checkbox" name={name} checked={checked} onChange={onChange} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
       <div className="min-w-0">
         <p className="font-medium text-sm leading-tight">{label}</p>
