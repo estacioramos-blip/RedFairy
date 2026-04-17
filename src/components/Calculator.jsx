@@ -407,6 +407,7 @@ function AdminConfigModal({ onFechar }) {
 
 export default function Calculator({ onVoltar, modoDemo }) {
   const [cadastrado, setCadastrado] = useState(null)
+  const [preFlag, setPreFlag] = useState(null)
   const [medicoNome, setMedicoNome] = useState('')
   const [medicoCRM, setMedicoCRM] = useState('')
 
@@ -422,6 +423,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
     setCadastrado(!!crm)
     setMedicoNome(nome || '')
     setMedicoCRM(crm || '')
+    if (window.__rfFlag) { setPreFlag(window.__rfFlag); window.__rfFlag = null }
   }, [modoDemo])
 
   function handleLogout() {
@@ -442,11 +444,11 @@ export default function Calculator({ onVoltar, modoDemo }) {
     }} />
   }
 
-  return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} onLogout={handleLogout} />
+  return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} onLogout={handleLogout} preFlag={preFlag} />
 }
 
 // ─── Formulário da calculadora ───────────────────────────────────────────────
-function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
+function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) {
   const [inputs, setInputs] = useState({
     cpf: '', sexo: 'M', idade: '', dataColeta: '',
     ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '',
@@ -458,6 +460,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout }) {
   });
 
   const [resultado, setResultado] = useState(null);
+
+  useEffect(() => {
+    if (preFlag === 'bariatrica') {
+      setInputs(prev => ({ ...prev, bariatrica: true }))
+    }
+  }, [preFlag]);
   const [copiado, setCopiado] = useState(false);
   const [showOBA, setShowOBA] = useState(false);
   const [dadosOBAColetados, setDadosOBAColetados] = useState(null);

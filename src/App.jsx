@@ -100,7 +100,7 @@ export default function App() {
 if (modo === 'home') {
   return (
     <LandingPage
-      onModoMedico={handleDemoMedico}
+      onModoMedico={(flag) => { handleDemoMedico(); if (flag) window.__rfFlag = flag; }}
       onModoPaciente={handleDemoPaciente}
     />
   )
