@@ -788,8 +788,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             <div className="terap-card"><div className="tc-icon">💊</div><h4>Reposição de ferro oral</h4><p>Dose, tipo de sal de ferro, horário e duração do tratamento via oral.</p></div>
             <div className="terap-card"><div className="tc-icon">📈</div><h4>Gráfico multiparamétrico</h4><p>Acompanhamento evolutivo do eritron ao longo do tempo para cada paciente.</p></div>
           </div>
-
-
+          <div style={{ marginTop:'2rem', padding:'0 0 0.5rem' }}>
+            <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
+            <p style={{ color:'#1F2937', fontSize:'0.92rem', fontWeight:600, textAlign:'center', margin:'0 0 0.3rem' }}>
+              Para fazer uma avaliação você vai precisar de algumas informações do eritrograma:
+            </p>
+            <p style={{ color:'#6B7280', fontSize:'0.85rem', fontWeight:600, textAlign:'center', margin:0 }}>
+              Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
+            </p>
+          </div>
         </div>
       </section>
 
