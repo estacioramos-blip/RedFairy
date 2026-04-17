@@ -603,7 +603,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <p style={{ color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', margin:'0.2rem 0 0.3rem' }}>
                 VÁLIDO PARA PROFISSIONAIS DE SAÚDE COM REGISTRO EM CONSELHO
               </p>
-              <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginTop:'0.3rem' }} />
             </div>
 
             <div className="trust">
