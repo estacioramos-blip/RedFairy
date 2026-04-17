@@ -100,7 +100,7 @@ export default function App() {
 if (modo === 'home') {
   return (
     <LandingPage
-      onModoMedico={(flag) => { handleDemoMedico(); if (flag) window.__rfFlag = flag; }}
+      onModoMedico={(flag) => { if (flag) localStorage.setItem('rf_flag', flag); handleDemoMedico(); }}
       onModoPaciente={handleDemoPaciente}
     />
   )

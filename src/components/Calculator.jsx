@@ -423,7 +423,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
     setCadastrado(!!crm)
     setMedicoNome(nome || '')
     setMedicoCRM(crm || '')
-    if (window.__rfFlag) { setPreFlag(window.__rfFlag); window.__rfFlag = null }
+    const flag = localStorage.getItem('rf_flag'); if (flag) { setPreFlag(flag); localStorage.removeItem('rf_flag') }
   }, [modoDemo])
 
   function handleLogout() {
@@ -452,7 +452,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
   const [inputs, setInputs] = useState({
     cpf: '', sexo: 'M', idade: '', dataColeta: '',
     ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '',
-    bariatrica: preFlag === 'bariatrica', vegetariano: false, perda: false,
+    bariatrica: preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica', vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false,
     tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false,
