@@ -429,9 +429,10 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
   // ── HEADER ───────────────────────────────────────────────────────────────
   const Header = ({ sub }) => (
     <div style={HD}>
-      <img src={logo} alt="OBA" style={{ width:48, height:48, objectFit:'contain', filter:'brightness(10)' }} />
+      <button onClick={onFechar} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:8, color:'white', fontSize:'0.8rem', fontWeight:700, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>← Voltar</button>
+      <img src={logo} alt="OBA" style={{ width:40, height:40, objectFit:'contain', filter:'brightness(10)' }} />
       <div>
-        <h2 style={{ color:'white', fontSize:'1.3rem', fontWeight:800, margin:0 }}>{saudacao} ao Projeto OBA!</h2>
+        <h2 style={{ color:'white', fontSize:'1.2rem', fontWeight:800, margin:0 }}>{saudacao} ao Projeto OBA!</h2>
         <p style={{ color:'rgba(255,255,255,0.75)', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', marginTop:'0.2rem' }}>{sub}</p>
       </div>
     </div>

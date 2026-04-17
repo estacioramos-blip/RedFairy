@@ -997,55 +997,55 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 <div id="rf-view-form" style={{ padding:11 }}>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sexo</label>
-                      <select id="rf-sexo" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none' }}>
+                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sexo</label>
+                      <select id="rf-sexo" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none' }}>
                         <option value="F">Feminino</option><option value="M">Masculino</option>
                       </select>
                     </div>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Idade</label>
-                      <input type="number" id="rf-idade" placeholder="35" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Idade</label>
+                      <input type="number" id="rf-idade" placeholder="35" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Hb (g/dL)</label>
-                      <input type="number" id="rf-hb2" step="0.1" placeholder="12.5" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Hb (g/dL)</label>
+                      <input type="number" id="rf-hb2" step="0.1" placeholder="12.5" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Ferritina (ng/mL)</label>
-                      <input type="number" id="rf-ferr2" step="0.1" placeholder="15" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Ferritina (ng/mL)</label>
+                      <input type="number" id="rf-ferr2" step="0.1" placeholder="15" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>VCM (fL)</label>
-                      <input type="number" id="rf-vcm2" step="0.1" placeholder="82" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>VCM (fL)</label>
+                      <input type="number" id="rf-vcm2" step="0.1" placeholder="82" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>RDW (%)</label>
-                      <input type="number" id="rf-rdw2" step="0.1" placeholder="13.5" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>RDW (%)</label>
+                      <input type="number" id="rf-rdw2" step="0.1" placeholder="13.5" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                   </div>
                   <div style={{ marginBottom:10 }}>
-                    <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sat. Transferrina (%)</label>
-                    <input type="number" id="rf-sat2" step="0.1" placeholder="25" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                    <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sat. Transferrina (%)</label>
+                    <input type="number" id="rf-sat2" step="0.1" placeholder="25" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                   </div>
 
                   {/* Contexto Clínico */}
                   <div style={{ marginBottom:10 }}>
-                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:8, textTransform:'uppercase', letterSpacing:1, margin:'0 0 5px' }}>Contexto Clínico</p>
+                    <p style={{ color:'rgba(255,255,255,0.65)', fontSize:8, textTransform:'uppercase', letterSpacing:1, margin:'0 0 5px' }}>Contexto Clínico</p>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:4, marginBottom:6 }}>
                       {[['bariatrica','Bariátrica'],['vegetariano','Vegetariano'],['perda','Hemorragia'],['alcoolista','Alcoolista'],['transfundido','Transfundido'],['hemoAlta','Hb Alta']].map(([k,l]) => (
-                        <label key={k} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:6, padding:'5px 6px', cursor:'pointer', fontSize:9, color:'rgba(255,255,255,0.7)' }}>
+                        <label key={k} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.28)', borderRadius:6, padding:'5px 6px', cursor:'pointer', fontSize:9, color:'rgba(255,255,255,0.7)' }}>
                           <input type="checkbox" id={`rf2-${k}`} style={{ width:10, height:10, accentColor:'#DC2626', flexShrink:0 }} /> {l}
                         </label>
                       ))}
                     </div>
-                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:8, textTransform:'uppercase', letterSpacing:1, margin:'0 0 5px' }}>Medicamentos</p>
+                    <p style={{ color:'rgba(255,255,255,0.65)', fontSize:8, textTransform:'uppercase', letterSpacing:1, margin:'0 0 5px' }}>Medicamentos</p>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:4 }}>
                       {[['aspirina','Aspirina'],['b12','Vitamina B12'],['ferroMed','Ferro Oral/EV']].map(([k,l]) => (
-                        <label key={k} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:6, padding:'5px 6px', cursor:'pointer', fontSize:9, color:'rgba(255,255,255,0.7)' }}>
+                        <label key={k} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.28)', borderRadius:6, padding:'5px 6px', cursor:'pointer', fontSize:9, color:'rgba(255,255,255,0.7)' }}>
                           <input type="checkbox" id={`rf2-${k}`} style={{ width:10, height:10, accentColor:'#DC2626', flexShrink:0 }} /> {l}
                         </label>
                       ))}
@@ -1069,9 +1069,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   </div>
                   <div style={{ background:'rgba(0,0,0,0.3)', borderRadius:'0 0 10px 10px', padding:'10px 12px', marginBottom:8 }}>
                     <p style={{ fontSize:8, color:'rgba(255,255,255,0.45)', margin:'0 0 3px', textTransform:'uppercase', letterSpacing:1 }}>Diagnóstico</p>
-                    <p id="rf-result-diag" style={{ fontSize:10, color:'rgba(255,255,255,0.85)', margin:'0 0 10px', lineHeight:1.6 }} />
+                    <p id="rf-result-diag" style={{ fontSize:10, color:'white', margin:'0 0 10px', lineHeight:1.6 }} />
                     <p style={{ fontSize:8, color:'rgba(255,255,255,0.45)', margin:'0 0 3px', textTransform:'uppercase', letterSpacing:1 }}>Recomendação</p>
-                    <p id="rf-result-rec" style={{ fontSize:10, color:'rgba(255,255,255,0.85)', margin:0, lineHeight:1.6 }} />
+                    <p id="rf-result-rec" style={{ fontSize:10, color:'white', margin:0, lineHeight:1.6 }} />
                   </div>
                   <div style={{ background:'rgba(220,38,38,0.15)', border:'1px solid rgba(220,38,38,0.3)', borderRadius:10, padding:'10px 12px', textAlign:'center', marginBottom:8 }}>
                     <p style={{ color:'rgba(255,255,255,0.55)', fontSize:9, margin:'0 0 6px' }}>Para orientações completas com dosagens:</p>
@@ -1079,7 +1079,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                       Acessar RedFairy completo →
                     </button>
                   </div>
-                  <button onClick={() => rfReset2()} style={{ width:'100%', background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.6)', border:'none', borderRadius:8, padding:8, fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
+                  <button onClick={() => rfReset2()} style={{ width:'100%', background:'rgba(255,255,255,0.12)', color:'rgba(255,255,255,0.6)', border:'none', borderRadius:8, padding:8, fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
                     ← Nova avaliação
                   </button>
                 </div>
