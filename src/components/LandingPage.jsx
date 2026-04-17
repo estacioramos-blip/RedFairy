@@ -822,17 +822,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <div className="flow-step"><div className="flow-num">3</div><h4>Preencha os parâmetros</h4><p>Apenas cinco parâmetros laboratoriais e algumas caixinhas com dados clínicos.</p></div>
                   <div className="flow-step"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>Diagnóstico, orientações terapêuticas e dosagens em segundos.</p></div>
                 </div>
-
-              </div>
-              <div style={{ margin:'1.5rem 0 0' }}>
-                <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
-                <p style={{ color:'#1F2937', fontSize:'0.95rem', fontWeight:600, textAlign:'center', margin:'0 0 0.2rem' }}>
-                  O Programa de Afiliados RedFairy beneficia quem beneficia os seus pacientes.
-                </p>
-                <p style={{ color:'#6B7280', fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', textAlign:'center', margin:'0.2rem 0 0', cursor:'pointer' }}
-                   onClick={() => document.getElementById('acesso')?.scrollIntoView({ behavior:'smooth' })}>
-                  CONHEÇA AS REGRAS
-                </p>
+                <div style={{ margin:'1.5rem 0 0' }}>
+                  <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
+                  <p style={{ color:'#1F2937', fontSize:'0.95rem', fontWeight:600, textAlign:'center', margin:'0 0 0.2rem' }}>
+                    O Programa de Afiliados RedFairy beneficia quem beneficia os seus pacientes.
+                  </p>
+                  <p style={{ color:'#6B7280', fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', textAlign:'center', margin:'0.2rem 0 0', cursor:'pointer' }}
+                     onClick={() => document.getElementById('acesso')?.scrollIntoView({ behavior:'smooth' })}>
+                    CONHEÇA AS REGRAS
+                  </p>
+                </div>
               </div>
             )}
             {activeTab === 'paciente' && (
