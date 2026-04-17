@@ -487,6 +487,66 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
     setRfForm(prev => ({ ...prev, [field]: value }))
   }
 
+  const rfMatrix2 = [
+    { id:3,  label:'Eritron Saudável',           color:'#16A34A', diag:'Produção normal de hemoglobina e células vermelhas, com boa reserva de ferro.',           rec:'Avaliação médica preventiva semestral.',                                       c:{ f:{a:25,b:150},   h:{a:12,b:17.5}, v:{a:75,b:100}, r:{a:11.5,b:15.5}, s:{a:20,b:50}  } },
+    { id:10, label:'Sideropenia sem Anemia',     color:'#CA8A04', diag:'Hemoglobina normal, mas com depleção incipiente de ferro.',                              rec:'Procure hematologista. Investigue a causa.',                                   c:{ f:{a:0,b:24},     h:{a:12,b:17.5}, v:{a:75,b:100}, r:{a:15.1,b:999}, s:{a:0,b:50}   } },
+    { id:11, label:'Anemia Ferropriva Moderada', color:'#EA580C', diag:'Deficiência de ferro com impacto sobre a produção de hemoglobina — anemia moderada.',    rec:'Avaliação com hematologista. Reposição de ferro conforme avaliação.',          c:{ f:{a:0,b:24},     h:{a:10,b:11.9}, v:{a:0,b:79},   r:{a:15.1,b:999}, s:{a:0,b:50}   } },
+    { id:12, label:'Anemia Ferropriva Importante',color:'#DC2626', diag:'Anemia ferropriva importante. Exige intervenção médica imediata.',                       rec:'Avaliação urgente. Ferro endovenoso indicado.',                               c:{ f:{a:0,b:24},     h:{a:7,b:9.9},   v:{a:0,b:79},   r:{a:15.1,b:999}, s:{a:0,b:19}   } },
+    { id:5,  label:'Processo Inflamatório',      color:'#CA8A04', diag:'Ferritina elevada com saturação normal. Processos inflamatórios ou doenças crônicas.',   rec:'Procure hematologista. Investigar a ferritina elevada.',                       c:{ f:{a:151,b:400},  h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:16},  s:{a:20,b:50}  } },
+    { id:7,  label:'Excesso de Ferro / Siderose',color:'#EA580C', diag:'Ferritina e saturação da transferrina elevadas — siderose significativa.',                rec:'Sangrias terapêuticas podem ser indicadas.',                                   c:{ f:{a:401,b:900},  h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:15},  s:{a:51,b:999} } },
+    { id:8,  label:'Compatível com Hemocromatose',color:'#DC2626',diag:'Ferritina e saturação muito elevadas. Possível hemocromatose hereditária.',              rec:'Avaliação urgente. Sangrias indicadas.',                                       c:{ f:{a:801,b:9999}, h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:15},  s:{a:51,b:999} } },
+  ]
+
+  function rfAvaliar2() {
+    const hb   = parseFloat(document.getElementById('rf-hb2')?.value)
+    const ferr = parseFloat(document.getElementById('rf-ferr2')?.value)
+    const vcm  = parseFloat(document.getElementById('rf-vcm2')?.value)
+    const rdw  = parseFloat(document.getElementById('rf-rdw2')?.value)
+    const sat  = parseFloat(document.getElementById('rf-sat2')?.value)
+    const erro = document.getElementById('rf-erro2')
+    if ([hb,ferr,vcm,rdw,sat].some(isNaN)) {
+      if (erro) { erro.textContent='Preencha todos os campos laboratoriais.'; erro.style.display='block' }
+      return
+    }
+    if (erro) erro.style.display='none'
+    const iR = (v,r) => v>=r.a && v<=r.b
+    const res = rfMatrix2.find(m => iR(hb,m.c.h)&&iR(ferr,m.c.f)&&iR(vcm,m.c.v)&&iR(rdw,m.c.r)&&iR(sat,m.c.s))
+    const form = document.getElementById('rf-view-form')
+    const result = document.getElementById('rf-view-result')
+    const screen = document.getElementById('rf-screen')
+    if (form) form.style.display='none'
+    if (result) result.style.display='block'
+    if (screen) screen.scrollTop=0
+    if (res) {
+      const h = document.getElementById('rf-result-header')
+      if (h) h.style.background=res.color
+      const l = document.getElementById('rf-result-label')
+      if (l) l.textContent=res.label
+      const d = document.getElementById('rf-result-diag')
+      if (d) d.textContent=res.diag
+      const r = document.getElementById('rf-result-rec')
+      if (r) r.textContent=res.rec
+    } else {
+      const h = document.getElementById('rf-result-header')
+      if (h) h.style.background='#6B7280'
+      const l = document.getElementById('rf-result-label')
+      if (l) l.textContent='Combinação não encontrada'
+      const d = document.getElementById('rf-result-diag')
+      if (d) d.textContent='Acesse o RedFairy completo para avaliação detalhada.'
+      const r = document.getElementById('rf-result-rec')
+      if (r) r.textContent=''
+    }
+  }
+
+  function rfReset2() {
+    const form = document.getElementById('rf-view-form')
+    const result = document.getElementById('rf-view-result')
+    const screen = document.getElementById('rf-screen')
+    if (form) form.style.display='block'
+    if (result) result.style.display='none'
+    if (screen) screen.scrollTop=0
+  }
+
   function rfAvaliar() {
     setRfErro('')
     setRfResultado(null)
@@ -903,112 +963,133 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       </section>
 
       {/* EXPERIMENTE AGORA */}
-      <section id="avaliar" style={{ background:'var(--dark-bg)', padding:'5.5rem 2rem' }}>
+      <section id="avaliar" style={{ background:'white', padding:'5.5rem 2rem' }}>
         <div className="container">
           <div className="center reveal" style={{ marginBottom:'2.5rem' }}>
-            <span className="tag" style={{ color:'var(--cherry-light)' }}>Experimente Agora</span>
-            <h2 className="stitle" style={{ color:'white' }}>Faça uma avaliação gratuita</h2>
-            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', margin:'0 auto', maxWidth:580 }}>Insira os dados laboratoriais e obtenha o diagnóstico. Sem cadastro.</p>
+            <span className="tag">Experimente Agora</span>
+            <h2 className="stitle">Faça uma avaliação gratuita</h2>
+            <p className="sdesc" style={{ margin:'0 auto' }}>Sem cadastro. Insira os dados e veja o diagnóstico.</p>
           </div>
-          <div style={{ maxWidth:720, margin:'0 auto' }}>
-            <div style={{ background:'var(--dark-card)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:16, padding:'2rem', marginBottom:'1.5rem' }}>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem', marginBottom:'1rem' }}>
-                <div><label style={labelStyle}>Sexo</label>
-                  <select value={rfSexo} onChange={e => setRfSexo(e.target.value)} style={inputStyle}>
-                    <option value="F">Feminino</option><option value="M">Masculino</option>
-                  </select>
-                </div>
-                <div><label style={labelStyle}>Idade</label>
-                  <input type="number" min="12" max="100" placeholder="Ex: 35" value={rfForm.idade} onChange={e => handleFormChange('idade', e.target.value)} style={inputStyle} />
-                </div>
+
+          {/* Mockup celular */}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
+            <div style={{ width:300, background:'#1A1A2E', borderRadius:40, border:'8px solid #2A2A3E', boxShadow:'0 0 0 2px #111, inset 0 0 0 1px rgba(255,255,255,0.05)', overflow:'hidden' }}>
+
+              {/* Notch */}
+              <div style={{ background:'#111', height:26, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <div style={{ width:60, height:13, background:'#1A1A2E', borderRadius:'0 0 10px 10px' }} />
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem', marginBottom:'1rem' }}>
-                <div><label style={labelStyle}>Hemoglobina (g/dL)</label>
-                  <input type="number" step="0.1" placeholder="Ex: 12.5" value={rfForm.hb} onChange={e => handleFormChange('hb', e.target.value)} style={inputStyle} />
-                </div>
-                <div><label style={labelStyle}>Ferritina (ng/mL)</label>
-                  <input type="number" step="0.1" placeholder="Ex: 15" value={rfForm.ferritina} onChange={e => handleFormChange('ferritina', e.target.value)} style={inputStyle} />
-                </div>
+              {/* Status bar */}
+              <div style={{ background:'#0F0F1A', padding:'3px 16px', display:'flex', justifyContent:'space-between' }}>
+                <span style={{ color:'rgba(255,255,255,0.4)', fontSize:9 }}>9:41</span>
+                <span style={{ color:'rgba(255,255,255,0.4)', fontSize:9 }}>▮▮▮ 🔋</span>
               </div>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.8rem', marginBottom:'0.8rem' }}>
-                <div><label style={labelStyle}>VCM (fL)</label>
-                  <input type="number" step="0.1" placeholder="Ex: 82" value={rfForm.vcm} onChange={e => handleFormChange('vcm', e.target.value)} style={inputStyle} />
-                </div>
-                <div><label style={labelStyle}>RDW (%)</label>
-                  <input type="number" step="0.1" placeholder="Ex: 13.5" value={rfForm.rdw} onChange={e => handleFormChange('rdw', e.target.value)} style={inputStyle} />
-                </div>
+              {/* Header com logo */}
+              <div style={{ background:'linear-gradient(135deg,#7B1E1E,#DC2626)', padding:'8px 14px', display:'flex', alignItems:'center', gap:8 }}>
+                <img src={logo} alt="RedFairy" style={{ height:24, objectFit:'contain', filter:'brightness(0) invert(1)' }} />
+                <p style={{ color:'rgba(255,255,255,0.65)', fontSize:8, margin:0, letterSpacing:'0.5px' }}>Eritron e Metabolismo do Ferro</p>
               </div>
-              <div style={{ marginBottom:'1.5rem' }}>
-                <label style={labelStyle}>Saturação da Transferrina (%)</label>
-                <input type="number" step="0.1" placeholder="Ex: 25" value={rfForm.sat} onChange={e => handleFormChange('sat', e.target.value)} style={inputStyle} />
-              </div>
-              <div style={{ marginBottom:'1rem' }}>
-                <label style={labelStyle}>Contexto clínico</label>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px,1fr))', gap:'0.5rem' }}>
-                  {[['bariatrica','Bariátrica'],['vegetariano','Vegetariano/Vegano'],['perda','Hemorragia'],['alcoolista','Alcoolista'],['transfundido','Transfundido'],['hemoAlta','Hemoglobina Alta'],
-                    ...(rfSexo==='F' ? [['hiper','Hipermenorreia'],['gestante','Gestante']] : [])
-                  ].map(([field, lbl]) => (
-                    <label key={field} style={{ display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.6rem 0.8rem',
-                      background: rfForm[field] ? 'rgba(220,38,38,0.1)' : '#1F2937',
-                      border: `1px solid ${rfForm[field] ? 'var(--cherry)' : 'rgba(255,255,255,0.08)'}`,
-                      borderRadius:8, cursor:'pointer', fontSize:'0.83rem',
-                      color: rfForm[field] ? 'white' : 'rgba(255,255,255,0.7)', transition:'all 0.2s' }}>
-                      <input type="checkbox" checked={!!rfForm[field]} onChange={e => handleFormChange(field, e.target.checked)} style={{ width:14, height:14 }} />
-                      {lbl}
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div style={{ marginBottom:'1.5rem' }}>
-                <label style={labelStyle}>Medicamentos / Suplementos</label>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px,1fr))', gap:'0.5rem' }}>
-                  {[['aspirina','Aspirina','Uso contínuo'],['b12','Vitamina B12','Últimos 3 meses'],['ferroMed','Ferro Oral/EV','Últimos 2 anos']].map(([field, lbl, sub]) => (
-                    <label key={field} style={{ display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.6rem 0.8rem',
-                      background: rfForm[field] ? 'rgba(220,38,38,0.1)' : '#1F2937',
-                      border: `1px solid ${rfForm[field] ? 'var(--cherry)' : 'rgba(255,255,255,0.08)'}`,
-                      borderRadius:8, cursor:'pointer', fontSize:'0.83rem',
-                      color: rfForm[field] ? 'white' : 'rgba(255,255,255,0.7)', transition:'all 0.2s' }}>
-                      <input type="checkbox" checked={!!rfForm[field]} onChange={e => handleFormChange(field, e.target.checked)} style={{ width:14, height:14 }} />
-                      <span>{lbl}<br /><small style={{ opacity:0.5, fontSize:'0.72rem' }}>{sub}</small></span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <button onClick={rfAvaliar} style={{ width:'100%', background:'var(--wine)', color:'white', border:'none', borderRadius:10, padding:'1rem', fontSize:'1rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
-                🔬 Avaliar Eritron
-              </button>
-              {rfErro && <p style={{ color:'#F87171', fontSize:'0.85rem', marginTop:'0.75rem', textAlign:'center' }}>{rfErro}</p>}
-            </div>
-            {rfResultado && (() => {
-              const c = colorMap[rfResultado.color] || colorMap.yellow
-              return (
-                <div style={{ background:c.bg, border:`1px solid ${c.border}`, borderRadius:16, overflow:'hidden' }}>
-                  <div style={{ background:c.badge, padding:'1rem 1.5rem', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+
+              {/* Tela */}
+              <div id="rf-screen" style={{ background:'#0F0F1A', height:500, overflowY:'auto' }}>
+
+                {/* Formulário */}
+                <div id="rf-view-form" style={{ padding:11 }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
-                      <p style={{ fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:2, color:'rgba(255,255,255,0.7)', marginBottom:'0.2rem' }}>Diagnóstico</p>
-                      <h3 style={{ color:'white', fontSize:'1.1rem', fontWeight:800, margin:0 }}>{rfResultado.label}</h3>
+                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sexo</label>
+                      <select id="rf-sexo" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none' }}>
+                        <option value="F">Feminino</option><option value="M">Masculino</option>
+                      </select>
                     </div>
-                    <span style={{ fontSize:'0.75rem', background:'rgba(255,255,255,0.2)', color:'white', padding:'0.3rem 0.7rem', borderRadius:6, fontWeight:700 }}>ID {rfResultado.id}</span>
-                  </div>
-                  <div style={{ padding:'1.5rem', display:'flex', flexDirection:'column', gap:'1rem' }}>
-                    <div style={{ background:'rgba(0,0,0,0.2)', borderRadius:10, padding:'1rem' }}>
-                      <p style={{ fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', color:c.text, marginBottom:'0.5rem', fontWeight:700 }}>🧝 Diagnóstico</p>
-                      <p style={{ color:'rgba(255,255,255,0.85)', fontSize:'0.88rem', lineHeight:1.7, margin:0 }}>{rfResultado.diag}</p>
-                    </div>
-                    <div style={{ background:'rgba(0,0,0,0.2)', borderRadius:10, padding:'1rem' }}>
-                      <p style={{ fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', color:c.text, marginBottom:'0.5rem', fontWeight:700 }}>📋 Recomendação</p>
-                      <p style={{ color:'rgba(255,255,255,0.85)', fontSize:'0.88rem', lineHeight:1.7, margin:0 }}>{rfResultado.rec}</p>
-                    </div>
-                    <div style={{ background:'rgba(220,38,38,0.15)', border:'1px solid rgba(220,38,38,0.25)', borderRadius:10, padding:'1rem', textAlign:'center' }}>
-                      <p style={{ color:'rgba(255,255,255,0.6)', fontSize:'0.8rem', marginBottom:'0.75rem' }}>Para orientações terapêuticas completas com dosagens e acompanhamento:</p>
-                      <button onClick={onModoMedico} style={{ background:'var(--wine)', color:'white', border:'none', padding:'0.75rem 1.8rem', borderRadius:8, fontWeight:700, fontSize:'0.9rem', cursor:'pointer', fontFamily:'inherit' }}>
-                        Acessar RedFairy completo →
-                      </button>
+                    <div>
+                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Idade</label>
+                      <input type="number" id="rf-idade" placeholder="35" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                   </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
+                    <div>
+                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Hb (g/dL)</label>
+                      <input type="number" id="rf-hb2" step="0.1" placeholder="12.5" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Ferritina (ng/mL)</label>
+                      <input type="number" id="rf-ferr2" step="0.1" placeholder="15" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                    </div>
+                  </div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
+                    <div>
+                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>VCM (fL)</label>
+                      <input type="number" id="rf-vcm2" step="0.1" placeholder="82" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                    </div>
+                    <div>
+                      <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>RDW (%)</label>
+                      <input type="number" id="rf-rdw2" step="0.1" placeholder="13.5" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                    </div>
+                  </div>
+                  <div style={{ marginBottom:10 }}>
+                    <label style={{ color:'rgba(255,255,255,0.55)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sat. Transferrina (%)</label>
+                    <input type="number" id="rf-sat2" step="0.1" placeholder="25" style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.18)', borderRadius:6, padding:'5px 6px', color:'rgba(255,255,255,0.85)', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                  </div>
+
+                  {/* Contexto Clínico */}
+                  <div style={{ marginBottom:10 }}>
+                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:8, textTransform:'uppercase', letterSpacing:1, margin:'0 0 5px' }}>Contexto Clínico</p>
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:4, marginBottom:6 }}>
+                      {[['bariatrica','Bariátrica'],['vegetariano','Vegetariano'],['perda','Hemorragia'],['alcoolista','Alcoolista'],['transfundido','Transfundido'],['hemoAlta','Hb Alta']].map(([k,l]) => (
+                        <label key={k} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:6, padding:'5px 6px', cursor:'pointer', fontSize:9, color:'rgba(255,255,255,0.7)' }}>
+                          <input type="checkbox" id={`rf2-${k}`} style={{ width:10, height:10, accentColor:'#DC2626', flexShrink:0 }} /> {l}
+                        </label>
+                      ))}
+                    </div>
+                    <p style={{ color:'rgba(255,255,255,0.4)', fontSize:8, textTransform:'uppercase', letterSpacing:1, margin:'0 0 5px' }}>Medicamentos</p>
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:4 }}>
+                      {[['aspirina','Aspirina'],['b12','Vitamina B12'],['ferroMed','Ferro Oral/EV']].map(([k,l]) => (
+                        <label key={k} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:6, padding:'5px 6px', cursor:'pointer', fontSize:9, color:'rgba(255,255,255,0.7)' }}>
+                          <input type="checkbox" id={`rf2-${k}`} style={{ width:10, height:10, accentColor:'#DC2626', flexShrink:0 }} /> {l}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p id="rf-erro2" style={{ color:'#F87171', fontSize:10, margin:'0 0 6px', display:'none' }} />
+                  <button onClick={() => rfAvaliar2()} style={{ width:'100%', background:'#7B1E1E', color:'white', border:'none', borderRadius:9, padding:10, fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                    🔬 Avaliar Eritron
+                  </button>
+                  <p style={{ color:'rgba(255,255,255,0.2)', fontSize:8, textAlign:'center', margin:'8px 0 0', letterSpacing:'0.3px' }}>
+                    RedFairy · Cuidar do Seu Eritron · by cytomica.com © 2026
+                  </p>
                 </div>
-              )
-            })()}
+
+                {/* Resultado */}
+                <div id="rf-view-result" style={{ display:'none', padding:11 }}>
+                  <div id="rf-result-header" style={{ borderRadius:'10px 10px 0 0', padding:'10px 12px' }}>
+                    <p style={{ fontSize:8, color:'rgba(255,255,255,0.6)', margin:'0 0 2px', textTransform:'uppercase', letterSpacing:1 }}>Diagnóstico</p>
+                    <p id="rf-result-label" style={{ fontSize:13, fontWeight:700, color:'white', margin:0 }} />
+                  </div>
+                  <div style={{ background:'rgba(0,0,0,0.3)', borderRadius:'0 0 10px 10px', padding:'10px 12px', marginBottom:8 }}>
+                    <p style={{ fontSize:8, color:'rgba(255,255,255,0.45)', margin:'0 0 3px', textTransform:'uppercase', letterSpacing:1 }}>Diagnóstico</p>
+                    <p id="rf-result-diag" style={{ fontSize:10, color:'rgba(255,255,255,0.85)', margin:'0 0 10px', lineHeight:1.6 }} />
+                    <p style={{ fontSize:8, color:'rgba(255,255,255,0.45)', margin:'0 0 3px', textTransform:'uppercase', letterSpacing:1 }}>Recomendação</p>
+                    <p id="rf-result-rec" style={{ fontSize:10, color:'rgba(255,255,255,0.85)', margin:0, lineHeight:1.6 }} />
+                  </div>
+                  <div style={{ background:'rgba(220,38,38,0.15)', border:'1px solid rgba(220,38,38,0.3)', borderRadius:10, padding:'10px 12px', textAlign:'center', marginBottom:8 }}>
+                    <p style={{ color:'rgba(255,255,255,0.55)', fontSize:9, margin:'0 0 6px' }}>Para orientações completas com dosagens:</p>
+                    <button onClick={onModoMedico} style={{ background:'#7B1E1E', color:'white', border:'none', borderRadius:7, padding:'7px 12px', fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
+                      Acessar RedFairy completo →
+                    </button>
+                  </div>
+                  <button onClick={() => rfReset2()} style={{ width:'100%', background:'rgba(255,255,255,0.07)', color:'rgba(255,255,255,0.6)', border:'none', borderRadius:8, padding:8, fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
+                    ← Nova avaliação
+                  </button>
+                </div>
+              </div>
+
+              {/* Home bar */}
+              <div style={{ background:'#0F0F1A', padding:7, display:'flex', justifyContent:'center' }}>
+                <div style={{ width:70, height:3, background:'rgba(255,255,255,0.2)', borderRadius:2 }} />
+              </div>
+            </div>
           </div>
         </div>
       </section>
