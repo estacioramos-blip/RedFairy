@@ -399,6 +399,7 @@ function AdminConfigModal({ onFechar }) {
 export default function Calculator({ onVoltar, modoDemo }) {
   const [cadastrado, setCadastrado] = useState(null)
   const [preFlag, setPreFlag] = useState(null)
+  const [preDemoDados, setPreDemoDados] = useState(null)
   const [medicoNome, setMedicoNome] = useState('')
   const [medicoCRM, setMedicoCRM] = useState('')
 
@@ -415,6 +416,14 @@ export default function Calculator({ onVoltar, modoDemo }) {
     setMedicoNome(nome || '')
     setMedicoCRM(crm || '')
     const flag = localStorage.getItem('rf_flag'); if (flag) { setPreFlag(flag); localStorage.removeItem('rf_flag') }
+    const demoDados = localStorage.getItem('rf_demo_dados')
+    if (demoDados) {
+      try {
+        const d = JSON.parse(demoDados)
+        setPreDemoDados(d)
+        localStorage.removeItem('rf_demo_dados')
+      } catch(e) {}
+    }
   }, [modoDemo])
 
   function handleLogout() {
@@ -435,11 +444,11 @@ export default function Calculator({ onVoltar, modoDemo }) {
     }} />
   }
 
-  return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} onLogout={handleLogout} preFlag={preFlag} />
+  return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} onLogout={handleLogout} preFlag={preFlag} preDemoDados={preDemoDados} />
 }
 
 // ─── Formulário da calculadora ───────────────────────────────────────────────
-function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) {
+function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, preDemoDados }) {
   const [inputs, setInputs] = useState({
     cpf: '', sexo: 'M', idade: '', dataColeta: '',
     ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '',
@@ -452,6 +461,25 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
   });
 
   const [resultado, setResultado] = useState(null);
+
+  useEffect(() => {
+    if (preDemoDados) {
+      const hoje = new Date().toISOString().split('T')[0]
+      setInputs(prev => ({
+        ...prev,
+        sexo:       preDemoDados.sexo || prev.sexo,
+        idade:      preDemoDados.idade || prev.idade,
+        hemoglobina: preDemoDados.hb || '',
+        ferritina:   preDemoDados.ferr || '',
+        vcm:         preDemoDados.vcm || '',
+        rdw:         preDemoDados.rdw || '',
+        satTransf:   preDemoDados.sat || '',
+        dataColeta:  hoje,
+        bariatrica:  preDemoDados.bariatrica || prev.bariatrica,
+        bariatrica_medico: preDemoDados.bariatrica || prev.bariatrica_medico,
+      }))
+    }
+  }, [preDemoDados]);
 
   useEffect(() => {
     if (preFlag === 'bariatrica') {
