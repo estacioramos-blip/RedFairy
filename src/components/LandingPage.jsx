@@ -690,11 +690,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <div className="hero-visual reveal" style={{ transitionDelay:'0.15s' }}>
 
 
-            <a href="#oba" className="oba-home-btn">
-              <span className="oba-title">Projeto OBA</span>
-              <span className="oba-sub">Otimizar o Bariátrico</span>
-              <span className="oba-link">Saiba mais</span>
-            </a>
+
           </div>
         </div>
       </section>
@@ -827,6 +823,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             {['Sangramentos Crônicos','Vegetarianos','Gestantes','Celíacos','Doadores de Sangue','Uso de Testosterona','Endometriose e Miomas','Menstruação Excessiva','Deficiência de G-6-PD','Alcoolistas'].map(i => (
               <div key={i} className="ind auto-dot"><strong>{i}</strong></div>
             ))}
+          </div>
+          <div style={{ display:'flex', justifyContent:'center', marginTop:'2rem' }}>
+            <a href="#oba" className="oba-home-btn">
+              <span className="oba-title">Projeto OBA</span>
+              <span className="oba-sub">Otimizar o Bariátrico</span>
+              <span className="oba-link">Saiba mais →</span>
+            </a>
           </div>
         </div>
       </section>
