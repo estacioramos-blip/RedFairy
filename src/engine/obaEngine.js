@@ -160,6 +160,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modAcomp = buildModAcompanhamento(dadosOBA, alertas)
   if (modAcomp) modulos.push(modAcomp)
 
+  // ── 15. MÓDULO LEUCÓCITOS E NEUTRÓFILOS ──────────────────────────────────
+  const modLeucos = buildModLeucos(examesOBA, alertas, examesSuger)
+  if (modLeucos) modulos.push(modLeucos)
+
   // ── Ordenar alertas por prioridade ──────────────────────────────────────
   const prioridade = { [GRAVE]: 0, [MODERADO]: 1, [LEVE]: 2 }
   alertas.sort((a, b) => prioridade[a.nivel] - prioridade[b.nivel])

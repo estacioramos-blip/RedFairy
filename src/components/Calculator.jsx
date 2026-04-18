@@ -443,7 +443,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
   const [inputs, setInputs] = useState({
     cpf: '', sexo: 'M', idade: '', dataColeta: '',
     ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '',
-    bariatrica: preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica', vegetariano: false, perda: false,
+    bariatrica: preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica',
+    bariatrica_medico: false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false,
     tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false,
@@ -726,7 +727,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
         vcm: Number(inputs.vcm),
         rdw: Number(inputs.rdw),
         sat_transf: Number(inputs.satTransf),
-        bariatrica: inputs.bariatrica,
+        bariatrica: inputs.bariatrica || inputs.bariatrica_medico,
+        bariatrica_medico: inputs.bariatrica_medico || false,
         vegetariano: inputs.vegetariano,
         perda: inputs.perda,
         hipermenorreia: inputs.hipermenorreia,
@@ -915,6 +917,15 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
                 <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className="input" />
                 <p className="text-xs text-gray-400 mt-0.5">Vincula ao paciente</p>
                 <p className="text-xs text-orange-500 mt-0.5">Digite apenas os números, sem pontos ou hífen</p>
+              </div>
+              <div className="col-span-2">
+                <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+                  <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm leading-tight">Paciente Bariátrico</p>
+                    <p className="text-xs opacity-70 leading-tight mt-0.5">Encaminha para avaliação OBA no modo paciente</p>
+                  </div>
+                </label>
                 
               </div>
               <div>
