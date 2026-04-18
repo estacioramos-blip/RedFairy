@@ -51,7 +51,7 @@ const LANDING_CSS = `
 
   /* HERO */
   .hero { min-height: auto; display: flex; align-items: center; padding: 5.5rem 2rem 1.5rem; background: var(--white); position: relative; overflow: hidden; }
-  .hero-wrap { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; position: relative; z-index: 2; }
+  .hero-wrap { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2; }
   .hero-badge { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 2.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; text-align: center; width: 100%; max-width: 480px; box-sizing: border-box; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
   .hero-badge .badge-main { display: flex; align-items: center; gap: 0.5rem; }
@@ -121,6 +121,7 @@ const LANDING_CSS = `
     background: var(--white); border: 1px solid var(--border); border-radius: 16px;
     padding: 2rem 2.5rem; box-shadow: var(--shadow);
     position: relative; overflow: hidden; cursor: pointer; margin-bottom: 0.8rem;
+    width: 100%; max-width: 700px; text-align: center;
   }
   .hero-textbox-bg {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -135,9 +136,9 @@ const LANDING_CSS = `
   .hero h1 { font-size: 3.6rem; line-height: 1.12; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
   .hero h1 .red { color: var(--cherry); }
   .hero-philosophy { font-style: normal; font-size: 1.15rem; color: var(--wine); margin-bottom: 0; line-height: 1.65; font-weight: 700; }
-  .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 100%; line-height: 1.7; margin-bottom: 1.2rem; font-weight: 700; text-align: justify; }
-  .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
-  .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; }
+  .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 100%; line-height: 1.7; margin-bottom: 1.2rem; font-weight: 700; text-align: center; }
+  .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; justify-content: center; }
+  .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; justify-content: center; }
   .trust-i { display: flex; align-items: center; gap: 0.35rem; }
   .trust-i svg { width: 15px; height: 15px; color: var(--cherry); }
   .trust-i span { font-size: 0.8rem; color: var(--text-light); }
@@ -641,7 +642,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </div>
 
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem', marginBottom:'0.5rem', width:'100%' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem', marginBottom:'0.5rem', width:'100%', maxWidth:700 }}>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
                 <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>
                   <span>Sou Médico</span>
@@ -659,7 +660,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               </div>
             </div>
             {/* Dupla linha vermelha + texto afiliados */}
-            <div style={{ margin:'0.5rem 0 0.8rem', textAlign:'center' }}>
+            <div style={{ margin:'0.5rem 0 0.8rem', textAlign:'center', width:'100%', maxWidth:700 }}>
               <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.5rem' }} />
               <p style={{ color:'#1F2937', fontSize:'0.88rem', fontWeight:600, margin:'0.3rem 0 0.1rem' }}>
                 Avalie um paciente e torne-se membro do Programa de Afiliados patrocinado.
