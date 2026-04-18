@@ -681,14 +681,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
           {/* COLUNA DIREITA */}
           <div className="hero-visual reveal" style={{ transitionDelay:'0.15s' }}>
-            <div className="fairy-showcase" onClick={handleFadaClick} style={{ cursor:'pointer' }}>
-              <img src={logo} alt="RedFairy — A Fada Vermelha" />
-            </div>
-            {/* fairy-quote: retângulo branco simples, sem hover */}
-            <div className="fairy-quote">
-              <p>O Ferro em você veio das estrelas, é dele o vermelho do seu sangue — a sua potência.</p>
-              <p className="question">Cuide da sua Hemoglobina, ela é a sua vida.</p>
-            </div>
+
+
             <a href="#oba" className="oba-home-btn">
               <span className="oba-title">Projeto OBA</span>
               <span className="oba-sub">Otimizar o Bariátrico</span>
