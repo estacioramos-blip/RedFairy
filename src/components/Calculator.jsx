@@ -470,6 +470,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
   const [showOBA, setShowOBA] = useState(false);
   const [dadosOBAColetados, setDadosOBAColetados] = useState(null);
   const [erros, setErros] = useState({});
+  const [aberrantes, setAberrantes] = useState({});
   const [showSobre, setShowSobre] = useState(false);
   const [showSaibaMais, setShowSaibaMais] = useState(false);
   const [showDemoMenu, setShowDemoMenu] = useState(false);
@@ -567,6 +568,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
     return digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6,9) + '-' + digits.slice(9);
   }
 
+  const LIMITES_ABERRANTE = {
+    ferritina:   { min: 1,   max: 5000 },
+    hemoglobina: { min: 4,   max: 22   },
+    vcm:         { min: 50,  max: 140  },
+    rdw:         { min: 8,   max: 30   },
+    satTransf:   { min: 1,   max: 99   },
+  };
+
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
     const novoValor = name === 'cpf' ? formatarCPF(value) : (type === 'checkbox' ? checked : value);
@@ -574,6 +583,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
     if (name === 'bariatrica') {
       if (!checked) setDadosOBAColetados(null);
+    }
+    // Crítica de valor aberrante
+    if (LIMITES_ABERRANTE[name] && value !== '') {
+      const num = parseFloat(String(value).replace(',', '.'));
+      const lim = LIMITES_ABERRANTE[name];
+      if (!isNaN(num) && (num < lim.min || num > lim.max)) {
+        setAberrantes(prev => ({ ...prev, [name]: true }));
+      } else {
+        setAberrantes(prev => ({ ...prev, [name]: false }));
+      }
     }
   }
 
@@ -592,11 +611,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
   function sanitizarNumero(valor) {
     if (!valor && valor !== 0) return valor;
     const str = String(valor).trim();
-    // Remove ponto de milhar (ex: "1.000" → "1000", "1.500" → "1500")
-    // Regra: ponto seguido de exatamente 3 dígitos é milhar
-    const semMilhar = str.replace(/\.(\d{3})(?!\d)/g, '$1');
-    // Vírgula como decimal → ponto (ex: "13,5" → "13.5")
+    const semMilhar = str.replace(/\.(?=\d{3}(?!\d))/g, '');
     const comPontoDecimal = semMilhar.replace(',', '.');
+    const num = parseFloat(comPontoDecimal);
+    if (!isNaN(num)) return String(Math.round(num));
     return comPontoDecimal;
   }
 
@@ -933,12 +951,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
               <IconExames /> Exames Laboratoriais
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              <LabInput label="Ferritina" unit="ng/mL" name="ferritina" reference={inputs.sexo === 'M' ? '24-336' : '25-150'} value={inputs.ferritina} onChange={handleChange} error={erros.ferritina} hint="Sem ponto ou vírgula. Ex: 1140" />
-              <LabInput label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} />
-              <LabInput label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} />
-              <LabInput label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} />
+              <LabInput label="Ferritina" unit="ng/mL" name="ferritina" reference={inputs.sexo === 'M' ? '24-336' : '25-150'} value={inputs.ferritina} onChange={handleChange} error={erros.ferritina} hint="Não use ponto para valores superiores a 1000. Ex: 1140" aberrante={!!aberrantes["ferritina"]} />
+              <LabInput label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} aberrante={!!aberrantes["hemoglobina"]} />
+              <LabInput label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} aberrante={!!aberrantes["vcm"]} />
+              <LabInput label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} aberrante={!!aberrantes["rdw"]} />
               <div className="col-span-2">
-                <LabInput label="Sat. Transferrina" unit="%" name="satTransf" reference="20-50" value={inputs.satTransf} onChange={handleChange} error={erros.satTransf} />
+                <LabInput label="Sat. Transferrina" unit="%" name="satTransf" reference="20-50" value={inputs.satTransf} onChange={handleChange} error={erros.satTransf} aberrante={!!aberrantes["satTransf"]} />
               </div>
             </div>
           </section>
@@ -1038,16 +1056,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag }) 
   );
 }
 
-function LabInput({ label, unit, name, reference, value, onChange, error, hint }) {
+function LabInput({ label, unit, name, reference, value, onChange, error, hint, aberrante }) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-600 mb-1">
         {label} <span className="text-xs text-gray-400">({unit})</span>
       </label>
       <input type="text" inputMode="decimal" name={name} value={value} onChange={onChange} placeholder="0"
-        className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${error ? 'border-red-500' : 'border-gray-200'}`} />
+        className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : 'border-gray-200'}`} />
       <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
       {hint && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
+      {aberrante && <p className="text-xs font-bold text-yellow-600 mt-0.5">⚠ VALOR ABERRANTE — CONFIRME</p>}
       {error && <p className="text-red-500 text-xs">{error}</p>}
     </div>
   );
