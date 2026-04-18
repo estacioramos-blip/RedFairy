@@ -21,6 +21,8 @@ const ESPECIALISTAS = [
   'CARDIOLOGISTA',
   'NEUROLOGISTA',
   'PSIQUIATRA',
+  'REUMATOLOGISTA',
+  'ORTOPEDISTA',
   'OUTRO',
 ]
 
@@ -680,7 +682,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Especialistas que me acompanham:</label>
           <CheckRow
-            label="NÃO ESTOU SOB ACOMPANHAMENTO DE ESPECIALISTA"
+            label="NÃO ESTOU SOB ACOMPANHAMENTO"
             checked={form.semEspecialista}
             onClick={() => sf('semEspecialista', !form.semEspecialista)}
           />
