@@ -213,7 +213,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
   const [form, setForm] = useState({
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
-    ganhou_peso_apos: false, fez_plasma_argonio: false,
+    ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
     status_intestinal: '', status_fibromialgia: [],
     tipo_cirurgia: '',
@@ -231,7 +231,54 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
     compulsoes: [], medicamentos: [], emagrecedores: {},
   })
 
+  const LIMITES_OBA = {
+    'leucocitos': { min:500, max:20000 },
+    'neutrofilos': { min:1, max:99 },
+    'plaquetas': { min:10, max:1000 },
+    'ferritina_oba': { min:1, max:5000 },
+    'vitamina_b12': { min:50, max:2000 },
+    'vitamina_d': { min:1, max:200 },
+    'tsh': { min:0.01, max:50 },
+    'hb_glicada': { min:3, max:20 },
+    'glicemia': { min:30, max:600 },
+    'insulina': { min:0.5, max:200 },
+    'triglicerides': { min:20, max:2000 },
+    'ast': { min:5, max:1000 },
+    'alt': { min:5, max:1000 },
+    'gama_gt': { min:5, max:1000 },
+    'creatinina': { min:0.3, max:15 },
+    'acido_urico': { min:1, max:20 },
+    'folatos': { min:1, max:50 },
+    'zinco': { min:20, max:300 },
+    'vitamina_a': { min:5, max:200 },
+    'vitamina_e': { min:1, max:50 },
+    'tiamina': { min:10, max:500 },
+    'selenio': { min:10, max:400 },
+    'vitamina_c': { min:0.1, max:10 },
+    'vitamina_k': { min:0.05, max:15 },
+    'niacina': { min:0.1, max:30 },
+    'testosterona': { min:5, max:2000 },
+    'psa_total': { min:0, max:100 },
+    'ca199': { min:0, max:500 },
+    'estradiol': { min:5, max:5000 },
+    'cea': { min:0, max:100 }
+  }
+
   const [dataExames, setDataExames] = useState('')
+  const [aberrantesOBA, setAberrantesOBA] = useState({})
+
+  function handleExameChangeOBA(key, value) {
+    handleExameChange(key, value)
+    if (value !== '') {
+      const num = parseFloat(value)
+      const lim = LIMITES_OBA[key]
+      if (lim && !isNaN(num)) {
+        setAberrantesOBA(prev => ({ ...prev, [key]: num < lim.min || num > lim.max }))
+      }
+    } else {
+      setAberrantesOBA(prev => ({ ...prev, [key]: false }))
+    }
+  }
   const diasExames = calcDias(dataExames)
   const [exames, setExames] = useState(Object.fromEntries(todosExames.map(e => [e.key, ''])))
 
@@ -494,7 +541,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem' }}>
             {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => (
-              <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : 'white', border:'1.5px solid #F3F4F6', borderRadius:8, padding:'0.5rem 0.7rem' }}>
+              <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : 'white', border: aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #F3F4F6', borderRadius:8, padding:'0.5rem 0.7rem' }}>
                 <span style={{ fontSize:'0.8rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#374151' }}>{ex.label}</span>
                 <span style={{ fontSize:'0.65rem', color:'#9CA3AF' }}>({ex.unit})</span>
                 {ex.ref && <span style={{ fontSize:'0.62rem', color:'#6B7280', fontStyle:'italic' }}>V.R.: {ex.ref}</span>}
@@ -504,7 +551,8 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
                   type="number" step="0.01" placeholder={ex.readOnly ? 'auto' : '—'}
                   readOnly={ex.readOnly}
                   value={exames[ex.key] || ''}
-                  onChange={e => !ex.readOnly && handleExameChange(ex.key, e.target.value)} />
+                  onChange={e => !ex.readOnly && handleExameChangeOBA(ex.key, e.target.value)} />
+                {aberrantesOBA[ex.key] && <span style={{ fontSize:'0.62rem', fontWeight:700, color:'#CA8A04', marginTop:'0.2rem' }}>⚠ VALOR ABERRANTE — CONFIRME</span>}
               </div>
             ))}
           </div>
@@ -617,8 +665,18 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
           <RadioGroup options={ACOMPANHAMENTO_OPS} value={form.acompanhamento} onChange={v => sf('acompanhamento', v)} />
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Especialistas que me acompanham:</label>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
-            {ESPECIALISTAS.map(e => <CheckRow key={e} label={e} checked={form.especialistas.includes(e)} onClick={() => sf('especialistas', tog(form.especialistas, e))} />)}
+          <CheckRow
+            label="NÃO ESTOU SOB ACOMPANHAMENTO DE ESPECIALISTA"
+            checked={form.semEspecialista}
+            onClick={() => sf('semEspecialista', !form.semEspecialista)}
+          />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem', marginTop:'0.4rem' }}>
+            {ESPECIALISTAS.map(e => (
+              <CheckRow key={e} label={e}
+                checked={form.especialistas.includes(e)}
+                disabled={form.semEspecialista}
+                onClick={() => !form.semEspecialista && sf('especialistas', tog(form.especialistas, e))} />
+            ))}
           </div>
 
           {/* ── STATUS GESTACIONAL ── */}
