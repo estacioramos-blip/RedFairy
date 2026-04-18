@@ -449,11 +449,14 @@ export default function Calculator({ onVoltar, modoDemo }) {
 
 // ─── Formulário da calculadora ───────────────────────────────────────────────
 function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, preDemoDados }) {
+  const _demo = (() => { try { const d = localStorage.getItem('rf_demo_dados'); if (d) { localStorage.removeItem('rf_demo_dados'); return JSON.parse(d) } } catch(e) {} return null })()
+  const _hoje = new Date().toISOString().split('T')[0]
+
   const [inputs, setInputs] = useState({
-    cpf: '', sexo: 'M', idade: '', dataColeta: '',
+    cpf: '', sexo: _demo?.sexo || 'M', idade: '', dataColeta: '',
     ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '',
-    bariatrica: preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica',
-    bariatrica_medico: false, vegetariano: false, perda: false,
+    bariatrica: _demo?.bariatrica || preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica',
+    bariatrica_medico: _demo?.bariatrica || false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, ferroOral: false,
     tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false,
@@ -461,25 +464,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
   });
 
   const [resultado, setResultado] = useState(null);
-
-  useEffect(() => {
-    if (preDemoDados) {
-      const hoje = new Date().toISOString().split('T')[0]
-      setInputs(prev => ({
-        ...prev,
-        sexo:       preDemoDados.sexo || prev.sexo,
-        idade:      preDemoDados.idade || prev.idade,
-        hemoglobina: preDemoDados.hb || '',
-        ferritina:   preDemoDados.ferr || '',
-        vcm:         preDemoDados.vcm || '',
-        rdw:         preDemoDados.rdw || '',
-        satTransf:   preDemoDados.sat || '',
-        dataColeta:  hoje,
-        bariatrica:  preDemoDados.bariatrica || prev.bariatrica,
-        bariatrica_medico: preDemoDados.bariatrica || prev.bariatrica_medico,
-      }))
-    }
-  }, [preDemoDados]);
 
   useEffect(() => {
     if (preFlag === 'bariatrica') {
