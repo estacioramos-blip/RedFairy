@@ -156,6 +156,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modGest = buildModGestacional(dadosOBA, mesesPos, alertas, examesSuger)
   if (modGest) modulos.push(modGest)
 
+  // ── 14. MÓDULO ACOMPANHAMENTO ────────────────────────────────────────────
+  const modAcomp = buildModAcompanhamento(dadosOBA, alertas)
+  if (modAcomp) modulos.push(modAcomp)
+
   // ── Ordenar alertas por prioridade ──────────────────────────────────────
   const prioridade = { [GRAVE]: 0, [MODERADO]: 1, [LEVE]: 2 }
   alertas.sort((a, b) => prioridade[a.nivel] - prioridade[b.nivel])
@@ -211,6 +215,12 @@ function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir,
     linhas.push('O ERITRON ESTÁ COMPROMETIDO DE FORMA MODERADA A IMPORTANTE. A SÍNDROME DISABSORTIVA BARIÁTRICA ESTÁ CLARAMENTE IMPACTANDO A ERITROPOESE. REAVALIAÇÃO URGENTE DA SUPLEMENTAÇÃO E INVESTIGAÇÃO DE OUTRAS CAUSAS.')
   } else if (color === 'red') {
     linhas.push('O ERITRON ESTÁ GRAVEMENTE COMPROMETIDO. A COMBINAÇÃO DE SÍNDROME DISABSORTIVA BARIÁTRICA COM SUPLEMENTAÇÃO INSUFICIENTE OU AUSENTE PRODUZIU ANEMIA SIGNIFICATIVA. INTERVENÇÃO MÉDICA URGENTE É NECESSÁRIA.')
+  }
+
+  // HIV/ARV — macrocitose e anemia
+  if (dadosOBA.hivTratamento) {
+    linhas.push('TRATAMENTO PARA HIV/ARV: ANTIRRETROVIRAIS (ESPECIALMENTE AZT/ZIDOVUDINA) PODEM CAUSAR MACROCITOSE E ANEMIA. NO BARIÁTRICO, ESSE EFEITO SE SOMA À SÍNDROME DISABSORTIVA. MONITORAR HEMOGRAMA COM ATENÇÃO AO VCM E RETICULÓCITOS. COMUNICAR AO INFECTOLOGISTA O CONTEXTO BARIÁTRICO.')
+    alertas.push({ nivel: MODERADO, texto: 'TRATAMENTO ARV: RISCO DE MACROCITOSE E ANEMIA — CORRELACIONAR COM HEMOGRAMA.' })
   }
 
   // Plasma de argônio
@@ -270,6 +280,18 @@ function buildModB12(ex, dados, disab, alertas, suger) {
     alertas.push({ nivel: LEVE, texto: `B12 LIMÍTROFE: ${b12} pg/mL — AUMENTAR SUPLEMENTAÇÃO.` })
   } else {
     linhas.push('VITAMINA B12 DENTRO DA FAIXA ADEQUADA PARA O CONTEXTO BARIÁTRICO. MANTER SUPLEMENTAÇÃO ATUAL E REMONITORAR EM 6 MESES.')
+  }
+
+  // Metformina e IBP agravam deficiência de B12
+  const usaMetformina = dados.metformina || false
+  const usaIBP = dados.ibp || false
+  if (usaMetformina) {
+    linhas.push('USO DE METFORMINA: REDUZ SIGNIFICATIVAMENTE A ABSORÇÃO DE VITAMINA B12 — RISCO CUMULATIVO COM A SÍNDROME DISABSORTIVA BARIÁTRICA. MONITORAR B12 A CADA 6 MESES.')
+    if (nivel === NORMAL) alertas.push({ nivel: LEVE, texto: 'METFORMINA + BARIÁTRICA: RISCO AUMENTADO DE DÉFICIT DE B12 — MONITORAR.' })
+  }
+  if (usaIBP) {
+    linhas.push('USO DE IBP (OMEPRAZOL/PANTOPRAZOL): SUPRIME ÁCIDO GÁSTRICO NECESSÁRIO PARA ABSORÇÃO DE B12. NO BARIÁTRICO, O USO CRÔNICO DE IBP AGRAVA O RISCO DE DEFICIÊNCIA DE B12 E FERRO. AVALIAR REAL NECESSIDADE DE MANUTENÇÃO.')
+    if (nivel === NORMAL) alertas.push({ nivel: LEVE, texto: 'IBP CRÔNICO: REDUZ ABSORÇÃO DE B12 E FERRO — AVALIAR NECESSIDADE.' })
   }
 
   // Via de reposição
@@ -438,8 +460,16 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     } else {
       linhas.push('FOLATOS DENTRO DA FAIXA NORMAL.')
     }
+    if (dados.methotrexato) {
+      linhas.push('USO DE METOTREXATO: ANTAGONISTA DO ÁCIDO FÓLICO. CAUSA DEPLEÇÃO PROGRESSIVA DE FOLATOS — EFEITO SOMADO À DISABSORÇÃO BARIÁTRICA. SUPLEMENTAÇÃO COM ÁCIDO FÓLICO 5 MG/DIA É OBRIGATÓRIA. MONITORAR FOLATOS E HEMOGRAMA REGULARMENTE.')
+      alertas.push({ nivel: MODERADO, texto: 'METOTREXATO + BARIÁTRICA: ALTO RISCO DE DEFICIÊNCIA DE FOLATOS — SUPLEMENTAR OBRIGATORIAMENTE.' })
+    }
   } else {
     suger.push('FOLATOS SÉRICOS')
+    if (dados.methotrexato) {
+      linhas.push('USO DE METOTREXATO SEM FOLATOS DOSADOS: METOTREXATO É ANTAGONISTA DO ÁCIDO FÓLICO. SOLICITAR FOLATOS URGENTE E INICIAR SUPLEMENTAÇÃO PREVENTIVA COM ÁCIDO FÓLICO 5 MG/DIA.')
+      alertas.push({ nivel: MODERADO, texto: 'METOTREXATO EM USO — DOSEAR FOLATOS E SUPLEMENTAR ÁCIDO FÓLICO.' })
+    }
   }
 
   // Selênio
@@ -454,6 +484,47 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     } else {
       linhas.push('SELÊNIO DENTRO DA FAIXA NORMAL.')
     }
+  }
+
+  // Vitamina C
+  const vitC = parseFloat(ex.vitamina_c)
+  if (!isNaN(vitC)) {
+    temAlgo = true
+    linhas.push(`VITAMINA C: ${vitC} mg/dL`)
+    if (vitC < REF.vitC.critico) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('VITAMINA C GRAVEMENTE BAIXA (< 0,2 mg/dL). RISCO DE ESCORBUTO: SANGRAMENTO GENGIVAL, PETÉQUIAS, COMPROMETIMENTO DE CICATRIZAÇÃO E FRAGILIDADE VASCULAR. A DEFICIÊNCIA DE VITAMINA C PREJUDICA TAMBÉM A ABSORÇÃO DE FERRO NÃO-HEME — AGRAVA ANEMIA FERROPRIVA. SUPLEMENTAÇÃO URGENTE: 500–1.000 MG/DIA.')
+      alertas.push({ nivel: MODERADO, texto: `VITAMINA C CRÍTICA: ${vitC} mg/dL — RISCO DE ESCORBUTO E COMPROMETIMENTO ABSORTIVO DE FERRO.` })
+    } else if (vitC < REF.vitC.baixo) {
+      if (nivelGeral === NORMAL) nivelGeral = LEVE
+      linhas.push('VITAMINA C BAIXA (0,2–0,4 mg/dL). SUPLEMENTAR 200–500 MG/DIA. A VITAMINA C POTENCIALIZA A ABSORÇÃO DO FERRO NÃO-HEME — IMPORTANTE NO BARIÁTRICO COM DEFICIÊNCIA DE FERRO.')
+      alertas.push({ nivel: LEVE, texto: `VITAMINA C BAIXA: ${vitC} mg/dL — SUPLEMENTAR.` })
+    } else {
+      linhas.push('VITAMINA C DENTRO DA FAIXA NORMAL.')
+    }
+  } else {
+    suger.push('VITAMINA C')
+  }
+
+  // Vitamina K
+  const vitK = parseFloat(ex.vitamina_k)
+  if (!isNaN(vitK)) {
+    temAlgo = true
+    linhas.push(`VITAMINA K: ${vitK} ng/mL`)
+    if (vitK < REF.vitK.critico) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('VITAMINA K GRAVEMENTE BAIXA (< 0,1 ng/mL). RISCO DE COAGULOPATIA E AGRAVAMENTO DA PERDA ÓSSEA. NO BARIÁTRICO COM VARIZES DE ESÔFAGO OU USO DE ANTICOAGULANTES, ESSE ACHADO É PARTICULARMENTE CRÍTICO. SUPLEMENTAÇÃO SUPERVISIONADA NECESSÁRIA.')
+      alertas.push({ nivel: MODERADO, texto: `VITAMINA K CRÍTICA: ${vitK} ng/mL — RISCO DE COAGULOPATIA.` })
+      suger.push('TEMPO DE PROTROMBINA (TP/INR)')
+    } else if (vitK < REF.vitK.baixo) {
+      if (nivelGeral === NORMAL) nivelGeral = LEVE
+      linhas.push('VITAMINA K BAIXA (0,1–0,2 ng/mL). IMPORTANTE PARA COAGULAÇÃO E SAÚDE ÓSSEA. SUPLEMENTAR VIA POLIVITAMÍNICO COM MK-7 (MENAQUINONA).')
+      alertas.push({ nivel: LEVE, texto: `VITAMINA K BAIXA: ${vitK} ng/mL — SUPLEMENTAR.` })
+    } else {
+      linhas.push('VITAMINA K DENTRO DA FAIXA NORMAL.')
+    }
+  } else {
+    suger.push('VITAMINA K')
   }
 
   if (!temAlgo) return null
@@ -939,6 +1010,27 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger) {
       linhas.push('TSH DENTRO DA NORMALIDADE.')
     }
   } else suger.push('TSH')
+
+  // Tiroxina exógena
+  const usaTiroxina = dados.tiroxina || false
+  if (usaTiroxina) {
+    temAlgo = true
+    if (!isNaN(tsh)) {
+      if (tsh > REF.tsh.hipotireoidismo) {
+        linhas.push('EM USO DE TIROXINA COM TSH AINDA ELEVADO: DOSE INSUFICIENTE OU ABSORÇÃO COMPROMETIDA PELA CIRURGIA BARIÁTRICA. CONSIDERAR AUMENTO DE DOSE OU FORMULAÇÃO LÍQUIDA/SUBLINGUAL. AVALIAÇÃO COM ENDOCRINOLOGISTA.')
+        alertas.push({ nivel: MODERADO, texto: 'TIROXINA EM USO MAS TSH AINDA ALTO — AJUSTE DE DOSE NECESSÁRIO.' })
+      } else if (tsh < REF.tsh.hipertireoidismo) {
+        linhas.push('EM USO DE TIROXINA COM TSH SUPRIMIDO: DOSE EXCESSIVA. RISCO DE FIBRILAÇÃO ATRIAL E PERDA ÓSSEA. REDUZIR DOSE COM ENDOCRINOLOGISTA.')
+        alertas.push({ nivel: MODERADO, texto: 'TIROXINA EM DOSE EXCESSIVA — TSH SUPRIMIDO. AJUSTAR.' })
+      } else {
+        linhas.push('EM USO DE TIROXINA COM TSH CONTROLADO: DOSE ADEQUADA. MANTER MONITORAMENTO SEMESTRAL.')
+      }
+    } else {
+      linhas.push('EM USO DE TIROXINA SEM TSH DOSADO: SOLICITAR TSH PARA AJUSTE DE DOSE. NO BARIÁTRICO, A ABSORÇÃO PODE VARIAR E A DOSE PRÉ-CIRURGIA PODE SER INSUFICIENTE.')
+      suger.push('TSH (AJUSTE DE DOSE DE TIROXINA)')
+      alertas.push({ nivel: LEVE, texto: 'TIROXINA EM USO — SOLICITAR TSH PARA CONTROLE.' })
+    }
+  }
 
   // Testosterona masculina
   if (sexo === 'M' && !isNaN(testo)) {
