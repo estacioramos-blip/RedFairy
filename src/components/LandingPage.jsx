@@ -598,10 +598,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
       {/* NAV */}
       <nav id="landing-nav" className={navScrolled ? 'scrolled' : ''} style={{ position:'fixed', top:0, left:0, right:0, boxSizing:'border-box', zIndex:1000, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.75rem 2rem' }}>
-        <a href="#" className="nav-brand">
+        <div className="nav-brand">
           <img src={logo} alt="RedFairy" style={{ height:36 }} />
           <span>Red<em>Fairy</em></span>
-        </a>
+        </div>
         <div className={`nav-links${navOpen ? ' open' : ''}`}>
           <a href="#filosofia" onClick={() => { setShowFilosofia(true); setNavOpen(false) }}>Filosofia</a>
           <a href="#como-funciona" onClick={() => setNavOpen(false)}>Como funciona</a>
