@@ -521,6 +521,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
 
   useEffect(() => {
     async function carregarMedico() {
+      // Verificar timeout de sessão (8 horas)
+      const loginAt = localStorage.getItem('medico_login_at')
+      const OITO_HORAS = 8 * 60 * 60 * 1000
+      if (loginAt && Date.now() - parseInt(loginAt) > OITO_HORAS) {
+        localStorage.removeItem('medico_crm')
+        localStorage.removeItem('medico_nome')
+        localStorage.removeItem('medico_login_at')
+        setSessaoExpirada(true)
+        return
+      }
       if (!medicoCRM) return;
       const { data } = await supabase
         .from('medicos')
