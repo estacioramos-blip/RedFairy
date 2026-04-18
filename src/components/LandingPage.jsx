@@ -404,6 +404,7 @@ const colorMap = {
 export default function LandingPage({ onModoMedico, onModoPaciente }) {
   const [navScrolled, setNavScrolled] = useState(false)
   const [navOpen,     setNavOpen]     = useState(false)
+  const [showFilosofia, setShowFilosofia] = useState(false)
   const [activeTab,   setActiveTab]   = useState('medico')
   const [showHtb,     setShowHtb]     = useState(false)
   const [showFil,     setShowFil]     = useState(false)
@@ -601,7 +602,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <span>Red<em>Fairy</em></span>
         </a>
         <div className={`nav-links${navOpen ? ' open' : ''}`}>
-          <a href="#filosofia">Filosofia</a>
+          <a href="#filosofia" onClick={() => setShowFilosofia(true)}>Filosofia</a>
           <a href="#como-funciona">Como funciona</a>
           <a href="#indicacoes">Indicações</a>
           <a href="#avaliar">Avaliar</a>
@@ -700,7 +701,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
 
       {/* FILOSOFIA */}
-      <section className="filosofia" id="filosofia">
+      <section className="filosofia" id="filosofia" style={{ display: showFilosofia ? 'block' : 'none' }}>
         <div className="container">
           <div className="reveal">
             <span className="tag">Filosofia</span>
