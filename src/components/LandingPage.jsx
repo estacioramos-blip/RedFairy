@@ -50,7 +50,7 @@ const LANDING_CSS = `
   .whatsapp-btn svg { width: 30px; height: 30px; fill: white; }
 
   /* HERO */
-  .hero { min-height: auto; display: flex; align-items: center; padding: 5.5rem 2rem 1.5rem; background: var(--white); position: relative; overflow: hidden; }
+  .hero { min-height: auto; display: flex; align-items: center; padding: 4rem 2rem 1rem; background: var(--white); position: relative; overflow: hidden; }
   .hero-wrap { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2; }
   .hero-badge { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 2.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; text-align: center; width: 100%; max-width: 480px; box-sizing: border-box; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
@@ -163,7 +163,7 @@ const LANDING_CSS = `
 
   /* CONTAINER / SECTIONS */
   .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
-  section { padding: 5.5rem 2rem; }
+  section { padding: 3rem 2rem; }
   .center { text-align: center; }
   .tag { display: inline-block; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--cherry); margin-bottom: 0.6rem; }
   .stitle { font-size: 2.3rem; color: var(--text); margin-bottom: 0.7rem; font-weight: 800; }
@@ -171,7 +171,7 @@ const LANDING_CSS = `
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
   /* FILOSOFIA — novo layout: texto esquerda, retângulo imagem direita */
-  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; padding-top: 1.5rem; padding-bottom: 2rem; }
+  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; padding-top: 1rem; padding-bottom: 1.5rem; }
   .filosofia .tag { color: var(--cherry); margin-bottom: 0.3rem; }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 1.5rem; }
   .fil-img-box .fil-content p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
@@ -216,8 +216,8 @@ const LANDING_CSS = `
 
   /* TERAPÊUTICA */
   .terapeutica { background: var(--gray-bg); }
-  .terap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.2rem; margin-top: 2.5rem; }
-  .terap-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.8rem; transition: all 0.2s; }
+  .terap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+  .terap-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.2rem; transition: all 0.2s; }
   .terap-card:hover { box-shadow: var(--shadow); }
   .terap-card .tc-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 0.8rem; background: var(--cherry-bg); }
   .terap-card h4 { font-size: 0.95rem; margin-bottom: 0.3rem; }
@@ -282,8 +282,8 @@ const LANDING_CSS = `
   /* CTA FINAL */
   .cta-final { background: var(--gray-bg); }
   .cta-final .tag { color: var(--cherry); }
-  .cta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2.5rem; }
-  .cta-c { border-radius: 16px; padding: 1rem 1.5rem; transition: transform 0.25s; display: flex; flex-direction: column; justify-content: space-between; }
+  .cta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+  .cta-c { border-radius: 16px; padding: 0.8rem 1.2rem; transition: transform 0.25s; display: flex; flex-direction: column; justify-content: space-between; }
   .cta-c:hover { transform: translateY(-4px); }
   .cta-doc { background: #D1D5DB; border: 1px solid #9CA3AF; box-shadow: var(--shadow); }
   .cta-pat { background: var(--wine); border: 1px solid var(--wine-dark); box-shadow: 0 8px 30px rgba(123,30,30,0.2); }
@@ -825,8 +825,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               <div key={i} className="ind auto-dot"><strong>{i}</strong></div>
             ))}
           </div>
-          <div style={{ display:'flex', justifyContent:'center', marginTop:'2rem' }}>
-            <a href="#oba" className="oba-home-btn">
+          <div style={{ display:'flex', justifyContent:'center', marginTop:'1.5rem' }}>
+            <a href="#oba" className="oba-home-btn" style={{ padding:'0.7rem 1.5rem' }}>
               <span className="oba-title">Projeto OBA</span>
               <span className="oba-sub">Otimizar o Bariátrico</span>
               <span className="oba-link">Saiba mais →</span>
