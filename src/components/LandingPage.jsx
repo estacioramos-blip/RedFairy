@@ -648,13 +648,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   <span>Sou Médico</span>
                   <span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span>
                 </button>
-                <p style={{ fontSize:'0.78rem', color:'var(--text-sec)', lineHeight:1.6, fontWeight:500, margin:0 }}>
+                <p style={{ fontSize:'0.78rem', color:'var(--text-sec)', lineHeight:1.6, fontWeight:500, margin:0, textAlign:'justify' }}>
                   Avalie o eritron e o metabolismo do ferro do seu paciente com precisão clínica com toques no seu celular, e o insira em um projeto de qualidade de vida.
                 </p>
               </div>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
                 <button className="btn btn-secondary" onClick={onModoPaciente} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>Sou Paciente</button>
-                <p style={{ fontSize:'0.78rem', color:'var(--text-sec)', lineHeight:1.6, fontWeight:500, margin:0 }}>
+                <p style={{ fontSize:'0.78rem', color:'var(--text-sec)', lineHeight:1.6, fontWeight:500, margin:0, textAlign:'justify' }}>
                   Com poucos dados de laboratório e contexto de vida, monitore a sua hemoglobina e receba orientações médicas ajustadas às suas necessidades. Viva mais e melhor!
                 </p>
               </div>
