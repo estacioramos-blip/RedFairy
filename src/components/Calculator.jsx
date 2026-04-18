@@ -177,6 +177,7 @@ function AuthMedico({ onConcluir, onVoltar }) {
 
     localStorage.setItem('medico_crm', conselhoLimpo)
     localStorage.setItem('medico_nome', nome.trim())
+    localStorage.setItem('medico_login_at', Date.now().toString())
     setCadSucesso(true)
   }
 
@@ -223,6 +224,13 @@ function AuthMedico({ onConcluir, onVoltar }) {
             {modo === 'login' ? 'Entre com seu conselho e senha' : 'Crie seu acesso ao RedFairy'}
           </p>
         </div>
+
+        {sessaoExpirada && (
+          <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 mb-2 text-center">
+            <p className="text-amber-800 text-sm font-semibold">⏱ Sua sessão expirou.</p>
+            <p className="text-amber-700 text-xs mt-0.5">Faça login novamente para continuar.</p>
+          </div>
+        )}
 
         {/* Abas login / cadastro */}
         <div className="flex rounded-xl overflow-hidden border border-gray-200">
@@ -417,6 +425,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
   const [preFlag, setPreFlag] = useState(null)
   const [preDemoDados, setPreDemoDados] = useState(null)
   const [medicoNome, setMedicoNome] = useState('')
+  const [sessaoExpirada, setSessaoExpirada] = useState(false)
   const [medicoCRM, setMedicoCRM] = useState('')
 
   useEffect(() => {
