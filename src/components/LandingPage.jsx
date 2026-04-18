@@ -1080,9 +1080,22 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                   </div>
                   <div style={{ background:'rgba(220,38,38,0.15)', border:'1px solid rgba(220,38,38,0.3)', borderRadius:10, padding:'10px 12px', textAlign:'center', marginBottom:8 }}>
                     <p style={{ color:'rgba(255,255,255,0.55)', fontSize:9, margin:'0 0 6px' }}>Para orientações completas com dosagens:</p>
-                    <button onClick={onModoMedico} style={{ background:'#7B1E1E', color:'white', border:'none', borderRadius:7, padding:'7px 12px', fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
-                      Acessar RedFairy completo →
-                    </button>
+                    <button onClick={() => {
+                        const hb   = document.getElementById('rf-hb2')?.value
+                        const ferr = document.getElementById('rf-ferr2')?.value
+                        const vcm  = document.getElementById('rf-vcm2')?.value
+                        const rdw  = document.getElementById('rf-rdw2')?.value
+                        const sat  = document.getElementById('rf-sat2')?.value
+                        const sexo = document.getElementById('rf-sexo')?.value
+                        const idade= document.getElementById('rf-idade')?.value
+                        const bari = document.getElementById('rf2-bariatrica')?.checked
+                        const dados = { hb, ferr, vcm, rdw, sat, sexo, idade, bariatrica: bari }
+                        localStorage.setItem('rf_demo_dados', JSON.stringify(dados))
+                        if (bari) localStorage.setItem('rf_flag', 'bariatrica')
+                        onModoMedico()
+                      }} style={{ background:'#7B1E1E', color:'white', border:'none', borderRadius:7, padding:'7px 12px', fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
+                        Acessar RedFairy completo →
+                      </button>
                   </div>
                   <button onClick={() => rfReset2()} style={{ width:'100%', background:'rgba(255,255,255,0.12)', color:'rgba(255,255,255,0.6)', border:'none', borderRadius:8, padding:8, fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
                     ← Nova avaliação
