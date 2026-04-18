@@ -264,38 +264,6 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
     'cea': { min:0, max:100 }
   }
 
-  const LIMITES_OBA = {
-    'leucocitos': { min:500, max:20000 },
-    'neutrofilos': { min:1, max:99 },
-    'plaquetas': { min:10, max:1000 },
-    'ferritina_oba': { min:1, max:5000 },
-    'vitamina_b12': { min:50, max:2000 },
-    'vitamina_d': { min:1, max:200 },
-    'tsh': { min:0.01, max:50 },
-    'hb_glicada': { min:3, max:20 },
-    'glicemia': { min:30, max:600 },
-    'insulina': { min:0.5, max:200 },
-    'triglicerides': { min:20, max:2000 },
-    'ast': { min:5, max:1000 },
-    'alt': { min:5, max:1000 },
-    'gama_gt': { min:5, max:1000 },
-    'creatinina': { min:0.3, max:15 },
-    'acido_urico': { min:1, max:20 },
-    'folatos': { min:1, max:50 },
-    'zinco': { min:20, max:300 },
-    'vitamina_a': { min:5, max:200 },
-    'vitamina_e': { min:1, max:50 },
-    'tiamina': { min:10, max:500 },
-    'selenio': { min:10, max:400 },
-    'vitamina_c': { min:0.1, max:10 },
-    'vitamina_k': { min:0.05, max:15 },
-    'niacina': { min:0.1, max:30 },
-    'testosterona': { min:5, max:2000 },
-    'psa_total': { min:0, max:100 },
-    'ca199': { min:0, max:500 },
-    'estradiol': { min:5, max:5000 },
-    'cea': { min:0, max:100 }
-  }
 
   const [dataExames, setDataExames] = useState('')
   const [aberrantesOBA, setAberrantesOBA] = useState({})
@@ -312,7 +280,6 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
       setAberrantesOBA(prev => ({ ...prev, [key]: false }))
     }
   }
-  const [aberrantesOBA, setAberrantesOBA] = useState({})
 
   function handleExameChangeOBA(key, value) {
     handleExameChange(key, value)
