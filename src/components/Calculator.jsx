@@ -87,6 +87,7 @@ function AuthMedico({ onConcluir, onVoltar }) {
 
   // Cadastro
   const [nome, setNome] = useState('')
+  const [tipoConselho, setTipoConselho] = useState('CRM')
   const [conselho, setConselho] = useState('')
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
@@ -134,7 +135,7 @@ function AuthMedico({ onConcluir, onVoltar }) {
   async function handleCadastro() {
     setCadErro('')
     if (!aceitoTC) { setCadErro('Você deve aceitar os Termos e Condições para criar acesso.'); return }
-    const conselhoLimpo = conselho.trim().toUpperCase()
+    const conselhoLimpo = (tipoConselho + '-' + conselho.trim()).toUpperCase()
     const celularDigits = celular.replace(/\D/g, '')
 
     if (!nome.trim() || nome.trim().length < 5) { setCadErro('Informe seu nome completo.'); return }
@@ -279,6 +280,21 @@ function AuthMedico({ onConcluir, onVoltar }) {
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
               <input type="text" value={nome} onChange={e => setNome(e.target.value)}
                 placeholder="Dr. João da Silva" className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Tipo de Conselho</label>
+              <select value={tipoConselho} onChange={e => setTipoConselho(e.target.value)} className={inputClass}>
+                <option value="CRM">CRM — Medicina</option>
+                <option value="COREN">COREN — Enfermagem</option>
+                <option value="CREFITO">CREFITO — Fisioterapia</option>
+                <option value="CRFA">CRFA — Fonoaudiologia</option>
+                <option value="CRN">CRN — Nutrição</option>
+                <option value="CRBio">CRBio — Biologia</option>
+                <option value="CRF">CRF — Farmácia/Bioquímica</option>
+                <option value="CRBM">CRBM — Biomedicina</option>
+                <option value="CRO">CRO — Odontologia</option>
+                <option value="CREF">CREF — Educação Física</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Número do Conselho/UF</label>
