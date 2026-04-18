@@ -631,6 +631,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
     return comPontoDecimal;
   }
 
+    async function salvarAfiliado() {
+    if (!afiliadoEndereco.trim() || !afiliadoPix.trim()) return;
+    setAfiliadoSalvando(true);
+    await supabase
+      .from('medicos')
+      .update({ endereco: afiliadoEndereco.trim(), pix_chave: afiliadoPix.trim() })
+      .eq('crm', medicoCRM);
+    setAfiliadoSalvando(false);
+    setAfiliadoSalvo(true);
+    setTimeout(() => setShowAfiliados(false), 1500);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const novosErros = validar();
