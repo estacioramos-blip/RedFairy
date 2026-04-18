@@ -603,12 +603,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <span>Red<em>Fairy</em></span>
         </a>
         <div className={`nav-links${navOpen ? ' open' : ''}`}>
-          <a href="#filosofia" onClick={() => setShowFilosofia(true)}>Filosofia</a>
-          <a href="#como-funciona">Como funciona</a>
-          <a href="#indicacoes">Indicações</a>
-          <a href="#avaliar">Avaliar</a>
-          <a href="#oba">Projeto OBA</a>
-          <button className="btn-sm btn-wine" onClick={onModoMedico}>Acessar</button>
+          <a href="#filosofia" onClick={() => { setShowFilosofia(true); setNavOpen(false) }}>Filosofia</a>
+          <a href="#como-funciona" onClick={() => setNavOpen(false)}>Como funciona</a>
+          <a href="#indicacoes" onClick={() => setNavOpen(false)}>Indicações</a>
+          <a href="#avaliar" onClick={() => setNavOpen(false)}>Avaliar</a>
+          <a href="#oba" onClick={() => setNavOpen(false)}>Projeto OBA</a>
+          <button className="btn-sm btn-wine" onClick={() => { onModoMedico(); setNavOpen(false) }}>Acessar</button>
         </div>
         <button className="hamburger" onClick={() => setNavOpen(!navOpen)}>
           <span /><span /><span />
