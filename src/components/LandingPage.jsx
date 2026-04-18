@@ -212,7 +212,7 @@ const LANDING_CSS = `
   .indicacoes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; margin-top: 2rem; align-items: start; }
   .ind { background: white; border: 1px solid var(--border2); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-sec); font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
   .ind.auto-dot::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--cherry); display: block; flex-shrink: 0; margin-top: 3px; }
-  .ind:hover { border-color: var(--cherry); color: var(--cherry); background: var(--cherry-bg); }
+  .ind:hover { border-color: var(--border2); }
 
   /* TERAPÊUTICA */
   .terapeutica { background: var(--gray-bg); }
