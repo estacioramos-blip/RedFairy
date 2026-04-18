@@ -453,8 +453,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
   const _hoje = new Date().toISOString().split('T')[0]
 
   const [inputs, setInputs] = useState({
-    cpf: '', sexo: _demo?.sexo || 'M', idade: '', dataColeta: '',
-    ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '',
+    cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
+    ferritina: _demo?.ferr || '', hemoglobina: _demo?.hb || '', vcm: _demo?.vcm || '', rdw: _demo?.rdw || '', satTransf: _demo?.sat || '',
     bariatrica: _demo?.bariatrica || preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica',
     bariatrica_medico: _demo?.bariatrica || false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, alcoolista: false,
