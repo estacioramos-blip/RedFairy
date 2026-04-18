@@ -90,6 +90,13 @@ export default function AuthPage({ onVoltar }) {
     return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`
   }
 
+  function formatarDataNascimento(valor) {
+    const digits = valor.replace(/\D/g, '').slice(0, 8)
+    if (digits.length <= 2) return digits
+    if (digits.length <= 4) return digits.slice(0,2) + '/' + digits.slice(2)
+    return digits.slice(0,2) + '/' + digits.slice(2,4) + '/' + digits.slice(4)
+  }
+
   function formatarCPF(valor) {
     const digits = valor.replace(/\D/g, '').slice(0, 11);
     if (digits.length <= 3) return digits;
@@ -282,7 +289,7 @@ export default function AuthPage({ onVoltar }) {
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Data de nascimento</label>
                 <input type="text" value={dataNascimento}
-                  onChange={e => setDataNascimento(e.target.value)}
+                  onChange={e => setDataNascimento(formatarDataNascimento(e.target.value))}
                   placeholder="DD/MM/AAAA" maxLength={10} inputMode="numeric"
                   className={inputClass} />
               </div>

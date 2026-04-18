@@ -131,13 +131,28 @@ export default function PatientDashboard({ session, onVoltar }) {
               style={{ filter: 'brightness(10)' }} />
             <div>
               <h1 className="text-xl font-bold">RedFairy</h1>
-              <p className="text-red-200 text-xs">Olá, {profile?.nome}!</p>
+              <p className="text-red-200 text-xs">Olá, {profile?.nome?.split(' ')[0]}!</p>
             </div>
           </div>
-          <button onClick={() => setShowSobre(true)}
-            className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
-            Sobre
-          </button>
+          <div className="flex items-center gap-2">
+            {profile?.nome && (
+              <div title={profile.nome}
+                className="w-9 h-9 rounded-full bg-white flex items-center justify-content-center flex-shrink-0"
+                style={{ border: '2px solid rgba(255,255,255,0.4)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                <span className="text-red-700 font-black text-xs">
+                  {profile.nome.split(' ').slice(0,2).map(p => p[0]).join('').toUpperCase()}
+                </span>
+              </div>
+            )}
+            <button onClick={handleLogout}
+              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+              Sair
+            </button>
+            <button onClick={() => setShowSobre(true)}
+              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+              Sobre
+            </button>
+          </div>
         </div>
       </header>
 
