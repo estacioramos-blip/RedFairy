@@ -76,7 +76,7 @@ function TermosModal({ onFechar }) {
 
 
 // ─── Tela de login/cadastro do médico ────────────────────────────────────────
-function AuthMedico({ onConcluir, onVoltar }) {
+function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
   const [modo, setModo] = useState('login') // 'login' | 'cadastro'
 
   // Login
@@ -129,6 +129,7 @@ function AuthMedico({ onConcluir, onVoltar }) {
 
     localStorage.setItem('medico_crm', medico.crm)
     localStorage.setItem('medico_nome', medico.nome || '')
+    localStorage.setItem('medico_login_at', Date.now().toString())
     onConcluir(medico.nome || '', medico.crm)
   }
 
@@ -462,7 +463,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
   if (cadastrado === null) return null
 
   if (!cadastrado) {
-    return <AuthMedico onVoltar={onVoltar} onConcluir={(nome, crm) => {
+    return <AuthMedico sessaoExpirada={sessaoExpirada} onVoltar={onVoltar} onConcluir={(nome, crm) => {
       setMedicoNome(nome)
       setMedicoCRM(crm)
       setCadastrado(true)
