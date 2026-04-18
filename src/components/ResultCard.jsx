@@ -240,15 +240,17 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
 
   const WA_PLATAFORMA = '5571997110804'
 
-  // Verificar obstipação
-  const temObstipacao = oba?.modulos?.some(m =>
-    m.linhas?.some(l => l.includes('OBSTIPAÇÃO') || l.includes('PRISÃO DE VENTRE'))
-  )
+  // Verificar obstipação via módulo intestinal
+  const temObstipacao = !!modIntestData && modIntestData.linhas?.some(l => l.includes('OBSTIPAÇÃO'))
 
-  // Verificar fibromialgia
-  const temFibromialgia = oba?.modulos?.some(m =>
-    m.linhas?.some(l => l.includes('FIBROMIALGIA') || l.includes('FIBROMIÁLGIC'))
-  )
+  // Verificar fibromialgia — trigger: diagnostico OU obstipacao + 2 sintomas
+  const modFibroData = oba?.modulos?.find(m => m.id === 'fibromialgia')
+  const temFibromialgia = !!modFibroData && (modFibroData.nivel === 'moderado' || modFibroData.nivel === 'grave' ||
+    (modFibroData.nivel === 'leve' && modFibroData.linhas?.some(l => l.includes('SINTOMAS FIBROMIÁLGICOS'))))
+
+  // Verificar obstipação no módulo intestinal
+  const modIntestData = oba?.modulos?.find(m => m.id === 'intestinal')
+  const temObstipacaoModulo = !!modIntestData && modIntestData.linhas?.some(l => l.includes('OBSTIPAÇÃO'))
 
   if (!temObstipacao && !temFibromialgia) return null
 
