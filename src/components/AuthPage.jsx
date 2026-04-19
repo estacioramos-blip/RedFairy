@@ -71,8 +71,36 @@ export default function AuthPage({ onVoltar }) {
         setEtapa('cadastro')
       }
     }
+    function handleDemoKey(e) {
+      if (!e.ctrlKey || e.shiftKey || e.altKey) return
+      const preencherCadastro = (sx, idade) => {
+        e.preventDefault()
+        setCpf('00000000000')
+        setNome(sx === 'M' ? 'Paciente Demo Masculino' : 'Paciente Demo Feminino')
+        setSexo(sx)
+        setDataNascimento(() => {
+          const ano = new Date().getFullYear() - idade
+          return `01/01/${ano}`
+        })
+        setCelular('(71) 99999-9999')
+        setEmail(`demo${sx.toLowerCase()}${idade}@redfairy.bio`)
+        setEmailConfirm(`demo${sx.toLowerCase()}${idade}@redfairy.bio`)
+        setSenha('demo1234')
+        setSenhaConfirm('demo1234')
+        setAvaliacoesPendentes(0)
+        setEtapa('cadastro')
+      }
+      if (e.key === 'm' || e.key === 'M') preencherCadastro('M', 20)
+      if (e.key === 'b' || e.key === 'B') preencherCadastro('M', 50)
+      if (e.key === 'f' || e.key === 'F') preencherCadastro('F', 20)
+      if (e.key === 'g' || e.key === 'G') preencherCadastro('F', 50)
+    }
     window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
+    window.addEventListener('keydown', handleDemoKey)
+    return () => {
+      window.removeEventListener('keydown', handleKey)
+      window.removeEventListener('keydown', handleDemoKey)
+    }
   }, [])
 
   function formatarCelular(valor) {
@@ -206,6 +234,10 @@ export default function AuthPage({ onVoltar }) {
             <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
               <p className="text-red-700 text-sm font-medium">Entre com seu CPF para começar</p>
               <p className="text-gray-500 text-xs mt-1">Verificamos se seu médico já fez uma avaliação para você</p>
+            </div>
+            <div style={{ position:'absolute', bottom:8, right:12, display:'flex', flexDirection:'column', gap:1 }}>
+              <span style={{ color:'rgba(156,163,175,0.6)', fontSize:'8px', fontFamily:'monospace' }}>Ctrl+M ♂20  Ctrl+B ♂50</span>
+              <span style={{ color:'rgba(156,163,175,0.6)', fontSize:'8px', fontFamily:'monospace' }}>Ctrl+F ♀20  Ctrl+G ♀50</span>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">CPF</label>
