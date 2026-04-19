@@ -698,8 +698,27 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
 
       {/* FILOSOFIA */}
-      <section className="filosofia" id="filosofia" style={{ display: showFilosofia ? 'block' : 'none' }}>
+      <section className="filosofia" id="filosofia" style={{ display: showFilosofia ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
+          {/* Botão X fechar no canto superior direito */}
+          <button
+            onClick={() => { setShowFilosofia(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            aria-label="Fechar Filosofia"
+            style={{
+              position: 'absolute', top: '1rem', right: '1.5rem',
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'var(--wine)', color: 'white',
+              border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.1rem', fontWeight: 700,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              transition: 'all 0.2s', zIndex: 10, fontFamily: 'inherit',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
+          >
+            ✕
+          </button>
           <div className="reveal">
             <span className="tag">Filosofia</span>
           </div>
@@ -769,6 +788,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Botão Fechar ao final da seção */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => { setShowFilosofia(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            >
+              Fechar Filosofia
+            </button>
           </div>
         </div>
       </section>
