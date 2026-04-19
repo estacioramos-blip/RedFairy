@@ -104,6 +104,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   }
 
   async function handleAvaliar() {
+    console.log('[RF DEBUG] === handleAvaliar chamado ===')
+    console.log('[RF DEBUG] profile:', profile)
+    console.log('[RF DEBUG] profile.sexo:', profile?.sexo)
+    console.log('[RF DEBUG] profile.data_nascimento:', profile?.data_nascimento)
+    console.log('[RF DEBUG] inputs.sexo:', inputs.sexo)
+    console.log('[RF DEBUG] inputs.idade:', inputs.idade)
+    console.log('[RF DEBUG] inputs completo:', inputs)
+
     if (!profile) return
 
     // Fallback sexo: profile primeiro, depois inputs (demo/bariatrico)
@@ -113,7 +121,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       ? calcularIdade(profile.data_nascimento)
       : (inputs.idade ? Number(inputs.idade) : null)
 
+    console.log('[RF DEBUG] sexoFinal calculado:', sexoFinal)
+    console.log('[RF DEBUG] idadeFinal calculada:', idadeFinal)
+
     if (!sexoFinal || !idadeFinal) {
+      console.log('[RF DEBUG] ABORTANDO: sexo ou idade invalidos')
       alert('Antes de avaliar, use um dos atalhos: Ctrl+M (masc 20a), Ctrl+B (masc 50a), Ctrl+F (fem 20a), Ctrl+G (fem 50a) para definir sexo e idade.')
       return
     }
