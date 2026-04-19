@@ -16,6 +16,7 @@ export default function App() {
   const [demoPacienteClicks, setDemoPacienteClicks] = useState(0)
   const [demoMedicoTimer, setDemoMedicoTimer] = useState(null)
   const [demoPacienteTimer, setDemoPacienteTimer] = useState(null)
+  const [demoPacientePerfil, setDemoPacientePerfil] = useState(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -90,7 +91,12 @@ export default function App() {
   }
 
   if (modo === 'paciente') {
-    if (!session) return <AuthPage onLogin={() => {}} onVoltar={() => setModo('home')} />
+    if (demoPacientePerfil) return <PatientDashboard session={null} demoPerfil={demoPacientePerfil} onVoltar={() => { setModo('home'); setDemoPacientePerfil(null) }} />
+    if (!session) return <AuthPage
+      onLogin={() => {}}
+      onVoltar={() => setModo('home')}
+      onDemoEntrar={(perfil) => setDemoPacientePerfil(perfil)}
+    />
     return <PatientDashboard session={session} onVoltar={() => setModo('home')} />
   }
 

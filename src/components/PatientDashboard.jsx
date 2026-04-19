@@ -4,7 +4,7 @@ import ResultCard from './ResultCard'
 import heroImg from '../assets/redfairy-hero.png'
 import logo from '../assets/logo.png'
 
-export default function PatientDashboard({ session, onVoltar }) {
+export default function PatientDashboard({ session, onVoltar, demoPerfil }) {
   const [profile, setProfile] = useState(null)
   const [avaliacoes, setAvaliacoes] = useState([])
   const [tela, setTela] = useState('historico')
@@ -59,6 +59,12 @@ export default function PatientDashboard({ session, onVoltar }) {
 
   async function carregarDados() {
     setLoading(true)
+    if (demoPerfil) {
+      setProfile(demoPerfil)
+      setAvaliacoes([])
+      setLoading(false)
+      return
+    }
     const { data: prof } = await supabase
       .from('profiles').select('*').eq('id', session.user.id).single()
     if (!prof) {
