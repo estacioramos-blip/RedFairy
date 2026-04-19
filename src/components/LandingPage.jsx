@@ -632,39 +632,36 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </div>
 
             {/* ===================================================================== */}
-            {/* CONTEÚDO DO MODAL CONTATO — Dr. Ramos, edite aqui os dados reais.     */}
+            {/* CONTEÚDO DO MODAL CONTATO */}
             {/* ===================================================================== */}
 
-            {/* Pessoas */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 2, color: 'var(--text-light)', fontWeight: 700, marginBottom: '0.8rem' }}>
-                Equipe
-              </h3>
-              <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.7, fontWeight: 600, margin: 0 }}>
-                <strong>E.F. Ramos, M.D.</strong> — CRM 6302 BA<br/>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-sec)', fontWeight: 500 }}>[Placeholder] Outros membros da equipe</span>
+            {/* Contato direto (sem cabecalho Equipe, ja que e 1 pessoa) */}
+            <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+              <p style={{ fontSize: '1.05rem', color: 'var(--text)', lineHeight: 1.6, fontWeight: 700, margin: 0 }}>
+                <strong style={{ color: 'var(--wine)' }}>Laíse Silva Dantas</strong>
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', fontWeight: 500, margin: '0.2rem 0 0', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                COO
               </p>
             </div>
 
-            {/* Endereço */}
+            {/* Endereco */}
             <div style={{ marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 2, color: 'var(--text-light)', fontWeight: 700, marginBottom: '0.8rem' }}>
-                Endereço
+                Endereço para Correspondência
               </h3>
               <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.7, fontWeight: 500, margin: 0 }}>
-                [Placeholder] Rua, número, bairro<br/>
-                Salvador — BA · CEP XXXXX-XXX
+                Rua Barro Vermelho, 386/42<br/>
+                Rio Vermelho · CEP 41940-340<br/>
+                Salvador — Bahia | Brasil
               </p>
             </div>
 
-            {/* Telefones */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 2, color: 'var(--text-light)', fontWeight: 700, marginBottom: '0.8rem' }}>
-                Telefones
-              </h3>
-              <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.7, fontWeight: 500, margin: 0 }}>
-                <strong style={{ color: 'var(--wine)' }}>+55 71 99711-0804</strong> — Plataforma<br/>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-sec)' }}>[Placeholder] Outros telefones, email, etc.</span>
+            {/* Empresa (rodape institucional) */}
+            <div style={{ marginBottom: '1.5rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border)' }}>
+              <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.7, fontWeight: 500, margin: 0, textAlign: 'center' }}>
+                <strong style={{ color: 'var(--wine)', fontWeight: 700, letterSpacing: '0.5px' }}>CYTOMICA<sup style={{ fontSize: '0.6em', fontWeight: 500 }}>®</sup></strong><br/>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-sec)' }}>CNPJ 57.561.446/0001-02</span>
               </p>
             </div>
 
