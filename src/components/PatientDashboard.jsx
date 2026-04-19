@@ -4,7 +4,7 @@ import ResultCard from './ResultCard'
 import heroImg from '../assets/redfairy-hero.png'
 import logo from '../assets/logo.png'
 
-export default function PatientDashboard({ session, onVoltar, demoPerfil }) {
+export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirOBA }) {
   const [profile, setProfile] = useState(null)
   const [avaliacoes, setAvaliacoes] = useState([])
   const [tela, setTela] = useState('historico')
@@ -12,6 +12,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil }) {
   const [copiado, setCopiado] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showSobre, setShowSobre] = useState(false)
+  const [showOBAModal, setShowOBAModal] = useState(false)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
 
   const [inputs, setInputs] = useState({

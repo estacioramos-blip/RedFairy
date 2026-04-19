@@ -97,7 +97,7 @@ export default function App() {
       onVoltar={() => setModo('home')}
       onDemoEntrar={(perfil) => setDemoPacientePerfil(perfil)}
     />
-    return <PatientDashboard session={session} onVoltar={() => setModo('home')} />
+    return <PatientDashboard session={session} onVoltar={() => setModo('home')} abrirOBA={!!localStorage.getItem('rf_flag')} />
   }
 
   if (modo === 'admin') {
