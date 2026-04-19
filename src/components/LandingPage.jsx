@@ -164,7 +164,7 @@ const LANDING_CSS = `
 
   /* CONTAINER / SECTIONS */
   .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
-  section { padding: 3rem 2rem; }
+  section { padding: 3rem 2rem; scroll-margin-top: 80px; }
   .center { text-align: center; }
   .tag { display: inline-block; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--cherry); margin-bottom: 0.6rem; }
   .stitle { font-size: 2.3rem; color: var(--text); margin-bottom: 0.7rem; font-weight: 800; }
@@ -172,7 +172,7 @@ const LANDING_CSS = `
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
   /* FILOSOFIA — novo layout: texto esquerda, retângulo imagem direita */
-  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; padding-top: 1rem; padding-bottom: 1.5rem; }
+  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; padding-top: 5rem; padding-bottom: 1.5rem; }
   .filosofia .tag { color: var(--cherry); margin-bottom: 0.3rem; }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 1.5rem; }
   .fil-img-box .fil-content p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
