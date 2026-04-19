@@ -172,7 +172,7 @@ const LANDING_CSS = `
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
   /* FILOSOFIA — novo layout: texto esquerda, retângulo imagem direita */
-  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; padding-top: 5rem; padding-bottom: 1.5rem; }
+  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; margin-top: 5rem; padding-top: 1.5rem; padding-bottom: 1.5rem; }
   .filosofia .tag { color: var(--cherry); margin-bottom: 0.3rem; }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 1.5rem; }
   .fil-img-box .fil-content p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
