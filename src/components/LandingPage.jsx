@@ -21,14 +21,14 @@ const LANDING_CSS = `
   body { font-family: 'DM Sans', -apple-system, sans-serif; color: var(--text); background: var(--white); line-height: 1.65; overflow-x: hidden; -webkit-font-smoothing: antialiased; scrollbar-gutter: stable; }
 
   /* NAV */
-  #landing-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s; box-sizing: border-box; }
+  #landing-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 0.75rem 2rem; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; transition: all 0.3s; box-sizing: border-box; }
   #landing-nav.scrolled { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); box-shadow: 0 1px 8px rgba(0,0,0,0.04); }
 
 
   .nav-brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
   .nav-brand span { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--wine); }
   .nav-brand em { font-style: normal; color: var(--cherry); }
-  .nav-links { display: flex; gap: 1.8rem; align-items: center; }
+  .nav-links { display: flex; gap: 1.8rem; align-items: center; justify-content: center; }
   .nav-links a { text-decoration: none; font-size: 0.87rem; font-weight: 500; color: var(--text-sec); transition: color 0.2s; }
   .nav-links a:hover { color: var(--text); }
   .btn-sm { padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; cursor: pointer; border: none; font-family: inherit; }
@@ -67,6 +67,7 @@ const LANDING_CSS = `
     .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
 
     /* Nav */
+    #landing-nav { display: flex !important; justify-content: space-between !important; }
     .nav-links { display: none; }
     .hamburger { display: flex; }
     .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 0.6rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
@@ -635,11 +636,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           <a href="#indicacoes" onClick={() => setNavOpen(false)}>Indicações</a>
           <a href="#avaliar" onClick={() => setNavOpen(false)}>Avaliar</a>
           <a href="#oba" onClick={() => setNavOpen(false)}>Projeto OBA</a>
-          <button className="btn-sm btn-wine" onClick={() => { onModoMedico(); setNavOpen(false) }}>Acessar</button>
         </div>
-        <button className="hamburger" onClick={() => setNavOpen(!navOpen)}>
-          <span /><span /><span />
-        </button>
+        {/* 3ª coluna vazia para simetria do grid (mantém menu centralizado) */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button className="hamburger" onClick={() => setNavOpen(!navOpen)}>
+            <span /><span /><span />
+          </button>
+        </div>
       </nav>
 
       {/* HERO */}
