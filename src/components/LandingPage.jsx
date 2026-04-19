@@ -1057,18 +1057,45 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
           <div className="reveal">
             <span className="tag">Afiliados</span>
-            <h2 className="stitle">Programa de Afiliados</h2>
+            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>Programa de Afiliados</h2>
           </div>
 
           {/* ========================================================================= */}
-          {/* CONTEÚDO DA PÁGINA "AFILIADOS" — Dr. Ramos, cole/edite seu conteúdo aqui. */}
+          {/* CONTEÚDO DA PÁGINA "AFILIADOS" */}
           {/* ========================================================================= */}
-          <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 800, marginLeft: 'auto', marginRight: 'auto' }}>
-            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.8, fontWeight: 600, textAlign: 'justify' }}>
-              [Placeholder] Conteúdo da página "Afiliados" virá aqui. Você pode descrever as regras do Programa de
-              Afiliados Patrocinado, como se inscrever, benefícios, requisitos (registro em conselho profissional),
-              forma de pagamento (PIX, USDC), e exemplos de ganhos.
+          <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 760, marginLeft: 'auto', marginRight: 'auto' }}>
+
+            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
+              O <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>Programa de Afiliados RedFairy | OBA</strong> está aberto ao apoio de <strong>empresas, filantropos, organizações sociais e fundações</strong> comprometidos com a ampliação do acesso à iniciativa.
             </p>
+
+            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
+              Seu objetivo é estimular e reconhecer <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>médicos e outros profissionais de saúde</strong> que contribuam para expandir seu alcance, seja por meio de avaliações, seja por ações, ideias e iniciativas de difusão. Ao realizar a primeira avaliação de um paciente, o médico ou profissional de saúde já pode optar por integrar o Programa.
+            </p>
+
+            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
+              Apoiar o programa é fortalecer o acesso de pessoas com condições ligadas ao <strong>ferro e à hemoglobina</strong> a mais saúde, desempenho e qualidade de vida.
+            </p>
+
+            {/* Fecho com call-to-action — "Entre em contato" é link para o modal */}
+            <p style={{ textAlign: 'center', fontSize: '1.05rem', fontWeight: 700, color: 'var(--text)', margin: '0.5rem 0 0', letterSpacing: '0.3px' }}>
+              Quer participar?{' '}
+              <a
+                href="#contato"
+                onClick={(e) => {
+                  e.preventDefault()
+                  setShowAfiliados(false)
+                  setShowContato(true)
+                }}
+                style={{ color: 'var(--wine)', textDecoration: 'underline', cursor: 'pointer' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--cherry)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--wine)' }}
+              >
+                Entre em contato
+              </a>
+              . Será um prazer acolher seu apoio.
+            </p>
+
           </div>
           {/* ========================================================================= */}
 
