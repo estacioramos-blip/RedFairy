@@ -1131,7 +1131,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
                         onModoPaciente && onModoPaciente()
                       }} style={{ flexDirection:'column', gap:'0.2rem', alignItems:'center', animation:'pulse 1.5s ease-out infinite', margin:'0 auto', display:'flex', border:'2px solid rgba(220,38,38,0.8)' }}>
                   <span>Sou Bariátrico — Começar</span>
-                  <span style={{ fontSize:'0.65rem', textTransform:'uppercase', letterSpacing:'1px', opacity:0.8, fontWeight:700 }}>Entra em Modo Paciente | Siga as Instruções</span>
+                  <span style={{ fontSize:'0.65rem', textTransform:'uppercase', letterSpacing:'1px', opacity:0.8, fontWeight:700 }}>Siga as Instruções</span>
                 </button>
               </div>
             </div>
