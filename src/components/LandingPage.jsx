@@ -29,8 +29,8 @@ const LANDING_CSS = `
   .nav-brand span { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--wine); }
   .nav-brand em { font-style: normal; color: var(--cherry); }
   .nav-links { display: flex; gap: 1.8rem; align-items: center; justify-content: center; justify-self: center; }
-  .nav-links a { text-decoration: none; font-size: 0.87rem; font-weight: 500; color: var(--text-sec); transition: color 0.2s; }
-  .nav-links a:hover { color: var(--text); }
+  .nav-links a { text-decoration: none; font-size: 0.95rem; font-weight: 600; color: var(--wine); transition: color 0.2s; }
+  .nav-links a:hover { color: var(--cherry); }
   .btn-sm { padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; cursor: pointer; border: none; font-family: inherit; }
   .btn-wine { background: var(--wine); color: var(--white) !important; }
   .btn-wine:hover { background: var(--cherry); }
