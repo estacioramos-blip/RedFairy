@@ -64,6 +64,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       setProfile(demoPerfil)
       setAvaliacoes([])
       setLoading(false)
+      if (localStorage.getItem('rf_flag') === 'bariatrica') {
+        localStorage.removeItem('rf_flag')
+        setTimeout(() => setShowOBAModal(true), 500)
+      }
       return
     }
     const { data: prof } = await supabase
@@ -74,6 +78,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       return
     }
     setProfile(prof)
+    if (abrirOBA || localStorage.getItem('rf_flag') === 'bariatrica') {
+      localStorage.removeItem('rf_flag')
+      setTimeout(() => setShowOBAModal(true), 600)
+    }
     const { data: avals } = await supabase
       .from('avaliacoes').select('*')
       .eq('user_id', session.user.id)
