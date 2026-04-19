@@ -623,26 +623,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               padding: '2.5rem 2rem 2rem',
             }}
           >
-            {/* Botão X no canto superior direito */}
-            <button
-              onClick={() => setShowContato(false)}
-              aria-label="Fechar Contato"
-              style={{
-                position: 'absolute', top: '1rem', right: '1rem',
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'var(--wine)', color: 'white',
-                border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.1rem', fontWeight: 700,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                transition: 'all 0.2s', fontFamily: 'inherit',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
-            >
-              ✕
-            </button>
-
             {/* Cabeçalho */}
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <span className="tag" style={{ color: 'var(--cherry)' }}>Contato</span>
@@ -873,25 +853,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       {/* FILOSOFIA */}
       <section className="filosofia" id="filosofia" style={{ display: showFilosofia ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
-          {/* Botão X fechar no canto superior direito */}
-          <button
-            onClick={() => { setShowFilosofia(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-            aria-label="Fechar Filosofia"
-            style={{
-              position: 'absolute', top: '1rem', right: '1.5rem',
-              width: 36, height: 36, borderRadius: '50%',
-              background: 'var(--wine)', color: 'white',
-              border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.1rem', fontWeight: 700,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              transition: 'all 0.2s', zIndex: 10, fontFamily: 'inherit',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
-          >
-            ✕
-          </button>
           <div className="reveal">
             <span className="tag">Filosofia</span>
           </div>
@@ -989,26 +950,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       {/* SOBRE */}
       <section className="filosofia" id="sobre" style={{ display: showSobre ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
-          {/* Botão X fechar no canto superior direito */}
-          <button
-            onClick={() => { setShowSobre(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-            aria-label="Fechar Sobre"
-            style={{
-              position: 'absolute', top: '1rem', right: '1.5rem',
-              width: 36, height: 36, borderRadius: '50%',
-              background: 'var(--wine)', color: 'white',
-              border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.1rem', fontWeight: 700,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              transition: 'all 0.2s', zIndex: 10, fontFamily: 'inherit',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
-          >
-            ✕
-          </button>
-
           <div className="reveal">
             <span className="tag">Sobre</span>
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>RedFairy | OBA</h2>
@@ -1069,26 +1010,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
       {/* AFILIADOS */}
       <section className="filosofia" id="afiliados" style={{ display: showAfiliados ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
-          {/* Botão X fechar no canto superior direito */}
-          <button
-            onClick={() => { setShowAfiliados(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-            aria-label="Fechar Afiliados"
-            style={{
-              position: 'absolute', top: '1rem', right: '1.5rem',
-              width: 36, height: 36, borderRadius: '50%',
-              background: 'var(--wine)', color: 'white',
-              border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.1rem', fontWeight: 700,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              transition: 'all 0.2s', zIndex: 10, fontFamily: 'inherit',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
-          >
-            ✕
-          </button>
-
           <div className="reveal">
             <span className="tag">Afiliados</span>
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>Programa de Afiliados</h2>
