@@ -18,6 +18,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showSaibaMais, setShowSaibaMais] = useState(false)
 
   const [inputs, setInputs] = useState({
+    sexo: '', idade: '',
     dataColeta: '', ferritina: '', hemoglobina: '',
     vcm: '', rdw: '', satTransf: '',
     bariatrica: false, vegetariano: false, perda: false,
@@ -59,6 +60,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     window.addEventListener('keydown', handleDemoKey)
     return () => window.removeEventListener('keydown', handleDemoKey)
   }, [])
+
+  // Pre-preenche sexo/idade em inputs assim que o profile for carregado
+  useEffect(() => {
+    if (!profile) return
+    const idadeProfile = profile.data_nascimento ? calcularIdade(profile.data_nascimento) : ''
+    setInputs(prev => ({
+      ...prev,
+      sexo: prev.sexo || profile.sexo || '',
+      idade: prev.idade || (idadeProfile ? String(idadeProfile) : ''),
+    }))
+  }, [profile])
 
   async function carregarDados() {
     setLoading(true)
@@ -104,32 +116,20 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   }
 
   async function handleAvaliar() {
-    console.log('[RF DEBUG] === handleAvaliar chamado ===')
-    console.log('[RF DEBUG] profile:', profile)
-    console.log('[RF DEBUG] profile.sexo:', profile?.sexo)
-    console.log('[RF DEBUG] profile.data_nascimento:', profile?.data_nascimento)
-    console.log('[RF DEBUG] inputs.sexo:', inputs.sexo)
-    console.log('[RF DEBUG] inputs.idade:', inputs.idade)
-    console.log('[RF DEBUG] inputs completo:', inputs)
-
     if (!profile) return
 
-    // Fallback sexo: profile primeiro, depois inputs (demo/bariatrico)
-    const sexoFinal = profile.sexo || inputs.sexo || ''
-    // Fallback idade: calculada do profile, depois inputs.idade
-    const idadeFinal = profile.data_nascimento
-      ? calcularIdade(profile.data_nascimento)
-      : (inputs.idade ? Number(inputs.idade) : null)
-
-    console.log('[RF DEBUG] sexoFinal calculado:', sexoFinal)
-    console.log('[RF DEBUG] idadeFinal calculada:', idadeFinal)
-
-    if (!sexoFinal || !idadeFinal) {
-      console.log('[RF DEBUG] ABORTANDO: sexo ou idade invalidos')
-      alert('Antes de avaliar, use um dos atalhos: Ctrl+M (masc 20a), Ctrl+B (masc 50a), Ctrl+F (fem 20a), Ctrl+G (fem 50a) para definir sexo e idade.')
+    // Validacao: sexo e idade
+    if (!inputs.sexo) {
+      alert('Selecione o Sexo.')
+      return
+    }
+    const idadeNum = Number(inputs.idade)
+    if (!idadeNum || idadeNum < 12 || idadeNum > 100) {
+      alert('Informe uma idade valida (12 a 100 anos).')
       return
     }
 
+    // Validacao: campos laboratoriais
     if (!inputs.ferritina || !inputs.hemoglobina || !inputs.vcm || !inputs.rdw || !inputs.satTransf) {
       alert('Preencha todos os campos laboratoriais: Ferritina, Hemoglobina, VCM, RDW e Sat. Transferrina.')
       return
@@ -142,8 +142,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     const inputsNumericos = {
       ...inputs,
       cpf: profile.cpf || '',
-      sexo: sexoFinal,
-      idade: idadeFinal,
+      sexo: inputs.sexo,
+      idade: idadeNum,
       ferritina: Number(inputs.ferritina),
       hemoglobina: Number(inputs.hemoglobina),
       vcm: Number(inputs.vcm),
@@ -369,6 +369,23 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {tela === 'nova' && (
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
             <h2 className="font-semibold text-gray-700">Nova Avaliação</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
+                <select name="sexo" value={inputs.sexo} onChange={handleChange}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
+                  <option value="">Selecione...</option>
+                  <option value="F">Feminino</option>
+                  <option value="M">Masculino</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Idade (anos)</label>
+                <input type="number" name="idade" value={inputs.idade} onChange={handleChange}
+                  min="12" max="100" placeholder="35"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Data da Coleta</label>
               <input type="date" name="dataColeta" value={inputs.dataColeta} onChange={handleChange}
@@ -396,7 +413,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   { name: 'bariatrica', label: 'Bariátrica', sub: 'By-pass / Gastrectomia', color: 'amber' },
                   { name: 'vegetariano', label: 'Vegetariano/Vegano', sub: 'Dieta sem carne', color: 'green' },
                   { name: 'perda', label: 'Perda / Hemorragia', sub: 'Inclui doação de sangue, sangria, ou sangramento', color: 'red' },
-                  ...(profile?.sexo === 'F' ? [
+                  ...(inputs.sexo === 'F' ? [
                     { name: 'hipermenorreia', label: 'Hipermenorreia', sub: 'Fluxo excessivo', color: 'pink' },
                     { name: 'gestante', label: 'Gestante', sub: 'Gravidez atual', color: 'pink' },
                   ] : []),
