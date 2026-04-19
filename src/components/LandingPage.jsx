@@ -406,6 +406,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
   const [navScrolled, setNavScrolled] = useState(false)
   const [navOpen,     setNavOpen]     = useState(false)
   const [showFilosofia, setShowFilosofia] = useState(false)
+  const [showSobre, setShowSobre] = useState(false)
+  const [showAfiliados, setShowAfiliados] = useState(false)
   const [activeTab,   setActiveTab]   = useState('medico')
   const [showHtb,     setShowHtb]     = useState(false)
   const [showFil,     setShowFil]     = useState(false)
@@ -604,6 +606,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
         </div>
         <div className={`nav-links${navOpen ? ' open' : ''}`}>
           <a href="#filosofia" onClick={() => { setShowFilosofia(true); setNavOpen(false) }}>Filosofia</a>
+          <a href="#sobre" onClick={() => { setShowSobre(true); setNavOpen(false) }}>Sobre</a>
+          <a href="#afiliados" onClick={() => { setShowAfiliados(true); setNavOpen(false) }}>Afiliados</a>
           <a href="#como-funciona" onClick={() => setNavOpen(false)}>Como funciona</a>
           <a href="#indicacoes" onClick={() => setNavOpen(false)}>Indicações</a>
           <a href="#avaliar" onClick={() => setNavOpen(false)}>Avaliar</a>
@@ -797,6 +801,110 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               onClick={() => { setShowFilosofia(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
             >
               Fechar Filosofia
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* SOBRE */}
+      <section className="filosofia" id="sobre" style={{ display: showSobre ? 'block' : 'none', position: 'relative' }}>
+        <div className="container">
+          {/* Botão X fechar no canto superior direito */}
+          <button
+            onClick={() => { setShowSobre(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            aria-label="Fechar Sobre"
+            style={{
+              position: 'absolute', top: '1rem', right: '1.5rem',
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'var(--wine)', color: 'white',
+              border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.1rem', fontWeight: 700,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              transition: 'all 0.2s', zIndex: 10, fontFamily: 'inherit',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
+          >
+            ✕
+          </button>
+
+          <div className="reveal">
+            <span className="tag">Sobre</span>
+            <h2 className="stitle">Sobre o RedFairy</h2>
+          </div>
+
+          {/* ===================================================================== */}
+          {/* CONTEÚDO DA PÁGINA "SOBRE" — Dr. Ramos, cole/edite seu conteúdo aqui. */}
+          {/* ===================================================================== */}
+          <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 800, marginLeft: 'auto', marginRight: 'auto' }}>
+            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.8, fontWeight: 600, textAlign: 'justify' }}>
+              [Placeholder] Conteúdo da página "Sobre" virá aqui. Você pode descrever a história do RedFairy,
+              a motivação do projeto, a equipe, missão, visão e valores. Esta seção segue o mesmo padrão visual
+              da Filosofia — fundo cinza claro, tipografia consistente.
+            </p>
+          </div>
+          {/* ===================================================================== */}
+
+          {/* Botão Fechar ao final da seção */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => { setShowSobre(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            >
+              Fechar Sobre
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* AFILIADOS */}
+      <section className="filosofia" id="afiliados" style={{ display: showAfiliados ? 'block' : 'none', position: 'relative' }}>
+        <div className="container">
+          {/* Botão X fechar no canto superior direito */}
+          <button
+            onClick={() => { setShowAfiliados(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            aria-label="Fechar Afiliados"
+            style={{
+              position: 'absolute', top: '1rem', right: '1.5rem',
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'var(--wine)', color: 'white',
+              border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.1rem', fontWeight: 700,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              transition: 'all 0.2s', zIndex: 10, fontFamily: 'inherit',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
+          >
+            ✕
+          </button>
+
+          <div className="reveal">
+            <span className="tag">Afiliados</span>
+            <h2 className="stitle">Programa de Afiliados</h2>
+          </div>
+
+          {/* ========================================================================= */}
+          {/* CONTEÚDO DA PÁGINA "AFILIADOS" — Dr. Ramos, cole/edite seu conteúdo aqui. */}
+          {/* ========================================================================= */}
+          <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 800, marginLeft: 'auto', marginRight: 'auto' }}>
+            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.8, fontWeight: 600, textAlign: 'justify' }}>
+              [Placeholder] Conteúdo da página "Afiliados" virá aqui. Você pode descrever as regras do Programa de
+              Afiliados Patrocinado, como se inscrever, benefícios, requisitos (registro em conselho profissional),
+              forma de pagamento (PIX, USDC), e exemplos de ganhos.
+            </p>
+          </div>
+          {/* ========================================================================= */}
+
+          {/* Botão Fechar ao final da seção */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => { setShowAfiliados(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+            >
+              Fechar Afiliados
             </button>
           </div>
         </div>
