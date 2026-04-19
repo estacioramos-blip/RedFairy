@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { avaliarPaciente } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import heroImg from '../assets/redfairy-hero.png'
@@ -103,13 +104,34 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   }
 
   async function handleAvaliar() {
-     if (!profile) return 
-    const idade = calcularIdade(profile.data_nascimento)
+    if (!profile) return
+
+    // Fallback sexo: profile primeiro, depois inputs (demo/bariatrico)
+    const sexoFinal = profile.sexo || inputs.sexo || ''
+    // Fallback idade: calculada do profile, depois inputs.idade
+    const idadeFinal = profile.data_nascimento
+      ? calcularIdade(profile.data_nascimento)
+      : (inputs.idade ? Number(inputs.idade) : null)
+
+    if (!sexoFinal || !idadeFinal) {
+      alert('Antes de avaliar, use um dos atalhos: Ctrl+M (masc 20a), Ctrl+B (masc 50a), Ctrl+F (fem 20a), Ctrl+G (fem 50a) para definir sexo e idade.')
+      return
+    }
+
+    if (!inputs.ferritina || !inputs.hemoglobina || !inputs.vcm || !inputs.rdw || !inputs.satTransf) {
+      alert('Preencha todos os campos laboratoriais: Ferritina, Hemoglobina, VCM, RDW e Sat. Transferrina.')
+      return
+    }
+    if (!inputs.dataColeta) {
+      alert('Informe a data da coleta.')
+      return
+    }
+
     const inputsNumericos = {
       ...inputs,
       cpf: profile.cpf || '',
-      sexo: profile.sexo,
-      idade,
+      sexo: sexoFinal,
+      idade: idadeFinal,
       ferritina: Number(inputs.ferritina),
       hemoglobina: Number(inputs.hemoglobina),
       vcm: Number(inputs.vcm),
