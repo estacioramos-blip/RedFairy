@@ -988,7 +988,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
           <div className="reveal">
             <span className="tag">Sobre</span>
-            <h2 className="stitle">Sobre o RedFairy</h2>
+            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>RedFairy | OBA</h2>
           </div>
 
           {/* ===================================================================== */}
@@ -1012,12 +1012,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               O empreendimento inclui ainda um <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>Programa de Afiliados Patrocinado</strong>, destinado a ampliar o alcance da iniciativa e favorecer o acesso de um número crescente de pacientes à avaliação e ao cuidado.
             </p>
 
-            {/* Fecho institucional em destaque vinho */}
-            <div className="highlight-box" style={{ textAlign: 'center', padding: '1.4rem 1.5rem', marginTop: '0.5rem' }}>
-              <p style={{ color: 'white', fontSize: '1.15rem', fontWeight: 700, margin: 0, letterSpacing: '0.5px' }}>
-                Explore. Entenda. Compartilhe.
-              </p>
-            </div>
+            {/* Fecho institucional em negrito simples */}
+            <p style={{ textAlign: 'center', fontSize: '1.05rem', fontWeight: 700, color: 'var(--text)', margin: '0.5rem 0 0', letterSpacing: '0.5px' }}>
+              Explore. Entenda. Compartilhe.
+            </p>
 
           </div>
           {/* ===================================================================== */}
