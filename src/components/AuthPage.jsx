@@ -74,30 +74,27 @@ export default function AuthPage({ onVoltar, onDemoEntrar }) {
     }
     function handleDemoKey(e) {
       if (!e.ctrlKey || e.shiftKey || e.altKey) return
-      const preencherCadastro = (sx, idade) => {
+      const entrarComoDemo = (sx, idade) => {
         e.preventDefault()
-        setCpf('00000000000')
-        setNome(sx === 'M' ? 'Paciente Demo Masculino' : 'Paciente Demo Feminino')
-        setSexo(sx)
-        setDataNascimento(() => {
-          const ano = new Date().getFullYear() - idade
-          return `01/01/${ano}`
-        })
-        setCelular('(71) 99999-9999')
-        setEmail(`demo${sx.toLowerCase()}${idade}@redfairy.bio`)
-        setEmailConfirm(`demo${sx.toLowerCase()}${idade}@redfairy.bio`)
-        setSenha('demo1234')
-        setSenhaConfirm('demo1234')
-        setAceitoTC(true)
-        setAvaliacoesPendentes(0)
-        setEtapa('cadastro')
+        const nomeDemo = sx === 'M'
+          ? (idade <= 30 ? 'Paciente Demo Masculino Jovem' : 'Paciente Demo Masculino Sênior')
+          : (idade <= 30 ? 'Paciente Demo Feminino Jovem' : 'Paciente Demo Feminino Sênior')
+        const nascAno = new Date().getFullYear() - idade
+        const perfil = {
+          nome: nomeDemo,
+          sexo: sx,
+          data_nascimento: `${nascAno}-01-01`,
+          cpf: '00000000000',
+          celular: '71999999999',
+        }
+        onDemoEntrar && onDemoEntrar(perfil)
       }
-      if (e.key === 'm' || e.key === 'M') preencherCadastro('M', 20)
-      if (e.key === 'b' || e.key === 'B') preencherCadastro('M', 50)
-      if (e.key === 'f' || e.key === 'F') preencherCadastro('F', 20)
-      if (e.key === 'g' || e.key === 'G') preencherCadastro('F', 50)
+      if (e.key === 'm' || e.key === 'M') entrarComoDemo('M', 20)
+      if (e.key === 'b' || e.key === 'B') entrarComoDemo('M', 50)
+      if (e.key === 'f' || e.key === 'F') entrarComoDemo('F', 20)
+      if (e.key === 'g' || e.key === 'G') entrarComoDemo('F', 50)
     }
-    window.addEventListener('keydown', handleKey)
+        window.addEventListener('keydown', handleKey)
     window.addEventListener('keydown', handleDemoKey)
     return () => {
       window.removeEventListener('keydown', handleKey)
