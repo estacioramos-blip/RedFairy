@@ -67,6 +67,7 @@ export default function AuthPage({ onVoltar }) {
       if (e.ctrlKey && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
         e.preventDefault()
         setCpf('00000000000')
+        setAceitoTC(true)
         setAvaliacoesPendentes(0)
         setEtapa('cadastro')
       }
@@ -87,6 +88,7 @@ export default function AuthPage({ onVoltar }) {
         setEmailConfirm(`demo${sx.toLowerCase()}${idade}@redfairy.bio`)
         setSenha('demo1234')
         setSenhaConfirm('demo1234')
+        setAceitoTC(true)
         setAvaliacoesPendentes(0)
         setEtapa('cadastro')
       }
