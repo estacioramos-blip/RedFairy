@@ -712,14 +712,26 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               Conversar no WhatsApp
             </a>
 
-            {/* Botão Fechar */}
-            <button
-              className="btn btn-secondary"
-              onClick={() => setShowContato(false)}
-              style={{ width: '100%', minWidth: 'auto', height: 50 }}
-            >
-              Fechar
-            </button>
+            {/* Botão X fechar na base do modal */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <button
+                onClick={() => setShowContato(false)}
+                aria-label="Fechar Contato"
+                style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: 'var(--wine)', color: 'white',
+                  border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.1rem', fontWeight: 700,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  transition: 'all 0.2s', fontFamily: 'inherit',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
+              >
+                ✕
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -951,13 +963,24 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
             </div>
           </div>
 
-          {/* Botão Fechar ao final da seção */}
+          {/* Botão X fechar na base (segundo ponto de saída) */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
             <button
-              className="btn btn-secondary"
               onClick={() => { setShowFilosofia(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+              aria-label="Fechar Filosofia"
+              style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'var(--wine)', color: 'white',
+                border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.1rem', fontWeight: 700,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                transition: 'all 0.2s', fontFamily: 'inherit',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
             >
-              Fechar Filosofia
+              ✕
             </button>
           </div>
         </div>
@@ -1020,13 +1043,24 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           </div>
           {/* ===================================================================== */}
 
-          {/* Botão Fechar ao final da seção */}
+          {/* Botão X fechar na base (segundo ponto de saída) */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
             <button
-              className="btn btn-secondary"
               onClick={() => { setShowSobre(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+              aria-label="Fechar Sobre"
+              style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'var(--wine)', color: 'white',
+                border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.1rem', fontWeight: 700,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                transition: 'all 0.2s', fontFamily: 'inherit',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
             >
-              Fechar Sobre
+              ✕
             </button>
           </div>
         </div>
@@ -1099,13 +1133,24 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
           </div>
           {/* ========================================================================= */}
 
-          {/* Botão Fechar ao final da seção */}
+          {/* Botão X fechar na base (segundo ponto de saída) */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
             <button
-              className="btn btn-secondary"
               onClick={() => { setShowAfiliados(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+              aria-label="Fechar Afiliados"
+              style={{
+                width: 36, height: 36, borderRadius: '50%',
+                background: 'var(--wine)', color: 'white',
+                border: 'none', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.1rem', fontWeight: 700,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                transition: 'all 0.2s', fontFamily: 'inherit',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
             >
-              Fechar Afiliados
+              ✕
             </button>
           </div>
         </div>
