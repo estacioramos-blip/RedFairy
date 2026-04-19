@@ -600,11 +600,34 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
 
       {/* NAV */}
       <nav id="landing-nav" className={navScrolled ? 'scrolled' : ''} style={{ position:'fixed', top:0, left:0, right:0, boxSizing:'border-box', zIndex:1000, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.75rem 2rem' }}>
-        <div className="nav-brand">
+        <a
+          href="#home"
+          className="nav-brand"
+          onClick={(e) => {
+            e.preventDefault()
+            setShowFilosofia(false)
+            setShowSobre(false)
+            setShowAfiliados(false)
+            setNavOpen(false)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+          style={{ cursor: 'pointer' }}
+        >
           <img src={logo} alt="RedFairy" style={{ height:36 }} />
           <span>Red<em>Fairy</em></span>
-        </div>
+        </a>
         <div className={`nav-links${navOpen ? ' open' : ''}`}>
+          <a
+            href="#home"
+            onClick={(e) => {
+              e.preventDefault()
+              setShowFilosofia(false)
+              setShowSobre(false)
+              setShowAfiliados(false)
+              setNavOpen(false)
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+          >Home</a>
           <a href="#filosofia" onClick={() => { setShowFilosofia(true); setNavOpen(false) }}>Filosofia</a>
           <a href="#sobre" onClick={() => { setShowSobre(true); setNavOpen(false) }}>Sobre</a>
           <a href="#afiliados" onClick={() => { setShowAfiliados(true); setNavOpen(false) }}>Afiliados</a>
