@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import ResultCard from './ResultCard'
+import OBAModal from './OBAModal'
 import heroImg from '../assets/redfairy-hero.png'
 import logo from '../assets/logo.png'
 
@@ -207,7 +208,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </div>
         </div>
       </header>
-
+{showOBAModal && profile && (
+        <OBAModal
+          cpf={profile.cpf}
+          sexo={profile.sexo}
+          idade={profile.data_nascimento ? Math.floor((Date.now() - new Date(profile.data_nascimento)) / 31557600000) : 0}
+          onFechar={() => setShowOBAModal(false)}
+          onConcluir={() => setShowOBAModal(false)}
+        />
+      )}
+{/* MODAL SOBRE */}
       {/* MODAL SOBRE */}
       {showSobre && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
