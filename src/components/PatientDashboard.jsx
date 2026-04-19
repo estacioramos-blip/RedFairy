@@ -24,6 +24,39 @@ export default function PatientDashboard({ session, onVoltar }) {
 
   useEffect(() => { carregarDados() }, [])
 
+  useEffect(() => {
+    function handleDemoKey(e) {
+      if (!e.ctrlKey || e.shiftKey || e.altKey) return
+      const hoje = new Date().toISOString().split('T')[0]
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault()
+        setInputs(p => ({ ...p, sexo:'M', idade:'20', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }))
+        setResultado(null)
+        setTela('nova')
+      }
+      if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault()
+        setInputs(p => ({ ...p, sexo:'M', idade:'50', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }))
+        setResultado(null)
+        setTela('nova')
+      }
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault()
+        setInputs(p => ({ ...p, sexo:'F', idade:'20', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }))
+        setResultado(null)
+        setTela('nova')
+      }
+      if (e.key === 'g' || e.key === 'G') {
+        e.preventDefault()
+        setInputs(p => ({ ...p, sexo:'F', idade:'50', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }))
+        setResultado(null)
+        setTela('nova')
+      }
+    }
+    window.addEventListener('keydown', handleDemoKey)
+    return () => window.removeEventListener('keydown', handleDemoKey)
+  }, [])
+
   async function carregarDados() {
     setLoading(true)
     const { data: prof } = await supabase
@@ -132,6 +165,10 @@ export default function PatientDashboard({ session, onVoltar }) {
             <div>
               <h1 className="text-xl font-bold">RedFairy</h1>
               <p className="text-red-200 text-xs">Olá, {profile?.nome?.split(' ')[0]}!</p>
+              <div style={{ display:'flex', flexDirection:'column', gap:'1px', marginTop:'2px' }}>
+                <span style={{ color:'rgba(252,165,165,0.7)', fontSize:'8px', fontFamily:'monospace' }}>Ctrl+M ♂20  Ctrl+B ♂50</span>
+                <span style={{ color:'rgba(252,165,165,0.7)', fontSize:'8px', fontFamily:'monospace' }}>Ctrl+F ♀20  Ctrl+G ♀50</span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
