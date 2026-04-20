@@ -142,6 +142,63 @@ export function detectarAchadosParalelos(inputs) {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // ACHADO 8 — ANEMIA MACROCITICA (Hb baixa/limite + VCM > 100)
+  //
+  // Dispara quando ha anemia (ou Hb no limite inferior) associada a
+  // macrocitose. Gravidade graduada pela Hb. Lista causas e conduta.
+  // ─────────────────────────────────────────────────────────────
+  {
+    const hbLimiteInferior = sexo === 'M' ? 14.0 : 12.5;
+    const hbBaixaOuLimite = hemoglobina < hbLimiteInferior;
+
+    if (hbBaixaOuLimite && vcm > 100) {
+      const idade = Number(inputs.idade) || 0;
+      let cor = 'yellow';
+      let gravidade = 'LEVE';
+
+      if (hemoglobina < 8) {
+        cor = 'red';
+        gravidade = 'GRAVE';
+      } else if (hemoglobina <= 10) {
+        cor = 'orange';
+        gravidade = 'SIGNIFICATIVA';
+      }
+
+      let texto = `Hemoglobina de ${hemoglobina} g/dL e VCM de ${vcm} fL caracterizam ANEMIA MACROCÍTICA (${gravidade}). `;
+
+      texto += 'As causas mais comuns são: deficiência de VITAMINA B12 (gastrite atrófica, anemia perniciosa, uso de IBP, metformina, dieta pobre em proteína animal), deficiência de ÁCIDO FÓLICO (dieta inadequada, alcoolismo, gestação), HIPOTIREOIDISMO, DOENÇA HEPÁTICA (etilismo, hepatite, cirrose), MEDICAMENTOS (metotrexato, hidroxiureia, antirretrovirais, anticonvulsivantes) e SÍNDROME MIELODISPLÁSICA. ';
+
+      if (usaB12) {
+        texto += 'O uso de B12 está em curso — se recente, a macrocitose pode estar em regressão; se antiga, sugere dose/via inadequada ou má absorção. ';
+      }
+      if (alcoolista) {
+        texto += 'O alcoolismo crônico é causa frequente e reversível — abstinência é essencial. ';
+      }
+
+      texto += 'CONDUTA: solicitar DOSAGEM SÉRICA DE VITAMINA B12, FOLATOS, TSH/T4 LIVRE, FUNÇÃO HEPÁTICA (AST/ALT/GGT/bilirrubinas), RETICULÓCITOS e LDH. ';
+
+      if (idade >= 65) {
+        texto += 'Em pacientes com 65 anos ou mais, considerar também pesquisa de SÍNDROME MIELODISPLÁSICA — encaminhar ao hematologista para avaliação com possível mielograma. ';
+      }
+
+      if (hemoglobina < 8) {
+        texto += 'Com Hb < 8 g/dL, encaminhamento URGENTE ao hematologista. Avaliar necessidade de transfusão conforme sintomatologia.';
+      } else if (hemoglobina <= 10) {
+        texto += 'Avaliação com hematologista em curto prazo (2-4 semanas) é recomendada, sobretudo se sintomática.';
+      } else {
+        texto += 'Avaliar com hematologista se persistir após correção das causas reversíveis (B12, folato, tireoide).';
+      }
+
+      achados.push({
+        id: 'anemia-macrocitica',
+        label: `ANEMIA MACROCÍTICA ${gravidade} (Hb ${hemoglobina} · VCM ${vcm})`,
+        color: cor,
+        texto,
+      });
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // ACHADO 7 — SATURAÇÃO DA TRANSFERRINA ELEVADA (> 50%)
   //
   // Observacao fisiologica fundamental:
