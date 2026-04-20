@@ -405,7 +405,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
                   <input type="number" step="0.1" name={f.name} value={inputs[f.name]} onChange={handleChange}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
-                  {f.hint && <p className="text-xs text-gray-400 mt-1">{f.hint}</p>}
+                  {f.hint && <p className="text-xs text-orange-600 font-medium mt-1">{f.hint}</p>}
                 </div>
               ))}
             </div>
