@@ -395,7 +395,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
-                { label: 'Ferritina (ng/mL)', name: 'ferritina' },
+                { label: 'Ferritina (ng/mL)', name: 'ferritina', hint: 'Não use ponto para valores superiores a 1000. Ex: 1140' },
                 { label: 'Hemoglobina (g/dL)', name: 'hemoglobina' },
                 { label: 'VCM (fL)', name: 'vcm' },
                 { label: 'RDW-CV (%)', name: 'rdw' },
@@ -405,6 +405,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
                   <input type="number" step="0.1" name={f.name} value={inputs[f.name]} onChange={handleChange}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                  {f.hint && <p className="text-xs text-gray-400 mt-1">{f.hint}</p>}
                 </div>
               ))}
             </div>
