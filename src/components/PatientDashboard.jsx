@@ -178,6 +178,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       carregarDados()
     }
     setTela('resultado')
+
+    // Se o paciente eh bariatrico, abrir a anamnese OBA logo apos a avaliacao
+    if (inputs.bariatrica && res.encontrado) {
+      setShowOBAModal(true)
+    }
   }
 
   async function handleLogout() {
