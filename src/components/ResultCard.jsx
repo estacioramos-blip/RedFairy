@@ -322,6 +322,61 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
   )
 }
 
+// ── Seção Achados Paralelos ───────────────────────────────────────────────────
+function AchadosParalelosSection({ achados }) {
+  const [expandido, setExpandido] = useState(null);
+  if (!achados || achados.length === 0) return null;
+
+  const schemeBy = {
+    red:    { bg: 'bg-red-50',    border: 'border-red-400',    badge: 'bg-red-600',    text: 'text-red-800',    dot: 'bg-red-500',    label: '🔴 GRAVE'     },
+    orange: { bg: 'bg-orange-50', border: 'border-orange-400', badge: 'bg-orange-500', text: 'text-orange-800', dot: 'bg-orange-500', label: '🟠 IMPORTANTE' },
+    yellow: { bg: 'bg-yellow-50', border: 'border-yellow-300', badge: 'bg-yellow-500', text: 'text-yellow-800', dot: 'bg-yellow-400', label: '🟡 ATENÇÃO'   },
+  };
+
+  return (
+    <div className="mt-6 rounded-2xl border-2 border-gray-300 bg-white shadow-lg overflow-hidden">
+      <div className="bg-gray-700 text-white px-6 py-4">
+        <p className="text-xs uppercase tracking-widest opacity-70 mb-1">Achados Paralelos</p>
+        <h3 className="text-xl font-bold">Outros Achados Relevantes</h3>
+        <p className="text-gray-300 text-xs mt-1">
+          {achados.length} achado{achados.length > 1 ? 's' : ''} detectado{achados.length > 1 ? 's' : ''} além do diagnóstico principal
+        </p>
+      </div>
+      <div className="p-4 space-y-2">
+        {achados.map((ach, i) => {
+          const scheme = schemeBy[ach.color] || schemeBy.yellow;
+          const aberto = expandido === i;
+          return (
+            <div key={ach.id} className={`rounded-xl border ${scheme.border} ${scheme.bg} overflow-hidden`}>
+              <button
+                onClick={() => setExpandido(aberto ? null : i)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${scheme.dot}`} />
+                  <span className={`font-semibold text-sm truncate ${scheme.text}`}>{ach.label}</span>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full text-white whitespace-nowrap ${scheme.badge}`}>
+                    {scheme.label}
+                  </span>
+                  <span className={`text-xl leading-none font-light ${scheme.text} transition-transform duration-200 ${aberto ? 'rotate-90' : ''}`}>
+                    ›
+                  </span>
+                </div>
+              </button>
+              {aberto && (
+                <div className="px-4 pb-4 border-t border-white/60 pt-3">
+                  <p className={`text-sm leading-relaxed ${scheme.text}`}>{ach.texto}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Seção OBA ─────────────────────────────────────────────────────────────────
 function OBASection({ oba }) {
   const [expandido, setExpandido] = useState(null);
@@ -980,6 +1035,9 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
         </div>
       </div>
+
+      {/* ── SEÇÃO 1.5: ACHADOS PARALELOS ─────────────────────────────────────── */}
+      <AchadosParalelosSection achados={resultado.achadosParalelos} />
 
       {/* ── SEÇÃO 2: OBA ─────────────────────────────────────────────────────── */}
       {oba && <OBASection oba={oba} />}

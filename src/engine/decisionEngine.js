@@ -1,5 +1,6 @@
 import { maleMatrix } from './maleMatrix.js';
 import { femaleMatrix } from './femaleMatrix.js';
+import { detectarAchadosParalelos } from './achadosParalelos.js';
 
 export function calcularDias(dataColeta) {
   const hoje = new Date();
@@ -197,6 +198,8 @@ export function avaliarPaciente(inputs) {
     }
   }
 
+  const achadosParalelos = detectarAchadosParalelos(inputs);
+
   return {
     encontrado: true,
     id: resultado.id,
@@ -211,6 +214,7 @@ export function avaliarPaciente(inputs) {
     g6pdAlerta,
     isAge2,
     diasDesdeColeta: dias,
+    achadosParalelos,
   };
 }
 
