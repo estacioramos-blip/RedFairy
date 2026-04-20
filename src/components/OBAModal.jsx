@@ -216,6 +216,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
   const [form, setForm] = useState({
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
+    imc_antes: '', imc_atual: '',
     ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false, semEspecialista: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
     status_intestinal: '', status_fibromialgia: [],
@@ -658,6 +659,18 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Peso atual (kg)</label>
           <input style={inp} type="number" placeholder="Ex: 78" value={form.peso_atual} onChange={e => sf('peso_atual', e.target.value)} />
+
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem', marginTop:'0.8rem' }}>
+            <div>
+              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>IMC antes da cirurgia</label>
+              <input style={inp} type="number" step="0.1" placeholder="Ex: 42" value={form.imc_antes} onChange={e => sf('imc_antes', e.target.value)} />
+            </div>
+            <div>
+              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>IMC atual</label>
+              <input style={inp} type="number" step="0.1" placeholder="Ex: 28" value={form.imc_atual} onChange={e => sf('imc_atual', e.target.value)} />
+            </div>
+          </div>
+          <p style={{ fontSize:'0.7rem', color:'#6B7280', marginTop:'0.3rem', fontStyle:'italic' }}>Opcional — se não souber, deixe em branco.</p>
 
           {kgPerdidos !== null && kgPerdidos > 0 && (
             <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:8, padding:'0.5rem 0.9rem', marginTop:'0.5rem' }}>

@@ -804,6 +804,63 @@ function buildModPonderal(dados, alertas) {
     linhas.push(`PESO ATUAL: ${pesoAtual} kg`)
     linhas.push(`TOTAL PERDIDO: ${perdido.toFixed(1)} kg`)
 
+    // ── IMC PRE-CIRURGIA E IMC ATUAL ──────────────────────────────────
+    const imcAntes = parseFloat(dadosOBA.imc_antes)
+    const imcAtual = parseFloat(dadosOBA.imc_atual)
+
+    function classificaIMC(imc) {
+      if (isNaN(imc)) return ''
+      if (imc < 18.5)  return 'BAIXO PESO'
+      if (imc < 25)    return 'EUTROFIA'
+      if (imc < 30)    return 'SOBREPESO'
+      if (imc < 35)    return 'OBESIDADE GRAU I'
+      if (imc < 40)    return 'OBESIDADE GRAU II'
+      return 'OBESIDADE GRAU III (MORBIDA)'
+    }
+
+    const strIMCAntes = isNaN(imcAntes) ? 'desconhecido' : `${imcAntes.toFixed(1)} (${classificaIMC(imcAntes)})`
+    const strIMCAtual = isNaN(imcAtual) ? 'desconhecido' : `${imcAtual.toFixed(1)} (${classificaIMC(imcAtual)})`
+    linhas.push(`IMC PRÉVIO: ${strIMCAntes} · IMC ATUAL: ${strIMCAtual}`)
+
+    if (!isNaN(imcAntes) && !isNaN(imcAtual)) {
+      const deltaIMC = imcAntes - imcAtual           // positivo = perdeu
+      const pctIMC   = (deltaIMC / imcAntes) * 100
+
+      if (deltaIMC > 0) {
+        linhas.push(`REDUÇÃO DE IMC: ${deltaIMC.toFixed(1)} unidades (${pctIMC.toFixed(1)}% do IMC inicial).`)
+        if (pctIMC >= 25) {
+          linhas.push('PERDA DE IMC ADEQUADA/EXCELENTE (≥ 25% do IMC inicial): SUCESSO BARIÁTRICO CONSISTENTE. MANTER ACOMPANHAMENTO NUTRICIONAL E ATIVIDADE FÍSICA PARA SUSTENTAR O RESULTADO.')
+        } else if (pctIMC >= 10) {
+          if (nivelGeral === NORMAL) nivelGeral = LEVE
+          linhas.push('PERDA DE IMC PARCIAL (10–25% do IMC inicial): RESULTADO INSUFICIENTE PARA O ESPERADO NA BARIÁTRICA. REAVALIAR ADESÃO À DIETA, ATIVIDADE FÍSICA E POSSÍVEL FALHA PARCIAL DA CIRURGIA.')
+          alertas.push({ nivel: LEVE, texto: `PERDA DE IMC PARCIAL: ${pctIMC.toFixed(0)}% — INSUFICIENTE.` })
+        } else {
+          if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+          linhas.push('PERDA DE IMC MUITO AQUÉM DO ESPERADO (< 10% do IMC inicial): RESULTADO INSATISFATÓRIO DA CIRURGIA. INVESTIGAR ADESÃO, TÉCNICA CIRÚRGICA OU NECESSIDADE DE CIRURGIA REVISIONAL.')
+          alertas.push({ nivel: MODERADO, texto: `PERDA DE IMC AQUÉM: apenas ${pctIMC.toFixed(0)}%.` })
+        }
+      } else if (deltaIMC < 0) {
+        const ganhoAbs = Math.abs(deltaIMC)
+        const ganhoPct = Math.abs(pctIMC)
+        linhas.push(`GANHO DE IMC APÓS A CIRURGIA: ${ganhoAbs.toFixed(1)} unidades (${ganhoPct.toFixed(1)}% a mais que o IMC inicial).`)
+        if (ganhoPct > 10) {
+          nivelGeral = GRAVE
+          linhas.push('REGANHO EXPRESSIVO DO IMC (> 10% acima do IMC pré-cirúrgico): FALHA BARIÁTRICA SIGNIFICATIVA. AVALIAÇÃO PARA REVISÃO CIRÚRGICA, ACOMPANHAMENTO PSICOLÓGICO E TERAPIA FARMACOLÓGICA ADJUVANTE.')
+          alertas.push({ nivel: GRAVE, texto: `REGANHO DE IMC EXPRESSIVO: +${ganhoPct.toFixed(0)}%.` })
+        } else if (ganhoPct > 5) {
+          if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+          linhas.push('REGANHO MODERADO DO IMC (5–10% acima do IMC inicial): INTERVENÇÃO NECESSÁRIA. REAVALIAR PADRÃO ALIMENTAR, ATIVIDADE FÍSICA E CONSIDERAR FARMACOTERAPIA.')
+          alertas.push({ nivel: MODERADO, texto: `REGANHO DE IMC: +${ganhoPct.toFixed(0)}%.` })
+        } else {
+          if (nivelGeral === NORMAL) nivelGeral = LEVE
+          linhas.push('REGANHO LEVE DO IMC (até 5% acima do IMC inicial): MONITORAR. ATENÇÃO AO PADRÃO ALIMENTAR E ROTINA DE EXERCÍCIOS.')
+          alertas.push({ nivel: LEVE, texto: `REGANHO LEVE DE IMC: +${ganhoPct.toFixed(0)}%.` })
+        }
+      } else {
+        linhas.push('IMC ATUAL IGUAL AO PRÉ-CIRÚRGICO: AVALIAR SE HÁ OSCILAÇÃO RECENTE OU SE A CIRURGIA NÃO TEVE O IMPACTO PONDERAL ESPERADO.')
+      }
+    }
+
     if (!isNaN(pesoMin) && pesoMin < pesoAtual) {
       const reganho = pesoAtual - pesoMin
       linhas.push(`MENOR PESO ALCANÇADO: ${pesoMin} kg`)
