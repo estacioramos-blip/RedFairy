@@ -153,7 +153,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     const res = avaliarPaciente(inputsNumericos)
     setResultado({ ...res, _inputs: inputsNumericos })
 
-    if (res.encontrado) {
+    // So persiste no Supabase se houver sessao real (paciente cadastrado).
+    // Modo demo/bariatrico sem login apenas exibe o resultado.
+    if (res.encontrado && session?.user) {
       await supabase.from('avaliacoes').insert({
         user_id: session.user.id,
         data_coleta: inputs.dataColeta,
