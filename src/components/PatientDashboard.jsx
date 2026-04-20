@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { avaliarPaciente } from '../engine/decisionEngine'
+import { avaliarPaciente, formatarParaCopiar } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import heroImg from '../assets/redfairy-hero.png'
@@ -468,7 +468,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
         {tela === 'resultado' && resultado && (
           <div>
-            <ResultCard resultado={resultado} onCopiar={() => {}} copiado={copiado} />
+            <ResultCard resultado={resultado} onCopiar={() => {
+              const texto = formatarParaCopiar(resultado, resultado._inputs || inputs)
+              navigator.clipboard.writeText(texto).then(() => {
+                setCopiado(true)
+                setTimeout(() => setCopiado(false), 3000)
+              }).catch(err => {
+                console.error('Erro ao copiar:', err)
+                alert('Erro ao copiar. Tente novamente.')
+              })
+            }} copiado={copiado} />
             <button onClick={() => setTela('historico')}
               className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-xl transition-colors">
               Ver Histórico

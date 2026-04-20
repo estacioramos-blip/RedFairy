@@ -248,7 +248,58 @@ export function formatarParaCopiar(resultado, inputs) {
     texto += '\n';
   }
 
-  texto += 'PRÓXIMOS EXAMES SUGERIDOS\n';
+  // ACHADOS PARALELOS
+  if (resultado.achadosParalelos && resultado.achadosParalelos.length > 0) {
+    texto += 'OUTROS ACHADOS RELEVANTES\n';
+    resultado.achadosParalelos.forEach(a => {
+      texto += '- ' + a.label + ': ' + a.texto + '\n\n';
+    });
+  }
+
+  // ALERTA G-6-PD
+  if (resultado.g6pdAlerta) {
+    texto += 'ALERTA G-6-PD\n';
+    texto += resultado.g6pdAlerta + '\n\n';
+  }
+
+  // AVALIACAO OBA (resumida)
+  if (resultado._oba) {
+    const oba = resultado._oba;
+    texto += 'AVALIACAO OBA (BARIATRICO)\n';
+    texto += 'Cirurgia: ' + oba.tipoCirurgia + ' | ' + oba.mesesPosCirurgia + ' meses pos-cirurgia\n';
+    texto += 'Grau de disabsorcao: ' + oba.grauDisabsorcao + '/3\n\n';
+
+    if (oba.alertas && oba.alertas.length > 0) {
+      texto += 'Alertas OBA:\n';
+      oba.alertas.forEach(a => {
+        texto += '- [' + (a.nivel || '').toUpperCase() + '] ' + a.texto + '\n';
+      });
+      texto += '\n';
+    }
+
+    if (oba.modulos && oba.modulos.length > 0) {
+      texto += 'Modulos OBA:\n';
+      oba.modulos.forEach(m => {
+        if (m.nivel && m.nivel !== 'normal') {
+          texto += '- ' + m.titulo + ' [' + m.nivel.toUpperCase() + ']\n';
+          if (m.linhas) {
+            m.linhas.forEach(l => { texto += '  ' + l + '\n'; });
+          }
+        }
+      });
+      texto += '\n';
+    }
+
+    if (oba.examesComplementares && oba.examesComplementares.length > 0) {
+      texto += 'Exames complementares OBA:\n';
+      oba.examesComplementares.forEach(e => {
+        texto += '- ' + e + '\n';
+      });
+      texto += '\n';
+    }
+  }
+
+  texto += 'PROXIMOS EXAMES SUGERIDOS\n';
   resultado.proximosExames.forEach(e => {
     texto += '- ' + e + '\n';
   });

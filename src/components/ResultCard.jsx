@@ -1027,12 +1027,6 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
             </div>
           </div>
 
-          <button onClick={onCopiar}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all
-              ${copiado ? 'bg-green-500 text-white' : `${scheme.badge} text-white hover:opacity-90`}`}>
-            {copiado ? '✅ Resultado Copiado!' : '📋 Copiar Resultado para WhatsApp'}
-          </button>
-
         </div>
       </div>
 
@@ -1055,6 +1049,13 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
         // MODO PACIENTE — oferta de documentos
         <DocumentoMedicoPanel resultado={resultado} />
       )}
+
+      {/* ── BOTÃO FINAL: COPIAR RESULTADO COMPLETO PARA WHATSAPP ─────────────── */}
+      <button onClick={onCopiar}
+        className={`mt-6 w-full py-3 rounded-xl font-bold text-sm transition-all
+          ${copiado ? 'bg-green-500 text-white' : `${scheme.badge} text-white hover:opacity-90`}`}>
+        {copiado ? '✅ Resultado Copiado!' : '📋 Copiar Resultado Completo para WhatsApp'}
+      </button>
     </>
   );
 }
