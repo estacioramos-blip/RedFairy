@@ -30,9 +30,10 @@ const obaLevelLabel = {
 
 const WHATSAPP_MEDICO = '5571997110804';
 
-function calcularFerroEV(hbAtual, sexo) {
+function calcularFerroEV(hbAtual, sexo, gestante) {
   const pesoReferencia = 70;
-  const hbAlvo = sexo === 'M' ? 14.0 : 12.5;
+  // Na gestacao a Hb alvo e 11.5 (hemodilucao fisiologica, OMS)
+  const hbAlvo = sexo === 'M' ? 14.0 : (gestante ? 11.5 : 12.5);
   const deficit = Math.max(hbAlvo - hbAtual, 0);
   // FIX: se deficit = 0, dose = 0 (sem o +500 de reserva espuria)
   const doseTotal = deficit > 0
@@ -54,8 +55,8 @@ function calcularSangria(ferritina, satTransf, sexo, peso, hbAtual, isPolicitemi
   return { volume, intervalo, sangriaEstimadas, penultima, ferritinAlvo, hbMin };
 }
 
-function ModalFerroEV({ onClose, hbAtual, sexo }) {
-  const { doseTotal, sessoes, hbAlvo, deficit } = calcularFerroEV(hbAtual, sexo);
+function ModalFerroEV({ onClose, hbAtual, sexo, gestante }) {
+  const { doseTotal, sessoes, hbAlvo, deficit } = calcularFerroEV(hbAtual, sexo, gestante);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
@@ -890,9 +891,11 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
   const scheme = colorScheme[resultado.color] || colorScheme.yellow;
 
   // FIX: guards contra disparo espurio em paciente verde ou sem deficit real de Hb
+  // Consideramos gestante (Hb alvo gestacional = 11.5 g/dL por hemodilucao fisiologica)
   const _hbAtualFerroEV = Number(resultado._inputs?.hemoglobina ?? 0);
   const _sexoFerroEV = resultado._inputs?.sexo || 'M';
-  const _hbAlvoFerroEV = _sexoFerroEV === 'M' ? 14.0 : 12.5;
+  const _gestanteFerroEV = Boolean(resultado._inputs?.gestante);
+  const _hbAlvoFerroEV = _sexoFerroEV === 'M' ? 14.0 : (_gestanteFerroEV ? 11.5 : 12.5);
   const _deficitHbFerroEV = Math.max(_hbAlvoFerroEV - _hbAtualFerroEV, 0);
   const _bloqueioVerde = resultado.color === 'green';
 
@@ -925,7 +928,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
   return (
     <>
-      {showFerroEV && <ModalFerroEV onClose={() => setShowFerroEV(false)} hbAtual={hbAtual} sexo={sexo} />}
+      {showFerroEV && <ModalFerroEV onClose={() => setShowFerroEV(false)} hbAtual={hbAtual} sexo={sexo} gestante={resultado._inputs?.gestante} />}
       {showSangria && (
         <ModalSangria
           onClose={() => setShowSangria(false)}
