@@ -87,6 +87,21 @@ export function avaliarPaciente(inputs) {
     : inputsAjustados.idade >= 40;
 
   const resultado = matrix.find(item => matchesConditions(item, inputsAjustados));
+
+  // Fix palavra 'NOVA': se paciente NAO tem historico de perda/sangria,
+  // a palavra 'NOVA' antes de DOACAO/SANGRIA pressupoe antecedente inexistente.
+  // Remover 'NOVA ' para manter o texto coerente.
+  if (resultado && !inputs.perda) {
+    const limparNova = (txt) => typeof txt === 'string'
+      ? txt.replace(/NOVA DOA[ÇC][ÃA]O/g, 'DOAÇÃO')
+           .replace(/nova doa[çc][ãa]o/g, 'doação')
+           .replace(/NOVA SANGRIA/g, 'SANGRIA')
+           .replace(/nova sangria/g, 'sangria')
+      : txt;
+    resultado.diagnostico      = limparNova(resultado.diagnostico);
+    resultado.recomendacaoAge1 = limparNova(resultado.recomendacaoAge1);
+    resultado.recomendacaoAge2 = limparNova(resultado.recomendacaoAge2);
+  }
   const dias = calcularDias(inputs.dataColeta);
   const fraseData = getFraseData(dias);
 
