@@ -247,10 +247,10 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     }
   }, [dadosRedFairy])
 
-  // Fase 3: quando marca 'Tenho exames da mesma data', pre-preenche data_exames
+  // Fase 3: quando marca 'Tenho exames da mesma data', pre-preenche dataExames
   useEffect(() => {
-    if (form.temExamesMesmaData && examesRedFairy?.dataColeta && !form.data_exames) {
-      setForm(prev => ({ ...prev, data_exames: examesRedFairy.dataColeta }))
+    if (form.temExamesMesmaData && examesRedFairy?.dataColeta && !dataExames) {
+      setDataExames(examesRedFairy.dataColeta)
     }
   }, [form.temExamesMesmaData, examesRedFairy])
 
@@ -566,6 +566,33 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             </div>
           )}
 
+          {/* Fase 3: banner educativo + checkbox de exames da mesma data */}
+          {examesRedFairy && examesRedFairy.dataColeta && (
+            <div style={{ background:'#FDF2F8', border:'1.5px solid #F9A8D4', borderRadius:10, padding:'0.9rem 1rem', marginBottom:'1rem' }}>
+              <p style={{ color:'#831843', fontSize:'0.8rem', lineHeight:'1.5', marginBottom:'0.8rem' }}>
+                Se, na data em que você realizou o hemograma inicial, também fez alguns desses exames,
+                pode inserir os resultados na plataforma. De todo modo, é recomendável repetir ou
+                complementar os exames em cerca de duas semanas, e, se desejar, podemos emitir a
+                solicitação médica mediante o pagamento de uma pequena taxa. Isso costuma valer muito
+                a pena, pois economiza tempo, reduz custos de deslocamento e evita a necessidade de
+                uma nova consulta presencial apenas para esse fim. Se preferir, a plataforma também
+                poderá disponibilizar uma teleconsulta médica, especialmente caso os exames apresentem
+                alterações mais significativas.
+              </p>
+              <label style={{ display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                <input
+                  type="checkbox"
+                  checked={form.temExamesMesmaData}
+                  onChange={e => sf('temExamesMesmaData', e.target.checked)}
+                  style={{ width:'1.1rem', height:'1.1rem', accentColor:'#DB2777' }}
+                />
+                <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#831843' }}>
+                  Tenho exames da mesma data do eritron ({examesRedFairy.dataColeta.split('-').reverse().join('/')})
+                </span>
+              </label>
+            </div>
+          )}
+
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#374151', marginBottom:'0.5rem' }}>Data dos exames</label>
           <input style={inp} type="date" value={dataExames} onChange={e => setDataExames(e.target.value)} />
           {diasExames !== null && (
@@ -590,6 +617,22 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
                   value={exames[ex.key] || ''}
                   onChange={e => !ex.readOnly && handleExameChangeOBA(ex.key, e.target.value)} />
                 {aberrantesOBA[ex.key] && <span style={{ fontSize:'0.62rem', fontWeight:700, color:'#CA8A04', marginTop:'0.2rem' }}>⚠ VALOR ABERRANTE — CONFIRME</span>}
+                {/* Fase 3: classificacao automatica do valor */}
+                {(() => {
+                  const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
+                  if (!cl) return null
+                  const cores = {
+                    normal:    { fundo:'#F0FDF4', borda:'#BBF7D0', texto:'#166534', rotulo:'NORMAL' },
+                    limitrofe: { fundo:'#FEFCE8', borda:'#FDE68A', texto:'#92400E', rotulo:'LIMÍTROFE' },
+                    alterado:  { fundo:'#FFF1F2', borda:'#FECDD3', texto:'#9F1239', rotulo:'ALTERADO' },
+                  }[cl.nivel]
+                  const seta = cl.direcao === 'alto' ? ' ↑' : cl.direcao === 'baixo' ? ' ↓' : ''
+                  return (
+                    <span style={{ display:'inline-block', marginTop:'0.25rem', fontSize:'0.6rem', fontWeight:700, background:cores.fundo, border:`1px solid ${cores.borda}`, color:cores.texto, padding:'0.1rem 0.4rem', borderRadius:6 }}>
+                      {cores.rotulo}{seta}
+                    </span>
+                  )
+                })()}
               </div>
             ))}
           </div>
@@ -601,6 +644,27 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
               </p>
             </div>
           )}
+
+          {/* Fase 3: banner de teleconsulta se houver algum exame alterado */}
+          {(() => {
+            const temAlterado = todosExames.some(ex => {
+              const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
+              return cl && cl.nivel === 'alterado'
+            })
+            if (!temAlterado) return null
+            return (
+              <div style={{ background:'#FFF1F2', border:'1.5px solid #FCA5A5', borderRadius:10, padding:'0.9rem 1rem', margin:'1rem 0' }}>
+                <p style={{ color:'#9F1239', fontSize:'0.85rem', fontWeight:700, marginBottom:'0.4rem' }}>
+                  🩺 Alguns exames apresentam alterações significativas.
+                </p>
+                <p style={{ color:'#7F1D1D', fontSize:'0.78rem', lineHeight:'1.5' }}>
+                  A plataforma pode disponibilizar uma teleconsulta médica para discussão desses
+                  resultados. Fale com seu médico assistente ou solicite a teleconsulta após finalizar
+                  esta avaliação.
+                </p>
+              </div>
+            )
+          })()}
 
           <button style={btnP} onClick={salvarExames} disabled={loading}>
             {loading ? 'Salvando...' : 'Concluir e ir para a Avaliação →'}
