@@ -63,11 +63,13 @@ function matchesConditions(item, inputs) {
   if (!inRange(inputs.rdw,         c.rdw))         return false;
   if (!inRange(inputs.satTransf,   c.satTransf))   return false;
 
-  if (c.bariatrica   !== undefined && (inputs.bariatrica   ?? false) !== c.bariatrica)   return false;
-  if (c.vegetariano  !== undefined && (inputs.vegetariano  ?? false) !== c.vegetariano)  return false;
-  if (c.perda        !== undefined && (inputs.perda        ?? false) !== c.perda)        return false;
-  if (c.alcoolista   !== undefined && (inputs.alcoolista   ?? false) !== c.alcoolista)   return false;
-  if (c.transfundido !== undefined && (inputs.transfundido ?? false) !== c.transfundido) return false;
+  if (c.bariatrica     !== undefined && (inputs.bariatrica     ?? false) !== c.bariatrica)     return false;
+  if (c.vegetariano    !== undefined && (inputs.vegetariano    ?? false) !== c.vegetariano)    return false;
+  if (c.perda          !== undefined && (inputs.perda          ?? false) !== c.perda)          return false;
+  if (c.alcoolista     !== undefined && (inputs.alcoolista     ?? false) !== c.alcoolista)     return false;
+  if (c.transfundido   !== undefined && (inputs.transfundido   ?? false) !== c.transfundido)   return false;
+  if (c.gestante       !== undefined && (inputs.gestante       ?? false) !== c.gestante)       return false;
+  if (c.hipermenorreia !== undefined && (inputs.hipermenorreia ?? false) !== c.hipermenorreia) return false;
 
   return true;
 }
