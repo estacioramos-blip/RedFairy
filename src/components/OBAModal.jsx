@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { classificarValor } from '../engine/obaCutoffs'
 import logo from '../assets/logo.png'
 
 const TIPOS_CIRURGIA = ['Y DE ROUX', 'FOBI-CAPELLA', 'SLEEVE', 'BANDA GÁSTRICA AJUSTÁVEL', 'NÃO SEI']
@@ -222,7 +223,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     status_intestinal: '', status_fibromialgia: [],
     tipo_cirurgia: '',
     acompanhamento: '', especialistas: [],
-    status_gestacional: '', semanas_gestacao: '',
+    status_gestacional: '', semanas_gestacao: '', temExamesMesmaData: false,
     status_glicemico: '', status_pressorico: '',
     trombose: null, investigou_trombose: false,
     usou_anticoagulante: false, usa_anticoagulante: false,
@@ -245,6 +246,13 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       }))
     }
   }, [dadosRedFairy])
+
+  // Fase 3: quando marca 'Tenho exames da mesma data', pre-preenche data_exames
+  useEffect(() => {
+    if (form.temExamesMesmaData && examesRedFairy?.dataColeta && !form.data_exames) {
+      setForm(prev => ({ ...prev, data_exames: examesRedFairy.dataColeta }))
+    }
+  }, [form.temExamesMesmaData, examesRedFairy])
 
   const LIMITES_OBA = {
     'leucocitos': { min:500, max:20000 },
