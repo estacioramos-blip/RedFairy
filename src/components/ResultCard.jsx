@@ -34,8 +34,11 @@ function calcularFerroEV(hbAtual, sexo) {
   const pesoReferencia = 70;
   const hbAlvo = sexo === 'M' ? 14.0 : 12.5;
   const deficit = Math.max(hbAlvo - hbAtual, 0);
-  const doseTotal = Math.round((pesoReferencia * deficit * 2.4 + 500) / 100) * 100;
-  const sessoes = Math.ceil(doseTotal / 200);
+  // FIX: se deficit = 0, dose = 0 (sem o +500 de reserva espuria)
+  const doseTotal = deficit > 0
+    ? Math.round((pesoReferencia * deficit * 2.4 + 500) / 100) * 100
+    : 0;
+  const sessoes = doseTotal > 0 ? Math.ceil(doseTotal / 200) : 0;
   return { doseTotal, sessoes, hbAlvo, deficit: deficit.toFixed(1) };
 }
 
@@ -886,13 +889,22 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
   const scheme = colorScheme[resultado.color] || colorScheme.yellow;
 
+  // FIX: guards contra disparo espurio em paciente verde ou sem deficit real de Hb
+  const _hbAtualFerroEV = Number(resultado._inputs?.hemoglobina ?? 0);
+  const _sexoFerroEV = resultado._inputs?.sexo || 'M';
+  const _hbAlvoFerroEV = _sexoFerroEV === 'M' ? 14.0 : 12.5;
+  const _deficitHbFerroEV = Math.max(_hbAlvoFerroEV - _hbAtualFerroEV, 0);
+  const _bloqueioVerde = resultado.color === 'green';
+
   const precisaFerroEV =
-    resultado.diagnostico?.toUpperCase().includes('ENDOVENOSA') ||
-    resultado.diagnostico?.toUpperCase().includes('INTRAVENOSA') ||
-    resultado.diagnostico?.toUpperCase().includes('FERRO ENDOVENOSO') ||
-    resultado.recomendacao?.toUpperCase().includes('ENDOVENOSA') ||
-    resultado.recomendacao?.toUpperCase().includes('INTRAVENOSA') ||
-    resultado.recomendacao?.toUpperCase().includes('FERRO ENDOVENOSO');
+    !_bloqueioVerde && _deficitHbFerroEV > 0 && (
+      resultado.diagnostico?.toUpperCase().includes('ENDOVENOSA') ||
+      resultado.diagnostico?.toUpperCase().includes('INTRAVENOSA') ||
+      resultado.diagnostico?.toUpperCase().includes('FERRO ENDOVENOSO') ||
+      resultado.recomendacao?.toUpperCase().includes('ENDOVENOSA') ||
+      resultado.recomendacao?.toUpperCase().includes('INTRAVENOSA') ||
+      resultado.recomendacao?.toUpperCase().includes('FERRO ENDOVENOSO')
+    );
 
   const precisaSangria =
     resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
