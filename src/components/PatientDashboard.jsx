@@ -22,7 +22,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     dataColeta: '', ferritina: '', hemoglobina: '',
     vcm: '', rdw: '', satTransf: '',
     bariatrica: false, vegetariano: false, perda: false,
-    hipermenorreia: false, gestante: false,
+    hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '',
     aspirina: false, vitaminaB12: false, ferroOral: false,
   })
 
@@ -169,6 +169,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         perda: inputs.perda,
         hipermenorreia: inputs.hipermenorreia,
         gestante: inputs.gestante,
+        semanas_gestacao: inputs.gestante && inputs.semanas_gestacao ? Number(inputs.semanas_gestacao) : null,
+        dum: inputs.gestante && inputs.dum ? inputs.dum : null,
         aspirina: inputs.aspirina,
         vitamina_b12: inputs.vitaminaB12,
         ferro_oral: inputs.ferroOral,
@@ -260,6 +262,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           cpf={profile.cpf}
           sexo={profile.sexo}
           idade={profile.data_nascimento ? Math.floor((Date.now() - new Date(profile.data_nascimento)) / 31557600000) : 0}
+          dadosRedFairy={{
+            gestante: inputs.gestante,
+            semanas_gestacao: inputs.semanas_gestacao ? Number(inputs.semanas_gestacao) : null,
+            dum: inputs.dum || null,
+          }}
           onFechar={() => setShowOBAModal(false)}
           onConcluir={() => setShowOBAModal(false)}
         />
@@ -441,6 +448,37 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   </label>
                 ))}
               </div>
+
+              {/* Fase 1: dados de gestacao */}
+              {inputs.gestante && inputs.sexo === 'F' && (
+                <div className="mt-3 p-3 rounded-xl border border-pink-200 bg-pink-50">
+                  <p className="text-xs font-bold text-pink-700 uppercase tracking-wide mb-2">📋 Dados da Gestação</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Semanas de gestação <span className="text-red-500">*</span></label>
+                      <input type="number" name="semanas_gestacao" value={inputs.semanas_gestacao} onChange={handleChange}
+                        min="1" max="42" placeholder="Ex: 24"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">DUM <span className="text-gray-400 font-normal">(opcional)</span></label>
+                      <input type="date" name="dum" value={inputs.dum} onChange={handleChange}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                    </div>
+                  </div>
+                  {inputs.semanas_gestacao && inputs.dum && (() => {
+                    const hoje = new Date()
+                    const dumDate = new Date(inputs.dum)
+                    const diasDesdeDUM = Math.floor((hoje - dumDate) / (1000 * 60 * 60 * 24))
+                    const semanasCalc = diasDesdeDUM / 7
+                    const diff = Math.abs(semanasCalc - Number(inputs.semanas_gestacao))
+                    if (diff > 2) {
+                      return <p className="text-xs text-orange-600 font-medium mt-2">⚠️ DUM sugere ~{semanasCalc.toFixed(1)} semanas, mas você informou {inputs.semanas_gestacao}. Revise os dados.</p>
+                    }
+                    return null
+                  })()}
+                </div>
+              )}
             </div>
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Medicamentos / Suplementos</h3>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 
@@ -198,7 +198,7 @@ const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.
 //   onConcluir(dadosOBA, examesOBA) — callback com os dados para o obaEngine
 //   onFechar()        — fecha sem salvar
 // ─────────────────────────────────────────────────────────────────────────────
-export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir, onFechar }) {
+export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFairy, onConcluir, onFechar }) {
   const [etapa, setEtapa] = useState('anamnese')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
@@ -234,6 +234,17 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, onConcluir,
     meta_peso: '', meta_kg: '', projetos_vida: [],
     compulsoes: [], medicamentos: [], emagrecedores: {},
   })
+
+  // Fase 1: pre-preenche Status Gestacional se vier da RedFairy
+  useEffect(() => {
+    if (dadosRedFairy?.gestante) {
+      setForm(prev => ({
+        ...prev,
+        status_gestacional: prev.status_gestacional || 'GRÁVIDA',
+        semanas_gestacao: prev.semanas_gestacao || (dadosRedFairy.semanas_gestacao ? String(dadosRedFairy.semanas_gestacao) : ''),
+      }))
+    }
+  }, [dadosRedFairy])
 
   const LIMITES_OBA = {
     'leucocitos': { min:500, max:20000 },
