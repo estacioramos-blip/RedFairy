@@ -104,22 +104,72 @@ export function avaliarPaciente(inputs) {
   }
   // ── Medicamentos que podem causar macrocitose ──────────────────────────────
   if (inputs.metformina) {
-    comentarios.push({ titulo: 'METFORMINA', texto: 'A METFORMINA REDUZ A ABSORÇÃO DE VITAMINA B12 NO ÍLEO TERMINAL. USO PROLONGADO PODE PRODUZIR DÉFICIT DE B12 E MACROCITOSE. RECOMENDA-SE DOSAR A VITAMINA B12 ANUALMENTE E SUPLEMENTAR SE NECESSÁRIO.' });
+    const temMacrocitose = Number(inputs.vcm) >= 100
+    if (temMacrocitose) {
+      comentarios.push({
+        titulo: 'METFORMINA + MACROCITOSE',
+        texto: `METFORMINA EM USO COM MACROCITOSE (VCM ${inputs.vcm}): padrão provavelmente iatrogênico — a metformina reduz a absorção de vitamina B12 no íleo terminal. Recomendável dosar B12 sérica e avaliar consulta com hematologista. A suplementação sublingual de 1000 mcg/dia costuma corrigir o quadro; se persistir, considerar B12 injetável.`
+      })
+    } else {
+      comentarios.push({
+        titulo: 'METFORMINA',
+        texto: 'METFORMINA EM USO. A medicação reduz a absorção de vitamina B12 no íleo terminal. Uso prolongado pode produzir déficit de B12 e macrocitose. Recomendável dosagem sérica anual de B12 e suplementação preventiva se houver sinais de depleção.'
+      })
+    }
   }
   if (inputs.ibp) {
-    comentarios.push({ titulo: 'IBP (OMEPRAZOL / PANTOPRAZOL)', texto: 'O USO PROLONGADO DE INIBIDORES DA BOMBA DE PRÓTONS REDUZ A ABSORÇÃO DE VITAMINA B12 AO DIMINUIR A ACIDEZ GÁSTRICA. PODE CONTRIBUIR PARA MACROCITOSE E DEFICIT NEUROLÓGICO. AVALIAR A NECESSIDADE DE SUPLEMENTAÇÃO.' });
+    const vcmNum = Number(inputs.vcm)
+    const ferrNum = Number(inputs.ferritina)
+    const temMacrocitose = vcmNum >= 100
+    const temSideropenia = ferrNum < 50
+    if (temMacrocitose || temSideropenia) {
+      const labs = []
+      if (temMacrocitose) labs.push(`VCM ${inputs.vcm}`)
+      if (temSideropenia) labs.push(`Ferritina ${inputs.ferritina}`)
+      comentarios.push({
+        titulo: 'IBP + PADRÃO SUSPEITO',
+        texto: `IBP (OMEPRAZOL/PANTOPRAZOL) COM ${labs.join(' e ')}: o uso crônico de inibidores da bomba de prótons reduz a acidez gástrica, comprometendo a absorção de vitamina B12 e de ferro heme. Recomendável dosar B12 sérica, revisar a indicação do IBP com o médico assistente e considerar suplementação enquanto o uso for necessário.`
+      })
+    } else {
+      comentarios.push({
+        titulo: 'IBP (OMEPRAZOL / PANTOPRAZOL)',
+        texto: 'IBP EM USO PROLONGADO. Reduz a absorção de vitamina B12 e de ferro heme ao diminuir a acidez gástrica. Pode contribuir para macrocitose e sideropenia ao longo do tempo. Recomendável dosagem sérica anual de B12 e revisão periódica da indicação.'
+      })
+    }
   }
   if (inputs.tiroxina) {
     comentarios.push({ titulo: 'TIROXINA / T4', texto: 'O HIPOTIREOIDISMO PODE CAUSAR ANEMIA NORMOCÍTICA OU MACROCÍTICA. A REPOSIÇÃO COM TIROXINA COSTUMA CORRIGIR A ANEMIA GRADUALMENTE. MONITORAR TSH E HEMOGRAMA A CADA 6 MESES.' });
   }
   if (inputs.hidroxiureia) {
-    comentarios.push({ titulo: 'HIDROXIUREIA', texto: 'A HIDROXIUREIA INIBE A SÍNTESE DE DNA E PRODUZ MACROCITOSE DOSE-DEPENDENTE. ESSE ACHADO É ESPERADO E NÃO INDICA DÉFICIT NUTRICIONAL. NÃO SUSPENDER SEM ORIENTAÇÃO DO HEMATOLOGISTA.' });
+    const temMacrocitose = Number(inputs.vcm) > 100
+    if (temMacrocitose) {
+      comentarios.push({
+        titulo: 'HIDROXIUREIA + MACROCITOSE',
+        texto: `HIDROXIUREIA EM USO COM MACROCITOSE (VCM ${inputs.vcm}): esse achado é ESPERADO — a hidroxiureia inibe a síntese de DNA e produz macrocitose dose-dependente. Não indica déficit nutricional nem requer suspensão. Manter acompanhamento pelo hematologista; a macrocitose pode ser marcador de aderência ao tratamento.`
+      })
+    } else {
+      comentarios.push({
+        titulo: 'HIDROXIUREIA',
+        texto: 'HIDROXIUREIA EM USO. A medicação inibe a síntese de DNA e tipicamente produz macrocitose — sua ausência aqui pode significar dose abaixo do terapêutico ou início recente. Manter acompanhamento pelo hematologista.'
+      })
+    }
   }
   if (inputs.anticonvulsivante) {
     comentarios.push({ titulo: 'ANTICONVULSIVANTE', texto: 'FENITOÍNA, ÁCIDO VALPROICO E CARBAMAZEPINA PODEM INTERFERIR NO METABOLISMO DO ÁCIDO FÓLICO E PRODUZIR MACROCITOSE. AVALIAR DOSAGEM DE FOLATOS E VITAMINA B12. SUPLEMENTAÇÃO PROFILÁTICA DE ÁCIDO FÓLICO PODE SER INDICADA.' });
   }
   if (inputs.methotrexato) {
-    comentarios.push({ titulo: 'METOTREXATO', texto: 'O METOTREXATO É UM ANTAGONISTA DO ÁCIDO FÓLICO E PRODUZ MACROCITOSE E ANEMIA MEGALOBLÁSTICA. A SUPLEMENTAÇÃO COM ÁCIDO FÓLICO (5 mg/semana) É PADRÃO DE CUIDADO E REDUZ A TOXICIDADE SEM COMPROMETER A EFICÁCIA.' });
+    const temMacrocitose = Number(inputs.vcm) >= 100
+    if (temMacrocitose) {
+      comentarios.push({
+        titulo: 'METOTREXATO + MACROCITOSE',
+        texto: `METOTREXATO EM USO COM MACROCITOSE (VCM ${inputs.vcm}): padrão compatível com antagonismo do folato. Recomendável otimizar a suplementação de ácido fólico (5 mg/semana, ou 1 mg/dia) e avaliar com o reumatologista/médico assistente se a dose do metotrexato está adequada. Não suspender sem orientação médica.`
+      })
+    } else {
+      comentarios.push({
+        titulo: 'METOTREXATO',
+        texto: 'METOTREXATO EM USO. Antagonista do ácido fólico — pode produzir macrocitose e anemia megaloblástica ao longo do tempo. A suplementação profilática de ácido fólico (5 mg/semana) é fundamental para prevenir déficit. Manter monitoramento periódico de hemograma.'
+      })
+    }
   }
   if (inputs.hivTratamento) {
     comentarios.push({ titulo: 'ANTIRRETROVIRAIS (HIV)', texto: 'ALGUNS ANTIRRETROVIRAIS, ESPECIALMENTE ZIDOVUDINA (AZT), PRODUZEM MACROCITOSE E ANEMIA MEGALOBLÁSTICA POR INIBIÇÃO DA SÍNTESE DE DNA ERITROIDE. MONITORAR HEMOGRAMA E CONSIDERAR AJUSTE DO ESQUEMA COM O INFECTOLOGISTA.' });
