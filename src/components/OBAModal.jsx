@@ -675,10 +675,12 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             <div>
               <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>IMC antes da cirurgia</label>
               <input style={inp} type="number" step="0.1" placeholder="Ex: 42" value={form.imc_antes} onChange={e => sf('imc_antes', e.target.value)} />
+              <p style={{ fontSize:'0.65rem', color:'#6B7280', marginTop:'0.25rem' }}>Normal: 18.5 a 24.9</p>
             </div>
             <div>
               <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>IMC atual</label>
               <input style={inp} type="number" step="0.1" placeholder="Ex: 28" value={form.imc_atual} onChange={e => sf('imc_atual', e.target.value)} />
+              <p style={{ fontSize:'0.65rem', color:'#6B7280', marginTop:'0.25rem' }}>Normal: 18.5 a 24.9</p>
             </div>
           </div>
           <p style={{ fontSize:'0.7rem', color:'#6B7280', marginTop:'0.3rem', fontStyle:'italic' }}>Opcional — se não souber, deixe em branco.</p>
