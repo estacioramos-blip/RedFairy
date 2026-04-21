@@ -102,6 +102,17 @@ export function avaliarPaciente(inputs) {
     resultado.recomendacaoAge1 = limparNova(resultado.recomendacaoAge1);
     resultado.recomendacaoAge2 = limparNova(resultado.recomendacaoAge2);
   }
+
+  // Fix frase '16-17 anos': so relevante para pacientes menores de 18 anos.
+  // Em adultos (>= 18), a frase eh ruido e deve ser removida.
+  if (resultado && Number(inputs.idade) >= 18) {
+    const removerFraseMenor = (txt) => typeof txt === 'string'
+      ? txt.replace(/\s*ENTRE 16 E 17 ANOS DE IDADE É PRECISO AUTORIZAÇÃO DOS RESPONSÁVEIS LEGAIS PARA DOAR SANGUE\./g, '')
+           .replace(/\s*entre 16 e 17 anos de idade é preciso autorização dos responsáveis legais para doar sangue\./g, '')
+      : txt;
+    resultado.recomendacaoAge1 = removerFraseMenor(resultado.recomendacaoAge1);
+    resultado.recomendacaoAge2 = removerFraseMenor(resultado.recomendacaoAge2);
+  }
   const dias = calcularDias(inputs.dataColeta);
   const fraseData = getFraseData(dias);
 
