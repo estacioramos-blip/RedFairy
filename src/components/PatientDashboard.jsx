@@ -23,7 +23,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     vcm: '', rdw: '', satTransf: '',
     bariatrica: false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '',
-    aspirina: false, vitaminaB12: false, ferroOral: false,
+    aspirina: false, vitaminaB12: false, ferro_oral: false, ferro_injetavel: false,
   })
 
   useEffect(() => { carregarDados() }, [])
@@ -173,7 +173,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         dum: inputs.gestante && inputs.dum ? inputs.dum : null,
         aspirina: inputs.aspirina,
         vitamina_b12: inputs.vitaminaB12,
-        ferro_oral: inputs.ferroOral,
+        ferro_oral: inputs.ferro_oral,
+        ferro_injetavel: inputs.ferro_injetavel,
         diagnostico_label: res.label,
         diagnostico_color: res.color,
       })
@@ -486,7 +487,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 {[
                   { name: 'aspirina', label: 'Aspirina', sub: 'Uso contínuo', color: 'orange' },
                   { name: 'vitaminaB12', label: 'Vitamina B12', sub: 'Últimos 3 meses', color: 'purple' },
-                  { name: 'ferroOral', label: 'Ferro Oral/Injetável', sub: 'Últimos 2 anos', color: 'orange' },
+                  { name: 'ferro_oral', label: 'Ferro Oral', sub: 'Últimos 2 anos', color: 'orange' },
+                  { name: 'ferro_injetavel', label: 'Ferro Injetável', sub: 'Últimos 2 anos', color: 'orange' },
                 ].map(f => (
                   <label key={f.name} className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-sm
                     ${inputs[f.name]

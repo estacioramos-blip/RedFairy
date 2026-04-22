@@ -127,8 +127,19 @@ export function avaliarPaciente(inputs) {
   if (inputs.vitaminaB12 && resultado?.comentarioB12) {
     comentarios.push({ titulo: 'VITAMINA B12', texto: resultado.comentarioB12 });
   }
-  if (inputs.ferroOral && resultado?.comentarioFerro) {
-    comentarios.push({ titulo: 'FERRO ORAL / INJETÁVEL', texto: resultado.comentarioFerro });
+  // Ferro oral vs injetavel: usa comentario especifico se existir, senao cai em comentarioFerro generico
+  if (inputs.ferro_injetavel && resultado?.comentarioFerroInjetavel) {
+    comentarios.push({ titulo: 'FERRO INJETÁVEL', texto: resultado.comentarioFerroInjetavel });
+  } else if (inputs.ferro_oral && resultado?.comentarioFerroOral) {
+    comentarios.push({ titulo: 'FERRO ORAL', texto: resultado.comentarioFerroOral });
+  } else if ((inputs.ferro_oral || inputs.ferro_injetavel) && resultado?.comentarioFerro) {
+    // Fallback: comentario generico quando nao ha especifico
+    const titulo = inputs.ferro_injetavel && inputs.ferro_oral
+      ? 'FERRO ORAL + INJETÁVEL'
+      : inputs.ferro_injetavel
+        ? 'FERRO INJETÁVEL'
+        : 'FERRO ORAL';
+    comentarios.push({ titulo, texto: resultado.comentarioFerro });
   }
   // ── Medicamentos que podem causar macrocitose ──────────────────────────────
   if (inputs.metformina) {

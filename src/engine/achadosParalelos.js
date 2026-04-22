@@ -16,7 +16,7 @@ export function detectarAchadosParalelos(inputs) {
   const rdw         = Number(inputs.rdw);
   const satTransf   = Number(inputs.satTransf);
   const sexo        = inputs.sexo;
-  const usaFerro    = inputs.ferroOral || inputs.ferro_oral;
+  const usaFerro    = inputs.ferroOral || inputs.ferro_oral || inputs.ferro_injetavel;
   const usaTesto    = inputs.testosterona;
   const alcoolista  = inputs.alcoolista;
   const usaB12      = inputs.vitaminaB12 || inputs.vitamina_b12 || inputs.b12;
