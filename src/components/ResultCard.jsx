@@ -946,7 +946,8 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
       resultado.recomendacao?.toUpperCase().includes('FERRO ENDOVENOSO')
     );
 
-  const precisaSangria =
+  // Gatilho textual (mantido)
+  const _precisaSangriaTextual =
     resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
     resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
     resultado.diagnostico?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
@@ -955,6 +956,27 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
     resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
     resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
     resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPEUTICAS');
+
+  // Gatilho clinico objetivo (novo — criterios do Dr. Ramos)
+  const _sexoIn   = resultado._inputs?.sexo;
+  const _ferrIn   = Number(resultado._inputs?.ferritina ?? 0);
+  const _satIn    = Number(resultado._inputs?.satTransf ?? 0);
+  const _hbIn     = Number(resultado._inputs?.hemoglobina ?? 0);
+  const _gestante = Boolean(resultado._inputs?.gestante);
+
+  const _sobrecargaMasc = _sexoIn === 'M' && _ferrIn >= 500 && _satIn > 50 && _hbIn >= 13.5;
+  const _sobrecargaFem  = _sexoIn === 'F' && _ferrIn >= 400 && _satIn > 50 && _hbIn >= 12;
+
+  // Mostra botao de sangria quando:
+  //   - textual OU
+  //   - sobrecarga masculina OU
+  //   - sobrecarga feminina nao-gestante
+  const precisaSangria = _precisaSangriaTextual || _sobrecargaMasc || (_sobrecargaFem && !_gestante);
+
+  // Alerta especial: gestante com sobrecarga de ferro
+  // Sangria e contraindicada na gestacao (risco de hipoxia fetal).
+  // Gestacao + lactacao consumirao ~1 g de Fe das reservas.
+  const alertaGestanteSobrecarga = _sobrecargaFem && _gestante;
 
   const isPolicitemiaVera = resultado.id === 81;
   const hbAtual   = resultado._inputs?.hemoglobina || 0;
@@ -1047,6 +1069,25 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
               💉 Como repor o Ferro Endovenoso
             </button>
+          )}
+
+          {/* Alerta especial: gestante com sobrecarga de ferro */}
+          {alertaGestanteSobrecarga && (
+            <div className="rounded-xl border-2 border-pink-400 bg-pink-50 p-4 space-y-2">
+              <p className="text-sm font-bold text-pink-900 uppercase tracking-wide">
+                ⚠️ Sobrecarga de Ferro na Gestação
+              </p>
+              <p className="text-sm text-pink-900 leading-relaxed">
+                A sangria terapêutica <strong>não está indicada durante a gestação</strong> — há
+                risco de hipóxia fetal. A gestação e a lactação consumirão cerca de 1 g de ferro
+                das suas reservas, o que reduzirá parcialmente a sobrecarga atual.
+              </p>
+              <p className="text-sm text-pink-900 leading-relaxed font-medium">
+                <strong>Após o parto e o fim da lactação, solicite teleconsulta com hematologista
+                para avaliar o status atual do seu metabolismo do ferro e decidir sobre o
+                tratamento definitivo.</strong>
+              </p>
+            </div>
           )}
 
           {precisaSangria && (
