@@ -805,8 +805,8 @@ function buildModPonderal(dados, alertas) {
     linhas.push(`TOTAL PERDIDO: ${perdido.toFixed(1)} kg`)
 
     // ── IMC PRE-CIRURGIA E IMC ATUAL ──────────────────────────────────
-    const imcAntes = parseFloat(dadosOBA.imc_antes)
-    const imcAtual = parseFloat(dadosOBA.imc_atual)
+    const imcAntes = parseFloat(dados.imc_antes)
+    const imcAtual = parseFloat(dados.imc_atual)
 
     function classificaIMC(imc) {
       if (isNaN(imc)) return ''
