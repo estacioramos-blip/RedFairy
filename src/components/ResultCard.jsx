@@ -971,7 +971,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
   //   - textual OU
   //   - sobrecarga masculina OU
   //   - sobrecarga feminina nao-gestante
-  const precisaSangria = _precisaSangriaTextual || _sobrecargaMasc || (_sobrecargaFem && !_gestante);
+  const precisaSangria = (_precisaSangriaTextual || _sobrecargaMasc || (_sobrecargaFem && !_gestante)) && !_gestante;
 
   // Alerta especial: gestante com sobrecarga de ferro
   // Sangria e contraindicada na gestacao (risco de hipoxia fetal).
