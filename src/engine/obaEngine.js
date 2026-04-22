@@ -1540,3 +1540,184 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
     linhas,
   }
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// buildModAcompanhamento
+//
+// Avalia se paciente tem especialistas minimos pos-bariatrica e se a
+// frequencia do acompanhamento e adequada ao contexto clinico.
+//
+// Hierarquia de criticidade (Dr. Ramos):
+//   G1 (criticos):        Hematologista, Gastroenterologista, Endocrinologista, Clinico
+//   G2 (complementares):  Nutrologo, Nutricionista, Cirurgiao, Psicologo, Psiquiatra
+//
+// Frequencia recomendada = pior dos 3 eixos:
+//   - Tempo pos-cirurgia
+//   - Grau de disabsorcao (tipo de cirurgia)
+//   - Labs alterados
+// ════════════════════════════════════════════════════════════════════════════
+function buildModAcompanhamento(dadosOBA, alertas) {
+  const linhas = []
+  let nivelGeral = NORMAL
+
+  const especialistas  = Array.isArray(dadosOBA.especialistas) ? dadosOBA.especialistas : []
+  const semEspecialista = Boolean(dadosOBA.semEspecialista)
+  const acompFreq      = dadosOBA.acompanhamento || ''  // ex: 'ANUAL', 'BIANUAL', 'TRIANUAL', 'NUNCA'
+  const mesesPos       = parseInt(dadosOBA.meses_pos_cirurgia) || 0
+  const tipoCir        = (dadosOBA.tipo_cirurgia || '').toUpperCase()
+
+  // ─── Grupo 1 (criticos) ─────────────────────────────────────────────
+  const G1 = ['HEMATOLOGISTA', 'GASTROENTEROLOGISTA', 'ENDOCRINOLOGISTA', 'CLÍNICO', 'CLINICO']
+  const G2 = ['NUTRÓLOGO', 'NUTROLOGO', 'NUTRICIONISTA', 'CIRURGIÃO', 'CIRURGIAO', 'PSICÓLOGO', 'PSICOLOGO', 'PSIQUIATRA']
+
+  const temG1 = especialistas.filter(e => G1.includes((e || '').toUpperCase()))
+  const temG2 = especialistas.filter(e => G2.includes((e || '').toUpperCase()))
+
+  // ─── Avaliacao de adequacao dos especialistas ───────────────────────
+  if (semEspecialista || (especialistas.length === 0 && !semEspecialista)) {
+    // Nao tem ninguem
+    linhas.push('NENHUM ESPECIALISTA DE ACOMPANHAMENTO DECLARADO.')
+    linhas.push('O ACOMPANHAMENTO MULTIDISCIPLINAR VITALÍCIO É PADRÃO-OURO PÓS-BARIÁTRICA. A AUSÊNCIA DE SEGUIMENTO AUMENTA SIGNIFICATIVAMENTE O RISCO DE DEFICIÊNCIAS NUTRICIONAIS GRAVES, REGANHO PONDERAL E COMPLICAÇÕES DE LONGO PRAZO.')
+    linhas.push('RECOMENDAÇÃO PRIORITÁRIA: estabelecer acompanhamento imediatamente — como mínimo HEMATOLOGISTA, GASTROENTEROLOGISTA, ENDOCRINOLOGISTA ou CLÍNICO GERAL.')
+    nivelGeral = GRAVE
+    alertas.push({ nivel: GRAVE, texto: 'SEM ACOMPANHAMENTO ESPECIALIZADO — retomar imediatamente.' })
+  } else if (temG1.length === 0) {
+    // Tem G2 mas sem G1 critico
+    linhas.push(`ESPECIALISTAS DECLARADOS: ${especialistas.join(', ')}.`)
+    linhas.push('NENHUM ESPECIALISTA DO GRUPO CRÍTICO (HEMATOLOGISTA, GASTROENTEROLOGISTA, ENDOCRINOLOGISTA OU CLÍNICO) NO SEU ACOMPANHAMENTO.')
+    linhas.push('OS PROFISSIONAIS COMPLEMENTARES (NUTRICIONISTA, PSICÓLOGO, CIRURGIÃO) SÃO IMPORTANTES, MAS A VIGILÂNCIA CLÍNICA DE DEFICIÊNCIAS NUTRICIONAIS E COMPLICAÇÕES ORGÂNICAS EXIGE AVALIAÇÃO MÉDICA REGULAR.')
+    linhas.push('RECOMENDAÇÃO: incluir ao menos um profissional do grupo crítico no acompanhamento.')
+    nivelGeral = MODERADO
+    alertas.push({ nivel: MODERADO, texto: 'SEM ESPECIALISTA CRÍTICO (hemato/gastro/endo/clínico) no acompanhamento.' })
+  } else if (temG1.length === 1) {
+    linhas.push(`ESPECIALISTA CRÍTICO: ${temG1.join(', ')}.`)
+    if (temG2.length > 0) {
+      linhas.push(`COMPLEMENTARES: ${temG2.join(', ')}.`)
+    }
+    linhas.push('ACOMPANHAMENTO BÁSICO ESTABELECIDO. IDEAL EXPANDIR PARA COBRIR OS DEMAIS EIXOS (ENDÓCRINO/METABÓLICO, HEMATOLÓGICO E GASTROINTESTINAL).')
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+  } else {
+    // >= 2 G1
+    linhas.push(`ESPECIALISTAS CRÍTICOS: ${temG1.join(', ')}.`)
+    if (temG2.length > 0) {
+      linhas.push(`COMPLEMENTARES: ${temG2.join(', ')}.`)
+    }
+    linhas.push('COBERTURA MULTIDISCIPLINAR ADEQUADA.')
+  }
+
+  // ─── Frequencia recomendada (pior dos 3 eixos) ──────────────────────
+  // Eixo 1: tempo pos-cirurgia
+  let freqPorTempo = 'ANUAL'
+  if (mesesPos <= 6) freqPorTempo = 'TRIMESTRAL'
+  else if (mesesPos <= 24) freqPorTempo = 'SEMESTRAL'
+
+  // Eixo 2: grau de disabsorcao (bypass = trimestral por mais tempo)
+  let freqPorCirurgia = 'ANUAL'
+  if (tipoCir.includes('ROUX') || tipoCir.includes('FOBI') || tipoCir.includes('CAPELLA') || tipoCir.includes('BYPASS')) {
+    if (mesesPos <= 24) freqPorCirurgia = 'TRIMESTRAL'
+    else freqPorCirurgia = 'SEMESTRAL'
+  } else if (tipoCir.includes('SLEEVE') || tipoCir.includes('VERTICAL') || tipoCir.includes('GÁSTRICA')) {
+    if (mesesPos <= 12) freqPorCirurgia = 'SEMESTRAL'
+  }
+
+  // Pior dos 2 eixos (trimestral > semestral > anual)
+  const ordem = { 'TRIMESTRAL': 3, 'SEMESTRAL': 2, 'ANUAL': 1 }
+  const freqRec = ordem[freqPorTempo] >= ordem[freqPorCirurgia] ? freqPorTempo : freqPorCirurgia
+
+  linhas.push(`FREQUÊNCIA DE ACOMPANHAMENTO RECOMENDADA PARA O SEU PERFIL ATUAL: ${freqRec}.`)
+
+  if (acompFreq) {
+    linhas.push(`FREQUÊNCIA ATUAL DECLARADA: ${acompFreq}.`)
+    const ordemAtual = ordem[acompFreq.toUpperCase()] || 0
+    const ordemIdeal = ordem[freqRec] || 0
+    if (ordemAtual < ordemIdeal) {
+      linhas.push('A FREQUÊNCIA ATUAL ESTÁ ABAIXO DO RECOMENDADO PARA O SEU PERFIL. AJUSTAR.')
+      if (nivelGeral === NORMAL) nivelGeral = LEVE
+      else if (nivelGeral === LEVE) nivelGeral = MODERADO
+      alertas.push({ nivel: nivelGeral, texto: `FREQUÊNCIA DE ACOMPANHAMENTO (${acompFreq}) INSUFICIENTE — ideal: ${freqRec}.` })
+    }
+  }
+
+  return {
+    titulo: 'Acompanhamento Multidisciplinar',
+    nivel: nivelGeral,
+    linhas,
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// buildModLeucos
+//
+// Avalia leucograma (leucocitos e neutrofilos).
+// Cutoffs baseados em EXAMES_BASE:
+//   Leucocitos normais: 4.000 - 11.000 /uL
+//   Neutrofilos absolutos: 1.800 - 7.700 /uL
+// ════════════════════════════════════════════════════════════════════════════
+function buildModLeucos(examesOBA, alertas, examesSuger) {
+  const leuco   = parseFloat(examesOBA.leucocitos)
+  const neutPct = parseFloat(examesOBA.neutrofilos)
+  const neutAbs = parseFloat(examesOBA.neutrofilos_ul)
+
+  // Se nenhum informado, nao gerar modulo
+  if (isNaN(leuco) && isNaN(neutPct) && isNaN(neutAbs)) return null
+
+  const linhas = []
+  let nivelGeral = NORMAL
+
+  // ─── Leucocitos totais ──────────────────────────────────────────────
+  if (!isNaN(leuco)) {
+    linhas.push(`LEUCÓCITOS TOTAIS: ${leuco.toLocaleString('pt-BR')}/uL (referência 4.000–11.000).`)
+
+    if (leuco < 3000) {
+      nivelGeral = GRAVE
+      linhas.push('LEUCOPENIA GRAVE: contagem abaixo de 3.000/uL representa risco aumentado de infecções oportunistas. Avaliação hematológica imediata é mandatória. Investigar causas como síndrome mielodisplásica, aplasia medular, medicamentos mielotóxicos, infecções virais (HIV, parvovírus).')
+      alertas.push({ nivel: GRAVE, texto: `LEUCOPENIA GRAVE: ${leuco}/uL. Avaliação hematológica imediata.` })
+      examesSuger.push('MIELOGRAMA', 'SOROLOGIAS PARA HIV, HEPATITES B/C, PARVOVÍRUS B19', 'ELETROFORESE DE PROTEÍNAS')
+    } else if (leuco < 4000) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('LEUCOPENIA MODERADA: investigar causa. Pode estar associada a pós-bariátrica com deficiências nutricionais profundas (B12, folato, cobre), infecções crônicas ou autoimunidade.')
+      alertas.push({ nivel: MODERADO, texto: `LEUCOPENIA: ${leuco}/uL.` })
+    } else if (leuco > 15000) {
+      nivelGeral = GRAVE
+      linhas.push('LEUCOCITOSE GRAVE: acima de 15.000/uL sugere processo infeccioso/inflamatório significativo ou, mais raramente, distúrbio mieloproliferativo. Requer avaliação clínica imediata.')
+      alertas.push({ nivel: GRAVE, texto: `LEUCOCITOSE: ${leuco}/uL. Investigar foco infeccioso ou hematológico.` })
+      examesSuger.push('PCR', 'VHS', 'ESFREGAÇO DE SANGUE PERIFÉRICO')
+    } else if (leuco > 11000) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('LEUCOCITOSE LEVE A MODERADA: frequentemente reativa (infecção, inflamação, estresse). Correlacionar clinicamente.')
+      alertas.push({ nivel: MODERADO, texto: `LEUCOCITOSE: ${leuco}/uL.` })
+    } else {
+      linhas.push('Leucócitos totais dentro da faixa de normalidade.')
+    }
+  }
+
+  // ─── Neutrofilos absolutos ──────────────────────────────────────────
+  if (!isNaN(neutAbs)) {
+    linhas.push(`NEUTRÓFILOS ABSOLUTOS: ${neutAbs.toLocaleString('pt-BR')}/uL (referência 1.800–7.700).`)
+
+    if (neutAbs < 500) {
+      nivelGeral = GRAVE
+      linhas.push('NEUTROPENIA GRAVE (<500/uL): risco alto de infecção grave. Requer conduta imediata — avaliação em pronto atendimento se houver febre.')
+      alertas.push({ nivel: GRAVE, texto: `NEUTROPENIA GRAVE: ${neutAbs}/uL.` })
+    } else if (neutAbs < 1500) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('NEUTROPENIA RELEVANTE: valores entre 500 e 1.500/uL exigem investigação causal — deficiências nutricionais (B12/folato/cobre), medicamentos, infecções virais, autoimunidade.')
+      alertas.push({ nivel: MODERADO, texto: `NEUTROPENIA: ${neutAbs}/uL.` })
+    }
+  } else if (!isNaN(leuco) && !isNaN(neutPct)) {
+    // Calcula neutrofilos absolutos a partir de leuco + %
+    const neutCalc = Math.round(leuco * neutPct / 100)
+    linhas.push(`NEUTRÓFILOS ABSOLUTOS (calculado): ${neutCalc.toLocaleString('pt-BR')}/uL (referência 1.800–7.700).`)
+    if (neutCalc < 1500 && nivelGeral !== GRAVE) {
+      nivelGeral = MODERADO
+      linhas.push('NEUTROPENIA CALCULADA (<1.500/uL): relevante. Investigar como acima.')
+    }
+  }
+
+  return {
+    titulo: 'Leucócitos e Neutrófilos',
+    nivel: nivelGeral,
+    linhas,
+  }
+}
+
