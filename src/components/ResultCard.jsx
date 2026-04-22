@@ -944,6 +944,38 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           <div>
             <p className="text-xs uppercase tracking-widest opacity-80 mb-1">Diagnóstico</p>
             <h3 className="text-xl font-bold">{resultado.label}</h3>
+            {/* Subtexto de parametros (facilita testes via screenshot) */}
+            {resultado._inputs && (() => {
+              const inp = resultado._inputs
+              const labs = []
+              if (inp.hemoglobina !== undefined && inp.hemoglobina !== '') labs.push(`Hb ${inp.hemoglobina}`)
+              if (inp.ferritina   !== undefined && inp.ferritina   !== '') labs.push(`Ferr ${inp.ferritina}`)
+              if (inp.vcm         !== undefined && inp.vcm         !== '') labs.push(`VCM ${inp.vcm}`)
+              if (inp.rdw         !== undefined && inp.rdw         !== '') labs.push(`RDW ${inp.rdw}`)
+              if (inp.satTransf   !== undefined && inp.satTransf   !== '') labs.push(`Sat ${inp.satTransf}`)
+              const cabecalho = `${inp.sexo || '?'} ${inp.idade ? inp.idade + 'a' : ''}`.trim()
+              const flagsAtivas = []
+              const FLAGS_MAP = {
+                bariatrica: 'bariátrica', vegetariano: 'vegetariana', perda: 'perda',
+                hipermenorreia: 'hipermenorreia', gestante: 'gestante', alcoolista: 'alcoolista',
+                transfundido: 'transfundido', aspirina: 'aspirina', vitaminaB12: 'B12',
+                ferroOral: 'ferro oral', tiroxina: 'tiroxina', hidroxiureia: 'hidroxiureia',
+                anticonvulsivante: 'anticonvulsivante', testosterona: 'testosterona',
+                metformina: 'metformina', ibp: 'IBP', methotrexato: 'metotrexato',
+                hivTratamento: 'HIV', anemiaPrevia: 'anemia prévia', sideropenia: 'sideropenia',
+                sobrecargaFerro: 'sobrecarga ferro', hbAlta: 'Hb alta prévia', celiaco: 'celíaco',
+                g6pd: 'G6PD', endometriose: 'endometriose', doadorSangue: 'doador sangue'
+              }
+              for (const k of Object.keys(FLAGS_MAP)) {
+                if (inp[k] === true) flagsAtivas.push(FLAGS_MAP[k])
+              }
+              return (
+                <div className="text-xs opacity-75 mt-1 leading-snug">
+                  <div>{cabecalho} · {labs.join(' · ')}</div>
+                  <div>Flags: {flagsAtivas.length > 0 ? flagsAtivas.join(', ') : 'nenhuma'}</div>
+                </div>
+              )
+            })()}
           </div>
           <button onClick={onCopiar}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
