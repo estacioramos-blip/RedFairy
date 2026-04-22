@@ -218,7 +218,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
     imc_antes: '', imc_atual: '',
-    ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false, semEspecialista: false,
+    ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
     status_intestinal: '', status_fibromialgia: [],
     tipo_cirurgia: '',
