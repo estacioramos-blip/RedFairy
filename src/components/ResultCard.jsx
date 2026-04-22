@@ -843,6 +843,43 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
+  // Renderizacao especial: exames obsoletos (> 2 anos)
+  const [verObsoleto, setVerObsoleto] = useState(false);
+  if (resultado.obsoleto && !verObsoleto) {
+    return (
+      <div className="mt-4 rounded-2xl border-2 border-red-400 bg-red-50 overflow-hidden shadow-sm">
+        <div className="bg-red-700 text-white px-6 py-4">
+          <p className="text-xs uppercase tracking-widest opacity-80 mb-1">⚠️ Aviso</p>
+          <h3 className="text-xl font-bold">EXAMES OBSOLETOS</h3>
+          <p className="text-xs opacity-90 mt-1">
+            Realizados há {resultado.diasDesdeColeta} dia(s) — mais de 2 anos atrás
+          </p>
+        </div>
+        <div className="p-6 space-y-4 text-sm text-gray-800 leading-relaxed">
+          <p>
+            <strong>Esta avaliação NÃO TEM SIGNIFICADO CLÍNICO ATUAL.</strong>
+          </p>
+          <p>
+            Sugerimos que você faça os exames recomendados (hemograma, ferritina,
+            saturação da transferrina) para obter uma avaliação válida.
+          </p>
+          <div className="bg-white border border-red-200 rounded-xl p-4 text-sm text-gray-700">
+            💡 A plataforma RedFairy pode emitir a solicitação dos exames mediante
+            o pagamento de uma pequena taxa, evitando a necessidade de uma consulta
+            presencial apenas para isso. Após realizar os exames, retorne aqui para
+            nova avaliação.
+          </div>
+          <button
+            onClick={() => setVerObsoleto(true)}
+            className="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium py-2 rounded-lg transition-colors"
+          >
+            Ver avaliação obsoleta (apenas referência histórica)
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!resultado.encontrado) {
     return (
       <div className="bg-white border-2 border-amber-300 rounded-2xl overflow-hidden shadow-sm">

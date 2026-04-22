@@ -293,6 +293,7 @@ export function avaliarPaciente(inputs) {
     isAge2,
     diasDesdeColeta: dias,
     achadosParalelos,
+    obsoleto: dias > 730,
   };
 }
 

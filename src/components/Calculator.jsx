@@ -650,6 +650,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
     const novosErros = {};
     if (!inputs.idade || inputs.idade < 12 || inputs.idade > 100) novosErros.idade = 'Idade inválida (12-100)';
     if (!inputs.dataColeta) novosErros.dataColeta = 'Informe a data da coleta';
+    else {
+      const hojeStr = new Date().toISOString().split('T')[0];
+      if (inputs.dataColeta > hojeStr) novosErros.dataColeta = 'Data da coleta não pode ser no futuro';
+    }
     if (!inputs.ferritina)   novosErros.ferritina = 'Campo obrigatório';
     if (!inputs.hemoglobina) novosErros.hemoglobina = 'Campo obrigatório';
     if (!inputs.vcm)         novosErros.vcm = 'Campo obrigatório';
