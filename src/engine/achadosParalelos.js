@@ -282,12 +282,12 @@ export function detectarAchadosParalelos(inputs) {
       const ehIatrogenica = usaFerroIV;
 
       const label = ehIatrogenica
-        ? `SIDEROSE IATROGÊNICA POR FERRO ENDOVENOSO (Hb ${hemoglobina} · Ferr ${ferritina} · Sat ${satTransf}%)`
+        ? `SIDEROSE IATROGÊNICA POR FERRO EV/IM (Hb ${hemoglobina} · Ferr ${ferritina} · Sat ${satTransf}%)`
         : `SUSPEITA DE HEMOCROMATOSE HEREDITÁRIA (Hb ${hemoglobina} · Ferr ${ferritina} · Sat ${satTransf}%)`;
 
       let texto;
       if (ehIatrogenica) {
-        texto = `Combinação de HEMOGLOBINA ELEVADA (${hemoglobina} g/dL), HIPERFERRITINEMIA (${ferritina} ng/mL) e SATURAÇÃO DA TRANSFERRINA ELEVADA (${satTransf}%) em paciente que usou FERRO ENDOVENOSO recentemente. Esse quadro é compatível com SIDEROSE IATROGÊNICA — o ferro parenteral bypassa a regulação fisiológica pela hepcidina e pode causar acúmulo marcado nos tecidos, especialmente no fígado. `;
+        texto = `Combinação de HEMOGLOBINA ELEVADA (${hemoglobina} g/dL), HIPERFERRITINEMIA (${ferritina} ng/mL) e SATURAÇÃO DA TRANSFERRINA ELEVADA (${satTransf}%) em paciente que usou FERRO ENDOVENOSO OU INTRAMUSCULAR recentemente. Esse quadro é compatível com SIDEROSE IATROGÊNICA — o ferro parenteral (EV ou IM) bypassa a regulação fisiológica pela hepcidina e pode causar acúmulo marcado nos tecidos, especialmente no fígado. `;
         texto += 'CONDUTA: suspender imediatamente o ferro injetável. Solicitar avaliação com hematologista. A siderose iatrogênica costuma ser reversível com suspensão do ferro e, em casos selecionados, sangrias terapêuticas. ';
         texto += 'É importante também DESCARTAR hemocromatose hereditária subjacente (mutação HFE), especialmente quando a resposta à suspensão do ferro é incompleta ou quando há história familiar. ';
         texto += 'PRÓXIMOS EXAMES: MUTAÇÃO HFE (C282Y / H63D), FERRO HEPÁTICO POR RESSONÂNCIA MAGNÉTICA, AST, ALT, GGT, ALBUMINA, ALFAFETOPROTEÍNA, ECOCARDIOGRAMA. Investigar comprometimento hepático e cardíaco (órgãos mais afetados pelo excesso de ferro).';
