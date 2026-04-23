@@ -1569,9 +1569,11 @@ function buildModAcompanhamento(dadosOBA, alertas) {
   // ─── Grupo 1 (criticos) ─────────────────────────────────────────────
   const G1 = ['HEMATOLOGISTA', 'GASTROENTEROLOGISTA', 'ENDOCRINOLOGISTA', 'CLÍNICO', 'CLINICO']
   const G2 = ['NUTRÓLOGO', 'NUTROLOGO', 'NUTRICIONISTA', 'CIRURGIÃO', 'CIRURGIAO', 'PSICÓLOGO', 'PSICOLOGO', 'PSIQUIATRA']
+  const G3 = ['PNEUMOLOGISTA', 'NEFROLOGISTA', 'UROLOGISTA', 'DERMATOLOGISTA']
 
   const temG1 = especialistas.filter(e => G1.includes((e || '').toUpperCase()))
   const temG2 = especialistas.filter(e => G2.includes((e || '').toUpperCase()))
+  const temG3 = especialistas.filter(e => G3.includes((e || '').toUpperCase()))
 
   // ─── Avaliacao de adequacao dos especialistas ───────────────────────
   if (semEspecialista || (especialistas.length === 0 && !semEspecialista)) {
@@ -1593,6 +1595,7 @@ function buildModAcompanhamento(dadosOBA, alertas) {
     linhas.push(`ESPECIALISTA CRÍTICO: ${temG1.join(', ')}.`)
     if (temG2.length > 0) {
       linhas.push(`COMPLEMENTARES: ${temG2.join(', ')}.`)
+      if (temG3.length > 0) linhas.push(`ESPECIALIZADOS DE APOIO: ${temG3.join(', ')}.`)
     }
     linhas.push('ACOMPANHAMENTO BÁSICO ESTABELECIDO. IDEAL EXPANDIR PARA COBRIR OS DEMAIS EIXOS (ENDÓCRINO/METABÓLICO, HEMATOLÓGICO E GASTROINTESTINAL).')
     if (nivelGeral === NORMAL) nivelGeral = LEVE
@@ -1601,6 +1604,7 @@ function buildModAcompanhamento(dadosOBA, alertas) {
     linhas.push(`ESPECIALISTAS CRÍTICOS: ${temG1.join(', ')}.`)
     if (temG2.length > 0) {
       linhas.push(`COMPLEMENTARES: ${temG2.join(', ')}.`)
+      if (temG3.length > 0) linhas.push(`ESPECIALIZADOS DE APOIO: ${temG3.join(', ')}.`)
     }
     linhas.push('COBERTURA MULTIDISCIPLINAR ADEQUADA.')
   }

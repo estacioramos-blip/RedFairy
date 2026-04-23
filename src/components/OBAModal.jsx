@@ -26,6 +26,7 @@ const ESPECIALISTAS = [
   'ORTOPEDISTA',
   'GINECOLOGISTA',
   'OUTRO',
+  'PNEUMOLOGISTA','NEFROLOGISTA','UROLOGISTA','DERMATOLOGISTA',
 ]
 
 const STATUS_GLICEMICO_OPS = [
@@ -59,7 +60,9 @@ const PROJETOS = [
   'PRETENDO AJUDAR OUTRAS PESSOAS',
 ]
 
-const COMPULSOES = ['DOCES', 'COMIDA', 'GELO', 'ÁLCOOL', 'JOGO', 'TRABALHO', 'OUTRA']
+const COMPULSOES = ['DOCES', 'COMIDA', 'GELO', 'ÁLCOOL', 'JOGO', 'TRABALHO', 'OUTRA',
+  'CIGARRO / TABACO','CANNABIS',
+]
 
 const MEDICAMENTOS = [
   'FERRO VENOSO', 'VIT. B12 INTRAMUSCULAR', 'VIT. B12 SUBLINGUAL', 'POLIVITAMÍNICO ORAL',
@@ -90,6 +93,7 @@ const STATUS_FIBROMIALGIA_OPS = [
   'DESEQUILÍBRIO',
   'VARIAÇÃO DO HUMOR',
   'SINTO FRIO OU CALOR EXCESSIVO',
+  'EM USO DE GABAPENTINA','EM USO DE PREGABALINA',
 ]
 
 const EXAMES_BASE = [
@@ -221,6 +225,8 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
     status_intestinal: '', status_fibromialgia: [],
+    gestacoes_previas: '', abortamentos_espontaneos: null,
+    indicacao_cirurgia: '',
     tipo_cirurgia: '',
     acompanhamento: '', especialistas: [],
     status_gestacional: '', semanas_gestacao: '', temExamesMesmaData: false,
@@ -468,6 +474,9 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       compulsoes: form.compulsoes,
       medicamentos: form.medicamentos,
       emagrecedores: Object.keys(form.emagrecedores).length ? form.emagrecedores : null,
+      gestacoes_previas: form.gestacoes_previas !== '' ? parseInt(form.gestacoes_previas) : null,
+      abortamentos_espontaneos: form.abortamentos_espontaneos,
+      indicacao_cirurgia: form.indicacao_cirurgia || null,
     }
 
     await supabase.from('oba_anamnese').insert(dadosAnamnese)
@@ -730,6 +739,40 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Tipo de cirurgia</label>
           <RadioGroup options={TIPOS_CIRURGIA} value={form.tipo_cirurgia} onChange={v => sf('tipo_cirurgia', v)} />
+
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Indicação da cirurgia</label>
+          <RadioGroup
+            options={['OBESIDADE','METABÓLICA','OBESIDADE + DIABETES','HEMOCROMATOSE','GASTRECTOMIA POR OUTRAS CAUSAS']}
+            value={form.indicacao_cirurgia}
+            onChange={v => sf('indicacao_cirurgia', v)}
+          />
+
+          {sexo === 'F' && (
+            <>
+              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Número de gestações prévias</label>
+              <input
+                style={inp}
+                type="number"
+                min="0"
+                max="20"
+                step="1"
+                placeholder="Ex: 2 (digite 0 se nunca engravidou)"
+                value={form.gestacoes_previas}
+                onChange={e => sf('gestacoes_previas', e.target.value)}
+              />
+
+              {form.gestacoes_previas !== '' && parseInt(form.gestacoes_previas) > 0 && (
+                <>
+                  <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Teve abortamentos espontâneos?</label>
+                  <RadioGroup
+                    options={['SIM','NÃO']}
+                    value={form.abortamentos_espontaneos === true ? 'SIM' : form.abortamentos_espontaneos === false ? 'NÃO' : ''}
+                    onChange={v => sf('abortamentos_espontaneos', v === 'SIM')}
+                  />
+                </>
+              )}
+            </>
+          )}
 
           {/* ── STATUS PONDERAL ── */}
           <SectionTitle>Status Ponderal</SectionTitle>
