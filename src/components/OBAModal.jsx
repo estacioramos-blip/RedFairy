@@ -13,21 +13,8 @@ const ACOMPANHAMENTO_OPS = [
 ]
 
 const ESPECIALISTAS = [
-  'CIRURGIÃO',
-  'CLÍNICO',
-  'HEMATOLOGISTA',
-  'GASTROENTEROLOGISTA',
-  'NUTRÓLOGO',
-  'ENDOCRINOLOGISTA',
-  'CARDIOLOGISTA',
-  'NEUROLOGISTA',
-  'PSIQUIATRA',
-  'REUMATOLOGISTA',
-  'ORTOPEDISTA',
-  'GINECOLOGISTA',
-  'OUTRO',
-  'PNEUMOLOGISTA','NEFROLOGISTA','UROLOGISTA','DERMATOLOGISTA',
-]
+    'CIRURGIÃO', 'CLÍNICO', 'HEMATOLOGISTA', 'GASTROENTEROLOGISTA', 'NUTRÓLOGO', 'ENDOCRINOLOGISTA', 'CARDIOLOGISTA', 'NEUROLOGISTA', 'PSIQUIATRA', 'REUMATOLOGISTA', 'ORTOPEDISTA', 'GINECOLOGISTA', 'PNEUMOLOGISTA', 'NEFROLOGISTA', 'UROLOGISTA', 'DERMATOLOGISTA', 'OUTRO'
+  ]
 
 const STATUS_GLICEMICO_OPS = [
   'NÃO ERA E NÃO SOU DIABÉTICO',
@@ -60,12 +47,12 @@ const PROJETOS = [
   'PRETENDO AJUDAR OUTRAS PESSOAS',
 ]
 
-const COMPULSOES = ['DOCES', 'COMIDA', 'GELO', 'ÁLCOOL', 'JOGO', 'TRABALHO', 'OUTRA',
-  'CIGARRO / TABACO','CANNABIS',
-]
+const COMPULSOES = [
+    'DOCES', 'COMIDA', 'GELO', 'ÁLCOOL', 'JOGO', 'TRABALHO', 'CIGARRO / TABACO', 'CANNABIS', 'OUTRA'
+  ]
 
 const MEDICAMENTOS = [
-  'FERRO VENOSO', 'VIT. B12 INTRAMUSCULAR', 'VIT. B12 SUBLINGUAL', 'POLIVITAMÍNICO ORAL',
+  'FERRO ORAL', 'FERRO INJETÁVEL (EV/IM)', 'VIT. B12 INTRAMUSCULAR', 'VIT. B12 SUBLINGUAL', 'POLIVITAMÍNICO ORAL',
   'ANTICOAGULANTE',
   'ANTIDEPRESSIVO', 'REMÉDIO PARA DORMIR', 'LAXANTES', 'REMÉDIO PARA PRESSÃO',
   'REMÉDIO PARA DORES', 'REMÉDIO PARA BAIXAR A GLICEMIA', 'REMÉDIO PARA COLESTEROL', 'REMÉDIO PARA TRIGLICÉRIDES',
@@ -108,6 +95,12 @@ const EXAMES_BASE = [
   { key: 'hb_glicada',     label: 'Hb Glicada',               unit: '%',      ref: '<5,7%' },
   { key: 'glicemia',       label: 'Glicemia (jejum)',          unit: 'mg/dL',  ref: '70–99' },
   { key: 'insulina',       label: 'Insulina (jejum)',          unit: 'µUI/mL', ref: '2–15' },
+  { key: 'colesterol_total', label: 'Colesterol Total',         unit: 'mg/dL',  ref: '<190' },
+  { key: 'hdl',             label: 'HDL Colesterol',            unit: 'mg/dL',  ref: 'H: >40 / F: >50' },
+  { key: 'ldl',             label: 'LDL Colesterol',            unit: 'mg/dL',  ref: '<130 (ideal <100)' },
+  { key: 'vldl',            label: 'VLDL Colesterol',           unit: 'mg/dL',  ref: '<30' },
+  { key: 'lipoproteina_a',  label: 'Lipoproteína A (LpA)',      unit: 'mg/dL',  ref: '<30 (ótimo <14)' },
+  { key: 'apolipoproteina_b', label: 'Apolipoproteína B',       unit: 'mg/dL',  ref: '<100 (alto risco: >130)' },
   { key: 'triglicerides',  label: 'Triglicérides',            unit: 'mg/dL',  ref: '<150' },
   { key: 'ast',            label: 'AST (TGO)',                 unit: 'U/L',    ref: 'H: <40 / F: <32' },
   { key: 'alt',            label: 'ALT (TGP)',                 unit: 'U/L',    ref: 'H: <56 / F: <35' },
@@ -212,6 +205,20 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
   const [anamneseSalva, setAnamneseSalva] = useState(null)
 
   const saudacao = sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo'
+
+  // Pre-marca ferro oral/injetavel se ja selecionado no Calculator
+  useEffect(() => {
+    if (!dadosRedFairy) return
+    const novosMeds = []
+    if (dadosRedFairy.ferro_oral)      novosMeds.push('FERRO ORAL')
+    if (dadosRedFairy.ferro_injetavel) novosMeds.push('FERRO INJETÁVEL (EV/IM)')
+    if (novosMeds.length > 0) {
+      setForm(prev => ({
+        ...prev,
+        medicamentos: [...new Set([...(prev.medicamentos || []), ...novosMeds])],
+      }))
+    }
+  }, [dadosRedFairy])
   const isFem = sexo === 'F'
   const idadeNum = parseInt(idade) || 0
 
@@ -742,7 +749,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Indicação da cirurgia</label>
           <RadioGroup
-            options={['OBESIDADE','METABÓLICA','OBESIDADE + DIABETES','HEMOCROMATOSE','GASTRECTOMIA POR OUTRAS CAUSAS']}
+            options={['OBESIDADE','METABÓLICA (SÍNDROME METABÓLICA, DISLIPIDEMIA, HIPERTENSÃO, APNEIA DO SONO)','OBESIDADE + DIABETES','HEMOCROMATOSE','GASTRECTOMIA POR OUTRAS CAUSAS']}
             value={form.indicacao_cirurgia}
             onChange={v => sf('indicacao_cirurgia', v)}
           />
@@ -812,9 +819,6 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           )}
 
           <div style={{ marginTop:'0.8rem' }}>
-            {!(kgGanhou !== null && kgGanhou > 0) && (
-              <CheckRow label="PERDI MAS GANHEI PESO NOVAMENTE" checked={form.ganhou_peso_apos} onClick={() => sf('ganhou_peso_apos', !form.ganhou_peso_apos)} />
-            )}
             <CheckRow label="FIZ PLASMA DE ARGÔNIO" checked={form.fez_plasma_argonio} onClick={() => sf('fez_plasma_argonio', !form.fez_plasma_argonio)} />
           </div>
 
