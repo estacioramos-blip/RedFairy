@@ -244,9 +244,6 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
 
   const WA_PLATAFORMA = '5571997110804'
 
-  // Verificar obstipação via módulo intestinal
-  const temObstipacao = !!modIntestData && modIntestData.linhas?.some(l => l.includes('OBSTIPAÇÃO'))
-
   // Verificar fibromialgia — trigger: diagnostico OU obstipacao + 2 sintomas
   const modFibroData = oba?.modulos?.find(m => m.id === 'fibromialgia')
   const temFibromialgia = !!modFibroData && (modFibroData.nivel === 'moderado' || modFibroData.nivel === 'grave' ||
@@ -256,7 +253,7 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
   const modIntestData = oba?.modulos?.find(m => m.id === 'intestinal')
   const temObstipacaoModulo = !!modIntestData && modIntestData.linhas?.some(l => l.includes('OBSTIPAÇÃO'))
 
-  if (!temObstipacao && !temFibromialgia) return null
+  if (!temObstipacaoModulo && !temFibromialgia) return null
 
   async function registrar(tipo) {
     try {
@@ -290,7 +287,7 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
 
   return (
     <div className="px-4 pb-4 space-y-3">
-      {temObstipacao && (
+      {temObstipacaoModulo && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
           <p className="text-amber-800 text-xs font-bold uppercase tracking-wide mb-2">💊 Solução para Obstipação</p>
           <p className="text-amber-700 text-xs mb-3 leading-relaxed">
