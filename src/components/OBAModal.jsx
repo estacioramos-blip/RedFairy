@@ -225,6 +225,20 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
   const examesExtras = idadeNum >= 40 ? (isFem ? EXAMES_MULHER_40 : EXAMES_HOMEM_40) : []
   const todosExames = [...EXAMES_BASE, ...examesExtras]
 
+  const [alertaPeso, setAlertaPeso] = useState(null)
+
+  // Item 4 — handler de onBlur do peso_atual
+  const handlePesoAtualBlur = () => {
+    const atual = parseFloat(form.peso_atual)
+    const minimo = parseFloat(form.peso_minimo_pos)
+    if (!isNaN(atual) && !isNaN(minimo) && atual < minimo) {
+      setForm(prev => ({ ...prev, peso_atual: String(minimo) }))
+      setAlertaPeso({ original: atual, ajustado: minimo })
+    } else {
+      setAlertaPeso(null)
+    }
+  }
+
   const [form, setForm] = useState({
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
@@ -791,7 +805,12 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           <input style={inp} type="number" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => sf('peso_minimo_pos', e.target.value)} />
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Peso atual (kg)</label>
-          <input style={inp} type="number" placeholder="Ex: 78" value={form.peso_atual} onChange={e => sf('peso_atual', e.target.value)} />
+          <input style={inp} type="number" placeholder="Ex: 78" value={form.peso_atual} onChange={e => sf('peso_atual', e.target.value)} onBlur={handlePesoAtualBlur} />
+          {alertaPeso && (
+            <p style={{ color: '#d97706', fontSize: '0.75rem', marginTop: '0.25rem', lineHeight: 1.4 }}>
+              ⚠️ O peso atual informado ({alertaPeso.original} kg) não pode ser menor que o menor peso pós-cirurgia ({alertaPeso.ajustado} kg). Valor ajustado automaticamente para {alertaPeso.ajustado} kg.
+            </p>
+          )}
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem', marginTop:'0.8rem' }}>
             <div>
