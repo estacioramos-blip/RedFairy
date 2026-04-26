@@ -1016,7 +1016,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           {/* ── MEDICAMENTOS ── */}
           <SectionTitle>Medicamentos em Uso</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
-            {MEDICAMENTOS.map(m => <CheckRow key={m} label={m} checked={form.medicamentos.includes(m)} onClick={() => sf('medicamentos', tog(form.medicamentos, m))} />)}
+            {MEDICAMENTOS.map(m => <CheckRow key={m} label={m} checked={form.medicamentos.includes(m)} disabled={m === 'REMÉDIO PARA PRESSÃO' && form.status_pressorico === 'NÃO SOU HIPERTENSO'} onClick={() => sf('medicamentos', tog(form.medicamentos, m))} />)}
           </div>
 
           {/* ── MEDICAMENTOS ADICIONAIS ── */}
