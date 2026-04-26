@@ -646,8 +646,26 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
     }
   }
 
+  function validarCPF(cpf) {
+    const c = String(cpf || '').replace(/\D/g, '');
+    if (c.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(c)) return false; // todos iguais
+    let s = 0;
+    for (let i = 0; i < 9; i++) s += parseInt(c[i]) * (10 - i);
+    let d1 = (s * 10) % 11;
+    if (d1 === 10) d1 = 0;
+    if (d1 !== parseInt(c[9])) return false;
+    s = 0;
+    for (let i = 0; i < 10; i++) s += parseInt(c[i]) * (11 - i);
+    let d2 = (s * 10) % 11;
+    if (d2 === 10) d2 = 0;
+    return d2 === parseInt(c[10]);
+  }
+
   function validar() {
     const novosErros = {};
+    if (!inputs.cpf || !inputs.cpf.trim()) novosErros.cpf = 'Informe o CPF do paciente';
+    else if (!validarCPF(inputs.cpf)) novosErros.cpf = 'CPF inválido';
     if (!inputs.idade || inputs.idade < 12 || inputs.idade > 100) novosErros.idade = 'Idade inválida (12-100)';
     if (!inputs.dataColeta) novosErros.dataColeta = 'Informe a data da coleta';
     else {
@@ -1106,6 +1124,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
                 <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className="input" />
                 <p className="text-xs text-gray-400 mt-0.5">Vincula ao paciente</p>
                 <p className="text-xs text-orange-500 mt-0.5">Digite apenas os números, sem pontos ou hífen</p>
+                {erros.cpf && <p className="text-red-500 text-xs mt-1">{erros.cpf}</p>}
               </div>
               <div>
                 <label className="label">Sexo</label>
@@ -1243,6 +1262,27 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
               Limpar
             </button>
           </div>
+
+          {Object.keys(erros).length > 0 && (
+            <div className="mt-4 rounded-xl border-2 border-red-400 bg-red-50 p-3">
+              <p className="text-red-700 text-sm font-bold mb-1">⚠️ Preencha os campos obrigatórios antes de avaliar:</p>
+              <ul className="text-red-700 text-xs leading-snug list-disc list-inside">
+                {Object.entries(erros).filter(([_, v]) => v).map(([k, v]) => {
+                  const nomes = {
+                    cpf: 'CPF',
+                    idade: 'Idade',
+                    dataColeta: 'Data da Coleta',
+                    ferritina: 'Ferritina',
+                    hemoglobina: 'Hemoglobina',
+                    vcm: 'VCM',
+                    rdw: 'RDW',
+                    satTransf: 'Sat. Transferrina',
+                  };
+                  return <li key={k}>{nomes[k] || k}: {v}</li>;
+                })}
+              </ul>
+            </div>
+          )}
 
         </form>
 
