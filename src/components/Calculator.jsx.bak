@@ -689,6 +689,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
     const novosErros = validar();
     if (Object.keys(novosErros).length > 0) { setErros(novosErros); return; }
 
+    // Se bariátrico e ainda não preencheu o OBAModal → abrir agora
+    if (inputs.bariatrica && !dadosOBARef.current && !dadosOBAColetados) {
+      setShowOBA(true);
+      return;
+    }
+
     const inputsNumericos = {
       ...inputs,
       idade: Number(inputs.idade),
@@ -702,12 +708,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
     const res = avaliarPaciente(inputsNumericos);
 
     let obaResult = null;
-    // OBA só é processado se o paciente já preencheu a anamnese (Modo Paciente).
-    // No Modo Médico, a flag bariatrica é apenas registrada — paciente preenche depois.
-    const obaDisponivel = dadosOBAColetados || dadosOBARef.current;
-    if (inputs.bariatrica && obaDisponivel) {
+    if (inputs.bariatrica) {
       let dadosOBA = null;
       let examesOBA = null;
+
+      const obaDisponivel = dadosOBAColetados || dadosOBARef.current;
       if (obaDisponivel) {
         dadosOBA  = obaDisponivel.dadosOBA;
         examesOBA = obaDisponivel.examesOBA;
@@ -1107,6 +1112,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
                 <p className="text-xs text-gray-400 mt-0.5">Vincula ao paciente</p>
                 <p className="text-xs text-orange-500 mt-0.5">Digite apenas os números, sem pontos ou hífen</p>
               </div>
+              <div className="col-span-2">
+                <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+                  <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm leading-tight">Paciente Bariátrico</p>
+                    <p className="text-xs opacity-70 leading-tight mt-0.5">Encaminha para avaliação OBA no modo paciente</p>
+                  </div>
+                </label>
+                
+              </div>
               <div>
                 <label className="label">Sexo</label>
                 <select name="sexo" value={inputs.sexo} onChange={handleChange} className="input">
@@ -1118,22 +1133,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
                 <label className="label">Idade</label>
                 <input type="number" name="idade" value={inputs.idade} onChange={handleChange} placeholder="12-100" min={12} max={100} className={`input ${erros.idade ? 'border-red-500' : ''}`} />
                 {erros.idade && <p className="text-red-500 text-xs mt-1">{erros.idade}</p>}
-              </div>
-              <div className="col-span-2">
-                <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
-                  <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm leading-tight">
-                      {inputs.sexo === 'F' ? 'Paciente Bariátrica' : 'Paciente Bariátrico'}
-                    </p>
-                    <p className="text-xs opacity-70 leading-tight mt-0.5">
-                      {inputs.sexo === 'F'
-                        ? 'Se a paciente avaliada é BARIÁTRICA ela receberá a ANAMNESE do Projeto OBA, e passará a ter o acompanhamento dinâmico para a melhor qualidade de vida.'
-                        : 'Se o paciente avaliado é BARIÁTRICO ele receberá a ANAMNESE do Projeto OBA, e passará a ter o acompanhamento dinâmico para a melhor qualidade de vida.'}
-                    </p>
-                  </div>
-                </label>
-                
               </div>
               <div>
                 <label className="label">Data da Coleta</label>
@@ -1214,6 +1213,26 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
               </div>
             )}
 
+            {inputs.bariatrica && (
+              <div className="mt-3 bg-purple-50 border border-purple-200 rounded-xl p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-700 text-xs font-semibold">
+                      🔬 Avaliação OBA {dadosOBAColetados ? '✓ dados coletados' : '— pendente'}
+                    </p>
+                    <p className="text-purple-600 text-xs mt-0.5">
+                      {dadosOBAColetados
+                        ? `${dadosOBAColetados.dadosOBA.tipo_cirurgia} · ${dadosOBAColetados.dadosOBA.meses_pos_cirurgia} meses pós-op`
+                        : 'Preencha a anamnese para ativar os 13 módulos clínicos.'}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => setShowOBA(true)}
+                    className="ml-3 flex-shrink-0 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+                    {dadosOBAColetados ? 'Editar' : 'Preencher'}
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
