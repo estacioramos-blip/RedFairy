@@ -39,6 +39,19 @@ const STATUS_ENDOSCOPICO_OPS = [
   'H. PYLORI',
 ]
 
+const STATUS_NEUROLOGICO_OPS = [
+  'SEM QUEIXAS',
+  'SEQUELA MOTORA',
+  'DISTÚRBIO DA FALA',
+  'DORMÊNCIAS | FORMIGAMENTOS',
+  'ENXAQUECAS',
+  'PERDA DE SENSIBILIDADE',
+  'PERDA AUDITIVA',
+  'PERDA DE OLFATO',
+  'COMPROMETIMENTO DA VISÃO',
+  'DÉFICIT DE MEMÓRIA',
+]
+
 const ATIVIDADES = ['SEDENTÁRIO', 'CAMINHADAS', 'ACADEMIA', 'ACADEMIA COM PERSONAL', 'HIDROGINÁSTICA', 'FISIOTERAPIA', 'PRÁTICA ESPORTIVA']
 
 const PROJETOS = [
@@ -260,7 +273,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     tipo_cirurgia: '',
     acompanhamento: '', especialistas: [],
     status_gestacional: '', semanas_gestacao: '', temExamesMesmaData: false,
-    status_glicemico: '', status_pressorico: '', status_endoscopico: [],
+    status_glicemico: '', status_pressorico: '', status_endoscopico: [], status_neurologico: [],
     trombose: null, investigou_trombose: false,
     usou_anticoagulante: false, usa_anticoagulante: false,
     varizes: null, varizes_grau: '',
@@ -411,6 +424,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       status_glicemico:   form.status_glicemico || null,
       status_pressorico:  form.status_pressorico || null,
       status_endoscopico: form.status_endoscopico.length > 0 ? form.status_endoscopico : null,
+      status_neurologico: form.status_neurologico.length > 0 ? form.status_neurologico : null,
       status_osseo:       form.status_osseo || null,
       status_dental:      form.status_dental || null,
       status_gestacional: form.status_gestacional || null,
@@ -488,6 +502,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       status_glicemico: form.status_glicemico || null,
       status_pressorico: form.status_pressorico || null,
       status_endoscopico: form.status_endoscopico.length > 0 ? form.status_endoscopico : null,
+      status_neurologico: form.status_neurologico.length > 0 ? form.status_neurologico : null,
       trombose: form.trombose,
       investigou_trombose: form.trombose ? form.investigou_trombose : null,
       usou_anticoagulante: form.trombose ? form.usou_anticoagulante : null,
@@ -983,6 +998,36 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           ))}
 
           {/* ── STATUS INTESTINAL ── */}
+          {/* ── STATUS NEUROLÓGICO ── */}
+          <SectionTitle>Status Neurológico</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_NEUROLOGICO_OPS.map(opt => {
+              const ehSemQueixas = opt === 'SEM QUEIXAS'
+              const semQueixasMarcado = form.status_neurologico.includes('SEM QUEIXAS')
+              const opcaoMarcada = form.status_neurologico.includes(opt)
+              return (
+                <CheckRow
+                  key={opt}
+                  label={opt}
+                  checked={opcaoMarcada}
+                  disabled={!ehSemQueixas && semQueixasMarcado}
+                  onClick={() => {
+                    if (ehSemQueixas) {
+                      if (opcaoMarcada) {
+                        sf('status_neurologico', [])
+                      } else {
+                        sf('status_neurologico', ['SEM QUEIXAS'])
+                      }
+                    } else {
+                      const sem = form.status_neurologico.filter(x => x !== opt && x !== 'SEM QUEIXAS')
+                      sf('status_neurologico', opcaoMarcada ? sem : [...sem, opt])
+                    }
+                  }}
+                />
+              )
+            })}
+          </div>
+
           <SectionTitle>Status Intestinal</SectionTitle>
           <RadioGroup options={STATUS_INTESTINAL_OPS} value={form.status_intestinal} onChange={v => sf('status_intestinal', form.status_intestinal === v ? '' : v)} />
 
