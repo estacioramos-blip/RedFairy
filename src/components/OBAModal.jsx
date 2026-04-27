@@ -30,6 +30,15 @@ const STATUS_PRESSORICO_OPS = [
   'SOU HIPERTENSO MAL CONTROLADO',
 ]
 
+const STATUS_ENDOSCOPICO_OPS = [
+  'NORMAL',
+  'GASTRITE',
+  'ESOFAGITE',
+  'BARRETT',
+  'DRGE',
+  'H. PYLORI',
+]
+
 const ATIVIDADES = ['SEDENTÁRIO', 'CAMINHADAS', 'ACADEMIA', 'ACADEMIA COM PERSONAL', 'HIDROGINÁSTICA', 'FISIOTERAPIA', 'PRÁTICA ESPORTIVA']
 
 const PROJETOS = [
@@ -251,7 +260,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     tipo_cirurgia: '',
     acompanhamento: '', especialistas: [],
     status_gestacional: '', semanas_gestacao: '', temExamesMesmaData: false,
-    status_glicemico: '', status_pressorico: '',
+    status_glicemico: '', status_pressorico: '', status_endoscopico: [],
     trombose: null, investigou_trombose: false,
     usou_anticoagulante: false, usa_anticoagulante: false,
     varizes: null, varizes_grau: '',
@@ -401,6 +410,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       fez_plasma_argonio: form.fez_plasma_argonio,
       status_glicemico:   form.status_glicemico || null,
       status_pressorico:  form.status_pressorico || null,
+      status_endoscopico: form.status_endoscopico.length > 0 ? form.status_endoscopico : null,
       status_osseo:       form.status_osseo || null,
       status_dental:      form.status_dental || null,
       status_gestacional: form.status_gestacional || null,
@@ -477,6 +487,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       semanas_gestacao: form.semanas_gestacao ? parseFloat(form.semanas_gestacao) : null,
       status_glicemico: form.status_glicemico || null,
       status_pressorico: form.status_pressorico || null,
+      status_endoscopico: form.status_endoscopico.length > 0 ? form.status_endoscopico : null,
       trombose: form.trombose,
       investigou_trombose: form.trombose ? form.investigou_trombose : null,
       usou_anticoagulante: form.trombose ? form.usou_anticoagulante : null,
@@ -881,6 +892,38 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           {/* ── STATUS PRESSÓRICO ── */}
           <SectionTitle>Status Pressórico</SectionTitle>
           <RadioGroup options={STATUS_PRESSORICO_OPS} value={form.status_pressorico} onChange={v => sf('status_pressorico', v)} />
+
+          {/* ── STATUS ENDOSCÓPICO ── */}
+          <SectionTitle>Status Endoscópico</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_ENDOSCOPICO_OPS.map(opt => {
+              const ehNormal = opt === 'NORMAL'
+              const normalMarcado = form.status_endoscopico.includes('NORMAL')
+              const opcaoMarcada = form.status_endoscopico.includes(opt)
+              return (
+                <CheckRow
+                  key={opt}
+                  label={opt}
+                  checked={opcaoMarcada}
+                  disabled={!ehNormal && normalMarcado}
+                  onClick={() => {
+                    if (ehNormal) {
+                      // Marcar/desmarcar NORMAL: se marcar, limpa tudo e fica só com NORMAL
+                      if (opcaoMarcada) {
+                        sf('status_endoscopico', [])
+                      } else {
+                        sf('status_endoscopico', ['NORMAL'])
+                      }
+                    } else {
+                      // Marcar/desmarcar anormal: toggle, e remove NORMAL se estiver
+                      const sem = form.status_endoscopico.filter(x => x !== opt && x !== 'NORMAL')
+                      sf('status_endoscopico', opcaoMarcada ? sem : [...sem, opt])
+                    }
+                  }}
+                />
+              )
+            })}
+          </div>
 
           {/* ── STATUS VASCULAR ── */}
           <SectionTitle>Status Vascular</SectionTitle>
