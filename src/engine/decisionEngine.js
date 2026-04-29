@@ -252,9 +252,88 @@ export function avaliarPaciente(inputs) {
     return fallback;
   }
 
+
+  // ── TEXTO 3 DINÂMICO: ineficácia de via oral em bariátricos ──
+  // Substitui a frase estática (já removida das matrizes) por frase
+  // dinâmica baseada nas flags do paciente.
+  if (inputs.bariatrica) {
+    const bariatricoTermo = inputs.sexo === 'M' ? 'NO BARIÁTRICO' : 'NA BARIÁTRICA';
+    let fraseT3 = '';
+    if (inputs.ferro_oral && inputs.vitaminaB12) {
+      fraseT3 = `VITAMINA B12 E FERRO POR VIA ORAL NÃO FUNCIONAM ${bariatricoTermo}. `;
+    } else if (inputs.vitaminaB12) {
+      fraseT3 = `VITAMINA B12 POR VIA ORAL NÃO FUNCIONA ${bariatricoTermo}. `;
+    } else if (inputs.ferro_oral) {
+      fraseT3 = `FERRO POR VIA ORAL NÃO FUNCIONA ${bariatricoTermo}. `;
+    }
+    if (fraseT3 && resultado.diagnostico) {
+      // Injetar antes da próxima frase relevante (REQUER AVALIAÇÃO MÉDICA...)
+      // Ou no fim do diagnóstico se não houver tal âncora
+      if (resultado.diagnostico.includes('REQUER AVALIAÇÃO MÉDICA')) {
+        resultado.diagnostico = resultado.diagnostico.replace(
+          'REQUER AVALIAÇÃO MÉDICA',
+          fraseT3 + 'REQUER AVALIAÇÃO MÉDICA'
+        );
+      } else {
+        resultado.diagnostico = resultado.diagnostico.trimEnd() + ' ' + fraseT3.trim();
+      }
+    }
+  }
+
+
+  // ── TEXTO 4 DINÂMICO: recomendação de reposição parenteral ──
+  // Substitui [T4_PLACEHOLDER] (já injetado nas matrizes no lugar da
+  // frase estática) pela frase dinâmica baseada nas flags do paciente.
+  if (resultado.diagnostico && resultado.diagnostico.includes('[T4_PLACEHOLDER]')) {
+    const usaB12Parenteral = inputs.vitB12_SL || inputs.vitB12_IM;
+    const usaFerroParenteral = inputs.ferro_injetavel;
+    let fraseT4 = '';
+    if (!usaB12Parenteral && !usaFerroParenteral) {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA. RECOMENDA-SE REPOSIÇÃO COM VITAMINA B12 SUBLINGUAL OU PARENTERAL, E FERRO ENDOVENOSO.';
+    } else if (!usaB12Parenteral && usaFerroParenteral) {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA. RECOMENDA-SE REPOSIÇÃO COM VITAMINA B12 SUBLINGUAL OU PARENTERAL.';
+    } else if (usaB12Parenteral && !usaFerroParenteral) {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA. RECOMENDA-SE REPOSIÇÃO COM FERRO ENDOVENOSO.';
+    } else {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA.';
+    }
+    resultado.diagnostico = resultado.diagnostico.replace(/\[T4_PLACEHOLDER\]/g, fraseT4);
+  }
+  // Mesmo tratamento para recomendacaoAge1/Age2 (se houver)
+  if (resultado.recomendacaoAge1 && resultado.recomendacaoAge1.includes('[T4_PLACEHOLDER]')) {
+    const usaB12Parenteral = inputs.vitB12_SL || inputs.vitB12_IM;
+    const usaFerroParenteral = inputs.ferro_injetavel;
+    let fraseT4 = '';
+    if (!usaB12Parenteral && !usaFerroParenteral) {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA. RECOMENDA-SE REPOSIÇÃO COM VITAMINA B12 SUBLINGUAL OU PARENTERAL, E FERRO ENDOVENOSO.';
+    } else if (!usaB12Parenteral && usaFerroParenteral) {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA. RECOMENDA-SE REPOSIÇÃO COM VITAMINA B12 SUBLINGUAL OU PARENTERAL.';
+    } else if (usaB12Parenteral && !usaFerroParenteral) {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA. RECOMENDA-SE REPOSIÇÃO COM FERRO ENDOVENOSO.';
+    } else {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA.';
+    }
+    resultado.recomendacaoAge1 = resultado.recomendacaoAge1.replace(/\[T4_PLACEHOLDER\]/g, fraseT4);
+  }
+  if (resultado.recomendacaoAge2 && resultado.recomendacaoAge2.includes('[T4_PLACEHOLDER]')) {
+    const usaB12Parenteral = inputs.vitB12_SL || inputs.vitB12_IM;
+    const usaFerroParenteral = inputs.ferro_injetavel;
+    let fraseT4 = '';
+    if (!usaB12Parenteral && !usaFerroParenteral) {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA. RECOMENDA-SE REPOSIÇÃO COM VITAMINA B12 SUBLINGUAL OU PARENTERAL, E FERRO ENDOVENOSO.';
+    } else if (!usaB12Parenteral && usaFerroParenteral) {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA. RECOMENDA-SE REPOSIÇÃO COM VITAMINA B12 SUBLINGUAL OU PARENTERAL.';
+    } else if (usaB12Parenteral && !usaFerroParenteral) {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA. RECOMENDA-SE REPOSIÇÃO COM FERRO ENDOVENOSO.';
+    } else {
+      fraseT4 = 'REQUER AVALIAÇÃO MÉDICA.';
+    }
+    resultado.recomendacaoAge2 = resultado.recomendacaoAge2.replace(/\[T4_PLACEHOLDER\]/g, fraseT4);
+  }
+
   let diagnosticoFinal = resultado.diagnostico.replace('FRASE DATA', '').trim();
 
-  const temQualquerFlag = inputs.aspirina || inputs.vitaminaB12 || inputs.ferroOral ||
+  const temQualquerFlag = inputs.aspirina || inputs.vitaminaB12 || inputs.ferro_oral ||
     inputs.metformina || inputs.ibp || inputs.tiroxina || inputs.hidroxiureia ||
     inputs.anticonvulsivante || inputs.methotrexato || inputs.hivTratamento ||
     inputs.testosterona || inputs.anemiaPrevia || inputs.sideropenia ||

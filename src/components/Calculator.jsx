@@ -484,7 +484,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
     bariatrica: _demo?.bariatrica || preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica',
     bariatrica_medico: _demo?.bariatrica || false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '', alcoolista: false,
-    transfundido: false, aspirina: false, vitaminaB12: false, ferro_oral: false, ferro_injetavel: false,
+    transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false,
     tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false,
     methotrexato: false, hivTratamento: false, metformina: false, ibp: false,
   });
@@ -846,6 +846,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
         dum: inputs.gestante && inputs.dum ? inputs.dum : null,
         aspirina: inputs.aspirina,
         vitamina_b12: inputs.vitaminaB12,
+        vitb12_sl: inputs.vitB12_SL,
+        vitb12_im: inputs.vitB12_IM,
         ferro_oral: inputs.ferro_oral,
         ferro_injetavel: inputs.ferro_injetavel,
         diagnostico_label: res.label,
@@ -864,7 +866,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
   }
 
   function handleLimpar() {
-    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, ferro_oral: false, ferro_injetavel: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
+    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
     setResultado(null); setErros({}); setDadosOBAColetados(null);
   }
 
@@ -1243,6 +1245,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
             <div className="grid grid-cols-2 gap-2">
               <CheckboxCard name="aspirina" label="Aspirina" sublabel="Uso contínuo" checked={inputs.aspirina} onChange={handleChange} color="orange" />
               <CheckboxCard name="vitaminaB12" label="Vitamina B12" sublabel="Últimos 3 meses" checked={inputs.vitaminaB12} onChange={handleChange} color="purple" />
+              <CheckboxCard name="vitB12_SL" label="Vit. B12 SL" sublabel="Sublingual — em uso" checked={inputs.vitB12_SL} onChange={handleChange} color="purple" />
+              <CheckboxCard name="vitB12_IM" label="Vit. B12 IM" sublabel="Intramuscular — em uso" checked={inputs.vitB12_IM} onChange={handleChange} color="purple" />
               <CheckboxCard name="ferro_oral" label="Ferro Oral" sublabel="Nos últimos 2 anos" checked={inputs.ferro_oral} onChange={handleChange} color="orange" />
               <CheckboxCard name="ferro_injetavel" label="Ferro Injetável" sublabel="Nos últimos 2 anos" checked={inputs.ferro_injetavel} onChange={handleChange} color="orange" />
               <CheckboxCard name="testosterona" label="Testosterona / Anabolizante" sublabel="Uso exógeno — causa eritrocitose" checked={inputs.testosterona} onChange={handleChange} color="orange" />
