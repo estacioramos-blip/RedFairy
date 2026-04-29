@@ -22,3 +22,17 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Scripts temporarios de manutencao
+*.py
+
+# Backups das operacoes de patch
+*.bak
+*.bak[0-9]
+*.bak[0-9][0-9]
+
+# Arquivos auxiliares antigos
+*_temp.txt
+relatorio_*.txt
+*.cjs
+*.mjs
