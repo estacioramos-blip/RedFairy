@@ -1,6 +1,7 @@
 import { maleMatrix } from './maleMatrix.js';
 import { femaleMatrix } from './femaleMatrix.js';
 import { detectarAchadosParalelos } from './achadosParalelos.js';
+import { gerarFallbackClinico } from './fallbackEngine.js';
 
 export function calcularDias(dataColeta) {
   const hoje = new Date();
@@ -244,10 +245,11 @@ export function avaliarPaciente(inputs) {
   }
 
   if (!resultado) {
-    return {
-      encontrado: false,
-      mensagem: `Combinação não encontrada na base de dados. Valores: Ferritina=${inputs.ferritina}, Hb=${inputs.hemoglobina}, VCM=${inputs.vcm}, RDW=${inputs.rdw}, Sat=${inputs.satTransf} Flags: Bar=${inputs.bariatrica}, Veg=${inputs.vegetariano}, Perda=${inputs.perda}, Alc=${inputs.alcoolista}, Transf=${inputs.transfundido}`,
-    };
+    // Fallback clínico — gera resposta útil quando não há match nas matrizes
+    const fallback = gerarFallbackClinico(inputsAjustados);
+    fallback.diasDesdeColeta = calcularDias(inputs.dataColeta);
+    fallback.fraseData = getFraseData(fallback.diasDesdeColeta);
+    return fallback;
   }
 
   let diagnosticoFinal = resultado.diagnostico.replace('FRASE DATA', '').trim();

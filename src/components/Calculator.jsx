@@ -1263,7 +1263,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
             </button>
           </div>
 
-          {Object.keys(erros).length > 0 && (
+          {Object.values(erros).some(v => v) && (
             <div className="mt-4 rounded-xl border-2 border-red-400 bg-red-50 p-3">
               <p className="text-red-700 text-sm font-bold mb-1">⚠️ Preencha os campos obrigatórios antes de avaliar:</p>
               <ul className="text-red-700 text-xs leading-snug list-disc list-inside">
