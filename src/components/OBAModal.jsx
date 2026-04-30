@@ -91,7 +91,8 @@ const STATUS_INTESTINAL_OPS = [
 ]
 
 const STATUS_FIBROMIALGIA_OPS = [
-  'FUI DIAGNOSTICADO COM FIBROMIALGIA',
+  'TENHO FIBROMIALGIA DIAGNOSTICADA',
+  'OBSTIPAÇÃO CRÔNICA',
   'DORES NO CORPO',
   'DOR DE CABEÇA / ENXAQUECAS',
   'INSÔNIA',
@@ -271,7 +272,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     imc_antes: '', imc_atual: '',
     ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
-    status_intestinal: '', status_fibromialgia: [],
+    status_intestinal: '', status_fibromialgia: [], calprotectina: '', indican: '',
     gestacoes_previas: '', abortamentos_espontaneos: null,
     indicacao_cirurgia: '',
     tipo_cirurgia: '',
@@ -454,6 +455,8 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       projetos_vida:      form.projetos_vida,
       status_intestinal:  form.status_intestinal || null,
       status_fibromialgia: form.status_fibromialgia,
+      calprotectina: form.calprotectina === '' ? null : Number(form.calprotectina),
+      indican: form.indican || null,
       metformina:         form.metformina,
       ibp:                form.ibp,
       tiroxina:           form.tiroxina,
@@ -1038,6 +1041,64 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
 
           <SectionTitle>Status Intestinal</SectionTitle>
           <RadioGroup options={STATUS_INTESTINAL_OPS} value={form.status_intestinal} onChange={v => sf('status_intestinal', form.status_intestinal === v ? '' : v)} />
+
+          {/* ── EXAMES INTESTINAIS CONDICIONAIS (Etapa 2) ── */}
+          {(
+            (form.status_intestinal && form.status_intestinal !== 'INTESTINO FUNCIONA BEM') ||
+            form.status_fibromialgia.includes('TENHO FIBROMIALGIA DIAGNOSTICADA') ||
+            form.status_fibromialgia.includes('OBSTIPAÇÃO CRÔNICA')
+          ) && (
+            <div style={{ marginTop:'0.6rem', padding:'0.6rem', background:'#FEF3C7', borderRadius:'8px', border:'1px solid #FDE68A' }}>
+              <p style={{ fontSize:'0.72rem', color:'#92400E', fontWeight:600, marginBottom:'0.5rem' }}>
+                🔬 Exames Intestinais Complementares (sugeridos)
+              </p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem' }}>
+
+                {/* Calprotectina fecal - numérico */}
+                <div style={{ display:'flex', flexDirection:'column' }}>
+                  <label style={{ fontSize:'0.72rem', fontWeight:600, color:'#374151', marginBottom:'0.2rem' }}>
+                    Calprotectina fecal
+                    <span style={{ color:'#6B7280', fontWeight:400, marginLeft:'0.3rem' }}>µg/g (ref: &lt;50)</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={form.calprotectina}
+                    onChange={e => sf('calprotectina', e.target.value)}
+                    style={{
+                      padding:'0.4rem 0.6rem',
+                      border:'1px solid #D1D5DB',
+                      borderRadius:'6px',
+                      fontSize:'0.85rem'
+                    }}
+                  />
+                </div>
+
+                {/* Indican plasmático - select */}
+                <div style={{ display:'flex', flexDirection:'column' }}>
+                  <label style={{ fontSize:'0.72rem', fontWeight:600, color:'#374151', marginBottom:'0.2rem' }}>
+                    Indican plasmático
+                    <span style={{ color:'#6B7280', fontWeight:400, marginLeft:'0.3rem' }}>qualitativo</span>
+                  </label>
+                  <select
+                    value={form.indican}
+                    onChange={e => sf('indican', e.target.value)}
+                    style={{
+                      padding:'0.4rem 0.6rem',
+                      border:'1px solid #D1D5DB',
+                      borderRadius:'6px',
+                      fontSize:'0.85rem',
+                      background:'white'
+                    }}
+                  >
+                    <option value="">Selecione</option>
+                    <option value="Negativo">Negativo</option>
+                    <option value="Positivo">Positivo</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ── STATUS FIBROMIÁLGICO ── */}
           <SectionTitle>Status Fibromiálgico</SectionTitle>
