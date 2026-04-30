@@ -161,8 +161,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   if (modAcomp) modulos.push(modAcomp)
 
   // ── 15. MÓDULO LEUCÓCITOS E NEUTRÓFILOS ──────────────────────────────────
+  const modLipidico = buildModLipidico(examesOBA, dadosOBA, resultadoEritron?.inputs?.sexo, alertas, examesSuger)
   const modLeucos = buildModLeucos(examesOBA, alertas, examesSuger)
-  if (modLeucos) modulos.push(modLeucos)
+  if (modLeucos) modulos.push(modLipidico)
+  modulos.push(modLeucos)
 
   // ── 16. MÓDULO STATUS INTESTINAL ─────────────────────────────────────────
   const modIntestinal = buildModIntestinal(dadosOBA, alertas, examesSuger)
@@ -1657,6 +1659,140 @@ function buildModAcompanhamento(dadosOBA, alertas) {
 //   Leucocitos normais: 4.000 - 11.000 /uL
 //   Neutrofilos absolutos: 1.800 - 7.700 /uL
 // ════════════════════════════════════════════════════════════════════════════
+function buildModLipidico(ex, dados, sexo, alertas, suger) {
+  // Coleta valores
+  const colT = parseFloat(ex.colesterol_total)
+  const ldl = parseFloat(ex.ldl_c)
+  const hdl = parseFloat(ex.hdl_c)
+  const tg = parseFloat(ex.triglicerides)
+  const lpa = parseFloat(ex.lpa)
+  const apob = parseFloat(ex.apob)
+  const apoa = parseFloat(ex.apoa)
+  const sdldl = parseFloat(ex.sdldl)
+
+  const todos = [colT, ldl, hdl, tg, lpa, apob, apoa, sdldl]
+  const todosVazios = todos.every(v => isNaN(v) || v === null || v === undefined)
+
+  if (todosVazios) {
+    return {
+      titulo: '🩸 LIPIDOGRAMA / RISCO CARDIOVASCULAR',
+      nivel: 'aguardando',
+      linhas: [
+        'Lipidograma não solicitado/preenchido.',
+        'Recomenda-se solicitar: Colesterol Total, LDL-c, HDL-c, Triglicérides, Lp(a), ApoB, ApoA e sdLDL para avaliação completa de risco CV.'
+      ]
+    }
+  }
+
+  // Score por marcador
+  let score = 0
+  const achados = []
+
+  // Lp(a)
+  if (!isNaN(lpa)) {
+    if (lpa > 50) { score += 5; achados.push(`Lp(a) ${lpa.toFixed(1)} mg/dL — RISCO GENÉTICO ELEVADO (>50)`) }
+    else if (lpa >= 30) { score += 2; achados.push(`Lp(a) ${lpa.toFixed(1)} mg/dL — limite (30-50)`) }
+  }
+
+  // LDL-c
+  if (!isNaN(ldl)) {
+    if (ldl >= 160) { score += 3; achados.push(`LDL-c ${ldl.toFixed(0)} mg/dL — MUITO ALTO`) }
+    else if (ldl >= 130) { score += 2; achados.push(`LDL-c ${ldl.toFixed(0)} mg/dL — alto`) }
+    else if (ldl >= 100) { score += 1; achados.push(`LDL-c ${ldl.toFixed(0)} mg/dL — limítrofe`) }
+  }
+
+  // ApoB
+  if (!isNaN(apob)) {
+    if (apob > 130) { score += 3; achados.push(`ApoB ${apob.toFixed(0)} mg/dL — alto (>130)`) }
+    else if (apob >= 90) { score += 2; achados.push(`ApoB ${apob.toFixed(0)} mg/dL — limite (90-130)`) }
+  }
+
+  // Triglicérides
+  if (!isNaN(tg)) {
+    if (tg >= 500) { score += 3; achados.push(`Triglicérides ${tg.toFixed(0)} mg/dL — MUITO ALTO (risco de pancreatite)`) }
+    else if (tg >= 200) { score += 2; achados.push(`Triglicérides ${tg.toFixed(0)} mg/dL — alto`) }
+    else if (tg >= 150) { score += 1; achados.push(`Triglicérides ${tg.toFixed(0)} mg/dL — limítrofe`) }
+  }
+
+  // HDL-c
+  if (!isNaN(hdl)) {
+    const limiteHdl = sexo === 'M' ? 40 : 50
+    if (hdl < limiteHdl) { score += 2; achados.push(`HDL-c ${hdl.toFixed(0)} mg/dL — baixo (<${limiteHdl})`) }
+  }
+
+  // Colesterol Total
+  if (!isNaN(colT)) {
+    if (colT >= 240) { score += 2; achados.push(`Colesterol Total ${colT.toFixed(0)} mg/dL — alto`) }
+    else if (colT >= 200) { score += 1; achados.push(`Colesterol Total ${colT.toFixed(0)} mg/dL — limítrofe`) }
+  }
+
+  // ApoA
+  if (!isNaN(apoa)) {
+    const limiteApoa = sexo === 'M' ? 120 : 140
+    if (apoa < limiteApoa) { score += 1; achados.push(`ApoA ${apoa.toFixed(0)} mg/dL — baixo (<${limiteApoa})`) }
+  }
+
+  // sdLDL
+  if (!isNaN(sdldl)) {
+    if (sdldl >= 30) { score += 2; achados.push(`sdLDL ${sdldl.toFixed(1)} mg/dL — elevado (LDL pequena densa)`) }
+  }
+
+  // Classificação consolidada
+  // Lp(a) > 50 → automaticamente CRÍTICO
+  let categoria, nivel, conduta
+  const lpaCritica = !isNaN(lpa) && lpa > 50
+
+  if (score === 0) {
+    categoria = 'NORMAL'
+    nivel = 'normal'
+    conduta = 'Manter estilo de vida saudável e controle anual.'
+  } else if (lpaCritica || score >= 8) {
+    categoria = 'RISCO CRÍTICO'
+    nivel = 'critico'
+    conduta = 'Avaliação cardiológica URGENTE. Considerar terapia hipolipemiante intensiva (estatinas, ezetimiba, iPCSK9 se Lp(a) elevada).'
+    alertas.push({ nivel: 'critico', texto: `Risco cardiovascular CRÍTICO (score ${score}${lpaCritica ? ', Lp(a) >50' : ''})` })
+  } else if (score >= 4) {
+    categoria = 'RISCO ELEVADO'
+    nivel = 'alterado'
+    conduta = 'Considerar terapia farmacológica (estatina). Encaminhar à avaliação cardiológica.'
+    alertas.push({ nivel: 'alterado', texto: `Risco cardiovascular elevado (score ${score})` })
+  } else {
+    categoria = 'ALTERAÇÃO LEVE'
+    nivel = 'leve'
+    conduta = 'Reforçar dieta, atividade física e perda de peso. Reavaliar em 3-6 meses.'
+  }
+
+  // Sugestão de exames complementares
+  const examesNaoFeitos = []
+  if (isNaN(colT)) examesNaoFeitos.push('Colesterol Total')
+  if (isNaN(ldl)) examesNaoFeitos.push('LDL-c')
+  if (isNaN(hdl)) examesNaoFeitos.push('HDL-c')
+  if (isNaN(tg)) examesNaoFeitos.push('Triglicérides')
+  if (isNaN(lpa)) examesNaoFeitos.push('Lp(a)')
+  if (isNaN(apob)) examesNaoFeitos.push('ApoB')
+  if (isNaN(apoa)) examesNaoFeitos.push('ApoA')
+  if (isNaN(sdldl)) examesNaoFeitos.push('sdLDL')
+
+  if (examesNaoFeitos.length > 0) {
+    suger.push(`Lipidograma incompleto — solicitar: ${examesNaoFeitos.join(', ')}`)
+  }
+
+  const linhas = [
+    `Categoria consolidada: ${categoria} (score ${score})`,
+    ...achados,
+    `Conduta sugerida: ${conduta}`,
+  ]
+  if (examesNaoFeitos.length > 0) {
+    linhas.push(`Marcadores não preenchidos: ${examesNaoFeitos.join(', ')}`)
+  }
+
+  return {
+    titulo: '🩸 LIPIDOGRAMA / RISCO CARDIOVASCULAR',
+    nivel,
+    linhas
+  }
+}
+
 function buildModLeucos(examesOBA, alertas, examesSuger) {
   const leuco   = parseFloat(examesOBA.leucocitos)
   const neutPct = parseFloat(examesOBA.neutrofilos)
