@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { avaliarPaciente, formatarParaCopiar } from '../engine/decisionEngine';
+import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine';
 import { avaliarOBA } from '../engine/obaEngine';
 import OBAModal from './OBAModal';
 import ResultCard from './ResultCard';
@@ -490,6 +490,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
   });
 
   const [resultado, setResultado] = useState(null);
+  const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false);
   const [showAfiliados, setShowAfiliados] = useState(false);
   const [showAfiliadosBanner, setShowAfiliadosBanner] = useState(false);
   const [afiliadoEndereco, setAfiliadoEndereco] = useState('');
@@ -672,11 +673,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
       const hojeStr = new Date().toISOString().split('T')[0];
       if (inputs.dataColeta > hojeStr) novosErros.dataColeta = 'Data da coleta não pode ser no futuro';
     }
-    if (!inputs.ferritina)   novosErros.ferritina = 'Campo obrigatório';
+    // Triagem (sempre obrigatorios): Hb, VCM, RDW
     if (!inputs.hemoglobina) novosErros.hemoglobina = 'Campo obrigatório';
     if (!inputs.vcm)         novosErros.vcm = 'Campo obrigatório';
     if (!inputs.rdw)         novosErros.rdw = 'Campo obrigatório';
-    if (!inputs.satTransf)   novosErros.satTransf = 'Campo obrigatório';
+    // Avaliacao completa (so se mostrarExamesExtras): Ferritina e Sat. Transferrina
+    if (mostrarExamesExtras && !inputs.ferritina) novosErros.ferritina = 'Campo obrigatório';
+    if (mostrarExamesExtras && !inputs.satTransf) novosErros.satTransf = 'Campo obrigatório';
     return novosErros;
   }
 
@@ -717,7 +720,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
       satTransf:   Number(sanitizarNumero(inputs.satTransf)),
     };
 
-    const res = avaliarPaciente(inputsNumericos);
+    // Roteamento: triagem (Hb/VCM/RDW) ou avaliacao completa (5 valores)
+    const res = mostrarExamesExtras
+      ? avaliarPaciente(inputsNumericos)
+      : triagemEritron(inputsNumericos);
 
     let obaResult = null;
     // OBA só é processado se o paciente já preencheu a anamnese (Modo Paciente).
@@ -867,7 +873,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
 
   function handleLimpar() {
     setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
-    setResultado(null); setErros({}); setDadosOBAColetados(null);
+    setResultado(null); setErros({}); setDadosOBAColetados(null); setMostrarExamesExtras(false);
   }
 
   return (
@@ -1169,12 +1175,53 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
               <IconExames /> Exames Laboratoriais
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              <LabInput label="Ferritina" unit="ng/mL" name="ferritina" reference={inputs.sexo === 'M' ? '24-336' : '25-150'} value={inputs.ferritina} onChange={handleChange} error={erros.ferritina} hint="Não use ponto para valores superiores a 1000. Ex: 1140" aberrante={!!aberrantes["ferritina"]} />
-              <LabInput label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} aberrante={!!aberrantes["hemoglobina"]} />
-              <LabInput label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} aberrante={!!aberrantes["vcm"]} />
-              <LabInput label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} aberrante={!!aberrantes["rdw"]} />
+              {/* TRIAGEM: Hb, VCM, RDW (sempre habilitados) */}
+              <LabInput label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} aberrante={!!aberrantes["hemoglobina"]} borderColor="red" />
+              <LabInput label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} aberrante={!!aberrantes["vcm"]} borderColor="red" />
+              <LabInput label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} aberrante={!!aberrantes["rdw"]} borderColor="red" />
+
+              {/* CTA: botao para liberar exames extras */}
+              {!mostrarExamesExtras && (
+                <div className="col-span-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setMostrarExamesExtras(true)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center"
+                  >
+                    <span>📋 JÁ TENHO A FERRITINA E A SATURAÇÃO DA TRANSFERRINA</span>
+                    <span className="text-xs font-normal opacity-90 mt-1">Aprofundar o diagnóstico</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Ferritina e Sat: SEMPRE VISIVEIS, mas desabilitadas se !mostrarExamesExtras */}
+              <LabInput
+                label="Ferritina"
+                unit="ng/mL"
+                name="ferritina"
+                reference={inputs.sexo === 'M' ? '24-336' : '25-150'}
+                value={inputs.ferritina}
+                onChange={handleChange}
+                error={erros.ferritina}
+                hint={mostrarExamesExtras ? "Não use ponto para valores superiores a 1000. Ex: 1140" : "Clique no botão azul para liberar"}
+                aberrante={!!aberrantes["ferritina"]}
+                disabled={!mostrarExamesExtras}
+                borderColor="blue"
+              />
               <div className="col-span-2">
-                <LabInput label="Sat. Transferrina" unit="%" name="satTransf" reference="20-50" value={inputs.satTransf} onChange={handleChange} error={erros.satTransf} aberrante={!!aberrantes["satTransf"]} />
+                <LabInput
+                  label="Sat. Transferrina"
+                  unit="%"
+                  name="satTransf"
+                  reference="20-50"
+                  value={inputs.satTransf}
+                  onChange={handleChange}
+                  error={erros.satTransf}
+                  hint={mostrarExamesExtras ? null : "Clique no botão azul para liberar"}
+                  aberrante={!!aberrantes["satTransf"]}
+                  disabled={!mostrarExamesExtras}
+                  borderColor="blue"
+                />
               </div>
             </div>
           </section>
@@ -1309,16 +1356,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
   );
 }
 
-function LabInput({ label, unit, name, reference, value, onChange, error, hint, aberrante }) {
+function LabInput({ label, unit, name, reference, value, onChange, error, hint, aberrante, disabled, borderColor }) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-600 mb-1">
         {label} <span className="text-xs text-gray-400">({unit})</span>
       </label>
-      <input type="text" inputMode="decimal" name={name} value={value} onChange={onChange} placeholder="0"
-        className={`w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : 'border-gray-200'}`} />
+      <input type="text" inputMode="decimal" name={name} value={value} onChange={onChange} disabled={disabled} placeholder={disabled && hint ? hint : "0"}
+        className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic ${borderColor === 'red' ? 'border-red-500' : borderColor === 'blue' ? 'border-blue-500' : ''} ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : 'border-gray-200'}`} />
       <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
-      {hint && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
+      {hint && !disabled && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
       {aberrante && <p className="text-xs font-bold text-yellow-600 mt-0.5">⚠ VALOR ABERRANTE — CONFIRME</p>}
       {error && <p className="text-red-500 text-xs">{error}</p>}
     </div>

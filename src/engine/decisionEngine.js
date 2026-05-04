@@ -389,6 +389,167 @@ export function avaliarPaciente(inputs) {
   };
 }
 
+
+// ─────────────────────────────────────────────────────────────────────
+// TRIAGEM DO ERITRON — avaliação parcial sem Ferritina/Sat
+// ─────────────────────────────────────────────────────────────────────
+// Classifica morfologicamente a anemia/policitemia usando apenas:
+//   - Hb (hemoglobina)
+//   - VCM (volume corpuscular médio)
+//   - RDW (red distribution width)
+//   - Sexo, idade, gestante
+//
+// Retorna objeto compatível com ResultCard (com flag triagem: true).
+// Se eritron normal, retorna resultado de "tudo ok" sem CTA.
+// ─────────────────────────────────────────────────────────────────────
+export function triagemEritron(inputs) {
+  const hb = parseFloat(inputs.hemoglobina);
+  const vcm = parseFloat(inputs.vcm);
+  const rdw = parseFloat(inputs.rdw);
+  const sexo = inputs.sexo;
+  const gestante = !!inputs.gestante;
+
+  // Faixas de Hb normal
+  let hbMin, hbMax;
+  if (sexo === 'M') { hbMin = 13.5; hbMax = 17.5; }
+  else if (gestante) { hbMin = 11.0; hbMax = 15.5; }
+  else { hbMin = 12.0; hbMax = 15.5; }
+
+  // Classificação Hb
+  let classificacaoHb = 'NORMAL';
+  let gravidadeHb = null;
+  if (hb < hbMin) {
+    classificacaoHb = 'BAIXA';
+    if (sexo === 'M') {
+      if (hb >= 13 && hb < 13.5)  gravidadeHb = 'LEVE';
+      else if (hb >= 12.5 && hb < 13)  gravidadeHb = 'MODERADA';
+      else if (hb >= 9 && hb < 12.5)   gravidadeHb = 'IMPORTANTE';
+      else if (hb < 9)                 gravidadeHb = 'GRAVE';
+    } else if (gestante) {
+      if (hb >= 10 && hb < 11)    gravidadeHb = 'LEVE';
+      else if (hb >= 9 && hb < 10)     gravidadeHb = 'MODERADA';
+      else if (hb >= 8 && hb < 9)      gravidadeHb = 'IMPORTANTE';
+      else if (hb < 8)                 gravidadeHb = 'GRAVE';
+    } else {
+      if (hb >= 10 && hb < 12)    gravidadeHb = 'LEVE';
+      else if (hb >= 8 && hb < 10)     gravidadeHb = 'MODERADA';
+      else if (hb >= 7 && hb < 8)      gravidadeHb = 'IMPORTANTE';
+      else if (hb < 7)                 gravidadeHb = 'GRAVE';
+    }
+  } else if (hb > hbMax) {
+    classificacaoHb = 'ALTA';
+    if (sexo === 'M') {
+      if (hb > 17.5 && hb <= 18.5) gravidadeHb = 'LEVE';
+      else if (hb > 18.5 && hb <= 19.5) gravidadeHb = 'MODERADA';
+      else if (hb > 19.5)               gravidadeHb = 'GRAVE';
+    } else if (gestante) {
+      if (hb > 15 && hb <= 16)     gravidadeHb = 'LEVE';
+      else if (hb > 16 && hb <= 17)     gravidadeHb = 'MODERADA';
+      else if (hb > 17)                 gravidadeHb = 'GRAVE';
+    } else {
+      if (hb > 15.5 && hb <= 16.5) gravidadeHb = 'LEVE';
+      else if (hb > 16.5 && hb <= 17.5) gravidadeHb = 'MODERADA';
+      else if (hb > 17.5)               gravidadeHb = 'GRAVE';
+    }
+  }
+
+  // Classificação VCM (morfologia eritrocitária)
+  let classificacaoVCM = 'NORMOCÍTICA';
+  if (vcm < 80) classificacaoVCM = 'MICROCÍTICA';
+  else if (vcm > 100) classificacaoVCM = 'MACROCÍTICA';
+
+  // Classificação RDW (anisocitose)
+  const isAnisocitica = rdw > 15;
+
+  // ────── ERITRON NORMAL ──────
+  if (classificacaoHb === 'NORMAL' && classificacaoVCM === 'NORMOCÍTICA' && !isAnisocitica) {
+    return {
+      encontrado: true,
+      triagem: true,
+      label: 'ERITRON NORMAL',
+      color: 'green',
+      diagnostico: 'Hemograma dentro dos limites normais para idade e sexo. Hemoglobina, VCM e RDW estão na faixa esperada.',
+      recomendacao: 'Manter estilo de vida saudável e controle anual rotineiro.',
+      recomendacaoAge1: 'Manter estilo de vida saudável e controle anual rotineiro.',
+      recomendacaoAge2: 'Manter estilo de vida saudável e controle anual rotineiro.',
+      classificacaoHb: 'NORMAL',
+      classificacaoVCM: 'NORMOCÍTICA',
+      isAnisocitica: false,
+      proximosExames: [],
+      comentarios: [],
+      achadosParalelos: [],
+      g6pdAlerta: null,
+      obsoleto: false,
+      _inputs: inputs,
+    };
+  }
+
+  // ────── ERITRON ANORMAL ──────
+  // Construir label
+  let label = '';
+  let descricao = '';
+
+  if (classificacaoHb === 'BAIXA') {
+    label = 'ANEMIA';
+    if (classificacaoVCM === 'MICROCÍTICA') label += ' MICROCÍTICA';
+    else if (classificacaoVCM === 'MACROCÍTICA') label += ' MACROCÍTICA';
+    else label += ' NORMOCÍTICA';
+    if (isAnisocitica) label += ' E ANISOCÍTICA';
+    if (gravidadeHb) label += ` — ${gravidadeHb}`;
+    descricao = `Hemoglobina ${hb.toFixed(1)} g/dL — anemia ${gravidadeHb ? gravidadeHb.toLowerCase() : ''} `;
+    descricao += `com hemácias ${classificacaoVCM.toLowerCase()} (VCM ${vcm.toFixed(0)} fL)`;
+    if (isAnisocitica) descricao += ` e anisocitose (RDW ${rdw.toFixed(1)}%)`;
+    descricao += '.';
+  } else if (classificacaoHb === 'ALTA') {
+    label = 'POLIGLOBULIA / ERITROCITOSE';
+    if (gravidadeHb) label += ` — ${gravidadeHb}`;
+    descricao = `Hemoglobina ${hb.toFixed(1)} g/dL — eritrocitose ${gravidadeHb ? gravidadeHb.toLowerCase() : ''}.`;
+    if (classificacaoVCM === 'MICROCÍTICA') {
+      descricao += ` VCM baixo (${vcm.toFixed(0)} fL) sugere policitemia ferropriva ou talassemia.`;
+    } else if (classificacaoVCM === 'MACROCÍTICA') {
+      descricao += ` VCM elevado (${vcm.toFixed(0)} fL) sugere eritropoese aumentada.`;
+    }
+    if (isAnisocitica) descricao += ` Anisocitose (RDW ${rdw.toFixed(1)}%) sinaliza heterogeneidade eritrocitária.`;
+  } else if (classificacaoHb === 'NORMAL') {
+    if (classificacaoVCM === 'MICROCÍTICA') {
+      label = 'MICROCITOSE SEM ANEMIA';
+      descricao = `Hb normal (${hb.toFixed(1)} g/dL) com VCM baixo (${vcm.toFixed(0)} fL).`;
+    } else if (classificacaoVCM === 'MACROCÍTICA') {
+      label = 'MACROCITOSE SEM ANEMIA';
+      descricao = `Hb normal (${hb.toFixed(1)} g/dL) com VCM alto (${vcm.toFixed(0)} fL).`;
+    }
+    if (isAnisocitica) {
+      label = label || 'ANISOCITOSE ISOLADA';
+      descricao += isAnisocitica ? ` Anisocitose marcada (RDW ${rdw.toFixed(1)}%).` : '';
+    }
+  }
+
+  // Recomendação base + CTA
+  const recomendacao = 'PARA UM DIAGNÓSTICO MAIS PRECISO, PRECISA-SE NO MÍNIMO DE FERRITINA E SATURAÇÃO DA TRANSFERRINA.';
+  const recomendacaoFull = recomendacao + ' Esses exames são de baixo custo, com resultados rápidos, e normalmente cobertos por planos de saúde.';
+
+  return {
+    encontrado: true,
+    triagem: true,
+    label,
+    color: classificacaoHb === 'BAIXA' && (gravidadeHb === 'IMPORTANTE' || gravidadeHb === 'GRAVE') ? 'red' : 'orange',
+    diagnostico: descricao,
+    recomendacao: recomendacaoFull,
+    recomendacaoAge1: recomendacaoFull,
+    recomendacaoAge2: recomendacaoFull,
+    classificacaoHb,
+    classificacaoVCM,
+    isAnisocitica,
+    gravidadeHb,
+    proximosExames: ['FERRITINA', 'SATURAÇÃO DA TRANSFERRINA'],
+    comentarios: [],
+    achadosParalelos: [],
+    g6pdAlerta: null,
+    obsoleto: false,
+    _inputs: inputs,
+  };
+}
+
 export function formatarParaCopiar(resultado, inputs) {
   const hoje = new Date().toLocaleDateString('pt-BR');
   const sexoLabel = inputs.sexo === 'M' ? 'Masc' : 'Fem';
