@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { avaliarPaciente, formatarParaCopiar } from '../engine/decisionEngine'
+import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import heroImg from '../assets/redfairy-hero.png'
@@ -16,6 +16,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showSobre, setShowSobre] = useState(false)
   const [showOBAModal, setShowOBAModal] = useState(false)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
+  const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
 
   const [inputs, setInputs] = useState({
     sexo: '', idade: '',
@@ -129,9 +130,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       return
     }
 
-    // Validacao: campos laboratoriais
-    if (!inputs.ferritina || !inputs.hemoglobina || !inputs.vcm || !inputs.rdw || !inputs.satTransf) {
-      alert('Preencha todos os campos laboratoriais: Ferritina, Hemoglobina, VCM, RDW e Sat. Transferrina.')
+    // Validacao: triagem (sempre obrigatorios) - Hb, VCM, RDW
+    if (!inputs.hemoglobina || !inputs.vcm || !inputs.rdw) {
+      alert('Preencha os campos da triagem: Hemoglobina, VCM e RDW.')
+      return
+    }
+    // Validacao: aprofundamento (so se mostrarExamesExtras) - Ferritina e Sat
+    if (mostrarExamesExtras && (!inputs.ferritina || !inputs.satTransf)) {
+      alert('Voce optou por aprofundar o diagnostico. Preencha Ferritina e Sat. Transferrina.')
       return
     }
     if (!inputs.dataColeta) {
@@ -150,7 +156,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       rdw: Number(inputs.rdw),
       satTransf: Number(inputs.satTransf),
     }
-    const res = avaliarPaciente(inputsNumericos)
+    // Roteamento: triagem (Hb/VCM/RDW) ou avaliacao completa
+    const res = mostrarExamesExtras
+      ? avaliarPaciente(inputsNumericos)
+      : triagemEritron(inputsNumericos)
     setResultado({ ...res, _inputs: inputsNumericos })
 
     // So persiste no Supabase se houver sessao real (paciente cadastrado).
@@ -406,18 +415,51 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               <input type="date" name="dataColeta" value={inputs.dataColeta} onChange={handleChange}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
             </div>
+            {/* TRIAGEM (sempre habilitados): Hb, VCM, RDW - bordas vermelhas */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
-                { label: 'Ferritina (ng/mL)', name: 'ferritina', hint: 'Não use ponto para valores superiores a 1000. Ex: 1140' },
                 { label: 'Hemoglobina (g/dL)', name: 'hemoglobina' },
                 { label: 'VCM (fL)', name: 'vcm' },
                 { label: 'RDW-CV (%)', name: 'rdw' },
-                { label: 'Sat. Transferrina (%)', name: 'satTransf' },
               ].map(f => (
                 <div key={f.name}>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
                   <input type="number" step="0.1" name={f.name} value={inputs[f.name]} onChange={handleChange}
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                    className="w-full border-2 border-red-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                </div>
+              ))}
+            </div>
+
+            {/* CTA: botao para liberar exames extras */}
+            {!mostrarExamesExtras && (
+              <button
+                type="button"
+                onClick={() => setMostrarExamesExtras(true)}
+                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center"
+              >
+                <span>📋 JÁ TENHO A FERRITINA E A SATURAÇÃO DA TRANSFERRINA</span>
+                <span className="text-xs font-normal opacity-90 mt-1">Aprofundar o diagnóstico</span>
+              </button>
+            )}
+
+            {/* APROFUNDAMENTO (sempre visivel, desabilitados se !mostrarExamesExtras): Ferritina, Sat - bordas azuis */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Ferritina (ng/mL)', name: 'ferritina', hint: mostrarExamesExtras ? 'Não use ponto para valores superiores a 1000. Ex: 1140' : null },
+                { label: 'Sat. Transferrina (%)', name: 'satTransf' },
+              ].map(f => (
+                <div key={f.name}>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name={f.name}
+                    value={inputs[f.name]}
+                    onChange={handleChange}
+                    disabled={!mostrarExamesExtras}
+                    placeholder={!mostrarExamesExtras ? 'Clique no botão azul para liberar' : ''}
+                    className="w-full border-2 border-blue-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic"
+                  />
                   {f.hint && <p className="text-xs text-orange-600 font-medium mt-1">{f.hint}</p>}
                 </div>
               ))}

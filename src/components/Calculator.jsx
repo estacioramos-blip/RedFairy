@@ -1174,27 +1174,27 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <IconExames /> Exames Laboratoriais
             </h2>
-            <div className="grid grid-cols-2 gap-3">
-              {/* TRIAGEM: Hb, VCM, RDW (sempre habilitados) */}
+            {/* TRIAGEM: Hb, VCM, RDW (sempre habilitados) - 3 colunas */}
+            <div className="grid grid-cols-3 gap-3">
               <LabInput label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} aberrante={!!aberrantes["hemoglobina"]} borderColor="red" />
               <LabInput label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} aberrante={!!aberrantes["vcm"]} borderColor="red" />
               <LabInput label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} aberrante={!!aberrantes["rdw"]} borderColor="red" />
+            </div>
 
-              {/* CTA: botao para liberar exames extras */}
-              {!mostrarExamesExtras && (
-                <div className="col-span-2 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setMostrarExamesExtras(true)}
-                    className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center"
-                  >
-                    <span>📋 JÁ TENHO A FERRITINA E A SATURAÇÃO DA TRANSFERRINA</span>
-                    <span className="text-xs font-normal opacity-90 mt-1">Aprofundar o diagnóstico</span>
-                  </button>
-                </div>
-              )}
+            {/* CTA: botao para liberar exames extras */}
+            {!mostrarExamesExtras && (
+              <button
+                type="button"
+                onClick={() => setMostrarExamesExtras(true)}
+                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center mt-3"
+              >
+                <span>📋 JÁ TENHO A FERRITINA E A SATURAÇÃO DA TRANSFERRINA</span>
+                <span className="text-xs font-normal opacity-90 mt-1">Aprofundar o diagnóstico</span>
+              </button>
+            )}
 
-              {/* Ferritina e Sat: SEMPRE VISIVEIS, mas desabilitadas se !mostrarExamesExtras */}
+            {/* APROFUNDAMENTO: Ferritina e Sat - 2 colunas */}
+            <div className="grid grid-cols-2 gap-3 mt-3">
               <LabInput
                 label="Ferritina"
                 unit="ng/mL"
@@ -1208,21 +1208,19 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
                 disabled={!mostrarExamesExtras}
                 borderColor="blue"
               />
-              <div className="col-span-2">
-                <LabInput
-                  label="Sat. Transferrina"
-                  unit="%"
-                  name="satTransf"
-                  reference="20-50"
-                  value={inputs.satTransf}
-                  onChange={handleChange}
-                  error={erros.satTransf}
-                  hint={mostrarExamesExtras ? null : "Clique no botão azul para liberar"}
-                  aberrante={!!aberrantes["satTransf"]}
-                  disabled={!mostrarExamesExtras}
-                  borderColor="blue"
-                />
-              </div>
+              <LabInput
+                label="Sat. Transferrina"
+                unit="%"
+                name="satTransf"
+                reference="20-50"
+                value={inputs.satTransf}
+                onChange={handleChange}
+                error={erros.satTransf}
+                hint={mostrarExamesExtras ? null : "Clique no botão azul para liberar"}
+                aberrante={!!aberrantes["satTransf"]}
+                disabled={!mostrarExamesExtras}
+                borderColor="blue"
+              />
             </div>
           </section>
 
@@ -1363,7 +1361,7 @@ function LabInput({ label, unit, name, reference, value, onChange, error, hint, 
         {label} <span className="text-xs text-gray-400">({unit})</span>
       </label>
       <input type="text" inputMode="decimal" name={name} value={value} onChange={onChange} disabled={disabled} placeholder={disabled && hint ? hint : "0"}
-        className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic ${borderColor === 'red' ? 'border-red-500' : borderColor === 'blue' ? 'border-blue-500' : ''} ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : 'border-gray-200'}`} />
+        className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : borderColor === 'red' ? 'border-red-500' : borderColor === 'blue' ? 'border-blue-500' : 'border-gray-200'}`} />
       <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
       {hint && !disabled && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
       {aberrante && <p className="text-xs font-bold text-yellow-600 mt-0.5">⚠ VALOR ABERRANTE — CONFIRME</p>}
