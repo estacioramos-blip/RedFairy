@@ -38,9 +38,9 @@ function TermosModal({ onFechar }) {
 }
 
 
-export default function AuthPage({ onVoltar, onDemoEntrar }) {
-  const [etapa, setEtapa] = useState('cpf')
-  const [cpf, setCpf] = useState('')
+export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etapaInicial = 'cpf' }) {
+  const [etapa, setEtapa] = useState(etapaInicial)
+  const [cpf, setCpf] = useState(cpfInicial)
   const [email, setEmail] = useState('')
   const [emailConfirm, setEmailConfirm] = useState('')
   const [senha, setSenha] = useState('')

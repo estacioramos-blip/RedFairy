@@ -6,6 +6,7 @@ import PatientDashboard from './components/PatientDashboard'
 import AdminPage from './components/AdminPage'
 import logo from './assets/logo.png'
 import LandingPage from './components/LandingPage'
+import TriagemDireta from './components/TriagemDireta'
 export default function App() {
   const [modo, setModo] = useState('home')
   const [session, setSession] = useState(null)
@@ -13,10 +14,9 @@ export default function App() {
   const [calcKey, setCalcKey] = useState(0)
   const [adminClicks, setAdminClicks] = useState(0)
   const [demoMedicoClicks, setDemoMedicoClicks] = useState(0)
-  const [demoPacienteClicks, setDemoPacienteClicks] = useState(0)
   const [demoMedicoTimer, setDemoMedicoTimer] = useState(null)
-  const [demoPacienteTimer, setDemoPacienteTimer] = useState(null)
   const [demoPacientePerfil, setDemoPacientePerfil] = useState(null)
+  const [cpfPreCadastro, setCpfPreCadastro] = useState('')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -65,22 +65,6 @@ export default function App() {
     setModo('calculadora')
   }
 
-  function handleDemoPaciente() {
-    const next = demoPacienteClicks + 1
-    setDemoPacienteClicks(next)
-    if (demoPacienteTimer) clearTimeout(demoPacienteTimer)
-    if (next >= 5) {
-      setDemoPacienteClicks(0)
-      localStorage.setItem('medico_crm', 'DEMO/BA')
-      localStorage.setItem('medico_nome', 'Dr. Demo RedFairy')
-      setCalcKey(k => k + 1)
-      setModo('calculadora')
-      return
-    }
-    const t = setTimeout(() => setDemoPacienteClicks(0), 2000)
-    setDemoPacienteTimer(t)
-    setModo('paciente')
-  }
 
   if (modo === 'calculadora') {
     return (
@@ -90,12 +74,26 @@ export default function App() {
     )
   }
 
+  if (modo === 'triagem-direta') {
+    return (
+      <TriagemDireta
+        onVoltar={() => setModo('home')}
+        onCadastrar={(cpf) => {
+          setCpfPreCadastro(cpf)
+          setModo('paciente')
+        }}
+      />
+    )
+  }
+
   if (modo === 'paciente') {
     if (demoPacientePerfil) return <PatientDashboard session={null} demoPerfil={demoPacientePerfil} onVoltar={() => { setModo('home'); setDemoPacientePerfil(null) }} />
     if (!session) return <AuthPage
       onLogin={() => {}}
-      onVoltar={() => setModo('home')}
+      onVoltar={() => { setModo('home'); setCpfPreCadastro('') }}
       onDemoEntrar={(perfil) => setDemoPacientePerfil(perfil)}
+      cpfInicial={cpfPreCadastro}
+      etapaInicial={cpfPreCadastro ? 'cadastro' : 'cpf'}
     />
     return <PatientDashboard session={session} onVoltar={() => setModo('home')} abrirOBA={!!localStorage.getItem('rf_flag')} />
   }
@@ -107,7 +105,7 @@ if (modo === 'home') {
   return (
     <LandingPage
       onModoMedico={(flag) => { if (flag) localStorage.setItem('rf_flag', flag); handleDemoMedico(); }}
-      onModoPaciente={handleDemoPaciente}
+      onModoPaciente={() => setModo('triagem-direta')}
     />
   )
 }

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
+import TriagemModal from './TriagemModal'
+import TriagemResultadoModal from './TriagemResultadoModal'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import heroImg from '../assets/redfairy-hero.png'
@@ -17,6 +19,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showOBAModal, setShowOBAModal] = useState(false)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
+
+  // Estados de triagem (popup inicial)
+  const [showTriagem, setShowTriagem] = useState(false)
+  const [triagemResultado, setTriagemResultado] = useState(null)
+  const [triagemInputs, setTriagemInputs] = useState(null)
 
   const [inputs, setInputs] = useState({
     sexo: '', idade: '',
@@ -62,6 +69,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     return () => window.removeEventListener('keydown', handleDemoKey)
   }, [])
 
+  // Abrir TriagemModal automaticamente quando entrar na tela 'nova'
+  useEffect(() => {
+    if (tela === 'nova' && !triagemResultado) {
+      setShowTriagem(true)
+    } else {
+      setShowTriagem(false)
+    }
+  }, [tela, triagemResultado])
+
   // Pre-preenche sexo/idade em inputs assim que o profile for carregado
   useEffect(() => {
     if (!profile) return
@@ -88,9 +104,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       }
       return
     }
-    const { data: prof } = await supabase
-      .from('profiles').select('*').eq('id', session.user.id).single()
+    // Retry pos-signUp (race condition: profile insert pode nao ter terminado)
+    let prof = null
+    const delays = [0, 250, 600, 1200]
+    for (const d of delays) {
+      if (d > 0) await new Promise(r => setTimeout(r, d))
+      const { data } = await supabase
+        .from('profiles').select('*').eq('id', session.user.id).maybeSingle()
+      if (data) { prof = data; break }
+    }
     if (!prof) {
+      console.warn('[PatientDashboard] profile nao encontrado apos retries; signOut')
       await supabase.auth.signOut()
       onVoltar()
       return
@@ -267,7 +291,59 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </div>
         </div>
       </header>
-{showOBAModal && profile && (
+{/* TriagemModal: popup inicial de triagem */}
+      {showTriagem && (
+        <TriagemModal
+          modoMedico={false}
+          isDemoPaciente={!session?.user}
+          onConcluir={(resultado, novosInputs) => {
+            setTriagemResultado(resultado)
+            setTriagemInputs(novosInputs)
+            setShowTriagem(false)
+            // pre-preenche o form principal
+            setInputs(prev => ({
+              ...prev,
+              sexo: novosInputs.sexo || prev.sexo,
+              idade: String(novosInputs.idade || prev.idade || ''),
+              gestante: novosInputs.gestante || prev.gestante || false,
+              semanas_gestacao: novosInputs.semanas_gestacao ? String(novosInputs.semanas_gestacao) : prev.semanas_gestacao,
+              hemoglobina: String(novosInputs.hemoglobina || prev.hemoglobina || ''),
+              vcm: String(novosInputs.vcm || prev.vcm || ''),
+              rdw: String(novosInputs.rdw || prev.rdw || ''),
+            }))
+          }}
+          onFechar={() => {
+            setShowTriagem(false)
+            setTriagemResultado(null)
+          }}
+        />
+      )}
+
+      {/* TriagemResultadoModal: popup azul com resultado da triagem */}
+      {triagemResultado && (
+        <TriagemResultadoModal
+          resultado={triagemResultado}
+          inputs={{ ...triagemInputs, cpf: profile?.cpf || '' }}
+          modoMedico={false}
+          isDemo={!session?.user}
+          medicoCRM={null}
+          userId={session?.user?.id || null}
+          onVoltarInicio={() => {
+            setTriagemResultado(null)
+            setShowTriagem(false)
+            setTela('historico')
+            if (onVoltar) onVoltar()
+          }}
+          onCadastrar={() => {
+            setTriagemResultado(null)
+            setShowTriagem(false)
+            // TODO: redirecionar para fluxo de cadastro completo
+            if (onVoltar) onVoltar()
+          }}
+        />
+      )}
+
+      {showOBAModal && profile && (
         <OBAModal
           cpf={profile.cpf}
           sexo={profile.sexo}

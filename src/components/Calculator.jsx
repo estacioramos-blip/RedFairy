@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase';
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine';
 import { avaliarOBA } from '../engine/obaEngine';
 import OBAModal from './OBAModal';
+import TriagemModal from './TriagemModal';
+import TriagemResultadoModal from './TriagemResultadoModal';
 import ResultCard from './ResultCard';
 import heroImg from '../assets/redfairy-hero.png';
 import logo from '../assets/logo.png';
@@ -491,6 +493,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
 
   const [resultado, setResultado] = useState(null);
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false);
+
+  // Estados de triagem (popup inicial)
+  const [showTriagem, setShowTriagem] = useState(true);
+  const [triagemResultado, setTriagemResultado] = useState(null);
+  const [triagemInputs, setTriagemInputs] = useState(null);
   const [showAfiliados, setShowAfiliados] = useState(false);
   const [showAfiliadosBanner, setShowAfiliadosBanner] = useState(false);
   const [afiliadoEndereco, setAfiliadoEndereco] = useState('');
@@ -877,6 +884,53 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
   }
 
   return (
+    <>
+      {showTriagem && (
+        <TriagemModal
+          modoMedico={true}
+          onConcluir={(resultado, novosInputs) => {
+            setTriagemResultado(resultado);
+            setTriagemInputs(novosInputs);
+            // pre-preenche o form principal
+            setInputs(prev => ({
+              ...prev,
+              cpf: novosInputs.cpf || prev.cpf,
+              sexo: novosInputs.sexo || prev.sexo,
+              idade: String(novosInputs.idade || prev.idade || ''),
+              gestante: novosInputs.gestante || prev.gestante || false,
+              semanas_gestacao: novosInputs.semanas_gestacao ? String(novosInputs.semanas_gestacao) : prev.semanas_gestacao,
+              hemoglobina: String(novosInputs.hemoglobina || prev.hemoglobina || ''),
+              vcm: String(novosInputs.vcm || prev.vcm || ''),
+              rdw: String(novosInputs.rdw || prev.rdw || ''),
+            }));
+          }}
+          onFechar={() => {
+            // Usuario optou por ir direto ao form completo
+            setShowTriagem(false);
+            setTriagemResultado(null);
+          }}
+        />
+      )}
+      {triagemResultado && (
+        <TriagemResultadoModal
+          resultado={triagemResultado}
+          inputs={triagemInputs}
+          modoMedico={true}
+          isDemo={false}
+          medicoCRM={medicoCRM}
+          onVoltarInicio={() => {
+            setTriagemResultado(null);
+            setShowTriagem(false);
+            if (onVoltar) onVoltar();
+          }}
+          onCadastrar={() => {
+            // Modo Medico nao tem fluxo de cadastro - so volta ao inicio
+            setTriagemResultado(null);
+            setShowTriagem(false);
+            if (onVoltar) onVoltar();
+          }}
+        />
+      )}
     <div className="min-h-screen bg-gray-50">
 
       {/* ── BANNER AFILIADOS (avaliações seguintes) ── */}
@@ -1351,6 +1405,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
         )}
       </main>
     </div>
+    </>
   );
 }
 
