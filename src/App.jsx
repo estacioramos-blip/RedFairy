@@ -16,7 +16,7 @@ export default function App() {
   const [demoMedicoClicks, setDemoMedicoClicks] = useState(0)
   const [demoMedicoTimer, setDemoMedicoTimer] = useState(null)
   const [demoPacientePerfil, setDemoPacientePerfil] = useState(null)
-  const [cpfPreCadastro, setCpfPreCadastro] = useState('')
+  const [dadosPreCadastro, setDadosPreCadastro] = useState({ cpf: '', sexo: '', dataNascimento: '' })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -78,8 +78,8 @@ export default function App() {
     return (
       <TriagemDireta
         onVoltar={() => setModo('home')}
-        onCadastrar={(cpf) => {
-          setCpfPreCadastro(cpf)
+        onCadastrar={(dados) => {
+          setDadosPreCadastro(dados)
           setModo('paciente')
         }}
       />
@@ -90,10 +90,12 @@ export default function App() {
     if (demoPacientePerfil) return <PatientDashboard session={null} demoPerfil={demoPacientePerfil} onVoltar={() => { setModo('home'); setDemoPacientePerfil(null) }} />
     if (!session) return <AuthPage
       onLogin={() => {}}
-      onVoltar={() => { setModo('home'); setCpfPreCadastro('') }}
+      onVoltar={() => { setModo('home'); setDadosPreCadastro({ cpf: '', sexo: '', dataNascimento: '' }) }}
       onDemoEntrar={(perfil) => setDemoPacientePerfil(perfil)}
-      cpfInicial={cpfPreCadastro}
-      etapaInicial={cpfPreCadastro ? 'cadastro' : 'cpf'}
+      cpfInicial={dadosPreCadastro.cpf}
+      sexoInicial={dadosPreCadastro.sexo}
+      dataNascimentoInicial={dadosPreCadastro.dataNascimento}
+      etapaInicial={dadosPreCadastro.cpf ? 'cadastro' : 'cpf'}
     />
     return <PatientDashboard session={session} onVoltar={() => setModo('home')} abrirOBA={!!localStorage.getItem('rf_flag')} />
   }

@@ -66,10 +66,14 @@ export default function TriagemDireta({ onVoltar, onCadastrar }) {
             if (onVoltar) onVoltar()
           }}
           onCadastrar={() => {
-            const cpf = triagemInputs?.cpf || ''
+            const dados = {
+              cpf: triagemInputs?.cpf || '',
+              sexo: triagemInputs?.sexo || '',
+              dataNascimento: triagemInputs?.data_nascimento || '',
+            }
             setTriagemResultado(null)
             setShowTriagem(false)
-            if (onCadastrar) onCadastrar(cpf)
+            if (onCadastrar) onCadastrar(dados)
           }}
         />
       )}

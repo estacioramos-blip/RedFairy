@@ -243,6 +243,7 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
               <input type="text" value={cpf}
                 onChange={e => { setCpf(formatarCPF(e.target.value)); setErro('') }}
                 placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
+                autoComplete="off"
                 className={inputClass} />
             </div>
             {erro && <p className="text-red-500 text-sm">{erro}</p>}
@@ -265,11 +266,11 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
             <p className="text-center text-gray-500 text-sm">Bem-vindo de volta! Entre com sua senha.</p>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value.toLowerCase())} className={inputClass} autoComplete="off" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
-              <input type="password" value={senha} onChange={e => setSenha(e.target.value)} className={inputClass} />
+              <input type="password" value={senha} onChange={e => setSenha(e.target.value)} className={inputClass} autoComplete="new-password" />
             </div>
             {erro && <p className="text-red-500 text-sm">{erro}</p>}
             <button onClick={handleLogin} disabled={loading}
@@ -298,7 +299,7 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
 
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
-              <input type="text" value={nome} onChange={e => setNome(e.target.value)} className={inputClass} />
+              <input type="text" value={nome} onChange={e => setNome(e.target.value)} className={inputClass} autoComplete="off" />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -323,34 +324,37 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
               <input type="tel" value={celular}
                 onChange={e => setCelular(formatarCelular(e.target.value))}
                 placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15}
+                autoComplete="off"
                 className={inputClass} />
               <p className="text-xs text-gray-400 mt-1">Necessário para receber documentos médicos via WhatsApp</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value.toLowerCase())} className={inputClass} autoComplete="off" />
             </div>
             {email && (
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Confirme o e-mail</label>
                 <input type="email" value={emailConfirm}
-                  onChange={e => setEmailConfirm(e.target.value)}
-                  className={`${inputClass} ${emailErro ? 'border-red-400' : emailOk ? 'border-green-400' : ''}`} />
+                  onChange={e => setEmailConfirm(e.target.value.toLowerCase())}
+                  className={`${inputClass} ${emailErro ? 'border-red-400' : emailOk ? 'border-green-400' : ''}`}
+                  autoComplete="off" />
                 {emailErro && <p className="text-red-500 text-xs mt-1">Os e-mails não coincidem.</p>}
                 {emailOk && <p className="text-green-500 text-xs mt-1">✓ E-mails conferem.</p>}
               </div>
             )}
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
-              <input type="password" value={senha} onChange={e => setSenha(e.target.value)} className={inputClass} />
+              <input type="password" value={senha} onChange={e => setSenha(e.target.value)} className={inputClass} autoComplete="new-password" />
             </div>
             {senha && (
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Confirme a senha</label>
                 <input type="password" value={senhaConfirm}
                   onChange={e => setSenhaConfirm(e.target.value)}
-                  className={`${inputClass} ${senhaErro ? 'border-red-400' : senhaOk ? 'border-green-400' : ''}`} />
+                  className={`${inputClass} ${senhaErro ? 'border-red-400' : senhaOk ? 'border-green-400' : ''}`}
+                  autoComplete="new-password" />
                 {senhaErro && <p className="text-red-500 text-xs mt-1">As senhas não coincidem.</p>}
                 {senhaOk && <p className="text-green-500 text-xs mt-1">✓ Senhas conferem.</p>}
               </div>

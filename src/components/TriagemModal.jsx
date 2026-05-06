@@ -17,7 +17,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     sexo: '',
     gestante: false,
     semanas_gestacao: '',
-    idade: '',
+    dataNascimento: '',
     hemoglobina: '',
     vcm: '',
     rdw: '',
@@ -34,7 +34,14 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target
-    setInputs(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+    let v = type === 'checkbox' ? checked : value
+    if (name === 'dataNascimento' && typeof v === 'string') {
+      const digits = v.replace(/\D/g, '').slice(0, 8)
+      if (digits.length <= 2) v = digits
+      else if (digits.length <= 4) v = digits.slice(0,2) + '/' + digits.slice(2)
+      else v = digits.slice(0,2) + '/' + digits.slice(2,4) + '/' + digits.slice(4)
+    }
+    setInputs(prev => ({ ...prev, [name]: v }))
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }))
   }
 
@@ -63,32 +70,62 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   }
 
   function validar() {
-    const novos = {}
+    const errors = {}
+    let idadeCalc = null
+    let dataNascimentoISO = null
     if (mostrarCPF) {
-      if (!inputs.cpf || !inputs.cpf.trim()) novos.cpf = 'Informe o CPF'
-      else if (!validarCPF(inputs.cpf)) novos.cpf = 'CPF inválido'
+      if (!inputs.cpf || !inputs.cpf.trim()) errors.cpf = 'Informe o CPF'
+      else if (!validarCPF(inputs.cpf)) errors.cpf = 'CPF inválido'
     }
-    if (!inputs.sexo) novos.sexo = 'Selecione o sexo'
-    const idadeNum = Number(inputs.idade)
-    if (!idadeNum || idadeNum < 12 || idadeNum > 100) novos.idade = 'Idade inválida (12-100)'
-    if (!inputs.hemoglobina) novos.hemoglobina = 'Obrigatório'
-    if (!inputs.vcm) novos.vcm = 'Obrigatório'
-    if (!inputs.rdw) novos.rdw = 'Obrigatório'
+    if (!inputs.sexo) errors.sexo = 'Selecione o sexo'
+    // Validacao da data de nascimento (DD/MM/AAAA) + calculo de idade
+    const dn = String(inputs.dataNascimento || '').trim()
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) {
+      errors.dataNascimento = 'Use o formato DD/MM/AAAA'
+    } else {
+      const [d, m, a] = dn.split('/').map(Number)
+      const dt = new Date(a, m - 1, d)
+      const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d
+      if (!valida) {
+        errors.dataNascimento = 'Data invalida'
+      } else if (a < 1900) {
+        errors.dataNascimento = 'Verifique o ano de nascimento'
+      } else if (dt > new Date()) {
+        errors.dataNascimento = 'Data nao pode ser no futuro'
+      } else {
+        const hoje = new Date()
+        let idade = hoje.getFullYear() - a
+        const mDiff = hoje.getMonth() - (m - 1)
+        if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--
+        if (idade < 12) {
+          errors.dataNascimento = 'O RedFairy ainda nao atende criancas menores de 12 anos. Os valores de referencia do eritron pediatrico sao diferentes dos do adulto e exigem um modulo especifico que esta em desenvolvimento. Em breve!'
+        } else if (idade > 100) {
+          errors.dataNascimento = 'Verifique a data de nascimento'
+        } else {
+          idadeCalc = idade
+          dataNascimentoISO = `${a}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+        }
+      }
+    }
+    if (!inputs.hemoglobina) errors.hemoglobina = 'Obrigatório'
+    if (!inputs.vcm) errors.vcm = 'Obrigatório'
+    if (!inputs.rdw) errors.rdw = 'Obrigatório'
     if (inputs.sexo === 'F' && inputs.gestante && !inputs.semanas_gestacao) {
-      novos.semanas_gestacao = 'Informe as semanas'
+      errors.semanas_gestacao = 'Informe as semanas'
     }
-    return novos
+    return { errors, idadeCalc, dataNascimentoISO }
   }
 
   function handleAvaliar() {
-    const novosErros = validar()
-    if (Object.keys(novosErros).length > 0) {
-      setErros(novosErros)
+    const { errors, idadeCalc, dataNascimentoISO } = validar()
+    if (Object.keys(errors).length > 0) {
+      setErros(errors)
       return
     }
     const inputsNumericos = {
       ...inputs,
-      idade: Number(inputs.idade),
+      idade: idadeCalc,
+      data_nascimento: dataNascimentoISO,
       hemoglobina: Number(inputs.hemoglobina),
       vcm: Number(inputs.vcm),
       rdw: Number(inputs.rdw),
@@ -131,7 +168,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             </div>
           )}
 
-          {/* Sexo + Idade */}
+          {/* Sexo + Data de Nascimento */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
@@ -148,17 +185,18 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               {erros.sexo && <p className="text-red-500 text-xs mt-1">{erros.sexo}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Idade (anos)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Data de Nascimento</label>
               <input
-                type="number"
-                name="idade"
-                value={inputs.idade}
+                type="text"
+                name="dataNascimento"
+                value={inputs.dataNascimento}
                 onChange={handleChange}
-                min="12" max="100"
-                placeholder="35"
-                className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.idade ? 'border-red-500' : 'border-gray-200'}`}
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="DD/MM/AAAA"
+                className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.dataNascimento ? 'border-red-500' : 'border-gray-200'}`}
               />
-              {erros.idade && <p className="text-red-500 text-xs mt-1">{erros.idade}</p>}
+              {erros.dataNascimento && <p className="text-red-500 text-xs mt-1">{erros.dataNascimento}</p>}
             </div>
           </div>
 

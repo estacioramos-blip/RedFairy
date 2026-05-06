@@ -290,7 +290,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
               <input type="text" value={nome} onChange={e => setNome(e.target.value)}
-                placeholder="Dr. João da Silva" className={inputClass} />
+                placeholder="Dr. João da Silva" className={inputClass} autoComplete="off" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Tipo de Conselho</label>
@@ -310,13 +310,13 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Número do Conselho/UF</label>
               <input type="text" value={conselho} onChange={e => setConselho(formatarConselho(e.target.value))}
-                placeholder="Ex: 6302/BA ou COREN-12345/SP" className={inputClass} />
+                placeholder="Ex: 6302/BA ou COREN-12345/SP" className={inputClass} autoComplete="off" />
               <p className="text-xs text-gray-400 mt-0.5">Este será seu login permanente</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
               <input type="tel" value={celular} onChange={e => setCelular(formatarCelular(e.target.value))}
-                placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} />
+                placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} autoComplete="off" />
             </div>
             <div className="bg-green-50 border border-green-200 rounded-xl p-3">
               <p className="text-green-700 text-xs font-bold mb-1">⚡ Programa de Afiliados</p>
@@ -326,13 +326,13 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="seu@email.com" className={inputClass} />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value.toLowerCase())}
+                placeholder="seu@email.com" className={inputClass} autoComplete="off" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
               <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
-                placeholder="Mínimo 6 caracteres" className={inputClass} />
+                placeholder="Mínimo 6 caracteres" className={inputClass} autoComplete="new-password" />
               <p className="text-xs text-gray-400 mt-0.5">Será sua senha de acesso ao RedFairy.</p>
             </div>
             {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
