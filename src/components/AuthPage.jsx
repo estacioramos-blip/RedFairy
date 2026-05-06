@@ -38,7 +38,7 @@ function TermosModal({ onFechar }) {
 }
 
 
-export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etapaInicial = 'cpf' }) {
+export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etapaInicial = 'cpf', sexoInicial = '', dataNascimentoInicial = '' }) {
   const [etapa, setEtapa] = useState(etapaInicial)
   const [cpf, setCpf] = useState(cpfInicial)
   const [email, setEmail] = useState('')
@@ -46,8 +46,10 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
   const [senha, setSenha] = useState('')
   const [senhaConfirm, setSenhaConfirm] = useState('')
   const [nome, setNome] = useState('')
-  const [sexo, setSexo] = useState('F')
-  const [dataNascimento, setDataNascimento] = useState('')
+  const [sexo, setSexo] = useState(sexoInicial || 'F')
+  const [dataNascimento, setDataNascimento] = useState(dataNascimentoInicial || '')
+  // Flag: dados de identidade vieram da triagem (esconde campos editaveis)
+  const dadosVemDaTriagem = !!(sexoInicial && dataNascimentoInicial)
   const [celular, setCelular] = useState('')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
@@ -302,22 +304,40 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
               <input type="text" value={nome} onChange={e => setNome(e.target.value)} className={inputClass} autoComplete="off" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
-                <select value={sexo} onChange={e => setSexo(e.target.value)} className={inputClass}>
-                  <option value="F">Feminino</option>
-                  <option value="M">Masculino</option>
-                </select>
+            {dadosVemDaTriagem ? (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                <p className="text-xs text-gray-500 mb-1">Dados informados na triagem</p>
+                <p className="text-sm text-gray-700">
+                  <strong>{sexo === 'F' ? 'Feminino' : 'Masculino'}</strong>
+                  {' • '}
+                  <strong>{(() => {
+                    const v = String(dataNascimento || '');
+                    if (/^\d{4}-\d{2}-\d{2}/.test(v)) {
+                      const [a, m, d] = v.slice(0, 10).split('-');
+                      return `${d}/${m}/${a}`;
+                    }
+                    return v;
+                  })()}</strong>
+                </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Data de nascimento</label>
-                <input type="text" value={dataNascimento}
-                  onChange={e => setDataNascimento(formatarDataNascimento(e.target.value))}
-                  placeholder="DD/MM/AAAA" maxLength={10} inputMode="numeric"
-                  className={inputClass} />
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
+                  <select value={sexo} onChange={e => setSexo(e.target.value)} className={inputClass}>
+                    <option value="F">Feminino</option>
+                    <option value="M">Masculino</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Data de nascimento</label>
+                  <input type="text" value={dataNascimento}
+                    onChange={e => setDataNascimento(formatarDataNascimento(e.target.value))}
+                    placeholder="DD/MM/AAAA" maxLength={10} inputMode="numeric"
+                    className={inputClass} />
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular (WhatsApp)</label>

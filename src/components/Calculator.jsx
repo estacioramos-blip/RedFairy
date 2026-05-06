@@ -481,7 +481,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
   const _hoje = new Date().toISOString().split('T')[0]
 
   const [inputs, setInputs] = useState({
-    cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
+    cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', dataNascimento: '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
     ferritina: _demo?.ferr || '', hemoglobina: _demo?.hb || '', vcm: _demo?.vcm || '', rdw: _demo?.rdw || '', satTransf: _demo?.sat || '',
     bariatrica: _demo?.bariatrica || preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica',
     bariatrica_medico: _demo?.bariatrica || false, vegetariano: false, perda: false,
@@ -632,6 +632,31 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
+    // Caso especial: dataNascimento -> aplica mascara, calcula idade, seta ambos
+    if (name === 'dataNascimento') {
+      const digits = String(value).replace(/\D/g, '').slice(0, 8);
+      let dn = digits;
+      if (digits.length > 2 && digits.length <= 4) dn = digits.slice(0,2) + '/' + digits.slice(2);
+      else if (digits.length > 4) dn = digits.slice(0,2) + '/' + digits.slice(2,4) + '/' + digits.slice(4);
+      // Calcula idade se DN completa e valida
+      let idadeCalc = '';
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) {
+        const [d, m, a] = dn.split('/').map(Number);
+        const dt = new Date(a, m - 1, d);
+        const valida = dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+        if (valida && a >= 1900 && dt <= new Date()) {
+          const hoje = new Date();
+          let idade = hoje.getFullYear() - a;
+          const mDiff = hoje.getMonth() - (m - 1);
+          if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--;
+          idadeCalc = String(idade);
+        }
+      }
+      setInputs(prev => ({ ...prev, dataNascimento: dn, idade: idadeCalc }));
+      if (erros.dataNascimento) setErros(prev => ({ ...prev, dataNascimento: null }));
+      if (erros.idade) setErros(prev => ({ ...prev, idade: null }));
+      return;
+    }
     const novoValor = name === 'cpf' ? formatarCPF(value) : (type === 'checkbox' ? checked : value);
     setInputs(prev => ({ ...prev, [name]: novoValor }));
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
@@ -674,7 +699,34 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
     const novosErros = {};
     if (!inputs.cpf || !inputs.cpf.trim()) novosErros.cpf = 'Informe o CPF do paciente';
     else if (!validarCPF(inputs.cpf)) novosErros.cpf = 'CPF inválido';
-    if (!inputs.idade || inputs.idade < 12 || inputs.idade > 100) novosErros.idade = 'Idade inválida (12-100)';
+    // Validacao: Data de Nascimento (UI) -> idade calculada (interna)
+    {
+      const dn = String(inputs.dataNascimento || '').trim();
+      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) {
+        novosErros.dataNascimento = 'Use o formato DD/MM/AAAA';
+      } else {
+        const [d, m, a] = dn.split('/').map(Number);
+        const dt = new Date(a, m - 1, d);
+        const valida = dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+        if (!valida) {
+          novosErros.dataNascimento = 'Data invalida';
+        } else if (a < 1900) {
+          novosErros.dataNascimento = 'Verifique o ano de nascimento';
+        } else if (dt > new Date()) {
+          novosErros.dataNascimento = 'Data nao pode ser no futuro';
+        } else {
+          const hoje = new Date();
+          let idade = hoje.getFullYear() - a;
+          const mDiff = hoje.getMonth() - (m - 1);
+          if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--;
+          if (idade < 12) {
+            novosErros.dataNascimento = 'O RedFairy ainda nao atende criancas menores de 12 anos. Em breve teremos um modulo pediatrico especifico!';
+          } else if (idade > 100) {
+            novosErros.dataNascimento = 'Verifique a data de nascimento';
+          }
+        }
+      }
+    }
     if (!inputs.dataColeta) novosErros.dataColeta = 'Informe a data da coleta';
     else {
       const hojeStr = new Date().toISOString().split('T')[0];
@@ -720,6 +772,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
     const inputsNumericos = {
       ...inputs,
       idade: Number(inputs.idade),
+      data_nascimento: (() => {
+        const dn = String(inputs.dataNascimento || '').trim();
+        if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) return null;
+        const [d, m, a] = dn.split('/').map(Number);
+        return `${a}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      })(),
       ferritina:   Number(sanitizarNumero(inputs.ferritina)),
       hemoglobina: Number(sanitizarNumero(inputs.hemoglobina)),
       vcm:         Number(sanitizarNumero(inputs.vcm)),
@@ -879,7 +937,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
   }
 
   function handleLimpar() {
-    setInputs({ cpf: '', sexo: 'M', idade: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
+    setInputs({ cpf: '', sexo: 'M', idade: '', dataNascimento: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
     setResultado(null); setErros({}); setDadosOBAColetados(null); setMostrarExamesExtras(false);
   }
 
@@ -1196,9 +1254,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
                 </select>
               </div>
               <div>
-                <label className="label">Idade</label>
-                <input type="number" name="idade" value={inputs.idade} onChange={handleChange} placeholder="12-100" min={12} max={100} className={`input ${erros.idade ? 'border-red-500' : ''}`} />
-                {erros.idade && <p className="text-red-500 text-xs mt-1">{erros.idade}</p>}
+                <label className="label">Data de Nascimento</label>
+                <input type="text" name="dataNascimento" value={inputs.dataNascimento} onChange={handleChange} placeholder="DD/MM/AAAA" inputMode="numeric" maxLength={10} autoComplete="off" className={`input ${erros.dataNascimento ? 'border-red-500' : ''}`} />
+                {inputs.idade && !erros.dataNascimento && <p className="text-gray-500 text-xs mt-1">Idade: {inputs.idade} anos</p>}
+                {erros.dataNascimento && <p className="text-red-500 text-xs mt-1">{erros.dataNascimento}</p>}
               </div>
               <div className="col-span-2">
                 <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
@@ -1373,6 +1432,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
                 {Object.entries(erros).filter(([_, v]) => v).map(([k, v]) => {
                   const nomes = {
                     cpf: 'CPF',
+                    dataNascimento: 'Data de Nascimento',
                     idade: 'Idade',
                     dataColeta: 'Data da Coleta',
                     ferritina: 'Ferritina',

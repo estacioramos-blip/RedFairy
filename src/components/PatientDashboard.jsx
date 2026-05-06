@@ -22,6 +22,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
   // Estados de triagem (popup inicial)
   const [showTriagem, setShowTriagem] = useState(false)
+  const [temAvaliacaoCompleta, setTemAvaliacaoCompleta] = useState(false)
   const [triagemResultado, setTriagemResultado] = useState(null)
   const [triagemInputs, setTriagemInputs] = useState(null)
 
@@ -69,23 +70,25 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     return () => window.removeEventListener('keydown', handleDemoKey)
   }, [])
 
-  // Abrir TriagemModal automaticamente quando entrar na tela 'nova'
+  // Abrir TriagemModal so quando entrar na tela 'nova' E paciente ainda
+  // nao tem nenhuma avaliacao completa (com ferritina + sat preenchidos).
   useEffect(() => {
-    if (tela === 'nova' && !triagemResultado) {
+    if (tela === 'nova' && !triagemResultado && !temAvaliacaoCompleta) {
       setShowTriagem(true)
     } else {
       setShowTriagem(false)
     }
-  }, [tela, triagemResultado])
+  }, [tela, triagemResultado, temAvaliacaoCompleta])
 
-  // Pre-preenche sexo/idade em inputs assim que o profile for carregado
+  // Pre-preenche sexo/idade em inputs sempre que o profile mudar.
+  // Idade e sexo vem SEMPRE do profile (paciente nao edita esses campos).
   useEffect(() => {
     if (!profile) return
     const idadeProfile = profile.data_nascimento ? calcularIdade(profile.data_nascimento) : ''
     setInputs(prev => ({
       ...prev,
-      sexo: prev.sexo || profile.sexo || '',
-      idade: prev.idade || (idadeProfile ? String(idadeProfile) : ''),
+      sexo: profile.sexo || prev.sexo || '',
+      idade: idadeProfile ? String(idadeProfile) : (prev.idade || ''),
     }))
   }, [profile])
 
@@ -132,6 +135,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       .eq('user_id', session.user.id)
       .order('data_coleta', { ascending: false })
     setAvaliacoes(avals || [])
+    // Verifica se paciente ja tem alguma avaliacao com ferritina E sat preenchidos
+    const completa = (avals || []).some(a => a.ferritina != null && a.sat_transferrina != null)
+    setTemAvaliacaoCompleta(completa)
     setLoading(false)
   }
 
@@ -469,22 +475,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {tela === 'nova' && (
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
             <h2 className="font-semibold text-gray-700">Nova Avaliação</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
-                <select name="sexo" value={inputs.sexo} onChange={handleChange}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400">
-                  <option value="">Selecione...</option>
-                  <option value="F">Feminino</option>
-                  <option value="M">Masculino</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Idade (anos)</label>
-                <input type="number" name="idade" value={inputs.idade} onChange={handleChange}
-                  min="12" max="100" placeholder="35"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
-              </div>
+            {/* Bloco read-only: dados de identidade vem do profile */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+              <p className="text-xs text-gray-500 mb-1">Paciente</p>
+              <p className="text-sm text-gray-700">
+                <strong>{profile?.nome || ''}</strong>
+                {inputs.sexo && (<>{' • '}<strong>{inputs.sexo === 'F' ? 'Feminino' : 'Masculino'}</strong></>)}
+                {inputs.idade && (<>{' • '}<strong>{inputs.idade} anos</strong></>)}
+              </p>
+              {profile?.data_nascimento && (
+                <p className="text-xs text-gray-400 mt-0.5">Idade calculada a partir da data de nascimento no seu cadastro</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Data da Coleta</label>
