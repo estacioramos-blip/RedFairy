@@ -50,7 +50,6 @@ export default function TriagemResultadoModal({
         idade: Number(inputs.idade) || null,
         data_nascimento: inputs.data_nascimento || null,
         gestante: inputs.gestante || false,
-        bariatrica: inputs.bariatrica || false,
         semanas_gestacao: inputs.semanas_gestacao || null,
         hemoglobina: Number(inputs.hemoglobina) || null,
         vcm: Number(inputs.vcm) || null,

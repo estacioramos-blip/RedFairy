@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
-import TriagemModal from './TriagemModal'
-import TriagemResultadoModal from './TriagemResultadoModal'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import BoasVindasModal from './BoasVindasModal'
@@ -21,14 +19,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showOBAModal, setShowOBAModal] = useState(false)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
-
-  // Estados de triagem (popup inicial)
-  const [showTriagem, setShowTriagem] = useState(false)
-  const [temAvaliacaoCompleta, setTemAvaliacaoCompleta] = useState(false)
-  const [ultimaTriagem, setUltimaTriagem] = useState(null)
-  const [fraseGestacaoConcluida, setFraseGestacaoConcluida] = useState(false)
-  const [triagemResultado, setTriagemResultado] = useState(null)
-  const [triagemInputs, setTriagemInputs] = useState(null)
 
   const [inputs, setInputs] = useState({
     sexo: '', idade: '',
@@ -74,24 +64,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     return () => window.removeEventListener('keydown', handleDemoKey)
   }, [])
 
-  // Abrir TriagemModal so quando entrar na tela 'nova' E:
-  //   - paciente nao tem avaliacao completa (com ferritina + sat preenchidos)
-  //   - E ultima triagem foi >= 30 dias atras (ou nao existe)
-  useEffect(() => {
-    let triagemRecente = false
-    if (ultimaTriagem?.created_at) {
-      const dias = (new Date() - new Date(ultimaTriagem.created_at)) / (1000 * 60 * 60 * 24)
-      triagemRecente = dias < 30
-    }
-    if (tela === 'nova' && !triagemResultado && !temAvaliacaoCompleta && !triagemRecente) {
-      setShowTriagem(true)
-    } else {
-      setShowTriagem(false)
-    }
-  }, [tela, triagemResultado, temAvaliacaoCompleta, ultimaTriagem])
-
-  // Pre-preenche sexo/idade em inputs sempre que o profile mudar.
-  // Idade e sexo vem SEMPRE do profile (paciente nao edita esses campos).
+  // Pre-preenche sexo, idade e bariatrica em inputs sempre que o profile mudar.
+  // Idade, sexo e bariatrica vem SEMPRE do profile (paciente nao edita).
+  // Gestacao NAO eh pre-preenchida: paciente digita do zero a cada visita.
   useEffect(() => {
     if (!profile) return
     const idadeProfile = profile.data_nascimento ? calcularIdade(profile.data_nascimento) : ''
@@ -99,6 +74,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       ...prev,
       sexo: profile.sexo || prev.sexo || '',
       idade: idadeProfile ? String(idadeProfile) : (prev.idade || ''),
+      bariatrica: !!profile.bariatrica,
     }))
   }, [profile])
 
@@ -148,47 +124,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       .eq('user_id', session.user.id)
       .order('data_coleta', { ascending: false })
     setAvaliacoes(avals || [])
-    // Verifica se paciente ja tem alguma avaliacao com ferritina E sat preenchidos
-    const completa = (avals || []).some(a => a.ferritina != null && a.sat_transferrina != null)
-    setTemAvaliacaoCompleta(completa)
-
-    // Carrega ultima triagem do usuario (para decidir pular TriagemModal e calcular gestacao)
-    const { data: ult } = await supabase
-      .from('triagens').select('*')
-      .eq('user_id', session.user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    if (ult) {
-      setUltimaTriagem(ult)
-      // Pre-preenche bariatrica (paciente continua bariatrico/a)
-      if (ult.bariatrica) {
-        setInputs(prev => ({ ...prev, bariatrica: true }))
-      }
-      // Logica de gestacao: calcula semanas atuais
-      if (ult.gestante && ult.semanas_gestacao) {
-        const dataTriagem = new Date(ult.created_at)
-        const hoje = new Date()
-        const diasDecorridos = (hoje - dataTriagem) / (1000 * 60 * 60 * 24)
-        const semanasAtuais = Number(ult.semanas_gestacao) + (diasDecorridos / 7)
-        if (semanasAtuais > 40) {
-          // Provavelmente ja teve o bebe. Mostrar frase uma vez.
-          const flagKey = `frase_posparto_${session.user.id}`
-          if (!localStorage.getItem(flagKey)) {
-            setFraseGestacaoConcluida(true)
-            localStorage.setItem(flagKey, 'shown')
-          }
-          // Nao pre-preenche gestante
-        } else {
-          // Ainda gravida - pre-preenche gestante + semanas calculadas
-          setInputs(prev => ({
-            ...prev,
-            gestante: true,
-            semanas_gestacao: String(Math.floor(semanasAtuais))
-          }))
-        }
-      }
-    }
     setLoading(false)
   }
 
@@ -354,79 +289,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </div>
         </div>
       </header>
-{/* TriagemModal: popup inicial de triagem */}
-      {showTriagem && (
-        <TriagemModal
-          modoMedico={false}
-          isDemoPaciente={!session?.user}
-          onConcluir={(resultado, novosInputs) => {
-            setTriagemResultado(resultado)
-            setTriagemInputs(novosInputs)
-            setShowTriagem(false)
-            // pre-preenche o form principal
-            setInputs(prev => ({
-              ...prev,
-              sexo: novosInputs.sexo || prev.sexo,
-              idade: String(novosInputs.idade || prev.idade || ''),
-              gestante: novosInputs.gestante || prev.gestante || false,
-              semanas_gestacao: novosInputs.semanas_gestacao ? String(novosInputs.semanas_gestacao) : prev.semanas_gestacao,
-              hemoglobina: String(novosInputs.hemoglobina || prev.hemoglobina || ''),
-              vcm: String(novosInputs.vcm || prev.vcm || ''),
-              rdw: String(novosInputs.rdw || prev.rdw || ''),
-            }))
-          }}
-          onFechar={() => {
-            setShowTriagem(false)
-            setTriagemResultado(null)
-          }}
-        />
-      )}
-
-      {/* Frase pos-parto: mostra UMA vez quando ultima triagem indicava >40 semanas */}
-      {fraseGestacaoConcluida && tela === 'nova' && (
-        <div className="max-w-3xl mx-auto px-4 mt-4">
-          <div className="rounded-xl border border-pink-200 bg-pink-50 p-4 flex items-start gap-3">
-            <div className="text-2xl">🌸</div>
-            <div className="flex-1">
-              <p className="text-sm text-pink-900 leading-relaxed">
-                Espero que tudo tenha corrido bem com a <strong>gestação, o parto e o bebê</strong>. Vamos ver como está a sua Hemoglobina?
-              </p>
-            </div>
-            <button
-              onClick={() => setFraseGestacaoConcluida(false)}
-              className="text-pink-400 hover:text-pink-600 text-lg leading-none"
-              aria-label="Fechar"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* TriagemResultadoModal: popup azul com resultado da triagem */}
-      {triagemResultado && (
-        <TriagemResultadoModal
-          resultado={triagemResultado}
-          inputs={{ ...triagemInputs, cpf: profile?.cpf || '' }}
-          modoMedico={false}
-          isDemo={!session?.user}
-          medicoCRM={null}
-          userId={session?.user?.id || null}
-          onVoltarInicio={() => {
-            setTriagemResultado(null)
-            setShowTriagem(false)
-            setTela('historico')
-            if (onVoltar) onVoltar()
-          }}
-          onCadastrar={() => {
-            setTriagemResultado(null)
-            setShowTriagem(false)
-            // TODO: redirecionar para fluxo de cadastro completo
-            if (onVoltar) onVoltar()
-          }}
-        />
-      )}
-
       {showOBAModal && profile && (
         <OBAModal
           cpf={profile.cpf}

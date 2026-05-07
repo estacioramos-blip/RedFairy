@@ -215,20 +215,27 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
       }
 
       // Decisao estrategica: triagem nao gera historico.
-      // RPC server-side (SECURITY DEFINER) faz tudo numa transacao:
-      //   1. Le triagem mais recente do CPF
-      //   2. Se bariatrica=true, UPDATE profiles.bariatrica
-      //   3. DELETE de todas as triagens desse CPF
-      // Necessario via RPC porque RLS bloqueia SELECT/DELETE de triagens
-      // orfas (user_id=NULL) feitas antes do cadastro.
-      const { error: rpcErr } = await supabase.rpc('consume_triagem_on_signup', {
-        p_user_id: data.user.id,
-        p_cpf: cpfLimpo,
-      })
-      if (rpcErr) {
-        console.warn('[consume_triagem_on_signup] falhou:', rpcErr.message)
-        // Nao bloqueia o cadastro - paciente pode marcar bariatrica manualmente depois.
+      // Antes de apagar a triagem, copiar a flag bariatrica para profiles
+      // (estado permanente do paciente).
+      const { data: triagemRecente } = await supabase
+        .from('triagens')
+        .select('bariatrica')
+        .eq('cpf', cpfLimpo)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (triagemRecente?.bariatrica) {
+        await supabase.from('profiles')
+          .update({ bariatrica: true })
+          .eq('id', data.user.id)
       }
+
+      // DELETE de todas as triagens desse CPF (orfas ou nao).
+      // A primeira avaliacao "real" sera feita no dashboard com exames completos.
+      await supabase.from('triagens')
+        .delete()
+        .eq('cpf', cpfLimpo)
     }
     setSucesso('Cadastro realizado! Verifique seu e-mail para confirmar.')
     setLoading(false)
