@@ -19,6 +19,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showOBAModal, setShowOBAModal] = useState(false)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
   const [fraseGestacaoConcluida, setFraseGestacaoConcluida] = useState(false)
+  const [showDespedidaModal, setShowDespedidaModal] = useState(false)
+  const [querPedidoGratuito, setQuerPedidoGratuito] = useState(true)
+  const [salvandoPedido, setSalvandoPedido] = useState(false)
+  const [showToastWhatsapp, setShowToastWhatsapp] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
 
   const [inputs, setInputs] = useState({
@@ -165,7 +169,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   async function handleAvaliar() {
     if (!profile) return
 
-    // Validacao: sexo e idade
     if (!inputs.sexo) {
       alert('Selecione o Sexo.')
       return
@@ -176,12 +179,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       return
     }
 
-    // Validacao: triagem (sempre obrigatorios) - Hb, VCM, RDW
     if (!inputs.hemoglobina || !inputs.vcm || !inputs.rdw) {
       alert('Preencha os campos da triagem: Hemoglobina, VCM e RDW.')
       return
     }
-    // Validacao: aprofundamento (so se mostrarExamesExtras) - Ferritina e Sat
     if (mostrarExamesExtras && (!inputs.ferritina || !inputs.satTransf)) {
       alert('Voce optou por aprofundar o diagnostico. Preencha Ferritina e Sat. Transferrina.')
       return
@@ -202,14 +203,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       rdw: Number(inputs.rdw),
       satTransf: Number(inputs.satTransf),
     }
-    // Roteamento: triagem (Hb/VCM/RDW) ou avaliacao completa
     const res = mostrarExamesExtras
       ? avaliarPaciente(inputsNumericos)
       : triagemEritron(inputsNumericos)
     setResultado({ ...res, _inputs: inputsNumericos })
 
-    // So persiste no Supabase se houver sessao real (paciente cadastrado).
-    // Modo demo/bariatrico sem login apenas exibe o resultado.
     if (res.encontrado && session?.user) {
       await supabase.from('avaliacoes').insert({
         user_id: session.user.id,
@@ -237,10 +235,39 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     }
     setTela('resultado')
 
-    // Se o paciente eh bariatrico, abrir a anamnese OBA logo apos a avaliacao
     if (inputs.bariatrica && res.encontrado) {
       setShowOBAModal(true)
     }
+  }
+
+  async function handleDespedida() {
+    setSalvandoPedido(true)
+    if (querPedidoGratuito && profile) {
+      const { error } = await supabase.from('pedidos_documento').insert({
+        user_id: profile.id,
+        cpf: profile.cpf,
+        nome: profile.nome,
+        data_nascimento: profile.data_nascimento || null,
+        celular: profile.celular || null,
+        tipos_documento: ['hemograma', 'ferritina', 'sat_transferrina'],
+        texto_documentos: 'Primeiro pedido gratuito - solicitado pelo paciente no fluxo de cadastro.',
+        valor_total: 0,
+        status: 'pendente_envio',
+      })
+      if (error) {
+        console.error('[handleDespedida] erro ao criar pedido:', error)
+        alert('Nao conseguimos registrar seu pedido. Por favor tente novamente ou contate o suporte.')
+        setSalvandoPedido(false)
+        return
+      }
+    }
+    setSalvandoPedido(false)
+    setShowDespedidaModal(false)
+    setShowToastWhatsapp(true)
+    setTimeout(async () => {
+      await supabase.auth.signOut()
+      onVoltar()
+    }, 3500)
   }
 
   async function handleLogout() {
@@ -274,7 +301,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     <>
     <div className="min-h-screen bg-gray-50">
 
-      {/* HEADER — mesmo padrão do Calculator */}
+      {/* HEADER */}
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <button onClick={onVoltar}
@@ -315,7 +342,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         </div>
       </header>
 
-      {/* Frase pos-parto: mostra UMA vez quando profile indica gestacao concluida (>40 semanas calculadas) */}
+      {/* Frase pos-parto */}
       {fraseGestacaoConcluida && (
         <div className="max-w-3xl mx-auto px-4 mt-4">
           <div className="rounded-xl border border-pink-200 bg-pink-50 p-4 flex items-start gap-3">
@@ -350,7 +377,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           onConcluir={() => setShowOBAModal(false)}
         />
       )}
-{/* MODAL SOBRE */}
+
       {/* MODAL SOBRE */}
       {showSobre && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -359,21 +386,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl"
             style={{ maxHeight: '90vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}>
-          <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
-  <img src={heroImg} alt="RedFairy"
-    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
-  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
-    <div style={{ textAlign: 'center' }}>
-            <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
-        Eu sou a sua fada vermelha, a sua <span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>.
-        <br />
-        Eu uso a poeira das estrelas para te entregar o ar.
-        <br />
-        <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
-      </p>
-    </div>
-  </div>
-</div>
+            <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
+              <img src={heroImg} alt="RedFairy"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
+                    Eu sou a sua fada vermelha, a sua <span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>.
+                    <br />
+                    Eu uso a poeira das estrelas para te entregar o ar.
+                    <br />
+                    <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
+                  </p>
+                </div>
+              </div>
+            </div>
             <div style={{ padding: '20px' }}>
               {!showSaibaMais && (
                 <button onClick={() => setShowSaibaMais(true)}
@@ -403,9 +430,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
                   </p>
                   <div className="mt-4 text-center">
-  <p className="text-gray-500 text-xs font-medium">RT | E.F. Ramos, M.D.</p>
-  <p className="text-red-700 text-xs mt-1">drestacioramos.com.br</p>
-</div>
+                    <p className="text-gray-500 text-xs font-medium">RT | E.F. Ramos, M.D.</p>
+                    <p className="text-red-700 text-xs mt-1">drestacioramos.com.br</p>
+                  </div>
                 </div>
               )}
               <button onClick={() => { setShowSobre(false); setShowSaibaMais(false) }}
@@ -418,28 +445,58 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       )}
 
       <div className="max-w-3xl mx-auto px-4 py-6">
-        <div className="flex gap-2 mb-6">
-          <button onClick={() => setTela('historico')}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'historico' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
-            Histórico
-          </button>
-          <button onClick={() => { setTela('nova'); setResultado(null) }}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'nova' || tela === 'resultado' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
-            Nova Avaliação
-          </button>
-        </div>
+        {avaliacoes.length > 0 && (
+          <div className="flex gap-2 mb-6">
+            <button onClick={() => setTela('historico')}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'historico' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
+              Histórico
+            </button>
+            <button onClick={() => { setTela('nova'); setResultado(null) }}
+              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'nova' || tela === 'resultado' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
+              Nova Avaliação
+            </button>
+          </div>
+        )}
 
         {tela === 'historico' && (
           <div className="space-y-3">
             {avaliacoes.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center text-gray-400 border">
+              <div className="bg-white rounded-2xl p-8 text-center border">
                 <img src={logo} alt="RedFairy" className="w-12 h-12 object-contain mx-auto mb-3"
                   style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.4))' }} />
-                <p>Nenhuma avaliação ainda.</p>
-                <button onClick={() => setTela('nova')}
-                  className="mt-4 bg-red-700 text-white px-6 py-2 rounded-xl text-sm">
-                  Fazer primeira avaliação
-                </button>
+                {profile?.bariatrica ? (
+                  <>
+                    <p className="text-gray-700 leading-relaxed mb-1">
+                      Como você é <strong>bariátrica</strong>, vamos começar com a <strong>anamnese específica</strong>.
+                    </p>
+                    <p className="text-xs text-gray-400 mb-4">
+                      Depois disso, traga Hb, Ferritina e Saturação da Transferrina para sua primeira avaliação completa.
+                    </p>
+                    <button onClick={() => setShowOBAModal(true)}
+                      className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-xl text-sm font-semibold transition-colors">
+                      Iniciar Anamnese OBA
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-gray-700 leading-relaxed mb-2">
+                      Você já tem os resultados de <strong>Ferritina</strong> e <strong>Saturação da Transferrina</strong>?
+                    </p>
+                    <p className="text-xs text-gray-400 mb-5">
+                      Esses exames complementam o hemograma para uma avaliação completa.
+                    </p>
+                    <div className="flex gap-3 justify-center flex-wrap">
+                      <button onClick={() => { setTela('nova'); setResultado(null) }}
+                        className="bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-xl text-sm font-semibold transition-colors">
+                        Sim, tenho
+                      </button>
+                      <button onClick={() => setShowDespedidaModal(true)}
+                        className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-xl text-sm font-semibold transition-colors">
+                        Ainda não
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : avaliacoes.map(av => (
               <div key={av.id} className="bg-white rounded-2xl p-4 border shadow-sm flex items-center justify-between">
@@ -462,7 +519,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {tela === 'nova' && (
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
             <h2 className="font-semibold text-gray-700">Nova Avaliação</h2>
-            {/* Bloco read-only: dados de identidade vem do profile */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-xs text-gray-500 mb-1">Paciente</p>
               <p className="text-sm text-gray-700">
@@ -479,7 +535,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               <input type="date" name="dataColeta" value={inputs.dataColeta} onChange={handleChange}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
             </div>
-            {/* TRIAGEM (sempre habilitados): Hb, VCM, RDW - bordas vermelhas */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
                 { label: 'Hemoglobina (g/dL)', name: 'hemoglobina' },
@@ -494,7 +549,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               ))}
             </div>
 
-            {/* CTA: botao para liberar exames extras */}
             {!mostrarExamesExtras && (
               <button
                 type="button"
@@ -506,7 +560,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               </button>
             )}
 
-            {/* APROFUNDAMENTO (sempre visivel, desabilitados se !mostrarExamesExtras): Ferritina, Sat - bordas azuis */}
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: 'Ferritina (ng/mL)', name: 'ferritina', hint: mostrarExamesExtras ? 'Não use ponto para valores superiores a 1000. Ex: 1140' : null },
@@ -556,7 +609,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 ))}
               </div>
 
-              {/* Fase 1: dados de gestacao */}
               {inputs.gestante && inputs.sexo === 'F' && (
                 <div className="mt-3 p-3 rounded-xl border border-pink-200 bg-pink-50">
                   <p className="text-xs font-bold text-pink-700 uppercase tracking-wide mb-2">📋 Dados da Gestação</p>
@@ -646,6 +698,67 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           setProfile(p => ({ ...p, boas_vindas_vista: true }))
         }}
       />
+    )}
+
+    {/* Modal de despedida */}
+    {showDespedidaModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: 'rgba(0,0,0,0.6)' }}>
+        <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
+          <div className="px-6 pt-6 pb-4 text-center">
+            <img src={logo} alt="RedFairy" className="w-16 h-16 object-contain mx-auto mb-2" />
+            <h3 className="text-xl font-bold text-red-700">Sem problema!</h3>
+            <p className="text-sm text-gray-500 mt-1">Vamos te ajudar a obter esses exames.</p>
+          </div>
+          <div className="px-6 pb-2 space-y-4 text-sm text-gray-700 leading-relaxed">
+            <p>
+              Como sua assinatura inclui <strong>1 pedido médico gratuito</strong>, nós podemos
+              emitir agora um pedido com <strong>Hemograma, Ferritina e Saturação da Transferrina</strong>.
+            </p>
+            <p className="text-xs text-gray-500">
+              O pedido com assinatura digital do médico será enviado pelo seu WhatsApp.
+              Validade: 30 dias.
+            </p>
+            <label className="flex items-start gap-2 cursor-pointer p-3 rounded-xl border-2 border-amber-300 bg-amber-50">
+              <input type="checkbox" checked={querPedidoGratuito}
+                onChange={e => setQuerPedidoGratuito(e.target.checked)}
+                className="mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-900">Quero meu pedido médico gratuito</p>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  Inclui Hemograma + Ferritina + Saturação da Transferrina.
+                </p>
+              </div>
+            </label>
+          </div>
+          <div className="px-6 pb-6 pt-4 flex gap-3">
+            <button onClick={() => setShowDespedidaModal(false)}
+              disabled={salvandoPedido}
+              className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors text-sm disabled:opacity-50">
+              Voltar
+            </button>
+            <button onClick={handleDespedida}
+              disabled={salvandoPedido}
+              className="flex-1 py-3 rounded-xl bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait">
+              {salvandoPedido ? 'Enviando...' : 'Confirmar'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Toast WhatsApp */}
+    {showToastWhatsapp && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: 'rgba(0,0,0,0.5)' }}>
+        <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6 text-center">
+          <div className="text-5xl mb-3">📱</div>
+          <p className="text-gray-800 leading-relaxed">
+            O <strong>Pedido Médico</strong> com <strong>assinatura digital</strong> será enviado pelo seu <strong>WhatsApp</strong>.
+          </p>
+          <p className="text-xs text-gray-400 mt-3">Aguardando você de volta com os resultados!</p>
+        </div>
+      </div>
     )}
     </>
   )
