@@ -198,6 +198,15 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
         celular: celular.replace(/\D/g, ''),
       })
 
+      // Cria assinatura ativa (1 ano). Quando integrar Stripe, status comeca como 'pendente'
+      const dataFim = new Date()
+      dataFim.setFullYear(dataFim.getFullYear() + 1)
+      await supabase.from('assinaturas').insert({
+        user_id: data.user.id,
+        status: 'ativa',
+        data_fim: dataFim.toISOString(),
+      })
+
       if (avaliacoesPendentes > 0) {
         await supabase.from('avaliacoes')
           .update({ user_id: data.user.id })

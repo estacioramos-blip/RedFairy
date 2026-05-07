@@ -5,6 +5,7 @@ import TriagemModal from './TriagemModal'
 import TriagemResultadoModal from './TriagemResultadoModal'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
+import BoasVindasModal from './BoasVindasModal'
 import heroImg from '../assets/redfairy-hero.png'
 import logo from '../assets/logo.png'
 
@@ -12,6 +13,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [profile, setProfile] = useState(null)
   const [avaliacoes, setAvaliacoes] = useState([])
   const [tela, setTela] = useState('historico')
+  const [showBoasVindas, setShowBoasVindas] = useState(false)
   const [resultado, setResultado] = useState(null)
   const [copiado, setCopiado] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -131,6 +133,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       return
     }
     setProfile(prof)
+    if (prof && prof.boas_vindas_vista === false) {
+      setShowBoasVindas(true)
+    }
     if (abrirOBA || localStorage.getItem('rf_flag') === 'bariatrica') {
       localStorage.removeItem('rf_flag')
       setTimeout(() => {
@@ -306,6 +311,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   )
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50">
 
       {/* HEADER — mesmo padrão do Calculator */}
@@ -722,5 +728,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         )}
       </div>
     </div>
+
+    {showBoasVindas && profile && (
+      <BoasVindasModal
+        profile={profile}
+        onClose={() => {
+          setShowBoasVindas(false)
+          setProfile(p => ({ ...p, boas_vindas_vista: true }))
+        }}
+      />
+    )}
+    </>
   )
 }
