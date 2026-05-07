@@ -42,7 +42,7 @@ export default function TriagemResultadoModal({
     }
     try {
       const dados = {
-        cpf: inputs.cpf,
+        cpf: (inputs.cpf || '').replace(/\D/g, ''),
         user_id: userId || null,
         modo_medico: modoMedico,
         medico_crm: medicoCRM || null,

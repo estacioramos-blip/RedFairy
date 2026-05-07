@@ -203,6 +203,11 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
           .eq('cpf', cpfLimpo)
           .is('user_id', null)
       }
+      // Vincular triagens orfas (feitas como guest) ao novo user_id
+      await supabase.from('triagens')
+        .update({ user_id: data.user.id })
+        .eq('cpf', cpfLimpo)
+        .is('user_id', null)
     }
     setSucesso('Cadastro realizado! Verifique seu e-mail para confirmar.')
     setLoading(false)
