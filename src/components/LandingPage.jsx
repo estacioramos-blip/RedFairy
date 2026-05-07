@@ -403,7 +403,7 @@ const colorMap = {
   red:    { bg:'rgba(220,38,38,0.1)',  border:'rgba(220,38,38,0.35)', badge:'#DC2626', text:'#FECACA' },
 }
 
-export default function LandingPage({ onModoMedico, onModoPaciente }) {
+export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin }) {
   const [navScrolled, setNavScrolled] = useState(false)
   const [navOpen,     setNavOpen]     = useState(false)
   const [showFilosofia, setShowFilosofia] = useState(false)
@@ -804,6 +804,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente }) {
               </div>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
                 <button className="btn btn-secondary" onClick={onModoPaciente} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>Sou Paciente</button>
+                <button onClick={onIrLogin} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', background:'transparent', border:'none', color:'#6B7280', fontSize:'0.85rem', textDecoration:'underline', cursor:'pointer', padding:0, marginTop:'-0.2rem' }}>Já tenho conta — Entrar</button>
                 <p style={{ fontSize:'0.78rem', color:'#1F2937', lineHeight:1.6, fontWeight:700, margin:0, textAlign:'justify' }}>
                   Com poucos exames e informações de vida, monitore a sua hemoglobina e receba orientações médicas ajustadas ao que você precisa. Viva mais e melhor!
                 </p>

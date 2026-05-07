@@ -143,7 +143,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target
-    setInputs(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+    let v = type === 'checkbox' ? checked : value
+    // Decimais clinicos: aceita virgula, salva com ponto
+    if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf'].includes(name) && typeof v === 'string') {
+      v = v.replace(',', '.')
+    }
+    setInputs(prev => ({ ...prev, [name]: v }))
   }
 
   async function handleAvaliar() {

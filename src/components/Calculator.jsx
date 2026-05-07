@@ -544,7 +544,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
         .from('medicos')
         .select('nome, crm, celular')
         .eq('crm', medicoCRM)
-        .single();
+        .maybeSingle();
       if (data) setMedicoDados(data);
     }
     carregarMedico();
@@ -657,7 +657,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
       if (erros.idade) setErros(prev => ({ ...prev, idade: null }));
       return;
     }
-    const novoValor = name === 'cpf' ? formatarCPF(value) : (type === 'checkbox' ? checked : value);
+    // Decimais clinicos: aceita virgula, salva com ponto
+    let valorAjustado = (type === 'checkbox') ? checked : value;
+    if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf'].includes(name) && typeof valorAjustado === 'string') {
+      valorAjustado = valorAjustado.replace(',', '.');
+    }
+    const novoValor = name === 'cpf' ? formatarCPF(valorAjustado) : valorAjustado;
     setInputs(prev => ({ ...prev, [name]: novoValor }));
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
     if (name === 'bariatrica') {
@@ -888,7 +893,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
         .from('medicos')
         .select('endereco, pix_chave')
         .eq('crm', medicoCRM)
-        .single()
+        .maybeSingle()
       if (!medDados?.endereco || !medDados?.pix_chave) {
         if ((totalAvals || 0) === 0) {
           // Primeira avaliação — modal completo
@@ -986,6 +991,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
             setTriagemResultado(null);
             setShowTriagem(false);
             if (onVoltar) onVoltar();
+          }}
+          onAprofundar={() => {
+            // Medico clicou 'Aprofundar agora': fecha popup, dados ficam no form
+            setTriagemResultado(null);
+            setShowTriagem(false);
           }}
         />
       )}

@@ -86,6 +86,16 @@ export default function App() {
     )
   }
 
+  if (modo === 'login') {
+    if (session) { setModo('paciente'); return null }
+    return <AuthPage
+      onLogin={() => setModo('paciente')}
+      onVoltar={() => setModo('home')}
+      onDemoEntrar={(perfil) => { setDemoPacientePerfil(perfil); setModo('paciente') }}
+      etapaInicial="cpf"
+    />
+  }
+
   if (modo === 'paciente') {
     if (demoPacientePerfil) return <PatientDashboard session={null} demoPerfil={demoPacientePerfil} onVoltar={() => { setModo('home'); setDemoPacientePerfil(null) }} />
     if (!session) return <AuthPage
@@ -108,6 +118,7 @@ if (modo === 'home') {
     <LandingPage
       onModoMedico={(flag) => { if (flag) localStorage.setItem('rf_flag', flag); handleDemoMedico(); }}
       onModoPaciente={() => setModo('triagem-direta')}
+      onIrLogin={() => setModo('login')}
     />
   )
 }

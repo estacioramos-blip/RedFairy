@@ -16,6 +16,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     cpf: '',
     sexo: '',
     gestante: false,
+    bariatrica: false,
     semanas_gestacao: '',
     dataNascimento: '',
     hemoglobina: '',
@@ -40,6 +41,10 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       if (digits.length <= 2) v = digits
       else if (digits.length <= 4) v = digits.slice(0,2) + '/' + digits.slice(2)
       else v = digits.slice(0,2) + '/' + digits.slice(2,4) + '/' + digits.slice(4)
+    }
+    // Decimais clinicos: aceita virgula, salva com ponto
+    if (['hemoglobina', 'vcm', 'rdw'].includes(name) && typeof v === 'string') {
+      v = v.replace(',', '.')
     }
     setInputs(prev => ({ ...prev, [name]: v }))
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }))
@@ -233,6 +238,31 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               )}
             </div>
           )}
+
+          {/* Bariatrica/o (sempre visivel) */}
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                name="bariatrica"
+                checked={inputs.bariatrica}
+                onChange={handleChange}
+                className="mt-1"
+              />
+              <div>
+                <p className="text-sm font-medium text-amber-700">
+                  {modoMedico
+                    ? (inputs.sexo === 'F' ? 'Paciente bariátrica' : inputs.sexo === 'M' ? 'Paciente bariátrico' : 'Paciente bariátrico/a')
+                    : (inputs.sexo === 'F' ? 'Sou bariátrica' : inputs.sexo === 'M' ? 'Sou bariátrico' : 'Sou paciente bariátrico/a')}
+                </p>
+                <p className="text-xs text-amber-600">
+                  {modoMedico
+                    ? 'Marque se o(a) paciente fez cirurgia bariátrica'
+                    : 'Marque se você fez cirurgia bariátrica (by-pass / gastrectomia)'}
+                </p>
+              </div>
+            </label>
+          </div>
 
           {/* Hb, VCM, RDW (bordas vermelhas - sao de triagem) */}
           <div>
