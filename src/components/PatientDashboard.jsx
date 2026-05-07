@@ -18,6 +18,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showSobre, setShowSobre] = useState(false)
   const [showOBAModal, setShowOBAModal] = useState(false)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
+  const [fraseGestacaoConcluida, setFraseGestacaoConcluida] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
 
   const [inputs, setInputs] = useState({
@@ -64,17 +65,41 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     return () => window.removeEventListener('keydown', handleDemoKey)
   }, [])
 
-  // Pre-preenche sexo, idade e bariatrica em inputs sempre que o profile mudar.
-  // Idade, sexo e bariatrica vem SEMPRE do profile (paciente nao edita).
-  // Gestacao NAO eh pre-preenchida: paciente digita do zero a cada visita.
+  // Pre-preenche sexo, idade, bariatrica e gestacao em inputs sempre que profile mudar.
+  // Idade, sexo, bariatrica vem SEMPRE do profile (paciente nao edita).
+  // Gestacao: se profile registrou gestacao na triagem, calcula as semanas atuais
+  //   a partir de profile.semanas_gestacao_triagem + profile.data_triagem_gestacao.
+  //   Se <= 40 semanas, pre-preenche. Se > 40, mostra frase pos-parto uma vez.
   useEffect(() => {
     if (!profile) return
     const idadeProfile = profile.data_nascimento ? calcularIdade(profile.data_nascimento) : ''
+
+    let gestanteAtual = false
+    let semanasAtuaisStr = ''
+    if (profile.gestante && profile.semanas_gestacao_triagem && profile.data_triagem_gestacao) {
+      const dataTriagem = new Date(profile.data_triagem_gestacao)
+      const hoje = new Date()
+      const diasDecorridos = (hoje - dataTriagem) / (1000 * 60 * 60 * 24)
+      const semanasAtuais = Number(profile.semanas_gestacao_triagem) + (diasDecorridos / 7)
+      if (semanasAtuais > 40) {
+        const flagKey = `frase_posparto_${profile.id}`
+        if (!localStorage.getItem(flagKey)) {
+          setFraseGestacaoConcluida(true)
+          localStorage.setItem(flagKey, 'shown')
+        }
+      } else {
+        gestanteAtual = true
+        semanasAtuaisStr = String(Math.floor(semanasAtuais))
+      }
+    }
+
     setInputs(prev => ({
       ...prev,
       sexo: profile.sexo || prev.sexo || '',
       idade: idadeProfile ? String(idadeProfile) : (prev.idade || ''),
       bariatrica: !!profile.bariatrica,
+      gestante: gestanteAtual,
+      semanas_gestacao: semanasAtuaisStr,
     }))
   }, [profile])
 
@@ -289,6 +314,28 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </div>
         </div>
       </header>
+
+      {/* Frase pos-parto: mostra UMA vez quando profile indica gestacao concluida (>40 semanas calculadas) */}
+      {fraseGestacaoConcluida && (
+        <div className="max-w-3xl mx-auto px-4 mt-4">
+          <div className="rounded-xl border border-pink-200 bg-pink-50 p-4 flex items-start gap-3">
+            <div className="text-2xl">🌸</div>
+            <div className="flex-1">
+              <p className="text-sm text-pink-900 leading-relaxed">
+                Espero que tudo tenha corrido bem com a <strong>gestação, o parto e o bebê</strong>. Vamos ver como está a sua Hemoglobina?
+              </p>
+            </div>
+            <button
+              onClick={() => setFraseGestacaoConcluida(false)}
+              className="text-pink-400 hover:text-pink-600 text-lg leading-none"
+              aria-label="Fechar"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {showOBAModal && profile && (
         <OBAModal
           cpf={profile.cpf}
