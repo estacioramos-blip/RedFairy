@@ -222,9 +222,9 @@ export default function TriagemResultadoModal({
                     <strong> FERRITINA</strong> e a <strong>SATURAÇÃO DA TRANSFERRINA</strong>.
                   </p>
                   <p className="text-sm text-blue-900 leading-relaxed">
-                    Se estiverem normais e o paciente não fez nenhum tratamento recente,
-                    <strong> PARABÉNS!</strong> Vida que segue, muito bem para {inputs?.sexo === 'F' ? 'ela' : 'ele'}.
-                    Caso contrário, podemos cuidar {inputs?.sexo === 'F' ? 'dela' : 'dele'}.
+                    Se {inputs?.sexo === 'F' ? 'ela' : 'ele'} não fez nenhum tratamento recente,
+                    <strong> PARABÉNS!</strong> Vida que segue muito bem para {inputs?.sexo === 'F' ? 'ela' : 'ele'}.
+                    Caso contrário, se {inputs?.sexo === 'F' ? 'ela' : 'ele'} fez ou está em tratamento, podemos cuidar {inputs?.sexo === 'F' ? 'dela' : 'dele'}.
                   </p>
                 </div>
               ) : (
@@ -239,9 +239,9 @@ export default function TriagemResultadoModal({
                     <strong> FERRITINA</strong> e a <strong>SATURAÇÃO DA TRANSFERRINA</strong>.
                   </p>
                   <p className="text-sm text-blue-900 leading-relaxed">
-                    Se estiverem normais e você não fez nenhum tratamento recente,
-                    <strong> PARABÉNS!</strong> Vida que segue, muito bem para você.
-                    Caso contrário, cuidaremos de você.
+                    Se você não fez nenhum tratamento recente,
+                    <strong> PARABÉNS!</strong> Vida que segue muito bem para você.
+                    Caso contrário, se você fez ou está em tratamento, cuidaremos de você.
                   </p>
                 </div>
               )

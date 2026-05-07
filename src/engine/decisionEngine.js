@@ -468,7 +468,7 @@ export function triagemEritron(inputs) {
       triagem: true,
       label: 'ERITRON NORMAL',
       color: 'green',
-      diagnostico: 'Hemograma dentro dos limites normais para idade e sexo. Hemoglobina, VCM e RDW estão na faixa esperada.',
+      diagnostico: 'Eritrograma dentro dos limites normais para idade e sexo. Hemoglobina, VCM e RDW estão na faixa esperada.',
       recomendacao: 'Manter estilo de vida saudável e controle anual rotineiro.',
       recomendacaoAge1: 'Manter estilo de vida saudável e controle anual rotineiro.',
       recomendacaoAge2: 'Manter estilo de vida saudável e controle anual rotineiro.',
