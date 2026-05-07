@@ -795,9 +795,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem', marginBottom:'0.5rem', width:'100%', maxWidth:700 }}>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
                 <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>
-                  <span>Sou Médico</span>
+                  <span>Sou Médico Afiliado</span>
                   <span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span>
                 </button>
+                <button onClick={onModoMedico} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', background:'transparent', border:'none', color:'#6B7280', fontSize:'0.85rem', textDecoration:'underline', cursor:'pointer', padding:0, marginTop:'-0.2rem' }}>Ainda não sou afiliado</button>
                 <p style={{ fontSize:'0.78rem', color:'#7B1E1E', lineHeight:1.6, fontWeight:700, margin:0, textAlign:'justify' }}>
                   Avalie o eritron e o metabolismo do ferro do seu paciente com precisão clínica com toques no seu celular, e o insira em um projeto de qualidade de vida.
                 </p>
