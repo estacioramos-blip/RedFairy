@@ -794,18 +794,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem', marginBottom:'0.5rem', width:'100%', maxWidth:700 }}>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
-                <button className="btn btn-primary" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.05rem", height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>
-                  <span>Sou Médico Afiliado</span>
-                  <span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span>
-                </button>
-                <button onClick={onModoMedico} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', background:'transparent', border:'none', color:'#6B7280', fontSize:'0.85rem', textDecoration:'underline', cursor:'pointer', padding:0, marginTop:'-0.2rem' }}>Ainda não sou afiliado</button>
+                <button className="btn btn-primary" onClick={onModoMedico} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>Sou Médico</button>
+                <button className="btn btn-primary" onClick={onModoMedico} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', fontSize:"0.7rem", fontWeight:700, letterSpacing:"1.5px" }}>MÉDICO AFILIADO</button>
                 <p style={{ fontSize:'0.78rem', color:'#7B1E1E', lineHeight:1.6, fontWeight:700, margin:0, textAlign:'justify' }}>
                   Avalie o eritron e o metabolismo do ferro do seu paciente com precisão clínica com toques no seu celular, e o insira em um projeto de qualidade de vida.
                 </p>
               </div>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
                 <button className="btn btn-secondary" onClick={onModoPaciente} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>Sou Paciente</button>
-                <button onClick={onIrLogin} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', background:'transparent', border:'none', color:'#6B7280', fontSize:'0.85rem', textDecoration:'underline', cursor:'pointer', padding:0, marginTop:'-0.2rem' }}>Já tenho conta — Entrar</button>
+                <button className="btn btn-secondary" onClick={onIrLogin} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', fontSize:"0.7rem", fontWeight:700, letterSpacing:"1.5px" }}>PACIENTE CADASTRADO</button>
                 <p style={{ fontSize:'0.78rem', color:'#1F2937', lineHeight:1.6, fontWeight:700, margin:0, textAlign:'justify' }}>
                   Com poucos exames e informações de vida, monitore a sua hemoglobina e receba orientações médicas ajustadas ao que você precisa. Viva mais e melhor!
                 </p>
@@ -821,7 +818,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 Ao beneficiar pacientes, você também passa a auferir benefícios.
               </p>
               <p style={{ color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', margin:'0.2rem 0 0.3rem' }}>
-                VÁLIDO PARA PROFISSIONAIS DE SAÚDE COM REGISTRO EM CONSELHO
+                VÁLIDO PARA MÉDICOS COM REGISTRO NO CRM
               </p>
             </div>
 
@@ -964,7 +961,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              A iniciativa oferece <strong>avaliações iniciais gratuitas</strong>, acionadas por profissionais de saúde com o apoio de um algoritmo médico avançado, seguidas, quando necessário, de acompanhamento acessível, com suporte de inteligência artificial e assistência médica por telemedicina.
+              A iniciativa oferece <strong>avaliações iniciais gratuitas</strong>, acionadas por médicos com o apoio de um algoritmo médico avançado, seguidas, quando necessário, de acompanhamento acessível, com suporte de inteligência artificial e assistência médica por telemedicina.
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
@@ -1024,7 +1021,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              Seu objetivo é estimular e reconhecer <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>médicos e outros profissionais de saúde</strong> que contribuam para expandir seu alcance, seja por meio de avaliações, seja por ações, ideias e iniciativas de difusão. Ao realizar a primeira avaliação de um paciente, o médico ou profissional de saúde já pode optar por integrar o Programa.
+              Seu objetivo é estimular e reconhecer <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>médicos</strong> que contribuam para expandir seu alcance, seja por meio de avaliações, seja por ações, ideias e iniciativas de difusão. Ao realizar a primeira avaliação de um paciente, o médico já pode optar por integrar o Programa.
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
@@ -1176,7 +1173,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
           </div>
           <div className="como-tabs-wrap reveal">
             <div className="como-tabs">
-              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}><span>Para Médicos</span><span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.1rem" }}>PROFISSIONAIS DE SAÚDE</span></button>
+              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}><span>Para Médicos</span><span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.1rem" }}>MÉDICOS</span></button>
               <button className={`como-tab${activeTab === 'paciente' ? ' active' : ''}`} onClick={() => setActiveTab('paciente')}>Para Pacientes</button>
             </div>
           </div>
@@ -1184,7 +1181,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
             {activeTab === 'medico' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step"><div className="flow-num">1</div><h4>Acesse o Modo Médico<br/><span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", color:"var(--cherry)", textTransform:"uppercase" }}>Profissionais de Saúde</span></h4><p>Gratuito, sem cadastro. Use o seu CRM para acesso imediato à calculadora clínica.</p></div>
+                  <div className="flow-step"><div className="flow-num">1</div><h4>Acesse o Modo Médico<br/><span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", color:"var(--cherry)", textTransform:"uppercase" }}>Médicos</span></h4><p>Gratuito, sem cadastro. Use o seu CRM para acesso imediato à calculadora clínica.</p></div>
                   <div className="flow-step"><div className="flow-num">2</div><h4>Insira o CPF do paciente</h4><p>Única informação de identificação. Vincula os dados ao paciente automaticamente.</p></div>
                   <div className="flow-step"><div className="flow-num">3</div><h4>Preencha os parâmetros</h4><p>Apenas cinco parâmetros laboratoriais e algumas caixinhas com dados clínicos.</p></div>
                   <div className="flow-step"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>Diagnóstico, orientações terapêuticas e dosagens em segundos.</p></div>
@@ -1459,7 +1456,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
           <div className="cta-cards reveal">
             <div className="cta-c cta-doc">
               <div className="ci">🩺</div>
-              <h3>Modo Médico<br/><span style={{ fontSize:"0.65rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span></h3>
+              <h3>Modo Médico<br/><span style={{ fontSize:"0.65rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>MÉDICOS</span></h3>
               <p>Avaliação rápida sem cadastro. Insira o CPF e os dados do paciente e obtenha diagnóstico com orientações terapêuticas.</p>
               <ul>
                 <li>Acesso 100% gratuito</li>
@@ -1467,7 +1464,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 <li>Orientações terapêuticas com dosagens</li>
                 <li>Ganhe 10 USDC por paciente cadastrado</li>
               </ul>
-              <button className="btn-cta-doc" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>Acessar como Médico<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>PROFISSIONAIS DE SAÚDE</span></button>
+              <button className="btn-cta-doc" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>Acessar como Médico<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>MÉDICOS</span></button>
             </div>
             <div className="cta-c cta-pat">
               <div className="ci">❤️</div>
@@ -1493,7 +1490,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
           {' · '}Cuidar do Seu Eritron{' · '}by <a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a> © 2026{' · '}E.F. Ramos, M.D. CRM 6302 BA{' · '}<a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a>
         </p>
         <p style={{ fontSize:'0.62rem', color:'var(--text-light)', margin:0 }}>
-          <span style={{ color:'var(--cherry)', fontWeight:700 }}>*</span>{' '}Válido para todos os profissionais de saúde com registro profissional em Conselho Regional/Federal.
+          <span style={{ color:'var(--cherry)', fontWeight:700 }}>*</span>{' '}Válido para todos os médicos com registro no CRM.
         </p>
       </footer>
 

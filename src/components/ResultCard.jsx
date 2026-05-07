@@ -1042,10 +1042,12 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
         <div className="p-6 space-y-5">
 
-          <div className={`rounded-xl border px-4 py-3 text-sm ${fraseDataColor[resultado.fraseData.tipo]}`}>
-            <span className="font-semibold">📅 {resultado.diasDesdeColeta} dia(s) desde a coleta</span>
-            <p className="mt-1">{resultado.fraseData.texto}</p>
-          </div>
+          {resultado.fraseData && (
+            <div className={`rounded-xl border px-4 py-3 text-sm ${fraseDataColor[resultado.fraseData.tipo]}`}>
+              <span className="font-semibold">📅 {resultado.diasDesdeColeta} dia(s) desde a coleta</span>
+              <p className="mt-1">{resultado.fraseData.texto}</p>
+            </div>
+          )}
 
           <div>
             <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>🏷️ Diagnóstico</h4>

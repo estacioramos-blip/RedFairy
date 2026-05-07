@@ -132,8 +132,9 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
     setErro('')
     const cpfLimpo = cpf.replace(/\D/g, '')
 
-    const { data: perfil } = await supabase
-      .from('profiles').select('id').eq('cpf', cpfLimpo).single()
+    // Usa RPC publica lookup_cpf_triagem (sem RLS) para checar se ja existe profile
+    const { data: lookupData } = await supabase.rpc('lookup_cpf_triagem', { cpf_input: cpfLimpo })
+    const perfil = lookupData?.find?.(r => r.origem === 'profile') || null
 
     const { count } = await supabase
       .from('avaliacoes')
