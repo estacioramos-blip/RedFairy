@@ -7,6 +7,7 @@ import TriagemModal from './TriagemModal';
 import TriagemResultadoModal from './TriagemResultadoModal';
 import ResultCard from './ResultCard';
 import heroImg from '../assets/redfairy-hero.png';
+import fairyChatImg from '../assets/fairy-chat.png';
 import logo from '../assets/logo.png';
 
 const IconPaciente = () => (
@@ -463,20 +464,16 @@ export default function Calculator({ onVoltar, modoDemo }) {
   }
 
   if (cadastrado === null) return null
+  // Medico nao cadastrado: deixa avaliar livre. Se showAuthMedicoOverlay=true (apos convite),
+  // o AuthMedico sera renderizado como overlay (no fim do JSX, junto com outros modais).
+  // OBS: o bloqueio antigo `if (!cadastrado) return <AuthMedico>` foi removido para
+  // permitir que o medico avalie SEM cadastro previo. O cadastro e oferecido apos a avaliacao.
 
-  if (!cadastrado) {
-    return <AuthMedico sessaoExpirada={sessaoExpirada} onVoltar={onVoltar} onConcluir={(nome, crm) => {
-      setMedicoNome(nome)
-      setMedicoCRM(crm)
-      setCadastrado(true)
-    }} />
-  }
-
-  return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} onLogout={handleLogout} preFlag={preFlag} preDemoDados={preDemoDados} />
+  return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} setMedicoNome={setMedicoNome} setMedicoCRM={setMedicoCRM} cadastrado={cadastrado} setCadastrado={setCadastrado} onLogout={handleLogout} preFlag={preFlag} preDemoDados={preDemoDados} />
 }
 
 // ─── Formulário da calculadora ───────────────────────────────────────────────
-function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, preDemoDados }) {
+function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMedicoCRM, cadastrado, setCadastrado, onLogout, preFlag, preDemoDados }) {
   const _demo = (() => { try { const d = localStorage.getItem('rf_demo_dados'); if (d) { localStorage.removeItem('rf_demo_dados'); return JSON.parse(d) } } catch(e) {} return null })()
   const _hoje = new Date().toISOString().split('T')[0]
 
@@ -504,6 +501,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
   const [afiliadoPix, setAfiliadoPix] = useState('');
   const [afiliadoSalvando, setAfiliadoSalvando] = useState(false);
   const [afiliadoSalvo, setAfiliadoSalvo] = useState(false);
+  // Fluxo convite afiliado pos-primeira-avaliacao
+  const [showConviteAfiliado, setShowConviteAfiliado] = useState(false);
+  const [conviteRecusado, setConviteRecusado] = useState(false);
+  const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(false);
+  const [showFelicitacoes, setShowFelicitacoes] = useState(false);
+  const [showBeneficios, setShowBeneficios] = useState(false);
 
   useEffect(() => {
     if (preFlag === 'bariatrica') {
@@ -765,7 +768,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
       .update({ endereco: afiliadoEndereco.trim(), pix_chave: afiliadoPix.trim() })
       .eq('crm', medicoCRM);
     setAfiliadoSalvando(false);
-    setAfiliadoSalvo(true);
+    setAfiliadoSalvo(true); setTimeout(() => { setShowAfiliados(false); setShowFelicitacoes(true); }, 1500);
     setTimeout(() => setShowAfiliados(false), 1500);
   }
 
@@ -984,13 +987,22 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
           onVoltarInicio={() => {
             setTriagemResultado(null);
             setShowTriagem(false);
-            if (onVoltar) onVoltar();
+            // Se medico ainda nao cadastrado, abre convite em vez de voltar a home
+            if (!cadastrado) {
+              setShowConviteAfiliado(true);
+            } else {
+              if (onVoltar) onVoltar();
+            }
           }}
           onCadastrar={() => {
-            // Modo Medico nao tem fluxo de cadastro - so volta ao inicio
             setTriagemResultado(null);
             setShowTriagem(false);
-            if (onVoltar) onVoltar();
+            // Se medico ainda nao cadastrado, abre convite em vez de voltar a home
+            if (!cadastrado) {
+              setShowConviteAfiliado(true);
+            } else {
+              if (onVoltar) onVoltar();
+            }
           }}
           onAprofundar={() => {
             // Medico clicou 'Aprofundar agora': fecha popup, dados ficam no form
@@ -1473,6 +1485,139 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, onLogout, preFlag, pr
             />
           </div>
         )}
+
+      {/* CONVITE AFILIADO - imagem fairy-chat + texto persuasivo */}
+      {showConviteAfiliado && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            {/* Imagem com hover (gradiente preto na parte inferior) */}
+            <div style={{ position: 'relative', width: '100%', height: '440px', overflow: 'hidden' }}>
+              <img src={fairyChatImg} alt="Programa de Afiliados RedFairy"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+              {/* Hover gradiente preto translucido na parte inferior */}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.5) 40%, transparent)', padding: '24px 24px 18px' }}>
+                {!conviteRecusado ? (
+                  <>
+                    <p style={{ color: '#ffffff', fontSize: '22px', fontWeight: 800, lineHeight: '1.25', margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+                      Participe do nosso <span style={{ color: '#ef4444' }}>PROGRAMA DE AFILIADOS</span>, é rápido.
+                    </p>
+                    <p style={{ color: '#fca5a5', fontSize: '14px', fontWeight: 600, lineHeight: '1.4', margin: '10px 0 0', textAlign: 'center' }}>
+                      Um cadastro simples e você saberá porque é bom estar conosco.
+                    </p>
+                  </>
+                ) : (
+                  <p style={{ color: '#ef4444', fontSize: '20px', fontWeight: 700, lineHeight: '1.3', margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+                    Sentiremos a sua falta, mas estaremos sempre aqui.
+                  </p>
+                )}
+              </div>
+            </div>
+            {/* Botao + checkbox (apenas se nao recusado) */}
+            {!conviteRecusado && (
+              <div className="p-5 space-y-3">
+                <button
+                  onClick={() => {
+                    setShowConviteAfiliado(false);
+                    setShowAuthMedicoOverlay(true);
+                  }}
+                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">
+                  Cadastrar agora
+                </button>
+                <label className="flex items-center justify-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    onChange={() => {
+                      setConviteRecusado(true);
+                      setTimeout(() => {
+                        setShowConviteAfiliado(false);
+                        setConviteRecusado(false);
+                        if (onVoltar) onVoltar();
+                      }, 3000);
+                    }}
+                    className="w-3 h-3 cursor-pointer"
+                    style={{ accentColor: '#9ca3af' }}
+                  />
+                  <span style={{ color: '#9ca3af', fontSize: '11px', letterSpacing: '0.5px' }}>AGORA NÃO, OBRIGADO</span>
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* AUTH MEDICO OVERLAY - aparece apos convite aceito */}
+      {showAuthMedicoOverlay && (
+        <div className="fixed inset-0 z-50" style={{ background: '#111827' }}>
+          <AuthMedico
+            sessaoExpirada={false}
+            onVoltar={() => {
+              setShowAuthMedicoOverlay(false);
+              if (onVoltar) onVoltar();
+            }}
+            onConcluir={(nome, crm) => {
+              setMedicoNome(nome);
+              setMedicoCRM(crm);
+              setCadastrado(true);
+              setShowAuthMedicoOverlay(false);
+              // Apos cadastro, abre o modal de endereco/pix existente
+              setShowAfiliados(true);
+            }}
+          />
+        </div>
+      )}
+
+      {/* FELICITACOES - apos cadastro de endereco/pix */}
+      {showFelicitacoes && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="bg-red-700 px-6 py-5 text-center">
+              <p className="text-white text-xs uppercase tracking-widest opacity-80 mb-1">RedFairy</p>
+              <h2 className="text-white text-xl font-bold">Estamos felizes de ter voce no PROGRAMA</h2>
+            </div>
+            <div className="p-6 space-y-4 text-center">
+              <button
+                onClick={() => setShowBeneficios(true)}
+                className="text-red-700 hover:text-red-800 font-semibold text-sm underline">
+                Conheca os beneficios
+              </button>
+              <button
+                onClick={() => {
+                  setShowFelicitacoes(false);
+                  if (onVoltar) onVoltar();
+                }}
+                className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">
+                Ir para o inicio
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BENEFICIOS - placeholder */}
+      {showBeneficios && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="bg-red-700 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-white text-lg font-bold">Beneficios do Programa</h2>
+              <button onClick={() => setShowBeneficios(false)} className="text-red-200 hover:text-white text-xl font-bold">x</button>
+            </div>
+            <div className="p-6 text-center space-y-4">
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Em breve: lista detalhada dos beneficios do Programa de Afiliados Patrocinado RedFairy.
+              </p>
+              <p className="text-gray-400 text-xs">
+                Conteudo em desenvolvimento.
+              </p>
+              <button
+                onClick={() => setShowBeneficios(false)}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition-colors">
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       </main>
     </div>
     </>
@@ -1491,6 +1636,8 @@ function LabInput({ label, unit, name, reference, value, onChange, error, hint, 
       {hint && !disabled && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
       {aberrante && <p className="text-xs font-bold text-yellow-600 mt-0.5">⚠ VALOR ABERRANTE — CONFIRME</p>}
       {error && <p className="text-red-500 text-xs">{error}</p>}
+
+
     </div>
   );
 }
