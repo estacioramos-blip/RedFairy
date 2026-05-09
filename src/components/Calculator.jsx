@@ -8,6 +8,7 @@ import TriagemResultadoModal from './TriagemResultadoModal';
 import ResultCard from './ResultCard';
 import heroImg from '../assets/redfairy-hero.png';
 import fairyChatImg from '../assets/fairy-chat.png';
+import welcomeImg from '../assets/welcome.png';
 import logo from '../assets/logo.png';
 
 const IconPaciente = () => (
@@ -80,7 +81,7 @@ function TermosModal({ onFechar }) {
 
 // ─── Tela de login/cadastro do médico ────────────────────────────────────────
 function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
-  const [modo, setModo] = useState('login') // 'login' | 'cadastro'
+  const [modo, setModo] = useState('hub') // 'hub' | 'login' | 'cadastro'
 
   // Login
   const [loginConselho, setLoginConselho] = useState('')
@@ -100,6 +101,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
   const [cadSucesso, setCadSucesso] = useState(false)
   const [aceitoTC, setAceitoTC] = useState(false)
   const [showTC, setShowTC] = useState(false)
+  const [showSenha, setShowSenha] = useState(false)
+  const [showLoginSenha, setShowLoginSenha] = useState(false)
+  const [showEsqueciSenha, setShowEsqueciSenha] = useState(false)
 
   function formatarCelular(valor) {
     const digits = valor.replace(/\D/g, '').slice(0, 11)
@@ -139,7 +143,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
   async function handleCadastro() {
     setCadErro('')
     if (!aceitoTC) { setCadErro('Você deve aceitar os Termos e Condições para criar acesso.'); return }
-    const conselhoLimpo = (tipoConselho + '-' + conselho.trim()).toUpperCase()
+    const conselhoLimpo = conselho.trim().toUpperCase()
     const celularDigits = celular.replace(/\D/g, '')
 
     if (!nome.trim() || nome.trim().length < 5) { setCadErro('Informe seu nome completo.'); return }
@@ -191,15 +195,19 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center space-y-5">
-          <div className="text-5xl">🧝</div>
-          <h2 className="text-xl font-bold text-red-700">Bem-vindo ao RedFairy!</h2>
-          <p className="text-gray-600 text-sm leading-relaxed">
-            Cadastro realizado com sucesso. A partir de agora, faça login com seu número de conselho e senha.
+          <div className="text-5xl">🎉</div>
+          <h2 className="text-red-700 text-xl font-bold">Cadastro concluído</h2>
+          <p className="text-gray-700 text-sm leading-relaxed">
+            Você agora deve entrar como <strong>MÉDICO AFILIADO</strong>.
           </p>
           <button
-            onClick={() => onConcluir(nome.trim(), conselho.trim().toUpperCase())}
-            className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
-            Vamos lá! →
+            onClick={() => {
+              setCadSucesso(false);
+              setModo('login');
+              setLoginConselho(conselho.trim().toUpperCase());
+            }}
+            className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">
+            Entrar →
           </button>
         </div>
       </div>
@@ -236,47 +244,70 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
           </div>
         )}
 
-        {/* Abas login / cadastro */}
-        <div className="flex rounded-xl overflow-hidden border border-gray-200">
-          <button
-            onClick={() => { setModo('login'); setLoginErro(''); setCadErro('') }}
-            className={`flex-1 py-2 text-sm font-bold transition-colors ${modo === 'login' ? 'bg-red-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
-            Entrar
-          </button>
-          <button
-            onClick={() => { setModo('cadastro'); setLoginErro(''); setCadErro('') }}
-            className={`flex-1 py-2 text-sm font-bold transition-colors ${modo === 'cadastro' ? 'bg-red-700 text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>
-            Primeiro acesso
-          </button>
-        </div>
+        {/* HUB - 2 botoes grandes */}
+        {modo === 'hub' && (
+          <div className="space-y-3">
+            <p className="text-center text-sm text-gray-500 mb-4">
+              Como deseja prosseguir?
+            </p>
+            <button
+              onClick={() => { setModo('cadastro'); setLoginErro(''); setCadErro('') }}
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl text-base transition-colors flex flex-col items-center">
+              <span>Primeiro Acesso</span>
+              <span style={{ fontSize: '11px', fontWeight: 600, opacity: 0.85, marginTop: '2px' }}>Quero me cadastrar como afiliado</span>
+            </button>
+            <button
+              onClick={() => { setModo('login'); setLoginErro(''); setCadErro('') }}
+              className="w-full bg-white border-2 border-red-800 text-red-800 hover:bg-red-50 font-bold py-4 rounded-xl text-base transition-colors flex flex-col items-center">
+              <span>Entrar →</span>
+              <span style={{ fontSize: '11px', fontWeight: 600, opacity: 0.85, marginTop: '2px' }}>Já sou afiliado</span>
+            </button>
+          </div>
+        )}
 
         {/* LOGIN */}
         {modo === 'login' && (
           <div className="space-y-3">
+            <button
+              onClick={() => { setModo('hub'); setLoginErro(''); setCadErro('') }}
+              className="text-gray-400 hover:text-gray-600 text-xs font-medium">
+              ← Voltar
+            </button>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Número do Conselho/UF</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Número do CRM/UF</label>
               <input type="text" value={loginConselho}
                 onChange={e => setLoginConselho(formatarConselho(e.target.value))}
-                placeholder="Ex: 6302/BA ou COREN-12345/SP"
+                placeholder="Ex: 6302/BA"
                 className={inputClass} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
-              <input type="password" value={loginSenha}
-                onChange={e => setLoginSenha(e.target.value)}
-                placeholder="Sua senha"
-                className={inputClass}
-                onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+              <div style={{ position: 'relative' }}>
+                <input type={showLoginSenha ? 'text' : 'password'} value={loginSenha}
+                  onChange={e => setLoginSenha(e.target.value)}
+                  placeholder="Sua senha"
+                  className={inputClass}
+                  style={{ paddingRight: '40px' }}
+                  onKeyDown={e => e.key === 'Enter' && handleLogin()} />
+                <button type="button" onClick={() => setShowLoginSenha(!showLoginSenha)}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9ca3af' }}
+                  aria-label={showLoginSenha ? 'Ocultar senha' : 'Mostrar senha'}>
+                  {showLoginSenha ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  )}
+                </button>
+              </div>
             </div>
             {loginErro && <p className="text-red-500 text-sm">{loginErro}</p>}
             <button onClick={handleLogin} disabled={loginLoading}
-              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+              className="w-full bg-white border-2 border-red-800 text-red-800 hover:bg-red-50 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
               {loginLoading ? 'Verificando...' : 'Entrar →'}
             </button>
-            <p className="text-center text-xs text-gray-400">
-              Primeiro acesso?{' '}
-              <button onClick={() => setModo('cadastro')} className="text-red-600 font-semibold hover:underline">
-                Cadastre-se
+            <p className="text-center text-xs">
+              <button type="button" onClick={() => setShowEsqueciSenha(true)} className="text-gray-400 hover:text-red-700 hover:underline">
+                Esqueci a senha
               </button>
             </p>
           </div>
@@ -285,6 +316,11 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
         {/* CADASTRO */}
         {modo === 'cadastro' && (
           <div className="space-y-3">
+            <button
+              onClick={() => { setModo('hub'); setLoginErro(''); setCadErro('') }}
+              className="text-gray-400 hover:text-gray-600 text-xs font-medium">
+              ← Voltar
+            </button>
             <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-xs text-red-800 leading-relaxed">
               Informe seus dados para criar seu acesso. Depois entre sempre com conselho + senha.
             </div>
@@ -294,25 +330,10 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
                 placeholder="Dr. João da Silva" className={inputClass} autoComplete="off" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Tipo de Conselho</label>
-              <select value={tipoConselho} onChange={e => setTipoConselho(e.target.value)} className={inputClass}>
-                <option value="CRM">CRM — Medicina</option>
-                <option value="COREN">COREN — Enfermagem</option>
-                <option value="CREFITO">CREFITO — Fisioterapia</option>
-                <option value="CRFA">CRFA — Fonoaudiologia</option>
-                <option value="CRN">CRN — Nutrição</option>
-                <option value="CRBio">CRBio — Biologia</option>
-                <option value="CRF">CRF — Farmácia/Bioquímica</option>
-                <option value="CRBM">CRBM — Biomedicina</option>
-                <option value="CRO">CRO — Odontologia</option>
-                <option value="CREF">CREF — Educação Física</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Número do Conselho/UF</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Número do CRM/UF</label>
               <input type="text" value={conselho} onChange={e => setConselho(formatarConselho(e.target.value))}
-                placeholder="Ex: 6302/BA ou COREN-12345/SP" className={inputClass} autoComplete="off" />
-              <p className="text-xs text-gray-400 mt-0.5">Este será seu login permanente</p>
+                placeholder="Ex: 6302/BA" className={inputClass} autoComplete="off" />
+              <p className="text-xs text-red-800 font-medium mt-0.5">Este será seu login permanente</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
@@ -332,9 +353,21 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
-              <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
-                placeholder="Mínimo 6 caracteres" className={inputClass} autoComplete="new-password" />
-              <p className="text-xs text-gray-400 mt-0.5">Será sua senha de acesso ao RedFairy.</p>
+              <div style={{ position: 'relative' }}>
+                <input type={showSenha ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)}
+                  placeholder="Mínimo 6 caracteres" className={inputClass} autoComplete="new-password"
+                  style={{ paddingRight: '40px' }} />
+                <button type="button" onClick={() => setShowSenha(!showSenha)}
+                  style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9ca3af' }}
+                  aria-label={showSenha ? 'Ocultar senha' : 'Mostrar senha'}>
+                  {showSenha ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-red-800 font-medium mt-0.5">Será sua senha de acesso ao RedFairy.</p>
             </div>
             {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
             {showTC && <TermosModal onFechar={() => setShowTC(false)} />}
@@ -353,6 +386,34 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
           </div>
         )}
 
+
+        {/* Modal Esqueci a senha */}
+        {showEsqueciSenha && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowEsqueciSenha(false)}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
+              <div className="bg-red-700 px-5 py-4">
+                <h3 className="text-white font-bold text-base">Recuperação de senha</h3>
+              </div>
+              <div className="p-5 space-y-4 text-center">
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  Fale conosco por WhatsApp para recuperar seu acesso.
+                </p>
+                <a
+                  href="https://wa.me/5571997110804"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm transition-colors no-underline">
+                  Falar pelo WhatsApp
+                </a>
+                <button
+                  onClick={() => setShowEsqueciSenha(false)}
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -501,6 +562,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [afiliadoPix, setAfiliadoPix] = useState('');
   const [afiliadoSalvando, setAfiliadoSalvando] = useState(false);
   const [afiliadoSalvo, setAfiliadoSalvo] = useState(false);
+  const [afiliadoCEP, setAfiliadoCEP] = useState('');
+  const [afiliadoCPF, setAfiliadoCPF] = useState('');
+  const [pixTipo, setPixTipo] = useState(''); // '' | 'telefone' | 'cpf' | 'email' | 'outra'
   // Fluxo convite afiliado pos-primeira-avaliacao
   const [showConviteAfiliado, setShowConviteAfiliado] = useState(false);
   const [conviteRecusado, setConviteRecusado] = useState(false);
@@ -1046,39 +1110,109 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       {showAfiliados && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.75)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="bg-red-700 px-6 py-5">
-              <p className="text-white text-xs uppercase tracking-widest opacity-80 mb-1">Bem-vindo ao</p>
-              <h2 className="text-white text-xl font-bold">Programa de Afiliados Patrocinado</h2>
-              <p className="text-red-200 text-xs mt-1">RedFairy — Versão 1.0</p>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
+            {/* Imagem welcome no topo com header overlay (estilo do convite fairy-chat) */}
+            <div style={{ position: 'relative', width: '100%', height: '220px', overflow: 'hidden', flexShrink: 0 }}>
+              <img src={welcomeImg} alt="Bem-vindo ao Programa de Afiliados"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 50%, transparent)', padding: '24px 24px 16px' }}>
+                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '2px', margin: 0, fontWeight: 600, textShadow: '0 2px 6px rgba(0,0,0,0.6)' }}>Bem-vindo ao</p>
+                <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 800, margin: '2px 0 0', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>Programa de Afiliados Patrocinado</h2>
+              </div>
             </div>
-            <div className="p-6 space-y-4">
+
+            {/* Corpo scrollavel */}
+            <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1 }}>
               <p className="text-gray-700 text-sm leading-relaxed">
-                Para participar do <strong>Programa de Afiliados Patrocinado</strong> de RedFairy e receber os benefícios previstos, precisamos do seu <strong>endereço com CEP</strong> e da sua <strong>chave Pix</strong>.
+                Para concluir a sua inscrição no <strong>Programa de Afiliados Patrocinado</strong> de RedFairy e receber os benefícios previstos, precisamos do seu <strong>endereço com CEP</strong>, <strong>CPF</strong> e da sua <strong>chave Pix</strong>.
               </p>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Endereço completo com CEP</label>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Endereço completo</label>
                   <textarea
                     value={afiliadoEndereco}
                     onChange={e => setAfiliadoEndereco(e.target.value)}
-                    placeholder="Rua, número, bairro, cidade, estado, CEP"
+                    placeholder="Rua, número, bairro, cidade, estado"
                     rows={3}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Chave Pix</label>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CEP</label>
+                  <input
+                    type="text"
+                    value={afiliadoCEP}
+                    onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+                      const fmt = digits.length > 5 ? digits.slice(0,5) + '-' + digits.slice(5) : digits;
+                      setAfiliadoCEP(fmt);
+                    }}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CPF</label>
+                  <input
+                    type="text"
+                    value={afiliadoCPF}
+                    onChange={e => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      let fmt = digits;
+                      if (digits.length > 9) fmt = digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6,9) + '-' + digits.slice(9);
+                      else if (digits.length > 6) fmt = digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6);
+                      else if (digits.length > 3) fmt = digits.slice(0,3) + '.' + digits.slice(3);
+                      setAfiliadoCPF(fmt);
+                      if (pixTipo === 'cpf') setAfiliadoPix(fmt);
+                    }}
+                    placeholder="000.000.000-00"
+                    inputMode="numeric"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Chave Pix</label>
+                  <div className="space-y-1.5 mb-3">
+                    <label className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input type="checkbox" checked={pixTipo === 'telefone'}
+                        onChange={() => {
+                          if (pixTipo === 'telefone') { setPixTipo(''); setAfiliadoPix(''); }
+                          else { setPixTipo('telefone'); setAfiliadoPix(celular || medicoCRM); }
+                        }}
+                        style={{ accentColor: '#7B1E1E' }} />
+                      <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>MEU TELEFONE É O MEU PIX</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input type="checkbox" checked={pixTipo === 'cpf'}
+                        onChange={() => {
+                          if (pixTipo === 'cpf') { setPixTipo(''); setAfiliadoPix(''); }
+                          else { setPixTipo('cpf'); setAfiliadoPix(afiliadoCPF); }
+                        }}
+                        style={{ accentColor: '#7B1E1E' }} />
+                      <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>MEU CPF É O MEU PIX</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-sm">
+                      <input type="checkbox" checked={pixTipo === 'email'}
+                        onChange={() => {
+                          if (pixTipo === 'email') { setPixTipo(''); setAfiliadoPix(''); }
+                          else { setPixTipo('email'); setAfiliadoPix(''); }
+                        }}
+                        style={{ accentColor: '#7B1E1E' }} />
+                      <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>MEU E-MAIL É O MEU PIX</span>
+                    </label>
+                  </div>
+                  <p className="text-xs text-red-800 font-semibold mb-1">DIGITE ou marque um check-box acima</p>
                   <input
                     type="text"
                     value={afiliadoPix}
-                    onChange={e => setAfiliadoPix(e.target.value)}
-                    placeholder="CPF, e-mail, telefone ou chave aleatória"
+                    onChange={e => { setAfiliadoPix(e.target.value); if (pixTipo) setPixTipo('outra'); }}
+                    placeholder="Chave aleatória ou outra chave PIX"
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                   />
                 </div>
               </div>
-              <p className="text-xs text-gray-400 text-center leading-relaxed">
+              <p className="text-xs text-red-800 text-center leading-relaxed font-medium">
                 🔒 Entre seus dados tranquilamente. Você está em um servidor seguro, e não existe a possibilidade de uso inadequado dessas informações.
               </p>
               {afiliadoSalvo ? (
@@ -1086,14 +1220,31 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               ) : (
                 <div className="space-y-2">
                   <button
-                    onClick={salvarAfiliado}
-                    disabled={afiliadoSalvando || !afiliadoEndereco.trim() || !afiliadoPix.trim()}
-                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 text-sm">
-                    {afiliadoSalvando ? 'Salvando...' : 'Salvar e participar →'}
+                    disabled={afiliadoSalvando || !afiliadoEndereco.trim() || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim()}
+                    onClick={async () => {
+                      setAfiliadoSalvando(true);
+                      const { error } = await supabase
+                        .from('medicos')
+                        .update({
+                          endereco: afiliadoEndereco.trim(),
+                          cep: afiliadoCEP.trim(),
+                          cpf: afiliadoCPF.replace(/\D/g, ''),
+                          pix_chave: afiliadoPix.trim(),
+                        })
+                        .eq('crm', medicoCRM);
+                      setAfiliadoSalvando(false);
+                      if (error) {
+                        alert('Erro ao salvar. Tente novamente.');
+                        return;
+                      }
+                      setAfiliadoSalvo(true); setTimeout(() => { setShowAfiliados(false); setShowFelicitacoes(true); }, 1500);
+                    }}
+                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    {afiliadoSalvando ? 'Salvando...' : 'Confirmar dados →'}
                   </button>
                   <button
                     onClick={() => setShowAfiliados(false)}
-                    className="w-full text-gray-400 text-xs hover:text-gray-600 transition-colors py-1">
+                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
                     Preencher depois
                   </button>
                 </div>

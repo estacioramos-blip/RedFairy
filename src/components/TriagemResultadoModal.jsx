@@ -159,7 +159,7 @@ export default function TriagemResultadoModal({
                   onClick={onVoltarInicio}
                   className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors text-sm"
                 >
-                  Voltar ao início
+                  Continuar
                 </button>
               </>
             ) : (
@@ -167,7 +167,7 @@ export default function TriagemResultadoModal({
                 onClick={onVoltarInicio}
                 className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-colors text-sm"
               >
-                ← Voltar ao início
+                ← Continuar
               </button>
             )}
           </div>
