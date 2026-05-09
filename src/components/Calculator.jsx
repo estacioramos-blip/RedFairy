@@ -80,8 +80,8 @@ function TermosModal({ onFechar }) {
 
 
 // ─── Tela de login/cadastro do médico ────────────────────────────────────────
-function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
-  const [modo, setModo] = useState('hub') // 'hub' | 'login' | 'cadastro'
+function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadastro', onVoltarParaConvite }) {
+  const [modo, setModo] = useState(modoInicial) // 'login' | 'cadastro' (hub removido)
 
   // Login
   const [loginConselho, setLoginConselho] = useState('')
@@ -244,32 +244,12 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
           </div>
         )}
 
-        {/* HUB - 2 botoes grandes */}
-        {modo === 'hub' && (
-          <div className="space-y-3">
-            <p className="text-center text-sm text-gray-500 mb-4">
-              Como deseja prosseguir?
-            </p>
-            <button
-              onClick={() => { setModo('cadastro'); setLoginErro(''); setCadErro('') }}
-              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl text-base transition-colors flex flex-col items-center">
-              <span>Primeiro Acesso</span>
-              <span style={{ fontSize: '11px', fontWeight: 600, opacity: 0.85, marginTop: '2px' }}>Quero me cadastrar como afiliado</span>
-            </button>
-            <button
-              onClick={() => { setModo('login'); setLoginErro(''); setCadErro('') }}
-              className="w-full bg-white border-2 border-red-800 text-red-800 hover:bg-red-50 font-bold py-4 rounded-xl text-base transition-colors flex flex-col items-center">
-              <span>Entrar →</span>
-              <span style={{ fontSize: '11px', fontWeight: 600, opacity: 0.85, marginTop: '2px' }}>Já sou afiliado</span>
-            </button>
-          </div>
-        )}
 
         {/* LOGIN */}
         {modo === 'login' && (
           <div className="space-y-3">
             <button
-              onClick={() => { setModo('hub'); setLoginErro(''); setCadErro('') }}
+              onClick={() => { setLoginErro(''); setCadErro(''); onVoltar?.() }}
               className="text-gray-400 hover:text-gray-600 text-xs font-medium">
               ← Voltar
             </button>
@@ -317,13 +297,11 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada }) {
         {modo === 'cadastro' && (
           <div className="space-y-3">
             <button
-              onClick={() => { setModo('hub'); setLoginErro(''); setCadErro('') }}
+              onClick={() => { setLoginErro(''); setCadErro(''); onVoltarParaConvite?.() }}
               className="text-gray-400 hover:text-gray-600 text-xs font-medium">
               ← Voltar
             </button>
-            <div className="bg-red-50 border border-red-100 rounded-xl p-3 text-xs text-red-800 leading-relaxed">
-              Informe seus dados para criar seu acesso. Depois entre sempre com conselho + senha.
-            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
               <input type="text" value={nome} onChange={e => setNome(e.target.value)}
@@ -1669,7 +1647,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <button
                   onClick={() => {
                     setShowConviteAfiliado(false);
-                    setShowAuthMedicoOverlay(true);
+                    setShowAuthMedicoOverlay('cadastro');
                   }}
                   className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">
                   Cadastrar agora
@@ -1690,6 +1668,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   />
                   <span style={{ color: '#9ca3af', fontSize: '11px', letterSpacing: '0.5px' }}>AGORA NÃO, OBRIGADO</span>
                 </label>
+                <button
+                  onClick={() => {
+                    setShowConviteAfiliado(false);
+                    setShowAuthMedicoOverlay('login');
+                  }}
+                  className="w-full text-center mt-1"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>Já sou afiliado? </span>
+                  <span style={{ color: '#7B1E1E', fontSize: '11px', fontWeight: 600, textDecoration: 'underline' }}>Entrar</span>
+                </button>
               </div>
             )}
           </div>
@@ -1701,6 +1689,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed inset-0 z-50" style={{ background: '#111827' }}>
           <AuthMedico
             sessaoExpirada={false}
+            modoInicial={typeof showAuthMedicoOverlay === 'string' ? showAuthMedicoOverlay : 'cadastro'}
+            onVoltarParaConvite={() => {
+              setShowAuthMedicoOverlay(false);
+              setShowConviteAfiliado(true);
+            }}
             onVoltar={() => {
               setShowAuthMedicoOverlay(false);
               if (onVoltar) onVoltar();
