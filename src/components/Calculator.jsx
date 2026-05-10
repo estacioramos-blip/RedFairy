@@ -9,6 +9,7 @@ import ResultCard from './ResultCard';
 import heroImg from '../assets/redfairy-hero.png';
 import fairyChatImg from '../assets/fairy-chat.png';
 import welcomeImg from '../assets/welcome.png';
+import chatphone2Img from '../assets/chatphone2.png';
 import logo from '../assets/logo.png';
 
 const IconPaciente = () => (
@@ -258,6 +259,8 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
               <input type="text" value={loginConselho}
                 onChange={e => setLoginConselho(formatarConselho(e.target.value))}
                 placeholder="Ex: 6302/BA"
+                autoComplete="off"
+                name="rf-crm-login"
                 className={inputClass} />
             </div>
             <div>
@@ -1710,28 +1713,36 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         </div>
       )}
 
+      {/* __FELICITACOES_V2__ */}
       {/* FELICITACOES - apos cadastro de endereco/pix */}
       {showFelicitacoes && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="bg-red-700 px-6 py-5 text-center">
-              <p className="text-white text-xs uppercase tracking-widest opacity-80 mb-1">RedFairy</p>
-              <h2 className="text-white text-xl font-bold">Estamos felizes de ter voce no PROGRAMA</h2>
+          <div className="rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            {/* Imagem chatphone2 no topo, limpa, sem overlay */}
+            <div style={{ width: '100%', background: '#fff' }}>
+              <img src={chatphone2Img} alt="RedFairy"
+                style={{ display: 'block', width: '100%', height: 'auto', objectFit: 'contain' }} />
             </div>
-            <div className="p-6 space-y-4 text-center">
-              <button
-                onClick={() => setShowBeneficios(true)}
-                className="text-red-700 hover:text-red-800 font-semibold text-sm underline">
-                Conheca os beneficios
-              </button>
-              <button
-                onClick={() => {
-                  setShowFelicitacoes(false);
-                  if (onVoltar) onVoltar();
-                }}
-                className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">
-                Ir para o inicio
-              </button>
+            {/* Card bordo abaixo */}
+            <div className="bg-red-700 px-6 py-6 text-center">
+              <h2 className="text-white text-xl font-bold leading-tight">
+                Estamos felizes de ter você no RedFairy<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>®</sup>
+              </h2>
+              <div className="mt-5 space-y-3">
+                <button
+                  onClick={() => setShowBeneficios(true)}
+                  className="text-white hover:text-red-100 font-semibold text-sm underline block w-full">
+                  Conheça os benefícios
+                </button>
+                <button
+                  onClick={() => {
+                    setShowFelicitacoes(false);
+                    if (onVoltar) onVoltar();
+                  }}
+                  className="w-full bg-white text-red-700 hover:bg-red-50 font-bold py-3 rounded-xl text-sm transition-colors">
+                  Ir para o início
+                </button>
+              </div>
             </div>
           </div>
         </div>
