@@ -32,7 +32,7 @@ export default function TriagemResultadoModal({
 
   if (!resultado) return null
 
-  const isNormal = resultado.label === 'ERITRON NORMAL'
+  const isNormal = resultado.label === 'HEMOGLOBINA NORMAL + HEMÁCIAS NORMOCÍTICAS'
   const showCadastroBtn = !modoMedico && isDemo
 
   async function salvarTriagem() {
@@ -167,7 +167,7 @@ export default function TriagemResultadoModal({
                 onClick={onVoltarInicio}
                 className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-colors text-sm"
               >
-                ← Continuar
+                Continuar
               </button>
             )}
           </div>
@@ -196,16 +196,69 @@ export default function TriagemResultadoModal({
                 ? 'text-red-700'
                 : 'text-orange-600'
           }`}>{resultado.label}</h3>
-          {!isNormal && resultado.gravidadeHb && (
-            <p className="text-sm text-gray-600 mt-1">Gravidade: <span className="font-semibold">{resultado.gravidadeHb}</span></p>
+          {(inputs?.cpf || inputs?.dataColeta) && (
+            <p className="text-xs text-gray-700 mt-1 tracking-wide">
+              {[inputs?.cpf, inputs?.dataColeta && inputs.dataColeta.split('-').reverse().join('')].filter(Boolean).join(' · ')}
+            </p>
           )}
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Diagnostico clinico */}
-          <div className="text-sm text-gray-800 leading-relaxed">
-            {resultado.diagnostico}
-          </div>
+          {/* __TRIAGEM_TABELA_V1__ */}
+          {(() => {
+            const hb = parseFloat(inputs?.hemoglobina);
+            const vcm = parseFloat(inputs?.vcm);
+            const rdw = parseFloat(inputs?.rdw);
+            const sexo = inputs?.sexo;
+            const gestante = !!inputs?.gestante;
+            let hbMin, hbMax;
+            if (sexo === 'M') { hbMin = 13.5; hbMax = 17.5; }
+            else if (gestante) { hbMin = 11.0; hbMax = 15.5; }
+            else { hbMin = 12.0; hbMax = 15.5; }
+            const hbInterp = isNaN(hb) ? '—' : (hb < hbMin ? '↓' : hb > hbMax ? '↑' : 'NORMAL');
+            const vcmInterp = isNaN(vcm) ? '—' : (vcm < 80 ? '↓' : vcm > 100 ? '↑' : 'NORMAL');
+            const rdwInterp = isNaN(rdw) ? '—' : (rdw > 15 ? 'AMPLIADO' : 'NORMAL');
+            const cell = 'px-2 py-1.5 text-xs';
+            const corInterp = (txt) => {
+              if (txt === 'NORMAL') return 'text-gray-700';
+              if (txt === '—') return 'text-gray-400';
+              return 'text-red-700 font-semibold';
+            };
+            return (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-gray-100 text-gray-600 uppercase tracking-wide">
+                      <th className={cell + ' text-left font-semibold'}>Parâmetro</th>
+                      <th className={cell + ' text-right font-semibold'}>Valor</th>
+                      <th className={cell + ' text-left font-semibold'}>Und</th>
+                      <th className={cell + ' text-left font-semibold'}>Interpretação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-100">
+                      <td className={cell + ' font-medium text-gray-800'}>Hemoglobina</td>
+                      <td className={cell + ' text-right tabular-nums'}>{isNaN(hb) ? '—' : hb.toFixed(1)}</td>
+                      <td className={cell + ' text-gray-600'}>g/dL</td>
+                      <td className={cell + ' ' + corInterp(hbInterp)}>{hbInterp}</td>
+                    </tr>
+                    <tr className="border-b border-gray-100">
+                      <td className={cell + ' font-medium text-gray-800'}>Volume Globular Médio</td>
+                      <td className={cell + ' text-right tabular-nums'}>{isNaN(vcm) ? '—' : vcm.toFixed(1)}</td>
+                      <td className={cell + ' text-gray-600'}>fL</td>
+                      <td className={cell + ' ' + corInterp(vcmInterp)}>{vcmInterp}</td>
+                    </tr>
+                    <tr>
+                      <td className={cell + ' font-medium text-gray-800'}>RDW</td>
+                      <td className={cell + ' text-right tabular-nums'}>{isNaN(rdw) ? '—' : rdw.toFixed(1)}</td>
+                      <td className={cell + ' text-gray-600'}>CV %</td>
+                      <td className={cell + ' ' + corInterp(rdwInterp)}>{rdwInterp}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
 
           {/* Bloco azul - recomendacao */}
           <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-4">

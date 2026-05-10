@@ -204,7 +204,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             onClick={() => {
               setCadSucesso(false);
               setModo('login');
-              setLoginConselho(conselho.trim().toUpperCase());
+              setLoginConselho('');
             }}
             className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">
             Entrar →
@@ -587,7 +587,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       if (!medicoCRM) return;
       const { data } = await supabase
         .from('medicos')
-        .select('nome, crm, celular')
+        .select('nome, crm, celular, email')
         .eq('crm', medicoCRM)
         .maybeSingle();
       if (data) setMedicoDados(data);
@@ -1090,9 +1090,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           style={{ background: 'rgba(0,0,0,0.75)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
             {/* Imagem welcome no topo com header overlay (estilo do convite fairy-chat) */}
-            <div style={{ position: 'relative', width: '100%', height: '220px', overflow: 'hidden', flexShrink: 0 }}>
+            <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', flexShrink: 0 }}>
               <img src={welcomeImg} alt="Bem-vindo ao Programa de Afiliados"
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }} />
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 50%, transparent)', padding: '24px 24px 16px' }}>
                 <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '2px', margin: 0, fontWeight: 600, textShadow: '0 2px 6px rgba(0,0,0,0.6)' }}>Bem-vindo ao</p>
                 <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 800, margin: '2px 0 0', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>Programa de Afiliados Patrocinado</h2>
@@ -1156,7 +1156,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       <input type="checkbox" checked={pixTipo === 'telefone'}
                         onChange={() => {
                           if (pixTipo === 'telefone') { setPixTipo(''); setAfiliadoPix(''); }
-                          else { setPixTipo('telefone'); setAfiliadoPix(celular || medicoCRM); }
+                          else { setPixTipo('telefone'); setAfiliadoPix(medicoDados?.celular || ''); }
                         }}
                         style={{ accentColor: '#7B1E1E' }} />
                       <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>MEU TELEFONE É O MEU PIX</span>
@@ -1174,7 +1174,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       <input type="checkbox" checked={pixTipo === 'email'}
                         onChange={() => {
                           if (pixTipo === 'email') { setPixTipo(''); setAfiliadoPix(''); }
-                          else { setPixTipo('email'); setAfiliadoPix(''); }
+                          else { setPixTipo('email'); setAfiliadoPix(medicoDados?.email || ''); }
                         }}
                         style={{ accentColor: '#7B1E1E' }} />
                       <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>MEU E-MAIL É O MEU PIX</span>
@@ -1198,7 +1198,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               ) : (
                 <div className="space-y-2">
                   <button
-                    disabled={afiliadoSalvando || !afiliadoEndereco.trim() || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim()}
+                    disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim()}
                     onClick={async () => {
                       setAfiliadoSalvando(true);
                       const { error } = await supabase

@@ -231,7 +231,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                     onChange={handleChange}
                     min="1" max="42"
                     placeholder="Ex: 24"
-                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 ${erros.semanas_gestacao ? 'border-red-500' : 'border-gray-200'}`}
+                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 ${erros.semanas_gestacao ? 'border-red-500' : 'border-2 border-red-500'}`}
                   />
                   {erros.semanas_gestacao && <p className="text-red-500 text-xs mt-1">{erros.semanas_gestacao}</p>}
                 </div>

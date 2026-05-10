@@ -466,7 +466,7 @@ export function triagemEritron(inputs) {
     return {
       encontrado: true,
       triagem: true,
-      label: 'ERITRON NORMAL',
+      label: 'HEMOGLOBINA NORMAL + HEMÁCIAS NORMOCÍTICAS',
       color: 'green',
       diagnostico: 'Eritrograma dentro dos limites normais para idade e sexo. Hemoglobina, VCM e RDW estão na faixa esperada.',
       recomendacao: 'Manter estilo de vida saudável e controle anual rotineiro.',
@@ -485,44 +485,28 @@ export function triagemEritron(inputs) {
   }
 
   // ────── ERITRON ANORMAL ──────
-  // Construir label
-  let label = '';
-  let descricao = '';
+  // Construir label sindromico + hematimetrico
+  // __LABEL_SINDROMICO_HEMATIMETRICO_V1__
+  let sindromico = '';
+  if (classificacaoHb === 'BAIXA') sindromico = 'ANEMIA';
+  else if (classificacaoHb === 'ALTA') sindromico = 'POLIGLOBULIA';
+  else sindromico = 'HEMOGLOBINA NORMAL';
 
-  if (classificacaoHb === 'BAIXA') {
-    label = 'ANEMIA';
-    if (classificacaoVCM === 'MICROCÍTICA') label += ' MICROCÍTICA';
-    else if (classificacaoVCM === 'MACROCÍTICA') label += ' MACROCÍTICA';
-    else label += ' NORMOCÍTICA';
-    if (isAnisocitica) label += ' E ANISOCÍTICA';
-    if (gravidadeHb) label += ` — ${gravidadeHb}`;
-    descricao = `Hemoglobina ${hb.toFixed(1)} g/dL — anemia ${gravidadeHb ? gravidadeHb.toLowerCase() : ''} `;
-    descricao += `com hemácias ${classificacaoVCM.toLowerCase()} (VCM ${vcm.toFixed(0)} fL)`;
-    if (isAnisocitica) descricao += ` e anisocitose (RDW ${rdw.toFixed(1)}%)`;
-    descricao += '.';
-  } else if (classificacaoHb === 'ALTA') {
-    label = 'POLIGLOBULIA / ERITROCITOSE';
-    if (gravidadeHb) label += ` — ${gravidadeHb}`;
-    descricao = `Hemoglobina ${hb.toFixed(1)} g/dL — eritrocitose ${gravidadeHb ? gravidadeHb.toLowerCase() : ''}.`;
-    if (classificacaoVCM === 'MICROCÍTICA') {
-      descricao += ` VCM baixo (${vcm.toFixed(0)} fL) sugere policitemia ferropriva ou talassemia.`;
-    } else if (classificacaoVCM === 'MACROCÍTICA') {
-      descricao += ` VCM elevado (${vcm.toFixed(0)} fL) sugere eritropoese aumentada.`;
-    }
-    if (isAnisocitica) descricao += ` Anisocitose (RDW ${rdw.toFixed(1)}%) sinaliza heterogeneidade eritrocitária.`;
-  } else if (classificacaoHb === 'NORMAL') {
-    if (classificacaoVCM === 'MICROCÍTICA') {
-      label = 'MICROCITOSE SEM ANEMIA';
-      descricao = `Hb normal (${hb.toFixed(1)} g/dL) com VCM baixo (${vcm.toFixed(0)} fL).`;
-    } else if (classificacaoVCM === 'MACROCÍTICA') {
-      label = 'MACROCITOSE SEM ANEMIA';
-      descricao = `Hb normal (${hb.toFixed(1)} g/dL) com VCM alto (${vcm.toFixed(0)} fL).`;
-    }
-    if (isAnisocitica) {
-      label = label || 'ANISOCITOSE ISOLADA';
-      descricao += isAnisocitica ? ` Anisocitose marcada (RDW ${rdw.toFixed(1)}%).` : '';
-    }
+  let hematimetrico = '';
+  if (classificacaoVCM === 'NORMOCÍTICA') {
+    hematimetrico = isAnisocitica ? 'ANISOCITOSE' : 'HEMÁCIAS NORMOCÍTICAS';
+  } else if (classificacaoVCM === 'MICROCÍTICA') {
+    hematimetrico = isAnisocitica ? 'MICROCITOSE + ANISOCITOSE' : 'MICROCITOSE';
+  } else if (classificacaoVCM === 'MACROCÍTICA') {
+    hematimetrico = isAnisocitica ? 'MACROCITOSE + ANISOCITOSE' : 'MACROCITOSE';
   }
+
+  let label = sindromico + ' + ' + hematimetrico;
+  if (gravidadeHb) label += ' — ' + gravidadeHb;
+
+  // descricao: mantida apenas para compatibilidade (UI nova usa tabela)
+  let descricao = label + '.';
+
 
   // Recomendação base + CTA
   const recomendacao = 'PARA UM DIAGNÓSTICO MAIS PRECISO, PRECISA-SE NO MÍNIMO DE FERRITINA E SATURAÇÃO DA TRANSFERRINA.';
