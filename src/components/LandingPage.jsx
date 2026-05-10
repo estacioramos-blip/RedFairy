@@ -1464,7 +1464,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 <li>Orientações terapêuticas com dosagens</li>
                 <li>Ganhe 10 USDC por paciente cadastrado</li>
               </ul>
-              <button className="btn-cta-doc" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>Acessar como Médico<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>MÉDICOS</span></button>
+              <button className="btn-cta-doc" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>Acessar como Médico<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>AINDA NÃO AFILIADO</span></button>
             </div>
             <div className="cta-c cta-pat">
               <div className="ci">❤️</div>
@@ -1476,7 +1476,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 <li>Orientações em linguagem acessível</li>
                 <li>R$ 149,90/ano via PIX</li>
               </ul>
-              <button className="btn-cta-pat" onClick={onModoPaciente}>Acessar como Paciente</button>
+              <button className="btn-cta-pat" onClick={onModoPaciente} style={{ flexDirection:"column", gap:"0.1rem" }}>Acessar como Paciente<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>AINDA NÃO CADASTRADO</span></button>
             </div>
           </div>
         </div>

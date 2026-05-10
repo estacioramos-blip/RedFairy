@@ -805,17 +805,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     return comPontoDecimal;
   }
 
-    async function salvarAfiliado() {
-    if (!afiliadoEndereco.trim() || !afiliadoPix.trim()) return;
-    setAfiliadoSalvando(true);
-    await supabase
-      .from('medicos')
-      .update({ endereco: afiliadoEndereco.trim(), pix_chave: afiliadoPix.trim() })
-      .eq('crm', medicoCRM);
-    setAfiliadoSalvando(false);
-    setAfiliadoSalvo(true); setTimeout(() => { setShowAfiliados(false); setShowFelicitacoes(true); }, 1500);
-    setTimeout(() => setShowAfiliados(false), 1500);
-  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -1207,7 +1196,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       const { error } = await supabase
                         .from('medicos')
                         .update({
-                          endereco: afiliadoEndereco.trim(),
+                          endereco: '',
                           cep: afiliadoCEP.trim(),
                           cpf: afiliadoCPF.replace(/\D/g, ''),
                           pix_chave: afiliadoPix.trim(),
