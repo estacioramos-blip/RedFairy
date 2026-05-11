@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { triagemEritron } from '../engine/decisionEngine'
 import logo from '../assets/logo.png'
 
+import { supabase } from '../lib/supabase';
+import HistoricoChartModal from './HistoricoChartModal';
 /**
  * TriagemModal — popup inicial de triagem do eritron.
  *
@@ -23,6 +25,10 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     vcm: '',
     rdw: '',
   })
+  // __HISTORICO_BUSCA_V1__
+  const [historicoBuscando, setHistoricoBuscando] = useState(false);
+  const [historicoMsg, setHistoricoMsg] = useState('');
+  const [historicoData, setHistoricoData] = useState(null);
   const [erros, setErros] = useState({})
 
   // Mostrar CPF se eh medico OU se eh paciente demo
@@ -140,7 +146,41 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     onConcluir(resultado, inputsNumericos)
   }
 
-  return (
+  async function handleBuscarHistorico() {
+    const cpfDigits = String(inputs.cpf || '').replace(/\D/g, '');
+    if (cpfDigits.length !== 11) {
+      setHistoricoMsg('Informe um CPF v\u00e1lido (11 d\u00edgitos) antes de buscar.');
+      setTimeout(() => setHistoricoMsg(''), 4000);
+      return;
+    }
+    setHistoricoBuscando(true);
+    setHistoricoMsg('');
+    const { data, error } = await supabase
+      .from('avaliacoes')
+      .select('data_coleta, hemoglobina, vcm, rdw, ferritina, sat_transf')
+      .eq('cpf', cpfDigits)
+      .not('hemoglobina', 'is', null)
+      .not('vcm', 'is', null)
+      .not('rdw', 'is', null)
+      .not('ferritina', 'is', null)
+      .not('sat_transf', 'is', null)
+      .order('data_coleta', { ascending: true });
+    setHistoricoBuscando(false);
+    if (error) {
+      setHistoricoMsg('Erro ao buscar hist\u00f3rico. Tente novamente.');
+      setTimeout(() => setHistoricoMsg(''), 4000);
+      return;
+    }
+    if (!data || data.length < 2) {
+      setHistoricoMsg('N\u00c3O H\u00c1 ELEMENTOS PARA GR\u00c1FICO');
+      setTimeout(() => setHistoricoMsg(''), 4000);
+      return;
+    }
+    setHistoricoData({ cpf: cpfDigits, avaliacoes: data });
+  }
+
+  return (<>
+
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl">
@@ -170,6 +210,20 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                 className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.cpf ? 'border-red-500' : 'border-gray-200'}`}
               />
               {erros.cpf && <p className="text-red-500 text-xs mt-1">{erros.cpf}</p>}
+              {modoMedico && (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={handleBuscarHistorico}
+                    disabled={historicoBuscando}
+                    className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-xs px-3 py-2 rounded-lg transition-colors disabled:opacity-50">
+                    {historicoBuscando ? 'Buscando...' : '\ud83d\udcca Buscar hist\u00f3rico do paciente'}
+                  </button>
+                  {historicoMsg && (
+                    <p className="text-xs text-center mt-1 font-medium text-red-700">{historicoMsg}</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -322,5 +376,14 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
         </div>
       </div>
     </div>
+      {historicoData && (
+        <HistoricoChartModal
+          cpf={historicoData.cpf}
+          avaliacoes={historicoData.avaliacoes}
+          sexo={inputs.sexo}
+          gestante={!!inputs.gestante}
+          onFechar={() => setHistoricoData(null)} />
+      )}
+    </>
   )
 }
