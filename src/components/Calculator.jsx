@@ -1097,17 +1097,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 Para concluir a sua inscrição no <strong>Programa de Afiliados Patrocinado</strong> de RedFairy e receber os benefícios previstos, precisamos do seu <strong>endereço com CEP</strong>, <strong>CPF</strong> e da sua <strong>chave Pix</strong>.
               </p>
               <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">Endereço completo</label>
-                  <textarea
-                    value={afiliadoEndereco}
-                    onChange={e => setAfiliadoEndereco(e.target.value)}
-                    placeholder="Rua, número, bairro, cidade, estado"
-                    rows={3}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
-                  />
-                </div>
-                <div>
+<div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CEP</label>
                   <input
                     type="text"
