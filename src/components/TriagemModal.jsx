@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { triagemEritron } from '../engine/decisionEngine'
+import { useState, useEffect } from 'react';import { triagemEritron } from '../engine/decisionEngine'
 import logo from '../assets/logo.png'
 
 import { supabase } from '../lib/supabase';
@@ -25,6 +24,9 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     vcm: '',
     rdw: '',
   })
+  // __CPF_CONHECIDO_V1__
+  const [pacienteConhecido, setPacienteConhecido] = useState(null);
+  const [buscandoCpf, setBuscandoCpf] = useState(false);
   // __HISTORICO_BUSCA_V1__
   const [historicoBuscando, setHistoricoBuscando] = useState(false);
   const [historicoMsg, setHistoricoMsg] = useState('');
@@ -64,6 +66,16 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       .replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
       .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})$/, '$1.$2.$3-$4')
   }
+
+  useEffect(() => {
+    if (!modoMedico) return;
+    const digits = String(inputs.cpf || '').replace(/\D/g, '');
+    if (digits.length === 11) {
+      buscarCpfConhecido(digits);
+    } else {
+      setPacienteConhecido(null);
+    }
+  }, [inputs.cpf, modoMedico]);
 
   function validarCPF(cpf) {
     const c = cpf.replace(/\D/g, '')
@@ -146,6 +158,54 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     onConcluir(resultado, inputsNumericos)
   }
 
+  async function buscarCpfConhecido(cpfDigits) {
+    setBuscandoCpf(true);
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('sexo, data_nascimento, bariatrica, gestante')
+      .eq('cpf', cpfDigits)
+      .maybeSingle();
+    const { count: nTriagens } = await supabase
+      .from('triagens')
+      .select('*', { count: 'exact', head: true })
+      .eq('cpf', cpfDigits);
+    setBuscandoCpf(false);
+    if (!profile && (nTriagens || 0) >= 3) {
+      setPacienteConhecido('BLOQUEADO');
+      return;
+    }
+    if (profile) {
+      setPacienteConhecido({
+        origem: 'profile',
+        sexo: profile.sexo,
+        data_nascimento: profile.data_nascimento,
+        bariatrica: !!profile.bariatrica,
+        gestante: !!profile.gestante,
+      });
+      return;
+    }
+    if ((nTriagens || 0) > 0) {
+      const { data: triagem } = await supabase
+        .from('triagens')
+        .select('sexo, data_nascimento, bariatrica, gestante')
+        .eq('cpf', cpfDigits)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (triagem) {
+        setPacienteConhecido({
+          origem: 'triagem',
+          sexo: triagem.sexo,
+          data_nascimento: triagem.data_nascimento,
+          bariatrica: !!triagem.bariatrica,
+          gestante: !!triagem.gestante,
+        });
+        return;
+      }
+    }
+    setPacienteConhecido(null);
+  }
+
   async function handleBuscarHistorico() {
     const cpfDigits = String(inputs.cpf || '').replace(/\D/g, '');
     if (cpfDigits.length !== 11) {
@@ -210,6 +270,26 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                 className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.cpf ? 'border-red-500' : 'border-gray-200'}`}
               />
               {erros.cpf && <p className="text-red-500 text-xs mt-1">{erros.cpf}</p>}
+              {modoMedico && pacienteConhecido === 'BLOQUEADO' && (
+                <div className="mt-3 p-4 rounded-xl bg-red-50 border-2 border-red-300">
+                  <p className="text-sm font-bold text-red-800 mb-2">
+                    \ud83d\uded1 Limite de triagens gratuitas atingido
+                  </p>
+                  <p className="text-xs text-red-900 leading-relaxed">
+                    Para continuar avaliando a evolu\u00e7\u00e3o desse paciente, oriente-o a se <strong>CADASTRAR</strong> no RedFairy para receber gratuitamente um primeiro pedido de exames (Hemograma + Ferritina + Satura\u00e7\u00e3o da Transferrina). E se voc\u00ea ainda n\u00e3o \u00e9 <strong>AFILIADO</strong>, se filie para ter acesso aos benef\u00edcios do Programa.
+                  </p>
+                </div>
+              )}
+              {modoMedico && pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && (
+                <div className="mt-2 p-2 rounded-lg bg-green-50 border border-green-200">
+                  <p className="text-xs text-green-800">
+                    \u2713 Paciente conhecido: {pacienteConhecido.sexo === 'F' ? 'Feminino' : 'Masculino'}
+                    {pacienteConhecido.data_nascimento ? ' \u00b7 nasc. ' + String(pacienteConhecido.data_nascimento).split('-').reverse().join('/') : ''}
+                    {pacienteConhecido.bariatrica ? ' \u00b7 Bari\u00e1trica' : ''}
+                    {pacienteConhecido.gestante ? ' \u00b7 Gestante' : ''}
+                  </p>
+                </div>
+              )}
               {modoMedico && (
                 <div className="mt-2">
                   <button
