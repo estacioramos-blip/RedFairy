@@ -162,7 +162,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     setBuscandoCpf(true);
     const { data: profile } = await supabase
       .from('profiles')
-      .select('sexo, data_nascimento, bariatrica, gestante')
+      .select('sexo, data_nascimento, bariatrica, gestante, semanas_gestacao_triagem, data_triagem_gestacao')
       .eq('cpf', cpfDigits)
       .maybeSingle();
     const { count: nTriagens } = await supabase
@@ -181,13 +181,18 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
         data_nascimento: profile.data_nascimento,
         bariatrica: !!profile.bariatrica,
         gestante: !!profile.gestante,
+        semanas_gestacao_triagem: profile.semanas_gestacao_triagem,
+        data_triagem_gestacao: profile.data_triagem_gestacao,
+        semanas_gestacao: null,
+        dum: null,
+        created_at: null,
       });
       return;
     }
     if ((nTriagens || 0) > 0) {
       const { data: triagem } = await supabase
         .from('triagens')
-        .select('sexo, data_nascimento, bariatrica, gestante')
+        .select('sexo, data_nascimento, bariatrica, gestante, semanas_gestacao, dum, created_at')
         .eq('cpf', cpfDigits)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -199,11 +204,49 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           data_nascimento: triagem.data_nascimento,
           bariatrica: !!triagem.bariatrica,
           gestante: !!triagem.gestante,
+          semanas_gestacao_triagem: null,
+          data_triagem_gestacao: null,
+          semanas_gestacao: triagem.semanas_gestacao,
+          dum: triagem.dum,
+          created_at: triagem.created_at,
         });
         return;
       }
     }
     setPacienteConhecido(null);
+  }
+
+  // __ETAPA_B_V1__
+  // Calcula semanas atuais a partir dos dados de gestacao salvos.
+  // Retorna { gestanteAtual: bool, semanas: number|null, dum: string|null }
+  function revalidaGestante(pc) {
+    if (!pc || pc === 'BLOQUEADO' || !pc.gestante) {
+      return { gestanteAtual: false, semanas: null, dum: null };
+    }
+    const hoje = new Date();
+    let semanasCalc = null;
+    let dum = pc.dum || null;
+    // 1. Origem profile: usa semanas_gestacao_triagem + data_triagem_gestacao
+    if (pc.semanas_gestacao_triagem && pc.data_triagem_gestacao) {
+      const dataTriagem = new Date(pc.data_triagem_gestacao);
+      const diasDecorridos = (hoje - dataTriagem) / (1000 * 60 * 60 * 24);
+      semanasCalc = Number(pc.semanas_gestacao_triagem) + (diasDecorridos / 7);
+    }
+    // 2. Origem triagem: usa semanas_gestacao + created_at
+    else if (pc.semanas_gestacao && pc.created_at) {
+      const dataTriagem = new Date(pc.created_at);
+      const diasDecorridos = (hoje - dataTriagem) / (1000 * 60 * 60 * 24);
+      semanasCalc = Number(pc.semanas_gestacao) + (diasDecorridos / 7);
+    }
+    // 3. Sem dado de tempo: assume gestante atual (sem semanas calculadas)
+    if (semanasCalc === null) {
+      return { gestanteAtual: true, semanas: null, dum };
+    }
+    // 4. Se >40 semanas: gestacao concluida -> trata como nao-gestante
+    if (semanasCalc > 40) {
+      return { gestanteAtual: false, semanas: null, dum: null };
+    }
+    return { gestanteAtual: true, semanas: Math.round(semanasCalc * 10) / 10, dum };
   }
 
   async function handleBuscarHistorico() {
@@ -307,6 +350,8 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             </div>
           )}
 
+          {/* __ETAPA_B_V1__ - esconde Sexo/DN/Bariatrica quando paciente conhecido */}
+          {!pacienteConhecido && (<>
           {/* Sexo + Data de Nascimento */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -339,6 +384,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             </div>
           </div>
 
+          </>)}
           {/* Gestante (so se sexo F) */}
           {inputs.sexo === 'F' && (
             <div className="rounded-xl border border-pink-200 bg-pink-50 p-3">
@@ -398,6 +444,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             </label>
           </div>
 
+          {pacienteConhecido !== 'BLOQUEADO' && (<>
           {/* Hb, VCM, RDW (bordas vermelhas - sao de triagem) */}
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-gray-600 mb-2">📋 Hemograma</p>
@@ -437,6 +484,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               </div>
             </div>
           </div>
+          </>)}
         </div>
 
         {/* Acoes */}
