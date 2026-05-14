@@ -362,7 +362,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             </label>
             <button onClick={handleCadastro} disabled={cadLoading || !aceitoTC}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
-              {cadLoading ? 'Cadastrando...' : 'Criar acesso →'}
+              {cadLoading ? 'Cadastrando...' : 'Continue →'}
             </button>
           </div>
         )}
@@ -1096,6 +1096,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <p className="text-gray-700 text-sm leading-relaxed">
                 Para concluir a sua inscrição no <strong>Programa de Afiliados Patrocinado</strong> de RedFairy e receber os benefícios previstos, precisamos do seu <strong>endereço com CEP</strong>, <strong>CPF</strong> e da sua <strong>chave Pix</strong>.
               </p>
+              <p className="text-xs text-red-800 text-center leading-relaxed font-medium">
+                🔒 Entre seus dados tranquilamente. Você está em um servidor seguro, e não existe a possibilidade de uso inadequado dessas informações.
+              </p>
               <div className="space-y-3">
 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CEP</label>
@@ -1172,9 +1175,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   />
                 </div>
               </div>
-              <p className="text-xs text-red-800 text-center leading-relaxed font-medium">
-                🔒 Entre seus dados tranquilamente. Você está em um servidor seguro, e não existe a possibilidade de uso inadequado dessas informações.
-              </p>
               {afiliadoSalvo ? (
                 <p className="text-green-600 text-sm font-bold text-center">✅ Dados salvos! Bem-vindo ao Programa de Afiliados!</p>
               ) : (
@@ -1610,7 +1610,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 {!conviteRecusado ? (
                   <>
                     <p style={{ color: '#ffffff', fontSize: '22px', fontWeight: 800, lineHeight: '1.25', margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                      Participe do nosso <span style={{ color: '#ef4444' }}>PROGRAMA DE AFILIADOS</span>, é rápido.
+                      Participe do nosso <span style={{ color: '#ef4444' }}>PROGRAMA DE AFILIADOS</span>, é rápido e não custa nada.
+                    </p>
+                    <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 600, lineHeight: '1.3', margin: '8px 0 0', textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+                      Somente benefícios para você.
                     </p>
                     <p style={{ color: '#fca5a5', fontSize: '14px', fontWeight: 600, lineHeight: '1.4', margin: '10px 0 0', textAlign: 'center' }}>
                       Um cadastro simples e você saberá porque é bom estar conosco.
@@ -1632,7 +1635,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     setShowAuthMedicoOverlay('cadastro');
                   }}
                   className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">
-                  Cadastrar agora
+                  Continue
                 </button>
                 <label className="flex items-center justify-center gap-2 cursor-pointer">
                   <input

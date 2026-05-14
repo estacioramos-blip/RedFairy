@@ -31,6 +31,9 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   // Etapa do hemograma: 1=Hb ativo, 2=VCM ativo, 3=RDW ativo, 4=todos confirmados
   const [etapaHemograma, setEtapaHemograma] = useState(1);
   const timerHemogramaRef = useRef(null);
+  const refHbHemograma = useRef(null);
+  const refVcmHemograma = useRef(null);
+  const refRdwHemograma = useRef(null);
   // __HISTORICO_BUSCA_V1__
   const [historicoBuscando, setHistoricoBuscando] = useState(false);
   const [historicoMsg, setHistoricoMsg] = useState('');
@@ -258,6 +261,20 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   // Retorna { gestanteAtual: bool, semanas: number|null, dum: string|null }
   // __HEMOGRAMA_SEAMLESS_V1__
   // Avanca para o proximo campo do hemograma apos 2s sem digitacao.
+  // Move foco automaticamente quando etapaHemograma muda OU quando usuario
+  // interage com outros campos (sexo, DN, bariatrica, gestante).
+  // O foco sempre vai para o input ativo no momento.
+  useEffect(() => {
+    const targets = { 1: refHbHemograma, 2: refVcmHemograma, 3: refRdwHemograma };
+    const target = targets[etapaHemograma];
+    const t = setTimeout(() => {
+      if (target && target.current) {
+        target.current.focus();
+      }
+    }, 100);
+    return () => clearTimeout(t);
+  }, [etapaHemograma, inputs.sexo, inputs.dataNascimento, inputs.bariatrica, inputs.gestante]);
+
   function agendarAvancoHemograma(etapaAtual, valorAtual, maxChars) {
     if (timerHemogramaRef.current) clearTimeout(timerHemogramaRef.current);
     if (!valorAtual || String(valorAtual).length < 1) return;
@@ -528,6 +545,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Hb (g/dL)</label>
                 <input
+                  ref={refHbHemograma}
                   type="text"
                   inputMode="decimal"
                   name="hemoglobina"
@@ -553,6 +571,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">VCM (fL)</label>
                 <input
+                  ref={refVcmHemograma}
                   type="text"
                   inputMode="decimal"
                   name="vcm"
@@ -577,6 +596,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">RDW-CV (%)</label>
                 <input
+                  ref={refRdwHemograma}
                   type="text"
                   inputMode="decimal"
                   name="rdw"
