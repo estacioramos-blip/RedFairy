@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';import { triagemEritron } from '../engine/decisionEngine'
+import { useState, useEffect, useRef} from 'react';import { triagemEritron } from '../engine/decisionEngine'
 import logo from '../assets/logo.png'
 
 import { supabase } from '../lib/supabase';
@@ -27,6 +27,10 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   // __CPF_CONHECIDO_V1__
   const [pacienteConhecido, setPacienteConhecido] = useState(null);
   const [buscandoCpf, setBuscandoCpf] = useState(false);
+  // __HEMOGRAMA_SEAMLESS_V1__
+  // Etapa do hemograma: 1=Hb ativo, 2=VCM ativo, 3=RDW ativo, 4=todos confirmados
+  const [etapaHemograma, setEtapaHemograma] = useState(1);
+  const timerHemogramaRef = useRef(null);
   // __HISTORICO_BUSCA_V1__
   const [historicoBuscando, setHistoricoBuscando] = useState(false);
   const [historicoMsg, setHistoricoMsg] = useState('');
@@ -252,6 +256,22 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   // __ETAPA_B_V1__
   // Calcula semanas atuais a partir dos dados de gestacao salvos.
   // Retorna { gestanteAtual: bool, semanas: number|null, dum: string|null }
+  // __HEMOGRAMA_SEAMLESS_V1__
+  // Avanca para o proximo campo do hemograma apos 2s sem digitacao.
+  function agendarAvancoHemograma(etapaAtual, valorAtual, maxChars) {
+    if (timerHemogramaRef.current) clearTimeout(timerHemogramaRef.current);
+    if (!valorAtual || String(valorAtual).length < 1) return;
+    // Se ja atingiu o maxChars, avanca imediato
+    if (String(valorAtual).length >= maxChars) {
+      setEtapaHemograma(prev => Math.max(prev, etapaAtual + 1));
+      return;
+    }
+    // Senao, agenda timer de 2s
+    timerHemogramaRef.current = setTimeout(() => {
+      setEtapaHemograma(prev => Math.max(prev, etapaAtual + 1));
+    }, 2000);
+  }
+
   function revalidaGestante(pc) {
     if (!pc || pc === 'BLOQUEADO' || !pc.gestante) {
       return { gestanteAtual: false, semanas: null, dum: null };
@@ -501,40 +521,80 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           )}
 
           {pacienteConhecido !== 'BLOQUEADO' && (<>
-          {/* Hb, VCM, RDW (bordas vermelhas - sao de triagem) */}
+          {/* __HEMOGRAMA_SEAMLESS_V1__ */}
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-gray-600 mb-2">📋 Hemograma</p>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Hemoglobina (g/dL)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Hb (g/dL)</label>
                 <input
-                  type="number" step="0.1"
+                  type="text"
+                  inputMode="decimal"
                   name="hemoglobina"
                   value={inputs.hemoglobina}
-                  onChange={handleChange}
-                  className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.hemoglobina ? 'border-red-500' : 'border-red-500'}`}
+                  maxLength={4}
+                  disabled={etapaHemograma < 1}
+                  autoFocus
+                  onChange={e => {
+                    let v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.').slice(0, 4);
+                    handleChange({ target: { name: 'hemoglobina', value: v } });
+                    agendarAvancoHemograma(1, v, 4);
+                  }}
+                  className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                    etapaHemograma === 1
+                      ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400'
+                      : etapaHemograma > 1
+                        ? 'border-yellow-300 bg-yellow-50'
+                        : 'border-gray-300 bg-gray-100 text-gray-400'
+                  }`}
                 />
                 {erros.hemoglobina && <p className="text-red-500 text-xs mt-0.5">{erros.hemoglobina}</p>}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">VCM (fL)</label>
                 <input
-                  type="number" step="0.1"
+                  type="text"
+                  inputMode="decimal"
                   name="vcm"
                   value={inputs.vcm}
-                  onChange={handleChange}
-                  className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.vcm ? 'border-red-500' : 'border-red-500'}`}
+                  maxLength={5}
+                  disabled={etapaHemograma < 2}
+                  onChange={e => {
+                    let v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.').slice(0, 5);
+                    handleChange({ target: { name: 'vcm', value: v } });
+                    agendarAvancoHemograma(2, v, 5);
+                  }}
+                  className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                    etapaHemograma === 2
+                      ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400'
+                      : etapaHemograma > 2
+                        ? 'border-yellow-300 bg-yellow-50'
+                        : 'border-gray-300 bg-gray-100 text-gray-400'
+                  }`}
                 />
                 {erros.vcm && <p className="text-red-500 text-xs mt-0.5">{erros.vcm}</p>}
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">RDW-CV (%)</label>
                 <input
-                  type="number" step="0.1"
+                  type="text"
+                  inputMode="decimal"
                   name="rdw"
                   value={inputs.rdw}
-                  onChange={handleChange}
-                  className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.rdw ? 'border-red-500' : 'border-red-500'}`}
+                  maxLength={4}
+                  disabled={etapaHemograma < 3}
+                  onChange={e => {
+                    let v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.').slice(0, 4);
+                    handleChange({ target: { name: 'rdw', value: v } });
+                    agendarAvancoHemograma(3, v, 4);
+                  }}
+                  className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                    etapaHemograma === 3
+                      ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400'
+                      : etapaHemograma > 3
+                        ? 'border-yellow-300 bg-yellow-50'
+                        : 'border-gray-300 bg-gray-100 text-gray-400'
+                  }`}
                 />
                 {erros.rdw && <p className="text-red-500 text-xs mt-0.5">{erros.rdw}</p>}
               </div>
@@ -543,21 +603,30 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           </>)}
         </div>
 
-        {/* Acoes */}
-        <div className="px-6 pb-6 flex gap-3">
+        {/* __HEMOGRAMA_SEAMLESS_V1__ Acoes */}
+        {pacienteConhecido !== 'BLOQUEADO' && (
+        <div className="px-6 pb-6 flex flex-col items-center gap-2">
+          {etapaHemograma >= 4 && inputs.hemoglobina && inputs.vcm && inputs.rdw && (
+            <button
+              onClick={handleAvaliar}
+              className="w-full py-3 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>⏭</span>
+              <span>CONFIRME</span>
+            </button>
+          )}
+          {etapaHemograma < 4 && (
+            <p className="text-xs text-gray-400 text-center">Preencha os campos amarelos em sequência</p>
+          )}
           <button
             onClick={onFechar}
-            className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors text-sm"
+            aria-label="Fechar triagem"
+            className="w-10 h-10 rounded-full bg-red-700 hover:bg-red-800 text-white font-bold text-lg flex items-center justify-center transition-colors mt-1"
           >
-            Fechar
-          </button>
-          <button
-            onClick={handleAvaliar}
-            className="flex-1 py-3 rounded-xl bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold transition-colors text-sm"
-          >
-            Avaliar Triagem
+            ✕
           </button>
         </div>
+        )}
       </div>
     </div>
       {historicoData && (
