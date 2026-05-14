@@ -67,6 +67,27 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d{1,2})$/, '$1.$2.$3-$4')
   }
 
+  // __B2_SINC_INPUTS__
+  useEffect(() => {
+    if (!pacienteConhecido || pacienteConhecido === 'BLOQUEADO') return;
+    const reval = revalidaGestante(pacienteConhecido);
+    // Preenche sexo e bariatrica (escondidos do form)
+    setInputs(prev => ({
+      ...prev,
+      sexo: pacienteConhecido.sexo || prev.sexo,
+      bariatrica: !!pacienteConhecido.bariatrica,
+    }));
+    if (reval.gestanteAtual) {
+      setInputs(prev => ({
+        ...prev,
+        gestante: true,
+        semanas_gestacao: reval.semanas !== null ? String(reval.semanas) : prev.semanas_gestacao,
+      }));
+    } else if (pacienteConhecido.gestante) {
+      setInputs(prev => ({ ...prev, gestante: false, semanas_gestacao: '' }));
+    }
+  }, [pacienteConhecido]);
+
   useEffect(() => {
     if (!modoMedico) return;
     const digits = String(inputs.cpf || '').replace(/\D/g, '');
@@ -102,6 +123,17 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
     if (!inputs.sexo) errors.sexo = 'Selecione o sexo'
     // Validacao da data de nascimento (DD/MM/AAAA) + calculo de idade
+    // __B2_PULAR_VALIDACAO_DN__
+    // Se paciente conhecido tem data_nascimento, pula a validacao do DN do form
+    if (pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && pacienteConhecido.data_nascimento) {
+      const [a, m, d] = String(pacienteConhecido.data_nascimento).split('-').map(Number);
+      const hoje = new Date();
+      let idade = hoje.getFullYear() - a;
+      const mDiff = hoje.getMonth() - (m - 1);
+      if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--;
+      dataNascimentoISO = pacienteConhecido.data_nascimento;
+      idadeCalc = idade;
+    } else {
     const dn = String(inputs.dataNascimento || '').trim()
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) {
       errors.dataNascimento = 'Use o formato DD/MM/AAAA'
@@ -129,6 +161,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           dataNascimentoISO = `${a}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`
         }
       }
+    }
     }
     if (!inputs.hemoglobina) errors.hemoglobina = 'Obrigatório'
     if (!inputs.vcm) errors.vcm = 'Obrigatório'
@@ -385,41 +418,63 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           </div>
 
           </>)}
+          {/* __B2_GESTANTE_READONLY__ */}
           {/* Gestante (so se sexo F) */}
-          {inputs.sexo === 'F' && (
+          {inputs.sexo === 'F' && (() => {
+            const reval = revalidaGestante(pacienteConhecido);
+            const lockedGestante = !!pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && reval.gestanteAtual;
+            const semanasAuto = lockedGestante ? reval.semanas : null;
+            return (
             <div className="rounded-xl border border-pink-200 bg-pink-50 p-3">
               <label className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   name="gestante"
-                  checked={inputs.gestante}
-                  onChange={handleChange}
+                  checked={lockedGestante ? true : inputs.gestante}
+                  onChange={lockedGestante ? undefined : handleChange}
+                  disabled={lockedGestante}
                   className="mt-1"
                 />
                 <div>
-                  <p className="text-sm font-medium text-pink-700">Gestante</p>
-                  <p className="text-xs text-pink-600">{modoMedico ? 'Marque se a paciente está grávida' : 'Marque se está grávida'}</p>
+                  <p className="text-sm font-medium text-pink-700">
+                    Gestante{lockedGestante ? ' (já registrada)' : ''}
+                  </p>
+                  <p className="text-xs text-pink-600">
+                    {lockedGestante
+                      ? 'Esta paciente já está cadastrada como gestante.'
+                      : (modoMedico ? 'Marque se a paciente está grávida' : 'Marque se está grávida')}
+                  </p>
                 </div>
               </label>
-              {inputs.gestante && (
+              {(lockedGestante || inputs.gestante) && (
                 <div className="mt-2">
                   <label className="block text-xs font-medium text-gray-600 mb-1">Semanas de gestação</label>
-                  <input
-                    type="number"
-                    name="semanas_gestacao"
-                    value={inputs.semanas_gestacao}
-                    onChange={handleChange}
-                    min="1" max="42"
-                    placeholder="Ex: 24"
-                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 ${erros.semanas_gestacao ? 'border-red-500' : 'border-2 border-red-500'}`}
-                  />
-                  {erros.semanas_gestacao && <p className="text-red-500 text-xs mt-1">{erros.semanas_gestacao}</p>}
+                  {lockedGestante ? (
+                    <div className="w-full border-2 border-pink-300 bg-pink-100 rounded-lg px-3 py-2 text-sm text-pink-900 font-semibold">
+                      {semanasAuto !== null ? semanasAuto + ' semanas (calculado)' : 'Sem dado registrado'}
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        type="number"
+                        name="semanas_gestacao"
+                        value={inputs.semanas_gestacao}
+                        onChange={handleChange}
+                        min="1" max="42"
+                        placeholder="Ex: 24"
+                        className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 ${erros.semanas_gestacao ? 'border-red-500' : 'border-2 border-red-500'}`}
+                      />
+                      {erros.semanas_gestacao && <p className="text-red-500 text-xs mt-1">{erros.semanas_gestacao}</p>}
+                    </>
+                  )}
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
-          {/* Bariatrica/o (sempre visivel) */}
+          {/* Bariatrica/o (escondido se paciente conhecido) */}
+          {!pacienteConhecido && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
             <label className="flex items-start gap-2 cursor-pointer">
               <input
@@ -443,6 +498,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               </div>
             </label>
           </div>
+          )}
 
           {pacienteConhecido !== 'BLOQUEADO' && (<>
           {/* Hb, VCM, RDW (bordas vermelhas - sao de triagem) */}
