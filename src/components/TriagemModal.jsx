@@ -191,10 +191,14 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       setErros(errors)
       return
     }
+    // Data de hoje em ISO (YYYY-MM-DD) para usar como dataColeta na triagem
+    const _hoje = new Date();
+    const _dataHojeISO = `${_hoje.getFullYear()}-${String(_hoje.getMonth()+1).padStart(2,'0')}-${String(_hoje.getDate()).padStart(2,'0')}`;
     const inputsNumericos = {
       ...inputs,
       idade: idadeCalc,
       data_nascimento: dataNascimentoISO,
+      dataColeta: _dataHojeISO,
       hemoglobina: Number(inputs.hemoglobina),
       vcm: Number(inputs.vcm),
       rdw: Number(inputs.rdw),
@@ -287,10 +291,32 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
   }, [inputs.cpf, modoMedico, etapaInicio]);
 
+  // Avanca pra Sexo quando DN tem 10 caracteres (DD/MM/AAAA) validos, apos 800ms
+  useEffect(() => {
+    if (!modoMedico) return;
+    if (etapaInicio !== 2) return;
+    const dn = String(inputs.dataNascimento || '').trim();
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) return;
+    const [d, m, a] = dn.split('/').map(Number);
+    const dt = new Date(a, m - 1, d);
+    const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+    if (!valida || a < 1900 || dt > new Date()) return;
+    const t = setTimeout(() => {
+      setEtapaInicio(3);
+      setTimeout(() => {
+        if (refSexoSelect.current) refSexoSelect.current.focus();
+      }, 100);
+    }, 800);
+    return () => clearTimeout(t);
+  }, [inputs.dataNascimento, modoMedico, etapaInicio]);
+
   // Move foco automaticamente quando etapaHemograma muda OU quando usuario
   // interage com outros campos (sexo, DN, bariatrica, gestante).
   // O foco sempre vai para o input ativo no momento.
   useEffect(() => {
+    // So da foco no hemograma se inicio ja completou (etapaInicio >= 4)
+    // E se ja temos sexo definido
+    if (!inputs.sexo) return;
     const targets = { 1: refHbHemograma, 2: refVcmHemograma, 3: refRdwHemograma };
     const target = targets[etapaHemograma];
     const t = setTimeout(() => {
@@ -613,7 +639,6 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   value={inputs.hemoglobina}
                   maxLength={4}
                   disabled={etapaHemograma < 1}
-                  autoFocus
                   onChange={e => {
                     let v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.').slice(0, 4);
                     handleChange({ target: { name: 'hemoglobina', value: v } });

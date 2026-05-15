@@ -300,14 +300,10 @@ export default function TriagemResultadoModal({
             ) : modoMedico ? (
               <div>
                 <p className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-2">
-                  🩺 Para o(a) Doutor(a)
+                  🩺 IMPORTANTE
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed">
-                  Doutor(a): para entender melhor o eritron do seu/sua paciente,
-                  preciso da <strong>FERRITINA</strong> e da <strong>SATURAÇÃO DA
-                  TRANSFERRINA</strong>. Solicite esses exames e traga os
-                  resultados, ou o/a encaminhe para que se cadastre na
-                  plataforma, daí eu cuido de tudo.
+                  Para entender melhor o eritron, precisamos da <strong>FERRITINA</strong> e da <strong>SATURAÇÃO DA TRANSFERRINA [%]</strong>. Solicite esses exames e lance aqui os resultados, ou encaminhe o/a paciente para que se cadastre na plataforma, nos solicite o pedido desses exames, e lance os resultados. Nós faremos a análise e retornaremos a você com a conclusão.
                 </p>
               </div>
             ) : isDemo ? (

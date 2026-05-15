@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine';
@@ -10,6 +11,7 @@ import heroImg from '../assets/redfairy-hero.png';
 import fairyChatImg from '../assets/fairy-chat.png';
 import welcomeImg from '../assets/welcome.png';
 import chatphone2Img from '../assets/chatphone2.png';
+import telefonista2Img from '../assets/telefonista2.png';
 import logo from '../assets/logo.png';
 
 const IconPaciente = () => (
@@ -81,6 +83,55 @@ function TermosModal({ onFechar }) {
 
 
 // ─── Tela de login/cadastro do médico ────────────────────────────────────────
+// __TELA5_TELEFONISTA__
+// Tela apos cadastro: imagem telefonista2 com typewriter sobreposto.
+// Apos 4s chama onConcluir() automaticamente.
+function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
+  const fullText = 'Vamos ao programa de afiliados...';
+  const [displayed, setDisplayed] = React.useState('');
+
+  React.useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setDisplayed(fullText.slice(0, i));
+      if (i >= fullText.length) clearInterval(interval);
+    }, 60);
+    return () => clearInterval(interval);
+  }, []);
+
+  React.useEffect(() => {
+    const t = setTimeout(() => onConcluir(), 4000);
+    return () => clearTimeout(t);
+  }, [onConcluir]);
+
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        {/* Imagem telefonista2 no topo com gradiente */}
+        <div style={{ position: 'relative' }}>
+          <img src={telefonista2Img} alt="Vamos ao programa de afiliados"
+            style={{ width: '100%', height: 'auto', display: 'block' }} />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 50%, transparent)', padding: '40px 24px 18px' }}>
+            <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, lineHeight: 1.2, margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
+              {displayed}
+              <span style={{ opacity: 0.6, animation: 'blink 1s step-end infinite' }}>|</span>
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '10px', fontWeight: 600, letterSpacing: '1.5px', margin: '8px 0 0', textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
+              Após a próxima página você estará automaticamente logado
+            </p>
+          </div>
+          <style>{`@keyframes blink { 50% { opacity: 0; } }`}</style>
+        </div>
+        {/* Subtexto abaixo da imagem */}
+        <div className="px-6 py-3 text-center">
+          <p className="text-xs text-gray-400">Cadastro concluído</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadastro', onVoltarParaConvite }) {
   const [modo, setModo] = useState(modoInicial) // 'login' | 'cadastro' (hub removido)
 
@@ -194,24 +245,17 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
 
   if (cadSucesso) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md text-center space-y-5">
-          <div className="text-5xl">🎉</div>
-          <h2 className="text-red-700 text-xl font-bold">Cadastro concluído</h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
-            Você agora deve entrar como <strong>MÉDICO AFILIADO</strong>.
-          </p>
-          <button
-            onClick={() => {
-              setCadSucesso(false);
-              setModo('login');
-              setLoginConselho('');
-            }}
-            className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">
-            Entrar →
-          </button>
-        </div>
-      </div>
+      <CadastroConcluidoTela
+        nomeMedico={nome}
+        crmMedico={conselho}
+        onConcluir={() => {
+          // Auto-login: marca como logado e abre fluxo afiliados
+          setCadSucesso(false);
+          if (typeof onConcluir === 'function') {
+            onConcluir({ nome, crm: conselho });
+          }
+        }}
+      />
     )
   }
 
@@ -321,9 +365,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
               <input type="tel" value={celular} onChange={e => setCelular(formatarCelular(e.target.value))}
                 placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} autoComplete="off" />
             </div>
-            <div className="bg-green-50 border border-green-200 rounded-xl p-3">
-              <p className="text-green-700 text-xs font-bold mb-1">⚡ Programa de Afiliados</p>
-              <p className="text-green-700 text-xs leading-relaxed">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <p className="text-blue-800 text-xs font-bold mb-1">⚡ Programa de Afiliados</p>
+              <p className="text-blue-700 text-xs leading-relaxed">
                 Ao avaliar pacientes você passa a integrar o nosso Programa de Afiliados, com suporte dos nossos patrocinadores. Ao beneficiar pacientes, você também passa a auferir benefícios.
               </p>
             </div>
