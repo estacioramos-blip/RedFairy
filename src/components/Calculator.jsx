@@ -548,6 +548,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [pixTipo, setPixTipo] = useState(''); // '' | 'telefone' | 'cpf' | 'email' | 'outra'
   // Fluxo convite afiliado pos-primeira-avaliacao
   const [showConviteAfiliado, setShowConviteAfiliado] = useState(false);
+  // Destino apos completar/recusar convite afiliado: 'aprofundar' | 'landing'
+  const [destinoAposConvite, setDestinoAposConvite] = useState(null);
   const [conviteRecusado, setConviteRecusado] = useState(false);
   const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(false);
   const [showFelicitacoes, setShowFelicitacoes] = useState(false);
@@ -1023,6 +1025,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             setShowTriagem(false);
             // Se medico ainda nao cadastrado, abre convite em vez de voltar a home
             if (!cadastrado) {
+              setDestinoAposConvite('landing');
               setShowConviteAfiliado(true);
             } else {
               if (onVoltar) onVoltar();
@@ -1033,15 +1036,23 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             setShowTriagem(false);
             // Se medico ainda nao cadastrado, abre convite em vez de voltar a home
             if (!cadastrado) {
+              setDestinoAposConvite('landing');
               setShowConviteAfiliado(true);
             } else {
               if (onVoltar) onVoltar();
             }
           }}
           onAprofundar={() => {
-            // Medico clicou 'Aprofundar agora': fecha popup, dados ficam no form
+            // Medico clicou 'Aprofundar agora': fecha popup
             setTriagemResultado(null);
             setShowTriagem(false);
+            // Se medico nao cadastrado, mostra convite antes de seguir
+            if (!cadastrado) {
+              setDestinoAposConvite('aprofundar');
+              setShowConviteAfiliado(true);
+              return;
+            }
+            // Se ja cadastrado: dados ficam no form (comportamento original)
           }}
         />
       )}
@@ -1620,8 +1631,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     </p>
                   </>
                 ) : (
-                  <p style={{ color: '#ef4444', fontSize: '20px', fontWeight: 700, lineHeight: '1.3', margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                    Sentiremos a sua falta, mas estaremos sempre aqui.
+                  <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 500, lineHeight: '1.5', margin: '0 auto', maxWidth: '90%', textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
+                    Você inseriu um paciente no sistema pela triagem, mas não se afiliou no seguimento. É uma pena. Os dados do paciente estão salvos para eventual aprofundamento diagnóstico; porém, se ele se cadastrar sem que você esteja afiliado, você não participará do sistema de benefícios. Esperamos que seu paciente conclua o cadastro — e que você volte. Estaremos sempre abertos a ter você conosco. Até breve!...
                   </p>
                 )}
               </div>
@@ -1645,8 +1656,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       setTimeout(() => {
                         setShowConviteAfiliado(false);
                         setConviteRecusado(false);
+                        // Se destino era 'aprofundar', nao volta pra landing - fica no form
+                        if (destinoAposConvite === 'aprofundar') {
+                          setDestinoAposConvite(null);
+                          // Form ja esta visivel com os dados da triagem
+                          return;
+                        }
+                        // Caso contrario (landing ou null), volta como antes
+                        setDestinoAposConvite(null);
                         if (onVoltar) onVoltar();
-                      }, 3000);
+                      }, 6000);
                     }}
                     className="w-3 h-3 cursor-pointer"
                     style={{ accentColor: '#9ca3af' }}

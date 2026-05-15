@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { useState, useEffect } from 'react';import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 
 /**
@@ -397,9 +396,9 @@ export default function TriagemResultadoModal({
             <button
               onClick={handleContinuar}
               disabled={salvando}
-              className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
+              className="flex-1 py-3 rounded-xl bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
             >
-              {salvando ? 'Salvando...' : 'OK, entendi'}
+              {salvando ? 'Salvando...' : 'Continue'}
             </button>
           )}
         </div>

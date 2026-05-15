@@ -34,6 +34,12 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   const refHbHemograma = useRef(null);
   const refVcmHemograma = useRef(null);
   const refRdwHemograma = useRef(null);
+  // Refs do inicio seamless (CPF, DN, Sexo)
+  const refCpfInput = useRef(null);
+  const refDnInput = useRef(null);
+  const refSexoSelect = useRef(null);
+  // Etapa inicio: 1=CPF, 2=DN, 3=Sexo, 4=DN_completo (libera demais)
+  const [etapaInicio, setEtapaInicio] = useState(1);
   // __HISTORICO_BUSCA_V1__
   const [historicoBuscando, setHistoricoBuscando] = useState(false);
   const [historicoMsg, setHistoricoMsg] = useState('');
@@ -261,6 +267,26 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   // Retorna { gestanteAtual: bool, semanas: number|null, dum: string|null }
   // __HEMOGRAMA_SEAMLESS_V1__
   // Avanca para o proximo campo do hemograma apos 2s sem digitacao.
+  // Foco inicial no CPF quando modal abre
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (refCpfInput.current) refCpfInput.current.focus();
+    }, 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Avanca pra DN quando CPF tem 11 digitos validos
+  useEffect(() => {
+    if (!modoMedico) return;
+    const digits = String(inputs.cpf || '').replace(/\D/g, '');
+    if (digits.length === 11 && validarCPF(inputs.cpf) && etapaInicio === 1) {
+      setEtapaInicio(2);
+      setTimeout(() => {
+        if (refDnInput.current) refDnInput.current.focus();
+      }, 100);
+    }
+  }, [inputs.cpf, modoMedico, etapaInicio]);
+
   // Move foco automaticamente quando etapaHemograma muda OU quando usuario
   // interage com outros campos (sexo, DN, bariatrica, gestante).
   // O foco sempre vai para o input ativo no momento.
@@ -273,7 +299,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       }
     }, 100);
     return () => clearTimeout(t);
-  }, [etapaHemograma, inputs.sexo, inputs.dataNascimento, inputs.bariatrica, inputs.gestante]);
+  }, [etapaHemograma, inputs.sexo, inputs.bariatrica, inputs.gestante]);
 
   function agendarAvancoHemograma(etapaAtual, valorAtual, maxChars) {
     if (timerHemogramaRef.current) clearTimeout(timerHemogramaRef.current);
@@ -286,7 +312,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     // Senao, agenda timer de 2s
     timerHemogramaRef.current = setTimeout(() => {
       setEtapaHemograma(prev => Math.max(prev, etapaAtual + 1));
-    }, 2000);
+    }, 1000);
   }
 
   function revalidaGestante(pc) {
@@ -356,7 +382,8 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.6)' }}>
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl relative">
+        <button onClick={onFechar} aria-label="Fechar" className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-700 hover:bg-red-800 text-white font-bold text-sm flex items-center justify-center transition-colors shadow-md">✕</button>
 
         {/* Cabecalho centralizado com fadinha vermelha */}
         <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
@@ -375,12 +402,17 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                 CPF{modoMedico ? ' do Paciente' : ''}
               </label>
               <input
+                ref={refCpfInput}
                 type="text"
                 name="cpf"
                 value={inputs.cpf}
                 onChange={e => handleChange({ target: { name: 'cpf', value: formatarCPF(e.target.value) } })}
                 placeholder="000.000.000-00"
-                className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.cpf ? 'border-red-500' : 'border-gray-200'}`}
+                className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                  erros.cpf ? 'border-red-500' :
+                  etapaInicio === 1 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
+                  'border-yellow-300 bg-yellow-50'
+                }`}
               />
               {erros.cpf && <p className="text-red-500 text-xs mt-1">{erros.cpf}</p>}
               {modoMedico && pacienteConhecido === 'BLOQUEADO' && (
@@ -427,10 +459,16 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
               <select
+                ref={refSexoSelect}
                 name="sexo"
                 value={inputs.sexo}
                 onChange={handleChange}
-                className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.sexo ? 'border-red-500' : 'border-gray-200'}`}
+                className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                  erros.sexo ? 'border-red-500' :
+                  etapaInicio === 3 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
+                  etapaInicio > 3 ? 'border-yellow-300 bg-yellow-50' :
+                  'border-gray-200 bg-gray-50 text-gray-400'
+                }`}
               >
                 <option value="">Selecione...</option>
                 <option value="F">Feminino</option>
@@ -441,14 +479,37 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Data de Nascimento</label>
               <input
+                ref={refDnInput}
                 type="text"
                 name="dataNascimento"
                 value={inputs.dataNascimento}
                 onChange={handleChange}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const dn = String(inputs.dataNascimento || '').trim();
+                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) {
+                      const [d, m, a] = dn.split('/').map(Number);
+                      const dt = new Date(a, m - 1, d);
+                      const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+                      if (valida && a >= 1900 && dt <= new Date()) {
+                        setEtapaInicio(3);
+                        setTimeout(() => {
+                          if (refSexoSelect.current) refSexoSelect.current.focus();
+                        }, 100);
+                      }
+                    }
+                  }
+                }}
                 inputMode="numeric"
                 maxLength={10}
                 placeholder="DD/MM/AAAA"
-                className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 ${erros.dataNascimento ? 'border-red-500' : 'border-gray-200'}`}
+                className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                  erros.dataNascimento ? 'border-red-500' :
+                  etapaInicio === 2 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
+                  etapaInicio >= 3 ? 'border-yellow-300 bg-yellow-50' :
+                  'border-gray-200 bg-gray-50 text-gray-400'
+                }`}
               />
               {erros.dataNascimento && <p className="text-red-500 text-xs mt-1">{erros.dataNascimento}</p>}
             </div>
@@ -627,24 +688,21 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
         {pacienteConhecido !== 'BLOQUEADO' && (
         <div className="px-6 pb-6 flex flex-col items-center gap-2">
           {etapaHemograma >= 4 && inputs.hemoglobina && inputs.vcm && inputs.rdw && (
-            <button
-              onClick={handleAvaliar}
-              className="w-full py-3 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold transition-colors text-sm flex items-center justify-center gap-2"
-            >
-              <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>⏭</span>
-              <span>CONFIRME</span>
-            </button>
+            <div className="flex flex-col items-center gap-1">
+              <button
+                onClick={handleAvaliar}
+                aria-label="Confirmar e avaliar"
+                className="w-14 h-14 rounded-full bg-gray-400 hover:bg-gray-500 text-red-700 font-bold flex items-center justify-center transition-colors shadow-md"
+              >
+                <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>⏭</span>
+              </button>
+              <span className="text-xs font-bold text-red-800 tracking-wide">CONFIRMO</span>
+            </div>
           )}
           {etapaHemograma < 4 && (
             <p className="text-xs text-gray-400 text-center">Preencha os campos amarelos em sequência</p>
           )}
-          <button
-            onClick={onFechar}
-            aria-label="Fechar triagem"
-            className="w-10 h-10 rounded-full bg-red-700 hover:bg-red-800 text-white font-bold text-lg flex items-center justify-center transition-colors mt-1"
-          >
-            ✕
-          </button>
+
         </div>
         )}
       </div>
