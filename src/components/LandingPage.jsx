@@ -404,6 +404,17 @@ const colorMap = {
 }
 
 export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin }) {
+  const [medicoLogado, setMedicoLogado] = useState(() => {
+    try { return localStorage.getItem('medico_nome') || ''; } catch(e) { return ''; }
+  })
+  function fazerLogoffLanding() {
+    try {
+      localStorage.removeItem('medico_crm');
+      localStorage.removeItem('medico_nome');
+      localStorage.removeItem('medico_login_at');
+    } catch(e) {}
+    setMedicoLogado('');
+  }
   const [navScrolled, setNavScrolled] = useState(false)
   const [navOpen,     setNavOpen]     = useState(false)
   const [showFilosofia, setShowFilosofia] = useState(false)
@@ -757,8 +768,27 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
           <a href="#sobre" onClick={() => { setShowSobre(true); setNavOpen(false) }}>Sobre</a>
           <a href="#contato" onClick={(e) => { e.preventDefault(); setShowContato(true); setNavOpen(false) }}>Contato</a>
         </div>
-        {/* 3ª coluna vazia para simetria do grid (mantém menu centralizado) */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        {/* 3ª coluna: status de login (padrao ModalRedFairy) + hamburger */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px' }}>
+          {medicoLogado ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div title={medicoLogado} style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#b91c1c', border: '2px solid rgba(123,30,30,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ color: '#fff', fontWeight: 900, fontSize: '12px' }}>
+                  {medicoLogado.split(' ').filter(Boolean).slice(0,2).map(p => p[0]).join('').toUpperCase()}
+                </span>
+              </div>
+              <span style={{ color: '#b91c1c', fontSize: '9px', fontWeight: 700, letterSpacing: '1px' }}>LOGADO</span>
+              <button onClick={fazerLogoffLanding} aria-label="Sair" title="Sair"
+                style={{ background: '#e5e7eb', color: '#b91c1c', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, padding: '5px 12px', borderRadius: '8px', lineHeight: 1 }}>
+                Sair
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => { try { localStorage.setItem('rf_open_login','1'); } catch(e){} onModoMedico(); }} aria-label="Login" title="ENTRAR COMO MÉDICO AFILIADO"
+              style={{ background: '#e5e7eb', color: '#7B1E1E', border: '1.5px solid #7B1E1E', cursor: 'pointer', fontSize: '11px', fontWeight: 700, padding: '5px 14px', borderRadius: '8px', lineHeight: 1 }}>
+              LOGIN
+            </button>
+          )}
           <button className="hamburger" onClick={() => setNavOpen(!navOpen)}>
             <span /><span /><span />
           </button>
@@ -794,8 +824,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem', marginBottom:'0.5rem', width:'100%', maxWidth:700 }}>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
-                <button className="btn btn-primary" onClick={onModoMedico} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>Sou Médico</button>
-                <button className="btn btn-primary" onClick={onModoMedico} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', fontSize:"0.7rem", fontWeight:700, letterSpacing:"1.5px" }}>MÉDICO AFILIADO</button>
+                <button className="btn btn-primary" onClick={medicoLogado ? undefined : onModoMedico} disabled={!!medicoLogado} title={medicoLogado ? 'Você já está logado — use MÉDICO AFILIADO' : ''} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', opacity: medicoLogado ? 0.45 : 1, cursor: medicoLogado ? 'not-allowed' : 'pointer' }}>Sou Médico</button>
+                <button className="btn btn-primary" onClick={() => { try { localStorage.setItem('rf_open_login','1'); } catch(e){} onModoMedico(); }} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', fontSize:"0.7rem", fontWeight:700, letterSpacing:"1.5px" }}>MÉDICO AFILIADO</button>
                 <p style={{ fontSize:'0.78rem', color:'#7B1E1E', lineHeight:1.6, fontWeight:700, margin:0, textAlign:'justify' }}>
                   Avalie o eritron e o metabolismo do ferro do seu paciente com precisão clínica com toques no seu celular, e o insira em um projeto de qualidade de vida.
                 </p>

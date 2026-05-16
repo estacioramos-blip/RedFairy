@@ -12,6 +12,7 @@ import fairyChatImg from '../assets/fairy-chat.png';
 import welcomeImg from '../assets/welcome.png';
 import chatphone2Img from '../assets/chatphone2.png';
 import telefonista2Img from '../assets/telefonista2.png';
+import telefonista3Img from '../assets/telefonista3.png';
 import logo from '../assets/logo.png';
 
 const IconPaciente = () => (
@@ -134,6 +135,23 @@ function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
 
 function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadastro', onVoltarParaConvite }) {
   const [modo, setModo] = useState(modoInicial) // 'login' | 'cadastro' (hub removido)
+  const refCrmLogin = useRef(null);
+  const [vamosTxt, setVamosTxt] = useState('');
+  useEffect(() => {
+    const full = 'Vamos! ...';
+    let i = 0;
+    const iv = setInterval(() => {
+      i++; setVamosTxt(full.slice(0, i));
+      if (i >= full.length) clearInterval(iv);
+    }, 55);
+    return () => clearInterval(iv);
+  }, []);
+  useEffect(() => {
+    if (modo === 'login') {
+      const t = setTimeout(() => { if (refCrmLogin.current) refCrmLogin.current.focus(); }, 200);
+      return () => clearTimeout(t);
+    }
+  }, [modo]);
 
   // Login
   const [loginConselho, setLoginConselho] = useState('')
@@ -156,6 +174,20 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   const [showSenha, setShowSenha] = useState(false)
   const [showLoginSenha, setShowLoginSenha] = useState(false)
   const [showEsqueciSenha, setShowEsqueciSenha] = useState(false)
+  const refSenhaLogin = useRef(null);
+  const [etapaLogin, setEtapaLogin] = useState(1); // 1=CRM, 2=Senha
+  useEffect(() => {
+    if (modo !== 'login') return;
+    if (etapaLogin !== 1) return;
+    const v = (loginConselho || '').trim().toUpperCase();
+    if (/^\d+\/[A-Z]{2}$/.test(v)) {
+      const t = setTimeout(() => {
+        setEtapaLogin(2);
+        if (refSenhaLogin.current) refSenhaLogin.current.focus();
+      }, 1000);
+      return () => clearTimeout(t);
+    }
+  }, [loginConselho, modo, etapaLogin]);
 
   function formatarCelular(valor) {
     const digits = valor.replace(/\D/g, '').slice(0, 11)
@@ -268,12 +300,18 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
           ← Voltar
         </button>
       )}
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md space-y-5">
-
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md space-y-5" style={{ overflow: 'hidden' }}>
+        {/* __TELEFONISTA3_TOPO__ */}
+        <div style={{ position: 'relative' }}>
+          <img src={telefonista3Img} alt="Vamos!" style={{ width: '100%', height: 'auto', display: 'block' }} />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 50%, transparent)', padding: '40px 24px 34px' }}>
+            <p style={{ color: '#ffffff', fontSize: '26px', fontWeight: 800, lineHeight: 1.15, margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>{vamosTxt}</p>
+          </div>
+        </div>
+        <div className="px-8 pb-8 pt-2 space-y-5">
         <div className="text-center">
           <img src={logo} alt="RedFairy"
-            className="w-16 h-16 object-contain mx-auto mb-3"
-            style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }} />
+            className="w-16 h-16 object-contain mx-auto mb-3" />
           <h2 className="text-xl font-bold text-red-700">
             {modo === 'login' ? 'Acesso Médico' : 'Primeiro Acesso'}
           </h2>
@@ -300,20 +338,21 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             </button>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Número do CRM/UF</label>
-              <input type="text" value={loginConselho}
+              <input ref={refCrmLogin} type="text" value={loginConselho}
                 onChange={e => setLoginConselho(formatarConselho(e.target.value))}
                 placeholder="Ex: 6302/BA"
                 autoComplete="off"
                 name="rf-crm-login"
-                className={inputClass} />
+                className={`${inputClass} ${etapaLogin === 1 ? 'border-yellow-400 bg-yellow-50' : 'bg-yellow-50 border-yellow-300'}`} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
               <div style={{ position: 'relative' }}>
-                <input type={showLoginSenha ? 'text' : 'password'} value={loginSenha}
+                <input ref={refSenhaLogin} type={showLoginSenha ? 'text' : 'password'} value={loginSenha}
                   onChange={e => setLoginSenha(e.target.value)}
+                  onFocus={() => setEtapaLogin(2)}
                   placeholder="Sua senha"
-                  className={inputClass}
+                  className={`${inputClass} ${etapaLogin === 2 ? 'border-yellow-400 bg-yellow-50' : ''}`}
                   style={{ paddingRight: '40px' }}
                   onKeyDown={e => e.key === 'Enter' && handleLogin()} />
                 <button type="button" onClick={() => setShowLoginSenha(!showLoginSenha)}
@@ -328,10 +367,17 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
               </div>
             </div>
             {loginErro && <p className="text-red-500 text-sm">{loginErro}</p>}
-            <button onClick={handleLogin} disabled={loginLoading}
-              className="w-full bg-white border-2 border-red-800 text-red-800 hover:bg-red-50 font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
-              {loginLoading ? 'Verificando...' : 'Entrar →'}
-            </button>
+            {/* __LOGIN_CONFIRMO__ */}
+            {loginConselho.trim() && loginSenha.trim() && (
+              <div className="flex flex-col items-center gap-1 pt-1">
+                <button onClick={handleLogin} disabled={loginLoading}
+                  aria-label="Confirmar login"
+                  className="w-14 h-14 rounded-full bg-gray-400 hover:bg-gray-500 text-red-700 font-bold flex items-center justify-center transition-colors shadow-md disabled:opacity-50">
+                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>▶</span>
+                </button>
+                <span className="text-xs font-bold text-red-800 tracking-wide">{loginLoading ? '...' : 'CONFIRMO'}</span>
+              </div>
+            )}
             <p className="text-center text-xs">
               <button type="button" onClick={() => setShowEsqueciSenha(true)} className="text-gray-400 hover:text-red-700 hover:underline">
                 Esqueci a senha
@@ -439,6 +485,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             </div>
           </div>
         )}
+        </div>{/* __FECHA_DIV_INTERNA__ */}
       </div>
     </div>
   )
@@ -611,6 +658,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       setInputs(prev => ({ ...prev, bariatrica: true }))
     }
   }, [preFlag]);
+
+  // __ABRIR_LOGIN_MEDICO__ Se a landing pediu login (MEDICO AFILIADO/LOGIN),
+  // abre o AuthMedico em modo 'login' ao montar.
+  useEffect(() => {
+    let pedirLogin = false;
+    try { pedirLogin = localStorage.getItem('rf_open_login') === '1'; } catch(e) {}
+    if (pedirLogin) {
+      try { localStorage.removeItem('rf_open_login'); } catch(e) {}
+      setShowAuthMedicoOverlay('login');
+    }
+  }, []);
   const [copiado, setCopiado] = useState(false);
   const [showOBA, setShowOBA] = useState(false);
   const [dadosOBAColetados, setDadosOBAColetados] = useState(null);
