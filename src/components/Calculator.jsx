@@ -292,7 +292,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 relative">
+    <div className="bg-gray-900 relative" style={{ minHeight: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}> {/* __B2_SCROLL__ */}
       {onVoltar && (
         <button onClick={onVoltar}
           className="absolute top-4 left-4 text-white px-3 py-1 rounded-lg text-xs font-medium shadow transition-colors"
@@ -636,6 +636,28 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [afiliadoSalvo, setAfiliadoSalvo] = useState(false);
   const [afiliadoCEP, setAfiliadoCEP] = useState('');
   const [afiliadoCPF, setAfiliadoCPF] = useState('');
+  const refAfilCEP = useRef(null);
+  const refAfilCPF = useRef(null);
+  const [etapaAfil, setEtapaAfil] = useState(1); // 1=CEP, 2=CPF
+  useEffect(() => {
+    if (showAfiliados) {
+      setEtapaAfil(1);
+      const t = setTimeout(() => { if (refAfilCEP.current) refAfilCEP.current.focus(); }, 250);
+      return () => clearTimeout(t);
+    }
+  }, [showAfiliados]);
+  useEffect(() => {
+    if (!showAfiliados) return;
+    if (etapaAfil !== 1) return;
+    const d = (afiliadoCEP || '').replace(/\D/g, '');
+    if (d.length === 8) {
+      const t = setTimeout(() => {
+        setEtapaAfil(2);
+        if (refAfilCPF.current) refAfilCPF.current.focus();
+      }, 1000);
+      return () => clearTimeout(t);
+    }
+  }, [afiliadoCEP, showAfiliados, etapaAfil]);
   const [pixTipo, setPixTipo] = useState(''); // '' | 'telefone' | 'cpf' | 'email' | 'outra'
   // Fluxo convite afiliado pos-primeira-avaliacao
   const [showConviteAfiliado, setShowConviteAfiliado] = useState(false);
@@ -649,6 +671,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const refVcmForm = useRef(null);
   const refRdwForm = useRef(null);
   const [conviteRecusado, setConviteRecusado] = useState(false);
+  // __B4_PODE_CONVITE__ convite afiliado so para medico realmente nao cadastrado
+  function podeConvite() {
+    try { if (localStorage.getItem('medico_crm')) return false; } catch(e) {}
+    return !cadastrado;
+  }
   const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(false);
   const [showFelicitacoes, setShowFelicitacoes] = useState(false);
   const [showBeneficios, setShowBeneficios] = useState(false);
@@ -1145,7 +1172,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             setTriagemResultado(null);
             setShowTriagem(false);
             // Se medico ainda nao cadastrado, abre convite em vez de voltar a home
-            if (!cadastrado) {
+            if (podeConvite()) {
               setDestinoAposConvite('landing');
               setShowConviteAfiliado(true);
             } else {
@@ -1156,7 +1183,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             setTriagemResultado(null);
             setShowTriagem(false);
             // Se medico ainda nao cadastrado, abre convite em vez de voltar a home
-            if (!cadastrado) {
+            if (podeConvite()) {
               setDestinoAposConvite('landing');
               setShowConviteAfiliado(true);
             } else {
@@ -1168,7 +1195,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             setTriagemResultado(null);
             setShowTriagem(false);
             // Se medico nao cadastrado, mostra convite antes de seguir
-            if (!cadastrado) {
+            if (podeConvite()) {
               setDestinoAposConvite('aprofundar');
               setShowConviteAfiliado(true);
               return;
@@ -1235,6 +1262,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CEP</label>
                   <input
+                    ref={refAfilCEP}
                     type="text"
                     value={afiliadoCEP}
                     onChange={e => {
@@ -1244,14 +1272,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     }}
                     placeholder="00000-000"
                     inputMode="numeric"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 ${etapaAfil === 1 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : 'border-gray-200 focus:ring-red-400'}`}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CPF</label>
                   <input
+                    ref={refAfilCPF}
                     type="text"
                     value={afiliadoCPF}
+                    onFocus={() => setEtapaAfil(2)}
                     onChange={e => {
                       const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
                       let fmt = digits;
@@ -1263,7 +1293,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     }}
                     placeholder="000.000.000-00"
                     inputMode="numeric"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 ${etapaAfil === 2 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : 'border-gray-200 focus:ring-red-400'}`}
                   />
                 </div>
                 <div>
@@ -1311,6 +1341,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <p className="text-green-600 text-sm font-bold text-center">✅ Dados salvos! Bem-vindo ao Programa de Afiliados!</p>
               ) : (
                 <div className="space-y-2">
+                  {/* __AFIL_COND__ */}
+                {afiliadoCEP.trim() && afiliadoCPF.trim() && afiliadoPix.trim() && (
                   <button
                     disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim()}
                     onClick={async () => {
@@ -1334,6 +1366,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                     {afiliadoSalvando ? 'Salvando...' : 'Confirmar dados →'}
                   </button>
+                )}
                   <button
                     onClick={() => setShowAfiliados(false)}
                     className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
