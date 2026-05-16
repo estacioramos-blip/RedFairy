@@ -327,7 +327,7 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
 
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
-              <input type="text" value={nome} onChange={e => setNome(e.target.value)} className={inputClass} autoComplete="off" />
+              <input type="text" value={nome} onChange={e => setNome(e.target.value.toUpperCase())} className={inputClass} autoComplete="off" style={{ textTransform: 'uppercase' }} />
             </div>
 
             {dadosVemDaTriagem ? (

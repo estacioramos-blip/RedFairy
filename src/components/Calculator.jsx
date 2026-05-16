@@ -252,7 +252,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
           // Auto-login: marca como logado e abre fluxo afiliados
           setCadSucesso(false);
           if (typeof onConcluir === 'function') {
-            onConcluir({ nome, crm: conselho });
+            onConcluir(nome, conselho);
           }
         }}
       />
@@ -351,7 +351,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
 
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
-              <input type="text" value={nome} onChange={e => setNome(e.target.value)}
+              <input type="text" value={nome} onChange={e => setNome(e.target.value.toUpperCase())} style={{ textTransform: 'uppercase' }}
                 placeholder="Dr. João da Silva" className={inputClass} autoComplete="off" />
             </div>
             <div>
@@ -1301,17 +1301,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         />
       )}
 
-      <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
+      <header className="bg-red-900 text-white py-4 px-4 shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button onClick={onVoltar}
-              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+              className="bg-gray-200 hover:bg-gray-300 text-red-800 rounded-lg px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors">
               Voltar
             </button>
-            <div style={{ display:'flex', flexDirection:'column', gap:2 }} title="Atalhos de perfil demo">
-              <span style={{ color:'#fca5a5', fontSize:'9px', fontFamily:'monospace', lineHeight:1.3 }}>Ctrl+M ♂20  Ctrl+B ♂50</span>
-              <span style={{ color:'#fca5a5', fontSize:'9px', fontFamily:'monospace', lineHeight:1.3 }}>Ctrl+F ♀20  Ctrl+G ♀50</span>
-            </div>
           </div>
           <div className="flex items-center gap-3">
             <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
@@ -1319,7 +1315,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               onClick={handleLogoTripleClick} />
             <div>
               <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
-              <p className="text-red-200 text-xs">Calculadora Clínica - Eritron e Metabolismo do Ferro</p>
+              <p className="text-red-200 text-xs">Calculadora Clínica | Eritron</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -1333,11 +1329,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               </div>
             )}
             <button onClick={() => setShowLogoutConfirm(true)}
-              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+              className="bg-gray-200 hover:bg-gray-300 text-red-800 rounded-lg px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors">
               Sair
             </button>
             <button onClick={() => setShowSobre(true)}
-              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+              className="bg-gray-200 hover:bg-gray-300 text-red-800 rounded-lg px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors">
               Sobre
             </button>
           </div>
