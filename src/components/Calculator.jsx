@@ -594,6 +594,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [showConviteAfiliado, setShowConviteAfiliado] = useState(false);
   // Destino apos completar/recusar convite afiliado: 'aprofundar' | 'landing'
   const [destinoAposConvite, setDestinoAposConvite] = useState(null);
+  // Dados vieram da triagem -> campos travados ate clicar Editar
+  const [dadosVieramDaTriagem, setDadosVieramDaTriagem] = useState(false);
+  const [editandoDadosPaciente, setEditandoDadosPaciente] = useState(false);
+  const refDataColetaForm = useRef(null);
+  const refHbForm = useRef(null);
+  const refVcmForm = useRef(null);
+  const refRdwForm = useRef(null);
   const [conviteRecusado, setConviteRecusado] = useState(false);
   const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(false);
   const [showFelicitacoes, setShowFelicitacoes] = useState(false);
@@ -726,6 +733,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
+    // __MASCARA_DATACOLETA__ aplica mascara DD/MM/AAAA na data da coleta
+    if (name === 'dataColeta' && typeof value === 'string') {
+      const digits = value.replace(/\D/g, '').slice(0, 8);
+      let v = digits;
+      if (digits.length > 4) v = digits.slice(0,2) + '/' + digits.slice(2,4) + '/' + digits.slice(4);
+      else if (digits.length > 2) v = digits.slice(0,2) + '/' + digits.slice(2);
+      setInputs(prev => ({ ...prev, dataColeta: v }));
+      if (erros.dataColeta) setErros(prev => ({ ...prev, dataColeta: null }));
+      return;
+    }
     // Caso especial: dataNascimento -> aplica mascara, calcula idade, seta ambos
     if (name === 'dataNascimento') {
       const digits = String(value).replace(/\D/g, '').slice(0, 8);
@@ -1037,6 +1054,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           onConcluir={(resultado, novosInputs) => {
             setTriagemResultado(resultado);
             setTriagemInputs(novosInputs);
+            setDadosVieramDaTriagem(true);
+            setEditandoDadosPaciente(false);
             // pre-preenche o form principal
             setInputs(prev => ({
               ...prev,
@@ -1419,33 +1438,41 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <IconPaciente /> Dados do Paciente
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold text-gray-700 flex items-center gap-2">
+                <IconPaciente /> Dados do Paciente
+              </h2>
+              {dadosVieramDaTriagem && !editandoDadosPaciente && (
+                <button type="button" onClick={() => setEditandoDadosPaciente(true)}
+                  className="flex items-center gap-1 text-xs font-bold text-red-700 hover:text-red-800 transition-colors">
+                  <span style={{ fontSize: '0.9rem' }}>✏️</span> EDITAR
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label">CPF</label>
-                <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className="input" />
+                <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className={`input ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
                 <p className="text-xs text-gray-400 mt-0.5">Vincula ao paciente</p>
                 <p className="text-xs text-orange-500 mt-0.5">Digite apenas os números, sem pontos ou hífen</p>
                 {erros.cpf && <p className="text-red-500 text-xs mt-1">{erros.cpf}</p>}
               </div>
               <div>
                 <label className="label">Sexo</label>
-                <select name="sexo" value={inputs.sexo} onChange={handleChange} className="input">
+                <select name="sexo" value={inputs.sexo} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} className={`input ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`}>
                   <option value="M">Masculino</option>
                   <option value="F">Feminino</option>
                 </select>
               </div>
               <div>
                 <label className="label">Data de Nascimento</label>
-                <input type="text" name="dataNascimento" value={inputs.dataNascimento} onChange={handleChange} placeholder="DD/MM/AAAA" inputMode="numeric" maxLength={10} autoComplete="off" className={`input ${erros.dataNascimento ? 'border-red-500' : ''}`} />
-                {inputs.idade && !erros.dataNascimento && <p className="text-gray-500 text-xs mt-1">Idade: {inputs.idade} anos</p>}
+                <input type="text" name="dataNascimento" value={inputs.dataNascimento} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="DD/MM/AAAA" inputMode="numeric" maxLength={10} autoComplete="off" className={`input ${erros.dataNascimento ? 'border-red-500' : ''} ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
+                {inputs.idade && !erros.dataNascimento && <p className="text-red-600 text-xs mt-1 font-semibold">Idade: {inputs.idade} anos</p>}
                 {erros.dataNascimento && <p className="text-red-500 text-xs mt-1">{erros.dataNascimento}</p>}
               </div>
               <div className="col-span-2">
                 <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
-                  <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
+                  <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0 disabled:opacity-50" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm leading-tight">
                       {inputs.sexo === 'F' ? 'Paciente Bariátrica' : 'Paciente Bariátrico'}
@@ -1459,13 +1486,34 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 </label>
                 
               </div>
-              <div>
-                <label className="label">Data da Coleta</label>
-                <input type="date" name="dataColeta" value={inputs.dataColeta} onChange={handleChange} className={`input ${erros.dataColeta ? 'border-red-500' : ''}`} />
-                {erros.dataColeta && <p className="text-red-500 text-xs mt-1">{erros.dataColeta}</p>}
-              </div>
             </div>
           </section>
+
+          {/* __DATA_COLETA_SEAMLESS__ Data da Coleta - fora do quadro, amarelo, seamless */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <label className="label">Data da Coleta</label>
+            <input
+              ref={refDataColetaForm}
+              type="text"
+              name="dataColeta"
+              value={inputs.dataColeta}
+              onChange={handleChange}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (refHbForm.current) refHbForm.current.focus();
+                }
+              }}
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="DD/MM/AAAA"
+              className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                erros.dataColeta ? 'border-red-500' : 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400'
+              }`}
+            />
+            {erros.dataColeta && <p className="text-red-500 text-xs mt-1">{erros.dataColeta}</p>}
+            <p className="text-xs text-gray-400 mt-1">Digite a data e tecle ENTER</p>
+          </div>
 
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
@@ -1473,9 +1521,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </h2>
             {/* TRIAGEM: Hb, VCM, RDW (sempre habilitados) - 3 colunas */}
             <div className="grid grid-cols-3 gap-3">
-              <LabInput label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} aberrante={!!aberrantes["hemoglobina"]} borderColor="red" />
-              <LabInput label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} aberrante={!!aberrantes["vcm"]} borderColor="red" />
-              <LabInput label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} aberrante={!!aberrantes["rdw"]} borderColor="red" />
+              <LabInput ref={refHbForm} onEnter={() => refVcmForm.current && refVcmForm.current.focus()} label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} aberrante={!!aberrantes["hemoglobina"]} borderColor="red" />
+              <LabInput ref={refVcmForm} onEnter={() => refRdwForm.current && refRdwForm.current.focus()} label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} aberrante={!!aberrantes["vcm"]} borderColor="red" />
+              <LabInput ref={refRdwForm} onEnter={() => refRdwForm.current && refRdwForm.current.blur()} label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} aberrante={!!aberrantes["rdw"]} borderColor="red" />
             </div>
 
             {/* CTA: botao para liberar exames extras */}
@@ -1820,14 +1868,15 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   );
 }
 
-function LabInput({ label, unit, name, reference, value, onChange, error, hint, aberrante, disabled, borderColor }) {
+const LabInput = React.forwardRef(function LabInput({ label, unit, name, reference, value, onChange, error, hint, aberrante, disabled, borderColor, onEnter }, ref) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-600 mb-1">
         {label} <span className="text-xs text-gray-400">({unit})</span>
       </label>
-      <input type="text" inputMode="decimal" name={name} value={value} onChange={onChange} disabled={disabled} placeholder={disabled && hint ? hint : "0"}
-        className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : borderColor === 'red' ? 'border-red-500' : borderColor === 'blue' ? 'border-blue-500' : 'border-gray-200'}`} />
+      <input ref={ref} type="text" inputMode="decimal" name={name} value={value} onChange={onChange} disabled={disabled} placeholder={disabled && hint ? hint : "0"}
+        onKeyDown={e => { if (e.key === 'Enter' && onEnter) { e.preventDefault(); onEnter(); } }}
+        className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : (!value && !disabled) ? 'border-yellow-400 bg-yellow-50' : borderColor === 'red' ? 'border-red-500' : borderColor === 'blue' ? 'border-blue-500' : 'border-gray-200'}`} />
       <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
       {hint && !disabled && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
       {aberrante && <p className="text-xs font-bold text-yellow-600 mt-0.5">⚠ VALOR ABERRANTE — CONFIRME</p>}
@@ -1836,7 +1885,7 @@ function LabInput({ label, unit, name, reference, value, onChange, error, hint, 
 
     </div>
   );
-}
+})
 
 const colorMap = {
   amber:  'border-amber-400  bg-amber-50  text-amber-700',
