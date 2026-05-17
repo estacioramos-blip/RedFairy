@@ -1253,7 +1253,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             {/* Corpo scrollavel */}
             <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1 }}>
               <p className="text-gray-700 text-sm leading-relaxed">
-                Para concluir a sua inscrição no <strong>Programa de Afiliados Patrocinado</strong> de RedFairy e receber os benefícios previstos, precisamos do seu <strong>endereço com CEP</strong>, <strong>CPF</strong> e da sua <strong>chave Pix</strong>.
+                Para concluir a sua inscrição no <strong>Programa de Afiliados Patrocinado</strong> de RedFairy e receber os benefícios previstos, precisamos do seu <strong>CEP</strong>, <strong>CPF</strong> e da sua <strong>chave Pix</strong>.
               </p>
               <p className="text-xs text-red-800 text-center leading-relaxed font-medium">
                 🔒 Entre seus dados tranquilamente. Você está em um servidor seguro, e não existe a possibilidade de uso inadequado dessas informações.
@@ -1869,7 +1869,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
       {/* AUTH MEDICO OVERLAY - aparece apos convite aceito */}
       {showAuthMedicoOverlay && (
-        <div className="fixed inset-0 z-50" style={{ background: '#111827' }}>
+        <div className="fixed inset-0 z-50" style={{ background: '#111827', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <AuthMedico
             sessaoExpirada={false}
             modoInicial={typeof showAuthMedicoOverlay === 'string' ? showAuthMedicoOverlay : 'cadastro'}
