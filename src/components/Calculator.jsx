@@ -1076,10 +1076,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       // Verificar se já tem endereco e pix cadastrados
       const { data: medDados } = await supabase
         .from('medicos')
-        .select('endereco, pix_chave')
+        .select('cep, cpf, pix_chave')
         .eq('crm', medicoCRM)
         .maybeSingle()
-      if (!medDados?.endereco || !medDados?.pix_chave) {
+      if (!medDados?.cep || !medDados?.cpf || !medDados?.pix_chave) {
         if ((totalAvals || 0) === 0) {
           // Primeira avaliação — modal completo
           setTimeout(() => setShowAfiliados(true), 1200)
@@ -1881,13 +1881,26 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               setShowAuthMedicoOverlay(false);
               if (onVoltar) onVoltar();
             }}
-            onConcluir={(nome, crm) => {
+            onConcluir={async (nome, crm) => {
               setMedicoNome(nome);
               setMedicoCRM(crm);
               setCadastrado(true);
               setShowAuthMedicoOverlay(false);
-              // Apos cadastro, abre o modal de endereco/pix existente
-              setShowAfiliados(true);
+              // So abre afiliados se o medico AINDA NAO for afiliado completo
+              // (afiliado completo = tem cep + cpf + pix_chave no banco).
+              try {
+                const { data: md } = await supabase
+                  .from('medicos')
+                  .select('cep, cpf, pix_chave')
+                  .eq('crm', crm)
+                  .maybeSingle();
+                if (!md?.cep || !md?.cpf || !md?.pix_chave) {
+                  setShowAfiliados(true);
+                }
+              } catch (e) {
+                // Em caso de erro de consulta, nao bloqueia: abre afiliados
+                setShowAfiliados(true);
+              }
             }}
           />
         </div>
