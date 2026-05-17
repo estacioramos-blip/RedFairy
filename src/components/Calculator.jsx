@@ -162,7 +162,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   // Cadastro
   const [nome, setNome] = useState('')
   const [tipoConselho, setTipoConselho] = useState('CRM')
-  const [conselho, setConselho] = useState('')
+  const [conselho, setConselho] = useState(() => {  // __FATIA4C_PREFILL__
+    try { return localStorage.getItem('rf_crm_prefill') || '' } catch(e) { return '' }
+  })
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -418,7 +420,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
                 placeholder="seu@email.com" className={inputClass} autoComplete="off" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Crie uma Senha</label>
               <div style={{ position: 'relative' }}>
                 <input type={showSenha ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)}
                   placeholder="Mínimo 6 caracteres" className={inputClass} autoComplete="new-password"
