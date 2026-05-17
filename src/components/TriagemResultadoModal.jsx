@@ -146,29 +146,13 @@ export default function TriagemResultadoModal({
           </div>
 
           <div className="px-6 pb-6 flex gap-3">
-            {modoMedico && !inputs?.bariatrica && onAprofundar ? (
-              <>
-                <button
-                  onClick={onAprofundar}
-                  className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-colors text-sm"
-                >
-                  Aprofundar agora
-                </button>
-                <button
-                  onClick={onVoltarInicio}
-                  className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors text-sm"
-                >
-                  Continuar
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={onVoltarInicio}
-                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-colors text-sm"
-              >
-                Continuar
-              </button>
-            )}
+            {/* __TELA4_SO_CONTINUAR__ Fatia 1A: so Continuar (sem Aprofundar) */}
+            <button
+              onClick={onVoltarInicio}
+              className="w-full py-3 rounded-xl bg-red-900 hover:bg-red-950 active:bg-red-950 text-white font-bold transition-colors text-sm"
+            >
+              Continuar
+            </button>
           </div>
         </div>
       </div>

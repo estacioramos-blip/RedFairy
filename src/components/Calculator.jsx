@@ -275,21 +275,16 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
 
-  if (cadSucesso) {
-    return (
-      <CadastroConcluidoTela
-        nomeMedico={nome}
-        crmMedico={conselho}
-        onConcluir={() => {
-          // Auto-login: marca como logado e abre fluxo afiliados
-          setCadSucesso(false);
-          if (typeof onConcluir === 'function') {
-            onConcluir(nome, conselho);
-          }
-        }}
-      />
-    )
-  }
+  // __FATIA1B_SEM_TELA6__ TELA 6 (CadastroConcluidoTela) eliminada.
+  // Ao concluir o cadastro, segue direto para a proxima etapa.
+  useEffect(() => {
+    if (cadSucesso) {
+      setCadSucesso(false);
+      if (typeof onConcluir === 'function') {
+        onConcluir(nome, conselho);
+      }
+    }
+  }, [cadSucesso]);
 
   return (
     <div className="bg-gray-900 relative" style={{ minHeight: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}> {/* __B2_SCROLL__ */}
