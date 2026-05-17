@@ -666,6 +666,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const refVcmForm = useRef(null);
   const refRdwForm = useRef(null);
   const [conviteRecusado, setConviteRecusado] = useState(false);
+  const [afiliacaoRecusada, setAfiliacaoRecusada] = useState(false);
   // __B4_PODE_CONVITE__ convite afiliado so para medico realmente nao cadastrado
   function podeConvite() {
     try { if (localStorage.getItem('medico_crm')) return false; } catch(e) {}
@@ -1826,20 +1827,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   <input
                     type="checkbox"
                     onChange={() => {
-                      setConviteRecusado(true);
-                      setTimeout(() => {
-                        setShowConviteAfiliado(false);
-                        setConviteRecusado(false);
-                        // Se destino era 'aprofundar', nao volta pra landing - fica no form
-                        if (destinoAposConvite === 'aprofundar') {
-                          setDestinoAposConvite(null);
-                          // Form ja esta visivel com os dados da triagem
-                          return;
-                        }
-                        // Caso contrario (landing ou null), volta como antes
-                        setDestinoAposConvite(null);
-                        if (onVoltar) onVoltar();
-                      }, 6000);
+                      // __FATIA1C__ Agora nao: cadastra (TELA 7), pula afiliacao
+                      setAfiliacaoRecusada(true);
+                      setShowConviteAfiliado(false);
+                      setShowAuthMedicoOverlay('cadastro');
                     }}
                     className="w-3 h-3 cursor-pointer"
                     style={{ accentColor: '#9ca3af' }}
@@ -1881,6 +1872,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               setMedicoCRM(crm);
               setCadastrado(true);
               setShowAuthMedicoOverlay(false);
+              // __FATIA1C__ Se recusou afiliacao: pula TELA 8, vai pra TELA 9
+              if (afiliacaoRecusada) {
+                setAfiliacaoRecusada(false);
+                setShowFelicitacoes(true);
+                return;
+              }
               // So abre afiliados se o medico AINDA NAO for afiliado completo
               // (afiliado completo = tem cep + cpf + pix_chave no banco).
               try {
@@ -1891,9 +1888,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   .maybeSingle();
                 if (!md?.cep || !md?.cpf || !md?.pix_chave) {
                   setShowAfiliados(true);
+                } else {
+                  setShowFelicitacoes(true);
                 }
               } catch (e) {
-                // Em caso de erro de consulta, nao bloqueia: abre afiliados
                 setShowAfiliados(true);
               }
             }}
