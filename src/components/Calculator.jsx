@@ -1151,9 +1151,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             }));
           }}
           onFechar={() => {
-            // Usuario optou por ir direto ao form completo
+            // __TELA2_X_LANDING__ X da TELA 2: volta pra landing (desistiu)
             setShowTriagem(false);
             setTriagemResultado(null);
+            if (onVoltar) onVoltar();
           }}
         />
       )}

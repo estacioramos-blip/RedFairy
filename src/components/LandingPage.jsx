@@ -415,6 +415,14 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     } catch(e) {}
     setMedicoLogado('');
   }
+  const [crmMedicoExpand, setCrmMedicoExpand] = useState(false);
+  const [crmMedicoValor, setCrmMedicoValor] = useState('');
+  const crmMedicoValido = /^\d+\/[A-Z]{2}$/.test((crmMedicoValor || '').trim().toUpperCase());
+  function continuarComoMedico() {
+    if (!crmMedicoValido) return;
+    try { localStorage.setItem('rf_crm_prefill', crmMedicoValor.trim().toUpperCase()); } catch(e) {}
+    onModoMedico();
+  }
   const [navScrolled, setNavScrolled] = useState(false)
   const [navOpen,     setNavOpen]     = useState(false)
   const [showFilosofia, setShowFilosofia] = useState(false)
@@ -824,7 +832,32 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem', marginBottom:'0.5rem', width:'100%', maxWidth:700 }}>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
-                <button className="btn btn-primary" onClick={medicoLogado ? undefined : onModoMedico} disabled={!!medicoLogado} title={medicoLogado ? 'Você já está logado — use MÉDICO AFILIADO' : ''} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', opacity: medicoLogado ? 0.45 : 1, cursor: medicoLogado ? 'not-allowed' : 'pointer' }}>Sou Médico</button>
+                {medicoLogado ? (
+                  <button className="btn btn-primary" disabled title="Você já está logado — use MÉDICO AFILIADO" style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', opacity:0.45, cursor:'not-allowed' }}>Sou Médico</button>
+                ) : !crmMedicoExpand ? (
+                  <button className="btn btn-primary" onClick={() => setCrmMedicoExpand(true)} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>Sou Médico</button>
+                ) : (
+                  <div style={{ border:'2px solid #7B1E1E', borderRadius:'12px', padding:'12px', background:'#fff', width:'100%' }}>
+                    <label style={{ display:'block', fontSize:'0.72rem', fontWeight:800, color:'#1e3a8a', letterSpacing:'0.5px', marginBottom:'4px' }}>DIGITE SEU CRM/UF:</label>
+                    <input
+                      autoFocus
+                      type="text"
+                      value={crmMedicoValor}
+                      onChange={e => setCrmMedicoValor(e.target.value.toUpperCase())}
+                      onKeyDown={e => { if (e.key === 'Enter' && crmMedicoValido) continuarComoMedico(); }}
+                      placeholder="Ex: 6302/BA"
+                      style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.9rem', outline:'none' }}
+                    />
+                    <p style={{ fontSize:'0.66rem', color:'#1e3a8a', fontWeight:600, margin:'5px 0 10px' }}>SERÁ O SEU LOGIN NO SISTEMA</p>
+                    <button
+                      onClick={continuarComoMedico}
+                      disabled={!crmMedicoValido}
+                      className="btn btn-primary"
+                      style={{ height:42, width:'100%', justifyContent:'center', alignItems:'center', display:'flex', fontWeight:800, letterSpacing:'1px', opacity: crmMedicoValido ? 1 : 0.4, cursor: crmMedicoValido ? 'pointer' : 'not-allowed', boxShadow: crmMedicoValido ? '0 0 0 3px rgba(123,30,30,0.25)' : 'none' }}>
+                      CONTINUAR →
+                    </button>
+                  </div>
+                )}
                 <button className="btn btn-primary" onClick={() => { try { localStorage.setItem('rf_open_login','1'); } catch(e){} onModoMedico(); }} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', fontSize:"0.7rem", fontWeight:700, letterSpacing:"1.5px" }}>MÉDICO AFILIADO</button>
                 <p style={{ fontSize:'0.78rem', color:'#7B1E1E', lineHeight:1.6, fontWeight:700, margin:0, textAlign:'justify' }}>
                   Avalie o eritron e o metabolismo do ferro do seu paciente com precisão clínica com toques no seu celular, e o insira em um projeto de qualidade de vida.
