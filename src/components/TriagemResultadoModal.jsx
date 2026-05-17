@@ -346,6 +346,18 @@ export default function TriagemResultadoModal({
             </div>
           )}
 
+          {/* __CRM_SUBTEXTO_TELA3__ CRM do medico (logado ou prefill da landing) */}
+          {(() => {
+            let crm = medicoCRM;
+            if (!crm) { try { crm = localStorage.getItem('rf_crm_prefill') || ''; } catch(e) { crm = ''; } }
+            if (!crm) return null;
+            return (
+              <p className="text-center text-sm font-bold mt-1" style={{ color: '#1d4ed8' }}>
+                CRM {crm}
+              </p>
+            );
+          })()}
+
           {erroSalvamento && (
             <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700">
               ⚠️ {erroSalvamento}
