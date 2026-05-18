@@ -17,6 +17,8 @@ export default function App() {
   const [demoMedicoTimer, setDemoMedicoTimer] = useState(null)
   const [demoPacientePerfil, setDemoPacientePerfil] = useState(null)
   const [dadosPreCadastro, setDadosPreCadastro] = useState({ cpf: '', sexo: '', dataNascimento: '' })
+  const [showInatividade, setShowInatividade] = useState(false)  // __FATIA5D__
+  const [landingKey, setLandingKey] = useState(0)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -37,6 +39,48 @@ export default function App() {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
+
+  // __FATIA5D__ logoff automatico por inatividade
+  function fazerLogoffMedico() {
+    try {
+      localStorage.removeItem('medico_crm')
+      localStorage.removeItem('medico_nome')
+      localStorage.removeItem('medico_login_at')
+    } catch (e) {}
+    setShowInatividade(false)
+    setLandingKey(k => k + 1)
+    setModo('home')
+  }
+
+  useEffect(() => {
+    const naLanding = modo === 'home'
+    const LIMITE = naLanding ? 2 * 60 * 1000 : 5 * 60 * 1000
+    let tIdle = null
+    let tGraca = null
+    const limpar = () => { if (tIdle) clearTimeout(tIdle); if (tGraca) clearTimeout(tGraca) }
+    const disparar = () => {
+      if (naLanding) {
+        let logado = false
+        try { logado = !!localStorage.getItem('medico_crm') } catch (e) {}
+        if (logado) fazerLogoffMedico()
+      } else {
+        setShowInatividade(true)
+        tGraca = setTimeout(() => { fazerLogoffMedico() }, 30 * 1000)
+      }
+    }
+    const resetar = () => {
+      if (showInatividade) return
+      limpar()
+      tIdle = setTimeout(disparar, LIMITE)
+    }
+    const eventos = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']
+    eventos.forEach(ev => window.addEventListener(ev, resetar, { passive: true }))
+    resetar()
+    return () => {
+      limpar()
+      eventos.forEach(ev => window.removeEventListener(ev, resetar))
+    }
+  }, [modo, showInatividade])
 
   function handleLogoClick() {
     const next = adminClicks + 1
@@ -66,6 +110,7 @@ export default function App() {
   }
 
 
+  function renderConteudo() {  // __FATIA5D__
   if (modo === 'calculadora') {
     return (
       <div>
@@ -115,7 +160,7 @@ export default function App() {
   }
 if (modo === 'home') {
   return (
-    <LandingPage
+    <LandingPage key={landingKey}
       onModoMedico={(flag) => { if (flag) localStorage.setItem('rf_flag', flag); handleDemoMedico(); }}
       onModoPaciente={() => setModo('triagem-direta')}
       onIrLogin={() => setModo('login')}
@@ -206,5 +251,37 @@ if (modo === 'home') {
 
       </div>
     </div>
+  )
+}
+
+  // __FATIA5D__ modal de inatividade (cobre qualquer tela)
+  const InatividadeModal = showInatividade ? (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div style={{ background: '#fff', borderRadius: '16px', maxWidth: '360px', width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
+        <div style={{ background: '#b91c1c', padding: '16px 20px' }}>
+          <h3 style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', margin: 0 }}>Voce ainda esta ai?</h3>
+        </div>
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <p style={{ color: '#374151', fontSize: '0.9rem', lineHeight: 1.5, margin: '0 0 6px' }}>
+            Voce esta inativo ha algum tempo. Deseja continuar?
+          </p>
+          <p style={{ color: '#9ca3af', fontSize: '0.75rem', margin: '0 0 16px' }}>
+            Voce sera desconectado em 30s.
+          </p>
+          <button
+            onClick={() => setShowInatividade(false)}
+            style={{ width: '100%', background: '#b91c1c', color: '#fff', fontWeight: 800, border: 'none', borderRadius: '10px', padding: '12px', fontSize: '0.9rem', cursor: 'pointer' }}>
+            Continuar
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null
+
+  return (
+    <>
+      {renderConteudo()}
+      {InatividadeModal}
+    </>
   )
 }
