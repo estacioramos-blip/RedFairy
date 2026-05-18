@@ -5,6 +5,12 @@ import fairy3 from '../../redfairy3.png'
 import OBAModal from './OBAModal'
 
 const LANDING_CSS = `
+  .rf-cx-input::placeholder { color:#9ca3af; opacity:1; font-weight:600; letter-spacing:0.5px; }
+
+  .rf-fadewrap { transition: opacity 0.25s ease; }
+  .rf-fadewrap.out { opacity: 0; }
+  .rf-fadewrap.in { opacity: 1; }
+
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
     --wine: #7B1E1E; --wine-dark: #5C1515;
@@ -423,6 +429,63 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     try { localStorage.setItem('rf_crm_prefill', crmMedicoValor.trim().toUpperCase()); } catch(e) {}
     onModoMedico();
   }
+
+  // __FATIA_L1__ maquina de estados dos botoes progressivos
+  const [fluxoEtapa, setFluxoEtapa] = useState('inicio'); // inicio|escolha|medico|paciente
+  const [fluxoFade, setFluxoFade] = useState(false);
+  const [twTexto, setTwTexto] = useState('');
+  useEffect(() => {
+    if (fluxoEtapa !== 'inicio') return;
+    const full = 'COMECAMOS PELO HEMOGRAMA';
+    let i = 0;
+    setTwTexto('');
+    const iv = setInterval(() => {
+      i++;
+      setTwTexto(full.slice(0, i));
+      if (i >= full.length) clearInterval(iv);
+    }, 8);
+    return () => clearInterval(iv);
+  }, [fluxoEtapa]);
+  function irPara(etapa) {
+    setFluxoFade(true);
+    setTimeout(() => {
+      if (etapa === 'medico') { setCaixaPasso('crm'); setCaixaSenha(''); }
+      setFluxoEtapa(etapa);
+      setFluxoFade(false);
+    }, 260);
+  }
+  function signInMedico() {
+    try { localStorage.setItem('rf_open_login','1'); } catch(e){}
+    onModoMedico();
+  }
+
+  // __L2A__ caixa unificada CRM -> Senha
+  const [caixaPasso, setCaixaPasso] = useState('crm'); // crm|senha
+  const [caixaSenha, setCaixaSenha] = useState('');
+  const [caixaShowSenha, setCaixaShowSenha] = useState(false);
+  const [caixaTw, setCaixaTw] = useState('');
+  const caixaSenhaValida = (caixaSenha || '').length >= 6;
+  useEffect(() => {
+    if (fluxoEtapa !== 'medico') return;
+    const full = caixaPasso === 'crm' ? 'DIGITE O SEU CRM/UF' : 'DIGITE A SUA SENHA';
+    let i = 0; setCaixaTw('');
+    const iv = setInterval(() => {
+      i++; setCaixaTw(full.slice(0, i));
+      if (i >= full.length) clearInterval(iv);
+    }, 8);
+    return () => clearInterval(iv);
+  }, [fluxoEtapa, caixaPasso]);
+  function caixaAvancarCrm() {
+    if (!crmMedicoValido) return;
+    setCaixaSenha('');
+    setCaixaPasso('senha');
+  }
+  function caixaConcluir() {
+    // L2a: sem banco ainda - valida formato e segue (continuarComoMedico
+    // ja salva rf_crm_prefill e vai pra triagem). L2b amarra ao banco.
+    if (!crmMedicoValido || !caixaSenhaValida) return;
+    continuarComoMedico();
+  }
   const [navScrolled, setNavScrolled] = useState(false)
   const [navOpen,     setNavOpen]     = useState(false)
   const [showFilosofia, setShowFilosofia] = useState(false)
@@ -830,47 +893,140 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
             </div>
 
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.75rem', marginBottom:'0.5rem', width:'100%', maxWidth:700 }}>
-              <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
-                {medicoLogado ? (
-                  <button className="btn btn-primary" disabled title="Você já está logado — use MÉDICO AFILIADO" style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', opacity:0.45, cursor:'not-allowed' }}>Sou Médico</button>
-                ) : !crmMedicoExpand ? (
-                  <button className="btn btn-primary" onClick={() => setCrmMedicoExpand(true)} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>Sou Médico</button>
-                ) : (
-                  <div style={{ border:'2px solid #7B1E1E', borderRadius:'12px', padding:'12px', background:'#fff', width:'100%' }}>
-                    <label style={{ display:'block', fontSize:'0.72rem', fontWeight:800, color:'#1e3a8a', letterSpacing:'0.5px', marginBottom:'4px' }}>DIGITE SEU CRM/UF:</label>
-                    <input
-                      autoFocus
-                      type="text"
-                      value={crmMedicoValor}
-                      onChange={e => setCrmMedicoValor(e.target.value.toUpperCase())}
-                      onKeyDown={e => { if (e.key === 'Enter' && crmMedicoValido) continuarComoMedico(); }}
-                      placeholder="Ex: 6302/BA"
-                      style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.9rem', outline:'none' }}
-                    />
-                    <p style={{ fontSize:'0.66rem', color:'#1e3a8a', fontWeight:600, margin:'5px 0 10px' }}>SERÁ O SEU LOGIN NO SISTEMA</p>
-                    <button
-                      onClick={continuarComoMedico}
-                      disabled={!crmMedicoValido}
-                      className="btn btn-primary"
-                      style={{ height:42, width:'100%', justifyContent:'center', alignItems:'center', display:'flex', fontWeight:800, letterSpacing:'1px', opacity: crmMedicoValido ? 1 : 0.4, cursor: crmMedicoValido ? 'pointer' : 'not-allowed', boxShadow: crmMedicoValido ? '0 0 0 3px rgba(123,30,30,0.25)' : 'none' }}>
-                      CONTINUAR →
-                    </button>
+            {/* __FATIA_L1__ __L1_V4__ botoes progressivos */}
+            <div className={`rf-fadewrap ${fluxoFade ? 'out' : 'in'}`} style={{ width:'100%', maxWidth:480, margin:'0 auto 0.5rem', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'0.7rem' }}>
+
+              {fluxoEtapa === 'inicio' && (
+                <>
+                  <button onClick={() => irPara('escolha')}
+                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #ef4444', color:'#ef4444', fontSize:'0.62rem' }}>
+                    ENTRAR
+                  </button>
+                  <p style={{ fontSize:'0.8rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0.4rem 0 0', minHeight:'1.1rem' }}>
+                    {twTexto}
+                  </p>
+                </>
+              )}
+
+              {fluxoEtapa === 'escolha' && (
+                <div style={{ display:'flex', gap:'0.9rem', justifyContent:'center', width:'100%' }}>
+                  <button onClick={() => irPara('medico')}
+                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #ef4444', color:'#ef4444', fontSize:'0.62rem' }}>
+                    MEDICO
+                  </button>
+                  <button onClick={() => irPara('paciente')}
+                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #111827', color:'#111827', fontSize:'0.62rem' }}>
+                    PACIENTE
+                  </button>
+                </div>
+              )}
+
+              {/* __L2A__ caixa unificada CRM -> Senha */}
+              {fluxoEtapa === 'medico' && (
+                <div style={{ border:'2px solid #ef4444', borderRadius:'14px', padding:'16px', background:'#fff', width:'100%', maxWidth:340 }}>
+                  <p style={{ fontSize:'0.78rem', fontWeight:800, color:'#ef4444', letterSpacing:'0.5px', margin:'0 0 6px', minHeight:'1rem', textAlign:'center' }}>
+                    {caixaTw}
+                  </p>
+
+                  {caixaPasso === 'crm' && (
+                    <>
+                      <input
+                        autoFocus
+                        type="text"
+                        value={crmMedicoValor}
+                        onChange={e => setCrmMedicoValor(e.target.value.toUpperCase())}
+                        onKeyDown={e => { if (e.key === 'Enter' && crmMedicoValido) caixaAvancarCrm(); }}
+                        placeholder="Ex: 6302/BA"
+                        className="rf-cx-input"
+                        style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center' }}
+                      />
+                      <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 12px', textAlign:'center' }}>LOGIN NO SISTEMA</p>
+                      <button
+                        onClick={caixaAvancarCrm}
+                        disabled={!crmMedicoValido}
+                        style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#ef4444', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: crmMedicoValido ? 'pointer' : 'not-allowed', opacity: crmMedicoValido ? 1 : 0.4 }}>
+                        CONTINUAR →
+                      </button>
+                    </>
+                  )}
+
+                  {caixaPasso === 'senha' && (
+                    <>
+                      <div style={{ position:'relative' }}>
+                        <input
+                          autoFocus
+                          type={caixaShowSenha ? 'text' : 'password'}
+                          value={caixaSenha}
+                          onChange={e => setCaixaSenha(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter' && caixaSenhaValida) caixaConcluir(); }}
+                          placeholder="SEIS CARACTERES"
+                          className="rf-cx-input"
+                          style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 38px 10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center' }}
+                        />
+                        <button type="button" onClick={() => setCaixaShowSenha(s => !s)}
+                          aria-label={caixaShowSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                          style={{ position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', padding:'4px', color:'#9ca3af' }}>
+                          {caixaShowSenha ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                          )}
+                        </button>
+                      </div>
+                      <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 12px', textAlign:'center' }}>LOGIN NO SISTEMA</p>
+                      <button
+                        onClick={caixaConcluir}
+                        disabled={!caixaSenhaValida}
+                        style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#ef4444', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: caixaSenhaValida ? 'pointer' : 'not-allowed', opacity: caixaSenhaValida ? 1 : 0.4 }}>
+                        CONTINUAR →
+                      </button>
+                      <button onClick={() => setCaixaPasso('crm')}
+                        style={{ width:'100%', background:'none', border:'none', color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, letterSpacing:'1px', cursor:'pointer', marginTop:'8px' }}>
+                        ← corrigir CRM
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {fluxoEtapa === 'paciente' && (
+                <>
+                  <div style={{ display:'flex', gap:'0.9rem', justifyContent:'center', width:'100%' }}>
+                    <button onClick={onIrLogin}
+                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #374151', color:'#374151', fontSize:'0.62rem' }}>
+                    SIGN-IN
+                  </button>
+                    <button onClick={onModoPaciente}
+                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #111827', color:'#111827', fontSize:'0.62rem' }}>
+                    SIGN-UP
+                  </button>
                   </div>
-                )}
-                <button className="btn btn-primary" onClick={() => { try { localStorage.setItem('rf_open_login','1'); } catch(e){} onModoMedico(); }} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', fontSize:"0.7rem", fontWeight:700, letterSpacing:"1.5px" }}>MÉDICO AFILIADO</button>
-                <p style={{ fontSize:'0.78rem', color:'#7B1E1E', lineHeight:1.6, fontWeight:700, margin:0, textAlign:'justify' }}>
-                  Avalie o eritron e o metabolismo do ferro do seu paciente com precisão clínica com toques no seu celular, e o insira em um projeto de qualidade de vida.
-                </p>
-              </div>
-              <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
-                <button className="btn btn-secondary" onClick={onModoPaciente} style={{ height:60, justifyContent:"center", alignItems:"center", display:"flex", width:'100%' }}>Sou Paciente</button>
-                <button className="btn btn-secondary" onClick={onIrLogin} style={{ height:36, justifyContent:"center", alignItems:"center", display:"flex", width:'100%', fontSize:"0.7rem", fontWeight:700, letterSpacing:"1.5px" }}>PACIENTE CADASTRADO</button>
-                <p style={{ fontSize:'0.78rem', color:'#1F2937', lineHeight:1.6, fontWeight:700, margin:0, textAlign:'justify' }}>
-                  Com poucos exames e informações de vida, monitore a sua hemoglobina e receba orientações médicas ajustadas ao que você precisa. Viva mais e melhor!
-                </p>
-              </div>
+                  <div style={{ display:'flex', gap:'0.9rem', justifyContent:'center', width:'100%', marginTop:'0.35rem' }}>
+                  <span style={{ width:72, textAlign:'center', fontSize:'0.5rem', fontWeight:800, letterSpacing:'1px', color:'#374151' }}>CADASTRADO</span>
+                  <span style={{ width:72, textAlign:'center', fontSize:'0.5rem', fontWeight:800, letterSpacing:'1px', color:'#111827' }}>NAO CADASTRADO</span>
+                </div>
+                </>
+              )}
+
+              {fluxoEtapa !== 'inicio' && (
+                <button onClick={() => { setCrmMedicoExpand(false); irPara(fluxoEtapa === 'escolha' ? 'inicio' : 'escolha'); }}
+                  style={{ background:'none', border:'none', color:'#9CA3AF', fontSize:'0.7rem', fontWeight:700, letterSpacing:'1px', cursor:'pointer', marginTop:'0.3rem' }}>
+                  ← VOLTAR
+                </button>
+              )}
+
             </div>
+
             {/* Dupla linha vermelha + texto afiliados */}
             <div style={{ margin:'0.5rem 0 0.8rem', textAlign:'center', width:'100%', maxWidth:700 }}>
               <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.5rem' }} />

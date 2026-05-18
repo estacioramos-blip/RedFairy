@@ -28,6 +28,8 @@ export default function TriagemResultadoModal({
   const [tela, setTela] = useState('resultado') // 'resultado' | 'aguardo'
   const [salvando, setSalvando] = useState(false)
   const [erroSalvamento, setErroSalvamento] = useState(null)
+  const [pedNome, setPedNome] = useState('')  // __FATIA5C__
+  const [pedCelular, setPedCelular] = useState('')
 
   if (!resultado) return null
 
@@ -66,6 +68,23 @@ export default function TriagemResultadoModal({
         console.error('Erro ao salvar triagem:', error)
         return { sucesso: false, erro: error.message }
       }
+      // __FATIA5A__ apos salvar, verifica limite de 3 (visitante sem profile)
+      try {
+        const cpfDigits = (inputs.cpf || '').replace(/\D/g, '')
+        const { data: prof } = await supabase
+          .from('profiles').select('cpf').eq('cpf', cpfDigits).maybeSingle()
+        if (!prof) {
+          const { count: nTri } = await supabase
+            .from('triagens').select('*', { count: 'exact', head: true })
+            .eq('cpf', cpfDigits)
+          if ((nTri || 0) === 3) {
+            return { sucesso: true, limite3: true }
+          }
+          if ((nTri || 0) === 1) {  /* __FATIA5C__ 1a triagem visitante */
+            return { sucesso: true, pedidoExames: true }
+          }
+        }
+      } catch (e) { /* nao bloqueia o fluxo por erro de contagem */ }
       return { sucesso: true }
     } catch (err) {
       console.error('Erro inesperado ao salvar:', err)
@@ -81,6 +100,8 @@ export default function TriagemResultadoModal({
       setErroSalvamento('Não foi possível salvar. Tente novamente ou contate o suporte.')
       return
     }
+    if (resp.limite3) { setTela('limite3'); return }  /* __FATIA5A__ */
+    if (resp.pedidoExames) { setTela('pedidoExames'); return }  /* __FATIA5C__ */
     setTela('aguardo')
   }
 
@@ -89,6 +110,141 @@ export default function TriagemResultadoModal({
     await salvarTriagem()
     setSalvando(false)
     onCadastrar()
+  }
+
+  // ===== TELA PEDIDO DE EXAMES (5C) =====
+  if (tela === 'pedidoExames') {
+    const cpfFmt = (inputs?.cpf || '')
+    const dnFmt = inputs?.data_nascimento
+      ? String(inputs.data_nascimento).split('-').reverse().join('/')
+      : (inputs?.dataNascimento || '')
+    const podeEnviar = pedNome.trim().length > 2 && pedCelular.replace(/\D/g, '').length >= 10
+    const enviarWhatsApp = () => {
+      const linhas = [
+        'PEDIDO DE EXAMES - RedFairy',
+        'CPF: ' + cpfFmt,
+        'NOME: ' + pedNome.trim().toUpperCase(),
+        'DATA DE NASCIMENTO: ' + dnFmt,
+        'CELULAR: ' + pedCelular,
+        'EXAME: FERRITINA',
+        'EXAME: SATURACAO DA TRANSFERRINA'
+      ]
+      const texto = encodeURIComponent(linhas.join('\n'))
+      window.open('https://wa.me/5571997110804?text=' + texto, '_blank')
+    }
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+        <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
+            <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
+            <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
+            <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">Pedido de exames</p>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <p className="text-sm text-blue-900 leading-relaxed">
+                Este é o seu <strong>primeiro pedido gratuito</strong> de
+                <strong> FERRITINA</strong> e <strong>SATURAÇÃO DA TRANSFERRINA</strong>.
+                Preencha os dados abaixo e envie pelo WhatsApp.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
+              <input
+                type="text"
+                value={pedNome}
+                onChange={e => setPedNome(e.target.value.toUpperCase())}
+                placeholder="Nome completo do paciente"
+                className="w-full border-2 border-yellow-400 bg-yellow-50 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
+              <input
+                type="tel"
+                value={pedCelular}
+                onChange={e => {
+                  const d = e.target.value.replace(/\D/g, '').slice(0, 11)
+                  let f = d
+                  if (d.length > 10) f = '(' + d.slice(0,2) + ') ' + d.slice(2,7) + '-' + d.slice(7)
+                  else if (d.length > 6) f = '(' + d.slice(0,2) + ') ' + d.slice(2,6) + '-' + d.slice(6)
+                  else if (d.length > 2) f = '(' + d.slice(0,2) + ') ' + d.slice(2)
+                  setPedCelular(f)
+                }}
+                placeholder="(00) 00000-0000"
+                inputMode="numeric"
+                className="w-full border-2 border-yellow-400 bg-yellow-50 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              />
+            </div>
+            <button
+              onClick={enviarWhatsApp}
+              disabled={!podeEnviar}
+              className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed">
+              Solicitar exames pelo WhatsApp
+            </button>
+            <button
+              onClick={onVoltarInicio}
+              className="w-full py-2.5 rounded-xl border-2 border-gray-300 text-gray-600 font-semibold hover:bg-gray-50 transition-colors text-sm">
+              Voltar
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ===== TELA LIMITE 3 (5A') =====
+  if (tela === 'limite3') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+        <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
+            <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
+            <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
+            <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">Limite gratuito</p>
+          </div>
+          <div className="p-6 space-y-5">
+            <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-center">
+              <p className="text-sm font-bold text-red-900 leading-relaxed">
+                SÃO POSSÍVEIS TRÊS AVALIAÇÕES GRATUITAS POR CPF.
+                PARA NOVA AVALIAÇÃO O PACIENTE DEVE ESTAR INSCRITO.
+              </p>
+            </div>
+
+            {modoMedico ? (
+              <div className="text-center space-y-3">
+                <div>
+                  <p className="text-sm font-bold text-gray-800">RECOMENDE AO PACIENTE QUE SE CADASTRE</p>
+                  <p className="text-xs text-gray-500 mt-0.5">ACUMULE PONTOS NO PROGRAMA 4DOC</p>
+                </div>
+                <button
+                  onClick={onVoltarInicio}
+                  className="w-full py-3 rounded-xl bg-red-900 hover:bg-red-950 text-white font-bold transition-colors text-sm">
+                  Voltar
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <button
+                  onClick={onCadastrar}
+                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors text-sm">
+                  IR PARA O CADASTRO
+                </button>
+                <label className="flex items-center justify-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    onChange={() => onVoltarInicio()}
+                    className="w-3 h-3 cursor-pointer"
+                    style={{ accentColor: '#9ca3af' }}
+                  />
+                  <span style={{ color: '#9ca3af', fontSize: '11px', letterSpacing: '0.5px' }}>AGORA NÃO</span>
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // ===== TELA AGUARDO =====
