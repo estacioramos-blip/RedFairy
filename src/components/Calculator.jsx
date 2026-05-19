@@ -168,6 +168,8 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  // __FLUXO2_TELA7_SEM_SENHA__ medico ja logado (senha criada na caixa)
+  const jaLogadoSemSenha = (() => { try { return !!localStorage.getItem('medico_crm'); } catch(e) { return false; } })()
   const [cadErro, setCadErro] = useState('')
   const [cadLoading, setCadLoading] = useState(false)
   const [cadSucesso, setCadSucesso] = useState(false)
@@ -236,7 +238,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     if (!conselhoLimpo) { setCadErro('Informe o número do conselho de classe/UF.'); return }
     if (celularDigits.length < 10) { setCadErro('Informe um celular válido com DDD.'); return }
     if (!email || !email.includes('@')) { setCadErro('Informe um e-mail válido.'); return }
-    if (!senha || senha.length < 6) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
+    if (!jaLogadoSemSenha && (!senha || senha.length < 6)) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
 
     setCadLoading(true)
 
@@ -247,27 +249,38 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
       .eq('crm', conselhoLimpo)
       .single()
 
-    if (existing) {
-      setCadLoading(false)
-      setCadErro('Este conselho já está cadastrado. Faça login.')
-      return
-    }
-
     const partes = conselhoLimpo.split('/')
     const uf = partes[1] || ''
 
-    const { error } = await supabase.from('medicos').insert({
-      nome: nome.trim(),
-      crm: conselhoLimpo,
-      uf,
-      celular: celularDigits,
-      email: email.trim().toLowerCase(),
-      senha_klipbit: senha,
-    })
+    let opError = null
+    if (existing) {
+      // __L2B4__ registro minimo ja criado (caixa da landing): completa perfil
+      const _upd = {
+        nome: nome.trim(),
+        uf,
+        celular: celularDigits,
+        email: email.trim().toLowerCase(),
+      };
+      if (!jaLogadoSemSenha) { _upd.senha_klipbit = senha; }
+      const { error } = await supabase.from('medicos')
+        .update(_upd)
+        .eq('crm', conselhoLimpo)
+      opError = error
+    } else {
+      const { error } = await supabase.from('medicos').insert({
+        nome: nome.trim(),
+        crm: conselhoLimpo,
+        uf,
+        celular: celularDigits,
+        email: email.trim().toLowerCase(),
+        senha_klipbit: senha,
+      })
+      opError = error
+    }
 
     setCadLoading(false)
 
-    if (error) { setCadErro('Erro ao salvar. Tente novamente.'); return }
+    if (opError) { setCadErro('Erro ao salvar. Tente novamente.'); return }
 
     localStorage.setItem('medico_crm', conselhoLimpo)
     localStorage.setItem('medico_nome', nome.trim())
@@ -420,7 +433,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
                 placeholder="seu@email.com" className={inputClass} autoComplete="off" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Crie uma Senha</label>
+              {!jaLogadoSemSenha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie uma Senha</label>
               <div style={{ position: 'relative' }}>
                 <input type={showSenha ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)}
                   placeholder="Mínimo 6 caracteres" className={inputClass} autoComplete="new-password"
@@ -435,7 +448,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
                   )}
                 </button>
               </div>
-              <p className="text-xs text-red-800 font-medium mt-0.5">Será sua senha de acesso ao RedFairy.</p>
+              <p className="text-xs text-red-800 font-medium mt-0.5">Será sua senha de acesso ao RedFairy.</p></>)}
             </div>
             {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
             {showTC && <TermosModal onFechar={() => setShowTC(false)} />}
@@ -676,6 +689,35 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   }
   const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(false);
   const [showFelicitacoes, setShowFelicitacoes] = useState(false);
+
+  // __FLUXO1_POS_TRIAGEM__ decide para onde ir apos a triagem
+  async function decidirPosTriagem() {
+    setTriagemResultado(null);
+    setShowTriagem(false);
+    if (podeConvite()) {
+      setDestinoAposConvite('landing');
+      setShowConviteAfiliado(true);
+      return;
+    }
+    // Logado: verifica se o perfil esta completo (nome + email)
+    let completo = false;
+    try {
+      const { data: md } = await supabase
+        .from('medicos')
+        .select('nome, email')
+        .eq('crm', medicoCRM)
+        .maybeSingle();
+      completo = !!(md && md.nome && String(md.nome).trim() && md.email && String(md.email).trim());
+    } catch (e) {
+      completo = false;
+    }
+    if (completo) {
+      setShowFelicitacoes(true);
+    } else {
+      // Perfil minimo (veio da caixa SIGN-UP): completar dados na TELA 7
+      setShowAuthMedicoOverlay('cadastro');
+    }
+  }
   const [showBeneficios, setShowBeneficios] = useState(false);
 
   useEffect(() => {
@@ -1168,26 +1210,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           isDemo={false}
           medicoCRM={medicoCRM}
           onVoltarInicio={() => {
-            setTriagemResultado(null);
-            setShowTriagem(false);
-            // Se medico ainda nao cadastrado, abre convite em vez de voltar a home
-            if (podeConvite()) {
-              setDestinoAposConvite('landing');
-              setShowConviteAfiliado(true);
-            } else {
-              if (onVoltar) onVoltar();
-            }
+            // __FLUXO1_POS_TRIAGEM__
+            decidirPosTriagem();
           }}
           onCadastrar={() => {
-            setTriagemResultado(null);
-            setShowTriagem(false);
-            // Se medico ainda nao cadastrado, abre convite em vez de voltar a home
-            if (podeConvite()) {
-              setDestinoAposConvite('landing');
-              setShowConviteAfiliado(true);
-            } else {
-              if (onVoltar) onVoltar();
-            }
+            // __FLUXO1_POS_TRIAGEM__
+            decidirPosTriagem();
           }}
           onAprofundar={() => {
             // Medico clicou 'Aprofundar agora': fecha popup

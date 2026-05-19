@@ -3,6 +3,7 @@ import logo from '../assets/logo.png'
 import filosofiaBg from '../../redfairy-filosofia-bg.png'
 import fairy3 from '../../redfairy3.png'
 import OBAModal from './OBAModal'
+import { supabase } from '../lib/supabase'
 
 const LANDING_CSS = `
   .rf-cx-input::placeholder { color:#9ca3af; opacity:1; font-weight:600; letter-spacing:0.5px; }
@@ -464,10 +465,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
   const [caixaSenha, setCaixaSenha] = useState('');
   const [caixaShowSenha, setCaixaShowSenha] = useState(false);
   const [caixaTw, setCaixaTw] = useState('');
+  const [caixaModo, setCaixaModo] = useState(null); // __L2B1__ login|cadastro
+  const [caixaBuscando, setCaixaBuscando] = useState(false);
+  const [caixaErro, setCaixaErro] = useState('');
   const caixaSenhaValida = (caixaSenha || '').length >= 6;
   useEffect(() => {
     if (fluxoEtapa !== 'medico') return;
-    const full = caixaPasso === 'crm' ? 'DIGITE O SEU CRM/UF' : 'DIGITE A SUA SENHA';
+    const full = caixaPasso === 'crm'
+      ? 'DIGITE O SEU CRM/UF'
+      : (caixaModo === 'cadastro' ? 'CRIE AGORA A SUA SENHA' : 'DIGITE A SUA SENHA');
     let i = 0; setCaixaTw('');
     const iv = setInterval(() => {
       i++; setCaixaTw(full.slice(0, i));
@@ -475,16 +481,87 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     }, 8);
     return () => clearInterval(iv);
   }, [fluxoEtapa, caixaPasso]);
-  function caixaAvancarCrm() {
-    if (!crmMedicoValido) return;
+  async function caixaAvancarCrm() {
+    if (!crmMedicoValido || caixaBuscando) return;
+    setCaixaErro('');
+    setCaixaBuscando(true);
+    const crmLimpo = crmMedicoValor.trim().toUpperCase();
+    let existe = false;
+    try {
+      const { data } = await supabase
+        .from('medicos')
+        .select('crm')
+        .eq('crm', crmLimpo)
+        .maybeSingle();
+      existe = !!data;
+    } catch (e) {
+      // Em erro de rede, assume cadastro novo (fluxo nao trava)
+      existe = false;
+    }
+    setCaixaBuscando(false);
+    setCaixaModo(existe ? 'login' : 'cadastro');  // __L2B1__
     setCaixaSenha('');
     setCaixaPasso('senha');
   }
-  function caixaConcluir() {
-    // L2a: sem banco ainda - valida formato e segue (continuarComoMedico
-    // ja salva rf_crm_prefill e vai pra triagem). L2b amarra ao banco.
-    if (!crmMedicoValido || !caixaSenhaValida) return;
-    continuarComoMedico();
+  async function caixaConcluir() {
+    if (!crmMedicoValido || !caixaSenhaValida || caixaBuscando) return;
+    setCaixaErro('');
+    const crmLimpo = crmMedicoValor.trim().toUpperCase();
+
+    if (caixaModo === 'login') {  // __L2B2__
+      setCaixaBuscando(true);
+      let medico = null;
+      try {
+        const { data } = await supabase
+          .from('medicos')
+          .select('id, nome, crm, senha_klipbit')
+          .eq('crm', crmLimpo)
+          .maybeSingle();
+        medico = data;
+      } catch (e) { medico = null; }
+      setCaixaBuscando(false);
+      if (!medico) { setCaixaErro('CONSELHO NAO ENCONTRADO'); return; }
+      if (medico.senha_klipbit !== caixaSenha) { setCaixaErro('SENHA INCORRETA'); return; }
+      try {
+        localStorage.setItem('medico_crm', medico.crm);
+        localStorage.setItem('medico_nome', medico.nome || '');
+        localStorage.setItem('medico_login_at', Date.now().toString());
+        localStorage.setItem('rf_crm_prefill', medico.crm);
+      } catch (e) {}
+      onModoMedico();
+      return;
+    }
+
+    // __L2B3__ modo cadastro: insert minimo (crm + uf + senha)
+    setCaixaBuscando(true);
+    const partes = crmLimpo.split('/');
+    const uf = partes[1] || '';
+    let erroInsert = null;
+    try {
+      const { error } = await supabase.from('medicos').insert({
+        crm: crmLimpo,
+        uf,
+        celular: '',
+        email: '',
+        senha_klipbit: caixaSenha,
+      });
+      erroInsert = error;
+    } catch (e) {
+      erroInsert = e;
+    }
+    setCaixaBuscando(false);
+    if (erroInsert) {
+      // Pode ser corrida (CRM criado nesse meio tempo) ou erro real.
+      setCaixaErro('NAO FOI POSSIVEL CRIAR. TENTE NOVAMENTE.');
+      return;
+    }
+    try {
+      localStorage.setItem('medico_crm', crmLimpo);
+      localStorage.setItem('medico_nome', '');
+      localStorage.setItem('medico_login_at', Date.now().toString());
+      localStorage.setItem('rf_crm_prefill', crmLimpo);
+    } catch (e) {}
+    onModoMedico();
   }
   const [navScrolled, setNavScrolled] = useState(false)
   const [navOpen,     setNavOpen]     = useState(false)
@@ -980,6 +1057,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                         </button>
                       </div>
                       <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 12px', textAlign:'center' }}>LOGIN NO SISTEMA</p>
+                      {caixaErro && (
+                        <div style={{ textAlign:'center', margin:'0 0 10px' }}>
+                          <p style={{ color:'#dc2626', fontSize:'0.72rem', fontWeight:800, letterSpacing:'0.5px', margin:'0 0 2px' }}>{caixaErro}</p>
+                          {caixaModo === 'login' && (
+                            <a href="https://wa.me/5571997110804" target="_blank" rel="noopener noreferrer"
+                              style={{ color:'#7B1E1E', fontSize:'0.66rem', fontWeight:700, textDecoration:'underline' }}>
+                              Recuperar senha
+                            </a>
+                          )}
+                        </div>
+                      )}
                       <button
                         onClick={caixaConcluir}
                         disabled={!caixaSenhaValida}
