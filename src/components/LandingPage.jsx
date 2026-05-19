@@ -460,6 +460,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     onModoMedico();
   }
 
+  // __ENTRAR_LOGADO_DIRETO__ sessao ativa: entra na triagem sem caixa
+  function entrarLogadoDireto() {
+    try {
+      const crm = localStorage.getItem('medico_crm') || '';
+      if (crm) { localStorage.setItem('rf_crm_prefill', crm); }
+      // renova o carimbo de sessao
+      localStorage.setItem('medico_login_at', Date.now().toString());
+    } catch(e) {}
+    onModoMedico();
+  }
+
   // __L2A__ caixa unificada CRM -> Senha
   const [caixaPasso, setCaixaPasso] = useState('crm'); // crm|senha
   const [caixaSenha, setCaixaSenha] = useState('');
@@ -918,7 +929,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
         </div>
         {/* 3ª coluna: status de login (padrao ModalRedFairy) + hamburger */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px' }}>
-          {medicoLogado ? (
+          {/* __SEM_BOTAO_LOGIN_NAV__ */}
+          {medicoLogado && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div title={medicoLogado} style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#b91c1c', border: '2px solid rgba(123,30,30,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <span style={{ color: '#fff', fontWeight: 900, fontSize: '12px' }}>
@@ -931,11 +943,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 Sair
               </button>
             </div>
-          ) : (
-            <button onClick={() => { try { localStorage.setItem('rf_open_login','1'); } catch(e){} onModoMedico(); }} aria-label="Login" title="ENTRAR COMO MÉDICO AFILIADO"
-              style={{ background: '#e5e7eb', color: '#7B1E1E', border: '1.5px solid #7B1E1E', cursor: 'pointer', fontSize: '11px', fontWeight: 700, padding: '5px 14px', borderRadius: '8px', lineHeight: 1 }}>
-              LOGIN
-            </button>
           )}
           <button className="hamburger" onClick={() => setNavOpen(!navOpen)}>
             <span /><span /><span />
@@ -975,7 +982,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
 
               {fluxoEtapa === 'inicio' && (
                 <>
-                  <button onClick={() => irPara('escolha')}
+                  <button onClick={() => { if (medicoLogado) { entrarLogadoDireto(); } else { irPara('escolha'); } }}
                   onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
                   style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #ef4444', color:'#ef4444', fontSize:'0.62rem' }}>

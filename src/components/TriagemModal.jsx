@@ -242,7 +242,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     if ((nTriagens || 0) > 0) {
       const { data: triagem } = await supabase
         .from('triagens')
-        .select('sexo, data_nascimento, bariatrica, gestante, semanas_gestacao, dum, created_at')
+        .select('sexo, data_nascimento, bariatrica, gestante, semanas_gestacao, created_at') /* __FIX_DUM__ */
         .eq('cpf', cpfDigits)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -257,7 +257,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           semanas_gestacao_triagem: null,
           data_triagem_gestacao: null,
           semanas_gestacao: triagem.semanas_gestacao,
-          dum: triagem.dum,
+          dum: null,
           created_at: triagem.created_at,
         });
         return;
@@ -451,16 +451,38 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   </p>
                 </div>
               )}
-              {modoMedico && pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && (
-                <div className="mt-2 p-2 rounded-lg bg-green-50 border border-green-200">
-                  <p className="text-xs text-green-800">
-                    \u2713 Paciente conhecido: {pacienteConhecido.sexo === 'F' ? 'Feminino' : 'Masculino'}
-                    {pacienteConhecido.data_nascimento ? ' \u00b7 nasc. ' + String(pacienteConhecido.data_nascimento).split('-').reverse().join('/') : ''}
-                    {pacienteConhecido.bariatrica ? ' \u00b7 Bari\u00e1trica' : ''}
-                    {pacienteConhecido.gestante ? ' \u00b7 Gestante' : ''}
+              {/* __REAVAL_SUBTEXTO__ dados fixos do paciente ja avaliado */}
+              {modoMedico && pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && (() => {
+                const pc = pacienteConhecido;
+                let idadeStr = '';
+                if (pc.data_nascimento) {
+                  const [ay, am, ad] = String(pc.data_nascimento).split('-').map(Number);
+                  if (ay && am && ad) {
+                    const h = new Date();
+                    let anos = h.getFullYear() - ay;
+                    let meses = (h.getMonth() + 1) - am;
+                    if (h.getDate() < ad) meses -= 1;
+                    if (meses < 0) { anos -= 1; meses += 12; }
+                    const aTxt = anos + (anos === 1 ? ' ano' : ' anos');
+                    const mTxt = meses === 0 ? '' : (meses === 1 ? ' e 1 m\u00eas' : ' e ' + meses + ' meses');
+                    idadeStr = aTxt + mTxt;
+                  }
+                }
+                const sexoStr = pc.sexo === 'F' ? 'Feminino' : pc.sexo === 'M' ? 'Masculino' : '';
+                const bariStr = pc.bariatrica ? (pc.sexo === 'F' ? 'Bari\u00e1trica' : 'Bari\u00e1trico') : '';
+                const nomeStr = (pc.nome && String(pc.nome).trim()) ? String(pc.nome).trim() : '';
+                const partes = [];
+                if (nomeStr) partes.push(nomeStr);
+                if (sexoStr) partes.push(sexoStr);
+                if (idadeStr) partes.push(idadeStr);
+                if (bariStr) partes.push(bariStr);
+                if (partes.length === 0) return null;
+                return (
+                  <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#6B7280', fontWeight: 600, letterSpacing: '0.2px' }}>
+                    {partes.join(' | ')}
                   </p>
-                </div>
-              )}
+                );
+              })()}
               {modoMedico && (
                 <div className="mt-2">
                   <button
