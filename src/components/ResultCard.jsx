@@ -22,20 +22,18 @@ const obaLevelScheme = {
 };
 
 const obaLevelLabel = {
-  grave:    '🔴 URGENTE',
-  moderado: '🟠 ATENÇÃO',
-  leve:     '🟡 MONITORAR',
-  normal:   '🟢 NORMAL',
+  grave:    "\ud83d\udd34 URGENTE",
+  moderado: "\ud83d\udfe0 ATEN\u00c7\u00c3O",
+  leve:     "\ud83d\udfe1 MONITORAR",
+  normal:   "\ud83d\udfe2 NORMAL",
 };
 
 const WHATSAPP_MEDICO = '5571997110804';
 
 function calcularFerroEV(hbAtual, sexo, gestante) {
   const pesoReferencia = 70;
-  // Na gestacao a Hb alvo e 11.5 (hemodilucao fisiologica, OMS)
   const hbAlvo = sexo === 'M' ? 14.0 : (gestante ? 11.5 : 12.5);
   const deficit = Math.max(hbAlvo - hbAtual, 0);
-  // FIX: se deficit = 0, dose = 0 (sem o +500 de reserva espuria)
   const doseTotal = deficit > 0
     ? Math.round((pesoReferencia * deficit * 2.4 + 500) / 100) * 100
     : 0;
@@ -63,21 +61,21 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante }) {
       <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-y-auto"
         style={{ maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
         <div className="bg-red-700 text-white px-6 py-4 rounded-t-2xl">
-          <h2 className="text-lg font-bold">💉 Reposição de Ferro Endovenoso</h2>
-          <p className="text-red-200 text-xs mt-1">Estimativa baseada na Fórmula de Ganzoni</p>
+          <h2 className="text-lg font-bold">{"\ud83d\udc89 Reposi\u00e7\u00e3o de Ferro Endovenoso"}</h2>
+          <p className="text-red-200 text-xs mt-1">{"Estimativa baseada na F\u00f3rmula de Ganzoni"}</p>
         </div>
         <div className="p-6 space-y-4">
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-2">
-            <p className="text-xs font-bold text-red-700 uppercase tracking-wide">Cálculo da Dose Total</p>
+            <p className="text-xs font-bold text-red-700 uppercase tracking-wide">{"C\u00e1lculo da Dose Total"}</p>
             <p className="text-sm text-gray-700">
-              <span className="font-semibold">Fórmula de Ganzoni:</span><br/>
-              Dose (mg) = Peso × (Hb alvo − Hb atual) × 2,4 + 500
+              <span className="font-semibold">{"F\u00f3rmula de Ganzoni:"}</span><br/>
+              {"Dose (mg) = Peso \u00d7 (Hb alvo \u2212 Hb atual) \u00d7 2,4 + 500"}
             </p>
             <div className="border-t border-red-200 pt-2 text-sm text-gray-700 space-y-1">
-              <p>• Peso de referência: <strong>70 kg</strong></p>
-              <p>• Hb atual: <strong>{hbAtual} g/dL</strong></p>
-              <p>• Hb alvo: <strong>{hbAlvo} g/dL</strong></p>
-              <p>• Déficit: <strong>{deficit} g/dL</strong></p>
+              <p>{"\u2022 Peso de refer\u00eancia: "}<strong>70 kg</strong></p>
+              <p>{"\u2022 Hb atual: "}<strong>{hbAtual} g/dL</strong></p>
+              <p>{"\u2022 Hb alvo: "}<strong>{hbAlvo} g/dL</strong></p>
+              <p>{"\u2022 D\u00e9ficit: "}<strong>{deficit} g/dL</strong></p>
             </div>
             <div className="bg-red-700 text-white rounded-lg px-4 py-2 text-center mt-2">
               <p className="text-xs opacity-80">Dose Total Estimada</p>
@@ -85,43 +83,43 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante }) {
             </div>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Opções de Reposição</p>
+            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">{"Op\u00e7\u00f5es de Reposi\u00e7\u00e3o"}</p>
             <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
-              <p className="font-semibold text-gray-800">Opção 1 — Ferro Sacarato (100 mg/ampola)</p>
-              <p>• Usar <strong>2 ampolas (200 mg)</strong> por sessão, diluídas em <strong>100 mL de SF 0,9%</strong></p>
-              <p>• Infundir em <strong>30–60 minutos</strong></p>
-              <p>• Intervalo mínimo entre sessões: <strong>48–72 horas</strong></p>
-              <p>• Sessões necessárias: <strong>{sessoes} sessão(ões) de 200 mg</strong></p>
+              <p className="font-semibold text-gray-800">{"Op\u00e7\u00e3o 1 \u2014 Ferro Sacarato (100 mg/ampola)"}</p>
+              <p>{"\u2022 Usar "}<strong>2 ampolas (200 mg)</strong>{" por sess\u00e3o, dilu\u00eddas em "}<strong>100 mL de SF 0,9%</strong></p>
+              <p>{"\u2022 Infundir em "}<strong>{"30\u201360 minutos"}</strong></p>
+              <p>{"\u2022 Intervalo m\u00ednimo entre sess\u00f5es: "}<strong>{"48\u201372 horas"}</strong></p>
+              <p>{"\u2022 Sess\u00f5es necess\u00e1rias: "}<strong>{sessoes}{" sess\u00e3o(\u00f5es) de 200 mg"}</strong></p>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
-              <p className="font-semibold text-gray-800">Opção 2 — Ferrinject® Carboximaltose (500 mg/ampola)</p>
-              <p>• Cada ampola contém <strong>500 mg</strong> de ferro</p>
-              <p>• Pode-se infundir <strong>até 1.000 mg</strong> (2 ampolas) em sessão única</p>
-              <p>• Diluir em <strong>250 mL de SF 0,9%</strong> e infundir em <strong>15–30 minutos</strong></p>
-              <p>• Sessões necessárias: <strong>{Math.ceil(doseTotal / 1000)} sessão(ões) de 1.000 mg</strong> ou <strong>{Math.ceil(doseTotal / 500)} de 500 mg</strong></p>
-              <p>• Intervalo mínimo entre sessões: <strong>7 dias</strong></p>
+              <p className="font-semibold text-gray-800">{"Op\u00e7\u00e3o 2 \u2014 Ferrinject\u00ae Carboximaltose (500 mg/ampola)"}</p>
+              <p>{"\u2022 Cada ampola cont\u00e9m "}<strong>500 mg</strong>{" de ferro"}</p>
+              <p>{"\u2022 Pode-se infundir "}<strong>{"at\u00e9 1.000 mg"}</strong>{" (2 ampolas) em sess\u00e3o \u00fanica"}</p>
+              <p>{"\u2022 Diluir em "}<strong>250 mL de SF 0,9%</strong>{" e infundir em "}<strong>{"15\u201330 minutos"}</strong></p>
+              <p>{"\u2022 Sess\u00f5es necess\u00e1rias: "}<strong>{Math.ceil(doseTotal / 1000)}{" sess\u00e3o(\u00f5es) de 1.000 mg"}</strong>{" ou "}<strong>{Math.ceil(doseTotal / 500)}{" de 500 mg"}</strong></p>
+              <p>{"\u2022 Intervalo m\u00ednimo entre sess\u00f5es: "}<strong>7 dias</strong></p>
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 space-y-2">
-              <p className="font-semibold">☀️ Vitamina D — Importante!</p>
-              <p>A <strong>hipofosfatemia pós-reposição de ferro</strong> é um risco real, especialmente em pacientes com deficiência de vitamina D.</p>
-              <p>Idealmente, administre <strong>10.000 UI de vitamina D</strong> no dia anterior à primeira dose de ferro endovenoso.</p>
+              <p className="font-semibold">{"\u2600\ufe0f Vitamina D \u2014 Importante!"}</p>
+              <p>{"A "}<strong>{"hipofosfatemia p\u00f3s-reposi\u00e7\u00e3o de ferro"}</strong>{" \u00e9 um risco real, especialmente em pacientes com defici\u00eancia de vitamina D."}</p>
+              <p>{"Idealmente, administre "}<strong>10.000 UI de vitamina D</strong>{" no dia anterior \u00e0 primeira dose de ferro endovenoso."}</p>
             </div>
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800 space-y-2">
-              <p className="font-semibold">⚠️ Precauções:</p>
-              <p>• Ter disponível adrenalina e anti-histamínico</p>
-              <p>• Observar o paciente por <strong>30 min</strong> após a infusão</p>
-              <p>• Suspender imediatamente se sinais de reação alérgica</p>
-              <p>• Não infundir com outros medicamentos na mesma via</p>
+              <p className="font-semibold">{"\u26a0\ufe0f Precau\u00e7\u00f5es:"}</p>
+              <p>{"\u2022 Ter dispon\u00edvel adrenalina e anti-histam\u00ednico"}</p>
+              <p>{"\u2022 Observar o paciente por "}<strong>30 min</strong>{" ap\u00f3s a infus\u00e3o"}</p>
+              <p>{"\u2022 Suspender imediatamente se sinais de rea\u00e7\u00e3o al\u00e9rgica"}</p>
+              <p>{"\u2022 N\u00e3o infundir com outros medicamentos na mesma via"}</p>
             </div>
             <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-800 space-y-2">
-              <p className="font-semibold">✅ Monitoramento:</p>
-              <p>• Repetir hemograma após <strong>4 semanas</strong></p>
-              <p>• Repetir ferritina e saturação após <strong>8 semanas</strong></p>
-              <p>• Esperar elevação de Hb de <strong>1–2 g/dL</strong> por sessão de 200 mg</p>
+              <p className="font-semibold">{"\u2705 Monitoramento:"}</p>
+              <p>{"\u2022 Repetir hemograma ap\u00f3s "}<strong>4 semanas</strong></p>
+              <p>{"\u2022 Repetir ferritina e satura\u00e7\u00e3o ap\u00f3s "}<strong>8 semanas</strong></p>
+              <p>{"\u2022 Esperar eleva\u00e7\u00e3o de Hb de "}<strong>{"1\u20132 g/dL"}</strong>{" por sess\u00e3o de 200 mg"}</p>
             </div>
           </div>
           <p className="text-xs text-gray-400 text-center">
-            * Estimativa para paciente de 70 kg. Dose final deve ser ajustada pelo médico assistente conforme peso real e resposta clínica.
+            {"* Estimativa para paciente de 70 kg. Dose final deve ser ajustada pelo m\u00e9dico assistente conforme peso real e resposta cl\u00ednica."}
           </p>
           <button onClick={onClose}
             className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
@@ -155,25 +153,25 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
       <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-y-auto"
         style={{ maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
         <div className="bg-red-800 text-white px-6 py-4 rounded-t-2xl">
-          <h2 className="text-lg font-bold">🩸 Sangria Terapêutica</h2>
+          <h2 className="text-lg font-bold">{"\ud83e\ude78 Sangria Terap\u00eautica"}</h2>
           <p className="text-red-200 text-xs mt-1">Protocolo individualizado</p>
         </div>
         <div className="p-6 space-y-4">
           {!hbSegura && (
             <div className="bg-red-50 border border-red-400 rounded-xl p-4 text-sm text-red-800">
-              <p className="font-bold">⛔ Atenção!</p>
-              <p>A Hb atual ({hbAtual} g/dL) está abaixo do mínimo seguro ({hbMin} g/dL). <strong>Não realizar sangria</strong> até normalização da Hb.</p>
+              <p className="font-bold">{"\u26d4 Aten\u00e7\u00e3o!"}</p>
+              <p>{"A Hb atual ("}{hbAtual}{" g/dL) est\u00e1 abaixo do m\u00ednimo seguro ("}{hbMin}{" g/dL). "}<strong>{"N\u00e3o realizar sangria"}</strong>{" at\u00e9 normaliza\u00e7\u00e3o da Hb."}</p>
             </div>
           )}
           {isPolicitemiaVera && (
             <div className="bg-orange-50 border border-orange-300 rounded-xl p-4 text-sm text-orange-800">
-              <p className="font-bold">⚠️ Policitemia Vera</p>
-              <p>Na policitemia vera as sangrias são indicadas mesmo na ausência de siderose. O objetivo é manter o hematócrito abaixo de 45%.</p>
+              <p className="font-bold">{"\u26a0\ufe0f Policitemia Vera"}</p>
+              <p>{"Na policitemia vera as sangrias s\u00e3o indicadas mesmo na aus\u00eancia de siderose. O objetivo \u00e9 manter o hemat\u00f3crito abaixo de 45%."}</p>
             </div>
           )}
           {!calculado && (
             <div className="space-y-3">
-              <p className="text-sm text-gray-600">Informe o peso do paciente para calcular o volume por sessão:</p>
+              <p className="text-sm text-gray-600">{"Informe o peso do paciente para calcular o volume por sess\u00e3o:"}</p>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Peso (kg)</label>
                 <input type="number" value={peso} onChange={e => setPeso(e.target.value)} placeholder="Ex: 70"
@@ -188,39 +186,39 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
           {calculado && resultado && (
             <div className="space-y-3">
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-2">
-                <p className="text-xs font-bold text-red-700 uppercase tracking-wide">Volume por Sessão</p>
+                <p className="text-xs font-bold text-red-700 uppercase tracking-wide">{"Volume por Sess\u00e3o"}</p>
                 <div className="bg-red-700 text-white rounded-lg px-4 py-2 text-center">
                   <p className="text-xs opacity-80">Para {peso} kg</p>
                   <p className="text-3xl font-black">{resultado.volume} mL</p>
-                  <p className="text-xs opacity-80">por sessão</p>
+                  <p className="text-xs opacity-80">{"por sess\u00e3o"}</p>
                 </div>
               </div>
               <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
                 <p className="font-semibold text-gray-800">Planejamento</p>
-                <p>• Intervalo recomendado: <strong>{resultado.intervalo} dias</strong></p>
-                <p>• Ferritina atual: <strong>{ferritina} ng/mL</strong></p>
-                <p>• Ferritina alvo: <strong>{resultado.ferritinAlvo} ng/mL</strong></p>
-                <p>• Sangrias estimadas até o alvo: <strong>~{resultado.sangriaEstimadas} sessão(ões)</strong></p>
-                <p className="text-orange-700 font-medium">• Dosar ferritina + sat. transferrina antes da {resultado.penultima}ª sangria</p>
+                <p>{"\u2022 Intervalo recomendado: "}<strong>{resultado.intervalo} dias</strong></p>
+                <p>{"\u2022 Ferritina atual: "}<strong>{ferritina} ng/mL</strong></p>
+                <p>{"\u2022 Ferritina alvo: "}<strong>{resultado.ferritinAlvo} ng/mL</strong></p>
+                <p>{"\u2022 Sangrias estimadas at\u00e9 o alvo: "}<strong>{"~"}{resultado.sangriaEstimadas}{" sess\u00e3o(\u00f5es)"}</strong></p>
+                <p className="text-orange-700 font-medium">{"\u2022 Dosar ferritina + sat. transferrina antes da "}{resultado.penultima}{"\u00aa sangria"}</p>
               </div>
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800 space-y-2">
-                <p className="font-semibold">⚠️ Segurança:</p>
-                <p>• Suspender se Hb cair abaixo de <strong>{resultado.hbMin} g/dL</strong></p>
-                <p>• Verificar Hb e pressão arterial antes de cada sessão</p>
-                <p>• <strong>Não realizar</strong> se pressão arterial sistólica &gt; <strong>160 mmHg</strong></p>
-                <p>• O paciente deve consumir <strong>{isotonico}</strong> de bebida isotônica (Gatorade, Powerade ou similar) <strong>30 minutos antes</strong> do procedimento</p>
-                <p>• Observar por <strong>15–30 min</strong> após o procedimento</p>
+                <p className="font-semibold">{"\u26a0\ufe0f Seguran\u00e7a:"}</p>
+                <p>{"\u2022 Suspender se Hb cair abaixo de "}<strong>{resultado.hbMin} g/dL</strong></p>
+                <p>{"\u2022 Verificar Hb e press\u00e3o arterial antes de cada sess\u00e3o"}</p>
+                <p>{"\u2022 "}<strong>{"N\u00e3o realizar"}</strong>{" se press\u00e3o arterial sist\u00f3lica > "}<strong>160 mmHg</strong></p>
+                <p>{"\u2022 O paciente deve consumir "}<strong>{isotonico}</strong>{" de bebida isot\u00f4nica (Gatorade, Powerade ou similar) "}<strong>30 minutos antes</strong>{" do procedimento"}</p>
+                <p>{"\u2022 Observar por "}<strong>{"15\u201330 min"}</strong>{" ap\u00f3s o procedimento"}</p>
               </div>
               <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
-                <p className="font-semibold text-gray-800">Técnica:</p>
-                <p>• Acesso venoso periférico calibroso</p>
-                <p>• Bolsa de coleta padrão de hemocomponente</p>
-                <p>• Duração: <strong>20–40 minutos</strong></p>
-                <p>• Pode ser feita em clínica de hematologia ou banco de sangue</p>
+                <p className="font-semibold text-gray-800">{"T\u00e9cnica:"}</p>
+                <p>{"\u2022 Acesso venoso perif\u00e9rico calibroso"}</p>
+                <p>{"\u2022 Bolsa de coleta padr\u00e3o de hemocomponente"}</p>
+                <p>{"\u2022 Dura\u00e7\u00e3o: "}<strong>{"20\u201340 minutos"}</strong></p>
+                <p>{"\u2022 Pode ser feita em cl\u00ednica de hematologia ou banco de sangue"}</p>
               </div>
               <button onClick={() => { setCalculado(false); setPeso(''); }}
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm py-2 rounded-xl transition-colors">
-                ← Recalcular com outro peso
+                {"\u2190 Recalcular com outro peso"}
               </button>
             </div>
           )}
@@ -235,7 +233,6 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
 }
 
 
-// ── Botões WhatsApp OBA (obstipação e fibromialgia) ───────────────────────────
 function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
   const [salvandoObs, setSalvandoObs] = useState(false)
   const [salvandoFib, setSalvandoFib] = useState(false)
@@ -244,14 +241,12 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
 
   const WA_PLATAFORMA = '5571997110804'
 
-  // Verificar fibromialgia — trigger: diagnostico OU obstipacao + 2 sintomas
   const modFibroData = oba?.modulos?.find(m => m.id === 'fibromialgia')
   const temFibromialgia = !!modFibroData && (modFibroData.nivel === 'moderado' || modFibroData.nivel === 'grave' ||
-    (modFibroData.nivel === 'leve' && modFibroData.linhas?.some(l => l.includes('SINTOMAS FIBROMIÁLGICOS'))))
+    (modFibroData.nivel === 'leve' && modFibroData.linhas?.some(l => l.includes("SINTOMAS FIBROMI\u00c1LGICOS"))))
 
-  // Verificar obstipação no módulo intestinal
   const modIntestData = oba?.modulos?.find(m => m.id === 'intestinal')
-  const temObstipacaoModulo = !!modIntestData && modIntestData.linhas?.some(l => l.includes('OBSTIPAÇÃO'))
+  const temObstipacaoModulo = !!modIntestData && modIntestData.linhas?.some(l => l.includes("OBSTIPA\u00c7\u00c3O"))
 
   if (!temObstipacaoModulo && !temFibromialgia) return null
 
@@ -270,7 +265,7 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
   function enviarObstipacao() {
     setSalvandoObs(true)
     registrar('obstipacao')
-    const msg = `Olá! Desejo testar a solução de RedFairy para obstipação. Entendo que receberei uma amostra grátis (pagarei apenas o valor do SEDEX), e que se eu quiser continuar o uso, vocês me garantem a continuidade do fornecimento a custo muito baixo. Obrigado!`
+    const msg = "Ol\u00e1! Desejo testar a solu\u00e7\u00e3o de RedFairy para obstipa\u00e7\u00e3o. Entendo que receberei uma amostra gr\u00e1tis (pagarei apenas o valor do SEDEX), e que se eu quiser continuar o uso, voc\u00eas me garantem a continuidade do fornecimento a custo muito baixo. Obrigado!"
     window.open(`https://wa.me/${WA_PLATAFORMA}?text=${encodeURIComponent(msg)}`, '_blank')
     setSalvandoObs(false)
     setSalvoObs(true)
@@ -279,7 +274,7 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
   function enviarFibromialgia() {
     setSalvandoFib(true)
     registrar('fibromialgia')
-    const msg = `Olá! Desejo testar a solução de RedFairy para os sintomas da fibromialgia. Entendo que receberei uma amostra grátis (pagarei apenas o valor do SEDEX), e que se eu quiser continuar o uso, vocês me garantem a continuidade do fornecimento a custo muito baixo. Obrigado!`
+    const msg = "Ol\u00e1! Desejo testar a solu\u00e7\u00e3o de RedFairy para os sintomas da fibromialgia. Entendo que receberei uma amostra gr\u00e1tis (pagarei apenas o valor do SEDEX), e que se eu quiser continuar o uso, voc\u00eas me garantem a continuidade do fornecimento a custo muito baixo. Obrigado!"
     window.open(`https://wa.me/${WA_PLATAFORMA}?text=${encodeURIComponent(msg)}`, '_blank')
     setSalvandoFib(false)
     setSalvoFib(true)
@@ -289,32 +284,32 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
     <div className="px-4 pb-4 space-y-3">
       {temObstipacaoModulo && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <p className="text-amber-800 text-xs font-bold uppercase tracking-wide mb-2">💊 Solução para Obstipação</p>
+          <p className="text-amber-800 text-xs font-bold uppercase tracking-wide mb-2">{"\ud83d\udc8a Solu\u00e7\u00e3o para Obstipa\u00e7\u00e3o"}</p>
           <p className="text-amber-700 text-xs mb-3 leading-relaxed">
-            Identificamos obstipação crônica no seu perfil. Temos uma solução inovadora — amostras grátis disponíveis (você paga apenas o SEDEX).
+            {"Identificamos obstipa\u00e7\u00e3o cr\u00f4nica no seu perfil. Temos uma solu\u00e7\u00e3o inovadora \u2014 amostras gr\u00e1tis dispon\u00edveis (voc\u00ea paga apenas o SEDEX)."}
           </p>
           {salvoObs ? (
-            <p className="text-green-700 text-xs font-bold">✅ Mensagem enviada! Aguarde o contato da plataforma.</p>
+            <p className="text-green-700 text-xs font-bold">{"\u2705 Mensagem enviada! Aguarde o contato da plataforma."}</p>
           ) : (
             <button onClick={enviarObstipacao} disabled={salvandoObs}
               className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
-              📲 Quero testar — Enviar mensagem
+              {"\ud83d\udcf2 Quero testar \u2014 Enviar mensagem"}
             </button>
           )}
         </div>
       )}
       {temFibromialgia && (
         <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-          <p className="text-purple-800 text-xs font-bold uppercase tracking-wide mb-2">🌿 Solução para Fibromialgia</p>
+          <p className="text-purple-800 text-xs font-bold uppercase tracking-wide mb-2">{"\ud83c\udf3f Solu\u00e7\u00e3o para Fibromialgia"}</p>
           <p className="text-purple-700 text-xs mb-3 leading-relaxed">
-            Identificamos sintomas fibromiálgicos no seu perfil. Temos uma solução inovadora — amostras grátis disponíveis (você paga apenas o SEDEX).
+            {"Identificamos sintomas fibromi\u00e1lgicos no seu perfil. Temos uma solu\u00e7\u00e3o inovadora \u2014 amostras gr\u00e1tis dispon\u00edveis (voc\u00ea paga apenas o SEDEX)."}
           </p>
           {salvoFib ? (
-            <p className="text-green-700 text-xs font-bold">✅ Mensagem enviada! Aguarde o contato da plataforma.</p>
+            <p className="text-green-700 text-xs font-bold">{"\u2705 Mensagem enviada! Aguarde o contato da plataforma."}</p>
           ) : (
             <button onClick={enviarFibromialgia} disabled={salvandoFib}
               className="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
-              📲 Quero testar — Enviar mensagem
+              {"\ud83d\udcf2 Quero testar \u2014 Enviar mensagem"}
             </button>
           )}
         </div>
@@ -323,15 +318,14 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
   )
 }
 
-// ── Seção Achados Paralelos ───────────────────────────────────────────────────
 function AchadosParalelosSection({ achados }) {
   const [expandido, setExpandido] = useState(null);
   if (!achados || achados.length === 0) return null;
 
   const schemeBy = {
-    red:    { bg: 'bg-red-50',    border: 'border-red-400',    badge: 'bg-red-600',    text: 'text-red-800',    dot: 'bg-red-500',    label: '🔴 GRAVE'     },
-    orange: { bg: 'bg-orange-50', border: 'border-orange-400', badge: 'bg-orange-500', text: 'text-orange-800', dot: 'bg-orange-500', label: '🟠 IMPORTANTE' },
-    yellow: { bg: 'bg-yellow-50', border: 'border-yellow-300', badge: 'bg-yellow-500', text: 'text-yellow-800', dot: 'bg-yellow-400', label: '🟡 ATENÇÃO'   },
+    red:    { bg: 'bg-red-50',    border: 'border-red-400',    badge: 'bg-red-600',    text: 'text-red-800',    dot: 'bg-red-500',    label: "\ud83d\udd34 GRAVE"      },
+    orange: { bg: 'bg-orange-50', border: 'border-orange-400', badge: 'bg-orange-500', text: 'text-orange-800', dot: 'bg-orange-500', label: "\ud83d\udfe0 IMPORTANTE" },
+    yellow: { bg: 'bg-yellow-50', border: 'border-yellow-300', badge: 'bg-yellow-500', text: 'text-yellow-800', dot: 'bg-yellow-400', label: "\ud83d\udfe1 ATEN\u00c7\u00c3O"    },
   };
 
   return (
@@ -340,7 +334,7 @@ function AchadosParalelosSection({ achados }) {
         <p className="text-xs uppercase tracking-widest opacity-70 mb-1">Achados Paralelos</p>
         <h3 className="text-xl font-bold">Outros Achados Relevantes</h3>
         <p className="text-gray-300 text-xs mt-1">
-          {achados.length} achado{achados.length > 1 ? 's' : ''} detectado{achados.length > 1 ? 's' : ''} além do diagnóstico principal
+          {achados.length}{" achado"}{achados.length > 1 ? 's' : ''}{" detectado"}{achados.length > 1 ? 's' : ''}{" al\u00e9m do diagn\u00f3stico principal"}
         </p>
       </div>
       <div className="p-4 space-y-2">
@@ -361,7 +355,7 @@ function AchadosParalelosSection({ achados }) {
                     {scheme.label}
                   </span>
                   <span className={`text-xl leading-none font-light ${scheme.text} transition-transform duration-200 ${aberto ? 'rotate-90' : ''}`}>
-                    ›
+                    {"\u203a"}
                   </span>
                 </div>
               </button>
@@ -378,7 +372,6 @@ function AchadosParalelosSection({ achados }) {
   );
 }
 
-// ── Seção OBA ─────────────────────────────────────────────────────────────────
 function OBASection({ oba }) {
   const [expandido, setExpandido] = useState(null);
 
@@ -390,14 +383,14 @@ function OBASection({ oba }) {
       <div className="bg-purple-700 text-white px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-widest opacity-70 mb-1">Extensão Bariátrica</p>
-            <h3 className="text-xl font-bold">Avaliação OBA</h3>
+            <p className="text-xs uppercase tracking-widest opacity-70 mb-1">{"Extens\u00e3o Bari\u00e1trica"}</p>
+            <h3 className="text-xl font-bold">{"Avalia\u00e7\u00e3o OBA"}</h3>
             <p className="text-purple-200 text-xs mt-1">
-              {oba.tipoCirurgia} · {oba.mesesPosCirurgia} meses pós-cirurgia
+              {oba.tipoCirurgia}{" \u00b7 "}{oba.mesesPosCirurgia}{" meses p\u00f3s-cirurgia"}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-purple-300 text-xs mb-1">Disabsorção</p>
+            <p className="text-purple-300 text-xs mb-1">{"Disabsor\u00e7\u00e3o"}</p>
             <div className="flex gap-1 justify-end">
               {[1,2,3].map(n => (
                 <div key={n}
@@ -418,7 +411,7 @@ function OBASection({ oba }) {
           ))}
           {alertasMod.map((a, i) => (
             <div key={i} className="flex items-start gap-3 bg-orange-100 border border-orange-300 rounded-xl px-4 py-3">
-              <span className="text-orange-600 font-bold text-sm leading-none mt-0.5">▲</span>
+              <span className="text-orange-600 font-bold text-sm leading-none mt-0.5">{"\u25b2"}</span>
               <p className="text-orange-800 text-sm font-medium leading-snug">{a.texto}</p>
             </div>
           ))}
@@ -443,7 +436,7 @@ function OBASection({ oba }) {
                     {obaLevelLabel[mod.nivel] || mod.nivel}
                   </span>
                   <span className={`text-xl leading-none font-light ${scheme.text} transition-transform duration-200 ${aberto ? 'rotate-90' : ''}`}>
-                    ›
+                    {"\u203a"}
                   </span>
                 </div>
               </button>
@@ -467,12 +460,12 @@ function OBASection({ oba }) {
         <div className="px-4 pb-4">
           <div className="bg-white rounded-xl border border-purple-200 p-4">
             <p className="text-xs font-bold text-purple-700 uppercase tracking-wide mb-3">
-              🧪 Exames Complementares OBA
+              {"\ud83e\uddea Exames Complementares OBA"}
             </p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
               {oba.examesComplementares.map((ex, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
-                  <span className="text-purple-400 mt-0.5 flex-shrink-0">•</span>
+                  <span className="text-purple-400 mt-0.5 flex-shrink-0">{"\u2022"}</span>
                   <span>{ex}</span>
                 </div>
               ))}
@@ -484,7 +477,6 @@ function OBASection({ oba }) {
   );
 }
 
-// ── Painel do Médico (substitui DocumentoMedicoPanel no modo médico) ──────────
 function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
   const [querReceber, setQuerReceber] = useState(false)
   const [salvando, setSalvando] = useState(false)
@@ -511,26 +503,24 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
   return (
     <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 overflow-hidden shadow-sm">
       <div className="bg-blue-700 px-4 py-3">
-        <p className="text-white font-bold text-sm">🩺 Orientação ao Médico</p>
+        <p className="text-white font-bold text-sm">{"\ud83e\ude7a Orienta\u00e7\u00e3o ao M\u00e9dico"}</p>
       </div>
       <div className="p-4 space-y-4">
 
-        {/* Mensagem principal conforme resultado */}
         {isSaudavel ? (
           <div className="bg-white rounded-xl border border-green-200 p-4">
             <p className="text-gray-700 text-sm leading-relaxed">
-              Doutor, oriente {pronome} paciente a se cadastrar no RedFairy para futuras avaliações e acompanhamento.
+              {"Doutor, oriente "}{pronome}{" paciente a se cadastrar no RedFairy para futuras avalia\u00e7\u00f5es e acompanhamento."}
             </p>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-orange-200 p-4">
             <p className="text-gray-700 text-sm leading-relaxed">
-              Doutor: esse paciente precisa de reavaliação e prescrição médica. Quando ele se cadastrar na plataforma o sistema irá sinalizar, e ele terá a sua avaliação revisada por HEMATOLOGISTA, que emitirá os documentos. Você receberá um WhatsApp com essas informações.
+              {"Doutor: esse paciente precisa de reavalia\u00e7\u00e3o e prescri\u00e7\u00e3o m\u00e9dica. Quando ele se cadastrar na plataforma o sistema ir\u00e1 sinalizar, e ele ter\u00e1 a sua avalia\u00e7\u00e3o revisada por HEMATOLOGISTA, que emitir\u00e1 os documentos. Voc\u00ea receber\u00e1 um WhatsApp com essas informa\u00e7\u00f5es."}
             </p>
           </div>
         )}
 
-        {/* Checkbox: quero receber futuras avaliações */}
         <div className="bg-white rounded-xl border border-blue-100 p-4">
           <label className="flex items-start gap-3 cursor-pointer">
             <input
@@ -543,22 +533,21 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
               className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0"
             />
             <div>
-              <p className="font-bold text-sm text-gray-700">Quero receber as avaliações futuras deste paciente</p>
+              <p className="font-bold text-sm text-gray-700">{"Quero receber as avalia\u00e7\u00f5es futuras deste paciente"}</p>
               <p className="text-xs text-gray-500 mt-0.5">
-                Se marcar, você receberá o resultado das novas avaliações por WhatsApp.
+                {"Se marcar, voc\u00ea receber\u00e1 o resultado das novas avalia\u00e7\u00f5es por WhatsApp."}
               </p>
             </div>
           </label>
           {salvo && (
-            <p className="text-green-600 text-xs font-semibold mt-2 ml-7">✅ Preferência salva!</p>
+            <p className="text-green-600 text-xs font-semibold mt-2 ml-7">{"\u2705 Prefer\u00eancia salva!"}</p>
           )}
         </div>
 
-        {/* Info KlipBit */}
         <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-start gap-3">
-          <span className="text-green-600 text-lg flex-shrink-0">💰</span>
+          <span className="text-green-600 text-lg flex-shrink-0">{"\ud83d\udcb0"}</span>
           <p className="text-green-800 text-xs leading-relaxed">
-            Quando este paciente se cadastrar no RedFairy, você receberá uma notificação por WhatsApp e um crédito de <strong>10 dólares digitais</strong> na sua carteira KlipBit.
+            {"Quando este paciente se cadastrar no RedFairy, voc\u00ea receber\u00e1 uma notifica\u00e7\u00e3o por WhatsApp e um cr\u00e9dito de "}<strong>{"10 d\u00f3lares digitais"}</strong>{" na sua carteira KlipBit."}
           </p>
         </div>
 
@@ -567,7 +556,6 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
   )
 }
 
-// ── Painel do Paciente (modo paciente — com documentos) ───────────────────────
 function DocumentoMedicoPanel({ resultado }) {
   const [valorDoc, setValorDoc] = useState(null);
   const [pixChave, setPixChave] = useState('');
@@ -581,7 +569,7 @@ function DocumentoMedicoPanel({ resultado }) {
   const temPrescricao = resultado.recomendacao && (
     resultado.recomendacao.includes('FERRO') ||
     resultado.recomendacao.includes('VITAMINA') ||
-    resultado.recomendacao.includes('ÁCIDO FÓLICO') ||
+    resultado.recomendacao.includes("\u00c1CIDO F\u00d3LICO") ||
     resultado.recomendacao.includes('SUPLEMENTA') ||
     resultado.recomendacao.includes('PRESCRI') ||
     (resultado._oba && resultado._oba.alertas && resultado._oba.alertas.length > 0)
@@ -625,22 +613,22 @@ function DocumentoMedicoPanel({ resultado }) {
     const linhas = [];
     if (resultado.recomendacao) {
       const frases = resultado.recomendacao.split('\n').filter(l =>
-        l.includes('FERRO') || l.includes('VITAMINA') || l.includes('ÁCIDO FÓLICO') ||
-        l.includes('SUPLEMENTA') || l.includes('REPOSIÇÃO')
+        l.includes('FERRO') || l.includes('VITAMINA') || l.includes("\u00c1CIDO F\u00d3LICO") ||
+        l.includes('SUPLEMENTA') || l.includes("REPOSI\u00c7\u00c3O")
       );
       linhas.push(...frases);
     }
     if (resultado._oba?.modulos) {
       resultado._oba.modulos.forEach(mod => {
         mod.linhas?.forEach(l => {
-          if (l.includes('mg') || l.includes('µg') || l.includes('UI') || l.includes('COMPRIMIDO') || l.includes('SUBLINGUAL') || l.includes('INJETÁVEL') || l.includes('ENDOVENOSO')) {
+          if (l.includes('mg') || l.includes("\u00b5g") || l.includes('UI') || l.includes('COMPRIMIDO') || l.includes('SUBLINGUAL') || l.includes("INJET\u00c1VEL") || l.includes('ENDOVENOSO')) {
             linhas.push(l);
           }
         });
       });
     }
     if (!linhas.length) return '';
-    return 'PRESCRIÇÃO MÉDICA:\n' + linhas.join('\n');
+    return "PRESCRI\u00c7\u00c3O M\u00c9DICA:\n" + linhas.join('\n');
   }
 
   async function enviarWhatsApp() {
@@ -657,8 +645,8 @@ function DocumentoMedicoPanel({ resultado }) {
 
     const total = (valorDoc || 0) * documentos.length;
     const msgs = [
-      'ATENÇÃO | RedFairy!',
-      `CPF: ${dadosPaciente.cpf || 'Não informado'}`,
+      "ATEN\u00c7\u00c3O | RedFairy!",
+      `CPF: ${dadosPaciente.cpf || "N\u00e3o informado"}`,
       `PACIENTE: ${dadosPaciente.nome.trim().toUpperCase()}`,
       `NASCIMENTO: ${dadosPaciente.dataNasc}`,
       `CELULAR: ${dadosPaciente.celular}`,
@@ -687,7 +675,7 @@ function DocumentoMedicoPanel({ resultado }) {
   }
 
   async function confirmarPagamento() {
-    const msgPago = `${dadosPaciente.nome.trim().toUpperCase()} — PAGO. Emita o(s) documento(s).`;
+    const msgPago = `${dadosPaciente.nome.trim().toUpperCase()}` + " \u2014 PAGO. Emita o(s) documento(s).";
     const urlPago = `https://wa.me/${WHATSAPP_MEDICO}?text=${encodeURIComponent(msgPago)}`;
     window.open(urlPago, '_blank');
 
@@ -708,19 +696,19 @@ function DocumentoMedicoPanel({ resultado }) {
 
   if (etapa === 'concluido') return (
     <div className="mt-4 bg-green-50 border border-green-200 rounded-2xl p-5 text-center space-y-2">
-      <p className="text-2xl">✅</p>
+      <p className="text-2xl">{"\u2705"}</p>
       <p className="font-bold text-green-800">Pedido enviado com sucesso!</p>
-      <p className="text-sm text-green-700">O médico do Projeto RedFairy receberá seus documentos em breve via WhatsApp.</p>
+      <p className="text-sm text-green-700">{"O m\u00e9dico do Projeto RedFairy receber\u00e1 seus documentos em breve via WhatsApp."}</p>
     </div>
   );
 
   if (etapa === 'pix') return (
     <div className="mt-4 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
       <div className="bg-red-700 px-4 py-3">
-        <p className="text-white font-bold text-sm">💳 Efetue o pagamento via Pix</p>
+        <p className="text-white font-bold text-sm">{"\ud83d\udcb3 Efetue o pagamento via Pix"}</p>
       </div>
       <div className="p-4 space-y-4">
-        <p className="text-gray-600 text-sm">Valor: <strong className="text-red-700 text-lg">R$ {((valorDoc || 0) * ([tiposDoc.exames, tiposDoc.prescricao].filter(Boolean).length || 1)).toFixed(2)}</strong></p>
+        <p className="text-gray-600 text-sm">{"Valor: "}<strong className="text-red-700 text-lg">{"R$ "}{((valorDoc || 0) * ([tiposDoc.exames, tiposDoc.prescricao].filter(Boolean).length || 1)).toFixed(2)}</strong></p>
         {pixChave && (
           <>
             <div className="flex justify-center">
@@ -728,15 +716,15 @@ function DocumentoMedicoPanel({ resultado }) {
                 alt="QR Code Pix" className="rounded-xl border border-gray-200" width={180} height={180} />
             </div>
             <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-xs text-gray-500 mb-1">Chave Pix (Copia e Cola):</p>
+              <p className="text-xs text-gray-500 mb-1">{"Chave Pix (Copia e Cola):"}</p>
               <p className="text-xs font-mono text-gray-700 break-all select-all">{pixChave}</p>
             </div>
           </>
         )}
-        <p className="text-xs text-gray-500 text-center">Após o pagamento, clique no botão abaixo para confirmar.</p>
+        <p className="text-xs text-gray-500 text-center">{"Ap\u00f3s o pagamento, clique no bot\u00e3o abaixo para confirmar."}</p>
         <button onClick={confirmarPagamento}
           className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors text-sm">
-          ✅ Já paguei — Confirmar pagamento
+          {"\u2705 J\u00e1 paguei \u2014 Confirmar pagamento"}
         </button>
         <button onClick={() => setEtapa('oferta')}
           className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs py-2 rounded-xl transition-colors">
@@ -749,7 +737,7 @@ function DocumentoMedicoPanel({ resultado }) {
   if (etapa === 'dados') return (
     <div className="mt-4 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
       <div className="bg-red-700 px-4 py-3">
-        <p className="text-white font-bold text-sm">📋 Seus dados para o documento</p>
+        <p className="text-white font-bold text-sm">{"\ud83d\udccb Seus dados para o documento"}</p>
       </div>
       <div className="p-4 space-y-3">
         <div>
@@ -771,7 +759,7 @@ function DocumentoMedicoPanel({ resultado }) {
         {erro && <p className="text-red-500 text-xs">{erro}</p>}
         <button onClick={enviarWhatsApp} disabled={enviando}
           className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 text-sm">
-          {enviando ? 'Enviando...' : '📲 Enviar pedido via WhatsApp →'}
+          {enviando ? 'Enviando...' : "\ud83d\udcf2 Enviar pedido via WhatsApp \u2192"}
         </button>
         <button onClick={() => setEtapa('oferta')}
           className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs py-2 rounded-xl transition-colors">
@@ -784,14 +772,14 @@ function DocumentoMedicoPanel({ resultado }) {
   return (
     <div className="mt-4 bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 rounded-2xl overflow-hidden shadow-sm">
       <div className="bg-red-700 px-4 py-3 flex items-center gap-2">
-        <span className="text-xl">📄</span>
+        <span className="text-xl">{"\ud83d\udcc4"}</span>
         <div>
-          <p className="text-white font-bold text-sm">Quer que um médico emita os documentos?</p>
-          <p className="text-red-200 text-xs">Pedido de exames e/ou prescrição via WhatsApp</p>
+          <p className="text-white font-bold text-sm">{"Quer que um m\u00e9dico emita os documentos?"}</p>
+          <p className="text-red-200 text-xs">{"Pedido de exames e/ou prescri\u00e7\u00e3o via WhatsApp"}</p>
         </div>
       </div>
       <div className="p-4 space-y-3">
-        <p className="text-gray-600 text-sm">Um médico do Projeto RedFairy gera e envia por WhatsApp:</p>
+        <p className="text-gray-600 text-sm">{"Um m\u00e9dico do Projeto RedFairy gera e envia por WhatsApp:"}</p>
         <div className="space-y-2">
           {temExames && (
             <label className="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
@@ -799,10 +787,10 @@ function DocumentoMedicoPanel({ resultado }) {
               <input type="checkbox" checked={tiposDoc.exames} onChange={e => setTiposDoc(p => ({ ...p, exames: e.target.checked }))}
                 className="w-4 h-4 cursor-pointer" />
               <div>
-                <p className="font-bold text-sm text-gray-700">📋 Pedido de Exames</p>
-                <p className="text-xs text-gray-500">{resultado.proximosExames?.length} exame(s) sugeridos</p>
+                <p className="font-bold text-sm text-gray-700">{"\ud83d\udccb Pedido de Exames"}</p>
+                <p className="text-xs text-gray-500">{resultado.proximosExames?.length}{" exame(s) sugeridos"}</p>
               </div>
-              <span className="ml-auto font-bold text-red-700">R$ {valorDoc?.toFixed(2)}</span>
+              <span className="ml-auto font-bold text-red-700">{"R$ "}{valorDoc?.toFixed(2)}</span>
             </label>
           )}
           {temPrescricao && (
@@ -811,66 +799,61 @@ function DocumentoMedicoPanel({ resultado }) {
               <input type="checkbox" checked={tiposDoc.prescricao} onChange={e => setTiposDoc(p => ({ ...p, prescricao: e.target.checked }))}
                 className="w-4 h-4 cursor-pointer" />
               <div>
-                <p className="font-bold text-sm text-gray-700">💊 Prescrição Médica</p>
+                <p className="font-bold text-sm text-gray-700">{"\ud83d\udc8a Prescri\u00e7\u00e3o M\u00e9dica"}</p>
                 <p className="text-xs text-gray-500">Suplementos e medicamentos indicados</p>
               </div>
-              <span className="ml-auto font-bold text-red-700">R$ {valorDoc?.toFixed(2)}</span>
+              <span className="ml-auto font-bold text-red-700">{"R$ "}{valorDoc?.toFixed(2)}</span>
             </label>
           )}
         </div>
         {(tiposDoc.exames || tiposDoc.prescricao) && (
           <p className="text-center font-bold text-red-700">
-            Total: R$ {((valorDoc || 0) * [tiposDoc.exames, tiposDoc.prescricao].filter(Boolean).length).toFixed(2)}
+            {"Total: R$ "}{((valorDoc || 0) * [tiposDoc.exames, tiposDoc.prescricao].filter(Boolean).length).toFixed(2)}
           </p>
         )}
         <button
           onClick={() => { if (!tiposDoc.exames && !tiposDoc.prescricao) { setErro('Selecione pelo menos um documento.'); return; } setErro(''); setEtapa('dados'); }}
           className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors text-sm">
-          Quero receber os documentos →
+          {"Quero receber os documentos \u2192"}
         </button>
         {erro && <p className="text-red-500 text-xs text-center">{erro}</p>}
-        <p className="text-xs text-gray-400 text-center">Pagamento via Pix · Documento entregue em até 24h</p>
+        <p className="text-xs text-gray-400 text-center">{"Pagamento via Pix \u00b7 Documento entregue em at\u00e9 24h"}</p>
       </div>
     </div>
   );
 }
 
-// ── ResultCard principal ──────────────────────────────────────────────────────
+
 export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, medicoNome, medicoCRM, medicoDados }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
-  // Renderizacao especial: exames obsoletos (> 2 anos)
   const [verObsoleto, setVerObsoleto] = useState(false);
   if (resultado.obsoleto && !verObsoleto) {
     return (
       <div className="mt-4 rounded-2xl border-2 border-red-400 bg-red-50 overflow-hidden shadow-sm">
         <div className="bg-red-700 text-white px-6 py-4">
-          <p className="text-xs uppercase tracking-widest opacity-80 mb-1">⚠️ Aviso</p>
+          <p className="text-xs uppercase tracking-widest opacity-80 mb-1">{"\u26a0\ufe0f Aviso"}</p>
           <h3 className="text-xl font-bold">EXAMES OBSOLETOS</h3>
           <p className="text-xs opacity-90 mt-1">
-            Realizados há {resultado.diasDesdeColeta} dia(s) — mais de 2 anos atrás
+            {"Realizados h\u00e1 "}{resultado.diasDesdeColeta}{" dia(s) \u2014 mais de 2 anos atr\u00e1s"}
           </p>
         </div>
         <div className="p-6 space-y-4 text-sm text-gray-800 leading-relaxed">
           <p>
-            <strong>Esta avaliação NÃO TEM SIGNIFICADO CLÍNICO ATUAL.</strong>
+            <strong>{"Esta avalia\u00e7\u00e3o N\u00c3O TEM SIGNIFICADO CL\u00cdNICO ATUAL."}</strong>
           </p>
           <p>
-            Sugerimos que você faça os exames recomendados (hemograma, ferritina,
-            saturação da transferrina) para obter uma avaliação válida.
+            {"Sugerimos que voc\u00ea fa\u00e7a os exames recomendados (hemograma, ferritina, satura\u00e7\u00e3o da transferrina) para obter uma avalia\u00e7\u00e3o v\u00e1lida."}
           </p>
           <div className="bg-white border border-red-200 rounded-xl p-4 text-sm text-gray-700">
-            💡 A plataforma RedFairy pode emitir a solicitação dos exames mediante
-            o pagamento de uma pequena taxa, evitando a necessidade de uma consulta
-            presencial apenas para isso. Após realizar os exames, retorne aqui para
-            nova avaliação.
+            {"\ud83d\udca1 A plataforma RedFairy pode emitir a solicita\u00e7\u00e3o dos exames mediante o pagamento de uma pequena taxa, evitando a necessidade de uma consulta presencial apenas para isso. Ap\u00f3s realizar os exames, retorne aqui para nova avalia\u00e7\u00e3o."}
           </div>
           <button
             onClick={() => setVerObsoleto(true)}
             className="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium py-2 rounded-lg transition-colors"
           >
-            Ver avaliação obsoleta (apenas referência histórica)
+            {"Ver avalia\u00e7\u00e3o obsoleta (apenas refer\u00eancia hist\u00f3rica)"}
           </button>
         </div>
       </div>
@@ -881,13 +864,11 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
     return (
       <div className="bg-white border-2 border-amber-300 rounded-2xl overflow-hidden shadow-sm">
         <div className="bg-amber-50 px-6 py-5 flex items-start gap-4">
-          <span style={{ fontSize: '28px', lineHeight: 1 }}>🔍</span>
+          <span style={{ fontSize: '28px', lineHeight: 1 }}>{"\ud83d\udd0d"}</span>
           <div>
-            <p className="font-semibold text-amber-800 text-base">Combinação não reconhecida pelo algoritmo</p>
+            <p className="font-semibold text-amber-800 text-base">{"Combina\u00e7\u00e3o n\u00e3o reconhecida pelo algoritmo"}</p>
             <p className="text-amber-700 text-sm mt-1 leading-relaxed">
-              Os valores informados não correspondem a nenhum padrão catalogado.
-              Isso pode indicar um resultado laboratorial atípico, um erro de digitação,
-              ou uma combinação que ainda não está mapeada no RedFairy.
+              {"Os valores informados n\u00e3o correspondem a nenhum padr\u00e3o catalogado. Isso pode indicar um resultado laboratorial at\u00edpico, um erro de digita\u00e7\u00e3o, ou uma combina\u00e7\u00e3o que ainda n\u00e3o est\u00e1 mapeada no RedFairy."}
             </p>
           </div>
         </div>
@@ -895,26 +876,26 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           <p className="text-sm font-semibold text-gray-600">O que fazer:</p>
           <div className="space-y-2">
             <div className="flex items-start gap-3 text-sm text-gray-700">
-              <span className="text-amber-500 mt-0.5">①</span>
-              <span>Confira se os valores foram digitados corretamente, comparando com o laudo original.</span>
+              <span className="text-amber-500 mt-0.5">{"\u2460"}</span>
+              <span>{"Confira se os valores foram digitados corretamente, comparando com o laudo original."}</span>
             </div>
             <div className="flex items-start gap-3 text-sm text-gray-700">
-              <span className="text-amber-500 mt-0.5">②</span>
-              <span>Verifique se o laboratório utilizou as mesmas unidades de medida (ng/mL, g/dL, fL, %).</span>
+              <span className="text-amber-500 mt-0.5">{"\u2461"}</span>
+              <span>{"Verifique se o laborat\u00f3rio utilizou as mesmas unidades de medida (ng/mL, g/dL, fL, %)."}</span>
             </div>
             <div className="flex items-start gap-3 text-sm text-gray-700">
-              <span className="text-amber-500 mt-0.5">③</span>
-              <span>Se os valores estiverem corretos, consulte seu médico — resultados muito atípicos podem indicar erro laboratorial ou condição clínica rara.</span>
+              <span className="text-amber-500 mt-0.5">{"\u2462"}</span>
+              <span>{"Se os valores estiverem corretos, consulte seu m\u00e9dico \u2014 resultados muito at\u00edpicos podem indicar erro laboratorial ou condi\u00e7\u00e3o cl\u00ednica rara."}</span>
             </div>
           </div>
           <div className="bg-gray-50 rounded-xl p-3 mt-2 border border-gray-100">
             <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-1">Valores informados</p>
             <p className="text-xs text-gray-500 font-mono leading-relaxed">
-              Hb: {resultado.mensagem.match(/Hb=([\d.]+)/)?.[1] ?? '—'} g/dL &nbsp;|&nbsp;
-              Ferritina: {resultado.mensagem.match(/Ferritina=([\d.]+)/)?.[1] ?? '—'} ng/mL &nbsp;|&nbsp;
-              VCM: {resultado.mensagem.match(/VCM=([\d.]+)/)?.[1] ?? '—'} fL<br/>
-              RDW: {resultado.mensagem.match(/RDW=([\d.]+)/)?.[1] ?? '—'} % &nbsp;|&nbsp;
-              Sat: {resultado.mensagem.match(/Sat=([\d.]+)/)?.[1] ?? '—'} %
+              {"Hb: "}{resultado.mensagem.match(/Hb=([\d.]+)/)?.[1] ?? "\u2014"}{" g/dL  |  "}
+              {"Ferritina: "}{resultado.mensagem.match(/Ferritina=([\d.]+)/)?.[1] ?? "\u2014"}{" ng/mL  |  "}
+              {"VCM: "}{resultado.mensagem.match(/VCM=([\d.]+)/)?.[1] ?? "\u2014"}{" fL"}<br/>
+              {"RDW: "}{resultado.mensagem.match(/RDW=([\d.]+)/)?.[1] ?? "\u2014"}{" %  |  "}
+              {"Sat: "}{resultado.mensagem.match(/Sat=([\d.]+)/)?.[1] ?? "\u2014"}{" %"}
             </p>
           </div>
         </div>
@@ -924,8 +905,6 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
   const scheme = colorScheme[resultado.color] || colorScheme.yellow;
 
-  // FIX: guards contra disparo espurio em paciente verde ou sem deficit real de Hb
-  // Consideramos gestante (Hb alvo gestacional = 11.5 g/dL por hemodilucao fisiologica)
   const _hbAtualFerroEV = Number(resultado._inputs?.hemoglobina ?? 0);
   const _sexoFerroEV = resultado._inputs?.sexo || 'M';
   const _gestanteFerroEV = Boolean(resultado._inputs?.gestante);
@@ -943,18 +922,16 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
       resultado.recomendacao?.toUpperCase().includes('FERRO ENDOVENOSO')
     );
 
-  // Gatilho textual (mantido)
   const _precisaSangriaTextual =
-    resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
+    resultado.diagnostico?.toUpperCase().includes("SANGRIA TERAP\u00caUTICA") ||
     resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
-    resultado.diagnostico?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
+    resultado.diagnostico?.toUpperCase().includes("SANGRIAS TERAP\u00caUTICAS") ||
     resultado.diagnostico?.toUpperCase().includes('SANGRIAS TERAPEUTICAS') ||
-    resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPÊUTICA') ||
+    resultado.recomendacao?.toUpperCase().includes("SANGRIA TERAP\u00caUTICA") ||
     resultado.recomendacao?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
-    resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPÊUTICAS') ||
+    resultado.recomendacao?.toUpperCase().includes("SANGRIAS TERAP\u00caUTICAS") ||
     resultado.recomendacao?.toUpperCase().includes('SANGRIAS TERAPEUTICAS');
 
-  // Gatilho clinico objetivo (novo — criterios do Dr. Ramos)
   const _sexoIn   = resultado._inputs?.sexo;
   const _ferrIn   = Number(resultado._inputs?.ferritina ?? 0);
   const _satIn    = Number(resultado._inputs?.satTransf ?? 0);
@@ -964,15 +941,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
   const _sobrecargaMasc = _sexoIn === 'M' && _ferrIn >= 500 && _satIn > 50 && _hbIn >= 13.5;
   const _sobrecargaFem  = _sexoIn === 'F' && _ferrIn >= 400 && _satIn > 50 && _hbIn >= 12;
 
-  // Mostra botao de sangria quando:
-  //   - textual OU
-  //   - sobrecarga masculina OU
-  //   - sobrecarga feminina nao-gestante
   const precisaSangria = (_precisaSangriaTextual || _sobrecargaMasc || (_sobrecargaFem && !_gestante)) && !_gestante;
-
-  // Alerta especial: gestante com sobrecarga de ferro
-  // Sangria e contraindicada na gestacao (risco de hipoxia fetal).
-  // Gestacao + lactacao consumirao ~1 g de Fe das reservas.
   const alertaGestanteSobrecarga = _sobrecargaFem && _gestante;
 
   const isPolicitemiaVera = resultado.id === 81;
@@ -993,14 +962,12 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
         />
       )}
 
-      {/* ── SEÇÃO 1: ERITRON ─────────────────────────────────────────────────── */}
       <div className={`rounded-2xl border-2 ${scheme.border} ${scheme.bg} shadow-lg overflow-hidden`}>
 
         <div className={`${scheme.badge} text-white px-6 py-4 flex items-center justify-between`}>
           <div>
-            <p className="text-xs uppercase tracking-widest opacity-80 mb-1">Diagnóstico</p>
+            <p className="text-xs uppercase tracking-widest opacity-80 mb-1">{"Diagn\u00f3stico"}</p>
             <h3 className="text-xl font-bold">{resultado.label}</h3>
-            {/* Subtexto de parametros (facilita testes via screenshot) */}
             {resultado._inputs && (() => {
               const inp = resultado._inputs
               const labs = []
@@ -1012,14 +979,14 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               const cabecalho = `${inp.sexo || '?'} ${inp.idade ? inp.idade + 'a' : ''}`.trim()
               const flagsAtivas = []
               const FLAGS_MAP = {
-                bariatrica: 'bariátrica', vegetariano: 'vegetariana', perda: 'perda',
+                bariatrica: "bari\u00e1trica", vegetariano: 'vegetariana', perda: 'perda',
                 hipermenorreia: 'hipermenorreia', gestante: 'gestante', alcoolista: 'alcoolista',
                 transfundido: 'transfundido', aspirina: 'aspirina', vitaminaB12: 'B12',
                 ferroOral: 'ferro oral', tiroxina: 'tiroxina', hidroxiureia: 'hidroxiureia',
                 anticonvulsivante: 'anticonvulsivante', testosterona: 'testosterona',
                 metformina: 'metformina', ibp: 'IBP', methotrexato: 'metotrexato',
-                hivTratamento: 'HIV', anemiaPrevia: 'anemia prévia', sideropenia: 'sideropenia',
-                sobrecargaFerro: 'sobrecarga ferro', hbAlta: 'Hb alta prévia', celiaco: 'celíaco',
+                hivTratamento: 'HIV', anemiaPrevia: "anemia pr\u00e9via", sideropenia: 'sideropenia',
+                sobrecargaFerro: 'sobrecarga ferro', hbAlta: "Hb alta pr\u00e9via", celiaco: "cel\u00edaco",
                 g6pd: 'G6PD', endometriose: 'endometriose', doadorSangue: 'doador sangue'
               }
               for (const k of Object.keys(FLAGS_MAP)) {
@@ -1027,8 +994,8 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               }
               return (
                 <div className="text-xs opacity-75 mt-1 leading-snug">
-                  <div>{cabecalho} · {labs.join(' · ')}</div>
-                  <div>Flags: {flagsAtivas.length > 0 ? flagsAtivas.join(', ') : 'nenhuma'}</div>
+                  <div>{cabecalho}{" \u00b7 "}{labs.join(" \u00b7 ")}</div>
+                  <div>{"Flags: "}{flagsAtivas.length > 0 ? flagsAtivas.join(', ') : 'nenhuma'}</div>
                 </div>
               )
             })()}
@@ -1036,7 +1003,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           <button onClick={onCopiar}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
               ${copiado ? 'bg-white text-green-700' : 'bg-white/20 hover:bg-white/30 text-white'}`}>
-            {copiado ? '✅ Copiado!' : '📋 Copiar'}
+            {copiado ? "\u2705 Copiado!" : "\ud83d\udccb Copiar"}
           </button>
         </div>
 
@@ -1044,34 +1011,33 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
           {resultado.fraseData && (
             <div className={`rounded-xl border px-4 py-3 text-sm ${fraseDataColor[resultado.fraseData.tipo]}`}>
-              <span className="font-semibold">📅 {resultado.diasDesdeColeta} dia(s) desde a coleta</span>
+              <span className="font-semibold">{"\ud83d\udcc5 "}{resultado.diasDesdeColeta}{" dia(s) desde a coleta"}</span>
               <p className="mt-1">{resultado.fraseData.texto}</p>
             </div>
           )}
 
           <div>
-            <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>🏷️ Diagnóstico</h4>
+            <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>{"\ud83c\udff7\ufe0f Diagn\u00f3stico"}</h4>
             <p className="text-gray-700 text-sm leading-relaxed bg-white rounded-xl p-4 border border-gray-100">
               {resultado.diagnostico}
             </p>
           </div>
 
           <div>
-            <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>📋 Recomendação</h4>
+            <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>{"\ud83d\udccb Recomenda\u00e7\u00e3o"}</h4>
             <p className="text-gray-700 text-sm leading-relaxed bg-white rounded-xl p-4 border border-gray-100">
               {resultado.recomendacao}
             </p>
           </div>
 
-          {/* Aviso ao médico: paciente bariátrico será encaminhado ao Projeto OBA */}
           {!modoPaciente && resultado._inputs?.bariatrica && (() => {
             const sx = resultado._inputs?.sexo || 'M'
             const txt = sx === 'F'
-              ? 'Avaliação salva sob o CPF da paciente. Ao se cadastrar, ela terá acesso ao Projeto OBA — Otimizar o Bariátrico.'
-              : 'Avaliação salva sob o CPF do paciente. Ao se cadastrar, ele terá acesso ao Projeto OBA — Otimizar o Bariátrico.'
+              ? "Avalia\u00e7\u00e3o salva sob o CPF da paciente. Ao se cadastrar, ela ter\u00e1 acesso ao Projeto OBA \u2014 Otimizar o Bari\u00e1trico."
+              : "Avalia\u00e7\u00e3o salva sob o CPF do paciente. Ao se cadastrar, ele ter\u00e1 acesso ao Projeto OBA \u2014 Otimizar o Bari\u00e1trico."
             return (
               <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                <p className="text-sm font-bold text-blue-800 mb-1">📤 Encaminhamento ao Projeto OBA</p>
+                <p className="text-sm font-bold text-blue-800 mb-1">{"\ud83d\udce4 Encaminhamento ao Projeto OBA"}</p>
                 <p className="text-gray-700 text-sm leading-relaxed">{txt}</p>
               </div>
             )
@@ -1080,25 +1046,20 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           {precisaFerroEV && (
             <button onClick={() => setShowFerroEV(true)}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-              💉 Como repor o Ferro Endovenoso
+              {"\ud83d\udc89 Como repor o Ferro Endovenoso"}
             </button>
           )}
 
-          {/* Alerta especial: gestante com sobrecarga de ferro */}
           {alertaGestanteSobrecarga && (
             <div className="rounded-xl border-2 border-pink-400 bg-pink-50 p-4 space-y-2">
               <p className="text-sm font-bold text-pink-900 uppercase tracking-wide">
-                ⚠️ Sobrecarga de Ferro na Gestação
+                {"\u26a0\ufe0f Sobrecarga de Ferro na Gesta\u00e7\u00e3o"}
               </p>
               <p className="text-sm text-pink-900 leading-relaxed">
-                A sangria terapêutica <strong>não está indicada durante a gestação</strong> — há
-                risco de hipóxia fetal. A gestação e a lactação consumirão cerca de 1 g de ferro
-                das suas reservas, o que reduzirá parcialmente a sobrecarga atual.
+                {"A sangria terap\u00eautica "}<strong>{"n\u00e3o est\u00e1 indicada durante a gesta\u00e7\u00e3o"}</strong>{" \u2014 h\u00e1 risco de hip\u00f3xia fetal. A gesta\u00e7\u00e3o e a lacta\u00e7\u00e3o consumir\u00e3o cerca de 1 g de ferro das suas reservas, o que reduzir\u00e1 parcialmente a sobrecarga atual."}
               </p>
               <p className="text-sm text-pink-900 leading-relaxed font-medium">
-                <strong>Após o parto e o fim da lactação, solicite teleconsulta com hematologista
-                para avaliar o status atual do seu metabolismo do ferro e decidir sobre o
-                tratamento definitivo.</strong>
+                <strong>{"Ap\u00f3s o parto e o fim da lacta\u00e7\u00e3o, solicite teleconsulta com hematologista para avaliar o status atual do seu metabolismo do ferro e decidir sobre o tratamento definitivo."}</strong>
               </p>
             </div>
           )}
@@ -1106,13 +1067,13 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           {precisaSangria && (
             <button onClick={() => setShowSangria(true)}
               className="w-full bg-red-900 hover:bg-red-950 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-              🩸 Protocolo de Sangria Terapêutica
+              {"\ud83e\ude78 Protocolo de Sangria Terap\u00eautica"}
             </button>
           )}
 
           {resultado.fraseHipermenorreia && (
             <div>
-              <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-pink-700">⚠️ Hipermenorreia</h4>
+              <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-pink-700">{"\u26a0\ufe0f Hipermenorreia"}</h4>
               <p className="text-gray-700 text-sm leading-relaxed bg-pink-50 rounded-xl p-4 border border-pink-200">
                 {resultado.fraseHipermenorreia}
               </p>
@@ -1121,7 +1082,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
           {resultado.g6pdAlerta && (
             <div>
-              <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-purple-700">⚠️ G-6-PD</h4>
+              <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-purple-700">{"\u26a0\ufe0f G-6-PD"}</h4>
               <p className="text-gray-700 text-sm leading-relaxed bg-purple-50 rounded-xl p-4 border border-purple-200">
                 {resultado.g6pdAlerta}
               </p>
@@ -1130,7 +1091,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
           {resultado.g6pdAlerta && (
             <div>
-              <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-purple-700">⚠️ G-6-PD</h4>
+              <h4 className="font-semibold text-sm uppercase tracking-wide mb-2 text-purple-700">{"\u26a0\ufe0f G-6-PD"}</h4>
               <p className="text-gray-700 text-sm leading-relaxed bg-purple-50 rounded-xl p-4 border border-purple-200">
                 {resultado.g6pdAlerta}
               </p>
@@ -1139,7 +1100,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
           {resultado.comentarios.length > 0 && (
             <div>
-              <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>💊 Medicamentos / Suplementos</h4>
+              <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>{"\ud83d\udc8a Medicamentos / Suplementos"}</h4>
               <div className="space-y-2">
                 {resultado.comentarios.map((c, i) => (
                   <div key={i} className="bg-white rounded-xl p-4 border border-gray-100">
@@ -1152,12 +1113,12 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           )}
 
           <div>
-            <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>🧪 Próximos Exames Sugeridos</h4>
+            <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>{"\ud83e\uddea Pr\u00f3ximos Exames Sugeridos"}</h4>
             <div className="bg-white rounded-xl p-4 border border-gray-100">
               <div className="grid grid-cols-2 gap-1">
                 {resultado.proximosExames.map((exame, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
-                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-400">{"\u2022"}</span>
                     {exame}
                   </div>
                 ))}
@@ -1168,15 +1129,11 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
         </div>
       </div>
 
-      {/* ── SEÇÃO 1.5: ACHADOS PARALELOS ─────────────────────────────────────── */}
       <AchadosParalelosSection achados={resultado.achadosParalelos} />
 
-      {/* ── SEÇÃO 2: OBA ─────────────────────────────────────────────────────── */}
       {oba && <OBASection oba={oba} />}
 
-      {/* ── SEÇÃO 3: Painel conforme modo ────────────────────────────────────── */}
       {!modoPaciente ? (
-        // MODO MÉDICO — orientações + checkbox
         <PainelMedico
           resultado={resultado}
           medicoNome={medicoNome}
@@ -1184,15 +1141,13 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           medicoDados={medicoDados}
         />
       ) : (
-        // MODO PACIENTE — oferta de documentos
         <DocumentoMedicoPanel resultado={resultado} />
       )}
 
-      {/* ── BOTÃO FINAL: COPIAR RESULTADO COMPLETO PARA WHATSAPP ─────────────── */}
       <button onClick={onCopiar}
         className={`mt-6 w-full py-3 rounded-xl font-bold text-sm transition-all
           ${copiado ? 'bg-green-500 text-white' : `${scheme.badge} text-white hover:opacity-90`}`}>
-        {copiado ? '✅ Resultado Copiado!' : '📋 Copiar Resultado Completo para WhatsApp'}
+        {copiado ? "\u2705 Resultado Copiado!" : "\ud83d\udccb Copiar Resultado Completo para WhatsApp"}
       </button>
     </>
   );

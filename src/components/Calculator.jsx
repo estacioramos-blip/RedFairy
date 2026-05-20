@@ -48,30 +48,33 @@ const IconMedicamentos = () => (
   </svg>
 )
 
-
-
 function TermosModal({ onFechar }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }} onClick={onFechar}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{ maxHeight:'85vh' }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <div>
-            <p className="font-bold text-red-700 text-sm">Termos e Condições de Uso — Profissionais de Saúde</p>
-            <p className="text-gray-400 text-xs">RedFairy — Versão 1.0 — Abril de 2026</p>
+            <p className="font-bold text-red-700 text-sm">{"Termos e Condi\u00e7\u00f5es de Uso \u2014 Profissionais de Sa\u00fade"}</p>
+            <p className="text-gray-400 text-xs">{"RedFairy \u2014 Vers\u00e3o 1.0 \u2014 Abril de 2026"}</p>
           </div>
-          <button onClick={onFechar} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+          <button
+            onClick={onFechar}
+            className="text-gray-400 hover:text-gray-600 text-xl"
+            style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
+            {"\u2715"}
+          </button>
         </div>
         <div className="overflow-y-auto p-5 text-xs text-gray-700 leading-relaxed space-y-4">
-          <p className="font-bold text-red-700 uppercase tracking-wide mb-1">Termos e Condições de Uso — Profissionais de Saúde</p>
-          <p><strong>1. Natureza da Plataforma.</strong> O RedFairy é uma ferramenta digital de apoio à decisão clínica. NÃO substitui o julgamento clínico do profissional de saúde, o exame físico nem a anamnese detalhada. Os resultados gerados são orientativos e não constituem laudos médicos.</p>
-          <p><strong>2. Elegibilidade.</strong> O acesso ao módulo profissional é restrito a profissionais de saúde com registro ativo em conselho de classe (CRM, COREN, CRN, CRF ou equivalente). Ao se cadastrar, o profissional declara possuir habilitação legal para exercício da profissão, sendo legalmente responsável por esta informação.</p>
-          <p><strong>3. Responsabilidade Clínica.</strong> Médicos serão integralmente responsáveis pelas decisões clínicas tomadas com base nos resultados gerados. A plataforma mantém um canal de comunicação aberto para dúvidas ou esclarecimentos. O RedFairy é uma ferramenta auxiliar — a responsabilidade diagnóstica e terapêutica é exclusivamente do médico. Profissionais de saúde não médicos que utilizem a plataforma não devem fazer prescrições nem recomendações terapêuticas quando recomendado pelo algoritmo, e devem orientar os pacientes a consultarem os seus médicos, ou os médicos da plataforma.</p>
-          <p><strong>4. Consentimento dos Pacientes.</strong> Ao inserir dados de pacientes, o profissional declara ter obtido o consentimento informado do titular dos dados, em conformidade com a legislação vigente e com o Código de Ética Profissional. De preferência, as avaliações devem ser feitas na presença dos pacientes, ou quando os pacientes encaminhem os seus resultados diretamente para o médico, por qualquer meio.</p>
-          <p><strong>5. Programa de Afiliados.</strong> Ao avaliar pacientes na plataforma, o profissional integra automaticamente o Programa de Afiliados RedFairy, com suporte dos patrocinadores da Operadora. As regras e benefícios são estabelecidos em documento próprio que será enviado aos profissionais, e podem ser alterados com aviso prévio de 30 dias.</p>
-          <p><strong>6. Proteção de Dados — LGPD.</strong> Os dados inseridos são tratados em conformidade com a Lei nº 13.709/2018. O profissional é corresponsável pelo tratamento adequado dos dados dos seus pacientes inseridos na plataforma.</p>
-          <p><strong>7. Propriedade Intelectual.</strong> Todo o conteúdo da plataforma, incluindo o algoritmo, as matrizes de decisão e as orientações terapêuticas, é de propriedade exclusiva da Cytomica. É vedada reprodução, cópia ou distribuição sem autorização expressa.</p>
-          <p><strong>8. Limitação de Responsabilidade.</strong> A Cytomica não se responsabiliza por danos decorrentes do uso inadequado da plataforma ou de decisões clínicas baseadas exclusivamente nos resultados gerados, sem a devida avaliação profissional.</p>
-          <p><strong>9. Foro.</strong> Comarca de Salvador, Estado da Bahia. Lei aplicável: legislação brasileira vigente, especialmente a LGPD e o Código de Ética Profissional.</p>
+          <p className="font-bold text-red-700 uppercase tracking-wide mb-1">{"Termos e Condi\u00e7\u00f5es de Uso \u2014 Profissionais de Sa\u00fade"}</p>
+          <p><strong>1. Natureza da Plataforma.</strong>{" O RedFairy \u00e9 uma ferramenta digital de apoio \u00e0 decis\u00e3o cl\u00ednica. N\u00c3O substitui o julgamento cl\u00ednico do profissional de sa\u00fade, o exame f\u00edsico nem a anamnese detalhada. Os resultados gerados s\u00e3o orientativos e n\u00e3o constituem laudos m\u00e9dicos."}</p>
+          <p><strong>2. Elegibilidade.</strong>{" O acesso ao m\u00f3dulo profissional \u00e9 restrito a profissionais de sa\u00fade com registro ativo em conselho de classe (CRM, COREN, CRN, CRF ou equivalente). Ao se cadastrar, o profissional declara possuir habilita\u00e7\u00e3o legal para exerc\u00edcio da profiss\u00e3o, sendo legalmente respons\u00e1vel por esta informa\u00e7\u00e3o."}</p>
+          <p><strong>{"3. Responsabilidade Cl\u00ednica."}</strong>{" M\u00e9dicos ser\u00e3o integralmente respons\u00e1veis pelas decis\u00f5es cl\u00ednicas tomadas com base nos resultados gerados. A plataforma mant\u00e9m um canal de comunica\u00e7\u00e3o aberto para d\u00favidas ou esclarecimentos. O RedFairy \u00e9 uma ferramenta auxiliar \u2014 a responsabilidade diagn\u00f3stica e terap\u00eautica \u00e9 exclusivamente do m\u00e9dico. Profissionais de sa\u00fade n\u00e3o m\u00e9dicos que utilizem a plataforma n\u00e3o devem fazer prescri\u00e7\u00f5es nem recomenda\u00e7\u00f5es terap\u00eauticas quando recomendado pelo algoritmo, e devem orientar os pacientes a consultarem os seus m\u00e9dicos, ou os m\u00e9dicos da plataforma."}</p>
+          <p><strong>4. Consentimento dos Pacientes.</strong>{" Ao inserir dados de pacientes, o profissional declara ter obtido o consentimento informado do titular dos dados, em conformidade com a legisla\u00e7\u00e3o vigente e com o C\u00f3digo de \u00c9tica Profissional. De prefer\u00eancia, as avalia\u00e7\u00f5es devem ser feitas na presen\u00e7a dos pacientes, ou quando os pacientes encaminhem os seus resultados diretamente para o m\u00e9dico, por qualquer meio."}</p>
+          <p><strong>5. Programa de Afiliados.</strong>{" Ao avaliar pacientes na plataforma, o profissional integra automaticamente o Programa de Afiliados RedFairy, com suporte dos patrocinadores da Operadora. As regras e benef\u00edcios s\u00e3o estabelecidos em documento pr\u00f3prio que ser\u00e1 enviado aos profissionais, e podem ser alterados com aviso pr\u00e9vio de 30 dias."}</p>
+          <p><strong>{"6. Prote\u00e7\u00e3o de Dados \u2014 LGPD."}</strong>{" Os dados inseridos s\u00e3o tratados em conformidade com a Lei n\u00ba 13.709/2018. O profissional \u00e9 corespons\u00e1vel pelo tratamento adequado dos dados dos seus pacientes inseridos na plataforma."}</p>
+          <p><strong>7. Propriedade Intelectual.</strong>{" Todo o conte\u00fado da plataforma, incluindo o algoritmo, as matrizes de decis\u00e3o e as orienta\u00e7\u00f5es terap\u00eauticas, \u00e9 de propriedade exclusiva da Cytomica. \u00c9 vedada reprodu\u00e7\u00e3o, c\u00f3pia ou distribui\u00e7\u00e3o sem autoriza\u00e7\u00e3o expressa."}</p>
+          <p><strong>{"8. Limita\u00e7\u00e3o de Responsabilidade."}</strong>{" A Cytomica n\u00e3o se responsabiliza por danos decorrentes do uso inadequado da plataforma ou de decis\u00f5es cl\u00ednicas baseadas exclusivamente nos resultados gerados, sem a devida avalia\u00e7\u00e3o profissional."}</p>
+          <p><strong>9. Foro.</strong>{" Comarca de Salvador, Estado da Bahia. Lei aplic\u00e1vel: legisla\u00e7\u00e3o brasileira vigente, especialmente a LGPD e o C\u00f3digo de \u00c9tica Profissional."}</p>
           <p className="text-gray-400 text-center text-xs">cytomica.com | redfairy.bio | contato@redfairy.bio</p>
         </div>
         <div className="p-4 border-t border-gray-100">
@@ -82,11 +85,6 @@ function TermosModal({ onFechar }) {
   )
 }
 
-
-// ─── Tela de login/cadastro do médico ────────────────────────────────────────
-// __TELA5_TELEFONISTA__
-// Tela apos cadastro: imagem telefonista2 com typewriter sobreposto.
-// Apos 4s chama onConcluir() automaticamente.
 function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
   const fullText = 'Vamos ao programa de afiliados...';
   const [displayed, setDisplayed] = React.useState('');
@@ -109,7 +107,6 @@ function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        {/* Imagem telefonista2 no topo com gradiente */}
         <div style={{ position: 'relative' }}>
           <img src={telefonista2Img} alt="Vamos ao programa de afiliados"
             style={{ width: '100%', height: 'auto', display: 'block' }} />
@@ -119,14 +116,13 @@ function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
               <span style={{ opacity: 0.6, animation: 'blink 1s step-end infinite' }}>|</span>
             </p>
             <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '10px', fontWeight: 600, letterSpacing: '1.5px', margin: '8px 0 0', textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-              Após a próxima página você estará automaticamente logado
+              {"Ap\u00f3s a pr\u00f3xima p\u00e1gina voc\u00ea estar\u00e1 automaticamente logado"}
             </p>
           </div>
           <style>{`@keyframes blink { 50% { opacity: 0; } }`}</style>
         </div>
-        {/* Subtexto abaixo da imagem */}
         <div className="px-6 py-3 text-center">
-          <p className="text-xs text-gray-400">Cadastro concluído</p>
+          <p className="text-xs text-gray-400">{"Cadastro conclu\u00eddo"}</p>
         </div>
       </div>
     </div>
@@ -134,7 +130,8 @@ function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
 }
 
 function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadastro', onVoltarParaConvite }) {
-  const [modo, setModo] = useState(modoInicial) // 'login' | 'cadastro' (hub removido)
+  const [showReversaoAdesao, setShowReversaoAdesao] = useState(false);
+  const [modo, setModo] = useState(modoInicial)
   const refCrmLogin = useRef(null);
   const [vamosTxt, setVamosTxt] = useState('');
   useEffect(() => {
@@ -153,22 +150,19 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     }
   }, [modo]);
 
-  // Login
   const [loginConselho, setLoginConselho] = useState('')
   const [loginSenha, setLoginSenha] = useState('')
   const [loginErro, setLoginErro] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
 
-  // Cadastro
   const [nome, setNome] = useState('')
   const [tipoConselho, setTipoConselho] = useState('CRM')
-  const [conselho, setConselho] = useState(() => {  // __FATIA4C_PREFILL__
+  const [conselho, setConselho] = useState(() => {
     try { return localStorage.getItem('rf_crm_prefill') || '' } catch(e) { return '' }
   })
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
-  // __FLUXO2_TELA7_SEM_SENHA__ medico ja logado (senha criada na caixa)
   const jaLogadoSemSenha = (() => { try { return !!localStorage.getItem('medico_crm'); } catch(e) { return false; } })()
   const [cadErro, setCadErro] = useState('')
   const [cadLoading, setCadLoading] = useState(false)
@@ -179,7 +173,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   const [showLoginSenha, setShowLoginSenha] = useState(false)
   const [showEsqueciSenha, setShowEsqueciSenha] = useState(false)
   const refSenhaLogin = useRef(null);
-  const [etapaLogin, setEtapaLogin] = useState(1); // 1=CRM, 2=Senha
+  const [etapaLogin, setEtapaLogin] = useState(1);
   useEffect(() => {
     if (modo !== 'login') return;
     if (etapaLogin !== 1) return;
@@ -207,21 +201,17 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   async function handleLogin() {
     setLoginErro('')
     const conselhoLimpo = loginConselho.trim().toUpperCase()
-    if (!conselhoLimpo) { setLoginErro('Informe o número do conselho de classe.'); return }
+    if (!conselhoLimpo) { setLoginErro("Informe o n\u00famero do conselho de classe."); return }
     if (!loginSenha) { setLoginErro('Informe a senha.'); return }
-
     setLoginLoading(true)
     const { data: medico } = await supabase
       .from('medicos')
       .select('id, nome, crm, senha_klipbit')
       .eq('crm', conselhoLimpo)
       .single()
-
     setLoginLoading(false)
-
-    if (!medico) { setLoginErro('Conselho não encontrado. Verifique ou cadastre-se.'); return }
+    if (!medico) { setLoginErro("Conselho n\u00e3o encontrado. Verifique ou cadastre-se."); return }
     if (medico.senha_klipbit !== loginSenha) { setLoginErro('Senha incorreta.'); return }
-
     localStorage.setItem('medico_crm', medico.crm)
     localStorage.setItem('medico_nome', medico.nome || '')
     localStorage.setItem('medico_login_at', Date.now().toString())
@@ -230,58 +220,37 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
 
   async function handleCadastro() {
     setCadErro('')
-    if (!aceitoTC) { setCadErro('Você deve aceitar os Termos e Condições para criar acesso.'); return }
+    if (!aceitoTC) { setCadErro("Voc\u00ea deve aceitar os Termos e Condi\u00e7\u00f5es para criar acesso."); return }
     const conselhoLimpo = conselho.trim().toUpperCase()
     const celularDigits = celular.replace(/\D/g, '')
-
     if (!nome.trim() || nome.trim().length < 5) { setCadErro('Informe seu nome completo.'); return }
-    if (!conselhoLimpo) { setCadErro('Informe o número do conselho de classe/UF.'); return }
-    if (celularDigits.length < 10) { setCadErro('Informe um celular válido com DDD.'); return }
-    if (!email || !email.includes('@')) { setCadErro('Informe um e-mail válido.'); return }
+    if (!conselhoLimpo) { setCadErro("Informe o n\u00famero do conselho de classe/UF."); return }
+    if (celularDigits.length < 10) { setCadErro("Informe um celular v\u00e1lido com DDD."); return }
+    if (!email || !email.includes('@')) { setCadErro("Informe um e-mail v\u00e1lido."); return }
     if (!jaLogadoSemSenha && (!senha || senha.length < 6)) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
-
     setCadLoading(true)
-
-    // Verifica se já existe
     const { data: existing } = await supabase
       .from('medicos')
       .select('id, nome, crm')
       .eq('crm', conselhoLimpo)
       .single()
-
     const partes = conselhoLimpo.split('/')
     const uf = partes[1] || ''
-
     let opError = null
     if (existing) {
-      // __L2B4__ registro minimo ja criado (caixa da landing): completa perfil
-      const _upd = {
-        nome: nome.trim(),
-        uf,
-        celular: celularDigits,
-        email: email.trim().toLowerCase(),
-      };
+      const _upd = { nome: nome.trim(), uf, celular: celularDigits, email: email.trim().toLowerCase() };
       if (!jaLogadoSemSenha) { _upd.senha_klipbit = senha; }
-      const { error } = await supabase.from('medicos')
-        .update(_upd)
-        .eq('crm', conselhoLimpo)
+      const { error } = await supabase.from('medicos').update(_upd).eq('crm', conselhoLimpo)
       opError = error
     } else {
       const { error } = await supabase.from('medicos').insert({
-        nome: nome.trim(),
-        crm: conselhoLimpo,
-        uf,
-        celular: celularDigits,
-        email: email.trim().toLowerCase(),
-        senha_klipbit: senha,
+        nome: nome.trim(), crm: conselhoLimpo, uf, celular: celularDigits,
+        email: email.trim().toLowerCase(), senha_klipbit: senha,
       })
       opError = error
     }
-
     setCadLoading(false)
-
     if (opError) { setCadErro('Erro ao salvar. Tente novamente.'); return }
-
     localStorage.setItem('medico_crm', conselhoLimpo)
     localStorage.setItem('medico_nome', nome.trim())
     localStorage.setItem('medico_login_at', Date.now().toString())
@@ -290,28 +259,23 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
 
-  // __FATIA1B_SEM_TELA6__ TELA 6 (CadastroConcluidoTela) eliminada.
-  // Ao concluir o cadastro, segue direto para a proxima etapa.
   useEffect(() => {
     if (cadSucesso) {
       setCadSucesso(false);
-      if (typeof onConcluir === 'function') {
-        onConcluir(nome, conselho);
-      }
+      if (typeof onConcluir === 'function') { onConcluir(nome, conselho); }
     }
   }, [cadSucesso]);
 
   return (
-    <div className="bg-gray-900 relative" style={{ minHeight: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}> {/* __B2_SCROLL__ */}
+    <div className="bg-gray-900 relative" style={{ minHeight: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}>
       {onVoltar && (
         <button onClick={onVoltar}
           className="absolute top-4 left-4 text-white px-3 py-1 rounded-lg text-xs font-medium shadow transition-colors"
           style={{ backgroundColor: '#991b1b' }}>
-          ← Voltar
+          {"\u2190 Voltar"}
         </button>
       )}
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md space-y-5" style={{ overflow: 'hidden' }}>
-        {/* __TELEFONISTA3_TOPO__ */}
         <div style={{ position: 'relative' }}>
           <img src={telefonista3Img} alt="Vamos!" style={{ width: '100%', height: 'auto', display: 'block' }} />
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 50%, transparent)', padding: '40px 24px 34px' }}>
@@ -320,10 +284,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
         </div>
         <div className="px-8 pb-8 pt-2 space-y-5">
         <div className="text-center">
-          <img src={logo} alt="RedFairy"
-            className="w-16 h-16 object-contain mx-auto mb-3" />
+          <img src={logo} alt="RedFairy" className="w-16 h-16 object-contain mx-auto mb-3" />
           <h2 className="text-xl font-bold text-red-700">
-            {modo === 'login' ? 'Acesso Médico' : 'Primeiro Acesso'}
+            {modo === 'login' ? "Acesso M\u00e9dico" : 'Primeiro Acesso'}
           </h2>
           <p className="text-gray-500 text-sm mt-1">
             {modo === 'login' ? 'Entre com seu conselho e senha' : 'Crie seu acesso ao RedFairy'}
@@ -332,35 +295,28 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
 
         {sessaoExpirada && (
           <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 mb-2 text-center">
-            <p className="text-amber-800 text-sm font-semibold">⏱ Sua sessão expirou.</p>
-            <p className="text-amber-700 text-xs mt-0.5">Faça login novamente para continuar.</p>
+            <p className="text-amber-800 text-sm font-semibold">{"\u23f1 Sua sess\u00e3o expirou."}</p>
+            <p className="text-amber-700 text-xs mt-0.5">{"Fa\u00e7a login novamente para continuar."}</p>
           </div>
         )}
 
-
-        {/* LOGIN */}
         {modo === 'login' && (
           <div className="space-y-3">
-            <button
-              onClick={() => { setLoginErro(''); setCadErro(''); onVoltar?.() }}
-              className="text-gray-400 hover:text-gray-600 text-xs font-medium">
-              ← Voltar
+            <button onClick={() => { setLoginErro(''); setCadErro(''); onVoltar?.() }} className="text-gray-400 hover:text-gray-600 text-xs font-medium">
+              {"\u2190 Voltar"}
             </button>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Número do CRM/UF</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM/UF"}</label>
               <input ref={refCrmLogin} type="text" value={loginConselho}
                 onChange={e => setLoginConselho(formatarConselho(e.target.value))}
-                placeholder="Ex: 6302/BA"
-                autoComplete="off"
-                name="rf-crm-login"
+                placeholder="Ex: 6302/BA" autoComplete="off" name="rf-crm-login"
                 className={`${inputClass} ${etapaLogin === 1 ? 'border-yellow-400 bg-yellow-50' : 'bg-yellow-50 border-yellow-300'}`} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
               <div style={{ position: 'relative' }}>
                 <input ref={refSenhaLogin} type={showLoginSenha ? 'text' : 'password'} value={loginSenha}
-                  onChange={e => setLoginSenha(e.target.value)}
-                  onFocus={() => setEtapaLogin(2)}
+                  onChange={e => setLoginSenha(e.target.value)} onFocus={() => setEtapaLogin(2)}
                   placeholder="Sua senha"
                   className={`${inputClass} ${etapaLogin === 2 ? 'border-yellow-400 bg-yellow-50' : ''}`}
                   style={{ paddingRight: '40px' }}
@@ -377,13 +333,12 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
               </div>
             </div>
             {loginErro && <p className="text-red-500 text-sm">{loginErro}</p>}
-            {/* __LOGIN_CONFIRMO__ */}
             {loginConselho.trim() && loginSenha.trim() && (
               <div className="flex flex-col items-center gap-1 pt-1">
-                <button onClick={handleLogin} disabled={loginLoading}
-                  aria-label="Confirmar login"
-                  className="w-14 h-14 rounded-full bg-gray-400 hover:bg-gray-500 text-red-700 font-bold flex items-center justify-center transition-colors shadow-md disabled:opacity-50">
-                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>▶</span>
+                <button onClick={handleLogin} disabled={loginLoading} aria-label="Confirmar login"
+                  className="w-14 h-14 rounded-full bg-gray-400 hover:bg-gray-500 text-red-700 font-bold flex items-center justify-center transition-colors shadow-md disabled:opacity-50"
+                  style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, sans-serif' }}>
+                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{"\u2714"}</span>
                 </button>
                 <span className="text-xs font-bold text-red-800 tracking-wide">{loginLoading ? '...' : 'CONFIRMO'}</span>
               </div>
@@ -396,25 +351,21 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
           </div>
         )}
 
-        {/* CADASTRO */}
         {modo === 'cadastro' && (
           <div className="space-y-3">
-            <button
-              onClick={() => { setLoginErro(''); setCadErro(''); onVoltarParaConvite?.() }}
-              className="text-gray-400 hover:text-gray-600 text-xs font-medium">
-              ← Voltar
+            <button onClick={() => { setLoginErro(''); setCadErro(''); onVoltarParaConvite?.() }} className="text-gray-400 hover:text-gray-600 text-xs font-medium">
+              {"\u2190 Voltar"}
             </button>
-
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
               <input type="text" value={nome} onChange={e => setNome(e.target.value.toUpperCase())} style={{ textTransform: 'uppercase' }}
-                placeholder="Dr. João da Silva" className={inputClass} autoComplete="off" />
+                placeholder={"Jo\u00e3o da Silva"} className={inputClass} autoComplete="off" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Número do CRM/UF</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM/UF"}</label>
               <input type="text" value={conselho} onChange={e => setConselho(formatarConselho(e.target.value))}
                 placeholder="Ex: 6302/BA" className={inputClass} autoComplete="off" />
-              <p className="text-xs text-red-800 font-medium mt-0.5">Este será seu login permanente</p>
+              <p className="text-xs text-red-800 font-medium mt-0.5">{"Este ser\u00e1 seu login permanente"}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
@@ -422,9 +373,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
                 placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} autoComplete="off" />
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-              <p className="text-blue-800 text-xs font-bold mb-1">⚡ Programa de Afiliados</p>
+              <p className="text-blue-800 text-xs font-bold mb-1">{"\u2728 Programa de Afiliados"}</p>
               <p className="text-blue-700 text-xs leading-relaxed">
-                Ao avaliar pacientes você passa a integrar o nosso Programa de Afiliados, com suporte dos nossos patrocinadores. Ao beneficiar pacientes, você também passa a auferir benefícios.
+                {"Ao avaliar pacientes voc\u00ea passa a integrar o nosso Programa de Afiliados, com suporte dos nossos patrocinadores. Ao beneficiar pacientes, voc\u00ea tamb\u00e9m passa a auferir benef\u00edcios."}
               </p>
             </div>
             <div>
@@ -436,7 +387,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
               {!jaLogadoSemSenha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie uma Senha</label>
               <div style={{ position: 'relative' }}>
                 <input type={showSenha ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)}
-                  placeholder="Mínimo 6 caracteres" className={inputClass} autoComplete="new-password"
+                  placeholder={"M\u00ednimo 6 caracteres"} className={inputClass} autoComplete="new-password"
                   style={{ paddingRight: '40px' }} />
                 <button type="button" onClick={() => setShowSenha(!showSenha)}
                   style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9ca3af' }}
@@ -448,46 +399,69 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
                   )}
                 </button>
               </div>
-              <p className="text-xs text-red-800 font-medium mt-0.5">Será sua senha de acesso ao RedFairy.</p></>)}
+              <p className="text-xs text-red-800 font-medium mt-0.5">{"Ser\u00e1 sua senha de acesso ao RedFairy."}</p></>)}
             </div>
             {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
             {showTC && <TermosModal onFechar={() => setShowTC(false)} />}
             <label className="flex items-start gap-2 cursor-pointer">
               <input type="checkbox" checked={aceitoTC} onChange={e => setAceitoTC(e.target.checked)} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
-              <span className="text-xs text-gray-600">Li e aceito os{' '}
+              <span className="text-xs text-gray-600">{"Li e aceito os "}
                 <button type="button" onClick={() => setShowTC(true)} className="text-red-700 font-semibold hover:underline">
-                  Termos e Condições de Uso
+                  {"Termos e Condi\u00e7\u00f5es de Uso"}
                 </button>
               </span>
             </label>
             <button onClick={handleCadastro} disabled={cadLoading || !aceitoTC}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
-              {cadLoading ? 'Cadastrando...' : 'Continue →'}
+              {cadLoading ? 'Cadastrando...' : "Continue \u2192"}
+            </button>
+            <button type="button" onClick={() => setShowReversaoAdesao(true)}
+              className="w-full text-center text-gray-400 hover:text-gray-600 text-xs font-medium py-1">
+              {"N\u00e3o quero fornecer esses dados agora"}
             </button>
           </div>
         )}
 
+        {showReversaoAdesao && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+              <div className="p-6 space-y-5">
+                <p style={{ color: '#374151', fontSize: '15px', fontWeight: 600, lineHeight: 1.5, textAlign: 'center', margin: 0 }}>
+                  {"RedFairy"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{" precisa do seu WhatsApp + e-mail para que voc\u00ea possa operar a plataforma, conhecer o Projeto OBA, e os benef\u00edcios do 4DOC - Programa Patrocinado de M\u00e9dicos Afiliados."}
+                </p>
+                <div className="space-y-3">
+                  <button onClick={() => setShowReversaoAdesao(false)}
+                    className="w-full bg-red-700 hover:bg-gray-400 text-white font-bold py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
+                    <span>{"QUERO CONTINUAR"}</span>
+                    <span style={{ fontSize: '15px' }}>{"\u25ba"}</span>
+                  </button>
+                  <div className="text-center">
+                    <button onClick={() => { setShowReversaoAdesao(false); onVoltar?.(); }}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold py-2.5 px-5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 mx-auto">
+                      <span style={{ color: '#dc2626', fontSize: '15px' }}>{"\u25c4"}</span>
+                      <span>{"SAIR"}</span>
+                    </button>
+                    <p style={{ color: '#7B1E1E', fontSize: '11px', margin: '6px 0 0' }}>{"Se mudar de ideia \u00e9 s\u00f3 voltar"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Modal Esqueci a senha */}
         {showEsqueciSenha && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowEsqueciSenha(false)}>
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
               <div className="bg-red-700 px-5 py-4">
-                <h3 className="text-white font-bold text-base">Recuperação de senha</h3>
+                <h3 className="text-white font-bold text-base">{"Recupera\u00e7\u00e3o de senha"}</h3>
               </div>
               <div className="p-5 space-y-4 text-center">
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  Fale conosco por WhatsApp para recuperar seu acesso.
-                </p>
-                <a
-                  href="https://wa.me/5571997110804"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <p className="text-gray-700 text-sm leading-relaxed">Fale conosco por WhatsApp para recuperar seu acesso.</p>
+                <a href="https://wa.me/5571997110804" target="_blank" rel="noopener noreferrer"
                   className="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl text-sm transition-colors no-underline">
                   Falar pelo WhatsApp
                 </a>
-                <button
-                  onClick={() => setShowEsqueciSenha(false)}
+                <button onClick={() => setShowEsqueciSenha(false)}
                   className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
                   Fechar
                 </button>
@@ -495,13 +469,12 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             </div>
           </div>
         )}
-        </div>{/* __FECHA_DIV_INTERNA__ */}
+        </div>
       </div>
     </div>
   )
 }
 
-// ─── AdminConfigModal ──────────────────────────────────────────────────────
 function AdminConfigModal({ onFechar }) {
   const [valor, setValor] = useState('');
   const [valorDoc, setValorDoc] = useState('');
@@ -525,8 +498,8 @@ function AdminConfigModal({ onFechar }) {
 
   async function salvar() {
     setSalvando(true);
-    await supabase.from('config').upsert({ chave: 'valor_solicitacao_medica', valor, descricao: 'Valor R$ solicitação médica' }, { onConflict: 'chave' });
-    await supabase.from('config').upsert({ chave: 'valor_documento_medico', valor: valorDoc, descricao: 'Valor R$ documento médico' }, { onConflict: 'chave' });
+    await supabase.from('config').upsert({ chave: 'valor_solicitacao_medica', valor, descricao: "Valor R$ solicita\u00e7\u00e3o m\u00e9dica" }, { onConflict: 'chave' });
+    await supabase.from('config').upsert({ chave: 'valor_documento_medico', valor: valorDoc, descricao: "Valor R$ documento m\u00e9dico" }, { onConflict: 'chave' });
     await supabase.from('config').upsert({ chave: 'pix_chave', valor: pixChave, descricao: 'Chave Pix' }, { onConflict: 'chave' });
     setSalvando(false);
     setSucesso('Salvo!');
@@ -539,24 +512,27 @@ function AdminConfigModal({ onFechar }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onFechar}>
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-80 space-y-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <p className="font-bold text-gray-700 text-sm">⚙️ Configurações</p>
-          <button onClick={onFechar} className="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+          <p className="font-bold text-gray-700 text-sm">{"\u2699\ufe0f Configura\u00e7\u00f5es"}</p>
+          <button onClick={onFechar} className="text-gray-400 hover:text-gray-600 text-lg"
+            style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
+            {"\u2715"}
+          </button>
         </div>
         {loading ? <p className="text-gray-400 text-sm text-center">Carregando...</p> : (
           <>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Valor Solicitação Médica (R$)</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{"Valor Solicita\u00e7\u00e3o M\u00e9dica (R$)"}</label>
               <input type="number" step="0.01" value={valor} onChange={e => setValor(e.target.value)} placeholder="Ex: 50.00" className={inp} />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Valor Documento Médico (R$)</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">{"Valor Documento M\u00e9dico (R$)"}</label>
               <input type="number" step="0.01" value={valorDoc} onChange={e => setValorDoc(e.target.value)} placeholder="Ex: 29.90" className={inp} />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Chave Pix</label>
-              <input type="text" value={pixChave} onChange={e => setPixChave(e.target.value)} placeholder="E-mail, CPF ou código" className={inp} />
+              <input type="text" value={pixChave} onChange={e => setPixChave(e.target.value)} placeholder={"E-mail, CPF ou c\u00f3digo"} className={inp} />
             </div>
-            {sucesso && <p className="text-green-600 text-sm text-center font-bold">✅ {sucesso}</p>}
+            {sucesso && <p className="text-green-600 text-sm text-center font-bold">{"\u2705 "}{sucesso}</p>}
             <button onClick={salvar} disabled={salvando} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl transition-colors disabled:opacity-50 text-sm">
               {salvando ? 'Salvando...' : 'Salvar'}
             </button>
@@ -590,11 +566,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
     const flag = localStorage.getItem('rf_flag'); if (flag) { setPreFlag(flag); localStorage.removeItem('rf_flag') }
     const demoDados = localStorage.getItem('rf_demo_dados')
     if (demoDados) {
-      try {
-        const d = JSON.parse(demoDados)
-        setPreDemoDados(d)
-        localStorage.removeItem('rf_demo_dados')
-      } catch(e) {}
+      try { const d = JSON.parse(demoDados); setPreDemoDados(d); localStorage.removeItem('rf_demo_dados') } catch(e) {}
     }
   }, [modoDemo])
 
@@ -607,18 +579,12 @@ export default function Calculator({ onVoltar, modoDemo }) {
   }
 
   if (cadastrado === null) return null
-  // Medico nao cadastrado: deixa avaliar livre. Se showAuthMedicoOverlay=true (apos convite),
-  // o AuthMedico sera renderizado como overlay (no fim do JSX, junto com outros modais).
-  // OBS: o bloqueio antigo `if (!cadastrado) return <AuthMedico>` foi removido para
-  // permitir que o medico avalie SEM cadastro previo. O cadastro e oferecido apos a avaliacao.
 
   return <CalculatorForm onVoltar={onVoltar} medicoNome={medicoNome} medicoCRM={medicoCRM} setMedicoNome={setMedicoNome} setMedicoCRM={setMedicoCRM} cadastrado={cadastrado} setCadastrado={setCadastrado} onLogout={handleLogout} preFlag={preFlag} preDemoDados={preDemoDados} />
 }
 
-// ─── Formulário da calculadora ───────────────────────────────────────────────
 function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMedicoCRM, cadastrado, setCadastrado, onLogout, preFlag, preDemoDados }) {
   const _demo = (() => { try { const d = localStorage.getItem('rf_demo_dados'); if (d) { localStorage.removeItem('rf_demo_dados'); return JSON.parse(d) } } catch(e) {} return null })()
-  const _hoje = new Date().toISOString().split('T')[0]
 
   const [inputs, setInputs] = useState({
     cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', dataNascimento: '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
@@ -627,14 +593,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     bariatrica_medico: _demo?.bariatrica || false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '', alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false,
-    tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false,
+    tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false,
+    anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false,
     methotrexato: false, hivTratamento: false, metformina: false, ibp: false,
   });
 
   const [resultado, setResultado] = useState(null);
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false);
-
-  // Estados de triagem (popup inicial)
   const [showTriagem, setShowTriagem] = useState(true);
   const [triagemResultado, setTriagemResultado] = useState(null);
   const [triagemInputs, setTriagemInputs] = useState(null);
@@ -648,7 +613,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [afiliadoCPF, setAfiliadoCPF] = useState('');
   const refAfilCEP = useRef(null);
   const refAfilCPF = useRef(null);
-  const [etapaAfil, setEtapaAfil] = useState(1); // 1=CEP, 2=CPF
+  const [etapaAfil, setEtapaAfil] = useState(1);
   useEffect(() => {
     if (showAfiliados) {
       setEtapaAfil(1);
@@ -661,19 +626,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (etapaAfil !== 1) return;
     const d = (afiliadoCEP || '').replace(/\D/g, '');
     if (d.length === 8) {
-      const t = setTimeout(() => {
-        setEtapaAfil(2);
-        if (refAfilCPF.current) refAfilCPF.current.focus();
-      }, 1000);
+      const t = setTimeout(() => { setEtapaAfil(2); if (refAfilCPF.current) refAfilCPF.current.focus(); }, 1000);
       return () => clearTimeout(t);
     }
   }, [afiliadoCEP, showAfiliados, etapaAfil]);
-  const [pixTipo, setPixTipo] = useState(''); // '' | 'telefone' | 'cpf' | 'email' | 'outra'
-  // Fluxo convite afiliado pos-primeira-avaliacao
+  const [pixTipo, setPixTipo] = useState('');
   const [showConviteAfiliado, setShowConviteAfiliado] = useState(false);
-  // Destino apos completar/recusar convite afiliado: 'aprofundar' | 'landing'
   const [destinoAposConvite, setDestinoAposConvite] = useState(null);
-  // Dados vieram da triagem -> campos travados ate clicar Editar
   const [dadosVieramDaTriagem, setDadosVieramDaTriagem] = useState(false);
   const [editandoDadosPaciente, setEditandoDadosPaciente] = useState(false);
   const refDataColetaForm = useRef(null);
@@ -682,7 +641,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const refRdwForm = useRef(null);
   const [conviteRecusado, setConviteRecusado] = useState(false);
   const [afiliacaoRecusada, setAfiliacaoRecusada] = useState(false);
-  // __B4_PODE_CONVITE__ convite afiliado so para medico realmente nao cadastrado
   function podeConvite() {
     try { if (localStorage.getItem('medico_crm')) return false; } catch(e) {}
     return !cadastrado;
@@ -690,44 +648,24 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(false);
   const [showFelicitacoes, setShowFelicitacoes] = useState(false);
 
-  // __FLUXO1_POS_TRIAGEM__ decide para onde ir apos a triagem
   async function decidirPosTriagem() {
     setTriagemResultado(null);
     setShowTriagem(false);
-    if (podeConvite()) {
-      setDestinoAposConvite('landing');
-      setShowConviteAfiliado(true);
-      return;
-    }
-    // Logado: verifica se o perfil esta completo (nome + email)
+    if (podeConvite()) { setDestinoAposConvite('landing'); setShowConviteAfiliado(true); return; }
     let completo = false;
     try {
-      const { data: md } = await supabase
-        .from('medicos')
-        .select('nome, email')
-        .eq('crm', medicoCRM)
-        .maybeSingle();
+      const { data: md } = await supabase.from('medicos').select('nome, email').eq('crm', medicoCRM).maybeSingle();
       completo = !!(md && md.nome && String(md.nome).trim() && md.email && String(md.email).trim());
-    } catch (e) {
-      completo = false;
-    }
-    if (completo) {
-      setShowFelicitacoes(true);
-    } else {
-      // Perfil minimo (veio da caixa SIGN-UP): completar dados na TELA 7
-      setShowAuthMedicoOverlay('cadastro');
-    }
+    } catch (e) { completo = false; }
+    if (completo) { setShowFelicitacoes(true); }
+    else { setShowAuthMedicoOverlay('cadastro'); }
   }
   const [showBeneficios, setShowBeneficios] = useState(false);
 
   useEffect(() => {
-    if (preFlag === 'bariatrica') {
-      setInputs(prev => ({ ...prev, bariatrica: true }))
-    }
+    if (preFlag === 'bariatrica') { setInputs(prev => ({ ...prev, bariatrica: true })) }
   }, [preFlag]);
 
-  // __ABRIR_LOGIN_MEDICO__ Se a landing pediu login (MEDICO AFILIADO/LOGIN),
-  // abre o AuthMedico em modo 'login' ao montar.
   useEffect(() => {
     let pedirLogin = false;
     try { pedirLogin = localStorage.getItem('rf_open_login') === '1'; } catch(e) {}
@@ -736,6 +674,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       setShowAuthMedicoOverlay('login');
     }
   }, []);
+
   const [copiado, setCopiado] = useState(false);
   const [showOBA, setShowOBA] = useState(false);
   const [dadosOBAColetados, setDadosOBAColetados] = useState(null);
@@ -749,28 +688,21 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [logoClicks, setLogoClicks] = useState(0);
   const logoClickTimer = useRef(null);
   const dadosOBARef = useRef(null);
-
-  // Dados do médico para uso no resultado (nome, crm, celular)
   const [medicoDados, setMedicoDados] = useState(null);
 
   useEffect(() => {
     async function carregarMedico() {
-      // Verificar timeout de sessão (8 horas)
       const loginAt = localStorage.getItem('medico_login_at')
       const OITO_HORAS = 8 * 60 * 60 * 1000
       if (loginAt && Date.now() - parseInt(loginAt) > OITO_HORAS) {
         localStorage.removeItem('medico_crm')
         localStorage.removeItem('medico_nome')
         localStorage.removeItem('medico_login_at')
-        setSessaoExpirada(true)
+        // setSessaoExpirada(true)  // estado vive no Calculator pai, nao no Form
         return
       }
       if (!medicoCRM) return;
-      const { data } = await supabase
-        .from('medicos')
-        .select('nome, crm, celular, email')
-        .eq('crm', medicoCRM)
-        .maybeSingle();
+      const { data } = await supabase.from('medicos').select('nome, crm, celular, email').eq('crm', medicoCRM).maybeSingle();
       if (data) setMedicoDados(data);
     }
     carregarMedico();
@@ -788,15 +720,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   }
 
   function handleLogoTripleClick() {
-    // Demo por cliques na fada desativado — use Ctrl+M/N/F/G
     setLogoClicks(prev => {
       const next = prev + 1;
       if (logoClickTimer.current) clearTimeout(logoClickTimer.current);
-      if (next >= 5) {
-        logoClickTimer.current = null;
-        setShowAdminConfig(true);
-        return 0;
-      }
+      if (next >= 5) { logoClickTimer.current = null; setShowAdminConfig(true); return 0; }
       logoClickTimer.current = setTimeout(() => setLogoClicks(0), 1500);
       return next;
     });
@@ -811,33 +738,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     function handleDemoKey(e) {
       if (!e.ctrlKey || e.shiftKey || e.altKey) return;
       const hoje = new Date().toISOString().split('T')[0];
-      if (e.key === 'm' || e.key === 'M') {
-        e.preventDefault();
-        setInputs(p => ({ ...p, sexo:'M', idade:'20', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
-        setResultado(null); setErros({});
-      }
-      if (e.key === 'b' || e.key === 'B') {
-        e.preventDefault();
-        setInputs(p => ({ ...p, sexo:'M', idade:'50', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
-        setResultado(null); setErros({});
-      }
-      if (e.key === 'f' || e.key === 'F') {
-        e.preventDefault();
-        setInputs(p => ({ ...p, sexo:'F', idade:'20', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
-        setResultado(null); setErros({});
-      }
-      if (e.key === 'g' || e.key === 'G') {
-        e.preventDefault();
-        setInputs(p => ({ ...p, sexo:'F', idade:'50', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' }));
-        setResultado(null); setErros({});
-      }
+      if (e.key === 'm' || e.key === 'M') { e.preventDefault(); setInputs(p => ({ ...p, sexo:'M', idade:'20', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' })); setResultado(null); setErros({}); }
+      if (e.key === 'b' || e.key === 'B') { e.preventDefault(); setInputs(p => ({ ...p, sexo:'M', idade:'50', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' })); setResultado(null); setErros({}); }
+      if (e.key === 'f' || e.key === 'F') { e.preventDefault(); setInputs(p => ({ ...p, sexo:'F', idade:'20', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' })); setResultado(null); setErros({}); }
+      if (e.key === 'g' || e.key === 'G') { e.preventDefault(); setInputs(p => ({ ...p, sexo:'F', idade:'50', dataColeta:hoje, ferritina:'', hemoglobina:'', vcm:'', rdw:'', satTransf:'' })); setResultado(null); setErros({}); }
     }
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keydown', handleDemoKey);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keydown', handleDemoKey);
-    };
+    return () => { window.removeEventListener('keydown', handleKeyDown); window.removeEventListener('keydown', handleDemoKey); };
   }, []);
 
   function formatarCPF(valor) {
@@ -858,7 +766,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
-    // __MASCARA_DATACOLETA__ aplica mascara DD/MM/AAAA na data da coleta
     if (name === 'dataColeta' && typeof value === 'string') {
       const digits = value.replace(/\D/g, '').slice(0, 8);
       let v = digits;
@@ -868,13 +775,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       if (erros.dataColeta) setErros(prev => ({ ...prev, dataColeta: null }));
       return;
     }
-    // Caso especial: dataNascimento -> aplica mascara, calcula idade, seta ambos
     if (name === 'dataNascimento') {
       const digits = String(value).replace(/\D/g, '').slice(0, 8);
       let dn = digits;
       if (digits.length > 2 && digits.length <= 4) dn = digits.slice(0,2) + '/' + digits.slice(2);
       else if (digits.length > 4) dn = digits.slice(0,2) + '/' + digits.slice(2,4) + '/' + digits.slice(4);
-      // Calcula idade se DN completa e valida
       let idadeCalc = '';
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) {
         const [d, m, a] = dn.split('/').map(Number);
@@ -893,7 +798,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       if (erros.idade) setErros(prev => ({ ...prev, idade: null }));
       return;
     }
-    // Decimais clinicos: aceita virgula, salva com ponto
     let valorAjustado = (type === 'checkbox') ? checked : value;
     if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf'].includes(name) && typeof valorAjustado === 'string') {
       valorAjustado = valorAjustado.replace(',', '.');
@@ -901,29 +805,23 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     const novoValor = name === 'cpf' ? formatarCPF(valorAjustado) : valorAjustado;
     setInputs(prev => ({ ...prev, [name]: novoValor }));
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
-    if (name === 'bariatrica') {
-      if (!checked) setDadosOBAColetados(null);
-    }
+    if (name === 'bariatrica') { if (!checked) setDadosOBAColetados(null); }
     if (name === 'bariatrica_medico') {
       if (checked) setInputs(prev => ({ ...prev, bariatrica: true, bariatrica_medico: true }));
       else setInputs(prev => ({ ...prev, bariatrica_medico: false }));
     }
-    // Crítica de valor aberrante
     if (LIMITES_ABERRANTE[name] && value !== '') {
       const num = parseFloat(String(value).replace(',', '.'));
       const lim = LIMITES_ABERRANTE[name];
-      if (!isNaN(num) && (num < lim.min || num > lim.max)) {
-        setAberrantes(prev => ({ ...prev, [name]: true }));
-      } else {
-        setAberrantes(prev => ({ ...prev, [name]: false }));
-      }
+      if (!isNaN(num) && (num < lim.min || num > lim.max)) setAberrantes(prev => ({ ...prev, [name]: true }));
+      else setAberrantes(prev => ({ ...prev, [name]: false }));
     }
   }
 
   function validarCPF(cpf) {
     const c = String(cpf || '').replace(/\D/g, '');
     if (c.length !== 11) return false;
-    if (/^(\d)\1{10}$/.test(c)) return false; // todos iguais
+    if (/^(\d)\1{10}$/.test(c)) return false;
     let s = 0;
     for (let i = 0; i < 9; i++) s += parseInt(c[i]) * (10 - i);
     let d1 = (s * 10) % 11;
@@ -939,8 +837,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   function validar() {
     const novosErros = {};
     if (!inputs.cpf || !inputs.cpf.trim()) novosErros.cpf = 'Informe o CPF do paciente';
-    else if (!validarCPF(inputs.cpf)) novosErros.cpf = 'CPF inválido';
-    // Validacao: Data de Nascimento (UI) -> idade calculada (interna)
+    else if (!validarCPF(inputs.cpf)) novosErros.cpf = "CPF inv\u00e1lido";
     {
       const dn = String(inputs.dataNascimento || '').trim();
       if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) {
@@ -949,19 +846,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         const [d, m, a] = dn.split('/').map(Number);
         const dt = new Date(a, m - 1, d);
         const valida = dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
-        if (!valida) {
-          novosErros.dataNascimento = 'Data invalida';
-        } else if (a < 1900) {
-          novosErros.dataNascimento = 'Verifique o ano de nascimento';
-        } else if (dt > new Date()) {
-          novosErros.dataNascimento = 'Data nao pode ser no futuro';
-        } else {
+        if (!valida) { novosErros.dataNascimento = "Data inv\u00e1lida"; }
+        else if (a < 1900) { novosErros.dataNascimento = 'Verifique o ano de nascimento'; }
+        else if (dt > new Date()) { novosErros.dataNascimento = "Data n\u00e3o pode ser no futuro"; }
+        else {
           const hoje = new Date();
           let idade = hoje.getFullYear() - a;
           const mDiff = hoje.getMonth() - (m - 1);
           if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--;
           if (idade < 12) {
-            novosErros.dataNascimento = 'O RedFairy ainda nao atende criancas menores de 12 anos. Em breve teremos um modulo pediatrico especifico!';
+            novosErros.dataNascimento = "O RedFairy ainda n\u00e3o atende crian\u00e7as menores de 12 anos. Em breve teremos um m\u00f3dulo pedi\u00e1trico espec\u00edfico!";
           } else if (idade > 100) {
             novosErros.dataNascimento = 'Verifique a data de nascimento';
           }
@@ -971,15 +865,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (!inputs.dataColeta) novosErros.dataColeta = 'Informe a data da coleta';
     else {
       const hojeStr = new Date().toISOString().split('T')[0];
-      if (inputs.dataColeta > hojeStr) novosErros.dataColeta = 'Data da coleta não pode ser no futuro';
+      if (inputs.dataColeta > hojeStr) novosErros.dataColeta = "Data da coleta n\u00e3o pode ser no futuro";
     }
-    // Triagem (sempre obrigatorios): Hb, VCM, RDW
-    if (!inputs.hemoglobina) novosErros.hemoglobina = 'Campo obrigatório';
-    if (!inputs.vcm)         novosErros.vcm = 'Campo obrigatório';
-    if (!inputs.rdw)         novosErros.rdw = 'Campo obrigatório';
-    // Avaliacao completa (so se mostrarExamesExtras): Ferritina e Sat. Transferrina
-    if (mostrarExamesExtras && !inputs.ferritina) novosErros.ferritina = 'Campo obrigatório';
-    if (mostrarExamesExtras && !inputs.satTransf) novosErros.satTransf = 'Campo obrigatório';
+    if (!inputs.hemoglobina) novosErros.hemoglobina = "Campo obrigat\u00f3rio";
+    if (!inputs.vcm)         novosErros.vcm = "Campo obrigat\u00f3rio";
+    if (!inputs.rdw)         novosErros.rdw = "Campo obrigat\u00f3rio";
+    if (mostrarExamesExtras && !inputs.ferritina) novosErros.ferritina = "Campo obrigat\u00f3rio";
+    if (mostrarExamesExtras && !inputs.satTransf) novosErros.satTransf = "Campo obrigat\u00f3rio";
     return novosErros;
   }
 
@@ -992,7 +884,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (!isNaN(num)) return String(Math.round(num));
     return comPontoDecimal;
   }
-
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -1015,14 +906,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       satTransf:   Number(sanitizarNumero(inputs.satTransf)),
     };
 
-    // Roteamento: triagem (Hb/VCM/RDW) ou avaliacao completa (5 valores)
-    const res = mostrarExamesExtras
-      ? avaliarPaciente(inputsNumericos)
-      : triagemEritron(inputsNumericos);
+    const res = mostrarExamesExtras ? avaliarPaciente(inputsNumericos) : triagemEritron(inputsNumericos);
 
     let obaResult = null;
-    // OBA só é processado se o paciente já preencheu a anamnese (Modo Paciente).
-    // No Modo Médico, a flag bariatrica é apenas registrada — paciente preenche depois.
     const obaDisponivel = dadosOBAColetados || dadosOBARef.current;
     if (inputs.bariatrica && obaDisponivel) {
       let dadosOBA = null;
@@ -1032,14 +918,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         examesOBA = obaDisponivel.examesOBA;
       } else if (inputs.cpf.trim()) {
         const cpfLimpo = inputs.cpf.replace(/\D/g, '');
-        const { data: obaRow } = await supabase
-          .from('oba_anamnese')
-          .select('*')
-          .eq('cpf', cpfLimpo)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
+        const { data: obaRow } = await supabase.from('oba_anamnese').select('*').eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1).single();
         if (obaRow) {
           dadosOBA = {
             sexo: obaRow.sexo, idade: inputs.idade,
@@ -1084,23 +963,21 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           };
         }
       }
-
       if (!dadosOBA) {
         dadosOBA = {
           sexo: inputs.sexo, idade: inputs.idade,
-          tipo_cirurgia: 'NÃO SEI', meses_pos_cirurgia: 0,
-          status_gestacional: inputs.gestante ? 'GRÁVIDA' : null,
-          compulsoes: inputs.alcoolista ? ['ÁLCOOL'] : [],
+          tipo_cirurgia: "N\u00c3O SEI", meses_pos_cirurgia: 0,
+          status_gestacional: inputs.gestante ? "GR\u00c1VIDA" : null,
+          compulsoes: inputs.alcoolista ? ["\u00c1LCOOL"] : [],
           medicamentos: [
             ...(inputs.vitaminaB12 ? ['VIT. B12 SUBLINGUAL'] : []),
             ...(inputs.ferro_oral  ? ['FERRO ORAL']          : []),
-            ...(inputs.ferro_injetavel ? ['FERRO INJETÁVEL'] : []),
+            ...(inputs.ferro_injetavel ? ["FERRO INJET\u00c1VEL"] : []),
           ],
           atividade_fisica: [], emagrecedores: {},
         };
         examesOBA = {};
       }
-
       obaResult = avaliarOBA(res, dadosOBA, examesOBA);
     }
 
@@ -1108,27 +985,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     setCopiado(false);
 
     if (inputs.cpf.trim() && res.encontrado) {
-      // Verificar se é primeira avaliação do médico
-      const { count: totalAvals } = await supabase
-        .from('avaliacoes')
-        .select('*', { count: 'exact', head: true })
-        .eq('medico_crm', medicoCRM)
-      // Verificar se já tem endereco e pix cadastrados
-      const { data: medDados } = await supabase
-        .from('medicos')
-        .select('cep, cpf, pix_chave')
-        .eq('crm', medicoCRM)
-        .maybeSingle()
+      const { count: totalAvals } = await supabase.from('avaliacoes').select('*', { count: 'exact', head: true }).eq('medico_crm', medicoCRM)
+      const { data: medDados } = await supabase.from('medicos').select('cep, cpf, pix_chave').eq('crm', medicoCRM).maybeSingle()
       if (!medDados?.cep || !medDados?.cpf || !medDados?.pix_chave) {
-        if ((totalAvals || 0) === 0) {
-          // Primeira avaliação — modal completo
-          setTimeout(() => setShowAfiliados(true), 1200)
-        } else {
-          // Avaliações seguintes — banner menor
-          setTimeout(() => setShowAfiliadosBanner(true), 1200)
-        }
+        if ((totalAvals || 0) === 0) setTimeout(() => setShowAfiliados(true), 1200)
+        else setTimeout(() => setShowAfiliadosBanner(true), 1200)
       }
-
       await supabase.from('avaliacoes').insert({
         cpf: inputs.cpf.replace(/\D/g, ''),
         data_coleta: inputs.dataColeta,
@@ -1143,7 +1005,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         perda: inputs.perda,
         hipermenorreia: inputs.hipermenorreia,
         gestante: inputs.gestante,
-        semanas_gestacao: inputs.gestante && inputs.semanas_gestacao ? Number(inputs.semanas_gestacao) : null,
+        semanas_gestacao: inputs.gestante && inputs.semanas_gestacao ? Math.round(Number(inputs.semanas_gestacao)) : null,
         dum: inputs.gestante && inputs.dum ? inputs.dum : null,
         aspirina: inputs.aspirina,
         vitamina_b12: inputs.vitaminaB12,
@@ -1156,7 +1018,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         medico_crm: medicoCRM || null,
       });
     }
-
     setTimeout(() => { document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' }); }, 100);
   }
 
@@ -1167,7 +1028,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   }
 
   function handleLimpar() {
-    setInputs({ cpf: '', sexo: 'M', idade: '', dataNascimento: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
+    setInputs({ cpf: '', sexo: 'M', idade: '', dataNascimento: '', dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', bariatrica: false, vegetariano: false, perda: false, hipermenorreia: false, gestante: false, alcoolista: false, transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false, tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false, anemiaPrevia: false, sideropenia: false, sobrecargaFerro: false, hbAlta: false, celiaco: false, g6pd: false, endometriose: false, doadorSangue: false, methotrexato: false, hivTratamento: false, metformina: false, ibp: false });
     setResultado(null); setErros({}); setDadosOBAColetados(null); setMostrarExamesExtras(false);
   }
 
@@ -1181,7 +1042,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             setTriagemInputs(novosInputs);
             setDadosVieramDaTriagem(true);
             setEditandoDadosPaciente(false);
-            // pre-preenche o form principal
             setInputs(prev => ({
               ...prev,
               cpf: novosInputs.cpf || prev.cpf,
@@ -1195,7 +1055,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             }));
           }}
           onFechar={() => {
-            // __TELA2_X_LANDING__ X da TELA 2: volta pra landing (desistiu)
             setShowTriagem(false);
             setTriagemResultado(null);
             if (onVoltar) onVoltar();
@@ -1209,52 +1068,43 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           modoMedico={true}
           isDemo={false}
           medicoCRM={medicoCRM}
-          onVoltarInicio={() => {
-            // __FLUXO1_POS_TRIAGEM__
-            decidirPosTriagem();
-          }}
-          onCadastrar={() => {
-            // __FLUXO1_POS_TRIAGEM__
-            decidirPosTriagem();
-          }}
+          onVoltarInicio={() => { decidirPosTriagem(); }}
+          onCadastrar={() => { decidirPosTriagem(); }}
           onAprofundar={() => {
-            // Medico clicou 'Aprofundar agora': fecha popup
             setTriagemResultado(null);
             setShowTriagem(false);
-            // Se medico nao cadastrado, mostra convite antes de seguir
             if (podeConvite()) {
               setDestinoAposConvite('aprofundar');
               setShowConviteAfiliado(true);
               return;
             }
-            // Se ja cadastrado: dados ficam no form (comportamento original)
           }}
         />
       )}
     <div className="min-h-screen bg-gray-50">
 
-      {/* ── BANNER AFILIADOS (avaliações seguintes) ── */}
       {showAfiliadosBanner && !showAfiliados && (
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
           <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="bg-red-700 px-5 py-3 flex items-center justify-between">
-              <p className="text-white font-bold text-sm">🎯 Programa de Afiliados RedFairy</p>
-              <button onClick={() => setShowAfiliadosBanner(false)} className="text-red-200 hover:text-white text-lg font-bold">✕</button>
+              <p className="text-white font-bold text-sm">{"\ud83c\udfaf Programa de Afiliados RedFairy"}</p>
+              <button onClick={() => setShowAfiliadosBanner(false)} className="text-red-200 hover:text-white text-lg"
+                style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
+                {"\u2715"}
+              </button>
             </div>
             <div className="p-4 space-y-3">
               <p className="text-gray-700 text-sm leading-relaxed">
-                Você ainda não faz parte do <strong>Programa de Afiliados Patrocinado</strong>. Gostaria de entrar agora e receber os benefícios previstos?
+                {"Voc\u00ea ainda n\u00e3o faz parte do "}<strong>Programa de Afiliados Patrocinado</strong>{". Gostaria de entrar agora e receber os benef\u00edcios previstos?"}
               </p>
               <div className="flex gap-2">
-                <button
-                  onClick={() => { setShowAfiliadosBanner(false); setShowAfiliados(true) }}
+                <button onClick={() => { setShowAfiliadosBanner(false); setShowAfiliados(true) }}
                   className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
-                  Sim, quero participar →
+                  {"Sim, quero participar \u2192"}
                 </button>
-                <button
-                  onClick={() => setShowAfiliadosBanner(false)}
+                <button onClick={() => setShowAfiliadosBanner(false)}
                   className="px-4 bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm rounded-xl transition-colors">
-                  Agora não
+                  {"Agora n\u00e3o"}
                 </button>
               </div>
             </div>
@@ -1262,12 +1112,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         </div>
       )}
 
-      {/* ── MODAL PROGRAMA DE AFILIADOS ── */}
       {showAfiliados && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.75)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
-            {/* Imagem welcome no topo com header overlay (estilo do convite fairy-chat) */}
             <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', flexShrink: 0 }}>
               <img src={welcomeImg} alt="Bem-vindo ao Programa de Afiliados"
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
@@ -1277,37 +1124,29 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               </div>
             </div>
 
-            {/* Corpo scrollavel */}
             <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1 }}>
               <p className="text-gray-700 text-sm leading-relaxed">
-                Para concluir a sua inscrição no <strong>Programa de Afiliados Patrocinado</strong> de RedFairy e receber os benefícios previstos, precisamos do seu <strong>CEP</strong>, <strong>CPF</strong> e da sua <strong>chave Pix</strong>.
+                {"Para concluir a sua inscri\u00e7\u00e3o no "}<strong>Programa de Afiliados Patrocinado</strong>{" de RedFairy e receber os benef\u00edcios previstos, precisamos do seu "}<strong>CEP</strong>{", "}<strong>CPF</strong>{" e da sua "}<strong>chave Pix</strong>{"."}
               </p>
               <p className="text-xs text-red-800 text-center leading-relaxed font-medium">
-                🔒 Entre seus dados tranquilamente. Você está em um servidor seguro, e não existe a possibilidade de uso inadequado dessas informações.
+                {"\ud83d\udd12 Entre seus dados tranquilamente. Voc\u00ea est\u00e1 em um servidor seguro, e n\u00e3o existe a possibilidade de uso inadequado dessas informa\u00e7\u00f5es."}
               </p>
               <div className="space-y-3">
-<div>
+                <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CEP</label>
-                  <input
-                    ref={refAfilCEP}
-                    type="text"
-                    value={afiliadoCEP}
+                  <input ref={refAfilCEP} type="text" value={afiliadoCEP}
                     onChange={e => {
                       const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
                       const fmt = digits.length > 5 ? digits.slice(0,5) + '-' + digits.slice(5) : digits;
                       setAfiliadoCEP(fmt);
                     }}
-                    placeholder="00000-000"
-                    inputMode="numeric"
+                    placeholder="00000-000" inputMode="numeric"
                     className={`w-full border-2 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 ${etapaAfil === 1 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : 'border-gray-200 focus:ring-red-400'}`}
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CPF</label>
-                  <input
-                    ref={refAfilCPF}
-                    type="text"
-                    value={afiliadoCPF}
+                  <input ref={refAfilCPF} type="text" value={afiliadoCPF}
                     onFocus={() => setEtapaAfil(2)}
                     onChange={e => {
                       const digits = e.target.value.replace(/\D/g, '').slice(0, 11);
@@ -1318,8 +1157,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       setAfiliadoCPF(fmt);
                       if (pixTipo === 'cpf') setAfiliadoPix(fmt);
                     }}
-                    placeholder="000.000.000-00"
-                    inputMode="numeric"
+                    placeholder="000.000.000-00" inputMode="numeric"
                     className={`w-full border-2 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 ${etapaAfil === 2 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : 'border-gray-200 focus:ring-red-400'}`}
                   />
                 </div>
@@ -1333,7 +1171,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                           else { setPixTipo('telefone'); setAfiliadoPix(medicoDados?.celular || ''); }
                         }}
                         style={{ accentColor: '#7B1E1E' }} />
-                      <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>MEU TELEFONE É O MEU PIX</span>
+                      <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"MEU TELEFONE \u00c9 O MEU PIX"}</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                       <input type="checkbox" checked={pixTipo === 'cpf'}
@@ -1342,7 +1180,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                           else { setPixTipo('cpf'); setAfiliadoPix(afiliadoCPF); }
                         }}
                         style={{ accentColor: '#7B1E1E' }} />
-                      <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>MEU CPF É O MEU PIX</span>
+                      <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"MEU CPF \u00c9 O MEU PIX"}</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                       <input type="checkbox" checked={pixTipo === 'email'}
@@ -1351,51 +1189,39 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                           else { setPixTipo('email'); setAfiliadoPix(medicoDados?.email || ''); }
                         }}
                         style={{ accentColor: '#7B1E1E' }} />
-                      <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>MEU E-MAIL É O MEU PIX</span>
+                      <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"MEU E-MAIL \u00c9 O MEU PIX"}</span>
                     </label>
                   </div>
                   <p className="text-xs text-red-800 font-semibold mb-1">DIGITE ou marque um check-box acima</p>
-                  <input
-                    type="text"
-                    value={afiliadoPix}
+                  <input type="text" value={afiliadoPix}
                     onChange={e => { setAfiliadoPix(e.target.value); if (pixTipo) setPixTipo('outra'); }}
-                    placeholder="Chave aleatória ou outra chave PIX"
+                    placeholder={"Chave aleat\u00f3ria ou outra chave PIX"}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                   />
                 </div>
               </div>
               {afiliadoSalvo ? (
-                <p className="text-green-600 text-sm font-bold text-center">✅ Dados salvos! Bem-vindo ao Programa de Afiliados!</p>
+                <p className="text-green-600 text-sm font-bold text-center">{"\u2705 Dados salvos! Bem-vindo ao Programa de Afiliados!"}</p>
               ) : (
                 <div className="space-y-2">
-                  {/* __AFIL_COND__ */}
                 {afiliadoCEP.trim() && afiliadoCPF.trim() && afiliadoPix.trim() && (
-                  <button
-                    disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim()}
+                  <button disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim()}
                     onClick={async () => {
                       setAfiliadoSalvando(true);
-                      const { error } = await supabase
-                        .from('medicos')
-                        .update({
-                          endereco: '',
-                          cep: afiliadoCEP.trim(),
-                          cpf: afiliadoCPF.replace(/\D/g, ''),
-                          pix_chave: afiliadoPix.trim(),
-                        })
-                        .eq('crm', medicoCRM);
+                      const { error } = await supabase.from('medicos').update({
+                        endereco: '', cep: afiliadoCEP.trim(),
+                        cpf: afiliadoCPF.replace(/\D/g, ''),
+                        pix_chave: afiliadoPix.trim(),
+                      }).eq('crm', medicoCRM);
                       setAfiliadoSalvando(false);
-                      if (error) {
-                        alert('Erro ao salvar. Tente novamente.');
-                        return;
-                      }
+                      if (error) { alert('Erro ao salvar. Tente novamente.'); return; }
                       setAfiliadoSalvo(true); setTimeout(() => { setShowAfiliados(false); setShowFelicitacoes(true); }, 1500);
                     }}
                     className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                    {afiliadoSalvando ? 'Salvando...' : 'Confirmar dados →'}
+                    {afiliadoSalvando ? 'Salvando...' : "Confirmar dados \u2192"}
                   </button>
                 )}
-                  <button
-                    onClick={() => setShowAfiliados(false)}
+                  <button onClick={() => setShowAfiliados(false)}
                     className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
                     Preencher depois
                   </button>
@@ -1421,7 +1247,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           }}
           dadosRedFairy={{
             gestante: inputs.gestante,
-            semanas_gestacao: inputs.semanas_gestacao ? Number(inputs.semanas_gestacao) : null,
+            semanas_gestacao: inputs.semanas_gestacao ? Math.round(Number(inputs.semanas_gestacao)) : null,
             dum: inputs.dum || null,
           }}
           onConcluir={(dadosOBA, examesOBA) => {
@@ -1429,10 +1255,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             dadosOBARef.current = dados;
             setDadosOBAColetados(dados);
             setShowOBA(false);
-            // Chamar avaliação automaticamente com os dados OBA recém coletados
-            setTimeout(() => {
-              document.getElementById('btn-avaliar-paciente')?.click();
-            }, 100);
+            setTimeout(() => { document.getElementById('btn-avaliar-paciente')?.click(); }, 100);
           }}
           onFechar={() => setShowOBA(false)}
         />
@@ -1452,7 +1275,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               onClick={handleLogoTripleClick} />
             <div>
               <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
-              <p className="text-red-200 text-xs">Calculadora Clínica | Eritron</p>
+              <p className="text-red-200 text-xs">{"Calculadora Cl\u00ednica | Eritron"}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -1481,8 +1304,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowLogoutConfirm(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-72 space-y-4" onClick={e => e.stopPropagation()}>
-            <p className="text-center text-base font-bold text-gray-700">Trocar médico?</p>
-            <p className="text-center text-sm text-gray-500">Você será desconectado e voltará à tela de login.</p>
+            <p className="text-center text-base font-bold text-gray-700">{"Trocar m\u00e9dico?"}</p>
+            <p className="text-center text-sm text-gray-500">{"Voc\u00ea ser\u00e1 desconectado e voltar\u00e1 \u00e0 tela de login."}</p>
             <button onClick={() => { setShowLogoutConfirm(false); onLogout(); }}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
               Sim, sair
@@ -1501,10 +1324,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowDemoMenu(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-64 space-y-4" onClick={e => e.stopPropagation()}>
-            <p className="text-center text-sm font-bold text-gray-700">🎭 Modo Demo</p>
+            <p className="text-center text-sm font-bold text-gray-700">{"\ud83c\udfad Modo Demo"}</p>
             <p className="text-center text-xs text-gray-400">Escolha o perfil de teste</p>
-            <button onClick={() => carregarDemo('F')} className="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-xl transition-colors">👩 Paciente Feminina</button>
-            <button onClick={() => carregarDemo('M')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">👨 Paciente Masculino</button>
+            <button onClick={() => carregarDemo('F')} className="w-full bg-pink-600 hover:bg-pink-700 text-white font-bold py-3 rounded-xl transition-colors">{"\ud83d\udc69 Paciente Feminina"}</button>
+            <button onClick={() => carregarDemo('M')} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">{"\ud83d\udc68 Paciente Masculino"}</button>
             <button onClick={() => setShowDemoMenu(false)} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm py-2 rounded-xl transition-colors">Cancelar</button>
           </div>
         </div>
@@ -1519,9 +1342,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <img src={heroImg} alt="RedFairy" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
                 <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
-                  Eu sou a sua fada vermelha, a sua <span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>.<br />
-                  Eu uso a poeira das estrelas para te entregar o ar.<br />
-                  <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
+                  {"Eu sou a sua fada vermelha, a sua "}<span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>{"."}<br />
+                  {"Eu uso a poeira das estrelas para te entregar o ar."}<br />
+                  <span style={{ fontWeight: '600' }}>{"Quanto tempo voc\u00ea vive sem ar?"}</span>
                 </p>
               </div>
             </div>
@@ -1531,14 +1354,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               )}
               {showSaibaMais && (
                 <div style={{ marginBottom: '16px' }}>
-                  <h3 className="text-red-700 font-bold text-base text-center mb-4">Vida é ventilação e perfusão</h3>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência. Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais importante da sua vida.</p>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células - vinte vezes por minuto.</p>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
-                  <p className="text-gray-700 text-sm leading-relaxed mb-3">No ambiente, uma proteína verde - a <strong>clorofila</strong>, mãe da Hemoglobina - usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
+                  <h3 className="text-red-700 font-bold text-base text-center mb-4">{"Vida \u00e9 ventila\u00e7\u00e3o e perfus\u00e3o"}</h3>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">{"O Ferro em voc\u00ea veio das estrelas, e dele o vermelho do seu sangue - a sua pot\u00eancia. Com Ferro, a Natureza faz a "}<strong>Hemoglobina</strong>{", a prote\u00edna vermelha e mais importante da sua vida."}</p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">{"Ela sustenta a ventila\u00e7\u00e3o e realiza a perfus\u00e3o: capta o oxig\u00eanio do ar que ventila os pulm\u00f5es e o entrega a todas as suas c\u00e9lulas - vinte vezes por minuto."}</p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">{"Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas c\u00e9lulas, e o leva aos seus pulm\u00f5es para que voc\u00ea o expire no ar do mundo."}</p>
+                  <p className="text-gray-700 text-sm leading-relaxed mb-3">{"No ambiente, uma prote\u00edna verde - a "}<strong>clorofila</strong>{", m\u00e3e da Hemoglobina - usa a luz do sol para partir o CO2 e fazer a\u00e7\u00facar a partir de luz, carbono e \u00e1gua, devolvendo o oxig\u00eanio ao ar do planeta, em um ciclo virtuoso perfeito."}</p>
                   <div className="mt-4 bg-pink-50 border-2 border-red-400 rounded-xl p-4 text-center">
-                    <p className="text-black font-bold text-sm">Portanto, é importante que você cuide da sua Hemoglobina.</p>
-                    <p className="text-black font-bold text-sm mt-2">Nós ajudamos.</p>
+                    <p className="text-black font-bold text-sm">{"Portanto, \u00e9 importante que voc\u00ea cuide da sua Hemoglobina."}</p>
+                    <p className="text-black font-bold text-sm mt-2">{"N\u00f3s ajudamos."}</p>
                   </div>
                   <div className="mt-4 text-center">
                     <p className="text-gray-500 text-xs font-medium">RT | E.F. Ramos, M.D.</p>
@@ -1563,7 +1386,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               {dadosVieramDaTriagem && !editandoDadosPaciente && (
                 <button type="button" onClick={() => setEditandoDadosPaciente(true)}
                   className="flex items-center gap-1 text-xs font-bold text-red-700 hover:text-red-800 transition-colors">
-                  <span style={{ fontSize: '0.9rem' }}>✏️</span> EDITAR
+                  <span style={{ fontSize: '0.9rem' }}>{"\u270f\ufe0f"}</span> EDITAR
                 </button>
               )}
             </div>
@@ -1572,7 +1395,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <label className="label">CPF</label>
                 <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className={`input ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
                 <p className="text-xs text-gray-400 mt-0.5">Vincula ao paciente</p>
-                <p className="text-xs text-orange-500 mt-0.5">Digite apenas os números, sem pontos ou hífen</p>
+                <p className="text-xs text-orange-500 mt-0.5">{"Digite apenas os n\u00fameros, sem pontos ou h\u00edfen"}</p>
                 {erros.cpf && <p className="text-red-500 text-xs mt-1">{erros.cpf}</p>}
               </div>
               <div>
@@ -1593,21 +1416,19 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0 disabled:opacity-50" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm leading-tight">
-                      {inputs.sexo === 'F' ? 'Paciente Bariátrica' : 'Paciente Bariátrico'}
+                      {inputs.sexo === 'F' ? "Paciente Bari\u00e1trica" : "Paciente Bari\u00e1trico"}
                     </p>
                     <p className="text-xs opacity-70 leading-tight mt-0.5">
                       {inputs.sexo === 'F'
-                        ? 'Se a paciente avaliada é BARIÁTRICA ela receberá a ANAMNESE do Projeto OBA, e passará a ter o acompanhamento dinâmico para a melhor qualidade de vida.'
-                        : 'Se o paciente avaliado é BARIÁTRICO ele receberá a ANAMNESE do Projeto OBA, e passará a ter o acompanhamento dinâmico para a melhor qualidade de vida.'}
+                        ? "Se a paciente avaliada \u00e9 BARI\u00c1TRICA ela receber\u00e1 a ANAMNESE do Projeto OBA, e passar\u00e1 a ter o acompanhamento din\u00e2mico para a melhor qualidade de vida."
+                        : "Se o paciente avaliado \u00e9 BARI\u00c1TRICO ele receber\u00e1 a ANAMNESE do Projeto OBA, e passar\u00e1 a ter o acompanhamento din\u00e2mico para a melhor qualidade de vida."}
                     </p>
                   </div>
                 </label>
-                
               </div>
             </div>
           </section>
 
-          {/* __DATA_COLETA_SEAMLESS__ Data da Coleta - fora do quadro, amarelo, seamless */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <label className="label">Data da Coleta</label>
             <input
@@ -1637,26 +1458,23 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <IconExames /> Exames Laboratoriais
             </h2>
-            {/* TRIAGEM: Hb, VCM, RDW (sempre habilitados) - 3 colunas */}
             <div className="grid grid-cols-3 gap-3">
               <LabInput ref={refHbForm} onEnter={() => refVcmForm.current && refVcmForm.current.focus()} label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} aberrante={!!aberrantes["hemoglobina"]} borderColor="red" />
               <LabInput ref={refVcmForm} onEnter={() => refRdwForm.current && refRdwForm.current.focus()} label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} aberrante={!!aberrantes["vcm"]} borderColor="red" />
               <LabInput ref={refRdwForm} onEnter={() => refRdwForm.current && refRdwForm.current.blur()} label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} aberrante={!!aberrantes["rdw"]} borderColor="red" />
             </div>
 
-            {/* CTA: botao para liberar exames extras */}
             {!mostrarExamesExtras && (
               <button
                 type="button"
                 onClick={() => setMostrarExamesExtras(true)}
                 className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center mt-3"
               >
-                <span>📋 JÁ TENHO A FERRITINA E A SATURAÇÃO DA TRANSFERRINA</span>
-                <span className="text-xs font-normal opacity-90 mt-1">Aprofundar o diagnóstico</span>
+                <span>{"\ud83d\udd2c J\u00c1 TENHO A FERRITINA E A SATURA\u00c7\u00c3O DA TRANSFERRINA"}</span>
+                <span className="text-xs font-normal opacity-90 mt-1">{"Aprofundar o diagn\u00f3stico"}</span>
               </button>
             )}
 
-            {/* APROFUNDAMENTO: Ferritina e Sat - 2 colunas */}
             <div className="grid grid-cols-2 gap-3 mt-3">
               <LabInput
                 label="Ferritina"
@@ -1666,7 +1484,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 value={inputs.ferritina}
                 onChange={handleChange}
                 error={erros.ferritina}
-                hint={mostrarExamesExtras ? "Não use ponto para valores superiores a 1000. Ex: 1140" : "Clique no botão azul para liberar"}
+                hint={mostrarExamesExtras ? "N\u00e3o use ponto para valores superiores a 1000. Ex: 1140" : "Clique no bot\u00e3o azul para liberar"}
                 aberrante={!!aberrantes["ferritina"]}
                 disabled={!mostrarExamesExtras}
                 borderColor="blue"
@@ -1679,7 +1497,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 value={inputs.satTransf}
                 onChange={handleChange}
                 error={erros.satTransf}
-                hint={mostrarExamesExtras ? null : "Clique no botão azul para liberar"}
+                hint={mostrarExamesExtras ? null : "Clique no bot\u00e3o azul para liberar"}
                 aberrante={!!aberrantes["satTransf"]}
                 disabled={!mostrarExamesExtras}
                 borderColor="blue"
@@ -1689,21 +1507,21 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
-              <IconHistorico /> Histórico Clínico
+              <IconHistorico /> {"Hist\u00f3rico Cl\u00ednico"}
             </h2>
             <div className="grid grid-cols-2 gap-2">
-              {!inputs.bariatrica_medico && <CheckboxCard name="bariatrica" label="Bariátrica" sublabel="By-pass / Gastrectomia" checked={inputs.bariatrica} onChange={handleChange} color="amber" highlight={preFlag === 'bariatrica'} />}
+              {!inputs.bariatrica_medico && <CheckboxCard name="bariatrica" label={"Bari\u00e1trica"} sublabel="By-pass / Gastrectomia" checked={inputs.bariatrica} onChange={handleChange} color="amber" highlight={preFlag === 'bariatrica'} />}
               <CheckboxCard name="vegetariano" label="Vegetariano/Vegano" sublabel="Dieta sem carne" checked={inputs.vegetariano} onChange={handleChange} color="green" />
-              <CheckboxCard name="perda" label="Hemorragia" sublabel="Inclui doação de sangue, sangria, ou sangramento" checked={inputs.perda} onChange={handleChange} color="red" />
-              <CheckboxCard name="alcoolista" label="Alcoolista" sublabel="Uso crônico de álcool" checked={inputs.alcoolista} onChange={handleChange} color="amber" />
-              <CheckboxCard name="transfundido" label="Transfundido" sublabel="Transfusão de hemácias" checked={inputs.transfundido} onChange={handleChange} color="red" />
-              <CheckboxCard name="anemiaPrevia" label="Anemia Crônica / Prévia" sublabel="Diagnóstico anterior de anemia" checked={inputs.anemiaPrevia} onChange={handleChange} color="red" />
-              <CheckboxCard name="sideropenia" label="Deficiência de Ferro" sublabel="Histórico de ferritina baixa" checked={inputs.sideropenia} onChange={handleChange} color="orange" />
-              <CheckboxCard name="sobrecargaFerro" label="Excesso de Ferro / Hemocromatose" sublabel="Histórico de ferritina alta" checked={inputs.sobrecargaFerro} onChange={handleChange} color="orange" />
-              <CheckboxCard name="hbAlta" label="Hemoglobina Alta / Policitemia" sublabel="Histórico de Hb elevada ou sangrias" checked={inputs.hbAlta} onChange={handleChange} color="red" />
-              <CheckboxCard name="doadorSangue" label="Doador de Sangue" sublabel="Doações frequentes" checked={inputs.doadorSangue} onChange={handleChange} color="red" />
-              <CheckboxCard name="celiaco" label="Celíaco" sublabel="Doença celíaca — má absorção" checked={inputs.celiaco} onChange={handleChange} color="yellow" />
-              <CheckboxCard name="g6pd" label="Deficiência de G-6-PD" sublabel="Favismo — risco de hemólise" checked={inputs.g6pd} onChange={handleChange} color="purple" />
+              <CheckboxCard name="perda" label="Hemorragia" sublabel={"Inclui doa\u00e7\u00e3o de sangue, sangria, ou sangramento"} checked={inputs.perda} onChange={handleChange} color="red" />
+              <CheckboxCard name="alcoolista" label="Alcoolista" sublabel={"Uso cr\u00f4nico de \u00e1lcool"} checked={inputs.alcoolista} onChange={handleChange} color="amber" />
+              <CheckboxCard name="transfundido" label="Transfundido" sublabel={"Transfus\u00e3o de hem\u00e1cias"} checked={inputs.transfundido} onChange={handleChange} color="red" />
+              <CheckboxCard name="anemiaPrevia" label={"Anemia Cr\u00f4nica / Pr\u00e9via"} sublabel={"Diagn\u00f3stico anterior de anemia"} checked={inputs.anemiaPrevia} onChange={handleChange} color="red" />
+              <CheckboxCard name="sideropenia" label={"Defici\u00eancia de Ferro"} sublabel={"Hist\u00f3rico de ferritina baixa"} checked={inputs.sideropenia} onChange={handleChange} color="orange" />
+              <CheckboxCard name="sobrecargaFerro" label="Excesso de Ferro / Hemocromatose" sublabel={"Hist\u00f3rico de ferritina alta"} checked={inputs.sobrecargaFerro} onChange={handleChange} color="orange" />
+              <CheckboxCard name="hbAlta" label="Hemoglobina Alta / Policitemia" sublabel={"Hist\u00f3rico de Hb elevada ou sangrias"} checked={inputs.hbAlta} onChange={handleChange} color="red" />
+              <CheckboxCard name="doadorSangue" label="Doador de Sangue" sublabel={"Doa\u00e7\u00f5es frequentes"} checked={inputs.doadorSangue} onChange={handleChange} color="red" />
+              <CheckboxCard name="celiaco" label={"Cel\u00edaco"} sublabel={"Doen\u00e7a cel\u00edaca \u2014 m\u00e1 absor\u00e7\u00e3o"} checked={inputs.celiaco} onChange={handleChange} color="yellow" />
+              <CheckboxCard name="g6pd" label={"Defici\u00eancia de G-6-PD"} sublabel={"Favismo \u2014 risco de hem\u00f3lise"} checked={inputs.g6pd} onChange={handleChange} color="purple" />
               {inputs.sexo === 'F' && (
                 <>
                   <CheckboxCard name="hipermenorreia" label="Hipermenorreia" sublabel="Fluxo excessivo" checked={inputs.hipermenorreia} onChange={handleChange} color="pink" />
@@ -1712,19 +1530,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               )}
             </div>
 
-            {/* Fase 1: dados de gestacao */}
             {inputs.gestante && inputs.sexo === 'F' && (
               <div className="mt-3 p-3 rounded-xl border border-pink-200 bg-pink-50">
-                <p className="text-xs font-bold text-pink-700 uppercase tracking-wide mb-2">📋 Dados da Gestação</p>
+                <p className="text-xs font-bold text-pink-700 uppercase tracking-wide mb-2">{"\ud83d\udd76 Dados da Gesta\u00e7\u00e3o"}</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Semanas de gestação <span className="text-red-500">*</span></label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{"Semanas de gesta\u00e7\u00e3o "}<span className="text-red-500">*</span></label>
                     <input type="number" name="semanas_gestacao" value={inputs.semanas_gestacao} onChange={handleChange}
                       min="1" max="42" placeholder="Ex: 24"
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">DUM <span className="text-gray-400 font-normal">(opcional)</span></label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{"DUM "}<span className="text-gray-400 font-normal">(opcional)</span></label>
                     <input type="date" name="dum" value={inputs.dum} onChange={handleChange}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
                   </div>
@@ -1736,7 +1553,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   const semanasCalc = diasDesdeDUM / 7
                   const diff = Math.abs(semanasCalc - Number(inputs.semanas_gestacao))
                   if (diff > 2) {
-                    return <p className="text-xs text-orange-600 font-medium mt-2">⚠️ DUM sugere ~{semanasCalc.toFixed(1)} semanas, mas você informou {inputs.semanas_gestacao}. Revise os dados.</p>
+                    return <p className="text-xs text-orange-600 font-medium mt-2">{"\u26a0\ufe0f DUM sugere ~"}{semanasCalc.toFixed(1)}{" semanas, mas voc\u00ea informou "}{inputs.semanas_gestacao}{". Revise os dados."}</p>
                   }
                   return null
                 })()}
@@ -1751,18 +1568,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </h2>
             <p className="text-xs text-gray-400 mb-2">Marque os que o paciente usa ou usou recentemente</p>
             <div className="grid grid-cols-2 gap-2">
-              <CheckboxCard name="aspirina" label="Aspirina" sublabel="Uso contínuo" checked={inputs.aspirina} onChange={handleChange} color="orange" />
-              <CheckboxCard name="vitaminaB12" label="Vitamina B12" sublabel="Últimos 3 meses" checked={inputs.vitaminaB12} onChange={handleChange} color="purple" />
-              <CheckboxCard name="vitB12_SL" label="Vit. B12 SL" sublabel="Sublingual — em uso" checked={inputs.vitB12_SL} onChange={handleChange} color="purple" />
-              <CheckboxCard name="vitB12_IM" label="Vit. B12 IM" sublabel="Intramuscular — em uso" checked={inputs.vitB12_IM} onChange={handleChange} color="purple" />
-              <CheckboxCard name="ferro_oral" label="Ferro Oral" sublabel="Nos últimos 2 anos" checked={inputs.ferro_oral} onChange={handleChange} color="orange" />
-              <CheckboxCard name="ferro_injetavel" label="Ferro Injetável" sublabel="Nos últimos 2 anos" checked={inputs.ferro_injetavel} onChange={handleChange} color="orange" />
-              <CheckboxCard name="testosterona" label="Testosterona / Anabolizante" sublabel="Uso exógeno — causa eritrocitose" checked={inputs.testosterona} onChange={handleChange} color="orange" />
-                            <CheckboxCard name="tiroxina" label="Tiroxina / T4" sublabel="Tratamento tireoidiano" checked={inputs.tiroxina} onChange={handleChange} color="teal" />
-                            <CheckboxCard name="methotrexato" label="Metotrexato" sublabel="Antagonista do folato" checked={inputs.methotrexato} onChange={handleChange} color="purple" />
-                            <CheckboxCard name="hivTratamento" label="Trat. HIV / ARV" sublabel="Antirretrovirais" checked={inputs.hivTratamento} onChange={handleChange} color="purple" />
+              <CheckboxCard name="aspirina" label="Aspirina" sublabel={"Uso cont\u00ednuo"} checked={inputs.aspirina} onChange={handleChange} color="orange" />
+              <CheckboxCard name="vitaminaB12" label="Vitamina B12" sublabel={"\u00daltimos 3 meses"} checked={inputs.vitaminaB12} onChange={handleChange} color="purple" />
+              <CheckboxCard name="vitB12_SL" label="Vit. B12 SL" sublabel={"Sublingual \u2014 em uso"} checked={inputs.vitB12_SL} onChange={handleChange} color="purple" />
+              <CheckboxCard name="vitB12_IM" label="Vit. B12 IM" sublabel={"Intramuscular \u2014 em uso"} checked={inputs.vitB12_IM} onChange={handleChange} color="purple" />
+              <CheckboxCard name="ferro_oral" label="Ferro Oral" sublabel={"Nos \u00faltimos 2 anos"} checked={inputs.ferro_oral} onChange={handleChange} color="orange" />
+              <CheckboxCard name="ferro_injetavel" label={"Ferro Injet\u00e1vel"} sublabel={"Nos \u00faltimos 2 anos"} checked={inputs.ferro_injetavel} onChange={handleChange} color="orange" />
+              <CheckboxCard name="testosterona" label="Testosterona / Anabolizante" sublabel={"Uso ex\u00f3geno \u2014 causa eritrocitose"} checked={inputs.testosterona} onChange={handleChange} color="orange" />
+              <CheckboxCard name="tiroxina" label="Tiroxina / T4" sublabel="Tratamento tireoidiano" checked={inputs.tiroxina} onChange={handleChange} color="teal" />
+              <CheckboxCard name="methotrexato" label="Metotrexato" sublabel="Antagonista do folato" checked={inputs.methotrexato} onChange={handleChange} color="purple" />
+              <CheckboxCard name="hivTratamento" label="Trat. HIV / ARV" sublabel="Antirretrovirais" checked={inputs.hivTratamento} onChange={handleChange} color="purple" />
               <CheckboxCard name="hidroxiureia" label="Hidroxiureia" sublabel="Pode causar macrocitose" checked={inputs.hidroxiureia} onChange={handleChange} color="purple" />
-              <CheckboxCard name="anticonvulsivante" label="Anticonvulsivante" sublabel="Fenitoína, VPA etc." checked={inputs.anticonvulsivante} onChange={handleChange} color="purple" />
+              <CheckboxCard name="anticonvulsivante" label="Anticonvulsivante" sublabel={"Fenito\u00edna, VPA etc."} checked={inputs.anticonvulsivante} onChange={handleChange} color="purple" />
             </div>
           </section>
 
@@ -1777,7 +1594,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
           {Object.values(erros).some(v => v) && (
             <div className="mt-4 rounded-xl border-2 border-red-400 bg-red-50 p-3">
-              <p className="text-red-700 text-sm font-bold mb-1">⚠️ Preencha os campos obrigatórios antes de avaliar:</p>
+              <p className="text-red-700 text-sm font-bold mb-1">{"\u26a0\ufe0f Preencha os campos obrigat\u00f3rios antes de avaliar:"}</p>
               <ul className="text-red-700 text-xs leading-snug list-disc list-inside">
                 {Object.entries(erros).filter(([_, v]) => v).map(([k, v]) => {
                   const nomes = {
@@ -1801,7 +1618,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
         {resultado && (
           <div id="resultado" className="mt-6">
-            {/* modoPaciente=false — modo médico nunca exibe módulo de documentos */}
             <ResultCard
               resultado={resultado}
               onCopiar={handleCopiar}
@@ -1814,36 +1630,32 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           </div>
         )}
 
-      {/* CONVITE AFILIADO - imagem fairy-chat + texto persuasivo */}
       {showConviteAfiliado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            {/* Imagem com hover (gradiente preto na parte inferior) */}
             <div style={{ position: 'relative', width: '100%', height: '440px', overflow: 'hidden' }}>
               <img src={fairyChatImg} alt="Programa de Afiliados RedFairy"
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
-              {/* Hover gradiente preto translucido na parte inferior */}
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.5) 40%, transparent)', padding: '24px 24px 18px' }}>
                 {!conviteRecusado ? (
                   <>
                     <p style={{ color: '#ffffff', fontSize: '22px', fontWeight: 800, lineHeight: '1.25', margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                      Participe do nosso <span style={{ color: '#ef4444' }}>PROGRAMA DE AFILIADOS</span>, é rápido e não custa nada.
+                      {"Participe do nosso "}<span style={{ color: '#ef4444' }}>PROGRAMA DE AFILIADOS</span>{", \u00e9 r\u00e1pido e n\u00e3o custa nada."}
                     </p>
                     <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 600, lineHeight: '1.3', margin: '8px 0 0', textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                      Somente benefícios para você.
+                      {"Somente benef\u00edcios para voc\u00ea."}
                     </p>
                     <p style={{ color: '#fca5a5', fontSize: '14px', fontWeight: 600, lineHeight: '1.4', margin: '10px 0 0', textAlign: 'center' }}>
-                      Um cadastro simples e você saberá porque é bom estar conosco.
+                      {"Um cadastro simples e voc\u00ea saber\u00e1 porque \u00e9 bom estar conosco."}
                     </p>
                   </>
                 ) : (
                   <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 500, lineHeight: '1.5', margin: '0 auto', maxWidth: '90%', textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                    Você inseriu um paciente no sistema pela triagem, mas não se afiliou no seguimento. É uma pena. Os dados do paciente estão salvos para eventual aprofundamento diagnóstico; porém, se ele se cadastrar sem que você esteja afiliado, você não participará do sistema de benefícios. Esperamos que seu paciente conclua o cadastro — e que você volte. Estaremos sempre abertos a ter você conosco. Até breve!...
+                    {"Voc\u00ea inseriu um paciente no sistema pela triagem, mas n\u00e3o se afiliou no seguimento. \u00c9 uma pena. Os dados do paciente est\u00e3o salvos para eventual aprofundamento diagn\u00f3stico; por\u00e9m, se ele se cadastrar sem que voc\u00ea esteja afiliado, voc\u00ea n\u00e3o participar\u00e1 do sistema de benef\u00edcios. Esperamos que seu paciente conclua o cadastro \u2014 e que voc\u00ea volte. Estaremos sempre abertos a ter voc\u00ea conosco. At\u00e9 breve!..."}
                   </p>
                 )}
               </div>
             </div>
-            {/* Botao + checkbox (apenas se nao recusado) */}
             {!conviteRecusado && (
               <div className="p-5 space-y-3">
                 <button
@@ -1858,7 +1670,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   <input
                     type="checkbox"
                     onChange={() => {
-                      // __FATIA1C__ Agora nao: cadastra (TELA 7), pula afiliacao
                       setAfiliacaoRecusada(true);
                       setShowConviteAfiliado(false);
                       setShowAuthMedicoOverlay('cadastro');
@@ -1866,7 +1677,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     className="w-3 h-3 cursor-pointer"
                     style={{ accentColor: '#9ca3af' }}
                   />
-                  <span style={{ color: '#9ca3af', fontSize: '11px', letterSpacing: '0.5px' }}>AGORA NÃO, OBRIGADO</span>
+                  <span style={{ color: '#9ca3af', fontSize: '11px', letterSpacing: '0.5px' }}>{"AGORA N\u00c3O, OBRIGADO"}</span>
                 </label>
                 <button
                   onClick={() => {
@@ -1875,7 +1686,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   }}
                   className="w-full text-center mt-1"
                   style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>Já sou afiliado? </span>
+                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>{"J\u00e1 sou afiliado? "}</span>
                   <span style={{ color: '#7B1E1E', fontSize: '11px', fontWeight: 600, textDecoration: 'underline' }}>Entrar</span>
                 </button>
               </div>
@@ -1884,7 +1695,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         </div>
       )}
 
-      {/* AUTH MEDICO OVERLAY - aparece apos convite aceito */}
       {showAuthMedicoOverlay && (
         <div className="fixed inset-0 z-50" style={{ background: '#111827', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <AuthMedico
@@ -1903,14 +1713,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               setMedicoCRM(crm);
               setCadastrado(true);
               setShowAuthMedicoOverlay(false);
-              // __FATIA1C__ Se recusou afiliacao: pula TELA 8, vai pra TELA 9
               if (afiliacaoRecusada) {
                 setAfiliacaoRecusada(false);
                 setShowFelicitacoes(true);
                 return;
               }
-              // So abre afiliados se o medico AINDA NAO for afiliado completo
-              // (afiliado completo = tem cep + cpf + pix_chave no banco).
               try {
                 const { data: md } = await supabase
                   .from('medicos')
@@ -1930,30 +1737,25 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         </div>
       )}
 
-      {/* __FELICITACOES_V2__ */}
-      {/* FELICITACOES - apos cadastro de endereco/pix */}
-      {/* __TELA9_V3__ TELA 9 - Agora voce pode (5 botoes) */}
       {showFelicitacoes && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div className="rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-4">
-            {/* Imagem com texto no terco inferior */}
             <div style={{ position: 'relative', width: '100%', background: '#fff' }}>
               <img src={chatphone2Img} alt="RedFairy"
                 style={{ display: 'block', width: '100%', height: 'auto', objectFit: 'contain' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 55%, transparent)', padding: '40px 20px 16px' }}>
                 <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 800, lineHeight: 1.2, margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
-                  Estamos felizes de ter você no RedFairy<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>®</sup>
+                  {"Estamos felizes de ter voc\u00ea no RedFairy"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>
                 </h2>
               </div>
             </div>
-            {/* Card bordo com os 5 botoes */}
             <div className="bg-red-700 px-5 py-5">
-              <p className="text-red-200 text-xs font-bold tracking-widest uppercase text-center mb-4">Agora você pode:</p>
+              <p className="text-red-200 text-xs font-bold tracking-widest uppercase text-center mb-4">{"Agora voc\u00ea pode:"}</p>
               <div className="space-y-2.5">
                 <button
                   onClick={() => { setShowFelicitacoes(false); }}
                   className="w-full bg-white text-red-800 hover:bg-red-50 font-bold py-3 rounded-xl text-sm transition-colors">
-                  APROFUNDAR AVALIAÇÃO INICIADA
+                  {"APROFUNDAR AVALIA\u00c7\u00c3O INICIADA"}
                 </button>
                 <button
                   onClick={() => { setShowFelicitacoes(false); setShowTriagem(true); }}
@@ -1963,8 +1765,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <button
                   onClick={() => { setShowFelicitacoes(false); setShowOBA(true); }}
                   className="w-full bg-white text-red-800 hover:bg-red-50 font-bold py-3 rounded-xl text-sm transition-colors flex flex-col items-center leading-tight">
-                  <span>CONHECER O PROJETO OBA<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>®</sup></span>
-                  <span style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '1px', opacity: 0.6 }}>OTIMIZAR O BARIÁTRICO</span>
+                  <span>{"CONHECER O PROJETO OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup></span>
+                  <span style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '1px', opacity: 0.6 }}>{"OTIMIZAR O BARI\u00c1TRICO"}</span>
                 </button>
                 <button
                   onClick={async () => {
@@ -1981,16 +1783,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       setShowFelicitacoes(false);
                       setShowBeneficios(true);
                     } else {
-                      alert('FILIE-SE PARA CONHECER OS BENEFÍCIOS');
+                      alert("FILIE-SE PARA CONHECER OS BENEF\u00cdCIOS");
                     }
                   }}
                   className="w-full bg-white text-red-800 hover:bg-red-50 font-bold py-3 rounded-xl text-sm transition-colors">
-                  CONHECER OS BENEFÍCIOS
+                  {"CONHECER OS BENEF\u00cdCIOS"}
                 </button>
                 <button
                   onClick={() => { setShowFelicitacoes(false); if (onVoltar) onVoltar(); }}
                   className="w-full border-2 border-white/40 text-white hover:bg-red-800 font-semibold py-2.5 rounded-xl text-sm transition-colors">
-                  VOLTAR PARA O INÍCIO
+                  {"VOLTAR PARA O IN\u00cdCIO"}
                 </button>
               </div>
             </div>
@@ -1998,20 +1800,24 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         </div>
       )}
 
-      {/* BENEFICIOS - placeholder */}
       {showBeneficios && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="bg-red-700 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-white text-lg font-bold">Beneficios do Programa</h2>
-              <button onClick={() => setShowBeneficios(false)} className="text-red-200 hover:text-white text-xl font-bold">x</button>
+              <h2 className="text-white text-lg font-bold">{"Benef\u00edcios do Programa"}</h2>
+              <button
+                onClick={() => setShowBeneficios(false)}
+                className="text-red-200 hover:text-white text-xl"
+                style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
+                {"\u2715"}
+              </button>
             </div>
             <div className="p-6 text-center space-y-4">
               <p className="text-gray-600 text-sm leading-relaxed">
-                Em breve: lista detalhada dos beneficios do Programa de Afiliados Patrocinado RedFairy.
+                {"Em breve: lista detalhada dos benef\u00edcios do Programa de Afiliados Patrocinado RedFairy."}
               </p>
               <p className="text-gray-400 text-xs">
-                Conteudo em desenvolvimento.
+                {"Conte\u00fado em desenvolvimento."}
               </p>
               <button
                 onClick={() => setShowBeneficios(false)}
@@ -2040,10 +1846,8 @@ const LabInput = React.forwardRef(function LabInput({ label, unit, name, referen
         className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : (!value && !disabled) ? 'border-yellow-400 bg-yellow-50' : borderColor === 'red' ? 'border-red-500' : borderColor === 'blue' ? 'border-blue-500' : 'border-gray-200'}`} />
       <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
       {hint && !disabled && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
-      {aberrante && <p className="text-xs font-bold text-yellow-600 mt-0.5">⚠ VALOR ABERRANTE — CONFIRME</p>}
+      {aberrante && <p className="text-xs font-bold text-yellow-600 mt-0.5">{"\u26a0 VALOR ABERRANTE \u2014 CONFIRME"}</p>}
       {error && <p className="text-red-500 text-xs">{error}</p>}
-
-
     </div>
   );
 })
@@ -2057,6 +1861,7 @@ const colorMap = {
   purple: 'border-purple-400 bg-purple-50 text-purple-700',
   blue:   'border-blue-400   bg-blue-50   text-blue-700',
   teal:   'border-teal-400   bg-teal-50   text-teal-700',
+  yellow: 'border-yellow-400 bg-yellow-50 text-yellow-700',
 };
 
 function CheckboxCard({ name, label, sublabel, checked, onChange, color, highlight }) {
