@@ -1,18 +1,19 @@
-import { useState, useEffect } from 'react';import { supabase } from '../lib/supabase'
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 
 /**
- * TriagemResultadoModal — popup azul de resultado da triagem.
+ * TriagemResultadoModal - popup de resultado da triagem.
  *
  * Props:
  *   resultado:  objeto retornado por triagemEritron()
- *   inputs:     dados do paciente (cpf, sexo, idade, gestante, hb, vcm, rdw)
+ *   inputs:     dados do paciente (cpf, sexo, idade, gestante, hb, vcm, rdw, data_coleta, data_estimada)
  *   modoMedico: boolean
- *   isDemo:     boolean (so paciente nao logado)
- *   medicoCRM:  string (so se modoMedico)
- *   userId:     string (so se paciente logado, para link no Supabase)
- *   onVoltarInicio: function() — usuario clicou "Voltar ao inicio" (sair)
- *   onCadastrar:    function() — usuario DEMO clicou "Continuar para cadastro"
+ *   isDemo:     boolean
+ *   medicoCRM:  string
+ *   userId:     string
+ *   onVoltarInicio: function()
+ *   onCadastrar:    function()
  */
 export default function TriagemResultadoModal({
   resultado,
@@ -25,20 +26,29 @@ export default function TriagemResultadoModal({
   onVoltarInicio,
   onCadastrar
 }) {
-  const [tela, setTela] = useState('resultado') // 'resultado' | 'aguardo'
+  const [tela, setTela] = useState('resultado')
   const [salvando, setSalvando] = useState(false)
   const [erroSalvamento, setErroSalvamento] = useState(null)
-  const [pedNome, setPedNome] = useState('')  // __FATIA5C__
+  const [pedNome, setPedNome] = useState('')
   const [pedCelular, setPedCelular] = useState('')
 
   if (!resultado) return null
 
-  const isNormal = resultado.label === 'HEMOGLOBINA NORMAL + HEMÁCIAS NORMOCÍTICAS'
+  // String JS com \u: HEMOGLOBINA NORMAL + HEMACIAS NORMOCITICAS (em pt-BR com acentos)
+  const isNormal = resultado.label === "HEMOGLOBINA NORMAL + HEM\u00c1CIAS NORMOC\u00cdTICAS"
   const showCadastroBtn = !modoMedico && isDemo
+
+  // Helper para data_coleta -> DD/MM/AAAA
+  function fmtDataColeta(iso) {
+    if (!iso) return ''
+    const s = String(iso).split('T')[0]
+    const p = s.split('-')
+    if (p.length === 3) return p[2] + '/' + p[1] + '/' + p[0]
+    return s
+  }
 
   async function salvarTriagem() {
     if (!inputs?.cpf) {
-      // Paciente DEMO sem CPF nao salva (sem identificacao)
       return { sucesso: true, semCPF: true }
     }
     try {
@@ -52,7 +62,9 @@ export default function TriagemResultadoModal({
         data_nascimento: inputs.data_nascimento || null,
         gestante: inputs.gestante || false,
         bariatrica: inputs.bariatrica || false,
-        semanas_gestacao: inputs.semanas_gestacao || null,
+        semanas_gestacao: inputs.semanas_gestacao ? Math.round(Number(inputs.semanas_gestacao)) : null,
+        data_coleta: inputs.data_coleta || null,
+        data_estimada: !!inputs.data_estimada,
         hemoglobina: Number(inputs.hemoglobina) || null,
         vcm: Number(inputs.vcm) || null,
         rdw: Number(inputs.rdw) || null,
@@ -68,7 +80,6 @@ export default function TriagemResultadoModal({
         console.error('Erro ao salvar triagem:', error)
         return { sucesso: false, erro: error.message }
       }
-      // __FATIA5A__ apos salvar, verifica limite de 3 (visitante sem profile)
       try {
         const cpfDigits = (inputs.cpf || '').replace(/\D/g, '')
         const { data: prof } = await supabase
@@ -80,11 +91,11 @@ export default function TriagemResultadoModal({
           if ((nTri || 0) === 3) {
             return { sucesso: true, limite3: true }
           }
-          if ((nTri || 0) === 1) {  /* __FATIA5C__ 1a triagem visitante */
+          if ((nTri || 0) === 1) {
             return { sucesso: true, pedidoExames: true }
           }
         }
-      } catch (e) { /* nao bloqueia o fluxo por erro de contagem */ }
+      } catch (e) { /* nao bloqueia */ }
       return { sucesso: true }
     } catch (err) {
       console.error('Erro inesperado ao salvar:', err)
@@ -97,11 +108,11 @@ export default function TriagemResultadoModal({
     const resp = await salvarTriagem()
     setSalvando(false)
     if (!resp.sucesso) {
-      setErroSalvamento('Não foi possível salvar. Tente novamente ou contate o suporte.')
+      setErroSalvamento("N\u00e3o foi poss\u00edvel salvar. Tente novamente ou contate o suporte.")
       return
     }
-    if (resp.limite3) { setTela('limite3'); return }  /* __FATIA5A__ */
-    if (resp.pedidoExames) { setTela('pedidoExames'); return }  /* __FATIA5C__ */
+    if (resp.limite3) { setTela('limite3'); return }
+    if (resp.pedidoExames) { setTela('pedidoExames'); return }
     setTela('aguardo')
   }
 
@@ -143,9 +154,9 @@ export default function TriagemResultadoModal({
           <div className="p-6 space-y-4">
             <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
               <p className="text-sm text-blue-900 leading-relaxed">
-                Este é o seu <strong>primeiro pedido gratuito</strong> de
-                <strong> FERRITINA</strong> e <strong>SATURAÇÃO DA TRANSFERRINA</strong>.
-                Preencha os dados abaixo e envie pelo WhatsApp.
+                {"Este \u00e9 o seu "}<strong>primeiro pedido gratuito</strong>{" de "}
+                <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{"."}
+                {" Preencha os dados abaixo e envie pelo WhatsApp."}
               </p>
             </div>
             <div>
@@ -184,8 +195,8 @@ export default function TriagemResultadoModal({
             </button>
             <button
               onClick={onVoltarInicio}
-              className="w-full py-2.5 rounded-xl border-2 border-gray-300 text-gray-600 font-semibold hover:bg-gray-50 transition-colors text-sm">
-              Voltar
+              className="w-full py-2.5 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold transition-colors text-sm">
+              Continuar
             </button>
           </div>
         </div>
@@ -193,7 +204,7 @@ export default function TriagemResultadoModal({
     )
   }
 
-  // ===== TELA LIMITE 3 (5A') =====
+  // ===== TELA LIMITE 3 =====
   if (tela === 'limite3') {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
@@ -206,8 +217,9 @@ export default function TriagemResultadoModal({
           <div className="p-6 space-y-5">
             <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-center">
               <p className="text-sm font-bold text-red-900 leading-relaxed">
-                SÃO POSSÍVEIS TRÊS AVALIAÇÕES GRATUITAS POR CPF.
-                PARA NOVA AVALIAÇÃO O PACIENTE DEVE ESTAR INSCRITO.
+                {"S\u00c3O POSS\u00cdVEIS TR\u00caS AVALIA\u00c7\u00d5ES GRATUITAS POR CPF."}
+                <br />
+                {"PARA NOVA AVALIA\u00c7\u00c3O O PACIENTE DEVE ESTAR INSCRITO."}
               </p>
             </div>
 
@@ -220,7 +232,7 @@ export default function TriagemResultadoModal({
                 <button
                   onClick={onVoltarInicio}
                   className="w-full py-3 rounded-xl bg-red-900 hover:bg-red-950 text-white font-bold transition-colors text-sm">
-                  Voltar
+                  Continuar
                 </button>
               </div>
             ) : (
@@ -237,7 +249,7 @@ export default function TriagemResultadoModal({
                     className="w-3 h-3 cursor-pointer"
                     style={{ accentColor: '#9ca3af' }}
                   />
-                  <span style={{ color: '#9ca3af', fontSize: '11px', letterSpacing: '0.5px' }}>AGORA NÃO</span>
+                  <span style={{ color: '#9ca3af', fontSize: '11px', letterSpacing: '0.5px' }}>{"AGORA N\u00c3O"}</span>
                 </label>
               </div>
             )}
@@ -253,40 +265,36 @@ export default function TriagemResultadoModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ background: 'rgba(0,0,0,0.6)' }}>
         <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
-          {/* Cabecalho centralizado com fadinha */}
           <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
             <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
             <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
-            <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">✨ Triagem Salva</p>
+            <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">{"\u2728 Triagem Salva"}</p>
             <h3 className="text-lg font-semibold text-gray-800 mt-3 leading-tight">
-              {modoMedico ? 'Triagem salva' : 'Estaremos aguardando você!'}
+              {modoMedico ? 'Triagem salva' : "Estaremos aguardando voc\u00ea!"}
             </h3>
           </div>
 
           <div className="p-6 space-y-4">
             <div className="text-center">
-              <div className="text-5xl mb-3">🔬</div>
+              <div className="text-5xl mb-3">{"\ud83d\udd2c"}</div>
               {modoMedico && inputs?.bariatrica ? (
-                /* CENARIO 2: Medico + Bariatrico */
                 <p className="text-gray-800 leading-relaxed">
-                  <strong>Doutor, paciente bariátrico exige uma investigação mais complexa,</strong> inclusive uma <strong>ANAMNESE ESPECÍFICA</strong>. Encaminhe o paciente para que se cadastre: nós cuidaremos de tudo e retornaremos a você com o resultado dessa avaliação.
+                  <strong>{"Doutor, paciente bari\u00e1trico exige uma investiga\u00e7\u00e3o mais complexa,"}</strong>
+                  {" inclusive uma "}<strong>{"ANAMNESE ESPEC\u00cdFICA"}</strong>{". Encaminhe o paciente para que se cadastre: n\u00f3s cuidaremos de tudo e retornaremos a voc\u00ea com o resultado dessa avalia\u00e7\u00e3o."}
                 </p>
               ) : modoMedico ? (
-                /* CENARIO 1: Medico nao-bariatrico */
                 <p className="text-gray-800 leading-relaxed">
-                  Se você tem também a <strong>FERRITINA</strong> e <strong>SATURAÇÃO DA TRANSFERRINA</strong> do paciente, podemos prosseguir para uma avaliação melhor.
+                  {"Se voc\u00ea tem tamb\u00e9m a "}<strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{" do paciente, podemos prosseguir para uma avalia\u00e7\u00e3o melhor."}
                   <br /><br />
-                  Se não tem esses dados, solicite e retorne, ou encaminhe o paciente para que se cadastre.
+                  {"Se n\u00e3o tem esses dados, solicite e retorne, ou encaminhe o paciente para que se cadastre."}
                 </p>
               ) : (
-                /* CENARIO 5: Paciente normal (logado ou similar) */
                 <>
                   <p className="text-gray-800 leading-relaxed">
-                    <strong>Quando tiver os resultados de FERRITINA e SATURAÇÃO DA TRANSFERRINA, retorne.</strong>
+                    <strong>{"Quando tiver os resultados de FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA, retorne."}</strong>
                   </p>
                   <p className="text-sm text-gray-600 mt-3 leading-relaxed">
-                    Seus dados foram salvos. Quando voltar com os exames complementares,
-                    continuaremos a sua avaliação de onde paramos.
+                    {"Seus dados foram salvos. Quando voltar com os exames complementares, continuaremos a sua avalia\u00e7\u00e3o de onde paramos."}
                   </p>
                 </>
               )}
@@ -295,18 +303,16 @@ export default function TriagemResultadoModal({
             {!modoMedico && (
               <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
                 <p className="text-sm text-blue-900 italic">
-                  "Estaremos aguardando você! ✨"
+                  {"\"Estaremos aguardando voc\u00ea! \u2728\""}
                 </p>
               </div>
             )}
           </div>
 
           <div className="px-6 pb-6 flex gap-3">
-            {/* __TELA4_SO_CONTINUAR__ Fatia 1A: so Continuar (sem Aprofundar) */}
             <button
               onClick={onVoltarInicio}
-              className="w-full py-3 rounded-xl bg-red-900 hover:bg-red-950 active:bg-red-950 text-white font-bold transition-colors text-sm"
-            >
+              className="w-full py-3 rounded-xl bg-red-900 hover:bg-red-950 active:bg-red-950 text-white font-bold transition-colors text-sm">
               Continuar
             </button>
           </div>
@@ -316,17 +322,23 @@ export default function TriagemResultadoModal({
   }
 
   // ===== TELA RESULTADO =====
+  // Pre-calcula CRM (logado ou prefill da landing)
+  let crmExibir = medicoCRM
+  if (!crmExibir) { try { crmExibir = localStorage.getItem('rf_crm_prefill') || '' } catch(e) { crmExibir = '' } }
+
+  const dataColetaFmt = fmtDataColeta(inputs?.data_coleta)
+  const dataEstimadaFlag = !!inputs?.data_estimada
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl">
 
-        {/* Cabecalho centralizado com fadinha + label colorido */}
         <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
           <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
           <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
           <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">
-            {isNormal ? '✅ Triagem Concluída' : '🩺 Triagem - Achados'}
+            {isNormal ? "\u2705 Triagem Conclu\u00edda" : "\ud83e\ude7a Triagem - Achados"}
           </p>
           <h3 className={`text-lg font-bold mt-3 leading-tight ${
             isNormal
@@ -335,15 +347,15 @@ export default function TriagemResultadoModal({
                 ? 'text-red-700'
                 : 'text-orange-600'
           }`}>{resultado.label}</h3>
-          {(inputs?.cpf || inputs?.dataColeta) && (
+          {(inputs?.cpf || dataColetaFmt) && (
             <p className="text-xs text-gray-700 mt-1 tracking-wide">
-              {[inputs?.cpf, inputs?.dataColeta && inputs.dataColeta.split('-').reverse().join('')].filter(Boolean).join(' · ')}
+              {[inputs?.cpf, dataColetaFmt.replace(/\//g,'')].filter(Boolean).join(" \u00b7 ")}
             </p>
           )}
         </div>
 
         <div className="p-6 space-y-4">
-          {/* __TRIAGEM_TABELA_V1__ */}
+          {/* Tabela de resultados */}
           {(() => {
             const hb = parseFloat(inputs?.hemoglobina);
             const vcm = parseFloat(inputs?.vcm);
@@ -354,13 +366,16 @@ export default function TriagemResultadoModal({
             if (sexo === 'M') { hbMin = 13.5; hbMax = 17.5; }
             else if (gestante) { hbMin = 11.0; hbMax = 15.5; }
             else { hbMin = 12.0; hbMax = 15.5; }
-            const hbInterp = isNaN(hb) ? '—' : (hb < hbMin ? '↓' : hb > hbMax ? '↑' : 'NORMAL');
-            const vcmInterp = isNaN(vcm) ? '—' : (vcm < 80 ? '↓' : vcm > 100 ? '↑' : 'NORMAL');
-            const rdwInterp = isNaN(rdw) ? '—' : (rdw > 15 ? 'AMPLIADO' : 'NORMAL');
+            const traco = "\u2014"
+            const setaDn = "\u2193"
+            const setaUp = "\u2191"
+            const hbInterp = isNaN(hb) ? traco : (hb < hbMin ? setaDn : hb > hbMax ? setaUp : 'NORMAL');
+            const vcmInterp = isNaN(vcm) ? traco : (vcm < 80 ? setaDn : vcm > 100 ? setaUp : 'NORMAL');
+            const rdwInterp = isNaN(rdw) ? traco : (rdw > 15 ? 'AMPLIADO' : 'NORMAL');
             const cell = 'px-2 py-1.5 text-xs';
             const corInterp = (txt) => {
               if (txt === 'NORMAL') return 'text-gray-700';
-              if (txt === '—') return 'text-gray-400';
+              if (txt === traco) return 'text-gray-400';
               return 'text-red-700 font-semibold';
             };
             return (
@@ -368,28 +383,28 @@ export default function TriagemResultadoModal({
                 <table className="w-full border-collapse text-xs">
                   <thead>
                     <tr className="bg-gray-100 text-gray-600 uppercase tracking-wide">
-                      <th className={cell + ' text-left font-semibold'}>Parâmetro</th>
+                      <th className={cell + ' text-left font-semibold'}>{"Par\u00e2metro"}</th>
                       <th className={cell + ' text-right font-semibold'}>Valor</th>
                       <th className={cell + ' text-left font-semibold'}>Und</th>
-                      <th className={cell + ' text-left font-semibold'}>Interpretação</th>
+                      <th className={cell + ' text-left font-semibold'}>{"Interpreta\u00e7\u00e3o"}</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-b border-gray-100">
                       <td className={cell + ' font-medium text-gray-800'}>Hemoglobina</td>
-                      <td className={cell + ' text-right tabular-nums'}>{isNaN(hb) ? '—' : hb.toFixed(1)}</td>
+                      <td className={cell + ' text-right tabular-nums'}>{isNaN(hb) ? traco : hb.toFixed(1)}</td>
                       <td className={cell + ' text-gray-600'}>g/dL</td>
                       <td className={cell + ' ' + corInterp(hbInterp)}>{hbInterp}</td>
                     </tr>
                     <tr className="border-b border-gray-100">
-                      <td className={cell + ' font-medium text-gray-800'}>Volume Globular Médio</td>
-                      <td className={cell + ' text-right tabular-nums'}>{isNaN(vcm) ? '—' : vcm.toFixed(1)}</td>
+                      <td className={cell + ' font-medium text-gray-800'}>{"Volume Globular M\u00e9dio"}</td>
+                      <td className={cell + ' text-right tabular-nums'}>{isNaN(vcm) ? traco : vcm.toFixed(1)}</td>
                       <td className={cell + ' text-gray-600'}>fL</td>
                       <td className={cell + ' ' + corInterp(vcmInterp)}>{vcmInterp}</td>
                     </tr>
                     <tr>
                       <td className={cell + ' font-medium text-gray-800'}>RDW</td>
-                      <td className={cell + ' text-right tabular-nums'}>{isNaN(rdw) ? '—' : rdw.toFixed(1)}</td>
+                      <td className={cell + ' text-right tabular-nums'}>{isNaN(rdw) ? traco : rdw.toFixed(1)}</td>
                       <td className={cell + ' text-gray-600'}>CV %</td>
                       <td className={cell + ' ' + corInterp(rdwInterp)}>{rdwInterp}</td>
                     </tr>
@@ -403,120 +418,113 @@ export default function TriagemResultadoModal({
           <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
             {isNormal ? (
               modoMedico ? (
-                /* ERITRON NORMAL - MODO MEDICO */
                 <div className="space-y-2">
                   <p className="text-sm font-bold text-blue-900">
-                    ✨ Aparentemente os exames do seu paciente estão bem
+                    {"\u2728 Aparentemente os exames do seu paciente est\u00e3o bem"}
                   </p>
                   <p className="text-sm text-blue-900 leading-relaxed">
-                    Mas ainda assim eles não revelariam uma <strong>baixa reserva</strong> ou
-                    <strong> excesso de ferro</strong>. Recomende ao paciente que traga a
-                    <strong> FERRITINA</strong> e a <strong>SATURAÇÃO DA TRANSFERRINA</strong>.
+                    {"Mas ainda assim eles n\u00e3o revelariam uma "}<strong>baixa reserva</strong>{" ou "}
+                    <strong>excesso de ferro</strong>{". Recomende ao paciente que traga a "}
+                    <strong>FERRITINA</strong>{" e a "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{"."}
                   </p>
                   <p className="text-sm text-blue-900 leading-relaxed">
-                    Se {inputs?.sexo === 'F' ? 'ela' : 'ele'} não fez nenhum tratamento recente,
-                    <strong> PARABÉNS!</strong> Vida que segue muito bem para {inputs?.sexo === 'F' ? 'ela' : 'ele'}.
-                    Caso contrário, se {inputs?.sexo === 'F' ? 'ela' : 'ele'} fez ou está em tratamento, podemos cuidar {inputs?.sexo === 'F' ? 'dela' : 'dele'}.
+                    {"Se "}{inputs?.sexo === 'F' ? 'ela' : 'ele'}{" n\u00e3o fez nenhum tratamento recente, "}
+                    <strong>{"PARAB\u00c9NS!"}</strong>{" Vida que segue muito bem para "}{inputs?.sexo === 'F' ? 'ela' : 'ele'}{". Caso contr\u00e1rio, se "}{inputs?.sexo === 'F' ? 'ela' : 'ele'}{" fez ou est\u00e1 em tratamento, podemos cuidar "}{inputs?.sexo === 'F' ? 'dela' : 'dele'}{"."}
                   </p>
                 </div>
               ) : (
-                /* ERITRON NORMAL - MODO PACIENTE */
                 <div className="space-y-2">
                   <p className="text-sm font-bold text-blue-900">
-                    ✨ Aparentemente seus exames estão bem
+                    {"\u2728 Aparentemente seus exames est\u00e3o bem"}
                   </p>
                   <p className="text-sm text-blue-900 leading-relaxed">
-                    Mas ainda assim eles não revelariam uma <strong>baixa reserva</strong> ou
-                    <strong> excesso de ferro</strong>. Recomendamos que você traga a
-                    <strong> FERRITINA</strong> e a <strong>SATURAÇÃO DA TRANSFERRINA</strong>.
+                    {"Mas ainda assim eles n\u00e3o revelariam uma "}<strong>baixa reserva</strong>{" ou "}
+                    <strong>excesso de ferro</strong>{". Recomendamos que voc\u00ea traga a "}
+                    <strong>FERRITINA</strong>{" e a "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{"."}
                   </p>
                   <p className="text-sm text-blue-900 leading-relaxed">
-                    Se você não fez nenhum tratamento recente,
-                    <strong> PARABÉNS!</strong> Vida que segue muito bem para você.
-                    Caso contrário, se você fez ou está em tratamento, cuidaremos de você.
+                    {"Se voc\u00ea n\u00e3o fez nenhum tratamento recente, "}
+                    <strong>{"PARAB\u00c9NS!"}</strong>{" Vida que segue muito bem para voc\u00ea. Caso contr\u00e1rio, se voc\u00ea fez ou est\u00e1 em tratamento, cuidaremos de voc\u00ea."}
                   </p>
                 </div>
               )
             ) : modoMedico ? (
               <div>
                 <p className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-2">
-                  🩺 IMPORTANTE
+                  {"\ud83e\ude7a IMPORTANTE"}
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed">
-                  Para entender melhor o eritron, precisamos da <strong>FERRITINA</strong> e da <strong>SATURAÇÃO DA TRANSFERRINA [%]</strong>. Solicite esses exames e lance aqui os resultados, ou encaminhe o/a paciente para que se cadastre na plataforma, nos solicite o pedido desses exames, e lance os resultados. Nós faremos a análise e retornaremos a você com a conclusão.
+                  {"Para entender melhor o eritron, precisamos da "}<strong>FERRITINA</strong>{" e da "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA [%]"}</strong>{". Solicite esses exames e lance aqui os resultados, ou encaminhe o/a paciente para que se cadastre na plataforma, nos solicite o pedido desses exames, e lance os resultados. N\u00f3s faremos a an\u00e1lise e retornaremos a voc\u00ea com a conclus\u00e3o."}
                 </p>
               </div>
             ) : isDemo ? (
               <div>
                 <p className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-2">
-                  ✨ Aprofundar Diagnóstico
+                  {"\u2728 Aprofundar Diagn\u00f3stico"}
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed mb-2">
-                  Para um diagnóstico mais preciso, você precisa NO MÍNIMO de
-                  <strong> FERRITINA</strong> e <strong>SATURAÇÃO DA TRANSFERRINA</strong>.
-                  São de baixo custo, resultados rápidos, normalmente cobertos
-                  por planos de saúde.
+                  {"Para um diagn\u00f3stico mais preciso, voc\u00ea precisa NO M\u00cdNIMO de "}
+                  <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{". S\u00e3o de baixo custo, resultados r\u00e1pidos, normalmente cobertos por planos de sa\u00fade."}
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed">
-                  Ao se cadastrar aqui você terá <strong>acompanhamento por 1 ano</strong>,
-                  e esse <strong>primeiro pedido de exames será gratuito</strong>.
+                  {"Ao se cadastrar aqui voc\u00ea ter\u00e1 "}<strong>acompanhamento por 1 ano</strong>{", e esse "}<strong>{"primeiro pedido de exames ser\u00e1 gratuito"}</strong>{"."}
                 </p>
               </div>
             ) : (
               <div>
                 <p className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-2">
-                  ✨ Aprofundar Diagnóstico
+                  {"\u2728 Aprofundar Diagn\u00f3stico"}
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed">
-                  Para um diagnóstico mais preciso, é necessário fazer
-                  <strong> FERRITINA</strong> e <strong>SATURAÇÃO DA TRANSFERRINA</strong>.
-                  São de baixo custo, resultados rápidos, normalmente cobertos
-                  por planos de saúde. Solicite esses exames e traga os
-                  resultados aqui para uma avaliação completa.
+                  {"Para um diagn\u00f3stico mais preciso, \u00e9 necess\u00e1rio fazer "}
+                  <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{". S\u00e3o de baixo custo, resultados r\u00e1pidos, normalmente cobertos por planos de sa\u00fade. Solicite esses exames e traga os resultados aqui para uma avalia\u00e7\u00e3o completa."}
                 </p>
               </div>
             )}
           </div>
 
-          {/* Bloco amber bariatrica - so quando bariatrica e mostraCadastroBtn (paciente novo) */}
+          {/* Bloco amber bariatrica */}
           {inputs?.bariatrica === true && showCadastroBtn && (
             <div className="rounded-xl border border-amber-300 bg-amber-50 p-4">
               <p className="text-sm text-amber-900 leading-relaxed">
-                Normalmente, a partir daqui, gravamos essas informações e pedimos ao paciente que retorne depois com FERRITINA e SATURAÇÃO DA TRANSFERRINA.
+                {"Normalmente, a partir daqui, gravamos essas informa\u00e7\u00f5es e pedimos ao paciente que retorne depois com FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA."}
                 <br /><br />
-                Mas como <strong>você é {inputs?.sexo === 'F' ? 'bariátrica' : 'bariátrico'}</strong>, recomendamos o seu <strong>CADASTRO</strong> na plataforma, passando pela <strong>ANAMNESE</strong> completa. De lá vamos solicitar esses e outros exames para entender você, e tornar a sua vida melhor.
+                {"Mas como "}<strong>{"voc\u00ea \u00e9 "}{inputs?.sexo === 'F' ? "bari\u00e1trica" : "bari\u00e1trico"}</strong>{", recomendamos o seu "}<strong>CADASTRO</strong>{" na plataforma, passando pela "}<strong>ANAMNESE</strong>{" completa. De l\u00e1 vamos solicitar esses e outros exames para entender voc\u00ea, e tornar a sua vida melhor."}
               </p>
             </div>
           )}
 
-          {/* Frase rosa gestante - so quando F e gestante */}
+          {/* Frase rosa gestante */}
           {inputs?.sexo === 'F' && inputs?.gestante === true && (
             <div className="rounded-xl border border-pink-200 bg-pink-50 p-4">
               <p className="text-sm text-pink-900 leading-relaxed">
                 {modoMedico ? (
-                  <>Lembre à sua paciente que <strong>gravidez e amamentação</strong> demandam muito <strong>ferro, vitaminas e minerais</strong> — é preciso estar com boas reservas.</>
+                  <>{"Lembre \u00e0 sua paciente que "}<strong>{"gravidez e amamenta\u00e7\u00e3o"}</strong>{" demandam muito "}<strong>{"ferro, vitaminas e minerais"}</strong>{" \u2014 \u00e9 preciso estar com boas reservas."}</>
                 ) : (
-                  <><strong>Gravidez e amamentação</strong> demandam muito <strong>ferro, vitaminas e minerais</strong> — é preciso estar com boas reservas.</>
+                  <><strong>{"Gravidez e amamenta\u00e7\u00e3o"}</strong>{" demandam muito "}<strong>{"ferro, vitaminas e minerais"}</strong>{" \u2014 \u00e9 preciso estar com boas reservas."}</>
                 )}
               </p>
             </div>
           )}
 
-          {/* __CRM_SUBTEXTO_TELA3__ CRM do medico (logado ou prefill da landing) */}
-          {(() => {
-            let crm = medicoCRM;
-            if (!crm) { try { crm = localStorage.getItem('rf_crm_prefill') || ''; } catch(e) { crm = ''; } }
-            if (!crm) return null;
-            return (
-              <p className="text-center text-sm font-bold mt-1" style={{ color: '#1d4ed8' }}>
-                CRM {crm}
-              </p>
-            );
-          })()}
+          {/* Subtexto: SANGUE COLHIDO EM + CRM (mesma fonte, sem negrito) */}
+          {(dataColetaFmt || crmExibir) && (
+            <div className="text-center mt-3" style={{ color: '#1d4ed8', fontSize: '12px', lineHeight: 1.4 }}>
+              {dataColetaFmt && (
+                <p>
+                  {dataEstimadaFlag ? "DATA ESTIMADA \u00b7 " : ""}
+                  {"SANGUE COLHIDO EM: "}{dataColetaFmt}
+                </p>
+              )}
+              {crmExibir && (
+                <p>CRM {crmExibir}</p>
+              )}
+            </div>
+          )}
 
           {erroSalvamento && (
             <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700">
-              ⚠️ {erroSalvamento}
+              {"\u26a0\ufe0f "}{erroSalvamento}
             </div>
           )}
         </div>
@@ -528,24 +536,21 @@ export default function TriagemResultadoModal({
               <button
                 onClick={handleContinuar}
                 disabled={salvando}
-                className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
-              >
-                {salvando ? 'Salvando...' : 'Agora não'}
+                className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors text-sm disabled:opacity-50 disabled:cursor-wait">
+                {salvando ? 'Salvando...' : "Agora n\u00e3o"}
               </button>
               <button
                 onClick={handleCadastrarComSalvamento}
                 disabled={salvando}
-                className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
-              >
-                {salvando ? 'Salvando...' : 'Continuar para o cadastro →'}
+                className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait">
+                {salvando ? 'Salvando...' : <>{"Continuar para o cadastro \u2192"}</>}
               </button>
             </>
           ) : (
             <button
               onClick={handleContinuar}
               disabled={salvando}
-              className="flex-1 py-3 rounded-xl bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait"
-            >
+              className="flex-1 py-3 rounded-xl bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait">
               {salvando ? 'Salvando...' : 'Continue'}
             </button>
           )}

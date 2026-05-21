@@ -3,31 +3,34 @@ import { supabase } from '../lib/supabase'
 import { classificarValor } from '../engine/obaCutoffs'
 import logo from '../assets/logo.png'
 
-const TIPOS_CIRURGIA = ['Y DE ROUX', 'FOBI-CAPELLA', 'SLEEVE', 'BANDA GÁSTRICA AJUSTÁVEL', 'NÃO SEI']
+const TIPOS_CIRURGIA = ['Y DE ROUX', 'FOBI-CAPELLA', 'SLEEVE', "BANDA G\u00c1STRICA AJUST\u00c1VEL", "N\u00c3O SEI"]
 
 const ACOMPANHAMENTO_OPS = [
-  'FAÇO ACOMPANHAMENTO MÉDICO E REPOSIÇÕES',
-  'FIZ ACOMPANHAMENTO MAS PAREI',
-  'NÃO FIZ ACOMPANHAMENTO NEM REPOSIÇÕES',
-  'NÃO FAÇO ACOMPANHAMENTO MÉDICO',
+  "FA\u00c7O ACOMPANHAMENTO M\u00c9DICO E REPOSI\u00c7\u00d5ES",
+  "FIZ ACOMPANHAMENTO MAS PAREI",
+  "N\u00c3O FIZ ACOMPANHAMENTO NEM REPOSI\u00c7\u00d5ES",
+  "N\u00c3O FA\u00c7O ACOMPANHAMENTO M\u00c9DICO",
 ]
 
 const ESPECIALISTAS = [
-    'CIRURGIÃO', 'CLÍNICO', 'HEMATOLOGISTA', 'GASTROENTEROLOGISTA', 'NUTRÓLOGO', 'ENDOCRINOLOGISTA', 'CARDIOLOGISTA', 'NEUROLOGISTA', 'PSIQUIATRA', 'REUMATOLOGISTA', 'ORTOPEDISTA', 'GINECOLOGISTA', 'PNEUMOLOGISTA', 'NEFROLOGISTA', 'UROLOGISTA', 'DERMATOLOGISTA', 'OUTRO'
-  ]
+  "CIRURGI\u00c3O", "CL\u00cdNICO", "HEMATOLOGISTA", "GASTROENTEROLOGISTA", "NUTR\u00d3LOGO",
+  "ENDOCRINOLOGISTA", "CARDIOLOGISTA", "NEUROLOGISTA", "PSIQUIATRA", "REUMATOLOGISTA",
+  "ORTOPEDISTA", "GINECOLOGISTA", "PNEUMOLOGISTA", "NEFROLOGISTA", "UROLOGISTA",
+  "DERMATOLOGISTA", "OUTRO"
+]
 
 const STATUS_GLICEMICO_OPS = [
-  'NÃO ERA E NÃO SOU DIABÉTICO',
-  'ERA DIABÉTICO E FUI CURADO',
-  'ERA DIABÉTICO E CONTINUO DIABÉTICO',
-  'NÃO ERA, MAS FIQUEI DIABÉTICO APÓS A CIRURGIA',
-  'APRESENTO EPISÓDIOS DE DUMPING',
+  "N\u00c3O ERA E N\u00c3O SOU DIAB\u00c9TICO",
+  "ERA DIAB\u00c9TICO E FUI CURADO",
+  "ERA DIAB\u00c9TICO E CONTINUO DIAB\u00c9TICO",
+  "N\u00c3O ERA, MAS FIQUEI DIAB\u00c9TICO AP\u00d3S A CIRURGIA",
+  "APRESENTO EPIS\u00d3DIOS DE DUMPING",
 ]
 
 const STATUS_PRESSORICO_OPS = [
-  'NÃO SOU HIPERTENSO',
-  'SOU HIPERTENSO CONTROLADO',
-  'SOU HIPERTENSO MAL CONTROLADO',
+  "N\u00c3O SOU HIPERTENSO",
+  "SOU HIPERTENSO CONTROLADO",
+  "SOU HIPERTENSO MAL CONTROLADO",
 ]
 
 const STATUS_ENDOSCOPICO_OPS = [
@@ -40,118 +43,118 @@ const STATUS_ENDOSCOPICO_OPS = [
 ]
 
 const STATUS_NEUROLOGICO_OPS = [
-  'SEM QUEIXAS',
-  'SEQUELA MOTORA',
-  'DISTÚRBIO DA FALA',
-  'DORMÊNCIAS | FORMIGAMENTOS',
-  'ENXAQUECAS',
-  'PERDA DE SENSIBILIDADE',
-  'PERDA AUDITIVA',
-  'PERDA DE OLFATO',
-  'COMPROMETIMENTO DA VISÃO',
-  'DÉFICIT DE MEMÓRIA',
+  "SEM QUEIXAS",
+  "SEQUELA MOTORA",
+  "DIST\u00daRBIO DA FALA",
+  "DORM\u00caNCIAS | FORMIGAMENTOS",
+  "ENXAQUECAS",
+  "PERDA DE SENSIBILIDADE",
+  "PERDA AUDITIVA",
+  "PERDA DE OLFATO",
+  "COMPROMETIMENTO DA VIS\u00c3O",
+  "D\u00c9FICIT DE MEM\u00d3RIA",
 ]
 
-const ATIVIDADES = ['SEDENTÁRIO', 'CAMINHADAS', 'ACADEMIA', 'ACADEMIA COM PERSONAL', 'HIDROGINÁSTICA', 'FISIOTERAPIA', 'PRÁTICA ESPORTIVA']
+const ATIVIDADES = ["SEDENT\u00c1RIO", "CAMINHADAS", "ACADEMIA", "ACADEMIA COM PERSONAL", "HIDROGIN\u00c1STICA", "FISIOTERAPIA", "PR\u00c1TICA ESPORTIVA"]
 
 const PROJETOS = [
-  'PRETENDO FAZER CIRURGIA PLÁSTICA',
-  'PRETENDO FAZER REABILITAÇÃO',
-  'PRETENDO MELHORAR MINHA AUTOESTIMA',
-  'PRETENDO TER FILHO',
-  'PRETENDO UM EMPREGO NOVO',
-  'PRETENDO ABRIR UM NEGÓCIO',
-  'PRETENDO ESTUDAR',
-  'PRETENDO MANTER A MINHA ATIVIDADE FÍSICA',
-  'PRETENDO AUMENTAR A MINHA ATIVIDADE FÍSICA',
-  'PRETENDO PRATICAR UM ESPORTE',
-  'PRETENDO VIAJAR MAIS',
-  'PRETENDO AJUDAR OUTRAS PESSOAS',
+  "PRETENDO FAZER CIRURGIA PL\u00c1STICA",
+  "PRETENDO FAZER REABILITA\u00c7\u00c3O",
+  "PRETENDO MELHORAR MINHA AUTOESTIMA",
+  "PRETENDO TER FILHO",
+  "PRETENDO UM EMPREGO NOVO",
+  "PRETENDO ABRIR UM NEG\u00d3CIO",
+  "PRETENDO ESTUDAR",
+  "PRETENDO MANTER A MINHA ATIVIDADE F\u00cdSICA",
+  "PRETENDO AUMENTAR A MINHA ATIVIDADE F\u00cdSICA",
+  "PRETENDO PRATICAR UM ESPORTE",
+  "PRETENDO VIAJAR MAIS",
+  "PRETENDO AJUDAR OUTRAS PESSOAS",
 ]
 
 const COMPULSOES = [
-    'DOCES', 'COMIDA', 'GELO', 'ÁLCOOL', 'JOGO', 'TRABALHO', 'CIGARRO / TABACO', 'CANNABIS', 'OUTRA'
-  ]
+  "DOCES", "COMIDA", "GELO", "\u00c1LCOOL", "JOGO", "TRABALHO", "CIGARRO / TABACO", "CANNABIS", "OUTRA"
+]
 
 const MEDICAMENTOS = [
-  'FERRO ORAL', 'FERRO INJETÁVEL (EV/IM)', 'VIT. B12 INTRAMUSCULAR', 'VIT. B12 SUBLINGUAL', 'POLIVITAMÍNICO ORAL',
-  'ANTICOAGULANTE',
-  'ANTIDEPRESSIVO', 'REMÉDIO PARA DORMIR', 'LAXANTES', 'REMÉDIO PARA PRESSÃO',
-  'REMÉDIO PARA DORES', 'REMÉDIO PARA BAIXAR A GLICEMIA', 'REMÉDIO PARA COLESTEROL', 'REMÉDIO PARA TRIGLICÉRIDES',
-  'TOPIRAMATO', 'FENTERMINA', 'NALTREXONA', 'BUPROPIONA', 'ORLISTAT (XENICAL)',
-  'DOMPERIDONA (MOTILIUM)', 'BROMOPRIDA',
+  "FERRO ORAL", "FERRO INJET\u00c1VEL (EV/IM)", "VIT. B12 INTRAMUSCULAR", "VIT. B12 SUBLINGUAL", "POLIVITAM\u00cdNICO ORAL",
+  "ANTICOAGULANTE",
+  "ANTIDEPRESSIVO", "REM\u00c9DIO PARA DORMIR", "LAXANTES", "REM\u00c9DIO PARA PRESS\u00c3O",
+  "REM\u00c9DIO PARA DORES", "REM\u00c9DIO PARA BAIXAR A GLICEMIA", "REM\u00c9DIO PARA COLESTEROL", "REM\u00c9DIO PARA TRIGLIC\u00c9RIDES",
+  "TOPIRAMATO", "FENTERMINA", "NALTREXONA", "BUPROPIONA", "ORLISTAT (XENICAL)",
+  "DOMPERIDONA (MOTILIUM)", "BROMOPRIDA",
 ]
 
 const EMAGRECEDORES = ['Ozempic', 'Rybelsus', 'Wegovy', 'Mounjaro', 'Saxenda', 'Victoza', 'Trulicity', 'Xultophi']
 
 const STATUS_INTESTINAL_OPS = [
-  'INTESTINO FUNCIONA BEM',
-  'OBSTIPAÇÃO CRÔNICA (PRISÃO DE VENTRE)',
-  'INTESTINO IRRITÁVEL (DIARREIA FREQUENTE)',
+  "INTESTINO FUNCIONA BEM",
+  "OBSTIPA\u00c7\u00c3O CR\u00d4NICA (PRIS\u00c3O DE VENTRE)",
+  "INTESTINO IRRIT\u00c1VEL (DIARREIA FREQUENTE)",
 ]
 
 const STATUS_FIBROMIALGIA_OPS = [
-  'TENHO FIBROMIALGIA DIAGNOSTICADA',
-  'OBSTIPAÇÃO CRÔNICA',
-  'DORES NO CORPO',
-  'DOR DE CABEÇA / ENXAQUECAS',
-  'INSÔNIA',
-  'PROBLEMAS DE MEMÓRIA',
-  'DIFICULDADE DE CONCENTRAÇÃO',
-  'DEPRESSÃO OU MELANCOLIA',
-  'ZUMBIDOS',
-  'DESEQUILÍBRIO',
-  'VARIAÇÃO DO HUMOR',
-  'SINTO FRIO OU CALOR EXCESSIVO',
-  'EM USO DE GABAPENTINA','EM USO DE PREGABALINA',
+  "TENHO FIBROMIALGIA DIAGNOSTICADA",
+  "OBSTIPA\u00c7\u00c3O CR\u00d4NICA",
+  "DORES NO CORPO",
+  "DOR DE CABE\u00c7A / ENXAQUECAS",
+  "INS\u00d4NIA",
+  "PROBLEMAS DE MEM\u00d3RIA",
+  "DIFICULDADE DE CONCENTRA\u00c7\u00c3O",
+  "DEPRESS\u00c3O OU MELANCOLIA",
+  "ZUMBIDOS",
+  "DESEQUIL\u00cdBRIO",
+  "VARIA\u00c7\u00c3O DO HUMOR",
+  "SINTO FRIO OU CALOR EXCESSIVO",
+  "EM USO DE GABAPENTINA", "EM USO DE PREGABALINA",
 ]
 
 const EXAMES_BASE = [
-  { key: 'leucocitos',     label: 'Leucócitos (Total)',       unit: '/uL',    ref: '4.000–11.000', hint: 'Sem ponto ou vírgula. Ex: 7500' },
-  { key: 'neutrofilos',    label: 'Neutrófilos Segmentados',  unit: '%',      ref: '40–70%' },
-  { key: 'neutrofilos_ul', label: 'Neutrófilos (calculado)',  unit: '/uL',    ref: '1.800–7.700', readOnly: true },
-  { key: 'plaquetas',      label: 'Plaquetas',                unit: 'x1000/µL', ref: '150–400', hint: 'Ex: 250 = 250.000/µL' },
-  { key: 'ferritina_oba',  label: 'Ferritina',                unit: 'ng/mL',  ref: 'H: 24–336 / F: 25–150' },
-  { key: 'vitamina_b12',   label: 'Vitamina B12',             unit: 'pg/mL',  ref: '300–900 (bari: >300)' },
-  { key: 'vitamina_d',     label: 'Vitamina D 25-OH',         unit: 'ng/mL',  ref: '30–100 (bari: >30)' },
-  { key: 'tsh',            label: 'TSH',                      unit: 'mUI/L',  ref: '0,4–4,5' },
+  { key: 'leucocitos',     label: "Leuc\u00f3citos (Total)",       unit: '/uL',    ref: "4.000\u201311.000", hint: "Sem ponto ou v\u00edrgula. Ex: 7500" },
+  { key: 'neutrofilos',    label: "Neutr\u00f3filos Segmentados",  unit: '%',      ref: "40\u201370%" },
+  { key: 'neutrofilos_ul', label: "Neutr\u00f3filos (calculado)",  unit: '/uL',    ref: "1.800\u20137.700", readOnly: true },
+  { key: 'plaquetas',      label: 'Plaquetas',                unit: "x1000/\u00b5L", ref: "150\u2013400", hint: 'Ex: 250 = 250.000/\u00b5L' },
+  { key: 'ferritina_oba',  label: 'Ferritina',                unit: 'ng/mL',  ref: "H: 24\u2013336 / F: 25\u2013150" },
+  { key: 'vitamina_b12',   label: 'Vitamina B12',             unit: 'pg/mL',  ref: "300\u2013900 (bari: >300)" },
+  { key: 'vitamina_d',     label: 'Vitamina D 25-OH',         unit: 'ng/mL',  ref: "30\u2013100 (bari: >30)" },
+  { key: 'tsh',            label: 'TSH',                      unit: 'mUI/L',  ref: "0,4\u20134,5" },
   { key: 'hb_glicada',     label: 'Hb Glicada',               unit: '%',      ref: '<5,7%' },
-  { key: 'glicemia',       label: 'Glicemia (jejum)',          unit: 'mg/dL',  ref: '70–99' },
-  { key: 'insulina',       label: 'Insulina (jejum)',          unit: 'µUI/mL', ref: '2–15' },
+  { key: 'glicemia',       label: 'Glicemia (jejum)',          unit: 'mg/dL',  ref: "70\u201399" },
+  { key: 'insulina',       label: 'Insulina (jejum)',          unit: "\u00b5UI/mL", ref: "2\u201315" },
   { key: 'colesterol_total', label: 'Colesterol Total',         unit: 'mg/dL',  ref: '<190' },
   { key: 'hdl',             label: 'HDL Colesterol',            unit: 'mg/dL',  ref: 'H: >40 / F: >50' },
   { key: 'ldl',             label: 'LDL Colesterol',            unit: 'mg/dL',  ref: '<130 (ideal <100)' },
   { key: 'vldl',            label: 'VLDL Colesterol',           unit: 'mg/dL',  ref: '<30' },
-  { key: 'lipoproteina_a',  label: 'Lipoproteína A (LpA)',      unit: 'mg/dL',  ref: '<30 (ótimo <14)' },
-  { key: 'apolipoproteina_b', label: 'Apolipoproteína B',       unit: 'mg/dL',  ref: '<100 (alto risco: >130)' },
-  { key: 'triglicerides',  label: 'Triglicérides',            unit: 'mg/dL',  ref: '<150' },
+  { key: 'lipoproteina_a',  label: "Lipoprote\u00edna A (LpA)",      unit: 'mg/dL',  ref: "<30 (\u00f3timo <14)" },
+  { key: 'apolipoproteina_b', label: "Apolipoprote\u00edna B",       unit: 'mg/dL',  ref: '<100 (alto risco: >130)' },
+  { key: 'triglicerides',  label: "Triglic\u00e9rides",            unit: 'mg/dL',  ref: '<150' },
   { key: 'ast',            label: 'AST (TGO)',                 unit: 'U/L',    ref: 'H: <40 / F: <32' },
   { key: 'alt',            label: 'ALT (TGP)',                 unit: 'U/L',    ref: 'H: <56 / F: <35' },
   { key: 'gama_gt',        label: 'Gama-GT',                  unit: 'U/L',    ref: 'H: <61 / F: <36' },
-  { key: 'creatinina',     label: 'Creatinina',               unit: 'mg/dL',  ref: 'H: 0,7–1,2 / F: 0,5–1,0' },
-  { key: 'acido_urico',    label: 'Ácido Úrico',              unit: 'mg/dL',  ref: 'H: 3,4–7,0 / F: 2,4–6,0' },
-  { key: 'folatos',        label: 'Folatos séricos',           unit: 'ng/mL',  ref: '4,0–20,0' },
-  { key: 'zinco',          label: 'Zinco sérico',              unit: 'µg/dL',  ref: '70–120' },
-  { key: 'vitamina_d',     label: 'Vitamina D (25-OH)',        unit: 'ng/mL',  ref: '30–100' },
-  { key: 'pth',            label: 'PTH',                       unit: 'pg/mL',  ref: '15–65' },
-  { key: 'calcio_ionico',  label: 'Cálcio iônico',             unit: 'mmol/L', ref: '1,15–1,32' },
-  { key: 'magnesio',       label: 'Magnésio',                  unit: 'mg/dL',  ref: '1,7–2,4' },
+  { key: 'creatinina',     label: 'Creatinina',               unit: 'mg/dL',  ref: "H: 0,7\u20131,2 / F: 0,5\u20131,0" },
+  { key: 'acido_urico',    label: "\u00c1cido \u00darico",              unit: 'mg/dL',  ref: "H: 3,4\u20137,0 / F: 2,4\u20136,0" },
+  { key: 'folatos',        label: "Folatos s\u00e9ricos",           unit: 'ng/mL',  ref: "4,0\u201320,0" },
+  { key: 'zinco',          label: "Zinco s\u00e9rico",              unit: "\u00b5g/dL",  ref: "70\u2013120" },
+  { key: 'vitamina_d',     label: 'Vitamina D (25-OH)',        unit: 'ng/mL',  ref: "30\u2013100" },
+  { key: 'pth',            label: 'PTH',                       unit: 'pg/mL',  ref: "15\u201365" },
+  { key: 'calcio_ionico',  label: "C\u00e1lcio i\u00f4nico",             unit: 'mmol/L', ref: "1,15\u20131,32" },
+  { key: 'magnesio',       label: "Magn\u00e9sio",                  unit: 'mg/dL',  ref: "1,7\u20132,4" },
   { key: 'colesterol_total', label: 'Colesterol Total',        unit: 'mg/dL',  ref: '<200' },
   { key: 'ldl_c',            label: 'LDL-c',                   unit: 'mg/dL',  ref: '<100' },
-  { key: 'hdl_c',            label: 'HDL-c',                   unit: 'mg/dL',  ref: 'M ≥40 / F ≥50' },
-  { key: 'triglicerides',    label: 'Triglicérides',           unit: 'mg/dL',  ref: '<150' },
+  { key: 'hdl_c',            label: 'HDL-c',                   unit: 'mg/dL',  ref: "M \u226540 / F \u226550" },
+  { key: 'triglicerides',    label: "Triglic\u00e9rides",           unit: 'mg/dL',  ref: '<150' },
   { key: 'lpa',              label: 'Lp(a)',                   unit: 'mg/dL',  ref: '<30' },
   { key: 'apob',             label: 'ApoB',                    unit: 'mg/dL',  ref: '<90' },
-  { key: 'apoa',             label: 'ApoA',                    unit: 'mg/dL',  ref: 'M ≥120 / F ≥140' },
+  { key: 'apoa',             label: 'ApoA',                    unit: 'mg/dL',  ref: "M \u2265120 / F \u2265140" },
   { key: 'sdldl',            label: 'sdLDL',                   unit: 'mg/dL',  ref: '<30' },
-  { key: 'vitamina_a',     label: 'Vitamina A (Retinol)',      unit: 'µg/dL',  ref: '20–77' },
-  { key: 'vitamina_e',     label: 'Vitamina E (Tocoferol)',    unit: 'mg/L',   ref: '5–18' },
-  { key: 'tiamina',        label: 'Tiamina (B1)',              unit: 'nmol/L', ref: '70–180' },
-  { key: 'selenio',        label: 'Selênio',                   unit: 'µg/L',   ref: '63–160' },
-  { key: 'vitamina_c',     label: 'Vitamina C',                unit: 'mg/dL',  ref: '0,4–2,0' },
-  { key: 'vitamina_k',     label: 'Vitamina K',                unit: 'ng/mL',  ref: '0,2–3,2' },
-  { key: 'niacina',        label: 'Niacina (B3)',              unit: 'µg/mL',  ref: '0,5–8,9' },
-  { key: 'testosterona',   label: 'Testosterona Total',        unit: 'ng/dL',  ref: 'H: 300–1.000 / F: 15–70' },
+  { key: 'vitamina_a',     label: 'Vitamina A (Retinol)',      unit: "\u00b5g/dL",  ref: "20\u201377" },
+  { key: 'vitamina_e',     label: 'Vitamina E (Tocoferol)',    unit: 'mg/L',   ref: "5\u201318" },
+  { key: 'tiamina',        label: 'Tiamina (B1)',              unit: 'nmol/L', ref: "70\u2013180" },
+  { key: 'selenio',        label: "Sel\u00eanio",                   unit: "\u00b5g/L",   ref: "63\u2013160" },
+  { key: 'vitamina_c',     label: 'Vitamina C',                unit: 'mg/dL',  ref: "0,4\u20132,0" },
+  { key: 'vitamina_k',     label: 'Vitamina K',                unit: 'ng/mL',  ref: "0,2\u20133,2" },
+  { key: 'niacina',        label: 'Niacina (B3)',              unit: "\u00b5g/mL",  ref: "0,5\u20138,9" },
+  { key: 'testosterona',   label: 'Testosterona Total',        unit: 'ng/dL',  ref: "H: 300\u20131.000 / F: 15\u201370" },
 ]
 
 const EXAMES_HOMEM_40 = [
@@ -165,7 +168,6 @@ const EXAMES_MULHER_40 = [
   { key: 'estradiol', label: 'Estradiol', unit: 'pg/mL', ref: 'varia por fase do ciclo' },
 ]
 
-// ── Componentes reutilizáveis ──────────────────────────────────────────────
 function Radio16({ active }) {
   return (
     <div style={{ width:16, height:16, borderRadius:'50%', border:`2px solid ${active ? '#DC2626' : '#D1D5DB'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -225,28 +227,21 @@ const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.75
 const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, boxShadow:'0 20px 60px rgba(0,0,0,0.3)', marginBottom:'2rem', boxSizing:'border-box' }
 const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PROPS:
-//   sexo, cpf, idade  — dados do paciente já preenchidos na calculadora
-//   onConcluir(dadosOBA, examesOBA) — callback com os dados para o obaEngine
-//   onFechar()        — fecha sem salvar
-// ─────────────────────────────────────────────────────────────────────────────
+
 export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFairy, onConcluir, onFechar }) {
   const [etapa, setEtapa] = useState('anamnese')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
 
-  // Dados da anamnese já salvos (passados para etapa 2)
   const [anamneseSalva, setAnamneseSalva] = useState(null)
 
   const saudacao = sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo'
 
-  // Pre-marca ferro oral/injetavel se ja selecionado no Calculator
   useEffect(() => {
     if (!dadosRedFairy) return
     const novosMeds = []
     if (dadosRedFairy.ferro_oral)      novosMeds.push('FERRO ORAL')
-    if (dadosRedFairy.ferro_injetavel) novosMeds.push('FERRO INJETÁVEL (EV/IM)')
+    if (dadosRedFairy.ferro_injetavel) novosMeds.push("FERRO INJET\u00c1VEL (EV/IM)")
     if (novosMeds.length > 0) {
       setForm(prev => ({
         ...prev,
@@ -262,7 +257,6 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
 
   const [alertaPeso, setAlertaPeso] = useState(null)
 
-  // Item 4 — handler de onBlur do peso_atual
   const handlePesoAtualBlur = () => {
     const atual = parseFloat(form.peso_atual)
     const minimo = parseFloat(form.peso_minimo_pos)
@@ -298,18 +292,16 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     compulsoes: [], medicamentos: [], emagrecedores: {},
   })
 
-  // Fase 1: pre-preenche Status Gestacional se vier da RedFairy
   useEffect(() => {
     if (dadosRedFairy?.gestante) {
       setForm(prev => ({
         ...prev,
-        status_gestacional: prev.status_gestacional || 'GRÁVIDA',
+        status_gestacional: prev.status_gestacional || "GR\u00c1VIDA",
         semanas_gestacao: prev.semanas_gestacao || (dadosRedFairy.semanas_gestacao ? String(dadosRedFairy.semanas_gestacao) : ''),
       }))
     }
   }, [dadosRedFairy])
 
-  // Fase 3: quando marca 'Tenho exames da mesma data', pre-preenche dataExames
   useEffect(() => {
     if (form.temExamesMesmaData && examesRedFairy?.dataColeta && !dataExames) {
       setDataExames(examesRedFairy.dataColeta)
@@ -396,7 +388,6 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
   function handleExameChange(key, value) {
     setExames(prev => {
       const novo = { ...prev, [key]: value }
-      // Calcular neutrófilos absolutos automaticamente
       const leuco = parseFloat(key === 'leucocitos' ? value : prev.leucocitos)
       const neutPct = parseFloat(key === 'neutrofilos' ? value : prev.neutrofilos)
       if (!isNaN(leuco) && !isNaN(neutPct) && leuco > 0 && neutPct > 0) {
@@ -430,16 +421,15 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
   const kgGanhou   = (!isNaN(pesoMin) && !isNaN(pesoAtual) && pesoAtual > pesoMin) ? pesoAtual - pesoMin : null
 
   function toggleAtividade(val) {
-    if (val === 'SEDENTÁRIO') sf('atividade_fisica', form.atividade_fisica.includes('SEDENTÁRIO') ? [] : ['SEDENTÁRIO'])
-    else if (!form.atividade_fisica.includes('SEDENTÁRIO')) sf('atividade_fisica', tog(form.atividade_fisica, val))
+    if (val === "SEDENT\u00c1RIO") sf('atividade_fisica', form.atividade_fisica.includes("SEDENT\u00c1RIO") ? [] : ["SEDENT\u00c1RIO"])
+    else if (!form.atividade_fisica.includes("SEDENT\u00c1RIO")) sf('atividade_fisica', tog(form.atividade_fisica, val))
   }
 
-  // ── Monta objeto dadosOBA para o obaEngine ────────────────────────────────
   function buildDadosOBA() {
     return {
       sexo,
       idade: idadeNum,
-      tipo_cirurgia:      form.tipo_cirurgia || 'NÃO SEI',
+      tipo_cirurgia:      form.tipo_cirurgia || "N\u00c3O SEI",
       meses_pos_cirurgia: mesesPos || 0,
       peso_antes:         pesoAntes || null,
       peso_atual:         pesoAtual || null,
@@ -481,14 +471,12 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     }
   }
 
-  // ── Monta objeto examesOBA para o obaEngine ───────────────────────────────
   function buildExamesOBA() {
     return Object.fromEntries(
       todosExames.map(e => [e.key, exames[e.key] ? parseFloat(exames[e.key]) : null])
     )
   }
 
-  // ── Salvar anamnese e avançar para exames ─────────────────────────────────
   async function salvarAnamnese() {
     setErro('')
     if (!form.cirurgia_ano || !calcMesesPos()) {
@@ -498,7 +486,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       setErro('Selecione o tipo de cirurgia.'); return
     }
     if (!form.acompanhamento) {
-      setErro('Selecione a opção de acompanhamento.'); return
+      setErro("Selecione a op\u00e7\u00e3o de acompanhamento."); return
     }
     setLoading(true)
 
@@ -559,12 +547,10 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     setEtapa('exames')
   }
 
-  // ── Salvar exames e chamar onConcluir com TUDO ────────────────────────────
   async function salvarExames() {
     setLoading(true)
     const examesObj = buildExamesOBA()
 
-    // Atualiza o registro mais recente com os exames (pelo CPF)
     if (cpf) {
       const cpfLimpo = cpf.replace(/\D/g, '')
       const { data: rows } = await supabase
@@ -584,19 +570,16 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     }
 
     setLoading(false)
-    // Entrega os dados diretamente para o Calculator, sem nova busca no Supabase
     onConcluir(buildDadosOBA(), examesObj)
   }
 
-  // ── Pular exames — entrega só a anamnese ─────────────────────────────────
   function pularExames() {
     onConcluir(buildDadosOBA(), {})
   }
 
-  // ── HEADER ───────────────────────────────────────────────────────────────
   const Header = ({ sub }) => (
     <div style={HD}>
-      <button onClick={onFechar} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:8, color:'white', fontSize:'0.8rem', fontWeight:700, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>← Voltar</button>
+      <button onClick={onFechar} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:8, color:'white', fontSize:'0.8rem', fontWeight:700, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
       <img src={logo} alt="OBA" style={{ width:40, height:40, objectFit:'contain', filter:'brightness(10)' }} />
       <div>
         <h2 style={{ color:'white', fontSize:'1.2rem', fontWeight:800, margin:0 }}>{saudacao} ao Projeto OBA!</h2>
@@ -605,29 +588,26 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     </div>
   )
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // ETAPA 2: EXAMES
-  // ════════════════════════════════════════════════════════════════════════════
+
   if (etapa === 'exames') return (
     <div style={OV} onClick={pularExames}>
       <div style={CD} onClick={e => e.stopPropagation()}>
-        <Header sub="Exames Complementares — etapa final" />
+        <Header sub={"Exames Complementares \u2014 etapa final"} />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
           <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
             <p style={{ fontSize:'0.8rem', fontWeight:700, color:'#166534', margin:0 }}>
-              ✓ Anamnese salva com sucesso!
+              {"\u2713 Anamnese salva com sucesso!"}
             </p>
             <p style={{ fontSize:'0.75rem', color:'#15803D', marginTop:'0.3rem' }}>
-              Preencha os exames que tiver em mãos. Pode pular se não tiver agora.
+              {"Preencha os exames que tiver em m\u00e3os. Pode pular se n\u00e3o tiver agora."}
             </p>
           </div>
 
-          {/* ── Exames já registrados no RedFairy — somente leitura ── */}
           {examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && (
             <div style={{ background:'#FEF2F2', border:'1.5px solid #DC2626', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
               <p style={{ fontSize:'0.72rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', marginBottom:'0.6rem' }}>
-                🔒 Exames registrados na avaliação RedFairy — somente leitura
+                {"\ud83d\udd12 Exames registrados na avalia\u00e7\u00e3o RedFairy \u2014 somente leitura"}
               </p>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem' }}>
                 {[
@@ -649,18 +629,10 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             </div>
           )}
 
-          {/* Fase 3: banner educativo + checkbox de exames da mesma data */}
           {examesRedFairy && examesRedFairy.dataColeta && (
             <div style={{ background:'#FDF2F8', border:'1.5px solid #F9A8D4', borderRadius:10, padding:'0.9rem 1rem', marginBottom:'1rem' }}>
               <p style={{ color:'#831843', fontSize:'0.8rem', lineHeight:'1.5', marginBottom:'0.8rem' }}>
-                Se, na data em que você realizou o hemograma inicial, também fez alguns desses exames,
-                pode inserir os resultados na plataforma. De todo modo, é recomendável repetir ou
-                complementar os exames em cerca de duas semanas, e, se desejar, podemos emitir a
-                solicitação médica mediante o pagamento de uma pequena taxa. Isso costuma valer muito
-                a pena, pois economiza tempo, reduz custos de deslocamento e evita a necessidade de
-                uma nova consulta presencial apenas para esse fim. Se preferir, a plataforma também
-                poderá disponibilizar uma teleconsulta médica, especialmente caso os exames apresentem
-                alterações mais significativas.
+                {"Se, na data em que voc\u00ea realizou o hemograma inicial, tamb\u00e9m fez alguns desses exames, pode inserir os resultados na plataforma. De todo modo, \u00e9 recomend\u00e1vel repetir ou complementar os exames em cerca de duas semanas, e, se desejar, podemos emitir a solicita\u00e7\u00e3o m\u00e9dica mediante o pagamento de uma pequena taxa. Isso costuma valer muito a pena, pois economiza tempo, reduz custos de deslocamento e evita a necessidade de uma nova consulta presencial apenas para esse fim. Se preferir, a plataforma tamb\u00e9m poder\u00e1 disponibilizar uma teleconsulta m\u00e9dica, especialmente caso os exames apresentem altera\u00e7\u00f5es mais significativas."}
               </p>
               <label style={{ display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
                 <input
@@ -670,7 +642,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
                   style={{ width:'1.1rem', height:'1.1rem', accentColor:'#DB2777' }}
                 />
                 <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#831843' }}>
-                  Tenho exames da mesma data do eritron ({examesRedFairy.dataColeta.split('-').reverse().join('/')})
+                  {"Tenho exames da mesma data do eritron ("}{examesRedFairy.dataColeta.split('-').reverse().join('/')}{")"}
                 </span>
               </label>
             </div>
@@ -681,7 +653,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           {diasExames !== null && (
             <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:8, padding:'0.5rem 0.9rem', marginTop:'0.4rem', marginBottom:'0.8rem' }}>
               <p style={{ color:'#0369A1', fontSize:'0.85rem', fontWeight:700 }}>
-                {diasExames === 0 ? 'Exames de hoje' : `Realizados há ${diasExames} dia${diasExames > 1 ? 's' : ''}`}
+                {diasExames === 0 ? 'Exames de hoje' : `Realizados h\u00e1 ${diasExames} dia${diasExames > 1 ? 's' : ''}`}
               </p>
             </div>
           )}
@@ -695,21 +667,20 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
                 {ex.hint && <span style={{ fontSize:'0.62rem', color:'#F97316' }}>{ex.hint}</span>}
                 <input
                   style={{ marginTop:'0.4rem', width:'100%', border:'1.5px solid #E5E7EB', borderRadius:6, padding:'0.35rem 0.5rem', fontSize:'0.9rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : 'white', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
-                  type="number" step="0.01" placeholder={ex.readOnly ? 'auto' : '—'}
+                  type="number" step="0.01" placeholder={ex.readOnly ? 'auto' : "\u2014"}
                   readOnly={ex.readOnly}
                   value={exames[ex.key] || ''}
                   onChange={e => !ex.readOnly && handleExameChangeOBA(ex.key, e.target.value)} />
-                {aberrantesOBA[ex.key] && <span style={{ fontSize:'0.62rem', fontWeight:700, color:'#CA8A04', marginTop:'0.2rem' }}>⚠ VALOR ABERRANTE — CONFIRME</span>}
-                {/* Fase 3: classificacao automatica do valor */}
+                {aberrantesOBA[ex.key] && <span style={{ fontSize:'0.62rem', fontWeight:700, color:'#CA8A04', marginTop:'0.2rem' }}>{"\u26a0 VALOR ABERRANTE \u2014 CONFIRME"}</span>}
                 {(() => {
                   const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
                   if (!cl) return null
                   const cores = {
                     normal:    { fundo:'#F0FDF4', borda:'#BBF7D0', texto:'#166534', rotulo:'NORMAL' },
-                    limitrofe: { fundo:'#FEFCE8', borda:'#FDE68A', texto:'#92400E', rotulo:'LIMÍTROFE' },
+                    limitrofe: { fundo:'#FEFCE8', borda:'#FDE68A', texto:'#92400E', rotulo:"LIMITROFE" },
                     alterado:  { fundo:'#FFF1F2', borda:'#FECDD3', texto:'#9F1239', rotulo:'ALTERADO' },
                   }[cl.nivel]
-                  const seta = cl.direcao === 'alto' ? ' ↑' : cl.direcao === 'baixo' ? ' ↓' : ''
+                  const seta = cl.direcao === 'alto' ? " \u2191" : cl.direcao === 'baixo' ? " \u2193" : ''
                   return (
                     <span style={{ display:'inline-block', marginTop:'0.25rem', fontSize:'0.6rem', fontWeight:700, background:cores.fundo, border:`1px solid ${cores.borda}`, color:cores.texto, padding:'0.1rem 0.4rem', borderRadius:6 }}>
                       {cores.rotulo}{seta}
@@ -723,12 +694,11 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           {idadeNum >= 40 && (
             <div style={{ background:'#FEF9EC', border:'1px solid #FDE68A', borderRadius:8, padding:'0.5rem 0.9rem', margin:'0.5rem 0' }}>
               <p style={{ color:'#92400E', fontSize:'0.78rem', fontWeight:700 }}>
-                {isFem ? '+ CEA e Estradiol (mulher ≥ 40 anos)' : '+ PSA Total, CA 19-9 e CEA (homem ≥ 40 anos)'}
+                {isFem ? "+ CEA e Estradiol (mulher \u2265 40 anos)" : "+ PSA Total, CA 19-9 e CEA (homem \u2265 40 anos)"}
               </p>
             </div>
           )}
 
-          {/* Fase 3: banner de teleconsulta se houver algum exame alterado */}
           {(() => {
             const temAlterado = todosExames.some(ex => {
               const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
@@ -738,48 +708,43 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             return (
               <div style={{ background:'#FFF1F2', border:'1.5px solid #FCA5A5', borderRadius:10, padding:'0.9rem 1rem', margin:'1rem 0' }}>
                 <p style={{ color:'#9F1239', fontSize:'0.85rem', fontWeight:700, marginBottom:'0.4rem' }}>
-                  🩺 Alguns exames apresentam alterações significativas.
+                  {"\ud83e\ude7a Alguns exames apresentam altera\u00e7\u00f5es significativas."}
                 </p>
                 <p style={{ color:'#7F1D1D', fontSize:'0.78rem', lineHeight:'1.5' }}>
-                  A plataforma pode disponibilizar uma teleconsulta médica para discussão desses
-                  resultados. Fale com seu médico assistente ou solicite a teleconsulta após finalizar
-                  esta avaliação.
+                  {"A plataforma pode disponibilizar uma teleconsulta m\u00e9dica para discuss\u00e3o desses resultados. Fale com seu m\u00e9dico assistente ou solicite a teleconsulta ap\u00f3s finalizar esta avalia\u00e7\u00e3o."}
                 </p>
               </div>
             )
           })()}
 
           <button style={btnP} onClick={salvarExames} disabled={loading}>
-            {loading ? 'Salvando...' : 'Concluir e ir para a Avaliação →'}
+            {loading ? 'Salvando...' : "Concluir e ir para a Avalia\u00e7\u00e3o \u2192"}
           </button>
           <button style={btnS} onClick={pularExames}>
-            Pular exames e ir para a Avaliação
+            {"Pular exames e ir para a Avalia\u00e7\u00e3o"}
           </button>
         </div>
       </div>
     </div>
   )
 
-  // ════════════════════════════════════════════════════════════════════════════
-  // ETAPA 1: ANAMNESE
-  // ════════════════════════════════════════════════════════════════════════════
+
   return (
     <div style={OV} onClick={onFechar}>
       <div style={CD} onClick={e => e.stopPropagation()}>
-        <Header sub="Otimizar o Bariátrico" />
+        <Header sub={"Otimizar o Bari\u00e1trico"} />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
           <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
-            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>O bariátrico é um paciente complexo.</p>
-            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>Precisamos de mais informações para cuidar de você. Marque as caixinhas e preencha os campos:</p>
+            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>{"O bari\u00e1trico \u00e9 um paciente complexo."}</p>
+            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>{"Precisamos de mais informa\u00e7\u00f5es para cuidar de voc\u00ea. Marque as caixinhas e preencha os campos:"}</p>
           </div>
 
-          {/* ── DADOS DA CIRURGIA ── */}
           <SectionTitle>Dados da Cirurgia</SectionTitle>
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>
             Data da cirurgia <span style={{ color:'#DC2626' }}>*</span>
-            <span style={{ color:'#9CA3AF', fontWeight:400, marginLeft:'0.4rem' }}>(ANO obrigatório — DIA e MÊS opcionais)</span>
+            <span style={{ color:'#9CA3AF', fontWeight:400, marginLeft:'0.4rem' }}>{"(ANO obrigat\u00f3rio \u2014 DIA e M\u00caS opcionais)"}</span>
           </label>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem', marginBottom:'0.4rem' }}>
             <div>
@@ -787,18 +752,18 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
               <input style={inp} type="number" min="1" max="31" placeholder="DD" value={form.cirurgia_dia} onChange={e => sf('cirurgia_dia', e.target.value)} />
             </div>
             <div>
-              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>MÊS (opcional)</label>
+              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>{"M\u00caS (opcional)"}</label>
               <input style={inp} type="number" min="1" max="12" placeholder="MM" value={form.cirurgia_mes} onChange={e => sf('cirurgia_mes', e.target.value)} />
             </div>
             <div>
-              <label style={{ fontSize:'0.7rem', color:'#DC2626', fontWeight:700 }}>ANO ✱</label>
+              <label style={{ fontSize:'0.7rem', color:'#DC2626', fontWeight:700 }}>{"ANO \u2731"}</label>
               <input style={{ ...inp, borderColor: form.cirurgia_ano ? '#E5E7EB' : '#FCA5A5' }} type="number" min="2000" max="2030" placeholder="AAAA" value={form.cirurgia_ano} onChange={e => sf('cirurgia_ano', e.target.value)} />
             </div>
           </div>
           {mesesPos !== null ? (
             <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:8, padding:'0.6rem 0.9rem', marginBottom:'0.5rem' }}>
               <p style={{ color:'#0369A1', fontSize:'0.9rem', fontWeight:800, margin:0 }}>
-                ✓ {mesesPos} meses pós-cirurgia
+                {"\u2713 "}{mesesPos}{" meses p\u00f3s-cirurgia"}
                 {mesesPos >= 12 && <span style={{ fontWeight:400, fontSize:'0.8rem', marginLeft:'0.4rem', color:'#0284C7' }}>
                   ({Math.floor(mesesPos/12)} ano{Math.floor(mesesPos/12) > 1 ? 's' : ''}{mesesPos % 12 > 0 ? ` e ${mesesPos % 12} meses` : ''})
                 </span>}
@@ -814,16 +779,16 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Tipo de cirurgia</label>
           <RadioGroup options={TIPOS_CIRURGIA} value={form.tipo_cirurgia} onChange={v => sf('tipo_cirurgia', v)} />
 
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Indicação da cirurgia</label>
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Indica\u00e7\u00e3o da cirurgia"}</label>
           <RadioGroup
-            options={['OBESIDADE','METABÓLICA (SÍNDROME METABÓLICA, DISLIPIDEMIA, HIPERTENSÃO, APNEIA DO SONO)','OBESIDADE + DIABETES','HEMOCROMATOSE','GASTRECTOMIA POR OUTRAS CAUSAS']}
+            options={['OBESIDADE',"MET\u00c1BOLICA (S\u00cdNDROME METAB\u00d3LICA, DISLIPIDEMIA, HIPERTENS\u00c3O, APNEIA DO SONO)",'OBESIDADE + DIABETES','HEMOCROMATOSE','GASTRECTOMIA POR OUTRAS CAUSAS']}
             value={form.indicacao_cirurgia}
             onChange={v => sf('indicacao_cirurgia', v)}
           />
 
           {sexo === 'F' && (
             <>
-              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Número de gestações prévias</label>
+              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"N\u00famero de gesta\u00e7\u00f5es pr\u00e9vias"}</label>
               <input
                 style={inp}
                 type="number"
@@ -837,10 +802,10 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
 
               {form.gestacoes_previas !== '' && parseInt(form.gestacoes_previas) > 0 && (
                 <>
-                  <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Teve abortamentos espontâneos?</label>
+                  <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Teve abortamentos espont\u00e2neos?"}</label>
                   <RadioGroup
-                    options={['SIM','NÃO']}
-                    value={form.abortamentos_espontaneos === true ? 'SIM' : form.abortamentos_espontaneos === false ? 'NÃO' : ''}
+                    options={['SIM',"N\u00c3O"]}
+                    value={form.abortamentos_espontaneos === true ? 'SIM' : form.abortamentos_espontaneos === false ? "N\u00c3O" : ''}
                     onChange={v => sf('abortamentos_espontaneos', v === 'SIM')}
                   />
                 </>
@@ -848,20 +813,19 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             </>
           )}
 
-          {/* ── STATUS PONDERAL ── */}
           <SectionTitle>Status Ponderal</SectionTitle>
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>Peso antes da cirurgia (kg)</label>
           <input style={inp} type="number" placeholder="Ex: 120" value={form.peso_antes} onChange={e => sf('peso_antes', e.target.value)} />
 
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Menor peso após a cirurgia (kg)</label>
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Menor peso ap\u00f3s a cirurgia (kg)"}</label>
           <input style={inp} type="number" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => sf('peso_minimo_pos', e.target.value)} />
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Peso atual (kg)</label>
           <input style={inp} type="number" placeholder="Ex: 78" value={form.peso_atual} onChange={e => sf('peso_atual', e.target.value)} onBlur={handlePesoAtualBlur} />
           {alertaPeso && (
             <p style={{ color: '#d97706', fontSize: '0.75rem', marginTop: '0.25rem', lineHeight: 1.4 }}>
-              ⚠️ O peso atual informado ({alertaPeso.original} kg) não pode ser menor que o menor peso pós-cirurgia ({alertaPeso.ajustado} kg). Valor ajustado automaticamente para {alertaPeso.ajustado} kg.
+              {"\u26a0\ufe0f O peso atual informado ("}{alertaPeso.original}{" kg) n\u00e3o pode ser menor que o menor peso p\u00f3s-cirurgia ("}{alertaPeso.ajustado}{" kg). Valor ajustado automaticamente para "}{alertaPeso.ajustado}{" kg."}
             </p>
           )}
 
@@ -877,30 +841,29 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
               <p style={{ fontSize:'0.65rem', color:'#6B7280', marginTop:'0.25rem' }}>Normal: 18.5 a 24.9</p>
             </div>
           </div>
-          <p style={{ fontSize:'0.7rem', color:'#6B7280', marginTop:'0.3rem', fontStyle:'italic' }}>Opcional — se não souber, deixe em branco.</p>
+          <p style={{ fontSize:'0.7rem', color:'#6B7280', marginTop:'0.3rem', fontStyle:'italic' }}>{"Opcional \u2014 se n\u00e3o souber, deixe em branco."}</p>
 
           {kgPerdidos !== null && kgPerdidos > 0 && (
             <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:8, padding:'0.5rem 0.9rem', marginTop:'0.5rem' }}>
-              <p style={{ color:'#166534', fontSize:'0.85rem', fontWeight:700 }}>✓ Perdeu {kgPerdidos.toFixed(1)} kg do peso inicial</p>
+              <p style={{ color:'#166534', fontSize:'0.85rem', fontWeight:700 }}>{"\u2713 Perdeu "}{kgPerdidos.toFixed(1)}{" kg do peso inicial"}</p>
             </div>
           )}
           {kgGanhou !== null && kgGanhou > 0 && (
             <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:8, padding:'0.5rem 0.9rem', marginTop:'0.5rem' }}>
-              <p style={{ color:'#92400E', fontSize:'0.85rem', fontWeight:700 }}>⚠ Ganhou {kgGanhou.toFixed(1)} kg desde o menor peso</p>
+              <p style={{ color:'#92400E', fontSize:'0.85rem', fontWeight:700 }}>{"\u26a0 Ganhou "}{kgGanhou.toFixed(1)}{" kg desde o menor peso"}</p>
             </div>
           )}
 
           <div style={{ marginTop:'0.8rem' }}>
-            <CheckRow label="FIZ PLASMA DE ARGÔNIO" checked={form.fez_plasma_argonio} onClick={() => sf('fez_plasma_argonio', !form.fez_plasma_argonio)} />
+            <CheckRow label={"FIZ PLASMA DE ARG\u00d4NIO"} checked={form.fez_plasma_argonio} onClick={() => sf('fez_plasma_argonio', !form.fez_plasma_argonio)} />
           </div>
 
-          {/* ── ACOMPANHAMENTO ── */}
-          <SectionTitle>Acompanhamento Médico</SectionTitle>
+          <SectionTitle>{"Acompanhamento M\u00e9dico"}</SectionTitle>
           <RadioGroup options={ACOMPANHAMENTO_OPS} value={form.acompanhamento} onChange={v => sf('acompanhamento', v)} />
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Especialistas que me acompanham:</label>
           <CheckRow
-            label="NÃO ESTOU SOB ACOMPANHAMENTO"
+            label={"N\u00c3O ESTOU SOB ACOMPANHAMENTO"}
             checked={form.semEspecialista}
             onClick={() => sf('semEspecialista', !form.semEspecialista)}
           />
@@ -913,30 +876,26 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             ))}
           </div>
 
-          {/* ── STATUS GESTACIONAL ── */}
           {isFem && idadeNum >= 15 && (
             <>
               <SectionTitle>Status Gestacional</SectionTitle>
-              <CheckRow label="ESTOU GRÁVIDA" checked={form.status_gestacional === 'GRÁVIDA'} onClick={() => sf('status_gestacional', form.status_gestacional === 'GRÁVIDA' ? '' : 'GRÁVIDA')} />
-              {form.status_gestacional === 'GRÁVIDA' && (
+              <CheckRow label={"ESTOU GR\u00c1VIDA"} checked={form.status_gestacional === "GR\u00c1VIDA"} onClick={() => sf('status_gestacional', form.status_gestacional === "GR\u00c1VIDA" ? '' : "GR\u00c1VIDA")} />
+              {form.status_gestacional === "GR\u00c1VIDA" && (
                 <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginTop:'0.4rem' }}>
                   <input style={{ ...inp, width:120 }} type="number" placeholder="Semanas" value={form.semanas_gestacao} onChange={e => sf('semanas_gestacao', e.target.value)} />
-                  <span style={{ fontSize:'0.85rem', color:'#6B7280' }}>semanas de gestação</span>
+                  <span style={{ fontSize:'0.85rem', color:'#6B7280' }}>{"semanas de gesta\u00e7\u00e3o"}</span>
                 </div>
               )}
             </>
           )}
 
-          {/* ── STATUS GLICÊMICO ── */}
-          <SectionTitle>Status Glicêmico</SectionTitle>
+          <SectionTitle>{"Status Glic\u00eamico"}</SectionTitle>
           <RadioGroup options={STATUS_GLICEMICO_OPS} value={form.status_glicemico} onChange={v => sf('status_glicemico', v)} />
 
-          {/* ── STATUS PRESSÓRICO ── */}
-          <SectionTitle>Status Pressórico</SectionTitle>
+          <SectionTitle>{"Status Press\u00f3rico"}</SectionTitle>
           <RadioGroup options={STATUS_PRESSORICO_OPS} value={form.status_pressorico} onChange={v => sf('status_pressorico', v)} />
 
-          {/* ── STATUS ENDOSCÓPICO ── */}
-          <SectionTitle>Status Endoscópico</SectionTitle>
+          <SectionTitle>{"Status Endosc\u00f3pico"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {STATUS_ENDOSCOPICO_OPS.map(opt => {
               const ehNormal = opt === 'NORMAL'
@@ -950,14 +909,12 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
                   disabled={!ehNormal && normalMarcado}
                   onClick={() => {
                     if (ehNormal) {
-                      // Marcar/desmarcar NORMAL: se marcar, limpa tudo e fica só com NORMAL
                       if (opcaoMarcada) {
                         sf('status_endoscopico', [])
                       } else {
                         sf('status_endoscopico', ['NORMAL'])
                       }
                     } else {
-                      // Marcar/desmarcar anormal: toggle, e remove NORMAL se estiver
                       const sem = form.status_endoscopico.filter(x => x !== opt && x !== 'NORMAL')
                       sf('status_endoscopico', opcaoMarcada ? sem : [...sem, opt])
                     }
@@ -967,12 +924,11 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             })}
           </div>
 
-          {/* ── STATUS VASCULAR ── */}
           <SectionTitle>Status Vascular</SectionTitle>
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>Trombose</label>
           <div style={{ display:'flex', gap:'0.8rem', marginBottom:'0.6rem' }}>
-            {[['Sim', true], ['Não', false]].map(([l, v]) => (
+            {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
               <div key={l} onClick={() => sf('trombose', v)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.trombose === v ? '#DC2626' : '#E5E7EB'}`, background: form.trombose === v ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.trombose === v ? 700 : 500, color: form.trombose === v ? '#7B1E1E' : '#374151', fontSize:'0.85rem' }}>
                 <Radio16 active={form.trombose === v} />{l}
               </div>
@@ -988,7 +944,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Varizes</label>
           <div style={{ display:'flex', gap:'0.8rem', marginBottom:'0.6rem' }}>
-            {[['Sim', true], ['Não', false]].map(([l, v]) => (
+            {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
               <div key={l} onClick={() => sf('varizes', v)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.varizes === v ? '#DC2626' : '#E5E7EB'}`, background: form.varizes === v ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.varizes === v ? 700 : 500, color: form.varizes === v ? '#7B1E1E' : '#374151', fontSize:'0.85rem' }}>
                 <Radio16 active={form.varizes === v} />{l}
               </div>
@@ -1003,30 +959,26 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
               ))}
             </div>
           )}
-          <CheckRow label="TENHO VARIZES DE ESÔFAGO" checked={form.varizes_esofago} onClick={() => sf('varizes_esofago', !form.varizes_esofago)} />
+          <CheckRow label={"TENHO VARIZES DE ES\u00d4FAGO"} checked={form.varizes_esofago} onClick={() => sf('varizes_esofago', !form.varizes_esofago)} />
           {form.varizes_esofago && (
-            <CheckRow label="OPEREI VARIZES DE ESÔFAGO" checked={form.operou_varizes_esofago} onClick={() => sf('operou_varizes_esofago', !form.operou_varizes_esofago)} />
+            <CheckRow label={"OPEREI VARIZES DE ES\u00d4FAGO"} checked={form.operou_varizes_esofago} onClick={() => sf('operou_varizes_esofago', !form.operou_varizes_esofago)} />
           )}
 
-          {/* ── STATUS DENTAL ── */}
           <SectionTitle>Status Dental</SectionTitle>
-          {['BOA SAÚDE ORAL, DENTIÇÃO OK.', 'PRECISO TRATAMENTO ODONTOLÓGICO', 'PERDI MAIS DE UM DENTE APÓS A CIRURGIA'].map(op => (
+          {["BOA SA\u00daDE ORAL, DENTI\u00c7\u00c3O OK.", 'PRECISO TRATAMENTO ODONTOL\u00d3GICO', 'PERDI MAIS DE UM DENTE AP\u00d3S A CIRURGIA'].map(op => (
             <div key={op} onClick={() => sf('status_dental', form.status_dental === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem', borderRadius:8, border:`1.5px solid ${form.status_dental === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_dental === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem', fontSize:'0.85rem', fontWeight: form.status_dental === op ? 700 : 500, color: form.status_dental === op ? '#7B1E1E' : '#374151' }}>
               <Radio16 active={form.status_dental === op} />{op}
             </div>
           ))}
 
-          {/* ── STATUS ÓSSEO ── */}
-          <SectionTitle>Status Ósseo</SectionTitle>
-          {['DENSITOMETRIA ÓSSEA NORMAL', 'OSTEOPENIA', 'OSTEOPOROSE', 'NÃO FIZ DENSITOMETRIA'].map(op => (
+          <SectionTitle>{"Status \u00d3sseo"}</SectionTitle>
+          {["DENSITOMETRIA \u00d3SSEA NORMAL", 'OSTEOPENIA', 'OSTEOPOROSE', "N\u00c3O FIZ DENSITOMETRIA"].map(op => (
             <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem', borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem', fontSize:'0.85rem', fontWeight: form.status_osseo === op ? 700 : 500, color: form.status_osseo === op ? '#7B1E1E' : '#374151' }}>
               <Radio16 active={form.status_osseo === op} />{op}
             </div>
           ))}
 
-          {/* ── STATUS INTESTINAL ── */}
-          {/* ── STATUS NEUROLÓGICO ── */}
-          <SectionTitle>Status Neurológico</SectionTitle>
+          <SectionTitle>{"Status Neurol\u00f3gico"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {STATUS_NEUROLOGICO_OPS.map(opt => {
               const ehSemQueixas = opt === 'SEM QUEIXAS'
@@ -1058,23 +1010,21 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           <SectionTitle>Status Intestinal</SectionTitle>
           <RadioGroup options={STATUS_INTESTINAL_OPS} value={form.status_intestinal} onChange={v => sf('status_intestinal', form.status_intestinal === v ? '' : v)} />
 
-          {/* ── EXAMES INTESTINAIS CONDICIONAIS (Etapa 2) ── */}
           {(
             (form.status_intestinal && form.status_intestinal !== 'INTESTINO FUNCIONA BEM') ||
-            form.status_fibromialgia.includes('TENHO FIBROMIALGIA DIAGNOSTICADA') ||
-            form.status_fibromialgia.includes('OBSTIPAÇÃO CRÔNICA')
+            form.status_fibromialgia.includes("TENHO FIBROMIALGIA DIAGNOSTICADA") ||
+            form.status_fibromialgia.includes("OBSTIPA\u00c7\u00c3O CR\u00d4NICA")
           ) && (
             <div style={{ marginTop:'0.6rem', padding:'0.6rem', background:'#FEF3C7', borderRadius:'8px', border:'1px solid #FDE68A' }}>
               <p style={{ fontSize:'0.72rem', color:'#92400E', fontWeight:600, marginBottom:'0.5rem' }}>
-                🔬 Exames Intestinais Complementares (sugeridos)
+                {"\ud83d\udd2c Exames Intestinais Complementares (sugeridos)"}
               </p>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem' }}>
 
-                {/* Calprotectina fecal - numérico */}
                 <div style={{ display:'flex', flexDirection:'column' }}>
                   <label style={{ fontSize:'0.72rem', fontWeight:600, color:'#374151', marginBottom:'0.2rem' }}>
                     Calprotectina fecal
-                    <span style={{ color:'#6B7280', fontWeight:400, marginLeft:'0.3rem' }}>µg/g (ref: &lt;50)</span>
+                    <span style={{ color:'#6B7280', fontWeight:400, marginLeft:'0.3rem' }}>{"\u00b5g/g (ref: <50)"}</span>
                   </label>
                   <input
                     type="number"
@@ -1090,10 +1040,9 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
                   />
                 </div>
 
-                {/* Indican plasmático - select */}
                 <div style={{ display:'flex', flexDirection:'column' }}>
                   <label style={{ fontSize:'0.72rem', fontWeight:600, color:'#374151', marginBottom:'0.2rem' }}>
-                    Indican plasmático
+                    {"Indican plasm\u00e1tico"}
                     <span style={{ color:'#6B7280', fontWeight:400, marginLeft:'0.3rem' }}>qualitativo</span>
                   </label>
                   <select
@@ -1116,9 +1065,8 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             </div>
           )}
 
-          {/* ── STATUS FIBROMIÁLGICO ── */}
-          <SectionTitle>Status Fibromiálgico</SectionTitle>
-          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.5rem' }}>Marque os sintomas que apresenta com frequência:</p>
+          <SectionTitle>{"Status Fibromi\u00e1lgico"}</SectionTitle>
+          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.5rem' }}>{"Marque os sintomas que apresenta com frequ\u00eancia:"}</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {STATUS_FIBROMIALGIA_OPS.map(op => (
               <CheckRow key={op} label={op}
@@ -1127,41 +1075,37 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             ))}
           </div>
 
-          {/* ── STATUS COVID ── */}
           <SectionTitle>Status COVID-19</SectionTitle>
           <CheckRow label="TIVE COVID-19" checked={form.teve_covid} onClick={() => sf('teve_covid', !form.teve_covid)} />
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.6rem' }}>Vacina:</label>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
-            {['VACINA PFIZER', 'VACINA JANSSEN', 'VACINA ASTRAZENECA', 'VACINA CORONAVAC', 'NÃO TOMEI VACINA'].map(v => (
+            {['VACINA PFIZER', 'VACINA JANSSEN', 'VACINA ASTRAZENECA', 'VACINA CORONAVAC', "N\u00c3O TOMEI VACINA"].map(v => (
               <CheckRow key={v} label={v}
                 checked={form.vacina_covid.includes(v)}
-                disabled={v !== 'NÃO TOMEI VACINA' && form.vacina_covid.includes('NÃO TOMEI VACINA') || v === 'NÃO TOMEI VACINA' && form.vacina_covid.length > 0 && !form.vacina_covid.includes('NÃO TOMEI VACINA')}
+                disabled={v !== "N\u00c3O TOMEI VACINA" && form.vacina_covid.includes("N\u00c3O TOMEI VACINA") || v === "N\u00c3O TOMEI VACINA" && form.vacina_covid.length > 0 && !form.vacina_covid.includes("N\u00c3O TOMEI VACINA")}
                 onClick={() => sf('vacina_covid', tog(form.vacina_covid, v))} />
             ))}
           </div>
 
-          {/* ── ATIVIDADE FÍSICA ── */}
-          <SectionTitle>Atividade Física</SectionTitle>
-          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.5rem' }}>Se marcar SEDENTÁRIO, os demais são desmarcados.</p>
+          <SectionTitle>{"Atividade F\u00edsica"}</SectionTitle>
+          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.5rem' }}>{"Se marcar SEDENT\u00c1RIO, os demais s\u00e3o desmarcados."}</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {ATIVIDADES.map(at => {
-              const sedMarcado = form.atividade_fisica.includes('SEDENTÁRIO')
-              const disabled = at !== 'SEDENTÁRIO' && sedMarcado
+              const sedMarcado = form.atividade_fisica.includes("SEDENT\u00c1RIO")
+              const disabled = at !== "SEDENT\u00c1RIO" && sedMarcado
               return <CheckRow key={at} label={at} checked={form.atividade_fisica.includes(at)} disabled={disabled} onClick={() => toggleAtividade(at)} />
             })}
           </div>
 
-          {/* ── CIRURGIA PLÁSTICA ── */}
-          <SectionTitle>Cirurgia Plástica Pós-Bariátrica</SectionTitle>
+          <SectionTitle>{"Cirurgia Pl\u00e1stica P\u00f3s-Bari\u00e1trica"}</SectionTitle>
           <div style={{ display:'flex', gap:'0.8rem' }}>
-            {[['Sim', true], ['Não', false]].map(([l, v]) => (
+            {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
               <div key={l} onClick={() => sf('cirurgia_plastica', v)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.cirurgia_plastica === v ? '#DC2626' : '#E5E7EB'}`, background: form.cirurgia_plastica === v ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.cirurgia_plastica === v ? 700 : 500, color: form.cirurgia_plastica === v ? '#7B1E1E' : '#374151', fontSize:'0.85rem' }}>
                 <Radio16 active={form.cirurgia_plastica === v} />{l}
               </div>
             ))}
           </div>
 
-          {/* ── PROJETO DE VIDA ── */}
           <SectionTitle>Projeto de Vida</SectionTitle>
           <div style={{ display:'flex', gap:'0.4rem', marginBottom:'0.6rem', flexWrap:'wrap' }}>
             {[['MANTER','MANTER O PESO'],['PERDER','PERDER kg'],['GANHAR','GANHAR kg']].map(([v,l]) => (
@@ -1180,44 +1124,40 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             {PROJETOS.map(p => <CheckRow key={p} label={p} checked={form.projetos_vida.includes(p)} onClick={() => sf('projetos_vida', tog(form.projetos_vida, p))} />)}
           </div>
 
-          {/* ── COMPULSÕES ── */}
-          <SectionTitle>Compulsões</SectionTitle>
+          <SectionTitle>{"Compuls\u00f5es"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {COMPULSOES.map(c => <CheckRow key={c} label={c} checked={form.compulsoes.includes(c)} onClick={() => sf('compulsoes', tog(form.compulsoes, c))} />)}
           </div>
 
-          {/* ── MEDICAMENTOS ── */}
           <SectionTitle>Medicamentos em Uso</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
-            {MEDICAMENTOS.map(m => <CheckRow key={m} label={m} checked={form.medicamentos.includes(m)} disabled={m === 'REMÉDIO PARA PRESSÃO' && form.status_pressorico === 'NÃO SOU HIPERTENSO'} onClick={() => sf('medicamentos', tog(form.medicamentos, m))} />)}
+            {MEDICAMENTOS.map(m => <CheckRow key={m} label={m} checked={form.medicamentos.includes(m)} disabled={m === "REM\u00c9DIO PARA PRESS\u00c3O" && form.status_pressorico === "N\u00c3O SOU HIPERTENSO"} onClick={() => sf('medicamentos', tog(form.medicamentos, m))} />)}
           </div>
 
-          {/* ── MEDICAMENTOS ADICIONAIS ── */}
           <SectionTitle>Medicamentos que Afetam o Eritron</SectionTitle>
-          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.6rem' }}>Marque os que usa ou usou nos últimos 2 anos:</p>
+          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.6rem' }}>{"Marque os que usa ou usou nos \u00faltimos 2 anos:"}</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {[
-              { field: 'metformina',    label: 'Metformina',           sub: 'Reduz absorção de B12' },
+              { field: 'metformina',    label: 'Metformina',           sub: "Reduz absor\u00e7\u00e3o de B12" },
               { field: 'ibp',           label: 'IBP (Omeprazol etc.)', sub: 'Reduz B12' },
               { field: 'tiroxina',      label: 'Tiroxina / T4',        sub: 'Pode causar anemia' },
               { field: 'methotrexato',  label: 'Metotrexato',          sub: 'Antagonista do folato' },
               { field: 'hivTratamento', label: 'Trat. HIV / ARV',      sub: 'Macrocitose' },
             ].map(({ field, label, sub }) => (
               <CheckRow key={field}
-                label={label + ' — ' + sub}
+                label={label + " \u2014 " + sub}
                 checked={!!form[field]}
                 onClick={() => sf(field, !form[field])} />
             ))}
           </div>
 
-          {/* ── EMAGRECEDORES ── */}
           <SectionTitle>Medicamentos Emagrecedores</SectionTitle>
-          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.6rem' }}>Para cada medicamento, marque a situação:</p>
+          <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.6rem' }}>{"Para cada medicamento, marque a situa\u00e7\u00e3o:"}</p>
           {EMAGRECEDORES.map(med => (
             <div key={med} style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:'0.5rem', alignItems:'center', marginBottom:'0.5rem', padding:'0.3rem 0', borderBottom:'1px solid #F3F4F6' }}>
               <span style={{ fontSize:'0.85rem', fontWeight:600, color:'#374151' }}>{med}</span>
               <div style={{ display:'flex', gap:'0.3rem' }}>
-                {['JÁ USEI','ESTOU USANDO'].map(op => (
+                {["J\u00c1 USEI",'ESTOU USANDO'].map(op => (
                   <button key={op} onClick={() => sf('emagrecedores', { ...form.emagrecedores, [med]: form.emagrecedores[med] === op ? null : op })}
                     style={{ padding:'0.25rem 0.45rem', fontSize:'0.68rem', fontWeight:700, borderRadius:6, border:`1.5px solid ${form.emagrecedores[med] === op ? '#DC2626' : '#E5E7EB'}`, background: form.emagrecedores[med] === op ? '#FEF2F2' : '#FAFAFA', color: form.emagrecedores[med] === op ? '#7B1E1E' : '#6B7280', cursor:'pointer', whiteSpace:'nowrap', fontFamily:'inherit' }}>
                     {op}
@@ -1230,9 +1170,9 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           {erro && <p style={{ color:'#DC2626', fontSize:'0.85rem', marginTop:'0.8rem' }}>{erro}</p>}
 
           <button style={btnP} onClick={salvarAnamnese} disabled={loading}>
-            {loading ? 'Salvando...' : 'Avançar para os Exames →'}
+            {loading ? 'Salvando...' : "Avan\u00e7ar para os Exames \u2192"}
           </button>
-          <button style={btnS} onClick={onFechar}>← Voltar</button>
+          <button style={btnS} onClick={onFechar}>{"\u2190 Voltar"}</button>
         </div>
       </div>
     </div>

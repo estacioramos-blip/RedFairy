@@ -10,23 +10,27 @@ function TermosModal({ onFechar }) {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{ maxHeight:'85vh' }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <div>
-            <p className="font-bold text-red-700 text-sm">Termos e Condições de Uso — Pacientes</p>
-            <p className="text-gray-400 text-xs">RedFairy — Versão 1.0 — Abril de 2026</p>
+            <p className="font-bold text-red-700 text-sm">{"Termos e Condi\u00e7\u00f5es de Uso \u2014 Pacientes"}</p>
+            <p className="text-gray-400 text-xs">{"RedFairy \u2014 Vers\u00e3o 1.0 \u2014 Abril de 2026"}</p>
           </div>
-          <button onClick={onFechar} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+          <button onClick={onFechar}
+            className="text-gray-400 hover:text-gray-600 text-xl font-bold"
+            style={{ fontFamily: "'Apple Color Emoji', 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif" }}>
+            {"\u2715"}
+          </button>
         </div>
         <div className="overflow-y-auto p-5 text-xs text-gray-700 leading-relaxed space-y-4">
-          <p className="font-bold text-red-700 uppercase tracking-wide mb-1">Termos e Condições de Uso — Pacientes</p>
-          <p><strong>1. O que é o RedFairy.</strong> Ferramenta de saúde digital que analisa parâmetros laboratoriais do eritron e gera orientações personalizadas. NÃO é um serviço médico e NÃO emite diagnósticos definitivos. Não substitui consulta médica presencial ou teleconsulta.</p>
-          <p><strong>2. Elegibilidade.</strong> Maiores de 12 anos. Menores de 18 anos somente com autorização expressa de responsáveis legais.</p>
-          <p><strong>3. Como Funciona.</strong> Você insere dados laboratoriais e de contexto clínico, e o algoritmo gera orientações baseadas em evidências. Quando necessário, médico hematologista da plataforma, ou médicos parceiros associados podem ser acionados para aprimorar as recomendações via teleconsulta subsidiada.</p>
-          <p><strong>4. Pedidos de Exames e Prescrições.</strong> Se o usuário solicitar um pedido de exames ou prescrição médica com base no resultado da avaliação, um médico avaliará criticamente o resultado do algoritmo e, se concordar, emitirá os documentos mediante o pagamento das taxas cobradas pela plataforma. Por medida de segurança, o médico poderá solicitar uma teleconsulta com o paciente, sem ônus para este.</p>
-          <p><strong>5. Responsabilidade do Usuário.</strong> Você é responsável pela integridade e veracidade dos dados inseridos. Decisões de saúde devem ser tomadas em conjunto com profissional de saúde habilitado. Em emergências, procure serviço de urgência imediatamente.</p>
-          <p><strong>6. Dados e Privacidade — LGPD.</strong> Seus dados pessoais e de saúde são tratados em conformidade com a Lei nº 13.709/2018 (LGPD). Não são vendidos a terceiros nem usados para fins publicitários. Você pode solicitar acesso, correção ou exclusão a qualquer momento pelo e-mail: contato@redfairy.bio.</p>
-          <p><strong>7. Segurança.</strong> Seus dados são armazenados em servidores seguros com criptografia. O acesso é protegido por autenticação individual.</p>
-          <p><strong>8. Limitação de Responsabilidade.</strong> O RedFairy e a Cytomica não se responsabilizam por decisões de saúde tomadas exclusivamente com base nos resultados gerados pela plataforma, sem consulta a profissional habilitado.</p>
-          <p><strong>9. Alterações.</strong> Estes termos podem ser atualizados. Você será notificado por e-mail com antecedência mínima de 15 dias.</p>
-          <p><strong>10. Foro.</strong> Comarca de Salvador, Estado da Bahia. Lei aplicável: LGPD e Código de Defesa do Consumidor.</p>
+          <p className="font-bold text-red-700 uppercase tracking-wide mb-1">{"Termos e Condi\u00e7\u00f5es de Uso \u2014 Pacientes"}</p>
+          <p><strong>{"1. O que \u00e9 o RedFairy."}</strong>{" Ferramenta de sa\u00fade digital que analisa par\u00e2metros laboratoriais do eritron e gera orienta\u00e7\u00f5es personalizadas. N\u00c3O \u00e9 um servi\u00e7o m\u00e9dico e N\u00c3O emite diagn\u00f3sticos definitivos. N\u00e3o substitui consulta m\u00e9dica presencial ou teleconsulta."}</p>
+          <p><strong>2. Elegibilidade.</strong>{" Maiores de 12 anos. Menores de 18 anos somente com autoriza\u00e7\u00e3o expressa de respons\u00e1veis legais."}</p>
+          <p><strong>3. Como Funciona.</strong>{" Voc\u00ea insere dados laboratoriais e de contexto cl\u00ednico, e o algoritmo gera orienta\u00e7\u00f5es baseadas em evid\u00eancias. Quando necess\u00e1rio, m\u00e9dico hematologista da plataforma, ou m\u00e9dicos parceiros associados podem ser acionados para aprimorar as recomenda\u00e7\u00f5es via teleconsulta subsidiada."}</p>
+          <p><strong>{"4. Pedidos de Exames e Prescri\u00e7\u00f5es."}</strong>{" Se o usu\u00e1rio solicitar um pedido de exames ou prescri\u00e7\u00e3o m\u00e9dica com base no resultado da avalia\u00e7\u00e3o, um m\u00e9dico avaliar\u00e1 criticamente o resultado do algoritmo e, se concordar, emitir\u00e1 os documentos mediante o pagamento das taxas cobradas pela plataforma. Por medida de seguran\u00e7a, o m\u00e9dico poder\u00e1 solicitar uma teleconsulta com o paciente, sem \u00f4nus para este."}</p>
+          <p><strong>{"5. Responsabilidade do Usu\u00e1rio."}</strong>{" Voc\u00ea \u00e9 respons\u00e1vel pela integridade e veracidade dos dados inseridos. Decis\u00f5es de sa\u00fade devem ser tomadas em conjunto com profissional de sa\u00fade habilitado. Em emerg\u00eancias, procure servi\u00e7o de urg\u00eancia imediatamente."}</p>
+          <p><strong>{"6. Dados e Privacidade \u2014 LGPD."}</strong>{" Seus dados pessoais e de sa\u00fade s\u00e3o tratados em conformidade com a Lei n\u00ba 13.709/2018 (LGPD). N\u00e3o s\u00e3o vendidos a terceiros nem usados para fins publicit\u00e1rios. Voc\u00ea pode solicitar acesso, corre\u00e7\u00e3o ou exclus\u00e3o a qualquer momento pelo e-mail: contato@redfairy.bio."}</p>
+          <p><strong>{"7. Seguran\u00e7a."}</strong>{" Seus dados s\u00e3o armazenados em servidores seguros com criptografia. O acesso \u00e9 protegido por autentica\u00e7\u00e3o individual."}</p>
+          <p><strong>{"8. Limita\u00e7\u00e3o de Responsabilidade."}</strong>{" O RedFairy e a Cytomica n\u00e3o se responsabilizam por decis\u00f5es de sa\u00fade tomadas exclusivamente com base nos resultados gerados pela plataforma, sem consulta a profissional habilitado."}</p>
+          <p><strong>{"9. Altera\u00e7\u00f5es."}</strong>{" Estes termos podem ser atualizados. Voc\u00ea ser\u00e1 notificado por e-mail com anteced\u00eancia m\u00ednima de 15 dias."}</p>
+          <p><strong>10. Foro.</strong>{" Comarca de Salvador, Estado da Bahia. Lei aplic\u00e1vel: LGPD e C\u00f3digo de Defesa do Consumidor."}</p>
           <p className="text-gray-400 text-center text-xs">cytomica.com | redfairy.bio | contato@redfairy.bio</p>
         </div>
         <div className="p-4 border-t border-gray-100">
@@ -48,7 +52,6 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
   const [nome, setNome] = useState('')
   const [sexo, setSexo] = useState(sexoInicial || 'F')
   const [dataNascimento, setDataNascimento] = useState(dataNascimentoInicial || '')
-  // Flag: dados de identidade vieram da triagem (esconde campos editaveis)
   const dadosVemDaTriagem = !!(sexoInicial && dataNascimentoInicial)
   const [celular, setCelular] = useState('')
   const [loading, setLoading] = useState(false)
@@ -63,7 +66,6 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
   const senhaOk = senhaConfirm && senha === senhaConfirm
   const senhaErro = senhaConfirm && senha !== senhaConfirm
 
-  // Atalho secreto Ctrl+Shift+P — pula para cadastro sem CPF
   useEffect(() => {
     function handleKey(e) {
       if (e.ctrlKey && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
@@ -79,8 +81,8 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
       const entrarComoDemo = (sx, idade) => {
         e.preventDefault()
         const nomeDemo = sx === 'M'
-          ? (idade <= 30 ? 'Paciente Demo Masculino Jovem' : 'Paciente Demo Masculino Sênior')
-          : (idade <= 30 ? 'Paciente Demo Feminino Jovem' : 'Paciente Demo Feminino Sênior')
+          ? (idade <= 30 ? 'Paciente Demo Masculino Jovem' : "Paciente Demo Masculino S\u00eanior")
+          : (idade <= 30 ? 'Paciente Demo Feminino Jovem' : "Paciente Demo Feminino S\u00eanior")
         const nascAno = new Date().getFullYear() - idade
         const perfil = {
           nome: nomeDemo,
@@ -132,7 +134,6 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
     setErro('')
     const cpfLimpo = cpf.replace(/\D/g, '')
 
-    // Usa RPC publica lookup_cpf_triagem (sem RLS) para checar se ja existe profile
     const { data: lookupData } = await supabase.rpc('lookup_cpf_triagem', { cpf_input: cpfLimpo })
     const perfil = lookupData?.find?.(r => r.origem === 'profile') || null
 
@@ -164,21 +165,21 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
   }
 
   async function handleCadastro() {
-    if (!aceitoTC) { setErro('Você deve aceitar os Termos e Condições para criar conta.'); return }
-    if (!emailOk) { setErro('Os e-mails não coincidem.'); return }
-    if (!senhaOk) { setErro('As senhas não coincidem.'); return }
+    if (!aceitoTC) { setErro("Voc\u00ea deve aceitar os Termos e Condi\u00e7\u00f5es para criar conta."); return }
+    if (!emailOk) { setErro("Os e-mails n\u00e3o coincidem."); return }
+    if (!senhaOk) { setErro("As senhas n\u00e3o coincidem."); return }
     if (!celular || celular.replace(/\D/g, '').length < 10) {
-      setErro('Informe um celular válido com DDD.'); return
+      setErro("Informe um celular v\u00e1lido com DDD."); return
     }
     setLoading(true)
     setErro('')
 
     const { data, error } = await supabase.auth.signUp({ email, password: senha })
     if (error) {
-      if (error.message.includes('after')) setErro('Por segurança, aguarde alguns segundos.')
-      else if (error.message.includes('already registered')) setErro('E-mail já cadastrado. Tente fazer login.')
-      else if (error.message.includes('Password')) setErro('A senha deve ter pelo menos 6 caracteres.')
-      else setErro('Erro ao cadastrar. Tente novamente.')
+      if (error.message.includes('after')) setErro("Por seguran\u00e7a, aguarde alguns segundos.")
+      else if (error.message.includes('already registered')) setErro("E-mail j\u00e1 cadastrado. Tente fazer login.")
+      else if (error.message.includes('Password')) setErro("A senha deve ter pelo menos 6 caracteres.")
+      else setErro("Erro ao cadastrar. Tente novamente.")
       setLoading(false); return
     }
 
@@ -198,7 +199,6 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
         celular: celular.replace(/\D/g, ''),
       })
 
-      // Cria assinatura ativa (1 ano). Quando integrar Stripe, status comeca como 'pendente'
       const dataFim = new Date()
       dataFim.setFullYear(dataFim.getFullYear() + 1)
       await supabase.from('assinaturas').insert({
@@ -214,23 +214,15 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
           .is('user_id', null)
       }
 
-      // Decisao estrategica: triagem nao gera historico.
-      // RPC server-side (SECURITY DEFINER) faz tudo numa transacao:
-      //   1. Le triagem mais recente do CPF
-      //   2. Se bariatrica=true, UPDATE profiles.bariatrica
-      //   3. DELETE de todas as triagens desse CPF
-      // Necessario via RPC porque RLS bloqueia SELECT/DELETE de triagens
-      // orfas (user_id=NULL) feitas antes do cadastro.
       const { error: rpcErr } = await supabase.rpc('consume_triagem_on_signup', {
         p_user_id: data.user.id,
         p_cpf: cpfLimpo,
       })
       if (rpcErr) {
         console.warn('[consume_triagem_on_signup] falhou:', rpcErr.message)
-        // Nao bloqueia o cadastro - paciente pode marcar bariatrica manualmente depois.
       }
     }
-    setSucesso('Cadastro realizado! Verifique seu e-mail para confirmar.')
+    setSucesso("Cadastro realizado! Verifique seu e-mail para confirmar.")
     setLoading(false)
   }
 
@@ -255,16 +247,15 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
           <p className="text-gray-500 text-sm">Modo Paciente</p>
         </div>
 
-        {/* ETAPA 1 — CPF */}
         {etapa === 'cpf' && (
           <div className="space-y-4">
             <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
-              <p className="text-red-700 text-sm font-medium">Entre com seu CPF para começar</p>
-              <p className="text-gray-500 text-xs mt-1">Verificamos se seu médico já fez uma avaliação para você</p>
+              <p className="text-red-700 text-sm font-medium">{"Entre com seu CPF para come\u00e7ar"}</p>
+              <p className="text-gray-500 text-xs mt-1">{"Verificamos se seu m\u00e9dico j\u00e1 fez uma avalia\u00e7\u00e3o para voc\u00ea"}</p>
             </div>
             <div style={{ position:'absolute', bottom:8, right:12, display:'flex', flexDirection:'column', gap:1 }}>
-              <span style={{ color:'rgba(156,163,175,0.6)', fontSize:'8px', fontFamily:'monospace' }}>Ctrl+M ♂20  Ctrl+B ♂50</span>
-              <span style={{ color:'rgba(156,163,175,0.6)', fontSize:'8px', fontFamily:'monospace' }}>Ctrl+F ♀20  Ctrl+G ♀50</span>
+              <span style={{ color:'rgba(156,163,175,0.6)', fontSize:'8px', fontFamily:'monospace' }}>{"Ctrl+M \u264220  Ctrl+B \u264250"}</span>
+              <span style={{ color:'rgba(156,163,175,0.6)', fontSize:'8px', fontFamily:'monospace' }}>{"Ctrl+F \u264020  Ctrl+G \u264050"}</span>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">CPF</label>
@@ -282,13 +273,12 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
           </div>
         )}
 
-        {/* ETAPA 2 — LOGIN */}
         {etapa === 'login' && (
           <div className="space-y-4">
             {avaliacoesPendentes > 0 && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                <p className="text-green-700 text-sm font-bold">🎉 Encontramos {avaliacoesPendentes} avaliação{avaliacoesPendentes > 1 ? 'ões' : ''} do seu médico!</p>
-                <p className="text-green-600 text-xs mt-1">Entre com sua conta para acessá-la{avaliacoesPendentes > 1 ? 's' : ''}.</p>
+                <p className="text-green-700 text-sm font-bold">{"\ud83c\udf89 Encontramos "}{avaliacoesPendentes}{" avalia\u00e7\u00e3o"}{avaliacoesPendentes > 1 ? "\u00f5es" : ''}{" do seu m\u00e9dico!"}</p>
+                <p className="text-green-600 text-xs mt-1">{"Entre com sua conta para acess\u00e1-la"}{avaliacoesPendentes > 1 ? 's' : ''}.</p>
               </div>
             )}
             <p className="text-center text-gray-500 text-sm">Bem-vindo de volta! Entre com sua senha.</p>
@@ -307,22 +297,21 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
             </button>
             <button onClick={() => { setEtapa('cpf'); setErro('') }}
               className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors">
-              ← Voltar
+              {"\u2190 Voltar"}
             </button>
           </div>
         )}
 
-        {/* ETAPA 3 — CADASTRO */}
         {etapa === 'cadastro' && (
           <div className="space-y-4">
             {avaliacoesPendentes > 0 && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                <p className="text-green-700 text-sm font-bold">🎉 Encontramos {avaliacoesPendentes} avaliação{avaliacoesPendentes > 1 ? 'ões' : ''} do seu médico!</p>
-                <p className="text-green-600 text-xs mt-1">Crie sua conta para acessá-la{avaliacoesPendentes > 1 ? 's' : ''} e acompanhar sua evolução.</p>
+                <p className="text-green-700 text-sm font-bold">{"\ud83c\udf89 Encontramos "}{avaliacoesPendentes}{" avalia\u00e7\u00e3o"}{avaliacoesPendentes > 1 ? "\u00f5es" : ''}{" do seu m\u00e9dico!"}</p>
+                <p className="text-green-600 text-xs mt-1">{"Crie sua conta para acess\u00e1-la"}{avaliacoesPendentes > 1 ? 's' : ''}{" e acompanhar sua evolu\u00e7\u00e3o."}</p>
               </div>
             )}
             {avaliacoesPendentes === 0 && (
-              <p className="text-center text-gray-500 text-sm">Crie sua conta para acompanhar sua evolução.</p>
+              <p className="text-center text-gray-500 text-sm">{"Crie sua conta para acompanhar sua evolu\u00e7\u00e3o."}</p>
             )}
 
             <div>
@@ -335,7 +324,7 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
                 <p className="text-xs text-gray-500 mb-1">Dados informados na triagem</p>
                 <p className="text-sm text-gray-700">
                   <strong>{sexo === 'F' ? 'Feminino' : 'Masculino'}</strong>
-                  {' • '}
+                  {" \u2022 "}
                   <strong>{(() => {
                     const v = String(dataNascimento || '');
                     if (/^\d{4}-\d{2}-\d{2}/.test(v)) {
@@ -372,7 +361,7 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
                 placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15}
                 autoComplete="off"
                 className={inputClass} />
-              <p className="text-xs text-gray-400 mt-1">Necessário para receber documentos médicos via WhatsApp</p>
+              <p className="text-xs text-gray-400 mt-1">{"Necess\u00e1rio para receber documentos m\u00e9dicos via WhatsApp"}</p>
             </div>
 
             <div>
@@ -386,8 +375,8 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
                   onChange={e => setEmailConfirm(e.target.value.toLowerCase())}
                   className={`${inputClass} ${emailErro ? 'border-red-400' : emailOk ? 'border-green-400' : ''}`}
                   autoComplete="off" />
-                {emailErro && <p className="text-red-500 text-xs mt-1">Os e-mails não coincidem.</p>}
-                {emailOk && <p className="text-green-500 text-xs mt-1">✓ E-mails conferem.</p>}
+                {emailErro && <p className="text-red-500 text-xs mt-1">{"Os e-mails n\u00e3o coincidem."}</p>}
+                {emailOk && <p className="text-green-500 text-xs mt-1">{"\u2713 E-mails conferem."}</p>}
               </div>
             )}
             <div>
@@ -401,8 +390,8 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
                   onChange={e => setSenhaConfirm(e.target.value)}
                   className={`${inputClass} ${senhaErro ? 'border-red-400' : senhaOk ? 'border-green-400' : ''}`}
                   autoComplete="new-password" />
-                {senhaErro && <p className="text-red-500 text-xs mt-1">As senhas não coincidem.</p>}
-                {senhaOk && <p className="text-green-500 text-xs mt-1">✓ Senhas conferem.</p>}
+                {senhaErro && <p className="text-red-500 text-xs mt-1">{"As senhas n\u00e3o coincidem."}</p>}
+                {senhaOk && <p className="text-green-500 text-xs mt-1">{"\u2713 Senhas conferem."}</p>}
               </div>
             )}
 
@@ -412,9 +401,9 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
             {showTC && <TermosModal onFechar={() => setShowTC(false)} />}
             <label className="flex items-start gap-2 cursor-pointer">
               <input type="checkbox" checked={aceitoTC} onChange={e => setAceitoTC(e.target.checked)} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
-              <span className="text-xs text-gray-600">Li e aceito os{' '}
+              <span className="text-xs text-gray-600">{"Li e aceito os "}
                 <button type="button" onClick={() => setShowTC(true)} className="text-red-700 font-semibold hover:underline">
-                  Termos e Condições de Uso
+                  {"Termos e Condi\u00e7\u00f5es de Uso"}
                 </button>
               </span>
             </label>
@@ -424,7 +413,7 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
             </button>
             <button onClick={() => { setEtapa('cpf'); setErro('') }}
               className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors">
-              ← Voltar
+              {"\u2190 Voltar"}
             </button>
           </div>
         )}

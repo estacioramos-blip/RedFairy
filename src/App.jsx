@@ -17,7 +17,7 @@ export default function App() {
   const [demoMedicoTimer, setDemoMedicoTimer] = useState(null)
   const [demoPacientePerfil, setDemoPacientePerfil] = useState(null)
   const [dadosPreCadastro, setDadosPreCadastro] = useState({ cpf: '', sexo: '', dataNascimento: '' })
-  const [showInatividade, setShowInatividade] = useState(false)  // __FATIA5D__
+  const [showInatividade, setShowInatividade] = useState(false)
   const [landingKey, setLandingKey] = useState(0)
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function App() {
     supabase.auth.onAuthStateChange((_event, session) => setSession(session))
     setTimeout(() => setVisible(true), 100)
 
-    // Lê parâmetro ?modo= da URL para deep link da landing page
+    // Le parametro ?modo= da URL para deep link da landing page
     const params = new URLSearchParams(window.location.search)
     const modoParam = params.get('modo')
     if (modoParam === 'medico') {
@@ -34,13 +34,13 @@ export default function App() {
     } else if (modoParam === 'paciente') {
       setModo('paciente')
     }
-    // Limpa o parâmetro da URL sem reload
+    // Limpa o parametro da URL sem reload
     if (modoParam) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
 
-  // __FATIA5D__ logoff automatico por inatividade
+  // logoff automatico por inatividade
   function fazerLogoffMedico() {
     try {
       localStorage.removeItem('medico_crm')
@@ -110,7 +110,7 @@ export default function App() {
   }
 
 
-  function renderConteudo() {  // __FATIA5D__
+  function renderConteudo() {
   if (modo === 'calculadora') {
     return (
       <div>
@@ -217,11 +217,11 @@ if (modo === 'home') {
               <img src={logo} alt="RedFairy" className="w-10 h-10 object-contain"
                 style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.5))' }} />
             </div>
-            <h2 className="text-lg font-bold text-white mb-2">Modo Médico</h2>
+            <h2 className="text-lg font-bold text-white mb-2">{"Modo M\u00e9dico"}</h2>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Avaliação rápida sem cadastro. Insira os dados do paciente e obtenha o diagnóstico imediato.
+              {"Avalia\u00e7\u00e3o r\u00e1pida sem cadastro. Insira os dados do paciente e obtenha o diagn\u00f3stico imediato."}
             </p>
-            <div className="absolute bottom-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-lg">→</div>
+            <div className="absolute bottom-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-lg">{"\u2192"}</div>
           </button>
 
           <button
@@ -237,14 +237,14 @@ if (modo === 'home') {
             </div>
             <h2 className="text-lg font-bold text-white mb-2">Modo Paciente</h2>
             <p className="text-red-200 text-sm leading-relaxed">
-              Cadastre-se e acompanhe a evolução do seu eritron ao longo do tempo.
+              {"Cadastre-se e acompanhe a evolu\u00e7\u00e3o do seu eritron ao longo do tempo."}
             </p>
-            <div className="absolute bottom-4 right-4 text-red-200 opacity-0 group-hover:opacity-100 transition-opacity text-lg">→</div>
+            <div className="absolute bottom-4 right-4 text-red-200 opacity-0 group-hover:opacity-100 transition-opacity text-lg">{"\u2192"}</div>
           </button>
         </div>
 
         <div className="mt-10 flex flex-col items-center gap-1 text-center">
-          <p className="text-gray-500 text-xs tracking-wide">by cytomica.com | © 2026</p>
+          <p className="text-gray-500 text-xs tracking-wide">{"by cytomica.com | \u00a9 2026"}</p>
           <p className="text-gray-500 text-xs tracking-wide">E.F. Ramos, M.D. CRM 6302 BA | RQE 5830 * 5643 * 27847</p>
           <p className="text-gray-500 text-xs tracking-wide">drestacioramos.com.br</p>
         </div>
@@ -254,19 +254,19 @@ if (modo === 'home') {
   )
 }
 
-  // __FATIA5D__ modal de inatividade (cobre qualquer tela)
+  // modal de inatividade (cobre qualquer tela)
   const InatividadeModal = showInatividade ? (
     <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div style={{ background: '#fff', borderRadius: '16px', maxWidth: '360px', width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
         <div style={{ background: '#b91c1c', padding: '16px 20px' }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', margin: 0 }}>Voce ainda esta ai?</h3>
+          <h3 style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', margin: 0 }}>{"Voc\u00ea ainda est\u00e1 a\u00ed?"}</h3>
         </div>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <p style={{ color: '#374151', fontSize: '0.9rem', lineHeight: 1.5, margin: '0 0 6px' }}>
-            Voce esta inativo ha algum tempo. Deseja continuar?
+            {"Voc\u00ea est\u00e1 inativo h\u00e1 algum tempo. Deseja continuar?"}
           </p>
           <p style={{ color: '#9ca3af', fontSize: '0.75rem', margin: '0 0 16px' }}>
-            Voce sera desconectado em 30s.
+            {"Voc\u00ea ser\u00e1 desconectado em 30s."}
           </p>
           <button
             onClick={() => setShowInatividade(false)}

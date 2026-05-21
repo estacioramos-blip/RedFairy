@@ -3,7 +3,7 @@ import TriagemModal from './TriagemModal'
 import TriagemResultadoModal from './TriagemResultadoModal'
 
 /**
- * TriagemDireta — fluxo de triagem rapida sem cadastro previo.
+ * TriagemDireta -- fluxo de triagem rapida sem cadastro previo.
  *
  * Renderiza:
  *   1. TriagemModal (CPF + Sexo + Idade + Hb + VCM + RDW)
@@ -16,8 +16,8 @@ import TriagemResultadoModal from './TriagemResultadoModal'
  * em modo cadastro com o CPF pre-preenchido.
  *
  * Props:
- *   onVoltar:     function() — fechar tudo e voltar para landing
- *   onCadastrar:  function(cpf) — redirecionar para cadastro
+ *   onVoltar:     function() -- fechar tudo e voltar para landing
+ *   onCadastrar:  function(cpf) -- redirecionar para cadastro
  */
 export default function TriagemDireta({ onVoltar, onCadastrar }) {
   const [showTriagem, setShowTriagem] = useState(true)

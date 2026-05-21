@@ -65,21 +65,18 @@ const LANDING_CSS = `
   .hero-badge .badge-sub { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.55); padding-left: 1.3rem; cursor: pointer; text-align: center; width: 100%; }
   .hero-badge .badge-sub:hover { color: rgba(255,255,255,0.85); }
 
-  /* MOBILE — margens uniformes */
+  /* MOBILE \u2014 margens uniformes */
   @media (max-width: 768px) {
-    /* Layout geral - sem overflow horizontal */
     html, body { overflow-x: hidden; max-width: 100vw; }
     * { box-sizing: border-box; }
     section { padding: 2.5rem 0.6rem; }
     .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
 
-    /* Nav */
     #landing-nav { display: flex !important; justify-content: space-between !important; }
     .nav-links { display: none; }
     .hamburger { display: flex; }
     .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 0.6rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
 
-    /* Hero — padding zero, hero-wrap ocupa 100% com padding interno */
     .hero { padding: 5rem 0 3rem; }
     .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; max-width: 100% !important; padding: 0 0.6rem; }
     .hero h1 { font-size: 2.6rem; white-space: normal !important; }
@@ -87,44 +84,35 @@ const LANDING_CSS = `
     .hero-actions { justify-content: center; }
     .trust { justify-content: center; flex-wrap: wrap; gap: 1rem; }
     .hero-visual { display: none; }
-    /* hero-textbox sem padding extra para ter mesma largura das demais seções */
     .hero-textbox { padding: 1.2rem; margin-left: 0; margin-right: 0; }
     .hero-textbox h1 { font-size: 2rem !important; white-space: normal !important; }
-    /* Fonte menor na frase filosofia, sem corte */
     .hero-philosophy { font-size: 1.15rem !important; white-space: normal !important; }
     .hero-quote-box { text-align: center; }
 
-    /* Filosofia - coluna única, texto justificado */
     .filosofia-grid { grid-template-columns: 1fr !important; gap: 1.5rem; }
     .fil-img-box { width: 100%; }
     .fil-img-box h2 { white-space: normal !important; font-size: 1.5rem !important; }
     .fil-content p { text-align: justify; font-size: 0.9rem !important; }
     .cycle-card { width: 100%; }
 
-    /* Títulos */
     .stitle { font-size: 1.6rem; }
 
-    /* Indicações */
     .indicacoes-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
-    /* Como funciona */
     .como-tab { padding: 0.7rem 1.2rem; font-size: 0.85rem; }
     .flow { grid-template-columns: 1fr 1fr !important; gap: 0.8rem; }
     .flow-step { padding: 1rem 0.6rem; }
     .patient-features { grid-template-columns: 1fr !important; }
     .reward-banner { flex-direction: column; text-align: center; }
 
-    /* OBA */
     .oba-grid { grid-template-columns: 1fr !important; }
 
-    /* CTA */
     .cta-cards { grid-template-columns: 1fr !important; }
   }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
   @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(220,38,38,0.8), 0 0 0 0 rgba(220,38,38,0.4);}70%{box-shadow:0 0 0 12px rgba(220,38,38,0), 0 0 0 24px rgba(220,38,38,0);}100%{box-shadow:0 0 0 0 rgba(220,38,38,0), 0 0 0 0 rgba(220,38,38,0);} }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.4rem; margin-bottom: 0.8rem; font-weight: 700; }
 
-  /* HERO TEXTBOX — coluna esquerda, hover mostra imagem E esconde texto */
   .hero-textbox {
     background: var(--white); border: 1px solid var(--border); border-radius: 16px;
     padding: 2rem 2.5rem; box-shadow: var(--shadow);
@@ -151,25 +139,21 @@ const LANDING_CSS = `
   .trust-i svg { width: 15px; height: 15px; color: var(--cherry); }
   .trust-i span { font-size: 0.8rem; color: var(--text-light); }
 
-  /* HERO VISUAL — coluna direita */
   .hero-visual { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
   .fairy-showcase { width: 208px; height: 208px; }
   .fairy-showcase img { width: 100%; height: 100%; object-fit: contain; animation: floatFairy 4s ease-in-out infinite; }
   @keyframes floatFairy { 0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
 
-  /* fairy-quote — retângulo branco direito com texto */
   .fairy-quote { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 1.8rem 2rem; box-shadow: var(--shadow); text-align: center; max-width: 380px; width: 100%; }
   .fairy-quote p { font-size: 1.45rem; color: var(--text); line-height: 1.5; font-weight: 800; font-family: 'DM Sans', sans-serif; }
   .fairy-quote .question { color: var(--wine); font-weight: 700; margin-top: 1rem; font-size: 1.2rem; font-family: 'DM Sans', sans-serif; font-style: normal; }
 
-  /* OBA HOME BTN */
   .oba-home-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 16px; padding: 1.2rem 2rem; transition: all 0.3s; box-shadow: 0 4px 20px rgba(232,114,12,0.2); width: 100%; max-width: 380px; }
   .oba-home-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(232,114,12,0.3); }
   .oba-home-btn .oba-title { font-size: 1.1rem; font-weight: 800; color: var(--white); letter-spacing: 1px; }
   .oba-home-btn .oba-sub { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.9); margin-top: 0.15rem; font-weight: 700; }
   .oba-home-btn .oba-link { font-size: 0.78rem; color: rgba(255,255,255,0.85); margin-top: 0.5rem; text-decoration: underline; }
 
-  /* CONTAINER / SECTIONS */
   .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
   section { padding: 3rem 2rem; scroll-margin-top: 80px; }
   .center { text-align: center; }
@@ -178,7 +162,6 @@ const LANDING_CSS = `
   .sdesc { font-size: 1.02rem; color: var(--text-sec); max-width: 580px; line-height: 1.7; font-weight: 600; }
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
-  /* FILOSOFIA — novo layout: texto esquerda, retângulo imagem direita */
   .filosofia { background: var(--gray-bg); color: var(--text); position: relative; margin-top: 5rem; padding-top: 1.5rem; padding-bottom: 1.5rem; }
   .filosofia .tag { color: var(--cherry); margin-bottom: 0.3rem; }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 1.5rem; }
@@ -186,7 +169,6 @@ const LANDING_CSS = `
   .fil-img-box .fil-content .highlight-box p { color: var(--white); font-size: 1rem; margin: 0; font-weight: 600; }
   .highlight-box { background: var(--wine); border: 2px solid var(--wine-dark); border-radius: 12px; padding: 1.2rem 1.5rem; margin-top: 1.5rem; }
   .highlight-box p { color: var(--white); font-weight: 600; font-size: 1rem; margin: 0; text-align: center; }
-  /* Retângulo da imagem filosofia */
   .fil-img-box {
     background: white; border-radius: 16px; box-shadow: var(--shadow);
     border: 1px solid var(--border2);
@@ -216,13 +198,11 @@ const LANDING_CSS = `
   .cycle-step .desc { font-size: 0.95rem; color: var(--text-sec); font-weight: 700; }
   .fairy-mini { height: 38px; width: 38px; object-fit: contain; opacity: 0.85; }
 
-  /* INDICAÇÕES — bolinhas vermelhas, grid 5 colunas */
   .indicacoes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; margin-top: 2rem; align-items: start; }
   .ind { background: white; border: 1px solid var(--border2); border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.85rem; color: var(--text-sec); font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
   .ind.auto-dot::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--cherry); display: block; flex-shrink: 0; margin-top: 3px; }
   .ind:hover { border-color: var(--border2); }
 
-  /* TERAPÊUTICA */
   .terapeutica { background: var(--gray-bg); }
   .terap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
   .terap-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.2rem; transition: all 0.2s; }
@@ -231,7 +211,6 @@ const LANDING_CSS = `
   .terap-card h4 { font-size: 0.95rem; margin-bottom: 0.3rem; }
   .terap-card p { font-size: 0.83rem; color: var(--text-sec); }
 
-  /* COMO FUNCIONA */
   .como { background: var(--white); }
   .como-tabs-wrap { display: flex; justify-content: center; margin-top: 2rem; margin-bottom: 2.5rem; }
   .como-tabs { display: inline-flex; gap: 0.5rem; }
@@ -245,7 +224,6 @@ const LANDING_CSS = `
   .flow-num { width: 44px; height: 44px; border-radius: 50%; background: var(--wine); color: white; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; }
   .flow-step h4 { font-size: 0.92rem; margin-bottom: 0.4rem; font-weight: 700; }
   .flow-step p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
-  /* Reward banner com logo K */
   .reward-banner { background: #22863A; border-radius: 14px; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
   .reward-text h4 { color: white; font-size: 1rem; margin-bottom: 0.3rem; font-weight: 700; }
   .reward-text p { color: rgba(255,255,255,0.9); font-size: 0.85rem; line-height: 1.6; }
@@ -253,20 +231,17 @@ const LANDING_CSS = `
   .reward-right { display: flex; align-items: center; gap: 0.5rem; }
   .reward-amount { font-size: 2rem; font-weight: 800; color: white; white-space: nowrap; }
   .klipbit-k { width: 36px; height: 36px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 900; color: var(--wine); font-family: serif; }
-  /* Patient features com ícones SVG */
   .patient-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
   .pf-card { background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border2); }
   .pf-icon { width: 36px; height: 36px; margin-bottom: 0.8rem; color: var(--wine); }
   .pf-card h4 { font-size: 0.9rem; margin-bottom: 0.3rem; font-weight: 700; }
   .pf-card p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
-  /* Pricing box rosa */
   .pricing-box { background: #FFF1F2; border: 1px solid #FECDD3; border-radius: 14px; padding: 2.5rem 2rem; text-align: center; margin-top: 1.5rem; }
   .price { font-size: 3.5rem; font-weight: 800; color: var(--wine); }
   .price-sub { font-size: 0.95rem; color: var(--wine); margin-bottom: 1.2rem; font-weight: 400; }
   .pix-methods { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
   .pix-tag { background: white; border: 1px solid #FECDD3; border-radius: 8px; padding: 0.4rem 0.9rem; font-size: 0.82rem; color: var(--wine); font-weight: 500; display: flex; align-items: center; gap: 0.4rem; }
 
-  /* PROJETO OBA */
   .oba { background: linear-gradient(170deg, var(--oba-blue-dark) 0%, #334155 60%, #1E293B 100%); color: var(--white); position: relative; overflow: hidden; }
   .oba::before { content: ''; position: absolute; top: -30%; right: -15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(232,114,12,0.12), transparent 70%); border-radius: 50%; }
   .oba .container { position: relative; z-index: 2; }
@@ -287,7 +262,6 @@ const LANDING_CSS = `
   .btn-oba-main { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue-dark)); color: var(--white); box-shadow: 0 6px 25px rgba(232,114,12,0.3); }
   .btn-oba-main:hover { transform: translateY(-2px); }
 
-  /* CTA FINAL */
   .cta-final { background: var(--gray-bg); }
   .cta-final .tag { color: var(--cherry); }
   .cta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
@@ -304,15 +278,14 @@ const LANDING_CSS = `
   .cta-pat p { color: rgba(255,255,255,0.8); font-size: 0.88rem; margin-bottom: 1.2rem; line-height: 1.6; }
   .cta-c ul { list-style: none; margin-bottom: 1.5rem; padding: 0; }
   .cta-doc li { font-size: 0.84rem; color: var(--text-sec); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem; }
-  .cta-doc li::before { content: '✓'; color: var(--cherry); font-weight: 700; }
+  .cta-doc li::before { content: '\u2713'; color: var(--cherry); font-weight: 700; }
   .cta-pat li { font-size: 0.84rem; color: rgba(255,255,255,0.9); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem; }
-  .cta-pat li::before { content: '✓'; color: rgba(255,255,255,0.6); font-weight: 700; }
+  .cta-pat li::before { content: '\u2713'; color: rgba(255,255,255,0.6); font-weight: 700; }
   .btn-cta-doc { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.25s; background: var(--wine); color: var(--white); height: 60px; }
   .btn-cta-doc:hover { background: var(--cherry); transform: translateY(-2px); }
   .btn-cta-pat { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: 1.5px solid #9CA3AF; cursor: pointer; font-family: inherit; transition: all 0.25s; background: #9CA3AF; color: var(--white); height: 60px; }
   .btn-cta-pat:hover { background: #374151; border-color: #374151; transform: translateY(-2px); }
 
-  /* FOOTER */
   footer { text-align: center; }
   .foot-brand { display: inline-flex; align-items: center; gap: 0.4rem; }
   .foot-brand img { height: 28px; }
@@ -323,11 +296,8 @@ const LANDING_CSS = `
   footer a { color: var(--text-sec); text-decoration: none; }
   footer a:hover { color: var(--wine); }
 
-  /* REVEAL */
   .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.65s ease, transform 0.65s ease; }
   .reveal.show { opacity: 1; transform: translateY(0); }
-
-  /* fim CSS */
 `
 
 function rfInRange(v, r) { return v >= r.min && v <= r.max }
@@ -349,58 +319,58 @@ function rfMatch(matrix, inp) {
 }
 
 const rfMatrix = [
-  { id:3,  label:'SAUDÁVEL', color:'green',
+  { id:3,  label:"SAUD\u00c1VEL", color:'green',
     conditions:{ ferritina:{min:25,max:150}, hemoglobina:{min:12.0,max:17.5}, vcm:{min:75,max:100}, rdw:{min:11.5,max:15.5}, satTransf:{min:20,max:50}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
-    diag:'Produção normal de hemoglobina e células vermelhas, com boa reserva de ferro. Sem indicação de anemia ou siderose.',
-    rec:'Avaliação médica preventiva semestral. Se a ferritina for ≥ 100 ng/mL, você pode ser candidato a doações de sangue.' },
+    diag:"Produ\u00e7\u00e3o normal de hemoglobina e c\u00e9lulas vermelhas, com boa reserva de ferro. Sem indica\u00e7\u00e3o de anemia ou siderose.",
+    rec:"Avalia\u00e7\u00e3o m\u00e9dica preventiva semestral. Se a ferritina for \u2265 100 ng/mL, voc\u00ea pode ser candidato a doa\u00e7\u00f5es de sangue." },
   { id:10, label:'SIDEROPENIA INCIPIENTE SEM ANEMIA', color:'yellow',
     conditions:{ ferritina:{min:0,max:24}, hemoglobina:{min:12.0,max:17.5}, vcm:{min:75,max:100}, rdw:{min:15.1,max:999}, satTransf:{min:0,max:50}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
-    diag:'Hemoglobina normal, mas com sinais de depleção incipiente de ferro — anisocitose e hipoferritinemia.',
-    rec:'Procure orientação de hematologista. Investigue a causa da sideropenia. Não doe sangue enquanto não esclarecer.' },
+    diag:"Hemoglobina normal, mas com sinais de deple\u00e7\u00e3o incipiente de ferro \u2014 anisocitose e hipoferritinemia.",
+    rec:"Procure orienta\u00e7\u00e3o de hematologista. Investigue a causa da sideropenia. N\u00e3o doe sangue enquanto n\u00e3o esclarecer." },
   { id:11, label:'ANEMIA FERROPRIVA MODERADA', color:'orange',
     conditions:{ ferritina:{min:0,max:24}, hemoglobina:{min:10.0,max:11.9}, vcm:{min:0,max:79}, rdw:{min:15.1,max:999}, satTransf:{min:0,max:50}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
-    diag:'Deficiência de ferro com impacto sobre a produção de hemoglobina e hemácias, produzindo anemia moderada.',
-    rec:'Avaliação com hematologista assim que possível. Reposição de ferro oral ou intravenosa conforme avaliação médica.' },
+    diag:"Defici\u00eancia de ferro com impacto sobre a produ\u00e7\u00e3o de hemoglobina e hem\u00e1cias, produzindo anemia moderada.",
+    rec:"Avalia\u00e7\u00e3o com hematologista assim que poss\u00edvel. Reposi\u00e7\u00e3o de ferro oral ou intravenosa conforme avalia\u00e7\u00e3o m\u00e9dica." },
   { id:12, label:'ANEMIA FERROPRIVA IMPORTANTE', color:'red',
     conditions:{ ferritina:{min:0,max:24}, hemoglobina:{min:7.0,max:9.9}, vcm:{min:0,max:79}, rdw:{min:15.1,max:999}, satTransf:{min:0,max:19}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
-    diag:'Anemia ferropriva importante. Exige intervenção médica imediata.',
-    rec:'Avaliação urgente com hematologista. Pode ser necessária hospitalização. Ferro endovenoso indicado.' },
-  { id:5,  label:'PROCESSO INFLAMATÓRIO OU DOENÇA CRÔNICA', color:'yellow',
+    diag:"Anemia ferropriva importante. Exige interven\u00e7\u00e3o m\u00e9dica imediata.",
+    rec:"Avalia\u00e7\u00e3o urgente com hematologista. Pode ser necess\u00e1ria hospitaliza\u00e7\u00e3o. Ferro endovenoso indicado." },
+  { id:5,  label:"PROCESSO INFLAMAT\u00d3RIO OU DOEN\u00c7A CR\u00d4NICA", color:'yellow',
     conditions:{ ferritina:{min:151,max:400}, hemoglobina:{min:12.0,max:17.5}, vcm:{min:80,max:100}, rdw:{min:11.5,max:16}, satTransf:{min:20,max:50}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
-    diag:'Ferritina elevada com saturação normal. Processos inflamatórios, neoplasias ou doenças degenerativas.',
-    rec:'Procure orientação de hematologista. Não doe sangue enquanto não esclarecer a origem da ferritina elevada.' },
+    diag:"Ferritina elevada com satura\u00e7\u00e3o normal. Processos inflamat\u00f3rios, neoplasias ou doen\u00e7as degenerativas.",
+    rec:"Procure orienta\u00e7\u00e3o de hematologista. N\u00e3o doe sangue enquanto n\u00e3o esclarecer a origem da ferritina elevada." },
   { id:7,  label:'EXCESSO DE FERRO / SIDEROSE', color:'orange',
     conditions:{ ferritina:{min:401,max:900}, hemoglobina:{min:12.0,max:17.5}, vcm:{min:80,max:100}, rdw:{min:11.5,max:15}, satTransf:{min:51,max:999}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
-    diag:'Ferritina e saturação da transferrina elevadas, traduzindo siderose significativa.',
-    rec:'Procure orientação de hematologista. Sangrias terapêuticas podem ser indicadas.' },
-  { id:8,  label:'COMPATÍVEL COM HEMOCROMATOSE', color:'red',
+    diag:"Ferritina e satura\u00e7\u00e3o da transferrina elevadas, traduzindo siderose significativa.",
+    rec:"Procure orienta\u00e7\u00e3o de hematologista. Sangrias terap\u00eauticas podem ser indicadas." },
+  { id:8,  label:"COMPAT\u00cdVEL COM HEMOCROMATOSE", color:'red',
     conditions:{ ferritina:{min:801,max:9999}, hemoglobina:{min:12.0,max:17.5}, vcm:{min:80,max:100}, rdw:{min:11.5,max:15}, satTransf:{min:51,max:999}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
-    diag:'Siderose maior — ferritina e saturação muito elevadas. Possível hemocromatose hereditária (gene HFE).',
-    rec:'Avaliação urgente com hematologista. Sangrias terapêuticas deverão ser indicadas.' },
-  { id:80, label:'ERITROCITOSE — HEMOGLOBINA ACIMA DO NORMAL', color:'red',
+    diag:"Siderose maior \u2014 ferritina e satura\u00e7\u00e3o muito elevadas. Poss\u00edvel hemocromatose heredit\u00e1ria (gene HFE).",
+    rec:"Avalia\u00e7\u00e3o urgente com hematologista. Sangrias terap\u00eauticas dever\u00e3o ser indicadas." },
+  { id:80, label:"ERITROCITOSE \u2014 HEMOGLOBINA ACIMA DO NORMAL", color:'red',
     conditions:{ ferritina:{min:24,max:9999}, hemoglobina:{min:15.6,max:999}, vcm:{min:0,max:9999}, rdw:{min:0,max:999}, satTransf:{min:0,max:999}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
-    diag:'Hemoglobina acima do normal. Pode corresponder a uso de testosterona, eritropoetina, ou doenças hematológicas.',
-    rec:'Repita o hemograma. Se confirmada, avalie com hematologista assim que possível.' },
+    diag:"Hemoglobina acima do normal. Pode corresponder a uso de testosterona, eritropoetina, ou doen\u00e7as hematol\u00f3gicas.",
+    rec:"Repita o hemograma. Se confirmada, avalie com hematologista assim que poss\u00edvel." },
   { id:14, label:'VEGETARIANO/A COMPENSADO/A', color:'green',
     conditions:{ ferritina:{min:25,max:150}, hemoglobina:{min:12.0,max:17.5}, vcm:{min:75,max:100}, rdw:{min:11.5,max:16}, satTransf:{min:0,max:50}, bariatrica:false, vegetariano:true, perda:false, alcoolista:false, transfundido:false },
-    diag:'Normal quanto à produção de hemoglobina. A suplementação de ferro e vitamina B12 parece adequada.',
-    rec:'Procure orientação de hematologista antes de doar sangue.' },
+    diag:"Normal quanto \u00e0 produ\u00e7\u00e3o de hemoglobina. A suplementa\u00e7\u00e3o de ferro e vitamina B12 parece adequada.",
+    rec:"Procure orienta\u00e7\u00e3o de hematologista antes de doar sangue." },
   { id:17, label:'VEGETARIANO/A COM ANEMIA FERROPRIVA', color:'orange',
     conditions:{ ferritina:{min:0,max:24}, hemoglobina:{min:10.0,max:11.9}, vcm:{min:0,max:79}, rdw:{min:15.1,max:999}, satTransf:{min:0,max:19}, bariatrica:false, vegetariano:true, perda:false, alcoolista:false, transfundido:false },
-    diag:'Anemia moderada por deficiência de ferro, provavelmente secundária a dieta insuficiente.',
-    rec:'Avaliação com hematologista assim que possível. Suplementação de ferro e B12 necessária.' },
-  { id:25, label:'BARIÁTRICO/A COM SUPORTE ADEQUADO', color:'green',
+    diag:"Anemia moderada por defici\u00eancia de ferro, provavelmente secund\u00e1ria a dieta insuficiente.",
+    rec:"Avalia\u00e7\u00e3o com hematologista assim que poss\u00edvel. Suplementa\u00e7\u00e3o de ferro e B12 necess\u00e1ria." },
+  { id:25, label:"BARI\u00c1TRICO/A COM SUPORTE ADEQUADO", color:'green',
     conditions:{ ferritina:{min:25,max:150}, hemoglobina:{min:12.0,max:17.5}, vcm:{min:75,max:100}, rdw:{min:11.5,max:16}, satTransf:{min:0,max:50}, bariatrica:true, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
-    diag:'Normal quanto à produção de hemoglobina apesar do déficit absortivo da bariátrica.',
-    rec:'Avaliação com hematologista. Deve ser avaliado por médico antes de doar sangue.' },
+    diag:"Normal quanto \u00e0 produ\u00e7\u00e3o de hemoglobina apesar do d\u00e9ficit absortivo da bari\u00e1trica.",
+    rec:"Avalia\u00e7\u00e3o com hematologista. Deve ser avaliado por m\u00e9dico antes de doar sangue." },
   { id:35, label:'ANEMIA IMPORTANTE COM HEMORRAGIA E SIDEROPENIA', color:'red',
     conditions:{ ferritina:{min:0,max:24}, hemoglobina:{min:7.0,max:9.9}, vcm:{min:0,max:79}, rdw:{min:15.1,max:999}, satTransf:{min:0,max:19}, bariatrica:false, vegetariano:false, perda:true, alcoolista:false, transfundido:false },
-    diag:'Anemia importante por deficiência de ferro possivelmente causada pela hemorragia, com sideropenia grave.',
-    rec:'Avaliação urgente com hematologista. Ferro endovenoso indicado. Investigar causa do sangramento.' },
-  { id:82, label:'ANEMIA MACROCÍTICA — DÉFICIT DE FOLATOS', color:'orange',
+    diag:"Anemia importante por defici\u00eancia de ferro possivelmente causada pela hemorragia, com sideropenia grave.",
+    rec:"Avalia\u00e7\u00e3o urgente com hematologista. Ferro endovenoso indicado. Investigar causa do sangramento." },
+  { id:82, label:"ANEMIA MACROC\u00cdTICA \u2014 D\u00c9FICIT DE FOLATOS", color:'orange',
     conditions:{ ferritina:{min:25,max:150}, hemoglobina:{min:8.0,max:11.9}, vcm:{min:101,max:999}, rdw:{min:15.1,max:999}, satTransf:{min:20,max:50}, bariatrica:false, vegetariano:false, perda:false, alcoolista:true, transfundido:false },
-    diag:'Anemia macrocítica em alcoolista — padrão compatível com deficiência de ácido fólico.',
-    rec:'Avaliação com hematologista. Suplementação de ácido fólico essencial. Suspender o álcool.' },
+    diag:"Anemia macroc\u00edtica em alcoolista \u2014 padr\u00e3o compat\u00edvel com defici\u00eancia de \u00e1cido f\u00f3lico.",
+    rec:"Avalia\u00e7\u00e3o com hematologista. Suplementa\u00e7\u00e3o de \u00e1cido f\u00f3lico essencial. Suspender o \u00e1lcool." },
 ]
 
 const colorMap = {
@@ -409,6 +379,7 @@ const colorMap = {
   orange: { bg:'rgba(249,115,22,0.1)', border:'rgba(249,115,22,0.3)', badge:'#EA580C', text:'#FED7AA' },
   red:    { bg:'rgba(220,38,38,0.1)',  border:'rgba(220,38,38,0.35)', badge:'#DC2626', text:'#FECACA' },
 }
+
 
 export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin }) {
   const [medicoLogado, setMedicoLogado] = useState(() => {
@@ -431,8 +402,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     onModoMedico();
   }
 
-  // __FATIA_L1__ maquina de estados dos botoes progressivos
-  const [fluxoEtapa, setFluxoEtapa] = useState('inicio'); // inicio|escolha|medico|paciente
+  const [fluxoEtapa, setFluxoEtapa] = useState('inicio');
   const [fluxoFade, setFluxoFade] = useState(false);
   const [twTexto, setTwTexto] = useState('');
   useEffect(() => {
@@ -460,23 +430,20 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     onModoMedico();
   }
 
-  // __ENTRAR_LOGADO_DIRETO__ sessao ativa: entra na triagem sem caixa
   function entrarLogadoDireto() {
     try {
       const crm = localStorage.getItem('medico_crm') || '';
       if (crm) { localStorage.setItem('rf_crm_prefill', crm); }
-      // renova o carimbo de sessao
       localStorage.setItem('medico_login_at', Date.now().toString());
     } catch(e) {}
     onModoMedico();
   }
 
-  // __L2A__ caixa unificada CRM -> Senha
-  const [caixaPasso, setCaixaPasso] = useState('crm'); // crm|senha
+  const [caixaPasso, setCaixaPasso] = useState('crm');
   const [caixaSenha, setCaixaSenha] = useState('');
   const [caixaShowSenha, setCaixaShowSenha] = useState(false);
   const [caixaTw, setCaixaTw] = useState('');
-  const [caixaModo, setCaixaModo] = useState(null); // __L2B1__ login|cadastro
+  const [caixaModo, setCaixaModo] = useState(null);
   const [caixaBuscando, setCaixaBuscando] = useState(false);
   const [caixaErro, setCaixaErro] = useState('');
   const caixaSenhaValida = (caixaSenha || '').length >= 6;
@@ -506,11 +473,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
         .maybeSingle();
       existe = !!data;
     } catch (e) {
-      // Em erro de rede, assume cadastro novo (fluxo nao trava)
       existe = false;
     }
     setCaixaBuscando(false);
-    setCaixaModo(existe ? 'login' : 'cadastro');  // __L2B1__
+    setCaixaModo(existe ? 'login' : 'cadastro');
     setCaixaSenha('');
     setCaixaPasso('senha');
   }
@@ -519,7 +485,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     setCaixaErro('');
     const crmLimpo = crmMedicoValor.trim().toUpperCase();
 
-    if (caixaModo === 'login') {  // __L2B2__
+    if (caixaModo === 'login') {
       setCaixaBuscando(true);
       let medico = null;
       try {
@@ -543,7 +509,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
       return;
     }
 
-    // __L2B3__ modo cadastro: insert minimo (crm + uf + senha)
     setCaixaBuscando(true);
     const partes = crmLimpo.split('/');
     const uf = partes[1] || '';
@@ -562,7 +527,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     }
     setCaixaBuscando(false);
     if (erroInsert) {
-      // Pode ser corrida (CRM criado nesse meio tempo) ou erro real.
       setCaixaErro('NAO FOI POSSIVEL CRIAR. TENTE NOVAMENTE.');
       return;
     }
@@ -630,7 +594,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     }
   }, [])
 
-  // ESC fecha modal de Contato
   useEffect(() => {
     if (!showContato) return
     const onKey = (e) => { if (e.key === 'Escape') setShowContato(false) }
@@ -638,14 +601,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     return () => window.removeEventListener('keydown', onKey)
   }, [showContato])
 
-  // Hero textbox hover: mostra imagem E esconde texto por 2s
   function handleFadaClick() {
     const next = fadaClicks + 1
     setFadaClicks(next)
     if (fadaTimer.current) clearTimeout(fadaTimer.current)
     if (next >= 5) {
       setFadaClicks(0)
-      // Entra direto na calculadora em modo demo
       localStorage.setItem('medico_crm', 'DEMO/BA')
       localStorage.setItem('medico_nome', 'Dr. Demo RedFairy')
       onModoMedico()
@@ -660,7 +621,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     htbTimer.current = setTimeout(() => setShowHtb(false), 1000)
   }
 
-  // Filosofia hover: mostra imagem E esconde container por 2s
   function onFilEnter() {
     if (filTimer.current) clearTimeout(filTimer.current)
     setShowFil(true)
@@ -672,13 +632,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
   }
 
   const rfMatrix2 = [
-    { id:3,  label:'Eritron Saudável',           color:'#16A34A', diag:'Produção normal de hemoglobina e células vermelhas, com boa reserva de ferro.',           rec:'Avaliação médica preventiva semestral.',                                       c:{ f:{a:25,b:150},   h:{a:12,b:17.5}, v:{a:75,b:100}, r:{a:11.5,b:15.5}, s:{a:20,b:50}  } },
-    { id:10, label:'Sideropenia sem Anemia',     color:'#CA8A04', diag:'Hemoglobina normal, mas com depleção incipiente de ferro.',                              rec:'Procure hematologista. Investigue a causa.',                                   c:{ f:{a:0,b:24},     h:{a:12,b:17.5}, v:{a:75,b:100}, r:{a:15.1,b:999}, s:{a:0,b:50}   } },
-    { id:11, label:'Anemia Ferropriva Moderada', color:'#EA580C', diag:'Deficiência de ferro com impacto sobre a produção de hemoglobina — anemia moderada.',    rec:'Avaliação com hematologista. Reposição de ferro conforme avaliação.',          c:{ f:{a:0,b:24},     h:{a:10,b:11.9}, v:{a:0,b:79},   r:{a:15.1,b:999}, s:{a:0,b:50}   } },
-    { id:12, label:'Anemia Ferropriva Importante',color:'#DC2626', diag:'Anemia ferropriva importante. Exige intervenção médica imediata.',                       rec:'Avaliação urgente. Ferro endovenoso indicado.',                               c:{ f:{a:0,b:24},     h:{a:7,b:9.9},   v:{a:0,b:79},   r:{a:15.1,b:999}, s:{a:0,b:19}   } },
-    { id:5,  label:'Processo Inflamatório',      color:'#CA8A04', diag:'Ferritina elevada com saturação normal. Processos inflamatórios ou doenças crônicas.',   rec:'Procure hematologista. Investigar a ferritina elevada.',                       c:{ f:{a:151,b:400},  h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:16},  s:{a:20,b:50}  } },
-    { id:7,  label:'Excesso de Ferro / Siderose',color:'#EA580C', diag:'Ferritina e saturação da transferrina elevadas — siderose significativa.',                rec:'Sangrias terapêuticas podem ser indicadas.',                                   c:{ f:{a:401,b:900},  h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:15},  s:{a:51,b:999} } },
-    { id:8,  label:'Compatível com Hemocromatose',color:'#DC2626',diag:'Ferritina e saturação muito elevadas. Possível hemocromatose hereditária.',              rec:'Avaliação urgente. Sangrias indicadas.',                                       c:{ f:{a:801,b:9999}, h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:15},  s:{a:51,b:999} } },
+    { id:3,  label:'Eritron Saudavel',           color:'#16A34A', diag:"Produ\u00e7\u00e3o normal de hemoglobina e c\u00e9lulas vermelhas, com boa reserva de ferro.",           rec:"Avalia\u00e7\u00e3o m\u00e9dica preventiva semestral.",                                       c:{ f:{a:25,b:150},   h:{a:12,b:17.5}, v:{a:75,b:100}, r:{a:11.5,b:15.5}, s:{a:20,b:50}  } },
+    { id:10, label:'Sideropenia sem Anemia',     color:'#CA8A04', diag:"Hemoglobina normal, mas com deple\u00e7\u00e3o incipiente de ferro.",                              rec:"Procure hematologista. Investigue a causa.",                                   c:{ f:{a:0,b:24},     h:{a:12,b:17.5}, v:{a:75,b:100}, r:{a:15.1,b:999}, s:{a:0,b:50}   } },
+    { id:11, label:'Anemia Ferropriva Moderada', color:'#EA580C', diag:"Defici\u00eancia de ferro com impacto sobre a produ\u00e7\u00e3o de hemoglobina \u2014 anemia moderada.",    rec:"Avalia\u00e7\u00e3o com hematologista. Reposi\u00e7\u00e3o de ferro conforme avalia\u00e7\u00e3o.",          c:{ f:{a:0,b:24},     h:{a:10,b:11.9}, v:{a:0,b:79},   r:{a:15.1,b:999}, s:{a:0,b:50}   } },
+    { id:12, label:'Anemia Ferropriva Importante',color:'#DC2626', diag:"Anemia ferropriva importante. Exige interven\u00e7\u00e3o m\u00e9dica imediata.",                       rec:"Avalia\u00e7\u00e3o urgente. Ferro endovenoso indicado.",                               c:{ f:{a:0,b:24},     h:{a:7,b:9.9},   v:{a:0,b:79},   r:{a:15.1,b:999}, s:{a:0,b:19}   } },
+    { id:5,  label:"Processo Inflamat\u00f3rio",      color:'#CA8A04', diag:"Ferritina elevada com satura\u00e7\u00e3o normal. Processos inflamat\u00f3rios ou doen\u00e7as cr\u00f4nicas.",   rec:"Procure hematologista. Investigar a ferritina elevada.",                       c:{ f:{a:151,b:400},  h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:16},  s:{a:20,b:50}  } },
+    { id:7,  label:'Excesso de Ferro / Siderose',color:'#EA580C', diag:"Ferritina e satura\u00e7\u00e3o da transferrina elevadas \u2014 siderose significativa.",                rec:"Sangrias terap\u00eauticas podem ser indicadas.",                                   c:{ f:{a:401,b:900},  h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:15},  s:{a:51,b:999} } },
+    { id:8,  label:"Compat\u00edvel com Hemocromatose",color:'#DC2626',diag:"Ferritina e satura\u00e7\u00e3o muito elevadas. Poss\u00edvel hemocromatose heredit\u00e1ria.",              rec:"Avalia\u00e7\u00e3o urgente. Sangrias indicadas.",                                       c:{ f:{a:801,b:9999}, h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:15},  s:{a:51,b:999} } },
   ]
 
   function rfAvaliar2() {
@@ -714,9 +674,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
       const h = document.getElementById('rf-result-header')
       if (h) h.style.background='#6B7280'
       const l = document.getElementById('rf-result-label')
-      if (l) l.textContent='Combinação não encontrada'
+      if (l) l.textContent="Combina\u00e7\u00e3o n\u00e3o encontrada"
       const d = document.getElementById('rf-result-diag')
-      if (d) d.textContent='Acesse o RedFairy completo para avaliação detalhada.'
+      if (d) d.textContent="Acesse o RedFairy completo para avalia\u00e7\u00e3o detalhada."
       const r = document.getElementById('rf-result-rec')
       if (r) r.textContent=''
     }
@@ -741,13 +701,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     const sat   = parseFloat(rfForm.sat)
     const idade = parseInt(rfForm.idade)
     if ([hb, ferr, vcm, rdw, sat].some(isNaN)) { setRfErro('Preencha todos os campos laboratoriais.'); return }
-    if (!idade || idade < 12 || idade > 100) { setRfErro('Informe uma idade válida (12–100 anos).'); return }
+    if (!idade || idade < 12 || idade > 100) { setRfErro("Informe uma idade v\u00e1lida (12\u2013100 anos)."); return }
     const inp = { hemoglobina:hb, ferritina:ferr, vcm, rdw, satTransf:sat,
       bariatrica:rfForm.bariatrica, vegetariano:rfForm.vegetariano,
       perda:rfForm.perda, alcoolista:rfForm.alcoolista, transfundido:rfForm.transfundido }
     const res = rfMatch(rfMatrix, inp)
     if (res) setRfResultado(res)
-    else setRfErro('Combinação não encontrada na versão simplificada. Acesse o RedFairy completo.')
+    else setRfErro("Combina\u00e7\u00e3o n\u00e3o encontrada na vers\u00e3o simplificada. Acesse o RedFairy completo.")
   }
 
   const inputStyle = {
@@ -762,7 +722,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
   return (
     <div style={{ fontFamily:"'DM Sans', sans-serif", overflowX:'hidden', maxWidth:'100vw', position:'relative' }}>
 
-      {/* MODAL OBA */}
       {showOBA && (
         <OBAModal
           sexo={sexoOBA}
@@ -773,7 +732,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
         />
       )}
 
-      {/* MODAL CONTATO */}
       {showContato && (
         <div
           onClick={() => setShowContato(false)}
@@ -793,7 +751,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
               padding: '2.5rem 2rem 2rem',
             }}
           >
-            {/* Cabeçalho */}
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
               <span className="tag" style={{ color: 'var(--cherry)' }}>Contato</span>
               <h2 style={{ fontSize: '1.8rem', color: 'var(--wine)', fontWeight: 800, marginTop: '0.4rem' }}>
@@ -801,43 +758,33 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
               </h2>
             </div>
 
-            {/* ===================================================================== */}
-            {/* CONTEÚDO DO MODAL CONTATO */}
-            {/* ===================================================================== */}
-
-            {/* Contato direto (sem cabecalho Equipe, ja que e 1 pessoa) */}
             <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
               <p style={{ fontSize: '1.05rem', color: 'var(--text)', lineHeight: 1.6, fontWeight: 700, margin: 0 }}>
-                <strong style={{ color: 'var(--wine)' }}>Laíse Silva Dantas</strong>
+                <strong style={{ color: 'var(--wine)' }}>{"La\u00edse Silva Dantas"}</strong>
               </p>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', fontWeight: 500, margin: '0.2rem 0 0', letterSpacing: '1px', textTransform: 'uppercase' }}>
                 COO
               </p>
             </div>
 
-            {/* Endereco */}
             <div style={{ marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 2, color: 'var(--text-light)', fontWeight: 700, marginBottom: '0.8rem' }}>
-                Endereço para Correspondência
+                {"Endere\u00e7o para Correspond\u00eancia"}
               </h3>
               <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.7, fontWeight: 500, margin: 0 }}>
-                Rua Barro Vermelho, 386/42<br/>
-                Rio Vermelho · CEP 41940-340<br/>
-                Salvador — Bahia | Brasil
+                {"Rua Barro Vermelho, 386/42"}<br/>
+                {"Rio Vermelho \u00b7 CEP 41940-340"}<br/>
+                {"Salvador \u2014 Bahia | Brasil"}
               </p>
             </div>
 
-            {/* Empresa (rodape institucional) */}
             <div style={{ marginBottom: '1.5rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border)' }}>
               <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.7, fontWeight: 500, margin: 0, textAlign: 'center' }}>
-                <strong style={{ color: 'var(--wine)', fontWeight: 700, letterSpacing: '0.5px' }}>CYTOMICA<sup style={{ fontSize: '0.6em', fontWeight: 500 }}>®</sup></strong><br/>
+                <strong style={{ color: 'var(--wine)', fontWeight: 700, letterSpacing: '0.5px' }}>{"CYTOMICA"}<sup style={{ fontSize: '0.6em', fontWeight: 500 }}>{"\u00ae"}</sup></strong><br/>
                 <span style={{ fontSize: '0.82rem', color: 'var(--text-sec)' }}>CNPJ 57.561.446/0001-02</span>
               </p>
             </div>
 
-            {/* ===================================================================== */}
-
-            {/* Botão WhatsApp grande */}
             <a
               href="https://wa.me/5571997110804"
               target="_blank"
@@ -859,7 +806,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
               Conversar no WhatsApp
             </a>
 
-            {/* Botão X fechar na base do modal */}
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
               <button
                 onClick={() => setShowContato(false)}
@@ -871,24 +817,23 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '1.1rem', fontWeight: 700,
                   boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  transition: 'all 0.2s', fontFamily: 'inherit',
+                  transition: 'all 0.2s', fontFamily: "'Apple Color Emoji', 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif",
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
               >
-                ✕
+                {"\u2715"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* WHATSAPP */}
       <a href="https://wa.me/5571997110804" target="_blank" rel="noopener noreferrer" className="whatsapp-btn" aria-label="WhatsApp">
         <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       </a>
 
-      {/* NAV */}
+
       <nav id="landing-nav" className={navScrolled ? 'scrolled' : ''} style={{ position:'fixed', top:0, left:0, right:0, boxSizing:'border-box', zIndex:1000, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.75rem 2rem' }}>
         <a
           href="#home"
@@ -921,15 +866,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
           <a href="#filosofia" onClick={() => { setShowFilosofia(true); setNavOpen(false) }}>Filosofia</a>
           <a href="#afiliados" onClick={() => { setShowAfiliados(true); setNavOpen(false) }}>Afiliados</a>
           <a href="#como-funciona" onClick={() => setNavOpen(false)}>Como funciona</a>
-          <a href="#indicacoes" onClick={() => setNavOpen(false)}>Indicações</a>
+          <a href="#indicacoes" onClick={() => setNavOpen(false)}>{"Indica\u00e7\u00f5es"}</a>
           <a href="#avaliar" onClick={() => setNavOpen(false)}>Avaliar</a>
           <a href="#oba" onClick={() => setNavOpen(false)}>Projeto OBA</a>
           <a href="#sobre" onClick={() => { setShowSobre(true); setNavOpen(false) }}>Sobre</a>
           <a href="#contato" onClick={(e) => { e.preventDefault(); setShowContato(true); setNavOpen(false) }}>Contato</a>
         </div>
-        {/* 3ª coluna: status de login (padrao ModalRedFairy) + hamburger */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px' }}>
-          {/* __SEM_BOTAO_LOGIN_NAV__ */}
           {medicoLogado && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div title={medicoLogado} style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#b91c1c', border: '2px solid rgba(123,30,30,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -950,15 +893,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
         </div>
       </nav>
 
-      {/* HERO */}
       <section className="hero">
         <div className="hero-wrap">
 
-          {/* COLUNA ESQUERDA */}
           <div className="reveal">
 
-
-            {/* Hero textbox: hover revela imagem E esconde texto (fiel ao Cowork) */}
             <div
               className={`hero-textbox${showHtb ? ' reveal-img' : ''}`}
               onMouseEnter={onHtbEnter}
@@ -969,15 +908,14 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 style={{ backgroundImage: `url(${filosofiaBg})` }}
               />
               <div className="htb-content">
-                <h1>Eu sou a sua fada vermelha, a sua <span className="red">Hemoglobina</span></h1>
+                <h1>{"Eu sou a sua fada vermelha, a sua "}<span className="red">Hemoglobina</span></h1>
                 <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:800, textAlign:'center' }}>
-                  Eu uso a poeira das estrelas para te entregar o ar.<br/>Quanto tempo você vive sem ar?
+                  {"Eu uso a poeira das estrelas para te entregar o ar."}<br/>{"Quanto tempo voc\u00ea vive sem ar?"}
                 </p>
               </div>
             </div>
 
 
-            {/* __FATIA_L1__ __L1_V4__ botoes progressivos */}
             <div className={`rf-fadewrap ${fluxoFade ? 'out' : 'in'}`} style={{ width:'100%', maxWidth:480, margin:'0 auto 0.5rem', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'0.7rem' }}>
 
               {fluxoEtapa === 'inicio' && (
@@ -1011,7 +949,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 </div>
               )}
 
-              {/* __L2A__ caixa unificada CRM -> Senha */}
               {fluxoEtapa === 'medico' && (
                 <div style={{ border:'2px solid #ef4444', borderRadius:'14px', padding:'16px', background:'#fff', width:'100%', maxWidth:340 }}>
                   <p style={{ fontSize:'0.78rem', fontWeight:800, color:'#ef4444', letterSpacing:'0.5px', margin:'0 0 6px', minHeight:'1rem', textAlign:'center' }}>
@@ -1035,7 +972,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                         onClick={caixaAvancarCrm}
                         disabled={!crmMedicoValido}
                         style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#ef4444', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: crmMedicoValido ? 'pointer' : 'not-allowed', opacity: crmMedicoValido ? 1 : 0.4 }}>
-                        CONTINUAR →
+                        {"CONTINUAR \u2192"}
                       </button>
                     </>
                   )}
@@ -1079,11 +1016,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                         onClick={caixaConcluir}
                         disabled={!caixaSenhaValida}
                         style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#ef4444', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: caixaSenhaValida ? 'pointer' : 'not-allowed', opacity: caixaSenhaValida ? 1 : 0.4 }}>
-                        CONTINUAR →
+                        {"CONTINUAR \u2192"}
                       </button>
                       <button onClick={() => setCaixaPasso('crm')}
                         style={{ width:'100%', background:'none', border:'none', color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, letterSpacing:'1px', cursor:'pointer', marginTop:'8px' }}>
-                        ← corrigir CRM
+                        {"\u2190 corrigir CRM"}
                       </button>
                     </>
                   )}
@@ -1116,30 +1053,29 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
               {fluxoEtapa !== 'inicio' && (
                 <button onClick={() => { setCrmMedicoExpand(false); irPara(fluxoEtapa === 'escolha' ? 'inicio' : 'escolha'); }}
                   style={{ background:'none', border:'none', color:'#9CA3AF', fontSize:'0.7rem', fontWeight:700, letterSpacing:'1px', cursor:'pointer', marginTop:'0.3rem' }}>
-                  ← VOLTAR
+                  {"\u2190 VOLTAR"}
                 </button>
               )}
 
             </div>
 
-            {/* Dupla linha vermelha + texto afiliados */}
             <div style={{ margin:'0.5rem 0 0.8rem', textAlign:'center', width:'100%', maxWidth:700 }}>
               <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.5rem' }} />
               <p style={{ color:'#1F2937', fontSize:'0.88rem', fontWeight:600, margin:'0.3rem 0 0.1rem' }}>
-                Avalie um paciente e torne-se membro do Programa de Afiliados patrocinado.
+                {"Avalie um paciente e torne-se membro do Programa de Afiliados patrocinado."}
               </p>
               <p style={{ color:'#6B7280', fontSize:'0.78rem', fontWeight:500, margin:'0 0 0.2rem' }}>
-                Ao beneficiar pacientes, você também passa a auferir benefícios.
+                {"Ao beneficiar pacientes, voc\u00ea tamb\u00e9m passa a auferir benef\u00edcios."}
               </p>
               <p style={{ color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', margin:'0.2rem 0 0.3rem' }}>
-                VÁLIDO PARA MÉDICOS COM REGISTRO NO CRM
+                {"V\u00c1LIDO PARA M\u00c9DICOS COM REGISTRO NO CRM"}
               </p>
             </div>
 
             <div className="trust" style={{ justifyContent:'center' }}>
               <div className="trust-i">
                 <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                <span>30 variáveis clínicas</span>
+                <span>{"30 vari\u00e1veis cl\u00ednicas"}</span>
               </div>
               <div className="trust-i">
                 <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -1150,7 +1086,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
 
           </div>
 
-          {/* COLUNA DIREITA */}
           <div className="hero-visual reveal" style={{ transitionDelay:'0.15s' }}>
 
 
@@ -1160,16 +1095,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
       </section>
 
 
-      {/* FILOSOFIA */}
       <section className="filosofia" id="filosofia" style={{ display: showFilosofia ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
           <div className="reveal">
             <span className="tag">Filosofia</span>
           </div>
           <div className="filosofia-grid">
-            {/* Coluna esquerda: quadro com hover igual ao hero-textbox + texto abaixo */}
             <div className="reveal">
-              {/* Quadro COM hover e imagem — igual ao hero-textbox */}
               <div
                 className={`hero-textbox${showFil ? ' reveal-img' : ''}`}
                 style={{ marginBottom:'1rem' }}
@@ -1182,40 +1114,38 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 />
                 <div className="htb-content">
                   <h1 style={{ fontSize:'2.2rem', lineHeight:1.2, marginBottom:'0.8rem', color:'#1F2937', fontWeight:800 }}>
-                    Vida é ventilação e perfusão. É a sua <span style={{ color:'#DC2626' }}>Hemoglobina</span> que faz isso.
+                    {"Vida \u00e9 ventila\u00e7\u00e3o e perfus\u00e3o. \u00c9 a sua "}<span style={{ color:'#DC2626' }}>Hemoglobina</span>{" que faz isso."}
                   </h1>
                   <p style={{ fontStyle:'normal', fontWeight:700, fontSize:'0.9rem', color:'#7B1E1E', lineHeight:1.6 }}>
                     Cuide dela. Saiba mais:
                   </p>
                 </div>
               </div>
-              {/* Texto abaixo do quadro */}
               <div style={{ padding:'0.5rem 0' }}>
-                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>Com Ferro, a Natureza faz a Hemoglobina, a proteína vermelha e mais importante da sua vida.</p>
-                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões e o entrega a todas as suas células — vinte vezes por minuto.</p>
-                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células, e o leva aos seus pulmões para que você o expire no ar do mundo.</p>
-                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, fontWeight:600 }}>No ambiente, uma proteína verde — a clorofila, mãe da Hemoglobina — usa a luz do sol para partir o CO2 e fazer açúcar a partir de carbono e água, devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.</p>
+                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>{"Com Ferro, a Natureza faz a Hemoglobina, a prote\u00edna vermelha e mais importante da sua vida."}</p>
+                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>{"Ela sustenta a ventila\u00e7\u00e3o e realiza a perfus\u00e3o: capta o oxig\u00eanio do ar que ventila os pulm\u00f5es e o entrega a todas as suas c\u00e9lulas \u2014 vinte vezes por minuto."}</p>
+                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>{"Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas c\u00e9lulas, e o leva aos seus pulm\u00f5es para que voc\u00ea o expire no ar do mundo."}</p>
+                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, fontWeight:600 }}>{"No ambiente, uma prote\u00edna verde \u2014 a clorofila, m\u00e3e da Hemoglobina \u2014 usa a luz do sol para partir o CO2 e fazer a\u00e7\u00facar a partir de carbono e \u00e1gua, devolvendo o oxig\u00eanio ao ar do planeta, em um ciclo virtuoso perfeito."}</p>
               </div>
             </div>
-            {/* Coluna direita: Ciclo da Vida em retângulo branco vertical */}
             <div className="reveal" style={{ transitionDelay:'0.1s' }}>
               <div className="cycle-card" style={{ height:'100%' }}>
                 <h4>O ciclo da vida</h4>
                 <div className="cycle-step">
-                  <div className="icon">⭐</div>
-                  <div className="desc">Ferro — é poeira das estrelas, dá poder ao seu sangue.</div>
+                  <div className="icon">{"\u2b50"}</div>
+                  <div className="desc">{"Ferro \u2014 \u00e9 poeira das estrelas, d\u00e1 poder ao seu sangue."}</div>
                 </div>
                 <div className="cycle-step">
                   <div className="icon"><img src={logo} className="fairy-mini" alt="Fadinha" /></div>
-                  <div className="desc">Hemoglobina — A fada vermelha, que com o ferro faz você respirar.</div>
+                  <div className="desc">{"Hemoglobina \u2014 A fada vermelha, que com o ferro faz voc\u00ea respirar."}</div>
                 </div>
                 <div className="cycle-step">
-                  <div className="icon">🫁</div>
-                  <div className="desc">Ventilação — Ela capta o oxigênio do ar, 20x por minuto.</div>
+                  <div className="icon">{"\ud83e\udeC1"}</div>
+                  <div className="desc">{"Ventila\u00e7\u00e3o \u2014 Ela capta o oxig\u00eanio do ar, 20x por minuto."}</div>
                 </div>
                 <div className="cycle-step">
-                  <div className="icon" style={{ color:'#DC2626' }}>❤️</div>
-                  <div className="desc">Perfusão — Ela entrega oxigênio a cada célula do corpo e capta o gás carbônico do metabolismo.</div>
+                  <div className="icon" style={{ color:'#DC2626' }}>{"\u2764\ufe0f"}</div>
+                  <div className="desc">{"Perfus\u00e3o \u2014 Ela entrega oxig\u00eanio a cada c\u00e9lula do corpo e capta o g\u00e1s carb\u00f4nico do metabolismo."}</div>
                 </div>
                 <div className="cycle-step">
                   <div className="icon">
@@ -1224,17 +1154,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                       <path d="M12 22V8" strokeWidth="1.5"/><path d="M12 12l4-3" strokeWidth="1.5" strokeLinecap="round"/><path d="M12 15l-3-2.5" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
                   </div>
-                  <div className="desc">Clorofila — No meio ambiente, a mãe verde recicla o gás carbônico em oxigênio.</div>
+                  <div className="desc">{"Clorofila \u2014 No meio ambiente, a m\u00e3e verde recicla o g\u00e1s carb\u00f4nico em oxig\u00eanio."}</div>
                 </div>
                 <div className="cycle-step">
-                  <div className="icon" style={{ color:'#3B82F6' }}>♻️</div>
-                  <div className="desc">Ciclo perfeito — O vermelho e o verde sustentam a vida no planeta azul.</div>
+                  <div className="icon" style={{ color:'#3B82F6' }}>{"\u267b\ufe0f"}</div>
+                  <div className="desc">{"Ciclo perfeito \u2014 O vermelho e o verde sustentam a vida no planeta azul."}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Botão X fechar na base (segundo ponto de saída) */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
             <button
               onClick={() => { setShowFilosofia(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
@@ -1246,18 +1175,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '1.1rem', fontWeight: 700,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                transition: 'all 0.2s', fontFamily: 'inherit',
+                transition: 'all 0.2s', fontFamily: "'Apple Color Emoji', 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif",
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
             >
-              ✕
+              {"\u2715"}
             </button>
           </div>
         </div>
       </section>
 
-      {/* SOBRE */}
       <section className="filosofia" id="sobre" style={{ display: showSobre ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
           <div className="reveal">
@@ -1265,36 +1193,30 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>RedFairy | OBA</h2>
           </div>
 
-          {/* ===================================================================== */}
-          {/* CONTEÚDO DA PÁGINA "SOBRE" */}
-          {/* ===================================================================== */}
           <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 760, marginLeft: 'auto', marginRight: 'auto' }}>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>RedFairy<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>®</sup></strong> e o <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>Projeto OBA<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>TM</sup> — Otimizar o Bariátrico</strong> representam uma iniciativa institucional de <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>Cytomica<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>®</sup></strong>, com forte compromisso ético e social, voltada à melhoria da qualidade de vida de pacientes com doenças e condições crônicas ou agudas que afetam a produção de hemoglobina e de células vermelhas. Entre eles, destacam-se os pacientes bariátricos, que frequentemente demandam atenção clínica especializada.
+              <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>RedFairy<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup></strong>{" e o "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>TM</sup>{" \u2014 Otimizar o Bari\u00e1trico"}</strong>{" representam uma iniciativa institucional de "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Cytomica"}<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup></strong>{", com forte compromisso \u00e9tico e social, voltada \u00e0 melhoria da qualidade de vida de pacientes com doen\u00e7as e condi\u00e7\u00f5es cr\u00f4nicas ou agudas que afetam a produ\u00e7\u00e3o de hemoglobina e de c\u00e9lulas vermelhas. Entre eles, destacam-se os pacientes bari\u00e1tricos, que frequentemente demandam aten\u00e7\u00e3o cl\u00ednica especializada."}
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              A iniciativa oferece <strong>avaliações iniciais gratuitas</strong>, acionadas por médicos com o apoio de um algoritmo médico avançado, seguidas, quando necessário, de acompanhamento acessível, com suporte de inteligência artificial e assistência médica por telemedicina.
+              {"A iniciativa oferece "}<strong>{"avalia\u00e7\u00f5es iniciais gratuitas"}</strong>{", acionadas por m\u00e9dicos com o apoio de um algoritmo m\u00e9dico avan\u00e7ado, seguidas, quando necess\u00e1rio, de acompanhamento acess\u00edvel, com suporte de intelig\u00eancia artificial e assist\u00eancia m\u00e9dica por telemedicina."}
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              Desenvolvido ao longo de anos sob a orientação do <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>Dr. Estácio Ferreira Ramos</strong>, hematologista e pesquisador, o projeto reúne rigor médico, inovação e propósito social.
+              {"Desenvolvido ao longo de anos sob a orienta\u00e7\u00e3o do "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Dr. Est\u00e1cio Ferreira Ramos"}</strong>{", hematologista e pesquisador, o projeto re\u00fane rigor m\u00e9dico, inova\u00e7\u00e3o e prop\u00f3sito social."}
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
-              O empreendimento inclui ainda um <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>Programa de Afiliados Patrocinado</strong>, destinado a ampliar o alcance da iniciativa e favorecer o acesso de um número crescente de pacientes à avaliação e ao cuidado.
+              {"O empreendimento inclui ainda um "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Afiliados Patrocinado"}</strong>{", destinado a ampliar o alcance da iniciativa e favorecer o acesso de um n\u00famero crescente de pacientes \u00e0 avalia\u00e7\u00e3o e ao cuidado."}
             </p>
 
-            {/* Fecho institucional em negrito simples */}
             <p style={{ textAlign: 'center', fontSize: '1.05rem', fontWeight: 700, color: 'var(--text)', margin: '0.5rem 0 0', letterSpacing: '0.5px' }}>
               Explore. Entenda. Compartilhe.
             </p>
 
           </div>
-          {/* ===================================================================== */}
 
-          {/* Botão X fechar na base (segundo ponto de saída) */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
             <button
               onClick={() => { setShowSobre(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
@@ -1306,18 +1228,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '1.1rem', fontWeight: 700,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                transition: 'all 0.2s', fontFamily: 'inherit',
+                transition: 'all 0.2s', fontFamily: "'Apple Color Emoji', 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif",
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
             >
-              ✕
+              {"\u2715"}
             </button>
           </div>
         </div>
       </section>
 
-      {/* AFILIADOS */}
       <section className="filosofia" id="afiliados" style={{ display: showAfiliados ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
           <div className="reveal">
@@ -1325,26 +1246,22 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>Programa de Afiliados</h2>
           </div>
 
-          {/* ========================================================================= */}
-          {/* CONTEÚDO DA PÁGINA "AFILIADOS" */}
-          {/* ========================================================================= */}
           <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 760, marginLeft: 'auto', marginRight: 'auto' }}>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              O <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>Programa de Afiliados RedFairy | OBA</strong> está aberto ao apoio de <strong>empresas, filantropos, organizações sociais e fundações</strong> comprometidos com a ampliação do acesso à iniciativa.
+              {"O "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Afiliados RedFairy | OBA"}</strong>{" est\u00e1 aberto ao apoio de "}<strong>{"empresas, filantropos, organiza\u00e7\u00f5es sociais e funda\u00e7\u00f5es"}</strong>{" comprometidos com a amplia\u00e7\u00e3o do acesso \u00e0 iniciativa."}
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              Seu objetivo é estimular e reconhecer <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>médicos</strong> que contribuam para expandir seu alcance, seja por meio de avaliações, seja por ações, ideias e iniciativas de difusão. Ao realizar a primeira avaliação de um paciente, o médico já pode optar por integrar o Programa.
+              {"Seu objetivo \u00e9 estimular e reconhecer "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"m\u00e9dicos"}</strong>{" que contribuam para expandir seu alcance, seja por meio de avalia\u00e7\u00f5es, seja por a\u00e7\u00f5es, ideias e iniciativas de difus\u00e3o. Ao realizar a primeira avalia\u00e7\u00e3o de um paciente, o m\u00e9dico j\u00e1 pode optar por integrar o Programa."}
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
-              Apoiar o programa é fortalecer o acesso de pessoas com condições ligadas ao <strong>ferro e à hemoglobina</strong> a mais saúde, desempenho e qualidade de vida.
+              {"Apoiar o programa \u00e9 fortalecer o acesso de pessoas com condi\u00e7\u00f5es ligadas ao "}<strong>{"ferro e \u00e0 hemoglobina"}</strong>{" a mais sa\u00fade, desempenho e qualidade de vida."}
             </p>
 
-            {/* Fecho com call-to-action — "Entre em contato" é link para o modal */}
             <p style={{ textAlign: 'center', fontSize: '1.05rem', fontWeight: 700, color: 'var(--text)', margin: '0.5rem 0 0', letterSpacing: '0.3px' }}>
-              Quer participar?{' '}
+              {"Quer participar? "}
               <a
                 href="#contato"
                 onClick={(e) => {
@@ -1358,13 +1275,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
               >
                 Entre em contato
               </a>
-              . Será um prazer acolher seu apoio.
+              {". Ser\u00e1 um prazer acolher seu apoio."}
             </p>
 
           </div>
-          {/* ========================================================================= */}
 
-          {/* Botão X fechar na base (segundo ponto de saída) */}
           <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
             <button
               onClick={() => { setShowAfiliados(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
@@ -1376,50 +1291,46 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '1.1rem', fontWeight: 700,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                transition: 'all 0.2s', fontFamily: 'inherit',
+                transition: 'all 0.2s', fontFamily: "'Apple Color Emoji', 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif",
               }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--cherry)'; e.currentTarget.style.transform = 'scale(1.1)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--wine)'; e.currentTarget.style.transform = 'scale(1)' }}
             >
-              ✕
+              {"\u2715"}
             </button>
           </div>
         </div>
       </section>
 
-      {/* INDICAÇÕES */}
+
       <section id="indicacoes">
         <div className="container">
           <div className="reveal center">
-            <span className="tag">Indicações</span>
-            <h2 className="stitle">Para quem é o RedFairy?</h2>
-            <p className="sdesc" style={{ margin:"0 auto" }}>Avaliação e acompanhamento de condições clínicas relacionadas ao eritron e metabolismo do ferro.</p>
+            <span className="tag">{"Indica\u00e7\u00f5es"}</span>
+            <h2 className="stitle">{"Para quem \u00e9 o RedFairy?"}</h2>
+            <p className="sdesc" style={{ margin:"0 auto" }}>{"Avalia\u00e7\u00e3o e acompanhamento de condi\u00e7\u00f5es cl\u00ednicas relacionadas ao eritron e metabolismo do ferro."}</p>
           </div>
           <div className="indicacoes-grid reveal">
-            {/* Bariátricos — bolinha amarela */}
             <div className="ind" style={{ alignItems:'flex-start' }}>
               <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0, marginTop:8 }} />
               <div>
-                <strong>Bariátricos</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>OBA — Otimizar o Bariátrico</div>
+                <strong>{"Bari\u00e1tricos"}</strong>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>{"OBA \u2014 Otimizar o Bari\u00e1trico"}</div>
               </div>
             </div>
-            {/* Anemias — subtexto */}
             <div className="ind auto-dot" style={{ alignItems:'flex-start' }}>
               <div>
                 <strong>Anemias</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Crônicas ou Agudas</div>
+                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>{"Cr\u00f4nicas ou Agudas"}</div>
               </div>
             </div>
-            {/* Deficiência de Ferro */}
             <div className="ind" style={{ alignItems:'flex-start' }}>
               <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:3 }} />
               <div>
-                <strong>Deficiência de Ferro</strong>
+                <strong>{"Defici\u00eancia de Ferro"}</strong>
                 <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Ferritina Baixa</div>
               </div>
             </div>
-            {/* Excesso de Ferro */}
             <div className="ind" style={{ alignItems:'flex-start' }}>
               <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:3 }} />
               <div>
@@ -1427,67 +1338,74 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                 <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Ferritina Alta</div>
               </div>
             </div>
-            {/* Hemoglobina Alta + Regime de Sangrias */}
             <div className="ind auto-dot" style={{ alignItems:'flex-start' }}>
               <div>
                 <strong>Hemoglobina Alta</strong>
                 <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Regime de Sangrias</div>
               </div>
             </div>
-            {/* Demais em negrito */}
-            {['Sangramentos Crônicos','Vegetarianos','Gestantes','Celíacos','Doadores de Sangue','Uso de Testosterona','Endometriose e Miomas','Menstruação Excessiva','Deficiência de G-6-PD','Alcoolistas'].map(i => (
+            {[
+              "Sangramentos Cr\u00f4nicos",
+              "Vegetarianos",
+              "Gestantes",
+              "Cel\u00edacos",
+              "Doadores de Sangue",
+              "Uso de Testosterona",
+              "Endometriose e Miomas",
+              "Menstrua\u00e7\u00e3o Excessiva",
+              "Defici\u00eancia de G-6-PD",
+              "Alcoolistas"
+            ].map(i => (
               <div key={i} className="ind auto-dot"><strong>{i}</strong></div>
             ))}
           </div>
           <div style={{ display:'flex', justifyContent:'center', marginTop:'1.5rem' }}>
             <a href="#oba" className="oba-home-btn" style={{ padding:'0.7rem 1.5rem' }}>
               <span className="oba-title">Projeto OBA</span>
-              <span className="oba-sub">Otimizar o Bariátrico</span>
-              <span className="oba-link">Saiba mais →</span>
+              <span className="oba-sub">{"Otimizar o Bari\u00e1trico"}</span>
+              <span className="oba-link">{"Saiba mais \u2192"}</span>
             </a>
           </div>
         </div>
       </section>
 
-      {/* TERAPÊUTICA */}
       <section className="terapeutica">
         <div className="container">
           <div className="reveal center">
-            <span className="tag">Orientações Terapêuticas</span>
-            <h2 className="stitle">Muito além do diagnóstico</h2>
+            <span className="tag">{"Orienta\u00e7\u00f5es Terap\u00eauticas"}</span>
+            <h2 className="stitle">{"Muito al\u00e9m do diagn\u00f3stico"}</h2>
             <p className="sdesc-bold" style={{ margin:"0 auto" }}>
-              O RedFairy é um algoritmo médico, que não apenas avalia: ele orienta.<br />
-              Gera recomendações personalizadas com base no perfil completo do paciente.
+              {"O RedFairy \u00e9 um algoritmo m\u00e9dico, que n\u00e3o apenas avalia: ele orienta."}<br />
+              {"Gera recomenda\u00e7\u00f5es personalizadas com base no perfil completo do paciente."}
             </p>
           </div>
           <div className="terap-grid reveal">
-            <div className="terap-card"><div className="tc-icon">💉</div><h4>Cálculo de dose para infusão de ferro</h4><p>Dose ideal de ferro endovenoso baseada no déficit estimado e peso do paciente.</p></div>
-            <div className="terap-card"><div className="tc-icon">🩸</div><h4>Sangrias terapêuticas</h4><p>Número de sessões, volume e intervalo entre sangrias para siderose e poliglobulia.</p></div>
-            <div className="terap-card"><div className="tc-icon">💊</div><h4>Reposição de ferro oral</h4><p>Dose, tipo de sal de ferro, horário e duração do tratamento via oral.</p></div>
-            <div className="terap-card"><div className="tc-icon">📈</div><h4>Gráfico multiparamétrico</h4><p>Acompanhamento evolutivo do eritron ao longo do tempo para cada paciente.</p></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc89"}</div><h4>{"C\u00e1lculo de dose para infus\u00e3o de ferro"}</h4><p>{"Dose ideal de ferro endovenoso baseada no d\u00e9ficit estimado e peso do paciente."}</p></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83e\ude78"}</div><h4>{"Sangrias terap\u00eauticas"}</h4><p>{"N\u00famero de sess\u00f5es, volume e intervalo entre sangrias para siderose e poliglobulia."}</p></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc8a"}</div><h4>{"Reposi\u00e7\u00e3o de ferro oral"}</h4><p>{"Dose, tipo de sal de ferro, hor\u00e1rio e dura\u00e7\u00e3o do tratamento via oral."}</p></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udcc8"}</div><h4>{"Gr\u00e1fico multiparam\u00e9trico"}</h4><p>{"Acompanhamento evolutivo do eritron ao longo do tempo para cada paciente."}</p></div>
           </div>
           <div style={{ marginTop:'2rem', padding:'0 0 0.5rem' }}>
             <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
             <p style={{ color:'#1F2937', fontSize:'0.92rem', fontWeight:600, textAlign:'center', margin:'0 0 0.3rem' }}>
-              Para fazer uma avaliação você vai precisar de algumas informações do eritrograma:
+              {"Para fazer uma avalia\u00e7\u00e3o voc\u00ea vai precisar de algumas informa\u00e7\u00f5es do eritrograma:"}
             </p>
             <p style={{ color:'#6B7280', fontSize:'0.85rem', fontWeight:600, textAlign:'center', margin:0 }}>
-              Hemoglobina · VCM · RDW + Ferritina e Saturação da Transferrina
+              {"Hemoglobina \u00b7 VCM \u00b7 RDW + Ferritina e Satura\u00e7\u00e3o da Transferrina"}
             </p>
           </div>
         </div>
       </section>
 
-      {/* COMO FUNCIONA */}
       <section className="como" id="como-funciona">
         <div className="container">
           <div className="center reveal">
             <span className="tag">Como Funciona</span>
-            <h2 className="stitle">Simples para médicos e pacientes</h2>
+            <h2 className="stitle">{"Simples para m\u00e9dicos e pacientes"}</h2>
           </div>
           <div className="como-tabs-wrap reveal">
             <div className="como-tabs">
-              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}><span>Para Médicos</span><span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.1rem" }}>MÉDICOS</span></button>
+              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}><span>{"Para M\u00e9dicos"}</span><span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.1rem" }}>{"M\u00c9DICOS"}</span></button>
               <button className={`como-tab${activeTab === 'paciente' ? ' active' : ''}`} onClick={() => setActiveTab('paciente')}>Para Pacientes</button>
             </div>
           </div>
@@ -1495,19 +1413,19 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
             {activeTab === 'medico' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step"><div className="flow-num">1</div><h4>Acesse o Modo Médico<br/><span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", color:"var(--cherry)", textTransform:"uppercase" }}>Médicos</span></h4><p>Gratuito, sem cadastro. Use o seu CRM para acesso imediato à calculadora clínica.</p></div>
-                  <div className="flow-step"><div className="flow-num">2</div><h4>Insira o CPF do paciente</h4><p>Única informação de identificação. Vincula os dados ao paciente automaticamente.</p></div>
-                  <div className="flow-step"><div className="flow-num">3</div><h4>Preencha os parâmetros</h4><p>Apenas cinco parâmetros laboratoriais e algumas caixinhas com dados clínicos.</p></div>
-                  <div className="flow-step"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>Diagnóstico, orientações terapêuticas e dosagens em segundos.</p></div>
+                  <div className="flow-step"><div className="flow-num">1</div><h4>{"Acesse o Modo M\u00e9dico"}<br/><span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", color:"var(--cherry)", textTransform:"uppercase" }}>{"M\u00e9dicos"}</span></h4><p>{"Gratuito, sem cadastro. Use o seu CRM para acesso imediato \u00e0 calculadora cl\u00ednica."}</p></div>
+                  <div className="flow-step"><div className="flow-num">2</div><h4>Insira o CPF do paciente</h4><p>{"\u00danica informa\u00e7\u00e3o de identifica\u00e7\u00e3o. Vincula os dados ao paciente automaticamente."}</p></div>
+                  <div className="flow-step"><div className="flow-num">3</div><h4>{"Preencha os par\u00e2metros"}</h4><p>{"Apenas cinco par\u00e2metros laboratoriais e algumas caixinhas com dados cl\u00ednicos."}</p></div>
+                  <div className="flow-step"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>{"Diagn\u00f3stico, orienta\u00e7\u00f5es terap\u00eauticas e dosagens em segundos."}</p></div>
                 </div>
                 <div style={{ margin:'1.5rem 0 0' }}>
                   <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
                   <p style={{ color:'#1F2937', fontSize:'0.95rem', fontWeight:600, textAlign:'center', margin:'0 0 0.2rem' }}>
-                    O Programa de Afiliados RedFairy beneficia quem beneficia os seus pacientes.
+                    {"O Programa de Afiliados RedFairy beneficia quem beneficia os seus pacientes."}
                   </p>
                   <p style={{ color:'#6B7280', fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', textAlign:'center', margin:'0.2rem 0 0', cursor:'pointer' }}
                      onClick={() => document.getElementById('acesso')?.scrollIntoView({ behavior:'smooth' })}>
-                    CONHEÇA AS REGRAS
+                    {"CONHE\u00c7A AS REGRAS"}
                   </p>
                 </div>
               </div>
@@ -1515,51 +1433,48 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
             {activeTab === 'paciente' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step"><div className="flow-num">1</div><h4>Informe seu CPF</h4><p>Se o seu médico já fez a primeira avaliação, seus dados já estarão aqui. Se ele não fez, você mesmo faz. Tenha em mãos o seu Hemograma, a Ferritina e a Saturação da Transferrina.</p></div>
-                  <div className="flow-step"><div className="flow-num">2</div><h4>Complete ou Faça um Novo Cadastro</h4><p>Cadastro simples com e-mail, senha e celular. Rápido e seguro.</p></div>
-                  <div className="flow-step"><div className="flow-num">3</div><h4>Assine via PIX</h4><p>R$ 149,90/ano via QR Code, Chave PIX ou Copie e Cole.</p></div>
-                  <div className="flow-step"><div className="flow-num">4</div><h4>Acompanhe seu eritron</h4><p>Novas avaliações geram o gráfico multiparamétrico da sua saúde eritrocitária.</p></div>
+                  <div className="flow-step"><div className="flow-num">1</div><h4>Informe seu CPF</h4><p>{"Se o seu m\u00e9dico j\u00e1 fez a primeira avalia\u00e7\u00e3o, seus dados j\u00e1 estar\u00e3o aqui. Se ele n\u00e3o fez, voc\u00ea mesmo faz. Tenha em m\u00e3os o seu Hemograma, a Ferritina e a Satura\u00e7\u00e3o da Transferrina."}</p></div>
+                  <div className="flow-step"><div className="flow-num">2</div><h4>{"Complete ou Fa\u00e7a um Novo Cadastro"}</h4><p>{"Cadastro simples com e-mail, senha e celular. R\u00e1pido e seguro."}</p></div>
+                  <div className="flow-step"><div className="flow-num">3</div><h4>Assine via PIX</h4><p>{"R$ 149,90/ano via QR Code, Chave PIX ou Copie e Cole."}</p></div>
+                  <div className="flow-step"><div className="flow-num">4</div><h4>Acompanhe seu eritron</h4><p>{"Novas avalia\u00e7\u00f5es geram o gr\u00e1fico multiparam\u00e9trico da sua sa\u00fade eritrocit\u00e1ria."}</p></div>
                 </div>
                 <div className="patient-features">
                   <div className="pf-card">
-                    {/* Gráfico evolutivo - ícone de linha de gráfico */}
                     <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                     </svg>
-                    <h4>Gráfico evolutivo</h4>
-                    <p>Acompanhe a evolução dos parâmetros ao longo do tempo em um painel visual.</p>
+                    <h4>{"Gr\u00e1fico evolutivo"}</h4>
+                    <p>{"Acompanhe a evolu\u00e7\u00e3o dos par\u00e2metros ao longo do tempo em um painel visual."}</p>
                   </div>
                   <div className="pf-card">
-                    {/* Orientações - ícone de documento com check */}
                     <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                       <polyline points="14 2 14 8 20 8"/>
                       <polyline points="9 15 11 17 15 13"/>
                     </svg>
-                    <h4>Orientações claras e Prescrições</h4>
-                    <p>Resultados em linguagem acessível, com recomendações práticas, emissão de receitas médicas, e pedidos de exames.</p>
+                    <h4>{"Orienta\u00e7\u00f5es claras e Prescri\u00e7\u00f5es"}</h4>
+                    <p>{"Resultados em linguagem acess\u00edvel, com recomenda\u00e7\u00f5es pr\u00e1ticas, emiss\u00e3o de receitas m\u00e9dicas, e pedidos de exames."}</p>
                     <p style={{marginTop:'0.6rem', display:'flex', alignItems:'flex-start', gap:'0.4rem'}}>
                       <svg width="16" height="16" viewBox="0 0 24 24" style={{flexShrink:0, marginTop:'2px'}}>
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" fill="#DC2626"/>
                         <line x1="12" y1="9" x2="12" y2="13" stroke="white" strokeWidth="2" strokeLinecap="round"/>
                         <line x1="12" y1="17" x2="12.01" y2="17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
                       </svg>
-                      <span style={{color:'#5C1515', fontSize:'0.78rem', fontWeight:600}}>ATENÇÃO: Haverá uma pequena taxa a pagar pela emissão de receitas médicas e pedidos de exames.</span>
+                      <span style={{color:'#5C1515', fontSize:'0.78rem', fontWeight:600}}>{"ATEN\u00c7\u00c3O: Haver\u00e1 uma pequena taxa a pagar pela emiss\u00e3o de receitas m\u00e9dicas e pedidos de exames."}</span>
                     </p>
                   </div>
                   <div className="pf-card">
-                    {/* Conectado ao médico - ícone de coração + pulso */}
                     <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                       <path d="M18.364 5.636a9 9 0 0 1 0 12.728" strokeDasharray="2 2"/>
                     </svg>
-                    <h4>Conectado ao seu médico</h4>
-                    <p>A avaliação do médico já está no seu perfil quando você se cadastrar.</p>
+                    <h4>{"Conectado ao seu m\u00e9dico"}</h4>
+                    <p>{"A avalia\u00e7\u00e3o do m\u00e9dico j\u00e1 est\u00e1 no seu perfil quando voc\u00ea se cadastrar."}</p>
                   </div>
                 </div>
                 <div className="pricing-box">
-                  <div className="price">R$ 149,90</div>
-                  <div className="price-sub">Por um ano de avaliações na plataforma</div>
+                  <div className="price">{"R$ 149,90"}</div>
+                  <div className="price-sub">{"Por um ano de avalia\u00e7\u00f5es na plataforma"}</div>
                   <div className="pix-methods">
                     <div className="pix-tag">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M17 14h3M14 17v3M17 20h3"/></svg>
@@ -1581,38 +1496,31 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
         </div>
       </section>
 
-      {/* EXPERIMENTE AGORA */}
       <section id="avaliar" style={{ background:'white', padding:'5.5rem 2rem' }}>
         <div className="container">
           <div className="center reveal" style={{ marginBottom:'2.5rem' }}>
             <span className="tag">Experimente Agora</span>
-            <h2 className="stitle">Faça uma avaliação gratuita</h2>
-            <p className="sdesc" style={{ margin:'0 auto' }}>Sem cadastro. Insira os dados e veja o diagnóstico.</p>
+            <h2 className="stitle">{"Fa\u00e7a uma avalia\u00e7\u00e3o gratuita"}</h2>
+            <p className="sdesc" style={{ margin:'0 auto' }}>{"Sem cadastro. Insira os dados e veja o diagn\u00f3stico."}</p>
           </div>
 
-          {/* Mockup celular */}
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
             <div style={{ width:300, background:'#1A1A2E', borderRadius:40, border:'8px solid #2A2A3E', boxShadow:'0 0 0 2px #111, inset 0 0 0 1px rgba(255,255,255,0.05)', overflow:'hidden' }}>
 
-              {/* Notch */}
               <div style={{ background:'#111', height:26, display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <div style={{ width:60, height:13, background:'#1A1A2E', borderRadius:'0 0 10px 10px' }} />
               </div>
-              {/* Status bar */}
               <div style={{ background:'#0F0F1A', padding:'3px 16px', display:'flex', justifyContent:'space-between' }}>
                 <span style={{ color:'rgba(255,255,255,0.4)', fontSize:9 }}>9:41</span>
-                <span style={{ color:'rgba(255,255,255,0.4)', fontSize:9 }}>▮▮▮ 🔋</span>
+                <span style={{ color:'rgba(255,255,255,0.4)', fontSize:9 }}>{"\u25ae\u25ae\u25ae \ud83d\udd0b"}</span>
               </div>
-              {/* Header com logo */}
               <div style={{ background:'linear-gradient(135deg,#7B1E1E,#DC2626)', padding:'8px 14px', display:'flex', alignItems:'center', gap:8 }}>
                 <img src={logo} alt="RedFairy" style={{ height:24, objectFit:'contain', filter:'brightness(0) invert(1)' }} />
                 <p style={{ color:'rgba(255,255,255,0.65)', fontSize:8, margin:0, letterSpacing:'0.5px' }}>Eritron e Metabolismo do Ferro</p>
               </div>
 
-              {/* Tela */}
               <div id="rf-screen" style={{ background:'#0F0F1A', height:500, overflowY:'auto' }}>
 
-                {/* Formulário */}
                 <div id="rf-view-form" style={{ padding:11 }}>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
@@ -1651,11 +1559,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                     <input type="number" id="rf-sat2" step="0.1" placeholder="25" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                   </div>
 
-                  {/* Contexto Clínico */}
                   <div style={{ marginBottom:10 }}>
-                    <p style={{ color:'rgba(255,255,255,0.65)', fontSize:8, textTransform:'uppercase', letterSpacing:1, margin:'0 0 5px' }}>Contexto Clínico</p>
+                    <p style={{ color:'rgba(255,255,255,0.65)', fontSize:8, textTransform:'uppercase', letterSpacing:1, margin:'0 0 5px' }}>{"Contexto Cl\u00ednico"}</p>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:4, marginBottom:6 }}>
-                      {[['bariatrica','Bariátrica'],['vegetariano','Vegetariano'],['perda','Hemorragia'],['alcoolista','Alcoolista'],['transfundido','Transfundido'],['hemoAlta','Hb Alta']].map(([k,l]) => (
+                      {[['bariatrica',"Bari\u00e1trica"],['vegetariano','Vegetariano'],['perda','Hemorragia'],['alcoolista','Alcoolista'],['transfundido','Transfundido'],['hemoAlta','Hb Alta']].map(([k,l]) => (
                         <label key={k} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.28)', borderRadius:6, padding:'5px 6px', cursor:'pointer', fontSize:9, color:'rgba(255,255,255,0.7)' }}>
                           <input type="checkbox" id={`rf2-${k}`} style={{ width:10, height:10, accentColor:'#DC2626', flexShrink:0 }} /> {l}
                         </label>
@@ -1673,27 +1580,26 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
 
                   <p id="rf-erro2" style={{ color:'#F87171', fontSize:10, margin:'0 0 6px', display:'none' }} />
                   <button onClick={() => rfAvaliar2()} style={{ width:'100%', background:'#7B1E1E', color:'white', border:'none', borderRadius:9, padding:10, fontSize:12, fontWeight:700, cursor:'pointer' }}>
-                    🔬 Avaliar Eritron
+                    {"\ud83d\udd2c Avaliar Eritron"}
                   </button>
                   <p style={{ color:'rgba(255,255,255,0.2)', fontSize:8, textAlign:'center', margin:'8px 0 0', letterSpacing:'0.3px' }}>
-                    RedFairy · Cuidar do Seu Eritron · by cytomica.com © 2026
+                    {"RedFairy \u00b7 Cuidar do Seu Eritron \u00b7 by cytomica.com \u00a9 2026"}
                   </p>
                 </div>
 
-                {/* Resultado */}
                 <div id="rf-view-result" style={{ display:'none', padding:11 }}>
                   <div id="rf-result-header" style={{ borderRadius:'10px 10px 0 0', padding:'10px 12px' }}>
-                    <p style={{ fontSize:8, color:'rgba(255,255,255,0.6)', margin:'0 0 2px', textTransform:'uppercase', letterSpacing:1 }}>Diagnóstico</p>
+                    <p style={{ fontSize:8, color:'rgba(255,255,255,0.6)', margin:'0 0 2px', textTransform:'uppercase', letterSpacing:1 }}>{"Diagn\u00f3stico"}</p>
                     <p id="rf-result-label" style={{ fontSize:13, fontWeight:700, color:'white', margin:0 }} />
                   </div>
                   <div style={{ background:'rgba(0,0,0,0.3)', borderRadius:'0 0 10px 10px', padding:'10px 12px', marginBottom:8 }}>
-                    <p style={{ fontSize:8, color:'rgba(255,255,255,0.45)', margin:'0 0 3px', textTransform:'uppercase', letterSpacing:1 }}>Diagnóstico</p>
+                    <p style={{ fontSize:8, color:'rgba(255,255,255,0.45)', margin:'0 0 3px', textTransform:'uppercase', letterSpacing:1 }}>{"Diagn\u00f3stico"}</p>
                     <p id="rf-result-diag" style={{ fontSize:10, color:'white', margin:'0 0 10px', lineHeight:1.6 }} />
-                    <p style={{ fontSize:8, color:'rgba(255,255,255,0.45)', margin:'0 0 3px', textTransform:'uppercase', letterSpacing:1 }}>Recomendação</p>
+                    <p style={{ fontSize:8, color:'rgba(255,255,255,0.45)', margin:'0 0 3px', textTransform:'uppercase', letterSpacing:1 }}>{"Recomenda\u00e7\u00e3o"}</p>
                     <p id="rf-result-rec" style={{ fontSize:10, color:'white', margin:0, lineHeight:1.6 }} />
                   </div>
                   <div style={{ background:'rgba(220,38,38,0.15)', border:'1px solid rgba(220,38,38,0.3)', borderRadius:10, padding:'10px 12px', textAlign:'center', marginBottom:8 }}>
-                    <p style={{ color:'rgba(255,255,255,0.55)', fontSize:9, margin:'0 0 6px' }}>Para orientações completas com dosagens:</p>
+                    <p style={{ color:'rgba(255,255,255,0.55)', fontSize:9, margin:'0 0 6px' }}>{"Para orienta\u00e7\u00f5es completas com dosagens:"}</p>
                     <button onClick={() => {
                         const hb   = document.getElementById('rf-hb2')?.value
                         const ferr = document.getElementById('rf-ferr2')?.value
@@ -1708,16 +1614,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                         if (bari) localStorage.setItem('rf_flag', 'bariatrica')
                         onModoMedico()
                       }} style={{ background:'#7B1E1E', color:'white', border:'none', borderRadius:7, padding:'7px 12px', fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
-                        Acessar RedFairy completo →
+                        {"Acessar RedFairy completo \u2192"}
                       </button>
                   </div>
                   <button onClick={() => rfReset2()} style={{ width:'100%', background:'rgba(255,255,255,0.12)', color:'rgba(255,255,255,0.6)', border:'none', borderRadius:8, padding:8, fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
-                    ← Nova avaliação
+                    {"\u2190 Nova avalia\u00e7\u00e3o"}
                   </button>
                 </div>
               </div>
 
-              {/* Home bar */}
               <div style={{ background:'#0F0F1A', padding:7, display:'flex', justifyContent:'center' }}>
                 <div style={{ width:70, height:3, background:'rgba(255,255,255,0.2)', borderRadius:2 }} />
               </div>
@@ -1726,85 +1631,82 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
         </div>
       </section>
 
-      {/* PROJETO OBA */}
       <section className="oba" id="oba">
         <div className="container">
           <div className="reveal">
             <span className="tag">Projeto OBA</span>
-            <h2 className="stitle">Otimizar o Bariátrico</h2>
-            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', maxWidth:580, lineHeight:1.7, fontWeight:700 }}>Milhares de bariátricos vivem desassistidos. O Projeto OBA é um sub-algoritmo especializado dentro do RedFairy que cuida especificamente de quem fez cirurgia bariátrica.</p>
+            <h2 className="stitle">{"Otimizar o Bari\u00e1trico"}</h2>
+            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', maxWidth:580, lineHeight:1.7, fontWeight:700 }}>{"Milhares de bari\u00e1tricos vivem desassistidos. O Projeto OBA \u00e9 um sub-algoritmo especializado dentro do RedFairy que cuida especificamente de quem fez cirurgia bari\u00e1trica."}</p>
           </div>
           <div className="oba-grid">
             <div className="oba-narrative reveal">
-              <div className="oba-metaphor"><p>A cirurgia bariátrica corta as asas da sua fada vermelha.<br />Ela continua com seus superpoderes, mas para voar precisa da ajuda do RedFairy.</p></div>
-              <p>O bypass gástrico e a gastrectomia causam uma <strong>síndrome disabsortiva</strong> que prejudica a absorção de ferro, vitamina B12 e outros elementos essenciais.</p>
-              <p>O Projeto OBA oferece um <strong>tratamento de manutenção indefinido</strong>: monitoramento contínuo, cálculo de reposição personalizado e orientações específicas.</p>
+              <div className="oba-metaphor"><p>{"A cirurgia bari\u00e1trica corta as asas da sua fada vermelha."}<br />{"Ela continua com seus superpoderes, mas para voar precisa da ajuda do RedFairy."}</p></div>
+              <p>{"O bypass g\u00e1strico e a gastrectomia causam uma "}<strong>{"s\u00edndrome disabsortiva"}</strong>{" que prejudica a absor\u00e7\u00e3o de ferro, vitamina B12 e outros elementos essenciais."}</p>
+              <p>{"O Projeto OBA oferece um "}<strong>{"tratamento de manuten\u00e7\u00e3o indefinido"}</strong>{": monitoramento cont\u00ednuo, c\u00e1lculo de reposi\u00e7\u00e3o personalizado e orienta\u00e7\u00f5es espec\u00edficas."}</p>
               <div className="oba-cta-row">
                 <button className="btn btn-oba-main" onClick={() => {
                         localStorage.setItem('rf_flag', 'bariatrica')
                         onModoPaciente && onModoPaciente()
                       }} style={{ flexDirection:'column', gap:'0.2rem', alignItems:'center', animation:'pulse 1.5s ease-out infinite', margin:'0 auto', display:'flex', border:'2px solid rgba(220,38,38,0.8)' }}>
-                  <span>Sou Bariátrico — Começar</span>
-                  <span style={{ fontSize:'0.65rem', textTransform:'uppercase', letterSpacing:'1px', opacity:0.8, fontWeight:700 }}>Siga as Instruções</span>
+                  <span>{"Sou Bari\u00e1trico \u2014 Come\u00e7ar"}</span>
+                  <span style={{ fontSize:'0.65rem', textTransform:'uppercase', letterSpacing:'1px', opacity:0.8, fontWeight:700 }}>{"Siga as Instru\u00e7\u00f5es"}</span>
                 </button>
               </div>
             </div>
             <div className="oba-features reveal" style={{ transitionDelay:'0.1s' }}>
-              <div className="oba-feat"><div className="of-icon">🔬</div><div><h4>Mini-anamnese especializada</h4><p>Informações adicionais para que o algoritmo cuide de você especificamente.</p></div></div>
-              <div className="oba-feat"><div className="of-icon">💊</div><div><h4>Reposição personalizada</h4><p>Cálculo de ferro, B12 e outros elementos prejudicados pela síndrome disabsortiva.</p></div></div>
-              <div className="oba-feat"><div className="of-icon">📈</div><div><h4>Monitoramento contínuo</h4><p>Evolução dos parâmetros com gráficos e alertas personalizados.</p></div></div>
-              <div className="oba-feat"><div className="of-icon">💰</div><div><h4>Muito mais acessível</h4><p>Custa uma fração do acompanhamento médico tradicional recorrente.</p></div></div>
-              <div className="oba-feat"><div className="of-icon">🔗</div><div><h4>Manutenção indefinida</h4><p>O bariátrico precisa de cuidado contínuo. O RedFairy está sempre ao seu lado.</p></div></div>
+              <div className="oba-feat"><div className="of-icon">{"\ud83d\udd2c"}</div><div><h4>Mini-anamnese especializada</h4><p>{"Informa\u00e7\u00f5es adicionais para que o algoritmo cuide de voc\u00ea especificamente."}</p></div></div>
+              <div className="oba-feat"><div className="of-icon">{"\ud83d\udc8a"}</div><div><h4>{"Reposi\u00e7\u00e3o personalizada"}</h4><p>{"C\u00e1lculo de ferro, B12 e outros elementos prejudicados pela s\u00edndrome disabsortiva."}</p></div></div>
+              <div className="oba-feat"><div className="of-icon">{"\ud83d\udcc8"}</div><div><h4>{"Monitoramento cont\u00ednuo"}</h4><p>{"Evolu\u00e7\u00e3o dos par\u00e2metros com gr\u00e1ficos e alertas personalizados."}</p></div></div>
+              <div className="oba-feat"><div className="of-icon">{"\ud83d\udcb0"}</div><div><h4>{"Muito mais acess\u00edvel"}</h4><p>{"Custa uma fra\u00e7\u00e3o do acompanhamento m\u00e9dico tradicional recorrente."}</p></div></div>
+              <div className="oba-feat"><div className="of-icon">{"\ud83d\udd17"}</div><div><h4>{"Manuten\u00e7\u00e3o indefinida"}</h4><p>{"O bari\u00e1trico precisa de cuidado cont\u00ednuo. O RedFairy est\u00e1 sempre ao seu lado."}</p></div></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA FINAL */}
       <section className="cta-final" id="acesso">
         <div className="container">
           <div className="center reveal" style={{ marginBottom:'2.5rem' }}>
             <span className="tag">Comece Agora</span>
-            <h2 style={{ fontSize:'1.6rem', fontWeight:800, color:'var(--wine)', marginBottom:'0.8rem' }}>Cuide da sua Hemoglobina, ela é a sua vida.</h2>
+            <h2 style={{ fontSize:'1.6rem', fontWeight:800, color:'var(--wine)', marginBottom:'0.8rem' }}>{"Cuide da sua Hemoglobina, ela \u00e9 a sua vida."}</h2>
           </div>
           <div className="cta-cards reveal">
             <div className="cta-c cta-doc">
-              <div className="ci">🩺</div>
-              <h3>Modo Médico<br/><span style={{ fontSize:"0.65rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>MÉDICOS</span></h3>
-              <p>Avaliação rápida sem cadastro. Insira o CPF e os dados do paciente e obtenha diagnóstico com orientações terapêuticas.</p>
+              <div className="ci">{"\ud83e\ude7a"}</div>
+              <h3>{"Modo M\u00e9dico"}<br/><span style={{ fontSize:"0.65rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>{"M\u00c9DICOS"}</span></h3>
+              <p>{"Avalia\u00e7\u00e3o r\u00e1pida sem cadastro. Insira o CPF e os dados do paciente e obtenha diagn\u00f3stico com orienta\u00e7\u00f5es terap\u00eauticas."}</p>
               <ul>
                 <li>Acesso 100% gratuito</li>
-                <li>Sem cadastro necessário</li>
-                <li>Orientações terapêuticas com dosagens</li>
+                <li>{"Sem cadastro necess\u00e1rio"}</li>
+                <li>{"Orienta\u00e7\u00f5es terap\u00eauticas com dosagens"}</li>
                 <li>Ganhe 10 USDC por paciente cadastrado</li>
               </ul>
-              <button className="btn-cta-doc" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>Acessar como Médico<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>AINDA NÃO AFILIADO</span></button>
+              <button className="btn-cta-doc" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>{"Acessar como M\u00e9dico"}<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>{"AINDA N\u00c3O AFILIADO"}</span></button>
             </div>
             <div className="cta-c cta-pat">
-              <div className="ci">❤️</div>
+              <div className="ci">{"\u2764\ufe0f"}</div>
               <h3>Modo Paciente</h3>
-              <p>Cadastre-se e acompanhe a evolução do seu eritron ao longo do tempo.</p>
+              <p>{"Cadastre-se e acompanhe a evolu\u00e7\u00e3o do seu eritron ao longo do tempo."}</p>
               <ul>
-                <li>Primeira avaliação já disponível</li>
-                <li>Gráfico evolutivo multiparamétrico</li>
-                <li>Orientações em linguagem acessível</li>
-                <li>R$ 149,90/ano via PIX</li>
+                <li>{"Primeira avalia\u00e7\u00e3o j\u00e1 dispon\u00edvel"}</li>
+                <li>{"Gr\u00e1fico evolutivo multiparam\u00e9trico"}</li>
+                <li>{"Orienta\u00e7\u00f5es em linguagem acess\u00edvel"}</li>
+                <li>{"R$ 149,90/ano via PIX"}</li>
               </ul>
-              <button className="btn-cta-pat" onClick={onModoPaciente} style={{ flexDirection:"column", gap:"0.1rem" }}>Acessar como Paciente<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>AINDA NÃO CADASTRADO</span></button>
+              <button className="btn-cta-pat" onClick={onModoPaciente} style={{ flexDirection:"column", gap:"0.1rem" }}>{"Acessar como Paciente"}<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>{"AINDA N\u00c3O CADASTRADO"}</span></button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer style={{ padding:'0.8rem 1rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
         <p style={{ fontSize:'0.65rem', color:'var(--text-light)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:'0 0 0.3rem', letterSpacing:'-0.01em' }}>
           <img src={logo} alt="" style={{ height:14, verticalAlign:'middle', marginRight:4 }} />
           <span style={{ fontFamily:"'DM Serif Display',serif", color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em></span>
-          {' · '}Cuidar do Seu Eritron{' · '}by <a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a> © 2026{' · '}E.F. Ramos, M.D. CRM 6302 BA{' · '}<a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a>
+          {" \u00b7 Cuidar do Seu Eritron \u00b7 by "}<a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a>{" \u00a9 2026 \u00b7 E.F. Ramos, M.D. CRM 6302 BA \u00b7 "}<a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a>
         </p>
         <p style={{ fontSize:'0.62rem', color:'var(--text-light)', margin:0 }}>
-          <span style={{ color:'var(--cherry)', fontWeight:700 }}>*</span>{' '}Válido para todos os médicos com registro no CRM.
+          <span style={{ color:'var(--cherry)', fontWeight:700 }}>*</span>{" V\u00e1lido para todos os m\u00e9dicos com registro no CRM."}
         </p>
       </footer>
 

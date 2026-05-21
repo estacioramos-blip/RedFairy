@@ -19,10 +19,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showOBAModal, setShowOBAModal] = useState(false)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
   const [fraseGestacaoConcluida, setFraseGestacaoConcluida] = useState(false)
-  const [showDespedidaModal, setShowDespedidaModal] = useState(false)
-  const [querPedidoGratuito, setQuerPedidoGratuito] = useState(true)
-  const [salvandoPedido, setSalvandoPedido] = useState(false)
-  const [showToastWhatsapp, setShowToastWhatsapp] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
 
   const [inputs, setInputs] = useState({
@@ -69,41 +65,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     return () => window.removeEventListener('keydown', handleDemoKey)
   }, [])
 
-  // Pre-preenche sexo, idade, bariatrica e gestacao em inputs sempre que profile mudar.
-  // Idade, sexo, bariatrica vem SEMPRE do profile (paciente nao edita).
-  // Gestacao: se profile registrou gestacao na triagem, calcula as semanas atuais
-  //   a partir de profile.semanas_gestacao_triagem + profile.data_triagem_gestacao.
-  //   Se <= 40 semanas, pre-preenche. Se > 40, mostra frase pos-parto uma vez.
   useEffect(() => {
     if (!profile) return
     const idadeProfile = profile.data_nascimento ? calcularIdade(profile.data_nascimento) : ''
-
-    let gestanteAtual = false
-    let semanasAtuaisStr = ''
-    if (profile.gestante && profile.semanas_gestacao_triagem && profile.data_triagem_gestacao) {
-      const dataTriagem = new Date(profile.data_triagem_gestacao)
-      const hoje = new Date()
-      const diasDecorridos = (hoje - dataTriagem) / (1000 * 60 * 60 * 24)
-      const semanasAtuais = Number(profile.semanas_gestacao_triagem) + (diasDecorridos / 7)
-      if (semanasAtuais > 40) {
-        const flagKey = `frase_posparto_${profile.id}`
-        if (!localStorage.getItem(flagKey)) {
-          setFraseGestacaoConcluida(true)
-          localStorage.setItem(flagKey, 'shown')
-        }
-      } else {
-        gestanteAtual = true
-        semanasAtuaisStr = String(Math.floor(semanasAtuais))
-      }
-    }
-
     setInputs(prev => ({
       ...prev,
       sexo: profile.sexo || prev.sexo || '',
       idade: idadeProfile ? String(idadeProfile) : (prev.idade || ''),
       bariatrica: !!profile.bariatrica,
-      gestante: gestanteAtual,
-      semanas_gestacao: semanasAtuaisStr,
     }))
   }, [profile])
 
@@ -122,7 +91,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       }
       return
     }
-    // Retry pos-signUp (race condition: profile insert pode nao ter terminado)
     let prof = null
     const delays = [0, 250, 600, 1200]
     for (const d of delays) {
@@ -159,7 +127,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   function handleChange(e) {
     const { name, value, type, checked } = e.target
     let v = type === 'checkbox' ? checked : value
-    // Decimais clinicos: aceita virgula, salva com ponto
     if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf'].includes(name) && typeof v === 'string') {
       v = v.replace(',', '.')
     }
@@ -239,37 +206,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       setShowOBAModal(true)
     }
   }
-
-  async function handleDespedida() {
-    setSalvandoPedido(true)
-    if (querPedidoGratuito && profile) {
-      const { error } = await supabase.from('pedidos_documento').insert({
-        user_id: profile.id,
-        cpf: profile.cpf,
-        nome: profile.nome,
-        data_nascimento: profile.data_nascimento || null,
-        celular: profile.celular || null,
-        tipos_documento: ['hemograma', 'ferritina', 'sat_transferrina'],
-        texto_documentos: 'Primeiro pedido gratuito - solicitado pelo paciente no fluxo de cadastro.',
-        valor_total: 0,
-        status: 'pendente_envio',
-      })
-      if (error) {
-        console.error('[handleDespedida] erro ao criar pedido:', error)
-        alert('Nao conseguimos registrar seu pedido. Por favor tente novamente ou contate o suporte.')
-        setSalvandoPedido(false)
-        return
-      }
-    }
-    setSalvandoPedido(false)
-    setShowDespedidaModal(false)
-    setShowToastWhatsapp(true)
-    setTimeout(async () => {
-      await supabase.auth.signOut()
-      onVoltar()
-    }, 3500)
-  }
-
   async function handleLogout() {
     await supabase.auth.signOut()
     onVoltar()
@@ -301,7 +237,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     <>
     <div className="min-h-screen bg-gray-50">
 
-      {/* HEADER */}
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <button onClick={onVoltar}
@@ -313,10 +248,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               style={{ filter: 'brightness(10)' }} />
             <div>
               <h1 className="text-xl font-bold">RedFairy</h1>
-              <p className="text-red-200 text-xs">Olá, {profile?.nome?.split(' ')[0]}!</p>
+              <p className="text-red-200 text-xs">{"Ol\u00e1, "}{profile?.nome?.split(' ')[0]}{"!"}</p>
               <div style={{ display:'flex', flexDirection:'column', gap:'1px', marginTop:'2px' }}>
-                <span style={{ color:'rgba(252,165,165,0.7)', fontSize:'8px', fontFamily:'monospace' }}>Ctrl+M ♂20  Ctrl+B ♂50</span>
-                <span style={{ color:'rgba(252,165,165,0.7)', fontSize:'8px', fontFamily:'monospace' }}>Ctrl+F ♀20  Ctrl+G ♀50</span>
+                <span style={{ color:'rgba(252,165,165,0.7)', fontSize:'8px', fontFamily:'monospace' }}>{"Ctrl+M \u264220  Ctrl+B \u264250"}</span>
+                <span style={{ color:'rgba(252,165,165,0.7)', fontSize:'8px', fontFamily:'monospace' }}>{"Ctrl+F \u264020  Ctrl+G \u264050"}</span>
               </div>
             </div>
           </div>
@@ -342,22 +277,22 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         </div>
       </header>
 
-      {/* Frase pos-parto */}
       {fraseGestacaoConcluida && (
         <div className="max-w-3xl mx-auto px-4 mt-4">
           <div className="rounded-xl border border-pink-200 bg-pink-50 p-4 flex items-start gap-3">
-            <div className="text-2xl">🌸</div>
+            <div className="text-2xl">{"\ud83c\udf38"}</div>
             <div className="flex-1">
               <p className="text-sm text-pink-900 leading-relaxed">
-                Espero que tudo tenha corrido bem com a <strong>gestação, o parto e o bebê</strong>. Vamos ver como está a sua Hemoglobina?
+                {"Espero que tudo tenha corrido bem com a "}<strong>{"gesta\u00e7\u00e3o, o parto e o beb\u00ea"}</strong>{". Vamos ver como est\u00e1 a sua Hemoglobina?"}
               </p>
             </div>
             <button
               onClick={() => setFraseGestacaoConcluida(false)}
               className="text-pink-400 hover:text-pink-600 text-lg leading-none"
               aria-label="Fechar"
+              style={{ fontFamily: "'Apple Color Emoji', 'Segoe UI Symbol', 'Noto Sans Symbols', sans-serif" }}
             >
-              ✕
+              {"\u2715"}
             </button>
           </div>
         </div>
@@ -377,8 +312,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           onConcluir={() => setShowOBAModal(false)}
         />
       )}
-
-      {/* MODAL SOBRE */}
       {showSobre && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: 'rgba(0,0,0,0.7)' }}
@@ -386,21 +319,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl"
             style={{ maxHeight: '90vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
-              <img src={heroImg} alt="RedFairy"
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
-                    Eu sou a sua fada vermelha, a sua <span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>.
-                    <br />
-                    Eu uso a poeira das estrelas para te entregar o ar.
-                    <br />
-                    <span style={{ fontWeight: '600' }}>Quanto tempo você vive sem ar?</span>
-                  </p>
-                </div>
-              </div>
-            </div>
+          <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
+  <img src={heroImg} alt="RedFairy"
+    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
+    <div style={{ textAlign: 'center' }}>
+            <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
+        {"Eu sou a sua fada vermelha, a sua "}<span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>{"."}
+        <br />
+        {"Eu uso a poeira das estrelas para te entregar o ar."}
+        <br />
+        <span style={{ fontWeight: '600' }}>{"Quanto tempo voc\u00ea vive sem ar?"}</span>
+      </p>
+    </div>
+  </div>
+</div>
             <div style={{ padding: '20px' }}>
               {!showSaibaMais && (
                 <button onClick={() => setShowSaibaMais(true)}
@@ -410,29 +343,23 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               )}
               {showSaibaMais && (
                 <div style={{ marginBottom: '16px' }}>
-                  <h3 className="text-red-700 font-bold text-base text-center mb-4">Vida é ventilação e perfusão</h3>
+                  <h3 className="text-red-700 font-bold text-base text-center mb-4">{"Vida \u00e9 ventila\u00e7\u00e3o e perfus\u00e3o"}</h3>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    O Ferro em você veio das estrelas, e dele o vermelho do seu sangue - a sua potência.
-                    Com Ferro, a Natureza faz a <strong>Hemoglobina</strong>, a proteína vermelha e mais importante da sua vida.
+                    {"O Ferro em voc\u00ea veio das estrelas, e dele o vermelho do seu sangue - a sua pot\u00eancia. Com Ferro, a Natureza faz a "}<strong>Hemoglobina</strong>{", a prote\u00edna vermelha e mais importante da sua vida."}
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    Ela sustenta a ventilação e realiza a perfusão: capta o oxigênio do ar que ventila os pulmões
-                    e o entrega a todas as suas células - vinte vezes por minuto. As células precisam do oxigênio
-                    para queimar o alimento e obter a energia vital, sem a qual você só vive alguns minutos.
+                    {"Ela sustenta a ventila\u00e7\u00e3o e realiza a perfus\u00e3o: capta o oxig\u00eanio do ar que ventila os pulm\u00f5es e o entrega a todas as suas c\u00e9lulas - vinte vezes por minuto. As c\u00e9lulas precisam do oxig\u00eanio para queimar o alimento e obter a energia vital, sem a qual voc\u00ea s\u00f3 vive alguns minutos."}
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas células,
-                    e o leva aos seus pulmões para que você o expire no ar do mundo.
+                    {"Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas c\u00e9lulas, e o leva aos seus pulm\u00f5es para que voc\u00ea o expire no ar do mundo."}
                   </p>
                   <p className="text-gray-700 text-sm leading-relaxed mb-3">
-                    No ambiente, uma proteína verde - a clorofila, mãe da Hemoglobina -
-                    usa a luz do sol para partir o CO2 e fazer açúcar a partir de luz, carbono e água,
-                    devolvendo o oxigênio ao ar do planeta, em um ciclo virtuoso perfeito.
+                    {"No ambiente, uma prote\u00edna verde - a clorofila, m\u00e3e da Hemoglobina - usa a luz do sol para partir o CO2 e fazer a\u00e7\u00facar a partir de luz, carbono e \u00e1gua, devolvendo o oxig\u00eanio ao ar do planeta, em um ciclo virtuoso perfeito."}
                   </p>
                   <div className="mt-4 text-center">
-                    <p className="text-gray-500 text-xs font-medium">RT | E.F. Ramos, M.D.</p>
-                    <p className="text-red-700 text-xs mt-1">drestacioramos.com.br</p>
-                  </div>
+  <p className="text-gray-500 text-xs font-medium">RT | E.F. Ramos, M.D.</p>
+  <p className="text-red-700 text-xs mt-1">drestacioramos.com.br</p>
+</div>
                 </div>
               )}
               <button onClick={() => { setShowSobre(false); setShowSaibaMais(false) }}
@@ -445,58 +372,28 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       )}
 
       <div className="max-w-3xl mx-auto px-4 py-6">
-        {avaliacoes.length > 0 && (
-          <div className="flex gap-2 mb-6">
-            <button onClick={() => setTela('historico')}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'historico' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
-              Histórico
-            </button>
-            <button onClick={() => { setTela('nova'); setResultado(null) }}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'nova' || tela === 'resultado' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
-              Nova Avaliação
-            </button>
-          </div>
-        )}
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => setTela('historico')}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'historico' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
+            {"Hist\u00f3rico"}
+          </button>
+          <button onClick={() => { setTela('nova'); setResultado(null) }}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'nova' || tela === 'resultado' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
+            {"Nova Avalia\u00e7\u00e3o"}
+          </button>
+        </div>
 
         {tela === 'historico' && (
           <div className="space-y-3">
             {avaliacoes.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center border">
+              <div className="bg-white rounded-2xl p-8 text-center text-gray-400 border">
                 <img src={logo} alt="RedFairy" className="w-12 h-12 object-contain mx-auto mb-3"
                   style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.4))' }} />
-                {profile?.bariatrica ? (
-                  <>
-                    <p className="text-gray-700 leading-relaxed mb-1">
-                      Como você é <strong>bariátrica</strong>, vamos começar com a <strong>anamnese específica</strong>.
-                    </p>
-                    <p className="text-xs text-gray-400 mb-4">
-                      Depois disso, traga Hb, Ferritina e Saturação da Transferrina para sua primeira avaliação completa.
-                    </p>
-                    <button onClick={() => setShowOBAModal(true)}
-                      className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-xl text-sm font-semibold transition-colors">
-                      Iniciar Anamnese OBA
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-gray-700 leading-relaxed mb-2">
-                      Você já tem os resultados de <strong>Ferritina</strong> e <strong>Saturação da Transferrina</strong>?
-                    </p>
-                    <p className="text-xs text-gray-400 mb-5">
-                      Esses exames complementam o hemograma para uma avaliação completa.
-                    </p>
-                    <div className="flex gap-3 justify-center flex-wrap">
-                      <button onClick={() => { setTela('nova'); setResultado(null) }}
-                        className="bg-red-700 hover:bg-red-800 text-white px-6 py-2 rounded-xl text-sm font-semibold transition-colors">
-                        Sim, tenho
-                      </button>
-                      <button onClick={() => setShowDespedidaModal(true)}
-                        className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-2 rounded-xl text-sm font-semibold transition-colors">
-                        Ainda não
-                      </button>
-                    </div>
-                  </>
-                )}
+                <p>{"Nenhuma avalia\u00e7\u00e3o ainda."}</p>
+                <button onClick={() => setTela('nova')}
+                  className="mt-4 bg-red-700 text-white px-6 py-2 rounded-xl text-sm">
+                  {"Fazer primeira avalia\u00e7\u00e3o"}
+                </button>
               </div>
             ) : avaliacoes.map(av => (
               <div key={av.id} className="bg-white rounded-2xl p-4 border shadow-sm flex items-center justify-between">
@@ -505,7 +402,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     {new Date(av.data_coleta + 'T12:00:00').toLocaleDateString('pt-BR')}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Hb: {av.hemoglobina} | Ferritina: {av.ferritina} | VCM: {av.vcm}
+                    {"Hb: "}{av.hemoglobina}{" | Ferritina: "}{av.ferritina}{" | VCM: "}{av.vcm}
                   </p>
                 </div>
                 <span className={`text-xs font-bold px-3 py-1 rounded-full ${colorBadge[av.diagnostico_color] || colorBadge.yellow}`}>
@@ -518,13 +415,13 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
         {tela === 'nova' && (
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
-            <h2 className="font-semibold text-gray-700">Nova Avaliação</h2>
+            <h2 className="font-semibold text-gray-700">{"Nova Avalia\u00e7\u00e3o"}</h2>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-xs text-gray-500 mb-1">Paciente</p>
               <p className="text-sm text-gray-700">
                 <strong>{profile?.nome || ''}</strong>
-                {inputs.sexo && (<>{' • '}<strong>{inputs.sexo === 'F' ? 'Feminino' : 'Masculino'}</strong></>)}
-                {inputs.idade && (<>{' • '}<strong>{inputs.idade} anos</strong></>)}
+                {inputs.sexo && (<>{" \u2022 "}<strong>{inputs.sexo === 'F' ? 'Feminino' : 'Masculino'}</strong></>)}
+                {inputs.idade && (<>{" \u2022 "}<strong>{inputs.idade} anos</strong></>)}
               </p>
               {profile?.data_nascimento && (
                 <p className="text-xs text-gray-400 mt-0.5">Idade calculada a partir da data de nascimento no seu cadastro</p>
@@ -555,14 +452,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 onClick={() => setMostrarExamesExtras(true)}
                 className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center"
               >
-                <span>📋 JÁ TENHO A FERRITINA E A SATURAÇÃO DA TRANSFERRINA</span>
-                <span className="text-xs font-normal opacity-90 mt-1">Aprofundar o diagnóstico</span>
+                <span>{"\ud83d\udccb J\u00c1 TENHO A FERRITINA E A SATURA\u00c7\u00c3O DA TRANSFERRINA"}</span>
+                <span className="text-xs font-normal opacity-90 mt-1">{"Aprofundar o diagn\u00f3stico"}</span>
               </button>
             )}
 
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Ferritina (ng/mL)', name: 'ferritina', hint: mostrarExamesExtras ? 'Não use ponto para valores superiores a 1000. Ex: 1140' : null },
+                { label: 'Ferritina (ng/mL)', name: 'ferritina', hint: mostrarExamesExtras ? "N\u00e3o use ponto para valores superiores a 1000. Ex: 1140" : null },
                 { label: 'Sat. Transferrina (%)', name: 'satTransf' },
               ].map(f => (
                 <div key={f.name}>
@@ -574,7 +471,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     value={inputs[f.name]}
                     onChange={handleChange}
                     disabled={!mostrarExamesExtras}
-                    placeholder={!mostrarExamesExtras ? 'Clique no botão azul para liberar' : ''}
+                    placeholder={!mostrarExamesExtras ? "Clique no bot\u00e3o azul para liberar" : ''}
                     className="w-full border-2 border-blue-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic"
                   />
                   {f.hint && <p className="text-xs text-orange-600 font-medium mt-1">{f.hint}</p>}
@@ -582,12 +479,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               ))}
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Histórico Clínico</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{"Hist\u00f3rico Cl\u00ednico"}</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { name: 'bariatrica', label: 'Bariátrica', sub: 'By-pass / Gastrectomia', color: 'amber' },
+                  { name: 'bariatrica', label: "Bari\u00e1trica", sub: 'By-pass / Gastrectomia', color: 'amber' },
                   { name: 'vegetariano', label: 'Vegetariano/Vegano', sub: 'Dieta sem carne', color: 'green' },
-                  { name: 'perda', label: 'Perda / Hemorragia', sub: 'Inclui doação de sangue, sangria, ou sangramento', color: 'red' },
+                  { name: 'perda', label: "Perda / Hemorragia", sub: "Inclui doa\u00e7\u00e3o de sangue, sangria, ou sangramento", color: 'red' },
                   ...(inputs.sexo === 'F' ? [
                     { name: 'hipermenorreia', label: 'Hipermenorreia', sub: 'Fluxo excessivo', color: 'pink' },
                     { name: 'gestante', label: 'Gestante', sub: 'Gravidez atual', color: 'pink' },
@@ -611,16 +508,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
               {inputs.gestante && inputs.sexo === 'F' && (
                 <div className="mt-3 p-3 rounded-xl border border-pink-200 bg-pink-50">
-                  <p className="text-xs font-bold text-pink-700 uppercase tracking-wide mb-2">📋 Dados da Gestação</p>
+                  <p className="text-xs font-bold text-pink-700 uppercase tracking-wide mb-2">{"\ud83d\udccb Dados da Gesta\u00e7\u00e3o"}</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Semanas de gestação <span className="text-red-500">*</span></label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{"Semanas de gesta\u00e7\u00e3o "}<span className="text-red-500">*</span></label>
                       <input type="number" name="semanas_gestacao" value={inputs.semanas_gestacao} onChange={handleChange}
                         min="1" max="42" placeholder="Ex: 24"
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">DUM <span className="text-gray-400 font-normal">(opcional)</span></label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{"DUM "}<span className="text-gray-400 font-normal">(opcional)</span></label>
                       <input type="date" name="dum" value={inputs.dum} onChange={handleChange}
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
                     </div>
@@ -632,7 +529,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     const semanasCalc = diasDesdeDUM / 7
                     const diff = Math.abs(semanasCalc - Number(inputs.semanas_gestacao))
                     if (diff > 2) {
-                      return <p className="text-xs text-orange-600 font-medium mt-2">⚠️ DUM sugere ~{semanasCalc.toFixed(1)} semanas, mas você informou {inputs.semanas_gestacao}. Revise os dados.</p>
+                      return <p className="text-xs text-orange-600 font-medium mt-2">{"\u26a0\ufe0f DUM sugere ~"}{semanasCalc.toFixed(1)}{" semanas, mas voc\u00ea informou "}{inputs.semanas_gestacao}{". Revise os dados."}</p>
                     }
                     return null
                   })()}
@@ -643,10 +540,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Medicamentos / Suplementos</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { name: 'aspirina', label: 'Aspirina', sub: 'Uso contínuo', color: 'orange' },
-                  { name: 'vitaminaB12', label: 'Vitamina B12', sub: 'Últimos 3 meses', color: 'purple' },
-                  { name: 'ferro_oral', label: 'Ferro Oral', sub: 'Últimos 2 anos', color: 'orange' },
-                  { name: 'ferro_injetavel', label: 'Ferro Injetável', sub: 'Últimos 2 anos', color: 'orange' },
+                  { name: 'aspirina', label: 'Aspirina', sub: "Uso cont\u00ednuo", color: 'orange' },
+                  { name: 'vitaminaB12', label: 'Vitamina B12', sub: "\u00daltimos 3 meses", color: 'purple' },
+                  { name: 'ferro_oral', label: 'Ferro Oral', sub: "\u00daltimos 2 anos", color: 'orange' },
+                  { name: 'ferro_injetavel', label: "Ferro Injet\u00e1vel", sub: "\u00daltimos 2 anos", color: 'orange' },
                 ].map(f => (
                   <label key={f.name} className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-sm
                     ${inputs[f.name]
@@ -683,7 +580,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             }} copiado={copiado} />
             <button onClick={() => setTela('historico')}
               className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-xl transition-colors">
-              Ver Histórico
+              {"Ver Hist\u00f3rico"}
             </button>
           </div>
         )}
@@ -698,67 +595,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           setProfile(p => ({ ...p, boas_vindas_vista: true }))
         }}
       />
-    )}
-
-    {/* Modal de despedida */}
-    {showDespedidaModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(0,0,0,0.6)' }}>
-        <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl">
-          <div className="px-6 pt-6 pb-4 text-center">
-            <img src={logo} alt="RedFairy" className="w-16 h-16 object-contain mx-auto mb-2" />
-            <h3 className="text-xl font-bold text-red-700">Sem problema!</h3>
-            <p className="text-sm text-gray-500 mt-1">Vamos te ajudar a obter esses exames.</p>
-          </div>
-          <div className="px-6 pb-2 space-y-4 text-sm text-gray-700 leading-relaxed">
-            <p>
-              Como sua assinatura inclui <strong>1 pedido médico gratuito</strong>, nós podemos
-              emitir agora um pedido com <strong>Hemograma, Ferritina e Saturação da Transferrina</strong>.
-            </p>
-            <p className="text-xs text-gray-500">
-              O pedido com assinatura digital do médico será enviado pelo seu WhatsApp.
-              Validade: 30 dias.
-            </p>
-            <label className="flex items-start gap-2 cursor-pointer p-3 rounded-xl border-2 border-amber-300 bg-amber-50">
-              <input type="checkbox" checked={querPedidoGratuito}
-                onChange={e => setQuerPedidoGratuito(e.target.checked)}
-                className="mt-0.5" />
-              <div>
-                <p className="font-semibold text-amber-900">Quero meu pedido médico gratuito</p>
-                <p className="text-xs text-amber-700 mt-0.5">
-                  Inclui Hemograma + Ferritina + Saturação da Transferrina.
-                </p>
-              </div>
-            </label>
-          </div>
-          <div className="px-6 pb-6 pt-4 flex gap-3">
-            <button onClick={() => setShowDespedidaModal(false)}
-              disabled={salvandoPedido}
-              className="flex-1 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors text-sm disabled:opacity-50">
-              Voltar
-            </button>
-            <button onClick={handleDespedida}
-              disabled={salvandoPedido}
-              className="flex-1 py-3 rounded-xl bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait">
-              {salvandoPedido ? 'Enviando...' : 'Confirmar'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* Toast WhatsApp */}
-    {showToastWhatsapp && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(0,0,0,0.5)' }}>
-        <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6 text-center">
-          <div className="text-5xl mb-3">📱</div>
-          <p className="text-gray-800 leading-relaxed">
-            O <strong>Pedido Médico</strong> com <strong>assinatura digital</strong> será enviado pelo seu <strong>WhatsApp</strong>.
-          </p>
-          <p className="text-xs text-gray-400 mt-3">Aguardando você de volta com os resultados!</p>
-        </div>
-      </div>
     )}
     </>
   )

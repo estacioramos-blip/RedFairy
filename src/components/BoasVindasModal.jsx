@@ -40,17 +40,17 @@ export default function BoasVindasModal({ profile, onClose }) {
       <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl">
         <div className="text-center mb-5">
           <h2 className="text-2xl font-bold text-red-700 mb-2">
-            Olá, {profile.nome?.split(' ')[0] || 'paciente'}!
+            {"Ol\u00e1, "}{profile.nome?.split(' ')[0] || 'paciente'}{"!"}
           </h2>
           <p className="text-sm text-gray-600">Bem-vindo(a) ao RedFairy</p>
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
           <p className="text-sm text-gray-800 mb-2">
-            Você agora tem acesso à plataforma por <strong>1 ano</strong>.
+            {"Voc\u00ea agora tem acesso \u00e0 plataforma por "}<strong>1 ano</strong>{"."}
           </p>
           <p className="text-sm text-gray-800">
-            Traga todos os seus futuros hemogramas. Nós vamos avaliar, pôr a sua evolução em um gráfico, e medicar se for necessário.
+            {"Traga todos os seus futuros hemogramas. N\u00f3s vamos avaliar, p\u00f4r a sua evolu\u00e7\u00e3o em um gr\u00e1fico, e medicar se for necess\u00e1rio."}
           </p>
         </div>
 
@@ -66,10 +66,10 @@ export default function BoasVindasModal({ profile, onClose }) {
               Quero o meu primeiro pedido de exames (GRATUITO)
             </p>
             <p className="text-xs text-amber-800 mt-1">
-              Inclui: Hemograma, Ferritina e Saturação da Transferrina
+              {"Inclui: Hemograma, Ferritina e Satura\u00e7\u00e3o da Transferrina"}
             </p>
             <p className="text-xs text-gray-600 mt-1 italic">
-              Pedidos futuros: R$ 60,00 cada
+              {"Pedidos futuros: R$ 60,00 cada"}
             </p>
           </div>
         </label>

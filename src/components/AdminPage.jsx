@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-// ── Paleta eritron ────────────────────────────────────────────────────────────
 const eritronColor = {
   green:  { bg: 'bg-green-100',  text: 'text-green-800',  label: 'Normal'   },
-  yellow: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Atenção'  },
+  yellow: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: "Aten\u00e7\u00e3o"  },
   orange: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Moderado' },
   red:    { bg: 'bg-red-100',    text: 'text-red-800',    label: 'Grave'    },
 };
@@ -16,9 +15,8 @@ const obaColor = {
   normal:   { bg: 'bg-green-100',  text: 'text-green-800',  dot: 'bg-green-500'  },
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function formatarCPF(cpf) {
-  if (!cpf) return '—';
+  if (!cpf) return "\u2014";
   const d = String(cpf).replace(/\D/g, '').padStart(11, '0');
   return `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}`;
 }
@@ -30,55 +28,51 @@ function diasAtras(dateStr) {
 }
 
 function formatarData(dateStr) {
-  if (!dateStr) return '—';
+  if (!dateStr) return "\u2014";
   return new Date(dateStr).toLocaleDateString('pt-BR');
 }
 
-// ── Texto de solicitação médica (CFM) ─────────────────────────────────────────
 function gerarSolicitacaoCFM(avaliacao, oba) {
   const sexo = avaliacao.sexo === 'M' ? 'masculino' : 'feminino';
   const hoje = new Date().toLocaleDateString('pt-BR');
-  let texto = `SOLICITAÇÃO MÉDICA — ${hoje}\n\n`;
-  texto += `Paciente do sexo ${sexo}, ${avaliacao.sexo === 'M' ? 'portador' : 'portadora'} de diagnóstico de ${avaliacao.diagnostico_label}`;
-  if (avaliacao.bariatrica) texto += `, com histórico de cirurgia bariátrica`;
+  let texto = `SOLICITA\u00c7\u00c3O M\u00c9DICA \u2014 ${hoje}\n\n`;
+  texto += `Paciente do sexo ${sexo}, ${avaliacao.sexo === 'M' ? 'portador' : 'portadora'} de diagn\u00f3stico de ${avaliacao.diagnostico_label}`;
+  if (avaliacao.bariatrica) texto += `, com hist\u00f3rico de cirurgia bari\u00e1trica`;
   texto += `.\n\n`;
 
-  // Eritron
-  texto += `AVALIAÇÃO DO ERITRON (${formatarData(avaliacao.data_coleta)}):\n`;
-  texto += `• Ferritina: ${avaliacao.ferritina} ng/mL\n`;
-  texto += `• Hemoglobina: ${avaliacao.hemoglobina} g/dL\n`;
-  texto += `• VCM: ${avaliacao.vcm} fL\n`;
-  texto += `• RDW: ${avaliacao.rdw}%\n`;
-  texto += `• Saturação de Transferrina: ${avaliacao.sat_transf}%\n\n`;
+  texto += `AVALIA\u00c7\u00c3O DO ERITRON (${formatarData(avaliacao.data_coleta)}):\n`;
+  texto += `\u2022 Ferritina: ${avaliacao.ferritina} ng/mL\n`;
+  texto += `\u2022 Hemoglobina: ${avaliacao.hemoglobina} g/dL\n`;
+  texto += `\u2022 VCM: ${avaliacao.vcm} fL\n`;
+  texto += `\u2022 RDW: ${avaliacao.rdw}%\n`;
+  texto += `\u2022 Satura\u00e7\u00e3o de Transferrina: ${avaliacao.sat_transf}%\n\n`;
 
-  // Conduta
   const cor = avaliacao.diagnostico_color;
   if (cor === 'red' || cor === 'orange') {
     if (avaliacao.diagnostico_label?.toUpperCase().includes('FERRO')) {
-      texto += `CONDUTA INDICADA:\nReposição de Ferro Endovenoso conforme Fórmula de Ganzoni.\nIniciar com Ferro Sacarato ou Carboximaltose Férrica, sob monitoramento laboratorial.\n\n`;
+      texto += `CONDUTA INDICADA:\nReposi\u00e7\u00e3o de Ferro Endovenoso conforme F\u00f3rmula de Ganzoni.\nIniciar com Ferro Sacarato ou Carboximaltose F\u00e9rrica, sob monitoramento laboratorial.\n\n`;
     } else if (avaliacao.diagnostico_label?.toUpperCase().includes('SANGRIA')) {
-      texto += `CONDUTA INDICADA:\nSangria Terapêutica para redução da sobrecarga de ferro.\nMonitorar Hb, ferritina e saturação de transferrina antes de cada sessão.\n\n`;
+      texto += `CONDUTA INDICADA:\nSangria Terap\u00eautica para redu\u00e7\u00e3o da sobrecarga de ferro.\nMonitorar Hb, ferritina e satura\u00e7\u00e3o de transferrina antes de cada sess\u00e3o.\n\n`;
     } else {
-      texto += `CONDUTA INDICADA:\nAvaliação hematológica especializada. Investigação complementar conforme clínica.\n\n`;
+      texto += `CONDUTA INDICADA:\nAvalia\u00e7\u00e3o hematol\u00f3gica especializada. Investiga\u00e7\u00e3o complementar conforme cl\u00ednica.\n\n`;
     }
   }
 
-  // OBA
   if (oba) {
-    texto += `AVALIAÇÃO OBA — BARIÁTRICO (${oba.tipo_cirurgia}, ${oba.meses_pos_cirurgia} meses pós-cirurgia):\n`;
+    texto += `AVALIA\u00c7\u00c3O OBA \u2014 BARI\u00c1TRICO (${oba.tipo_cirurgia}, ${oba.meses_pos_cirurgia} meses p\u00f3s-cirurgia):\n`;
     const alertasGraves = oba.alertas?.filter(a => a.nivel === 'grave') || [];
     const alertasMod    = oba.alertas?.filter(a => a.nivel === 'moderado') || [];
     if (alertasGraves.length > 0) {
       texto += `\nAlertas Urgentes:\n`;
-      alertasGraves.forEach(a => { texto += `• ${a.texto}\n`; });
+      alertasGraves.forEach(a => { texto += `\u2022 ${a.texto}\n`; });
     }
     if (alertasMod.length > 0) {
-      texto += `\nAlertas de Atenção:\n`;
-      alertasMod.forEach(a => { texto += `• ${a.texto}\n`; });
+      texto += `\nAlertas de Aten\u00e7\u00e3o:\n`;
+      alertasMod.forEach(a => { texto += `\u2022 ${a.texto}\n`; });
     }
     if (oba.examesComplementares?.length > 0) {
       texto += `\nExames Complementares Solicitados:\n`;
-      oba.examesComplementares.forEach(ex => { texto += `• ${ex}\n`; });
+      oba.examesComplementares.forEach(ex => { texto += `\u2022 ${ex}\n`; });
     }
     texto += '\n';
   }
@@ -87,9 +81,6 @@ function gerarSolicitacaoCFM(avaliacao, oba) {
   return texto;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// COMPONENTE PRINCIPAL
-// ─────────────────────────────────────────────────────────────────────────────
 export default function AdminPage({ onVoltar }) {
   const [aba, setAba] = useState('pacientes');
 
@@ -99,16 +90,15 @@ export default function AdminPage({ onVoltar }) {
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <button onClick={onVoltar}
             className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium transition-colors">
-            ← Voltar
+            {"\u2190 Voltar"}
           </button>
-          <h1 className="text-base font-bold">Painel Médico</h1>
+          <h1 className="text-base font-bold">{"Painel M\u00e9dico"}</h1>
           <div className="w-16" />
         </div>
-        {/* Abas */}
         <div className="max-w-3xl mx-auto flex gap-2 mt-3">
           {[
-            { id: 'pacientes', label: '👥 Pacientes' },
-            { id: 'config',    label: '⚙️ Configurações' },
+            { id: 'pacientes', label: "\ud83d\udc65 Pacientes" },
+            { id: 'config',    label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
           ].map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
@@ -128,9 +118,6 @@ export default function AdminPage({ onVoltar }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ABA: PACIENTES
-// ─────────────────────────────────────────────────────────────────────────────
 function AbaPacientes() {
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -150,7 +137,6 @@ function AbaPacientes() {
     carregar();
   }, []);
 
-  // Agrupa por CPF (ou por id se sem CPF)
   const porCpf = {};
   avaliacoes.forEach(av => {
     const chave = av.cpf || `sem_cpf_${av.id}`;
@@ -185,17 +171,16 @@ function AbaPacientes() {
 
   return (
     <div className="space-y-4">
-      {/* Busca */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <input
           type="text"
           value={busca}
           onChange={e => setBusca(e.target.value)}
-          placeholder="Buscar por CPF ou diagnóstico..."
+          placeholder={"Buscar por CPF ou diagn\u00f3stico..."}
           className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
         />
         <p className="text-xs text-gray-400 mt-2">
-          {grupos.length} paciente{grupos.length !== 1 ? 's' : ''} · {avaliacoes.length} avaliação{avaliacoes.length !== 1 ? 'ões' : ''}
+          {grupos.length}{" paciente"}{grupos.length !== 1 ? 's' : ''}{" \u00b7 "}{avaliacoes.length}{" avalia\u00e7\u00e3o"}{avaliacoes.length !== 1 ? "\u00f5es" : ''}
         </p>
       </div>
 
@@ -225,13 +210,13 @@ function AbaPacientes() {
                         </span>
                       )}
                       <span className="text-xs text-gray-400">
-                        {avs.length} avaliação{avs.length !== 1 ? 'ões' : ''}
+                        {avs.length}{" avalia\u00e7\u00e3o"}{avs.length !== 1 ? "\u00f5es" : ''}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1 truncate">{ultima.diagnostico_label}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      Última: {formatarData(ultima.data_coleta)}
-                      {dias !== null && ` · há ${dias} dia${dias !== 1 ? 's' : ''}`}
+                      {"\u00daltima: "}{formatarData(ultima.data_coleta)}
+                      {dias !== null && ` \u00b7 h\u00e1 ${dias} dia${dias !== 1 ? 's' : ''}`}
                     </p>
                   </div>
                   <div className={`flex-shrink-0 px-2 py-1 rounded-lg text-xs font-bold ${scheme.bg} ${scheme.text}`}>
@@ -247,9 +232,6 @@ function AbaPacientes() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// FICHA DO PACIENTE
-// ─────────────────────────────────────────────────────────────────────────────
 function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
   const [obaData, setObaData] = useState(null);
   const [loadingOba, setLoadingOba] = useState(false);
@@ -281,36 +263,35 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
 
   const scheme = eritronColor[ultima?.diagnostico_color] || eritronColor.yellow;
 
-  // Monta resumo OBA para exibição (campos chave)
   const camposOba = obaData ? [
     { label: 'Cirurgia',         valor: obaData.tipo_cirurgia },
-    { label: 'Tempo pós-op',     valor: obaData.meses_pos_cirurgia ? `${obaData.meses_pos_cirurgia} meses` : null },
+    { label: "Tempo p\u00f3s-op",     valor: obaData.meses_pos_cirurgia ? `${obaData.meses_pos_cirurgia} meses` : null },
     { label: 'Peso antes',       valor: obaData.peso_antes ? `${obaData.peso_antes} kg` : null },
     { label: 'Menor peso',       valor: obaData.peso_minimo_pos ? `${obaData.peso_minimo_pos} kg` : null },
     { label: 'Peso atual',       valor: obaData.peso_atual ? `${obaData.peso_atual} kg` : null },
-    { label: 'Status glicêmico', valor: obaData.status_glicemico },
-    { label: 'Status pressórico',valor: obaData.status_pressorico },
-    { label: 'Status ósseo',     valor: obaData.status_osseo },
+    { label: "Status glic\u00eamico", valor: obaData.status_glicemico },
+    { label: "Status press\u00f3rico",valor: obaData.status_pressorico },
+    { label: "Status \u00f3sseo",     valor: obaData.status_osseo },
     { label: 'Status dental',    valor: obaData.status_dental },
     { label: 'Atividade',        valor: obaData.atividade_fisica?.join(', ') },
-    { label: 'Compulsões',       valor: obaData.compulsoes?.join(', ') },
+    { label: "Compuls\u00f5es",       valor: obaData.compulsoes?.join(', ') },
     { label: 'Acompanhamento',   valor: obaData.acompanhamento },
   ].filter(c => c.valor) : [];
 
   const examesOba = obaData ? [
     { label: 'B12',         valor: obaData.vitamina_b12,  unit: 'pg/mL' },
     { label: 'Vit. D',      valor: obaData.vitamina_d,    unit: 'ng/mL' },
-    { label: 'Zinco',       valor: obaData.zinco,         unit: 'µg/dL' },
+    { label: 'Zinco',       valor: obaData.zinco,         unit: "\u00b5g/dL" },
     { label: 'TSH',         valor: obaData.tsh,           unit: 'mUI/L' },
     { label: 'HbA1c',       valor: obaData.hb_glicada,    unit: '%'     },
     { label: 'Glicemia',    valor: obaData.glicemia,      unit: 'mg/dL' },
-    { label: 'Insulina',    valor: obaData.insulina,      unit: 'µUI/mL'},
-    { label: 'Triglicérides',valor: obaData.triglicerides,unit: 'mg/dL' },
+    { label: 'Insulina',    valor: obaData.insulina,      unit: "\u00b5UI/mL"},
+    { label: "Triglic\u00e9rides",valor: obaData.triglicerides,unit: 'mg/dL' },
     { label: 'AST',         valor: obaData.ast,           unit: 'U/L'   },
     { label: 'ALT',         valor: obaData.alt,           unit: 'U/L'   },
     { label: 'Gama-GT',     valor: obaData.gama_gt,       unit: 'U/L'   },
     { label: 'Creatinina',  valor: obaData.creatinina,    unit: 'mg/dL' },
-    { label: 'Vit. A',      valor: obaData.vitamina_a,    unit: 'µg/dL' },
+    { label: 'Vit. A',      valor: obaData.vitamina_a,    unit: "\u00b5g/dL" },
     { label: 'Tiamina',     valor: obaData.tiamina,       unit: 'nmol/L'},
     { label: 'Folatos',     valor: obaData.folatos,       unit: 'ng/mL' },
     { label: 'PSA',         valor: obaData.psa_total,     unit: 'ng/mL' },
@@ -320,25 +301,23 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
   return (
     <div className="space-y-4">
 
-      {/* Header ficha */}
       <div className="flex items-center gap-3">
         <button onClick={onVoltar}
           className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
-          ← Lista
+          {"\u2190 Lista"}
         </button>
         <div>
           <h2 className="font-bold text-gray-800 text-base">
             {cpf.startsWith('sem_cpf') ? 'Paciente sem CPF' : formatarCPF(cpf)}
           </h2>
-          <p className="text-xs text-gray-400">{avaliacoes.length} avaliação{avaliacoes.length !== 1 ? 'ões' : ''} registrada{avaliacoes.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-gray-400">{avaliacoes.length}{" avalia\u00e7\u00e3o"}{avaliacoes.length !== 1 ? "\u00f5es" : ''}{" registrada"}{avaliacoes.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
-      {/* Última avaliação eritron */}
       <div className={`rounded-2xl border-2 ${scheme.bg === 'bg-red-100' ? 'border-red-300' : scheme.bg === 'bg-orange-100' ? 'border-orange-300' : scheme.bg === 'bg-yellow-100' ? 'border-yellow-300' : 'border-green-300'} overflow-hidden shadow-sm`}>
         <div className={`${scheme.bg} px-5 py-3 flex items-center justify-between`}>
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Última avaliação — {formatarData(ultima.data_coleta)}</p>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{"\u00daltima avalia\u00e7\u00e3o \u2014 "}{formatarData(ultima.data_coleta)}</p>
             <p className={`font-bold text-base ${scheme.text} mt-0.5`}>{ultima.diagnostico_label}</p>
           </div>
           <span className={`text-xs font-black px-3 py-1 rounded-full ${scheme.bg} ${scheme.text} border-2 ${scheme.bg === 'bg-red-100' ? 'border-red-400' : scheme.bg === 'bg-orange-100' ? 'border-orange-400' : scheme.bg === 'bg-yellow-100' ? 'border-yellow-400' : 'border-green-400'}`}>
@@ -357,15 +336,14 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
             ].map((item, i) => (
               <div key={i} className="bg-gray-50 rounded-xl p-2">
                 <p className="text-xs text-gray-400">{item.label}</p>
-                <p className="font-bold text-gray-800 text-sm">{item.valor ?? '—'}</p>
+                <p className="font-bold text-gray-800 text-sm">{item.valor ?? "\u2014"}</p>
                 <p className="text-xs text-gray-400">{item.unit}</p>
               </div>
             ))}
           </div>
 
-          {/* Flags clínicas */}
           <div className="flex flex-wrap gap-1.5 mt-3">
-            {ultima.bariatrica    && <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">Bariátrica</span>}
+            {ultima.bariatrica    && <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">{"Bari\u00e1trica"}</span>}
             {ultima.vegetariano   && <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">Vegetariano</span>}
             {ultima.gestante      && <span className="bg-pink-100 text-pink-700 text-xs font-bold px-2 py-0.5 rounded-full">Gestante</span>}
             {ultima.hipermenorreia && <span className="bg-pink-100 text-pink-700 text-xs font-bold px-2 py-0.5 rounded-full">Hipermenorreia</span>}
@@ -376,10 +354,9 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
         </div>
       </div>
 
-      {/* Histórico */}
       {avaliacoes.length > 1 && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Histórico de Avaliações</p>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">{"Hist\u00f3rico de Avalia\u00e7\u00f5es"}</p>
           <div className="space-y-2">
             {avaliacoes.slice(1).map((av, i) => {
               const sc = eritronColor[av.diagnostico_color] || eritronColor.yellow;
@@ -390,8 +367,8 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
                     <p className="text-sm font-medium text-gray-700">{av.diagnostico_label}</p>
                   </div>
                   <div className="text-right text-xs text-gray-500">
-                    <p>Hb: {av.hemoglobina}</p>
-                    <p>Ferr: {av.ferritina}</p>
+                    <p>{"Hb: "}{av.hemoglobina}</p>
+                    <p>{"Ferr: "}{av.ferritina}</p>
                   </div>
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${sc.bg} ${sc.text}`}>
                     {sc.label}
@@ -403,13 +380,12 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
         </div>
       )}
 
-      {/* Dados OBA */}
       {ultima.bariatrica && (
         <div className="rounded-2xl border-2 border-purple-200 bg-purple-50 overflow-hidden shadow-sm">
           <div className="bg-purple-700 text-white px-5 py-3">
-            <p className="text-xs uppercase tracking-widest opacity-70">Avaliação OBA</p>
+            <p className="text-xs uppercase tracking-widest opacity-70">{"Avalia\u00e7\u00e3o OBA"}</p>
             <p className="font-bold text-base mt-0.5">
-              {obaData ? `${obaData.tipo_cirurgia} · ${obaData.meses_pos_cirurgia} meses` : 'Dados Bariátricos'}
+              {obaData ? `${obaData.tipo_cirurgia} \u00b7 ${obaData.meses_pos_cirurgia} meses` : "Dados Bari\u00e1tricos"}
             </p>
           </div>
 
@@ -419,14 +395,13 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
 
           {!loadingOba && !obaData && (
             <div className="p-4 text-center text-purple-400 text-sm">
-              Anamnese OBA não preenchida para este paciente.
+              {"Anamnese OBA n\u00e3o preenchida para este paciente."}
             </div>
           )}
 
           {obaData && (
             <div className="p-4 space-y-4">
 
-              {/* Resumo anamnese */}
               {camposOba.length > 0 && (
                 <div>
                   <p className="text-xs font-bold text-purple-700 uppercase tracking-wide mb-2">Anamnese</p>
@@ -441,7 +416,6 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
                 </div>
               )}
 
-              {/* Exames OBA */}
               {examesOba.length > 0 && (
                 <div>
                   <p className="text-xs font-bold text-purple-700 uppercase tracking-wide mb-2">Exames</p>
@@ -457,7 +431,6 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
                 </div>
               )}
 
-              {/* Medicamentos e compulsões */}
               {obaData.medicamentos?.length > 0 && (
                 <div>
                   <p className="text-xs font-bold text-purple-700 uppercase tracking-wide mb-1">Medicamentos</p>
@@ -485,24 +458,23 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
         </div>
       )}
 
-      {/* Botões de ação */}
       <div className="space-y-3">
         <button
           onClick={() => setShowSolicitacao(!showSolicitacao)}
           className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-          📋 {showSolicitacao ? 'Ocultar' : 'Gerar'} Solicitação Médica (CFM)
+          {"\ud83d\udccb "}{showSolicitacao ? 'Ocultar' : 'Gerar'}{" Solicita\u00e7\u00e3o M\u00e9dica (CFM)"}
         </button>
 
         {showSolicitacao && (
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
             <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-b border-gray-100">
-              <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Solicitação Médica</p>
+              <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">{"Solicita\u00e7\u00e3o M\u00e9dica"}</p>
               <button
                 onClick={copiarSolicitacao}
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
                   copiado ? 'bg-green-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                 }`}>
-                {copiado ? '✅ Copiado!' : '📋 Copiar'}
+                {copiado ? "\u2705 Copiado!" : "\ud83d\udccb Copiar"}
               </button>
             </div>
             <pre className="p-4 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap font-mono overflow-x-auto">
@@ -516,9 +488,6 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ABA: CONFIGURAÇÕES
-// ─────────────────────────────────────────────────────────────────────────────
 function AbaConfig() {
   const [valor, setValor] = useState('');
   const [valorDoc, setValorDoc] = useState('');
@@ -546,19 +515,19 @@ function AbaConfig() {
   async function salvar() {
     setSalvando(true); setSucesso('');
     await supabase.from('config').upsert(
-      { chave: 'valor_solicitacao_medica', valor, descricao: 'Valor em R$ da solicitação médica via Pix' },
+      { chave: 'valor_solicitacao_medica', valor, descricao: "Valor em R$ da solicita\u00e7\u00e3o m\u00e9dica via Pix" },
       { onConflict: 'chave' }
     );
     await supabase.from('config').upsert(
-      { chave: 'valor_documento_medico', valor: valorDoc, descricao: 'Valor em R$ da geração de documento médico (prescrição/pedido de exames)' },
+      { chave: 'valor_documento_medico', valor: valorDoc, descricao: "Valor em R$ da gera\u00e7\u00e3o de documento m\u00e9dico (prescri\u00e7\u00e3o/pedido de exames)" },
       { onConflict: 'chave' }
     );
     await supabase.from('config').upsert(
-      { chave: 'pix_chave', valor: pixChave, descricao: 'Chave Pix para recebimento de solicitações médicas' },
+      { chave: 'pix_chave', valor: pixChave, descricao: "Chave Pix para recebimento de solicita\u00e7\u00f5es m\u00e9dicas" },
       { onConflict: 'chave' }
     );
     setSalvando(false);
-    setSucesso('Configurações salvas com sucesso!');
+    setSucesso("Configura\u00e7\u00f5es salvas com sucesso!");
     setTimeout(() => setSucesso(''), 3000);
   }
 
@@ -567,7 +536,7 @@ function AbaConfig() {
   return (
     <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-700 mb-1">Solicitação Médica</h2>
+        <h2 className="text-lg font-semibold text-gray-700 mb-1">{"Solicita\u00e7\u00e3o M\u00e9dica"}</h2>
         <p className="text-sm text-gray-400">Configure o valor e a chave Pix para recebimento.</p>
       </div>
 
@@ -576,25 +545,25 @@ function AbaConfig() {
       ) : (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Valor da Solicitação Médica (R$)</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor da Solicita\u00e7\u00e3o M\u00e9dica (R$)"}</label>
             <input type="number" step="0.01" min="0" value={valor}
               onChange={e => setValor(e.target.value)} placeholder="Ex: 50.00" className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">Valor único cobrado para emissão de qualquer solicitação médica.</p>
+            <p className="text-xs text-gray-400 mt-1">{"Valor \u00fanico cobrado para emiss\u00e3o de qualquer solicita\u00e7\u00e3o m\u00e9dica."}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Valor da Geração de Documento Médico (R$)</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor da Gera\u00e7\u00e3o de Documento M\u00e9dico (R$)"}</label>
             <input type="number" step="0.01" min="0" value={valorDoc}
               onChange={e => setValorDoc(e.target.value)} placeholder="Ex: 29.90" className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">Valor cobrado por documento médico gerado via WhatsApp (prescrição, pedido de exames).</p>
+            <p className="text-xs text-gray-400 mt-1">{"Valor cobrado por documento m\u00e9dico gerado via WhatsApp (prescri\u00e7\u00e3o, pedido de exames)."}</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">Chave Pix (KlipBit)</label>
             <input type="text" value={pixChave}
               onChange={e => setPixChave(e.target.value)}
-              placeholder="Cole aqui a chave Pix ou o código copia-e-cola" className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">E-mail, CPF, telefone, chave aleatória ou código copia-e-cola do KlipBit.</p>
+              placeholder={"Cole aqui a chave Pix ou o c\u00f3digo copia-e-cola"} className={inputClass} />
+            <p className="text-xs text-gray-400 mt-1">{"E-mail, CPF, telefone, chave aleat\u00f3ria ou c\u00f3digo copia-e-cola do KlipBit."}</p>
           </div>
 
           {pixChave && (
@@ -614,13 +583,13 @@ function AbaConfig() {
 
           {sucesso && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center text-green-700 text-sm font-medium">
-              ✅ {sucesso}
+              {"\u2705 "}{sucesso}
             </div>
           )}
 
           <button onClick={salvar} disabled={salvando}
             className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
-            {salvando ? 'Salvando...' : 'Salvar configurações'}
+            {salvando ? 'Salvando...' : "Salvar configura\u00e7\u00f5es"}
           </button>
         </>
       )}
