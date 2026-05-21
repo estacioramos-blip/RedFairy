@@ -1,37 +1,32 @@
+# Build
+node_modules/
+dist/
+*.local
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
 # Logs
-logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Scripts temporarios de blindagem
+fix*.ps1
+fix*.py
+patch_*.py
+powershell
+
+# Backups antigos / arquivos soltos
+*OLD.js
+*OLD.jsx
+*.bak
+*.mojibak
+{
+}
+
+# Env
 .env
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Scripts temporarios de manutencao
-*.py
-
-# Backups das operacoes de patch
-*.bak*
-
-
-# Arquivos auxiliares antigos
-*_temp.txt
-relatorio_*.txt
-*.cjs
-*.mjs
+.env.local
