@@ -75,13 +75,12 @@ const DISAB = {
 }
 
 // Normaliza tipo de cirurgia — aceita variações de nome do OBAModal
-// BUG #8 corrigido: ordem dos testes — FOBI/CAPELLA antes de ROUX/BYPASS,
-// para que "FOBI-CAPELLA" sem "ROUX" caia no ramo correto sem ambiguidade.
 function normalizarCirurgia(tipo) {
   if (!tipo) return 'NÃO SEI'
   const t = tipo.toUpperCase()
-  if (t.includes('FOBI') || t.includes('CAPELLA')) return 'FOBI-CAPELLA'
-  if (t.includes('ROUX') || t.includes('BYPASS')) return 'Y DE ROUX'
+  if (t.includes('ROUX') || t.includes('BYPASS') || t.includes('FOBI') || t.includes('CAPELLA')) {
+    return t.includes('FOBI') || t.includes('CAPELLA') ? 'FOBI-CAPELLA' : 'Y DE ROUX'
+  }
   if (t.includes('SLEEVE') || t.includes('GASTRECTOMIA') || t.includes('VERTICAL')) return 'SLEEVE'
   if (t.includes('BANDA')) return 'BANDA GÁSTRICA AJUSTÁVEL'
   return DISAB[tipo] ? tipo : 'NÃO SEI'
@@ -162,13 +161,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   if (modAcomp) modulos.push(modAcomp)
 
   // ── 15. MÓDULO LEUCÓCITOS E NEUTRÓFILOS ──────────────────────────────────
-  // BUG #6 corrigido: antes "if (modLeucos) modulos.push(modLipidico)" e
-  // "modulos.push(modLeucos)" — invertia a lógica e empurrava sempre o
-  // leucos mesmo null. Agora cada módulo é empurrado se existir.
   const modLipidico = buildModLipidico(examesOBA, dadosOBA, resultadoEritron?.inputs?.sexo, alertas, examesSuger)
   const modLeucos = buildModLeucos(examesOBA, alertas, examesSuger)
-  if (modLipidico) modulos.push(modLipidico)
-  if (modLeucos) modulos.push(modLeucos)
+  if (modLeucos) modulos.push(modLipidico)
+  modulos.push(modLeucos)
 
   // ── 16. MÓDULO STATUS INTESTINAL ─────────────────────────────────────────
   const modIntestinal = buildModIntestinal(dadosOBA, alertas, examesSuger)
@@ -251,8 +247,8 @@ function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir,
   if (!isNaN(ferrOBA) && ferrOBA > 400) {
     linhas.push(`FERRITINA ELEVADA NO CONTEXTO BARIÁTRICO: ${ferrOBA} ng/mL. FERRITINA MUITO ACIMA DE 400 ng/mL PODE INDICAR SIDEROSE HEPÁTICA, INFLAMAÇÃO CRÔNICA OU SÍNDROME DE SOBRECARGA DE FERRO. NO BARIÁTRICO, A REPOSIÇÃO PARENTERAL DE FERRO SEM MONITORAMENTO ADEQUADO É UMA CAUSA FREQUENTE. AVALIAR SATURAÇÃO DA TRANSFERRINA — SE > 45%, INVESTIGAR HEMOCROMATOSE.`)
     alertas.push({ nivel: MODERADO, texto: `FERRITINA MUITO ELEVADA: ${ferrOBA} ng/mL — AVALIAR SOBRECARGA DE FERRO E INFLAMAÇÃO CRÔNICA.` })
-    // BUG #7 corrigido: antes, cada exame era empurrado 2x (dedup acontece
-    // no fim, mas suja a fonte). Agora cada um aparece 1x.
+    examesSuger.push('SATURAÇÃO DA TRANSFERRINA (AVALIAR SOBRECARGA DE FERRO)')
+    examesSuger.push('AVALIAÇÃO COM HEPATOLOGISTA')
     examesSuger.push('SATURAÇÃO DA TRANSFERRINA (AVALIAR SOBRECARGA DE FERRO)')
     examesSuger.push('AVALIAÇÃO COM HEPATOLOGISTA')
   }

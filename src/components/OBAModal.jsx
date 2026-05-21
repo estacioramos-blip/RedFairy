@@ -109,6 +109,9 @@ const STATUS_FIBROMIALGIA_OPS = [
   "EM USO DE GABAPENTINA", "EM USO DE PREGABALINA",
 ]
 
+// BUG #2 corrigido: removidos os duplicados antigos (hdl, ldl, vldl,
+// lipoproteina_a, apolipoproteina_b, colesterol_total v1, triglicerides v1)
+// Mantida a versao 2 alinhada com buildModLipidico no obaEngine.js
 const EXAMES_BASE = [
   { key: 'leucocitos',     label: "Leuc\u00f3citos (Total)",       unit: '/uL',    ref: "4.000\u201311.000", hint: "Sem ponto ou v\u00edrgula. Ex: 7500" },
   { key: 'neutrofilos',    label: "Neutr\u00f3filos Segmentados",  unit: '%',      ref: "40\u201370%" },
@@ -121,13 +124,6 @@ const EXAMES_BASE = [
   { key: 'hb_glicada',     label: 'Hb Glicada',               unit: '%',      ref: '<5,7%' },
   { key: 'glicemia',       label: 'Glicemia (jejum)',          unit: 'mg/dL',  ref: "70\u201399" },
   { key: 'insulina',       label: 'Insulina (jejum)',          unit: "\u00b5UI/mL", ref: "2\u201315" },
-  { key: 'colesterol_total', label: 'Colesterol Total',         unit: 'mg/dL',  ref: '<190' },
-  { key: 'hdl',             label: 'HDL Colesterol',            unit: 'mg/dL',  ref: 'H: >40 / F: >50' },
-  { key: 'ldl',             label: 'LDL Colesterol',            unit: 'mg/dL',  ref: '<130 (ideal <100)' },
-  { key: 'vldl',            label: 'VLDL Colesterol',           unit: 'mg/dL',  ref: '<30' },
-  { key: 'lipoproteina_a',  label: "Lipoprote\u00edna A (LpA)",      unit: 'mg/dL',  ref: "<30 (\u00f3timo <14)" },
-  { key: 'apolipoproteina_b', label: "Apolipoprote\u00edna B",       unit: 'mg/dL',  ref: '<100 (alto risco: >130)' },
-  { key: 'triglicerides',  label: "Triglic\u00e9rides",            unit: 'mg/dL',  ref: '<150' },
   { key: 'ast',            label: 'AST (TGO)',                 unit: 'U/L',    ref: 'H: <40 / F: <32' },
   { key: 'alt',            label: 'ALT (TGP)',                 unit: 'U/L',    ref: 'H: <56 / F: <35' },
   { key: 'gama_gt',        label: 'Gama-GT',                  unit: 'U/L',    ref: 'H: <61 / F: <36' },
@@ -135,7 +131,6 @@ const EXAMES_BASE = [
   { key: 'acido_urico',    label: "\u00c1cido \u00darico",              unit: 'mg/dL',  ref: "H: 3,4\u20137,0 / F: 2,4\u20136,0" },
   { key: 'folatos',        label: "Folatos s\u00e9ricos",           unit: 'ng/mL',  ref: "4,0\u201320,0" },
   { key: 'zinco',          label: "Zinco s\u00e9rico",              unit: "\u00b5g/dL",  ref: "70\u2013120" },
-  { key: 'vitamina_d',     label: 'Vitamina D (25-OH)',        unit: 'ng/mL',  ref: "30\u2013100" },
   { key: 'pth',            label: 'PTH',                       unit: 'pg/mL',  ref: "15\u201365" },
   { key: 'calcio_ionico',  label: "C\u00e1lcio i\u00f4nico",             unit: 'mmol/L', ref: "1,15\u20131,32" },
   { key: 'magnesio',       label: "Magn\u00e9sio",                  unit: 'mg/dL',  ref: "1,7\u20132,4" },
@@ -220,6 +215,51 @@ function calcDias(dataStr) {
   return diff >= 0 ? diff : null
 }
 
+// BUG #3 corrigido: removidas as chaves duplicadas vitamina_d e triglicerides
+// (cada uma aparecia 2x). Mantida apenas uma versao de cada.
+const LIMITES_OBA = {
+  'leucocitos': { min:500, max:20000 },
+  'neutrofilos': { min:1, max:99 },
+  'plaquetas': { min:10, max:1000 },
+  'ferritina_oba': { min:1, max:5000 },
+  'vitamina_b12': { min:50, max:2000 },
+  'vitamina_d': { min:1, max:200 },
+  'tsh': { min:0.01, max:50 },
+  'hb_glicada': { min:3, max:20 },
+  'glicemia': { min:30, max:600 },
+  'insulina': { min:0.5, max:200 },
+  'triglicerides': { min:20, max:3000 },
+  'ast': { min:5, max:1000 },
+  'alt': { min:5, max:1000 },
+  'gama_gt': { min:5, max:1000 },
+  'creatinina': { min:0.3, max:15 },
+  'acido_urico': { min:1, max:20 },
+  'folatos': { min:1, max:50 },
+  'zinco': { min:20, max:300 },
+  'pth': { min:1, max:2000 },
+  'calcio_ionico': { min:0.5, max:3.0 },
+  'magnesio': { min:0.5, max:10 },
+  'colesterol_total': { min:50, max:700 },
+  'ldl_c': { min:10, max:500 },
+  'hdl_c': { min:5, max:200 },
+  'lpa': { min:0, max:300 },
+  'apob': { min:10, max:300 },
+  'apoa': { min:30, max:300 },
+  'sdldl': { min:0, max:100 },
+  'vitamina_a': { min:5, max:200 },
+  'vitamina_e': { min:1, max:50 },
+  'tiamina': { min:10, max:500 },
+  'selenio': { min:10, max:400 },
+  'vitamina_c': { min:0.1, max:10 },
+  'vitamina_k': { min:0.05, max:15 },
+  'niacina': { min:0.1, max:30 },
+  'testosterona': { min:5, max:2000 },
+  'psa_total': { min:0, max:100 },
+  'ca199': { min:0, max:500 },
+  'estradiol': { min:5, max:5000 },
+  'cea': { min:0, max:100 }
+}
+
 const inp = { width:'100%', border:'1.5px solid #E5E7EB', borderRadius:8, padding:'0.65rem 0.9rem', fontSize:'0.92rem', outline:'none', fontFamily:'inherit', boxSizing:'border-box' }
 const btnP = { width:'100%', background:'#7B1E1E', color:'white', border:'none', borderRadius:10, padding:'0.9rem', fontSize:'1rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit', marginTop:'1.5rem' }
 const btnS = { width:'100%', background:'#F3F4F6', color:'#374151', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginTop:'0.5rem' }
@@ -229,44 +269,16 @@ const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.
 
 
 export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFairy, onConcluir, onFechar }) {
+  //  States: declarados PRIMEIRO, antes de qualquer useEffect que os use 
+  // BUG #4 e #5 corrigidos: ordem dos hooks. form, exames, dataExames,
+  // aberrantesOBA, alertaPeso agora vem antes dos useEffects que os mexem.
   const [etapa, setEtapa] = useState('anamnese')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
-
   const [anamneseSalva, setAnamneseSalva] = useState(null)
-
-  const saudacao = sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo'
-
-  useEffect(() => {
-    if (!dadosRedFairy) return
-    const novosMeds = []
-    if (dadosRedFairy.ferro_oral)      novosMeds.push('FERRO ORAL')
-    if (dadosRedFairy.ferro_injetavel) novosMeds.push("FERRO INJET\u00c1VEL (EV/IM)")
-    if (novosMeds.length > 0) {
-      setForm(prev => ({
-        ...prev,
-        medicamentos: [...new Set([...(prev.medicamentos || []), ...novosMeds])],
-      }))
-    }
-  }, [dadosRedFairy])
-  const isFem = sexo === 'F'
-  const idadeNum = parseInt(idade) || 0
-
-  const examesExtras = idadeNum >= 40 ? (isFem ? EXAMES_MULHER_40 : EXAMES_HOMEM_40) : []
-  const todosExames = [...EXAMES_BASE, ...examesExtras]
-
   const [alertaPeso, setAlertaPeso] = useState(null)
-
-  const handlePesoAtualBlur = () => {
-    const atual = parseFloat(form.peso_atual)
-    const minimo = parseFloat(form.peso_minimo_pos)
-    if (!isNaN(atual) && !isNaN(minimo) && atual < minimo) {
-      setForm(prev => ({ ...prev, peso_atual: String(minimo) }))
-      setAlertaPeso({ original: atual, ajustado: minimo })
-    } else {
-      setAlertaPeso(null)
-    }
-  }
+  const [dataExames, setDataExames] = useState('')
+  const [aberrantesOBA, setAberrantesOBA] = useState({})
 
   const [form, setForm] = useState({
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
@@ -292,6 +304,29 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     compulsoes: [], medicamentos: [], emagrecedores: {},
   })
 
+  const saudacao = sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo'
+  const isFem = sexo === 'F'
+  const idadeNum = parseInt(idade) || 0
+
+  const examesExtras = idadeNum >= 40 ? (isFem ? EXAMES_MULHER_40 : EXAMES_HOMEM_40) : []
+  const todosExames = [...EXAMES_BASE, ...examesExtras]
+
+  const [exames, setExames] = useState(Object.fromEntries(todosExames.map(e => [e.key, ''])))
+
+  //  Effects: depois de TODOS os useState que eles dependem 
+  useEffect(() => {
+    if (!dadosRedFairy) return
+    const novosMeds = []
+    if (dadosRedFairy.ferro_oral)      novosMeds.push('FERRO ORAL')
+    if (dadosRedFairy.ferro_injetavel) novosMeds.push("FERRO INJET\u00c1VEL (EV/IM)")
+    if (novosMeds.length > 0) {
+      setForm(prev => ({
+        ...prev,
+        medicamentos: [...new Set([...(prev.medicamentos || []), ...novosMeds])],
+      }))
+    }
+  }, [dadosRedFairy])
+
   useEffect(() => {
     if (dadosRedFairy?.gestante) {
       setForm(prev => ({
@@ -308,82 +343,17 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     }
   }, [form.temExamesMesmaData, examesRedFairy])
 
-  const LIMITES_OBA = {
-    'leucocitos': { min:500, max:20000 },
-    'neutrofilos': { min:1, max:99 },
-    'plaquetas': { min:10, max:1000 },
-    'ferritina_oba': { min:1, max:5000 },
-    'vitamina_b12': { min:50, max:2000 },
-    'vitamina_d': { min:1, max:200 },
-    'tsh': { min:0.01, max:50 },
-    'hb_glicada': { min:3, max:20 },
-    'glicemia': { min:30, max:600 },
-    'insulina': { min:0.5, max:200 },
-    'triglicerides': { min:20, max:2000 },
-    'ast': { min:5, max:1000 },
-    'alt': { min:5, max:1000 },
-    'gama_gt': { min:5, max:1000 },
-    'creatinina': { min:0.3, max:15 },
-    'acido_urico': { min:1, max:20 },
-    'folatos': { min:1, max:50 },
-    'zinco': { min:20, max:300 },
-    'vitamina_d': { min:5, max:200 },
-    'pth': { min:1, max:2000 },
-    'calcio_ionico': { min:0.5, max:3.0 },
-    'magnesio': { min:0.5, max:10 },
-    'colesterol_total': { min:50, max:700 },
-    'ldl_c': { min:10, max:500 },
-    'hdl_c': { min:5, max:200 },
-    'triglicerides': { min:30, max:3000 },
-    'lpa': { min:0, max:300 },
-    'apob': { min:10, max:300 },
-    'apoa': { min:30, max:300 },
-    'sdldl': { min:0, max:100 },
-    'vitamina_a': { min:5, max:200 },
-    'vitamina_e': { min:1, max:50 },
-    'tiamina': { min:10, max:500 },
-    'selenio': { min:10, max:400 },
-    'vitamina_c': { min:0.1, max:10 },
-    'vitamina_k': { min:0.05, max:15 },
-    'niacina': { min:0.1, max:30 },
-    'testosterona': { min:5, max:2000 },
-    'psa_total': { min:0, max:100 },
-    'ca199': { min:0, max:500 },
-    'estradiol': { min:5, max:5000 },
-    'cea': { min:0, max:100 }
-  }
-
-
-  const [dataExames, setDataExames] = useState('')
-  const [aberrantesOBA, setAberrantesOBA] = useState({})
-
-  function handleExameChangeOBA(key, value) {
-    handleExameChange(key, value)
-    if (value !== '') {
-      const num = parseFloat(value)
-      const lim = LIMITES_OBA[key]
-      if (lim && !isNaN(num)) {
-        setAberrantesOBA(prev => ({ ...prev, [key]: num < lim.min || num > lim.max }))
-      }
+  //  Handlers 
+  const handlePesoAtualBlur = () => {
+    const atual = parseFloat(form.peso_atual)
+    const minimo = parseFloat(form.peso_minimo_pos)
+    if (!isNaN(atual) && !isNaN(minimo) && atual < minimo) {
+      setForm(prev => ({ ...prev, peso_atual: String(minimo) }))
+      setAlertaPeso({ original: atual, ajustado: minimo })
     } else {
-      setAberrantesOBA(prev => ({ ...prev, [key]: false }))
+      setAlertaPeso(null)
     }
   }
-
-  function handleExameChangeOBA(key, value) {
-    handleExameChange(key, value)
-    if (value !== '') {
-      const num = parseFloat(value)
-      const lim = LIMITES_OBA[key]
-      if (lim && !isNaN(num)) {
-        setAberrantesOBA(prev => ({ ...prev, [key]: num < lim.min || num > lim.max }))
-      }
-    } else {
-      setAberrantesOBA(prev => ({ ...prev, [key]: false }))
-    }
-  }
-  const diasExames = calcDias(dataExames)
-  const [exames, setExames] = useState(Object.fromEntries(todosExames.map(e => [e.key, ''])))
 
   function handleExameChange(key, value) {
     setExames(prev => {
@@ -396,6 +366,23 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       return novo
     })
   }
+
+  // BUG #1 corrigido: removida a duplicacao da funcao handleExameChangeOBA
+  // (antes existia 2x identicas seguidas).
+  function handleExameChangeOBA(key, value) {
+    handleExameChange(key, value)
+    if (value !== '') {
+      const num = parseFloat(value)
+      const lim = LIMITES_OBA[key]
+      if (lim && !isNaN(num)) {
+        setAberrantesOBA(prev => ({ ...prev, [key]: num < lim.min || num > lim.max }))
+      }
+    } else {
+      setAberrantesOBA(prev => ({ ...prev, [key]: false }))
+    }
+  }
+
+  const diasExames = calcDias(dataExames)
 
   const sf = (f, v) => setForm(p => ({ ...p, [f]: v }))
   const tog = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
