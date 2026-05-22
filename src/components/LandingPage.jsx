@@ -85,9 +85,9 @@ const LANDING_CSS = `
     .hero-actions { justify-content: center; }
     .trust { justify-content: center; flex-wrap: wrap; gap: 1rem; }
     .hero-visual { display: none; }
-    .hero-textbox { padding: 1.2rem; margin-left: 0; margin-right: 0; }
-    .hero-textbox h1 { font-size: 2rem !important; white-space: normal !important; }
-    .hero-philosophy { font-size: 1.15rem !important; white-space: normal !important; }
+    .hero-textbox { padding: 1.2rem !important; margin-left: 0 !important; margin-right: 0 !important; max-width: calc(100vw - 1.6rem) !important; box-sizing: border-box !important; }
+    .hero-textbox h1 { font-size: 1.7rem !important; white-space: normal !important; line-height: 1.2 !important; }
+    .hero-philosophy { font-size: 0.95rem !important; white-space: normal !important; }
     .hero-quote-box { text-align: center; }
 
     .filosofia-grid { grid-template-columns: 1fr !important; gap: 1.5rem; }
