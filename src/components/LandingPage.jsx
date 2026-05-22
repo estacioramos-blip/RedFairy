@@ -59,7 +59,7 @@ const LANDING_CSS = `
 
   /* HERO */
   .hero { min-height: auto; display: flex; align-items: center; padding: 4rem 2rem 1rem; background: var(--white); position: relative; overflow: hidden; }
-  .hero-wrap { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2; }
+  .hero-wrap { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2; }
   .hero-badge { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 2.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; text-align: center; width: 100%; max-width: 480px; box-sizing: border-box; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
   .hero-badge .badge-main { display: flex; align-items: center; gap: 0.5rem; }
@@ -85,7 +85,7 @@ const LANDING_CSS = `
     .hero-actions { justify-content: center; }
     .trust { justify-content: center; flex-wrap: wrap; gap: 1rem; }
     .hero-visual { display: none; }
-    .hero-textbox { padding: 1.2rem; margin-left: 0; margin-right: 0; max-width: 100% !important; box-sizing: border-box; }
+    .hero-textbox { padding: 1.2rem; margin-left: 0; margin-right: 0; }
     .hero-textbox h1 { font-size: 2rem !important; white-space: normal !important; }
     .hero-philosophy { font-size: 1.15rem !important; white-space: normal !important; }
     .hero-quote-box { text-align: center; }
@@ -120,7 +120,7 @@ const LANDING_CSS = `
     background: var(--white); border: 1px solid var(--border); border-radius: 16px;
     padding: 2rem 2.5rem; box-shadow: var(--shadow);
     position: relative; overflow: hidden; cursor: pointer; margin-bottom: 0.8rem;
-    width: 100%; max-width: 880px; text-align: center;
+    width: 100%; max-width: 700px; text-align: center;
   }
   .hero-textbox-bg {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
