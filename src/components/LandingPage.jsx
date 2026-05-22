@@ -85,7 +85,7 @@ const LANDING_CSS = `
     .hero-actions { justify-content: center; }
     .trust { justify-content: center; flex-wrap: wrap; gap: 1rem; }
     .hero-visual { display: none; }
-    .hero-textbox { padding: 1.2rem; margin-left: 0; margin-right: 0; }
+    .hero-textbox { padding: 1.2rem; margin-left: 0; margin-right: 0; max-width: 100% !important; box-sizing: border-box; }
     .hero-textbox h1 { font-size: 2rem !important; white-space: normal !important; }
     .hero-philosophy { font-size: 1.15rem !important; white-space: normal !important; }
     .hero-quote-box { text-align: center; }
