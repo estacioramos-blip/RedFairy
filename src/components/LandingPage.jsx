@@ -53,9 +53,9 @@ const LANDING_CSS = `
   .btn-secondary:hover { background: #374151; border-color: #374151; transform: translateY(-2px); }
 
   /* WHATSAPP */
-  .whatsapp-btn { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; width: 56px; height: 56px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; }
+  .whatsapp-btn { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; width: 38px; height: 38px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; }
   .whatsapp-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(37,211,102,0.5); }
-  .whatsapp-btn svg { width: 30px; height: 30px; fill: white; }
+  .whatsapp-btn svg { width: 20px; height: 20px; fill: white; }
 
   /* HERO */
   .hero { min-height: auto; display: flex; align-items: center; padding: 4rem 2rem 1rem; background: var(--white); position: relative; overflow: hidden; }
@@ -79,7 +79,8 @@ const LANDING_CSS = `
     .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 0.6rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
 
     .hero { padding: 5rem 0 3rem; }
-    .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; max-width: 100% !important; padding: 0 0.6rem; }
+    .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; max-width: 100% !important; padding: 0 0.6rem; width: 100% !important; box-sizing: border-box !important; }
+    .hero-wrap > * { max-width: 100% !important; width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
     .hero h1 { font-size: 2.6rem; white-space: normal !important; }
     .hero-desc { margin: 0 auto 1.5rem; }
     .hero-actions { justify-content: center; }
