@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import logo from '../assets/logo.png'
+import redcell1 from '../assets/redcell1.png'
 import filosofiaBg from '../../redfairy-filosofia-bg.png'
 import fairy3 from '../../redfairy3.png'
 import OBAModal from './OBAModal'
@@ -58,7 +59,7 @@ const LANDING_CSS = `
 
   /* HERO */
   .hero { min-height: auto; display: flex; align-items: center; padding: 4rem 2rem 1rem; background: var(--white); position: relative; overflow: hidden; }
-  .hero-wrap { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2; }
+  .hero-wrap { max-width: 880px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2; }
   .hero-badge { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 2.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; text-align: center; width: 100%; max-width: 480px; box-sizing: border-box; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
   .hero-badge .badge-main { display: flex; align-items: center; gap: 0.5rem; }
@@ -111,13 +112,15 @@ const LANDING_CSS = `
   }
   @keyframes pDot { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);} }
   @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(220,38,38,0.8), 0 0 0 0 rgba(220,38,38,0.4);}70%{box-shadow:0 0 0 12px rgba(220,38,38,0), 0 0 0 24px rgba(220,38,38,0);}100%{box-shadow:0 0 0 0 rgba(220,38,38,0), 0 0 0 0 rgba(220,38,38,0);} }
+  @keyframes pulseGray { 0%{box-shadow:0 0 0 0 rgba(31,41,55,0.8), 0 0 0 0 rgba(31,41,55,0.4);}70%{box-shadow:0 0 0 12px rgba(31,41,55,0), 0 0 0 24px rgba(31,41,55,0);}100%{box-shadow:0 0 0 0 rgba(31,41,55,0), 0 0 0 0 rgba(31,41,55,0);} }
+  @keyframes heartbeat { 0%{transform:scale(1);}14%{transform:scale(1.10);}28%{transform:scale(1);}42%{transform:scale(1.10);}70%{transform:scale(1);} }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.4rem; margin-bottom: 0.8rem; font-weight: 700; }
 
   .hero-textbox {
     background: var(--white); border: 1px solid var(--border); border-radius: 16px;
     padding: 2rem 2.5rem; box-shadow: var(--shadow);
     position: relative; overflow: hidden; cursor: pointer; margin-bottom: 0.8rem;
-    width: 100%; max-width: 700px; text-align: center;
+    width: 100%; max-width: 880px; text-align: center;
   }
   .hero-textbox-bg {
     position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -218,10 +221,16 @@ const LANDING_CSS = `
   .como-tab:hover { background: #374151; }
   .como-tab.active { background: var(--wine); color: white; box-shadow: 0 4px 14px rgba(123,30,30,0.25); }
   .como-tab.active:hover { background: var(--cherry); }
+  .como-tab.paciente.active { background: #1F2937; box-shadow: 0 4px 14px rgba(31,41,55,0.25); }
+  .como-tab.paciente.active:hover { background: #4B5563; }
   .como-content { min-height: 300px; }
   .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
   .flow-step { text-align: center; background: white; border: 1px solid var(--border2); border-radius: 14px; padding: 1.5rem 1rem; }
-  .flow-num { width: 44px; height: 44px; border-radius: 50%; background: var(--wine); color: white; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; }
+  .flow-num { width: 44px; height: 44px; border-radius: 50%; background: var(--wine); color: white; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; transition: background 0.2s ease; }
+  .flow-step.medico .flow-num { background: #7B1E1E; color: white; }
+  .flow-step.medico:hover .flow-num { background: #EF4444; }
+  .flow-step.paciente .flow-num { background: #1F2937; color: white; }
+  .flow-step.paciente:hover .flow-num { background: #9CA3AF; }
   .flow-step h4 { font-size: 0.92rem; margin-bottom: 0.4rem; font-weight: 700; }
   .flow-step p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
   .reward-banner { background: #22863A; border-radius: 14px; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
@@ -380,11 +389,38 @@ const colorMap = {
   red:    { bg:'rgba(220,38,38,0.1)',  border:'rgba(220,38,38,0.35)', badge:'#DC2626', text:'#FECACA' },
 }
 
+// Lista de indicacoes (usada na faixa flutuante da hero e em qualquer outro lugar)
+const RF_INDICACOES = [
+  "Bari\u00e1tricos",
+  "Anemias Cr\u00f4nicas",
+  "Anemias Agudas",
+  "Defici\u00eancia de Ferro",
+  "Excesso de Ferro",
+  "Hemoglobina Alta",
+  "Regime de Sangrias",
+  "Sangramentos Cr\u00f4nicos",
+  "Vegetarianos",
+  "Gestantes",
+  "Cel\u00edacos",
+  "Doadores de Sangue",
+  "Uso de Testosterona",
+  "Endometriose e Miomas",
+  "Menstrua\u00e7\u00e3o Excessiva",
+  "Defici\u00eancia de G-6-PD",
+  "Alcoolistas",
+];
 
-export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin }) {
+
+export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, onIrDashboardPaciente }) {
   const [medicoLogado, setMedicoLogado] = useState(() => {
     try { return localStorage.getItem('medico_nome') || ''; } catch(e) { return ''; }
   })
+
+  // Indicacoes flutuantes do hero: marquee de 3 linhas, infinito.
+  // Cada linha tem ordem embaralhada e velocidade propria.
+  const marqueeRow1 = RF_INDICACOES;
+  const marqueeRow2 = [...RF_INDICACOES].reverse();
+  const marqueeRow3 = [...RF_INDICACOES].sort(() => Math.random() - 0.5);
   function fazerLogoffLanding() {
     try {
       localStorage.removeItem('medico_crm');
@@ -393,6 +429,47 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     } catch(e) {}
     setMedicoLogado('');
   }
+
+  // -- Paciente logado: localStorage (novo padrao) + Supabase Auth (fallback) --
+  // pacienteLogadoFlag = ha sessao (existe paciente_id)
+  // pacienteLogado = nome para exibicao (pode ser vazio nas contas novas)
+  const [pacienteLogadoFlag, setPacienteLogadoFlag] = useState(() => {
+    try { return !!localStorage.getItem('paciente_id'); } catch(e) { return false; }
+  })
+  const [pacienteLogado, setPacienteLogado] = useState(() => {
+    try { return localStorage.getItem('paciente_nome') || ''; } catch(e) { return ''; }
+  })
+  useEffect(() => {
+    let cancelado = false
+    async function carregarPaciente(userId) {
+      if (!userId) return
+      const { data } = await supabase.from('profiles').select('nome').eq('id', userId).maybeSingle()
+      if (!cancelado && data?.nome) setPacienteLogado(data.nome)
+    }
+    // Fallback: se nao tem nome no localStorage, tenta Supabase Auth
+    try {
+      const nomeLs = localStorage.getItem('paciente_nome')
+      if (!nomeLs) {
+        supabase.auth.getSession().then(({ data }) => carregarPaciente(data?.session?.user?.id))
+      }
+    } catch (e) {}
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.id) carregarPaciente(session.user.id)
+    })
+    return () => { cancelado = true; sub?.subscription?.unsubscribe?.() }
+  }, [])
+  async function fazerLogoffPaciente() {
+    try {
+      localStorage.removeItem('paciente_id')
+      localStorage.removeItem('paciente_cpf')
+      localStorage.removeItem('paciente_nome')
+      localStorage.removeItem('paciente_login_at')
+    } catch(e) {}
+    try { await supabase.auth.signOut() } catch(e) {}
+    setPacienteLogado('')
+    setPacienteLogadoFlag(false)
+  }
+
   const [crmMedicoExpand, setCrmMedicoExpand] = useState(false);
   const [crmMedicoValor, setCrmMedicoValor] = useState('');
   const crmMedicoValido = /^\d+\/[A-Z]{2}$/.test((crmMedicoValor || '').trim().toUpperCase());
@@ -407,7 +484,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
   const [twTexto, setTwTexto] = useState('');
   useEffect(() => {
     if (fluxoEtapa !== 'inicio') return;
-    const full = 'COMECAMOS PELO HEMOGRAMA';
+    const full = 'TEM UM HEMOGRAMA?...';
     let i = 0;
     setTwTexto('');
     const iv = setInterval(() => {
@@ -446,6 +523,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
   const [caixaModo, setCaixaModo] = useState(null);
   const [caixaBuscando, setCaixaBuscando] = useState(false);
   const [caixaErro, setCaixaErro] = useState('');
+  const [caixaAceitoTC, setCaixaAceitoTC] = useState(false);
   const caixaSenhaValida = (caixaSenha || '').length >= 6;
   useEffect(() => {
     if (fluxoEtapa !== 'medico') return;
@@ -483,9 +561,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
   async function caixaConcluir() {
     if (!crmMedicoValido || !caixaSenhaValida || caixaBuscando) return;
     setCaixaErro('');
-    const crmLimpo = crmMedicoValor.trim().toUpperCase();
-
-    if (caixaModo === 'login') {
+    if (caixaModo === 'cadastro' && !caixaAceitoTC) {
+      setCaixaErro("ACEITE OS TERMOS DE USO PARA CONTINUAR");
+      return;
+    }
+    const crmLimpo = crmMedicoValor.trim().toUpperCase();    if (caixaModo === 'login') {
       setCaixaBuscando(true);
       let medico = null;
       try {
@@ -538,6 +618,114 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
     } catch (e) {}
     onModoMedico();
   }
+
+  // -- Caixa CPF + SENHA do PACIENTE (espelha caixa CRM/UF do medico) --
+  const [cpfPacPasso, setCpfPacPasso] = useState('cpf'); // 'cpf' | 'senha'
+  const [cpfPacValor, setCpfPacValor] = useState('');
+  const [cpfPacSenha, setCpfPacSenha] = useState('');
+  const [cpfPacShowSenha, setCpfPacShowSenha] = useState(false);
+  const [cpfPacModo, setCpfPacModo] = useState(null); // 'login' | 'cadastro'
+  const [cpfPacBuscando, setCpfPacBuscando] = useState(false);
+  const [cpfPacErro, setCpfPacErro] = useState('');
+  const [cpfPacTw, setCpfPacTw] = useState('');
+  const [cpfPacSemCpf, setCpfPacSemCpf] = useState(false);
+  const [cpfPacAceitoTC, setCpfPacAceitoTC] = useState(false);
+  function formatarCPFLand(valor) {
+    const d = (valor || '').replace(/\D/g, '').slice(0, 11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return d.slice(0,3) + '.' + d.slice(3);
+    if (d.length <= 9) return d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6);
+    return d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6,9) + '-' + d.slice(9);
+  }
+  const cpfPacDigitos = (cpfPacValor || '').replace(/\D/g, '');
+  const cpfPacValido = cpfPacDigitos.length === 11;
+  const cpfPacSenhaValida = (cpfPacSenha || '').length >= 6;
+  useEffect(() => {
+    if (fluxoEtapa !== 'paciente') return;
+    const full = cpfPacPasso === 'cpf'
+      ? "DIGITE O SEU CPF"
+      : (cpfPacModo === 'cadastro' ? "CRIE AGORA A SUA SENHA" : "DIGITE A SUA SENHA");
+    let i = 0; setCpfPacTw('');
+    const iv = setInterval(() => {
+      i++; setCpfPacTw(full.slice(0, i));
+      if (i >= full.length) clearInterval(iv);
+    }, 8);
+    return () => clearInterval(iv);
+  }, [fluxoEtapa, cpfPacPasso, cpfPacModo]);
+  async function cpfPacAvancar() {
+    if (!cpfPacValido || cpfPacBuscando) return;
+    setCpfPacErro('');
+    setCpfPacBuscando(true);
+    let existe = false;
+    try {
+      const { data } = await supabase.rpc('lookup_cpf_triagem', { cpf_input: cpfPacDigitos });
+      existe = !!(data?.find?.(r => r.origem === 'profile'));
+    } catch (e) { existe = false; }
+    setCpfPacBuscando(false);
+    setCpfPacModo(existe ? 'login' : 'cadastro');
+    setCpfPacSenha('');
+    setCpfPacAceitoTC(false);
+    setCpfPacPasso('senha');
+  }
+  async function cpfPacConcluir() {
+    if (!cpfPacValido || !cpfPacSenhaValida || cpfPacBuscando) return;
+    setCpfPacErro('');
+    if (cpfPacModo === 'cadastro' && !cpfPacAceitoTC) {
+      setCpfPacErro("ACEITE OS TERMOS DE USO PARA CONTINUAR");
+      return;
+    }
+    setCpfPacBuscando(true);
+    const rpcName = cpfPacModo === 'login' ? 'login_paciente' : 'register_paciente';
+    let resp = null;
+    try {
+      const { data, error } = await supabase.rpc(rpcName, {
+        p_cpf: cpfPacDigitos,
+        p_senha: cpfPacSenha,
+      });
+      if (error) {
+        setCpfPacBuscando(false);
+        setCpfPacErro("ERRO DE CONEXAO. TENTE NOVAMENTE.");
+        return;
+      }
+      resp = data;
+    } catch (e) {
+      setCpfPacBuscando(false);
+      setCpfPacErro("ERRO DE CONEXAO. TENTE NOVAMENTE.");
+      return;
+    }
+    setCpfPacBuscando(false);
+    if (!resp || !resp.ok) {
+      const msg = (resp && resp.erro) ? String(resp.erro).toUpperCase() : "FALHA NO LOGIN";
+      setCpfPacErro(msg);
+      return;
+    }
+    try {
+      localStorage.setItem('paciente_id', resp.id || '');
+      localStorage.setItem('paciente_cpf', cpfPacDigitos);
+      localStorage.setItem('paciente_nome', resp.nome || '');
+      localStorage.setItem('paciente_login_at', Date.now().toString());
+    } catch (e) {}
+    setPacienteLogado(resp.nome || '');
+    setPacienteLogadoFlag(true);
+    onModoPaciente && onModoPaciente();
+  }
+  function cpfPacAlternativo() {
+    // Fluxo alternativo (sem CPF) - por enquanto manda pra AuthPage legacy
+    try {
+      localStorage.setItem('rf_paciente_sem_cpf', '1');
+      localStorage.removeItem('rf_paciente_cpf_prefill');
+      localStorage.removeItem('rf_paciente_etapa_inicial');
+    } catch (e) {}
+    onIrLogin && onIrLogin({ cpf: '', etapa: 'cadastro', semCpf: true });
+  }
+  function cpfPacVoltarCpf() {
+    setCpfPacPasso('cpf');
+    setCpfPacSenha('');
+    setCpfPacErro('');
+    setCpfPacModo(null);
+  }
+
+
   const [navScrolled, setNavScrolled] = useState(false)
   const [navOpen,     setNavOpen]     = useState(false)
   const [showFilosofia, setShowFilosofia] = useState(false)
@@ -875,14 +1063,34 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px' }}>
           {medicoLogado && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div title={medicoLogado} style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#b91c1c', border: '2px solid rgba(123,30,30,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div title={medicoLogado} style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#b91c1c', border: '2px solid rgba(123,30,30,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: 'pulse 2s infinite' }}>
                 <span style={{ color: '#fff', fontWeight: 900, fontSize: '12px' }}>
                   {medicoLogado.split(' ').filter(Boolean).slice(0,2).map(p => p[0]).join('').toUpperCase()}
                 </span>
               </div>
-              <span style={{ color: '#b91c1c', fontSize: '9px', fontWeight: 700, letterSpacing: '1px' }}>LOGADO</span>
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+                <span style={{ color: '#b91c1c', fontSize: '9px', fontWeight: 700, letterSpacing: '1px' }}>LOGADO</span>
+                <span style={{ color: '#b91c1c', fontSize: '8px', fontWeight: 700, letterSpacing: '1px', marginTop: '2px' }}>{"M\u00c9DICO"}</span>
+              </div>
               <button onClick={fazerLogoffLanding} aria-label="Sair" title="Sair"
                 style={{ background: '#e5e7eb', color: '#b91c1c', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, padding: '5px 12px', borderRadius: '8px', lineHeight: 1 }}>
+                Sair
+              </button>
+            </div>
+          )}
+          {pacienteLogadoFlag && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div title={pacienteLogado || 'Paciente'} style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#1f2937', border: '2px solid rgba(31,41,55,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, animation: 'pulseGray 2s infinite' }}>
+                <span style={{ color: '#fff', fontWeight: 900, fontSize: '12px' }}>
+                  {(pacienteLogado || '').split(' ').filter(Boolean).slice(0,2).map(p => p[0]).join('').toUpperCase() || '\u2022'}
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
+                <span style={{ color: '#1f2937', fontSize: '9px', fontWeight: 700, letterSpacing: '1px' }}>LOGADO</span>
+                <span style={{ color: '#1f2937', fontSize: '8px', fontWeight: 700, letterSpacing: '1px', marginTop: '2px' }}>PACIENTE</span>
+              </div>
+              <button onClick={fazerLogoffPaciente} aria-label="Sair" title="Sair"
+                style={{ background: '#e5e7eb', color: '#1f2937', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, padding: '5px 12px', borderRadius: '8px', lineHeight: 1 }}>
                 Sair
               </button>
             </div>
@@ -920,15 +1128,23 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
 
               {fluxoEtapa === 'inicio' && (
                 <>
-                  <button onClick={() => { if (medicoLogado) { entrarLogadoDireto(); } else { irPara('escolha'); } }}
-                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #ef4444', color:'#ef4444', fontSize:'0.62rem' }}>
-                    ENTRAR
-                  </button>
-                  <p style={{ fontSize:'0.8rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0.4rem 0 0', minHeight:'1.1rem' }}>
+                  <p style={{ fontSize:'1rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0 0 0.5rem', minHeight:'1.3rem' }}>
                     {twTexto}
                   </p>
+                  <button onClick={() => {
+                    if (medicoLogado) { entrarLogadoDireto(); return; }
+                    if (pacienteLogadoFlag) { onIrDashboardPaciente && onIrDashboardPaciente(); return; }
+                    irPara('escolha');
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
+                  style={{ position:'relative', width:96, height:96, borderRadius:'50%', background:'none', backgroundColor:'transparent', border:'none', outline:'none', padding:0, margin:0, cursor:'pointer', transition:'transform 0.15s ease', animation:'heartbeat 1.6s ease-in-out infinite', WebkitAppearance:'none', MozAppearance:'none', appearance:'none', boxShadow:'none' }}>
+                    <img src={redcell1} alt="ENTRE"
+                      style={{ width:'100%', height:'100%', objectFit:'contain', display:'block', pointerEvents:'none', background:'transparent' }} />
+                    <span style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -50%)', color:'#fff', fontWeight:900, fontSize:'0.85rem', letterSpacing:'1px', paddingLeft:'1px', textShadow:'0 1px 3px rgba(0,0,0,0.55), 0 0 2px rgba(0,0,0,0.4)', pointerEvents:'none', userSelect:'none', whiteSpace:'nowrap' }}>
+                      ENTRE
+                    </span>
+                  </button>
                 </>
               )}
 
@@ -937,13 +1153,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                   <button onClick={() => irPara('medico')}
                   onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #ef4444', color:'#ef4444', fontSize:'0.62rem' }}>
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'4px solid #ef4444', color:'#ef4444', fontSize:'0.62rem' }}>
                     MEDICO
                   </button>
-                  <button onClick={() => irPara('paciente')}
+                  <button onClick={() => {
+                    if (pacienteLogadoFlag) { onIrDashboardPaciente && onIrDashboardPaciente(); return; }
+                    irPara('paciente');
+                  }}
                   onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #111827', color:'#111827', fontSize:'0.62rem' }}>
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'4px solid #1f2937', color:'#1f2937', fontSize:'0.62rem' }}>
                     PACIENTE
                   </button>
                 </div>
@@ -1001,6 +1220,22 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
                         </button>
                       </div>
                       <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 12px', textAlign:'center' }}>LOGIN NO SISTEMA</p>
+                      {caixaModo === 'cadastro' && (
+                        <label style={{ display:'flex', alignItems:'flex-start', gap:'8px', justifyContent:'flex-start', margin:'0 0 12px', cursor:'pointer', userSelect:'none' }}>
+                          <input
+                            type="checkbox"
+                            checked={caixaAceitoTC}
+                            onChange={e => setCaixaAceitoTC(e.target.checked)}
+                            style={{ width:'14px', height:'14px', cursor:'pointer', accentColor:'#ef4444', marginTop:'2px', flexShrink:0 }} />
+                          <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', letterSpacing:'0.3px', lineHeight:1.3 }}>
+                            {"Li e aceito os "}
+                            <a href="#" onClick={e => { e.preventDefault(); }}
+                              style={{ color:'#7B1E1E', textDecoration:'underline', fontWeight:800 }}>
+                              {"Termos e Condi\u00e7\u00f5es de Uso"}
+                            </a>
+                          </span>
+                        </label>
+                      )}
                       {caixaErro && (
                         <div style={{ textAlign:'center', margin:'0 0 10px' }}>
                           <p style={{ color:'#dc2626', fontSize:'0.72rem', fontWeight:800, letterSpacing:'0.5px', margin:'0 0 2px' }}>{caixaErro}</p>
@@ -1028,26 +1263,125 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
               )}
 
               {fluxoEtapa === 'paciente' && (
-                <>
-                  <div style={{ display:'flex', gap:'0.9rem', justifyContent:'center', width:'100%' }}>
-                    <button onClick={onIrLogin}
-                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #374151', color:'#374151', fontSize:'0.62rem' }}>
-                    SIGN-IN
-                  </button>
-                    <button onClick={onModoPaciente}
-                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'2.5px solid #111827', color:'#111827', fontSize:'0.62rem' }}>
-                    SIGN-UP
-                  </button>
-                  </div>
-                  <div style={{ display:'flex', gap:'0.9rem', justifyContent:'center', width:'100%', marginTop:'0.35rem' }}>
-                  <span style={{ width:72, textAlign:'center', fontSize:'0.5rem', fontWeight:800, letterSpacing:'1px', color:'#374151' }}>CADASTRADO</span>
-                  <span style={{ width:72, textAlign:'center', fontSize:'0.5rem', fontWeight:800, letterSpacing:'1px', color:'#111827' }}>NAO CADASTRADO</span>
+                <div style={{ border:'2px solid #1f2937', borderRadius:'14px', padding:'16px', background:'#fff', width:'100%', maxWidth:340 }}>
+                  <p style={{ fontSize:'0.78rem', fontWeight:800, color:'#1f2937', letterSpacing:'0.5px', margin:'0 0 6px', minHeight:'1rem', textAlign:'center' }}>
+                    {cpfPacTw}
+                  </p>
+
+                  {cpfPacPasso === 'cpf' && (
+                    <>
+                      <input
+                        autoFocus
+                        type="text"
+                        value={cpfPacValor}
+                        onChange={e => { setCpfPacValor(formatarCPFLand(e.target.value)); setCpfPacErro(''); }}
+                        onKeyDown={e => { if (e.key === 'Enter' && cpfPacValido) cpfPacAvancar(); }}
+                        placeholder="000.000.000-00"
+                        inputMode="numeric"
+                        maxLength={14}
+                        className="rf-cx-input"
+                        style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center' }}
+                      />
+                      <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 10px', textAlign:'center' }}>{"LOGIN DO PACIENTE"}</p>
+
+                      <label style={{ display:'flex', alignItems:'center', gap:'8px', justifyContent:'center', margin:'0 0 12px', cursor:'pointer', userSelect:'none' }}>
+                        <input
+                          type="checkbox"
+                          checked={cpfPacSemCpf}
+                          onChange={e => setCpfPacSemCpf(e.target.checked)}
+                          style={{ width:'14px', height:'14px', cursor:'pointer', accentColor:'#1f2937' }} />
+                        <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', letterSpacing:'0.3px' }}>{"N\u00c3O TENHO CPF"}</span>
+                      </label>
+
+                      {cpfPacErro && (
+                        <div style={{ textAlign:'center', margin:'0 0 10px' }}>
+                          <p style={{ color:'#dc2626', fontSize:'0.72rem', fontWeight:800, letterSpacing:'0.5px', margin:'0' }}>{cpfPacErro}</p>
+                        </div>
+                      )}
+
+                      {cpfPacSemCpf ? (
+                        <button
+                          onClick={cpfPacAlternativo}
+                          style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#1f2937', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor:'pointer' }}>
+                          {"CONTINUAR SEM CPF \u2192"}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={cpfPacAvancar}
+                          disabled={!cpfPacValido || cpfPacBuscando}
+                          style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#1f2937', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: cpfPacValido && !cpfPacBuscando ? 'pointer' : 'not-allowed', opacity: cpfPacValido && !cpfPacBuscando ? 1 : 0.4 }}>
+                          {cpfPacBuscando ? "VERIFICANDO..." : "CONTINUAR \u2192"}
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {cpfPacPasso === 'senha' && (
+                    <>
+                      <div style={{ position:'relative' }}>
+                        <input
+                          autoFocus
+                          type={cpfPacShowSenha ? 'text' : 'password'}
+                          value={cpfPacSenha}
+                          onChange={e => { setCpfPacSenha(e.target.value); setCpfPacErro(''); }}
+                          onKeyDown={e => { if (e.key === 'Enter' && cpfPacSenhaValida) cpfPacConcluir(); }}
+                          placeholder="SEIS CARACTERES"
+                          className="rf-cx-input"
+                          style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 38px 10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center' }}
+                        />
+                        <button type="button" onClick={() => setCpfPacShowSenha(s => !s)}
+                          aria-label={cpfPacShowSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                          style={{ position:'absolute', right:'10px', top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', padding:'4px', color:'#9ca3af' }}>
+                          {cpfPacShowSenha ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                          )}
+                        </button>
+                      </div>
+                      <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 12px', textAlign:'center' }}>{"LOGIN DO PACIENTE"}</p>
+
+                      {cpfPacModo === 'cadastro' && (
+                        <label style={{ display:'flex', alignItems:'flex-start', gap:'8px', justifyContent:'flex-start', margin:'0 0 12px', cursor:'pointer', userSelect:'none' }}>
+                          <input
+                            type="checkbox"
+                            checked={cpfPacAceitoTC}
+                            onChange={e => setCpfPacAceitoTC(e.target.checked)}
+                            style={{ width:'14px', height:'14px', cursor:'pointer', accentColor:'#1f2937', marginTop:'2px', flexShrink:0 }} />
+                          <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', letterSpacing:'0.3px', lineHeight:1.3 }}>
+                            {"Li e aceito os "}
+                            <a href="#" onClick={e => { e.preventDefault(); }}
+                              style={{ color:'#1f2937', textDecoration:'underline', fontWeight:800 }}>
+                              {"Termos e Condi\u00e7\u00f5es de Uso"}
+                            </a>
+                          </span>
+                        </label>
+                      )}
+
+                      {cpfPacErro && (
+                        <div style={{ textAlign:'center', margin:'0 0 10px' }}>
+                          <p style={{ color:'#dc2626', fontSize:'0.72rem', fontWeight:800, letterSpacing:'0.5px', margin:'0 0 2px' }}>{cpfPacErro}</p>
+                          {cpfPacModo === 'login' && (
+                            <a href="https://wa.me/5571997110804" target="_blank" rel="noopener noreferrer"
+                              style={{ color:'#7B1E1E', fontSize:'0.66rem', fontWeight:700, textDecoration:'underline' }}>
+                              Recuperar senha
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      <button
+                        onClick={cpfPacConcluir}
+                        disabled={!cpfPacSenhaValida || cpfPacBuscando}
+                        style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#1f2937', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: cpfPacSenhaValida && !cpfPacBuscando ? 'pointer' : 'not-allowed', opacity: cpfPacSenhaValida && !cpfPacBuscando ? 1 : 0.4 }}>
+                        {cpfPacBuscando ? (cpfPacModo === 'login' ? "ENTRANDO..." : "CRIANDO...") : "CONTINUAR \u2192"}
+                      </button>
+                      <button onClick={cpfPacVoltarCpf}
+                        style={{ width:'100%', background:'none', border:'none', color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, letterSpacing:'1px', cursor:'pointer', marginTop:'8px' }}>
+                        {"\u2190 corrigir CPF"}
+                      </button>
+                    </>
+                  )}
                 </div>
-                </>
               )}
 
               {fluxoEtapa !== 'inicio' && (
@@ -1059,20 +1393,41 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
 
             </div>
 
-            <div style={{ margin:'0.5rem 0 0.8rem', textAlign:'center', width:'100%', maxWidth:700 }}>
-              <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.5rem' }} />
-              <p style={{ color:'#1F2937', fontSize:'0.88rem', fontWeight:600, margin:'0.3rem 0 0.1rem' }}>
-                {"Avalie um paciente e torne-se membro do Programa de Afiliados patrocinado."}
-              </p>
-              <p style={{ color:'#6B7280', fontSize:'0.78rem', fontWeight:500, margin:'0 0 0.2rem' }}>
-                {"Ao beneficiar pacientes, voc\u00ea tamb\u00e9m passa a auferir benef\u00edcios."}
-              </p>
-              <p style={{ color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', margin:'0.2rem 0 0.3rem' }}>
-                {"V\u00c1LIDO PARA M\u00c9DICOS COM REGISTRO NO CRM"}
-              </p>
+            {/* Marquee de indicacoes: 3 linhas, scroll infinito horizontal */}
+            <div className="rf-marquee" aria-hidden="true">
+              <div className="rf-marquee-row rf-marquee-row-1">
+                <div className="rf-marquee-track">
+                  {marqueeRow1.map((ind, i) => (
+                    <span key={`r1a-${i}`} className="rf-marquee-item">{ind}</span>
+                  ))}
+                  {marqueeRow1.map((ind, i) => (
+                    <span key={`r1b-${i}`} className="rf-marquee-item" aria-hidden="true">{ind}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="rf-marquee-row rf-marquee-row-2">
+                <div className="rf-marquee-track">
+                  {marqueeRow2.map((ind, i) => (
+                    <span key={`r2a-${i}`} className="rf-marquee-item">{ind}</span>
+                  ))}
+                  {marqueeRow2.map((ind, i) => (
+                    <span key={`r2b-${i}`} className="rf-marquee-item" aria-hidden="true">{ind}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="rf-marquee-row rf-marquee-row-3">
+                <div className="rf-marquee-track">
+                  {marqueeRow3.map((ind, i) => (
+                    <span key={`r3a-${i}`} className="rf-marquee-item">{ind}</span>
+                  ))}
+                  {marqueeRow3.map((ind, i) => (
+                    <span key={`r3b-${i}`} className="rf-marquee-item" aria-hidden="true">{ind}</span>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="trust" style={{ justifyContent:'center' }}>
+            <div className="trust" style={{ justifyContent:'center', marginTop:'1rem' }}>
               <div className="trust-i">
                 <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 <span>{"30 vari\u00e1veis cl\u00ednicas"}</span>
@@ -1092,6 +1447,53 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
 
           </div>
         </div>
+
+        {/* CSS do marquee de indicacoes (3 linhas, scroll infinito) */}
+        <style>{`
+          @keyframes rfMarqueeScroll {
+            from { transform: translateX(0); }
+            to   { transform: translateX(-50%); }
+          }
+          .rf-marquee {
+            width: 100%;
+            max-width: 880px;
+            margin: 1.4rem auto 0.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            overflow: hidden;
+            mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+          }
+          .rf-marquee-row {
+            overflow: hidden;
+            width: 100%;
+          }
+          .rf-marquee-track {
+            display: inline-flex;
+            white-space: nowrap;
+            gap: 2.4rem;
+            padding-right: 2.4rem;
+            animation: rfMarqueeScroll linear infinite;
+            will-change: transform;
+          }
+          .rf-marquee-row-1 .rf-marquee-track { animation-duration: 38s; }
+          .rf-marquee-row-2 .rf-marquee-track { animation-duration: 46s; animation-direction: reverse; }
+          .rf-marquee-row-3 .rf-marquee-track { animation-duration: 32s; }
+          .rf-marquee-item {
+            color: #6B7280;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+          @media (max-width: 720px) {
+            .rf-marquee-item { font-size: 0.66rem; }
+            .rf-marquee-track { gap: 1.6rem; padding-right: 1.6rem; }
+          }
+        `}</style>
       </section>
 
 
@@ -1308,58 +1710,33 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
           <div className="reveal center">
             <span className="tag">{"Indica\u00e7\u00f5es"}</span>
             <h2 className="stitle">{"Para quem \u00e9 o RedFairy?"}</h2>
-            <p className="sdesc" style={{ margin:"0 auto" }}>{"Avalia\u00e7\u00e3o e acompanhamento de condi\u00e7\u00f5es cl\u00ednicas relacionadas ao eritron e metabolismo do ferro."}</p>
           </div>
-          <div className="indicacoes-grid reveal">
-            <div className="ind" style={{ alignItems:'flex-start' }}>
-              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'#EAB308', display:'block', flexShrink:0, marginTop:8 }} />
-              <div>
-                <strong>{"Bari\u00e1tricos"}</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>{"OBA \u2014 Otimizar o Bari\u00e1trico"}</div>
-              </div>
-            </div>
-            <div className="ind auto-dot" style={{ alignItems:'flex-start' }}>
-              <div>
-                <strong>Anemias</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>{"Cr\u00f4nicas ou Agudas"}</div>
-              </div>
-            </div>
-            <div className="ind" style={{ alignItems:'flex-start' }}>
-              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:3 }} />
-              <div>
-                <strong>{"Defici\u00eancia de Ferro"}</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Ferritina Baixa</div>
-              </div>
-            </div>
-            <div className="ind" style={{ alignItems:'flex-start' }}>
-              <span style={{ width:8, height:8, minWidth:8, borderRadius:'50%', background:'var(--cherry)', display:'block', flexShrink:0, marginTop:3 }} />
-              <div>
-                <strong>Excesso de Ferro</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Ferritina Alta</div>
-              </div>
-            </div>
-            <div className="ind auto-dot" style={{ alignItems:'flex-start' }}>
-              <div>
-                <strong>Hemoglobina Alta</strong>
-                <div style={{ fontSize:'0.7rem', textTransform:'uppercase', fontWeight:400, color:'var(--text-light)', marginTop:'0.2rem' }}>Regime de Sangrias</div>
-              </div>
-            </div>
-            {[
-              "Sangramentos Cr\u00f4nicos",
-              "Vegetarianos",
-              "Gestantes",
-              "Cel\u00edacos",
-              "Doadores de Sangue",
-              "Uso de Testosterona",
-              "Endometriose e Miomas",
-              "Menstrua\u00e7\u00e3o Excessiva",
-              "Defici\u00eancia de G-6-PD",
-              "Alcoolistas"
-            ].map(i => (
-              <div key={i} className="ind auto-dot"><strong>{i}</strong></div>
-            ))}
+          <div className="reveal" style={{ maxWidth: 880, margin: '1.5rem auto 0', lineHeight: 1.7, color: 'var(--text-sec)', fontSize: '0.98rem', textAlign: 'justify' }}>
+            <p style={{ marginBottom: '1.1rem' }}>
+              {"No Brasil, anemia e defici\u00eancia de ferro atingem dezenas de milh\u00f5es de pessoas. Ao mesmo tempo, crescem os grupos com hemoglobina alta, ferritina elevada, sobrecarga de ferro, necessidade de sangrias terap\u00eauticas e altera\u00e7\u00f5es hematol\u00f3gicas associadas a cirurgias bari\u00e1tricas e gastrectomias, gesta\u00e7\u00e3o, vegetarianismo, sangramentos cr\u00f4nicos, doa\u00e7\u00e3o de sangue, uso de testosterona, abuso de \u00e1lcool, doen\u00e7a cel\u00edaca, defici\u00eancia de G-6-PD e dist\u00farbios do metabolismo do ferro."}
+            </p>
+            <p style={{ marginBottom: '1.1rem' }}>
+              {"Em conjunto, essas condi\u00e7\u00f5es envolvem mais de "}<strong style={{ color: 'var(--wine)' }}>{"55 milh\u00f5es de brasileiros"}</strong>{" em risco hematol\u00f3gico-nutricional relevante, incluindo grande contingente de crian\u00e7as e idosos, muitas vezes sem acesso poss\u00edvel a avalia\u00e7\u00e3o especializada."}
+            </p>
+            <p style={{ marginBottom: '1.1rem' }}>
+              <strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" transforma o hemograma em uma "}<strong>{"porta de entrada inteligente"}</strong>{" para triagem, orienta\u00e7\u00e3o diagn\u00f3stica e cuidado m\u00e9dico em hematologia. A plataforma apoia m\u00e9dicos n\u00e3o especialistas na identifica\u00e7\u00e3o de riscos ocultos, e conduz pacientes atrav\u00e9s de avalia\u00e7\u00e3o e seguimento estruturados."}
+            </p>
+            <p style={{ marginBottom: '1.1rem' }}>
+              {"Em um pa\u00eds continental e desigual, com car\u00eancia de hematologistas em extensas regi\u00f5es, "}<strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" ocupa parte dessa lacuna assistencial por meio de recomenda\u00e7\u00f5es m\u00e9dicas fundamentadas, solicita\u00e7\u00e3o de exames e prescri\u00e7\u00f5es emitidas por hematologistas com assinatura m\u00e9dica digital."}
+            </p>
+            <p style={{ marginBottom: '0.5rem' }}>
+              {"Para ampliar essa rede de cuidado, o "}<strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" inclui um "}<strong>{"Programa de Afiliados Patrocinado para M\u00e9dicos"}</strong>{", voltado a reconhecer e apoiar profissionais que identifiquem pacientes em risco e os orientem a se cadastrar na plataforma. Cada paciente previamente avaliado por um m\u00e9dico e posteriormente cadastrado poder\u00e1 gerar cr\u00e9ditos institucionais vinculados ao profissional respons\u00e1vel pelo encaminhamento, fortalecendo uma rede colaborativa de triagem, preven\u00e7\u00e3o, diagn\u00f3stico precoce e cuidado hematol\u00f3gico-nutricional no Brasil."}
+            </p>
+            {medicoLogado && (
+              <p style={{ textAlign: 'center', margin: '1.2rem 0 0', cursor: 'pointer' }}
+                 onClick={() => document.getElementById('info-epidemio')?.scrollIntoView({ behavior:'smooth' })}>
+                <span style={{ color:'#7B1E1E', fontSize:'0.78rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1.5px', borderBottom:'1.5px solid #7B1E1E', paddingBottom:'2px' }}>
+                  {"Informa\u00e7\u00f5es Epidemiol\u00f3gicas & T\u00e9cnicas \u2192"}
+                </span>
+              </p>
+            )}
           </div>
-          <div style={{ display:'flex', justifyContent:'center', marginTop:'1.5rem' }}>
+          <div style={{ display:'flex', justifyContent:'center', marginTop:'1.8rem' }}>
             <a href="#oba" className="oba-home-btn" style={{ padding:'0.7rem 1.5rem' }}>
               <span className="oba-title">Projeto OBA</span>
               <span className="oba-sub">{"Otimizar o Bari\u00e1trico"}</span>
@@ -1406,37 +1783,45 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin })
           <div className="como-tabs-wrap reveal">
             <div className="como-tabs">
               <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}><span>{"Para M\u00e9dicos"}</span><span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.1rem" }}>{"M\u00c9DICOS"}</span></button>
-              <button className={`como-tab${activeTab === 'paciente' ? ' active' : ''}`} onClick={() => setActiveTab('paciente')}>Para Pacientes</button>
+              <button className={`como-tab paciente${activeTab === 'paciente' ? ' active' : ''}`} onClick={() => setActiveTab('paciente')}>Para Pacientes</button>
             </div>
           </div>
           <div className="como-content">
             {activeTab === 'medico' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step"><div className="flow-num">1</div><h4>{"Acesse o Modo M\u00e9dico"}<br/><span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", color:"var(--cherry)", textTransform:"uppercase" }}>{"M\u00e9dicos"}</span></h4><p>{"Gratuito, sem cadastro. Use o seu CRM para acesso imediato \u00e0 calculadora cl\u00ednica."}</p></div>
-                  <div className="flow-step"><div className="flow-num">2</div><h4>Insira o CPF do paciente</h4><p>{"\u00danica informa\u00e7\u00e3o de identifica\u00e7\u00e3o. Vincula os dados ao paciente automaticamente."}</p></div>
-                  <div className="flow-step"><div className="flow-num">3</div><h4>{"Preencha os par\u00e2metros"}</h4><p>{"Apenas cinco par\u00e2metros laboratoriais e algumas caixinhas com dados cl\u00ednicos."}</p></div>
-                  <div className="flow-step"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>{"Diagn\u00f3stico, orienta\u00e7\u00f5es terap\u00eauticas e dosagens em segundos."}</p></div>
+                  <div className="flow-step medico"><div className="flow-num">1</div><h4>{"Acesse o Modo M\u00e9dico"}<br/><span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", color:"var(--cherry)", textTransform:"uppercase" }}>{"M\u00e9dicos"}</span></h4><p>{"Gratuito, sem cadastro. Use o seu CRM para acesso imediato \u00e0 calculadora cl\u00ednica."}</p></div>
+                  <div className="flow-step medico"><div className="flow-num">2</div><h4>Insira o CPF do paciente</h4><p>{"\u00danica informa\u00e7\u00e3o de identifica\u00e7\u00e3o. Vincula os dados ao paciente automaticamente."}</p></div>
+                  <div className="flow-step medico"><div className="flow-num">3</div><h4>{"Preencha os par\u00e2metros"}</h4><p>{"Apenas cinco par\u00e2metros laboratoriais e algumas caixinhas com dados cl\u00ednicos."}</p></div>
+                  <div className="flow-step medico"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>{"Diagn\u00f3stico, orienta\u00e7\u00f5es terap\u00eauticas e dosagens em segundos."}</p></div>
                 </div>
                 <div style={{ margin:'1.5rem 0 0' }}>
                   <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
-                  <p style={{ color:'#1F2937', fontSize:'0.95rem', fontWeight:600, textAlign:'center', margin:'0 0 0.2rem' }}>
-                    {"O Programa de Afiliados RedFairy beneficia quem beneficia os seus pacientes."}
+                  <p style={{ color:'#7B1E1E', fontSize:'0.95rem', fontWeight:600, textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.5 }}>
+                    {"Avalie um paciente e torne-se membro do Programa de Afiliados patrocinado."}
                   </p>
-                  <p style={{ color:'#6B7280', fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', textAlign:'center', margin:'0.2rem 0 0', cursor:'pointer' }}
-                     onClick={() => document.getElementById('acesso')?.scrollIntoView({ behavior:'smooth' })}>
-                    {"CONHE\u00c7A AS REGRAS"}
+                  <p style={{ color:'#7B1E1E', fontSize:'0.85rem', fontWeight:500, textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.5, opacity:0.9 }}>
+                    {"Ao beneficiar pacientes, voc\u00ea tamb\u00e9m passa a auferir benef\u00edcios."}
                   </p>
+                  <p style={{ color:'#991B1B', fontSize:'0.7rem', fontWeight:700, letterSpacing:'1px', textAlign:'center', margin:'0 0 0.6rem', textTransform:'uppercase', opacity:0.75 }}>
+                    {"V\u00e1lido para m\u00e9dicos com registro no CRM"}
+                  </p>
+                  {medicoLogado && (
+                    <p style={{ color:'#6B7280', fontSize:'0.72rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', textAlign:'center', margin:'0.4rem 0 0', cursor:'pointer' }}
+                       onClick={() => document.getElementById('acesso')?.scrollIntoView({ behavior:'smooth' })}>
+                      {"CONHE\u00c7A AS REGRAS"}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
             {activeTab === 'paciente' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step"><div className="flow-num">1</div><h4>Informe seu CPF</h4><p>{"Se o seu m\u00e9dico j\u00e1 fez a primeira avalia\u00e7\u00e3o, seus dados j\u00e1 estar\u00e3o aqui. Se ele n\u00e3o fez, voc\u00ea mesmo faz. Tenha em m\u00e3os o seu Hemograma, a Ferritina e a Satura\u00e7\u00e3o da Transferrina."}</p></div>
-                  <div className="flow-step"><div className="flow-num">2</div><h4>{"Complete ou Fa\u00e7a um Novo Cadastro"}</h4><p>{"Cadastro simples com e-mail, senha e celular. R\u00e1pido e seguro."}</p></div>
-                  <div className="flow-step"><div className="flow-num">3</div><h4>Assine via PIX</h4><p>{"R$ 149,90/ano via QR Code, Chave PIX ou Copie e Cole."}</p></div>
-                  <div className="flow-step"><div className="flow-num">4</div><h4>Acompanhe seu eritron</h4><p>{"Novas avalia\u00e7\u00f5es geram o gr\u00e1fico multiparam\u00e9trico da sua sa\u00fade eritrocit\u00e1ria."}</p></div>
+                  <div className="flow-step paciente"><div className="flow-num">1</div><h4>Informe seu CPF</h4><p>{"Se o seu m\u00e9dico j\u00e1 fez a primeira avalia\u00e7\u00e3o, seus dados j\u00e1 estar\u00e3o aqui. Se ele n\u00e3o fez, voc\u00ea mesmo faz. Tenha em m\u00e3os o seu Hemograma, a Ferritina e a Satura\u00e7\u00e3o da Transferrina."}</p></div>
+                  <div className="flow-step paciente"><div className="flow-num">2</div><h4>{"Complete ou Fa\u00e7a um Novo Cadastro"}</h4><p>{"Cadastro simples com e-mail, senha e celular. R\u00e1pido e seguro."}</p></div>
+                  <div className="flow-step paciente"><div className="flow-num">3</div><h4>Assine via PIX</h4><p>{"R$ 149,90/ano via QR Code, Chave PIX ou Copie e Cole."}</p></div>
+                  <div className="flow-step paciente"><div className="flow-num">4</div><h4>Acompanhe seu eritron</h4><p>{"Novas avalia\u00e7\u00f5es geram o gr\u00e1fico multiparam\u00e9trico da sua sa\u00fade eritrocit\u00e1ria."}</p></div>
                 </div>
                 <div className="patient-features">
                   <div className="pf-card">

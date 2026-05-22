@@ -10,12 +10,23 @@ import HistoricoChartModal from './HistoricoChartModal';
  * Props:
  *   modoMedico:       boolean - se true, exibe campo CPF (medico digita do paciente)
  *   isDemoPaciente:   boolean - se true (modo paciente DEMO sem login), exibe CPF
+ *   cpfPrefill:       string  - CPF a ser preenchido automaticamente (paciente logado)
+ *   cpfBloqueado:     boolean - se true, o campo CPF fica disabled e foco pula pro proximo
  *   onConcluir:       function(resultado, inputs) - chamada apos avaliar com sucesso
  *   onFechar:         function() - usuario fechou sem avaliar
  */
-export default function TriagemModal({ modoMedico = false, isDemoPaciente = false, onConcluir, onFechar }) {
+export default function TriagemModal({ modoMedico = false, isDemoPaciente = false, cpfPrefill = '', cpfBloqueado = false, onConcluir, onFechar }) {
+  // Formata CPF inicial (se vier prefilled como digitos puros)
+  const formatarCPFInicial = (raw) => {
+    const d = String(raw || '').replace(/\D/g, '').slice(0, 11);
+    if (d.length === 0) return '';
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return d.slice(0,3) + '.' + d.slice(3);
+    if (d.length <= 9) return d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6);
+    return d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6,9) + '-' + d.slice(9);
+  };
   const [inputs, setInputs] = useState({
-    cpf: '',
+    cpf: formatarCPFInicial(cpfPrefill),
     sexo: '',
     gestante: false,
     bariatrica: false,
@@ -29,6 +40,19 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   })
 
   const [pacienteConhecido, setPacienteConhecido] = useState(null);
+  // Typewriter do aviso de topo: "NAO TEM UM HEMOGRAMA?..."
+  const [twTopo, setTwTopo] = useState('');
+  useEffect(() => {
+    const full = "N\u00c3O TEM UM HEMOGRAMA?... FECHE ESSA JANELA E VOLTE DEPOIS.";
+    let i = 0;
+    setTwTopo('');
+    const iv = setInterval(() => {
+      i++;
+      setTwTopo(full.slice(0, i));
+      if (i >= full.length) clearInterval(iv);
+    }, 30);
+    return () => clearInterval(iv);
+  }, []);
   const [buscandoCpf, setBuscandoCpf] = useState(false);
 
   // Etapa do hemograma: 1=Hb ativo, 2=VCM ativo, 3=RDW ativo, 4=todos confirmados
@@ -49,6 +73,11 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   const [erros, setErros] = useState({})
 
   const mostrarCPF = modoMedico || isDemoPaciente
+  // Flags derivadas: paciente conhecido REALMENTE tem sexo / data_nascimento.
+  // (pode existir profile mas com esses campos NULL - entao precisamos pedir)
+  const pacConhSexoOk = !!(pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && pacienteConhecido.sexo);
+  const pacConhDataNascOk = !!(pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && pacienteConhecido.data_nascimento);
+  const pacConhCompleto = pacConhSexoOk && pacConhDataNascOk;
 
   const fraseAbertura = modoMedico
     ? "Como est\u00e1 a hemoglobina do seu paciente?"
@@ -99,14 +128,14 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   }, [pacienteConhecido]);
 
   useEffect(() => {
-    if (!modoMedico) return;
+    if (!modoMedico && !cpfBloqueado) return;
     const digits = String(inputs.cpf || '').replace(/\D/g, '');
     if (digits.length === 11) {
       buscarCpfConhecido(digits);
     } else {
       setPacienteConhecido(null);
     }
-  }, [inputs.cpf, modoMedico]);
+  }, [inputs.cpf, modoMedico, cpfBloqueado]);
 
   function validarCPF(cpf) {
     const c = cpf.replace(/\D/g, '')
@@ -180,10 +209,21 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     return { errors, idadeCalc, dataNascimentoISO }
   }
 
+  const [erroGeral, setErroGeral] = useState('')
   function handleAvaliar() {
+    setErroGeral('')
     const { errors, idadeCalc, dataNascimentoISO } = validar()
     if (Object.keys(errors).length > 0) {
       setErros(errors)
+      // Se nenhum dos erros tem campo visivel (por exemplo pacienteConhecido escondeu
+      // os campos mas mesmo assim faltam dados), mostra mensagem geral.
+      const camposVisiveis = ['hemoglobina', 'vcm', 'rdw', 'data_coleta', 'semanas_gestacao']
+      if (!pacConhCompleto) camposVisiveis.push('sexo', 'dataNascimento')
+      if (mostrarCPF) camposVisiveis.push('cpf')
+      const errosOcultos = Object.keys(errors).filter(k => !camposVisiveis.includes(k))
+      if (errosOcultos.length > 0) {
+        setErroGeral("Dados incompletos no perfil. Acesse 'Completar Perfil' antes de avaliar.")
+      }
       return
     }
     const _hoje = new Date();
@@ -265,6 +305,17 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       if (refCpfInput.current) refCpfInput.current.focus();
     }, 100);
     return () => clearTimeout(t);
+  }, []);
+
+  // Paciente ja logado: CPF veio preenchido e bloqueado. Pular direto pro Sexo.
+  useEffect(() => {
+    if (!cpfBloqueado) return;
+    setEtapaInicio(3);
+    const t = setTimeout(() => {
+      if (refSexoSelect.current) refSexoSelect.current.focus();
+    }, 150);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -421,6 +472,13 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   }
 
   return (<>
+    <style>{`
+      @keyframes rfArrowPulse {
+        0%, 100% { transform: translateX(0); opacity: 0.6; }
+        50% { transform: translateX(8px); opacity: 1; }
+      }
+      .rf-arrow-x { animation: rfArrowPulse 1s ease-in-out infinite; }
+    `}</style>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl relative">
@@ -432,7 +490,22 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           {"\u2715"}
         </button>
 
-        <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
+        {/* Aviso no topo: "NAO TEM UM HEMOGRAMA?... FECHE A JANELA" + setinha pro X */}
+        <div style={{ background: '#FEF2F2', borderBottom: '1px solid #FECACA', padding: '10px 14px 10px 14px', position: 'relative' }}>
+          <div style={{ paddingRight: 76 }}>
+            <p style={{ fontSize: '0.78rem', fontWeight: 600, color: '#7B1E1E', letterSpacing: '0.5px', minHeight: '1.05rem', lineHeight: 1.3, margin: 0 }}>
+              {twTopo}
+            </p>
+            <p style={{ fontSize: '0.66rem', fontWeight: 700, color: '#991B1B', letterSpacing: '0.5px', marginTop: 3, opacity: 0.8 }}>
+              {"SEUS DADOS DE LOGIN EST\u00c3O SALVOS"}
+            </p>
+          </div>
+          <span className="rf-arrow-x" style={{ position: 'absolute', top: 8, right: 56, fontSize: '1.6rem', color: '#b91c1c', fontWeight: 900, pointerEvents: 'none', lineHeight: 1 }}>
+            {"\u2192"}
+          </span>
+        </div>
+
+        <div className="bg-white px-6 pt-4 pb-4 rounded-t-2xl text-center">
           <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
           <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
           <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">{"\ud83e\ude7a Triagem do Eritron"}</p>
@@ -453,7 +526,11 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                 value={inputs.cpf}
                 onChange={e => handleChange({ target: { name: 'cpf', value: formatarCPF(e.target.value) } })}
                 placeholder="000.000.000-00"
+                disabled={cpfBloqueado}
+                readOnly={cpfBloqueado}
+                tabIndex={cpfBloqueado ? -1 : 0}
                 className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                  cpfBloqueado ? 'border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed' :
                   erros.cpf ? 'border-red-500' :
                   etapaInicio === 1 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
                   'border-yellow-300 bg-yellow-50'
@@ -461,7 +538,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               />
               {erros.cpf && <p className="text-red-500 text-xs mt-1">{erros.cpf}</p>}
 
-              {modoMedico && pacienteConhecido === 'BLOQUEADO' && (
+              {(modoMedico || cpfBloqueado) && pacienteConhecido === 'BLOQUEADO' && (
                 <div className="mt-3 p-4 rounded-xl bg-red-50 border-2 border-red-300">
                   <p className="text-sm font-bold text-red-800 mb-2">
                     {"\ud83d\uded1 Limite de triagens gratuitas atingido"}
@@ -472,7 +549,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                 </div>
               )}
 
-              {modoMedico && pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && (() => {
+              {(modoMedico || cpfBloqueado) && pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && (() => {
                 const pc = pacienteConhecido;
                 let idadeStr = '';
                 if (pc.data_nascimento) {
@@ -521,7 +598,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             </div>
           )}
 
-          {!pacienteConhecido && (<>
+          {!pacConhCompleto && (<>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
@@ -530,7 +607,9 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   name="sexo"
                   value={inputs.sexo}
                   onChange={handleChange}
+                  disabled={pacConhSexoOk}
                   className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                    pacConhSexoOk ? 'border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed' :
                     erros.sexo ? 'border-red-500' :
                     etapaInicio === 3 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
                     etapaInicio > 3 ? 'border-yellow-300 bg-yellow-50' :
@@ -551,6 +630,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   name="dataNascimento"
                   value={inputs.dataNascimento}
                   onChange={handleChange}
+                  disabled={pacConhDataNascOk}
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -572,6 +652,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   maxLength={10}
                   placeholder="DD/MM/AAAA"
                   className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                    pacConhDataNascOk ? 'border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed' :
                     erros.dataNascimento ? 'border-red-500' :
                     etapaInicio === 2 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
                     etapaInicio >= 3 ? 'border-yellow-300 bg-yellow-50' :
@@ -784,6 +865,9 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             )}
             {etapaHemograma < 4 && (
               <p className="text-xs text-gray-400 text-center">{"Preencha os campos amarelos em sequ\u00eancia"}</p>
+            )}
+            {erroGeral && (
+              <p className="text-xs text-red-600 font-semibold text-center mt-2">{erroGeral}</p>
             )}
           </div>
         )}

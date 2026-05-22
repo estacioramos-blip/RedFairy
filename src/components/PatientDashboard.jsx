@@ -4,6 +4,7 @@ import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/d
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import BoasVindasModal from './BoasVindasModal'
+import CompletarPerfilModal from './CompletarPerfilModal'
 import heroImg from '../assets/redfairy-hero.png'
 import logo from '../assets/logo.png'
 
@@ -12,6 +13,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [avaliacoes, setAvaliacoes] = useState([])
   const [tela, setTela] = useState('historico')
   const [showBoasVindas, setShowBoasVindas] = useState(false)
+  const [showCompletarPerfil, setShowCompletarPerfil] = useState(false)
   const [resultado, setResultado] = useState(null)
   const [copiado, setCopiado] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -106,6 +108,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       return
     }
     setProfile(prof)
+    // Perfil incompleto (paciente recem-cadastrado): pede dados pessoais antes de tudo
+    if (prof && (!prof.nome || String(prof.nome).trim().length < 3)) {
+      setShowCompletarPerfil(true)
+    }
     if (prof && prof.boas_vindas_vista === false) {
       setShowBoasVindas(true)
     }
@@ -586,6 +592,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         )}
       </div>
     </div>
+
+    {showCompletarPerfil && profile && (
+      <CompletarPerfilModal
+        profile={profile}
+        onSalvo={(novoProfile) => {
+          setShowCompletarPerfil(false)
+          setProfile(novoProfile)
+        }}
+      />
+    )}
 
     {showBoasVindas && profile && (
       <BoasVindasModal

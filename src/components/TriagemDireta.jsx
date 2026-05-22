@@ -19,10 +19,19 @@ import TriagemResultadoModal from './TriagemResultadoModal'
  *   onVoltar:     function() -- fechar tudo e voltar para landing
  *   onCadastrar:  function(cpf) -- redirecionar para cadastro
  */
-export default function TriagemDireta({ onVoltar, onCadastrar }) {
+export default function TriagemDireta({ onVoltar, onCadastrar, onIrDashboard }) {
   const [showTriagem, setShowTriagem] = useState(true)
   const [triagemResultado, setTriagemResultado] = useState(null)
   const [triagemInputs, setTriagemInputs] = useState(null)
+
+  // CPF do paciente logado (se houver, vem prefilled e bloqueado)
+  let pacienteCpf = ''
+  let pacienteId = ''
+  try {
+    pacienteCpf = localStorage.getItem('paciente_cpf') || ''
+    pacienteId = localStorage.getItem('paciente_id') || ''
+  } catch (e) {}
+  const pacienteLogado = !!pacienteCpf && !!pacienteId
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,13 +48,23 @@ export default function TriagemDireta({ onVoltar, onCadastrar }) {
         <TriagemModal
           modoMedico={false}
           isDemoPaciente={true}
+          cpfPrefill={pacienteCpf}
+          cpfBloqueado={!!pacienteCpf}
           onConcluir={(resultado, inputs) => {
             setTriagemResultado(resultado)
             setTriagemInputs(inputs)
             setShowTriagem(false)
           }}
           onFechar={() => {
-            // Usuario clicou Fechar - volta ao landing
+            // Usuario clicou Fechar - se for paciente logado, faz logoff antes de voltar pra landing
+            if (pacienteLogado) {
+              try {
+                localStorage.removeItem('paciente_id')
+                localStorage.removeItem('paciente_cpf')
+                localStorage.removeItem('paciente_nome')
+                localStorage.removeItem('paciente_login_at')
+              } catch (e) {}
+            }
             if (onVoltar) onVoltar()
           }}
         />
@@ -57,13 +76,17 @@ export default function TriagemDireta({ onVoltar, onCadastrar }) {
           resultado={triagemResultado}
           inputs={triagemInputs}
           modoMedico={false}
-          isDemo={true}
+          isDemo={!pacienteLogado}
           medicoCRM={null}
-          userId={null}
+          userId={pacienteId || null}
           onVoltarInicio={() => {
             setTriagemResultado(null)
             setShowTriagem(false)
-            if (onVoltar) onVoltar()
+            if (pacienteLogado && onIrDashboard) {
+              onIrDashboard()
+            } else if (onVoltar) {
+              onVoltar()
+            }
           }}
           onCadastrar={() => {
             const dados = {

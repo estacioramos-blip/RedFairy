@@ -220,7 +220,6 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
 
   async function handleCadastro() {
     setCadErro('')
-    if (!aceitoTC) { setCadErro("Voc\u00ea deve aceitar os Termos e Condi\u00e7\u00f5es para criar acesso."); return }
     const conselhoLimpo = conselho.trim().toUpperCase()
     const celularDigits = celular.replace(/\D/g, '')
     if (!nome.trim() || nome.trim().length < 5) { setCadErro('Informe seu nome completo.'); return }
@@ -229,25 +228,29 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     if (!email || !email.includes('@')) { setCadErro("Informe um e-mail v\u00e1lido."); return }
     if (!jaLogadoSemSenha && (!senha || senha.length < 6)) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
     setCadLoading(true)
-    const { data: existing } = await supabase
+    const { data: existing, error: errExisting } = await supabase
       .from('medicos')
       .select('id, nome, crm')
       .eq('crm', conselhoLimpo)
-      .single()
+      .maybeSingle()
     const partes = conselhoLimpo.split('/')
     const uf = partes[1] || ''
     let opError = null
+    let opData = null
     if (existing) {
       const _upd = { nome: nome.trim(), uf, celular: celularDigits, email: email.trim().toLowerCase() };
       if (!jaLogadoSemSenha) { _upd.senha_klipbit = senha; }
-      const { error } = await supabase.from('medicos').update(_upd).eq('crm', conselhoLimpo)
+      const { data, error } = await supabase.from('medicos').update(_upd).eq('crm', conselhoLimpo).select()
       opError = error
+      opData = data
     } else {
-      const { error } = await supabase.from('medicos').insert({
+      const payload = {
         nome: nome.trim(), crm: conselhoLimpo, uf, celular: celularDigits,
         email: email.trim().toLowerCase(), senha_klipbit: senha,
-      })
+      }
+      const { data, error } = await supabase.from('medicos').insert(payload).select()
       opError = error
+      opData = data
     }
     setCadLoading(false)
     if (opError) { setCadErro('Erro ao salvar. Tente novamente.'); return }
@@ -403,15 +406,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             </div>
             {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
             {showTC && <TermosModal onFechar={() => setShowTC(false)} />}
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" checked={aceitoTC} onChange={e => setAceitoTC(e.target.checked)} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
-              <span className="text-xs text-gray-600">{"Li e aceito os "}
-                <button type="button" onClick={() => setShowTC(true)} className="text-red-700 font-semibold hover:underline">
-                  {"Termos e Condi\u00e7\u00f5es de Uso"}
-                </button>
-              </span>
-            </label>
-            <button onClick={handleCadastro} disabled={cadLoading || !aceitoTC}
+            <button onClick={handleCadastro} disabled={cadLoading}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
               {cadLoading ? 'Cadastrando...' : "Continue \u2192"}
             </button>
@@ -701,8 +696,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         // setSessaoExpirada(true)  // estado vive no Calculator pai, nao no Form
         return
       }
-      if (!medicoCRM) return;
-      const { data } = await supabase.from('medicos').select('nome, crm, celular, email').eq('crm', medicoCRM).maybeSingle();
+      const { data, error } = await supabase.from('medicos').select('nome, crm, celular, email').eq('crm', medicoCRM).maybeSingle();
       if (data) setMedicoDados(data);
     }
     carregarMedico();

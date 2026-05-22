@@ -80,6 +80,49 @@ export default function TriagemResultadoModal({
         console.error('Erro ao salvar triagem:', error)
         return { sucesso: false, erro: error.message }
       }
+      // Sincroniza sexo + data_nascimento no profile do paciente logado.
+      // Assim o CompletarPerfilModal sabe que ja temos esses dados.
+      try {
+        if (userId && (inputs.sexo || inputs.data_nascimento)) {
+          const patch = {}
+          if (inputs.sexo) patch.sexo = inputs.sexo
+          if (inputs.data_nascimento) patch.data_nascimento = inputs.data_nascimento
+          await supabase.from('profiles').update(patch).eq('id', userId)
+        }
+      } catch (e) { /* nao bloqueia */ }
+
+      // Cria tambem registro em avaliacoes (Fix 4 - unifica historico).
+      // Apenas se o paciente esta logado (userId presente).
+      // Idempotente: usa cpf+data_coleta+user_id como filtro para evitar duplicacao.
+      try {
+        if (userId && inputs.data_coleta) {
+          const cpfDigits = (inputs.cpf || '').replace(/\D/g, '')
+          const { data: existente } = await supabase
+            .from('avaliacoes')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('data_coleta', inputs.data_coleta)
+            .maybeSingle()
+          if (!existente) {
+            await supabase.from('avaliacoes').insert({
+              user_id: userId,
+              cpf: cpfDigits,
+              data_coleta: inputs.data_coleta,
+              data_nascimento: inputs.data_nascimento || null,
+              hemoglobina: Number(inputs.hemoglobina) || null,
+              vcm: Number(inputs.vcm) || null,
+              rdw: Number(inputs.rdw) || null,
+              ferritina: null,
+              sat_transf: null,
+              bariatrica: !!inputs.bariatrica,
+              gestante: !!inputs.gestante,
+              semanas_gestacao: inputs.semanas_gestacao ? Math.round(Number(inputs.semanas_gestacao)) : null,
+              diagnostico_label: resultado.label || null,
+              diagnostico_color: resultado.color || null,
+            })
+          }
+        }
+      } catch (e) { console.warn('Falha ao criar avaliacao da triagem:', e) }
       try {
         const cpfDigits = (inputs.cpf || '').replace(/\D/g, '')
         const { data: prof } = await supabase
@@ -113,6 +156,12 @@ export default function TriagemResultadoModal({
     }
     if (resp.limite3) { setTela('limite3'); return }
     if (resp.pedidoExames) { setTela('pedidoExames'); return }
+    // Paciente logado: pula a tela 'aguardo' (ja tem dashboard com historico)
+    // e vai direto pro proximo (que volta pro dashboard / landing).
+    if (userId) {
+      onVoltarInicio && onVoltarInicio()
+      return
+    }
     setTela('aguardo')
   }
 
@@ -551,7 +600,7 @@ export default function TriagemResultadoModal({
               onClick={handleContinuar}
               disabled={salvando}
               className="flex-1 py-3 rounded-xl bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait">
-              {salvando ? 'Salvando...' : 'Continue'}
+              {salvando ? 'Salvando...' : (modoMedico ? 'Continue' : <>{"Salvar e continuar \u2192"}</>)}
             </button>
           )}
         </div>
