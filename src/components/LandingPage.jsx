@@ -29,7 +29,7 @@ const LANDING_CSS = `
   body { font-family: 'DM Sans', -apple-system, sans-serif; color: var(--text); background: var(--white); line-height: 1.65; overflow-x: hidden; -webkit-font-smoothing: antialiased; scrollbar-gutter: stable; }
 
   /* NAV */
-  #landing-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 0.75rem 2rem; display: grid !important; grid-template-columns: 1fr 2fr 1fr !important; align-items: center; transition: all 0.3s; box-sizing: border-box; }
+  #landing-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 0.75rem 2rem; align-items: center; transition: all 0.3s; box-sizing: border-box; }
   #landing-nav.scrolled { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); box-shadow: 0 1px 8px rgba(0,0,0,0.04); }
 
 
@@ -58,7 +58,7 @@ const LANDING_CSS = `
   .whatsapp-btn svg { width: 20px; height: 20px; fill: white; }
 
   /* HERO */
-  .hero { min-height: auto; display: flex; align-items: center; padding: 4rem 2rem 1rem; background: var(--white); position: relative; overflow: hidden; }
+  .hero { min-height: auto; display: flex; align-items: center; justify-content: center; padding: 4rem 2rem 1rem; background: var(--white); position: relative; overflow: hidden; }
   .hero-wrap { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2; }
   .hero-badge { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 2.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; text-align: center; width: 100%; max-width: 480px; box-sizing: border-box; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
@@ -120,7 +120,7 @@ const LANDING_CSS = `
   .hero-textbox {
     background: var(--white); border: 1px solid var(--border); border-radius: 16px;
     padding: 2rem 2.5rem; box-shadow: var(--shadow);
-    position: relative; overflow: hidden; cursor: pointer; margin-bottom: 0.8rem;
+    position: relative; overflow: hidden; cursor: pointer; margin: 0 auto 0.8rem;
     width: 100%; max-width: 700px; text-align: center;
   }
   .hero-textbox-bg {
@@ -392,23 +392,24 @@ const colorMap = {
 
 // Lista de indicacoes (usada na faixa flutuante da hero e em qualquer outro lugar)
 const RF_INDICACOES = [
-  "Bari\u00e1tricos",
-  "Anemias Cr\u00f4nicas",
-  "Anemias Agudas",
-  "Defici\u00eancia de Ferro",
-  "Excesso de Ferro",
-  "Hemoglobina Alta",
-  "Regime de Sangrias",
-  "Sangramentos Cr\u00f4nicos",
-  "Vegetarianos",
-  "Gestantes",
-  "Cel\u00edacos",
-  "Doadores de Sangue",
-  "Uso de Testosterona",
-  "Endometriose e Miomas",
-  "Menstrua\u00e7\u00e3o Excessiva",
-  "Defici\u00eancia de G-6-PD",
-  "Alcoolistas",
+  { text: "Projeto OBA\u00ae | OTIMIZAR O BARI\u00c1TRICO", highlight: true },
+  { text: "Bari\u00e1tricos" },
+  { text: "Anemias Cr\u00f4nicas" },
+  { text: "Anemias Agudas" },
+  { text: "Defici\u00eancia de Ferro" },
+  { text: "Excesso de Ferro" },
+  { text: "Hemoglobina Alta" },
+  { text: "Regime de Sangrias" },
+  { text: "Sangramentos Cr\u00f4nicos" },
+  { text: "Vegetarianos" },
+  { text: "Gestantes" },
+  { text: "Cel\u00edacos" },
+  { text: "Doadores de Sangue" },
+  { text: "Uso de Testosterona" },
+  { text: "Endometriose e Miomas" },
+  { text: "Menstrua\u00e7\u00e3o Excessiva" },
+  { text: "Defici\u00eancia de G-6-PD" },
+  { text: "Alcoolistas" },
 ];
 
 
@@ -495,6 +496,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     }, 8);
     return () => clearInterval(iv);
   }, [fluxoEtapa]);
+
+  // Alternancia do hero textbox a cada 7s
+  const [heroVariant, setHeroVariant] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setHeroVariant(v => (v === 0 ? 1 : 0));
+    }, 7000);
+    return () => clearInterval(iv);
+  }, []);
+
   function irPara(etapa) {
     setFluxoFade(true);
     setTimeout(() => {
@@ -1023,7 +1034,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       </a>
 
 
-      <nav id="landing-nav" className={navScrolled ? 'scrolled' : ''} style={{ position:'fixed', top:0, left:0, right:0, boxSizing:'border-box', zIndex:1000, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'0.75rem 2rem' }}>
+      <nav id="landing-nav" className={navScrolled ? 'scrolled' : ''} style={{ position:'fixed', top:0, left:0, right:0, boxSizing:'border-box', zIndex:1000, padding:'0.75rem 2rem' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', maxWidth:1200, margin:'0 auto', width:'100%' }}>
         <a
           href="#home"
           className="nav-brand"
@@ -1100,6 +1112,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <span /><span /><span />
           </button>
         </div>
+        </div>
       </nav>
 
       <section className="hero">
@@ -1117,10 +1130,20 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 style={{ backgroundImage: `url(${filosofiaBg})` }}
               />
               <div className="htb-content">
-                <h1>{"Eu sou a sua fada vermelha, a sua "}<span className="red">Hemoglobina</span></h1>
-                <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:800, textAlign:'center' }}>
-                  {"Eu uso a poeira das estrelas para te entregar o ar."}<br/>{"Quanto tempo voc\u00ea vive sem ar?"}
-                </p>
+                <div style={{ display:'grid' }}>
+                  <div style={{ gridArea:'1 / 1', opacity: heroVariant === 0 ? 1 : 0, transition:'opacity 1.2s ease', pointerEvents: heroVariant === 0 ? 'auto' : 'none' }}>
+                    <h1>{"Eu sou a sua fada vermelha, a sua "}<span className="red">Hemoglobina</span></h1>
+                    <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:800, textAlign:'center' }}>
+                      {"Eu uso poeira de estrelas para te entregar o ar."}<br/>{"Quanto tempo voc\u00ea vive sem ar?"}
+                    </p>
+                  </div>
+                  <div style={{ gridArea:'1 / 1', opacity: heroVariant === 1 ? 1 : 0, transition:'opacity 1.2s ease', pointerEvents: heroVariant === 1 ? 'auto' : 'none', display:'flex', flexDirection:'column', justifyContent:'center' }}>
+                    <h1>{"Diagn\u00f3stico e tratamento de dist\u00farbios do "}<span className="red">Eritron</span>{" humano"}</h1>
+                    <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:800, textAlign:'center' }}>
+                      {"Entender e ajustar a produ\u00e7\u00e3o de hemoglobina e c\u00e9lulas vermelhas"}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1399,30 +1422,30 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               <div className="rf-marquee-row rf-marquee-row-1">
                 <div className="rf-marquee-track">
                   {marqueeRow1.map((ind, i) => (
-                    <span key={`r1a-${i}`} className="rf-marquee-item">{ind}</span>
+                    <span key={`r1a-${i}`} className={`rf-marquee-item${ind.highlight ? ' rf-marquee-item-hl' : ''}`}>{ind.text}</span>
                   ))}
                   {marqueeRow1.map((ind, i) => (
-                    <span key={`r1b-${i}`} className="rf-marquee-item" aria-hidden="true">{ind}</span>
+                    <span key={`r1b-${i}`} className={`rf-marquee-item${ind.highlight ? ' rf-marquee-item-hl' : ''}`} aria-hidden="true">{ind.text}</span>
                   ))}
                 </div>
               </div>
               <div className="rf-marquee-row rf-marquee-row-2">
                 <div className="rf-marquee-track">
                   {marqueeRow2.map((ind, i) => (
-                    <span key={`r2a-${i}`} className="rf-marquee-item">{ind}</span>
+                    <span key={`r2a-${i}`} className={`rf-marquee-item${ind.highlight ? ' rf-marquee-item-hl' : ''}`}>{ind.text}</span>
                   ))}
                   {marqueeRow2.map((ind, i) => (
-                    <span key={`r2b-${i}`} className="rf-marquee-item" aria-hidden="true">{ind}</span>
+                    <span key={`r2b-${i}`} className={`rf-marquee-item${ind.highlight ? ' rf-marquee-item-hl' : ''}`} aria-hidden="true">{ind.text}</span>
                   ))}
                 </div>
               </div>
               <div className="rf-marquee-row rf-marquee-row-3">
                 <div className="rf-marquee-track">
                   {marqueeRow3.map((ind, i) => (
-                    <span key={`r3a-${i}`} className="rf-marquee-item">{ind}</span>
+                    <span key={`r3a-${i}`} className={`rf-marquee-item${ind.highlight ? ' rf-marquee-item-hl' : ''}`}>{ind.text}</span>
                   ))}
                   {marqueeRow3.map((ind, i) => (
-                    <span key={`r3b-${i}`} className="rf-marquee-item" aria-hidden="true">{ind}</span>
+                    <span key={`r3b-${i}`} className={`rf-marquee-item${ind.highlight ? ' rf-marquee-item-hl' : ''}`} aria-hidden="true">{ind.text}</span>
                   ))}
                 </div>
               </div>
@@ -1457,7 +1480,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           }
           .rf-marquee {
             width: 100%;
-            max-width: 880px;
+            max-width: 800px;
             margin: 1.4rem auto 0.6rem;
             display: flex;
             flex-direction: column;
@@ -1489,6 +1512,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             text-transform: uppercase;
             white-space: nowrap;
             flex-shrink: 0;
+          }
+          .rf-marquee-item-hl {
+            color: #ef4444;
+            font-weight: 900;
           }
           @media (max-width: 720px) {
             .rf-marquee-item { font-size: 0.66rem; }
