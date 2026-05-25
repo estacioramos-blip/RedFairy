@@ -4,6 +4,7 @@ import redcell1 from '../assets/redcell1.png'
 import filosofiaBg from '../../redfairy-filosofia-bg.png'
 import fairy3 from '../../redfairy3.png'
 import OBAModal from './OBAModal'
+import TermosModal from './TermosModal'
 import { supabase } from '../lib/supabase'
 
 const LANDING_CSS = `
@@ -410,6 +411,7 @@ const RF_INDICACOES = [
   { text: "Menstrua\u00e7\u00e3o Excessiva" },
   { text: "Defici\u00eancia de G-6-PD" },
   { text: "Alcoolistas" },
+  { text: "HEMOGLOBINOPATIAS" },
 ];
 
 
@@ -417,6 +419,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [medicoLogado, setMedicoLogado] = useState(() => {
     try { return localStorage.getItem('medico_nome') || ''; } catch(e) { return ''; }
   })
+
+  // Controla qual modal de Termos esta aberto: null, 'medico', 'paciente'
+  const [tcAberto, setTcAberto] = useState(null);
 
   // Indicacoes flutuantes do hero: marquee de 3 linhas, infinito.
   // Cada linha tem ordem embaralhada e velocidade propria.
@@ -1157,7 +1162,18 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                   </p>
                   <button onClick={() => {
                     if (medicoLogado) { entrarLogadoDireto(); return; }
-                    if (pacienteLogadoFlag) { onIrDashboardPaciente && onIrDashboardPaciente(); return; }
+                    // Checa localStorage live (n\u00e3o state estale): se nao tem paciente_id real,
+                    // nao tenta ir pro dashboard (cairia em AuthPage legacy "Modo Paciente").
+                    let temPacienteIdLive = false;
+                    try { temPacienteIdLive = !!localStorage.getItem('paciente_id'); } catch (e) {}
+                    if (pacienteLogadoFlag && !temPacienteIdLive) {
+                      // Estado dessincronizado: limpa flag e segue pra escolha.
+                      setPacienteLogadoFlag(false);
+                      setPacienteLogado('');
+                    } else if (pacienteLogadoFlag && temPacienteIdLive) {
+                      onIrDashboardPaciente && onIrDashboardPaciente();
+                      return;
+                    }
                     irPara('escolha');
                   }}
                   onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; }}
@@ -1181,7 +1197,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     MEDICO
                   </button>
                   <button onClick={() => {
-                    if (pacienteLogadoFlag) { onIrDashboardPaciente && onIrDashboardPaciente(); return; }
+                    let temPacienteIdLive = false;
+                    try { temPacienteIdLive = !!localStorage.getItem('paciente_id'); } catch (e) {}
+                    if (pacienteLogadoFlag && !temPacienteIdLive) {
+                      setPacienteLogadoFlag(false);
+                      setPacienteLogado('');
+                    } else if (pacienteLogadoFlag && temPacienteIdLive) {
+                      onIrDashboardPaciente && onIrDashboardPaciente();
+                      return;
+                    }
                     irPara('paciente');
                   }}
                   onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
@@ -1253,7 +1277,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                             style={{ width:'14px', height:'14px', cursor:'pointer', accentColor:'#ef4444', marginTop:'2px', flexShrink:0 }} />
                           <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', letterSpacing:'0.3px', lineHeight:1.3 }}>
                             {"Li e aceito os "}
-                            <a href="#" onClick={e => { e.preventDefault(); }}
+                            <a href="#" onClick={e => { e.preventDefault(); setTcAberto('medico'); }}
                               style={{ color:'#7B1E1E', textDecoration:'underline', fontWeight:800 }}>
                               {"Termos e Condi\u00e7\u00f5es de Uso"}
                             </a>
@@ -1374,7 +1398,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                             style={{ width:'14px', height:'14px', cursor:'pointer', accentColor:'#1f2937', marginTop:'2px', flexShrink:0 }} />
                           <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', letterSpacing:'0.3px', lineHeight:1.3 }}>
                             {"Li e aceito os "}
-                            <a href="#" onClick={e => { e.preventDefault(); }}
+                            <a href="#" onClick={e => { e.preventDefault(); setTcAberto('paciente'); }}
                               style={{ color:'#1f2937', textDecoration:'underline', fontWeight:800 }}>
                               {"Termos e Condi\u00e7\u00f5es de Uso"}
                             </a>
@@ -1739,21 +1763,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <span className="tag">{"Indica\u00e7\u00f5es"}</span>
             <h2 className="stitle">{"Para quem \u00e9 o RedFairy?"}</h2>
           </div>
-          <div className="reveal" style={{ maxWidth: 880, margin: '1.5rem auto 0', lineHeight: 1.7, color: 'var(--text-sec)', fontSize: '0.98rem', textAlign: 'justify' }}>
+          <div className="reveal" style={{ maxWidth: 880, margin: '1.5rem auto 0', lineHeight: 1.7, color: 'var(--text-sec)', fontSize: '0.88rem', fontWeight: 600, textAlign: 'justify' }}>
             <p style={{ marginBottom: '1.1rem' }}>
-              {"No Brasil, anemia e defici\u00eancia de ferro atingem dezenas de milh\u00f5es de pessoas. Ao mesmo tempo, crescem os grupos com hemoglobina alta, ferritina elevada, sobrecarga de ferro, necessidade de sangrias terap\u00eauticas e altera\u00e7\u00f5es hematol\u00f3gicas associadas a cirurgias bari\u00e1tricas e gastrectomias, gesta\u00e7\u00e3o, vegetarianismo, sangramentos cr\u00f4nicos, doa\u00e7\u00e3o de sangue, uso de testosterona, abuso de \u00e1lcool, doen\u00e7a cel\u00edaca, defici\u00eancia de G-6-PD e dist\u00farbios do metabolismo do ferro."}
+              {"No Brasil, anemia, defici\u00eancia de ferro e dist\u00farbios gen\u00e9ticos ou adquiridos da hemoglobina, das hem\u00e1cias e do seu metabolismo, atingem dezenas de milh\u00f5es de pessoas \u2014 incluindo crian\u00e7as, idosos, gestantes, vegetarianos, bari\u00e1tricos, gastrectomizados, doadores de sangue, pessoas com sangramentos cr\u00f4nicos, uso de testosterona, abuso de \u00e1lcool, doen\u00e7a cel\u00edaca, defici\u00eancia de G-6-PD, sobrecarga de ferro ou necessidade de sangrias terap\u00eauticas. Em conjunto, essas condi\u00e7\u00f5es envolvem mais de "}<strong style={{ color: 'var(--wine)' }}>{"55 milh\u00f5es de brasileiros"}</strong>{" que vivem sob dano hematol\u00f3gico-nutricional relevante, muitos sem acesso poss\u00edvel a avalia\u00e7\u00e3o especializada."}
             </p>
             <p style={{ marginBottom: '1.1rem' }}>
-              {"Em conjunto, essas condi\u00e7\u00f5es envolvem mais de "}<strong style={{ color: 'var(--wine)' }}>{"55 milh\u00f5es de brasileiros"}</strong>{" em risco hematol\u00f3gico-nutricional relevante, incluindo grande contingente de crian\u00e7as e idosos, muitas vezes sem acesso poss\u00edvel a avalia\u00e7\u00e3o especializada."}
-            </p>
-            <p style={{ marginBottom: '1.1rem' }}>
-              <strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" transforma o hemograma em uma "}<strong>{"porta de entrada inteligente"}</strong>{" para triagem, orienta\u00e7\u00e3o diagn\u00f3stica e cuidado m\u00e9dico em hematologia. A plataforma apoia m\u00e9dicos n\u00e3o especialistas na identifica\u00e7\u00e3o de riscos ocultos, e conduz pacientes atrav\u00e9s de avalia\u00e7\u00e3o e seguimento estruturados."}
-            </p>
-            <p style={{ marginBottom: '1.1rem' }}>
-              {"Em um pa\u00eds continental e desigual, com car\u00eancia de hematologistas em extensas regi\u00f5es, "}<strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" ocupa parte dessa lacuna assistencial por meio de recomenda\u00e7\u00f5es m\u00e9dicas fundamentadas, solicita\u00e7\u00e3o de exames e prescri\u00e7\u00f5es emitidas por hematologistas com assinatura m\u00e9dica digital."}
+              <strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" transforma o hemograma em uma porta de entrada inteligente para triagem, orienta\u00e7\u00e3o diagn\u00f3stica, seguimento estruturado e cuidado m\u00e9dico em hematologia para essas condi\u00e7\u00f5es. Em um pa\u00eds continental, desigual e com car\u00eancia de hematologistas em extensas regi\u00f5es, o sistema ocupa uma lacuna assistencial com orienta\u00e7\u00e3o m\u00e9dica fundamentada, solicita\u00e7\u00e3o de exames e prescri\u00e7\u00f5es emitidas por hematologistas atrav\u00e9s da Plataforma do Conselho Federal de Medicina."}
             </p>
             <p style={{ marginBottom: '0.5rem' }}>
-              {"Para ampliar essa rede de cuidado, o "}<strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" inclui um "}<strong>{"Programa de Afiliados Patrocinado para M\u00e9dicos"}</strong>{", voltado a reconhecer e apoiar profissionais que identifiquem pacientes em risco e os orientem a se cadastrar na plataforma. Cada paciente previamente avaliado por um m\u00e9dico e posteriormente cadastrado poder\u00e1 gerar cr\u00e9ditos institucionais vinculados ao profissional respons\u00e1vel pelo encaminhamento, fortalecendo uma rede colaborativa de triagem, preven\u00e7\u00e3o, diagn\u00f3stico precoce e cuidado hematol\u00f3gico-nutricional no Brasil."}
+              {"Para ampliar essa rede de cuidado, "}<strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" inclui o 4DOC - Programa de Afiliados Patrocinado para M\u00e9dicos, que reconhece e apoia profissionais que identificam pacientes afetados e os orientam a se cadastrar no sistema, gerando cr\u00e9ditos institucionais vinculados ao encaminhamento e fortalecendo a triagem, a preven\u00e7\u00e3o, a redu\u00e7\u00e3o de sequelas, e o diagn\u00f3stico precoce de hemopatias no Brasil."}
             </p>
             {medicoLogado && (
               <p style={{ textAlign: 'center', margin: '1.2rem 0 0', cursor: 'pointer' }}
@@ -2122,6 +2140,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           <span style={{ color:'var(--cherry)', fontWeight:700 }}>*</span>{" V\u00e1lido para todos os m\u00e9dicos com registro no CRM."}
         </p>
       </footer>
+
+      {tcAberto && (
+        <TermosModal tipo={tcAberto} onFechar={() => setTcAberto(null)} />
+      )}
 
     </div>
   )
