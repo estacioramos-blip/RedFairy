@@ -3,8 +3,9 @@ import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
-import BoasVindasModal from './BoasVindasModal'
 import CompletarPerfilModal from './CompletarPerfilModal'
+import PagamentoCadastroModal from './PagamentoCadastroModal'
+import HistoricoChartModal from './HistoricoChartModal'
 import heroImg from '../assets/redfairy-hero.png'
 import logo from '../assets/logo.png'
 
@@ -14,6 +15,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [tela, setTela] = useState('historico')
   const [showBoasVindas, setShowBoasVindas] = useState(false)
   const [showCompletarPerfil, setShowCompletarPerfil] = useState(false)
+  const [showPagamento, setShowPagamento] = useState(false)
+  const [querPedidoGratis, setQuerPedidoGratis] = useState(false)
+  const [salvandoBoasVindas, setSalvandoBoasVindas] = useState(false)
+  const [mostrarDespedida, setMostrarDespedida] = useState(false)
   const [resultado, setResultado] = useState(null)
   const [copiado, setCopiado] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -22,6 +27,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showSaibaMais, setShowSaibaMais] = useState(false)
   const [fraseGestacaoConcluida, setFraseGestacaoConcluida] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
+
+  // Modal do grafico de evolucao (Hb/VCM/RDW + Ferritina/Sat) reutiliza o
+  // HistoricoChartModal usado pelo TriagemModal no modo medico.
+  const [historicoData, setHistoricoData] = useState(null)
+  const [historicoBuscando, setHistoricoBuscando] = useState(false)
+  const [historicoMsg, setHistoricoMsg] = useState('')
 
   const [inputs, setInputs] = useState({
     sexo: '', idade: '',
@@ -33,6 +44,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   })
 
   useEffect(() => { carregarDados() }, [])
+
+  // Paciente que ja fez avaliacoes (recebeu pedido gratis, tem exames em maos)
+  // ja chega ao Modal RedFairy com Ferritina e Sat Transf destravadas.
+  useEffect(() => {
+    if (avaliacoes && avaliacoes.length >= 1) {
+      setMostrarExamesExtras(true)
+    }
+  }, [avaliacoes])
 
   useEffect(() => {
     function handleDemoKey(e) {
@@ -111,9 +130,18 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // Perfil incompleto (paciente recem-cadastrado): pede dados pessoais antes de tudo
     if (prof && (!prof.nome || String(prof.nome).trim().length < 3)) {
       setShowCompletarPerfil(true)
-    }
-    if (prof && prof.boas_vindas_vista === false) {
-      setShowBoasVindas(true)
+    } else if (prof && prof.boas_vindas_vista === false) {
+      // So mostra boas-vindas se ja completou perfil E ja tem assinatura ativa.
+      // Senao, o BoasVindas e disparado manualmente apos o pagamento (onPago).
+      const { data: assin } = await supabase
+        .from('assinaturas')
+        .select('id')
+        .eq('user_id', prof.id)
+        .eq('status', 'ativa')
+        .maybeSingle()
+      if (assin) {
+        setShowBoasVindas(true)
+      }
     }
     if (abrirOBA || localStorage.getItem('rf_flag') === 'bariatrica') {
       localStorage.removeItem('rf_flag')
@@ -128,6 +156,77 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       .order('data_coleta', { ascending: false })
     setAvaliacoes(avals || [])
     setLoading(false)
+  }
+
+  // Reune triagens + avaliacoes do paciente logado e abre o modal de grafico.
+  // Espelha handleBuscarHistorico do TriagemModal, mas usa profile.cpf direto
+  // (paciente nao precisa redigitar).
+  async function handleVerGrafico() {
+    if (!profile?.cpf) return
+    const cpfDigits = String(profile.cpf).replace(/\D/g, '')
+    if (cpfDigits.length !== 11) return
+    setHistoricoBuscando(true)
+    setHistoricoMsg('')
+
+    const [tRes, aRes] = await Promise.all([
+      supabase
+        .from('triagens')
+        .select('created_at, hemoglobina, vcm, rdw')
+        .eq('cpf', cpfDigits)
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('avaliacoes')
+        .select('data_coleta, hemoglobina, vcm, rdw, ferritina, sat_transf')
+        .eq('cpf', cpfDigits)
+        .order('data_coleta', { ascending: true }),
+    ])
+
+    setHistoricoBuscando(false)
+
+    if (tRes.error && aRes.error) {
+      setHistoricoMsg('Erro ao buscar hist\u00f3rico. Tente novamente.')
+      setTimeout(() => setHistoricoMsg(''), 4000)
+      return
+    }
+
+    const norm = (v) => {
+      const n = Number(v)
+      return (v === null || v === undefined || v === '' || isNaN(n)) ? null : n
+    }
+
+    const serie = []
+    ;(tRes.data || []).forEach((r) => {
+      serie.push({
+        data: r.created_at,
+        hb: norm(r.hemoglobina),
+        vcm: norm(r.vcm),
+        rdw: norm(r.rdw),
+        ferritina: null,
+        sat: null,
+        origem: 'triagem',
+      })
+    })
+    ;(aRes.data || []).forEach((r) => {
+      serie.push({
+        data: r.data_coleta,
+        hb: norm(r.hemoglobina),
+        vcm: norm(r.vcm),
+        rdw: norm(r.rdw),
+        ferritina: norm(r.ferritina),
+        sat: norm(r.sat_transf),
+        origem: 'avaliacao',
+      })
+    })
+    serie.sort((a, b) => new Date(a.data) - new Date(b.data))
+
+    const pontosG1 = serie.filter((p) => p.hb !== null || p.vcm !== null || p.rdw !== null)
+    if (pontosG1.length < 2) {
+      setHistoricoMsg('N\u00c3O H\u00c1 ELEMENTOS PARA GR\u00c1FICO')
+      setTimeout(() => setHistoricoMsg(''), 4000)
+      return
+    }
+
+    setHistoricoData({ cpf: cpfDigits, serie })
   }
 
   function handleChange(e) {
@@ -217,6 +316,64 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     onVoltar()
   }
 
+  async function handleConfirmarBoasVindas() {
+    setSalvandoBoasVindas(true)
+    try {
+      await supabase.from('profiles')
+        .update({ boas_vindas_vista: true })
+        .eq('id', profile.id)
+      if (querPedidoGratis) {
+        await supabase.from('pedidos_documento').insert({
+          user_id: profile.id,
+          cpf: profile.cpf,
+          nome: profile.nome,
+          data_nascimento: profile.data_nascimento,
+          celular: profile.celular,
+          tipos_documento: ['HEMOGRAMA', 'FERRITINA', 'SAT_TRANSFERRINA'],
+          texto_documentos: 'Primeiro pedido gratuito apos cadastro',
+          valor_total: 0,
+          status: 'pendente_envio',
+        })
+
+        // Monta mensagem WhatsApp pro ADM
+        const dataNasc = profile.data_nascimento
+          ? new Date(profile.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR')
+          : '(nao informado)'
+        const celFormatado = (profile.celular || '').replace(/^(\d{2})(\d{4,5})(\d{4})$/, '($1) $2-$3') || '(nao informado)'
+        const mensagem =
+          `*RedFairy - Pedido GRATUITO de exames*\n\n` +
+          `*Nome:* ${profile.nome}\n` +
+          `*CPF:* ${profile.cpf}\n` +
+          `*Data de nascimento:* ${dataNasc}\n` +
+          `*Celular:* ${celFormatado}\n\n` +
+          `*Exames solicitados:*\n` +
+          `- Hemograma\n- Ferritina\n- Saturacao da Transferrina\n\n` +
+          `Solicito a emissao do pedido medico. Obrigado!`
+        const url = `https://wa.me/5571997110804?text=${encodeURIComponent(mensagem)}`
+        window.open(url, '_blank', 'noopener,noreferrer')
+      }
+    } catch (err) {
+      console.error('Erro ao salvar boas-vindas:', err)
+    } finally {
+      setSalvandoBoasVindas(false)
+      setShowBoasVindas(false)
+      setProfile(p => ({ ...p, boas_vindas_vista: true }))
+      if (querPedidoGratis) {
+        setMostrarDespedida(true)
+      }
+    }
+  }
+
+  function handleSairDespedida() {
+    try {
+      localStorage.removeItem('paciente_id')
+      localStorage.removeItem('paciente_cpf')
+      localStorage.removeItem('paciente_nome')
+      localStorage.removeItem('paciente_login_at')
+    } catch (e) {}
+    if (onVoltar) onVoltar()
+  }
+
   function calcularIdade(dataNascimento) {
     const hoje = new Date()
     const nasc = new Date(dataNascimento)
@@ -239,8 +396,44 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     </div>
   )
 
+  if (mostrarDespedida) return (
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-white to-amber-50">
+      <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-xl text-center">
+        <img src={logo} alt="RedFairy" style={{ width: 64, height: 64, margin: '0 auto 16px' }} />
+        <h1 className="text-3xl font-black text-red-700 mb-3">{"Pronto!"}</h1>
+        <p className="text-sm text-gray-700 leading-relaxed mb-4">
+          {"Em breve voc\u00ea receber\u00e1 o seu primeiro pedido de exames via WhatsApp."}
+        </p>
+        <p className="text-sm text-gray-700 leading-relaxed mb-6">
+          {"Quando tiver os resultados em m\u00e3os, entre na plataforma com seu CPF e senha para uma an\u00e1lise mais detalhada do seu estado."}
+        </p>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-6">
+          <p className="text-xs text-amber-900">
+            {"\ud83d\udca1 Se o WhatsApp n\u00e3o abriu, entre em contato pelo n\u00famero "}
+            <a href="https://wa.me/5571997110804" target="_blank" rel="noopener noreferrer"
+              className="font-bold underline">
+              {"+55 71 99711-0804"}
+            </a>
+          </p>
+        </div>
+        <button
+          onClick={handleSairDespedida}
+          className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold text-sm py-3 rounded-lg transition-colors">
+          {"Sair"}
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <>
+    <style>{`
+      @keyframes rfHistoricoPulse {
+        0%, 100% { opacity: 1; }
+        50%      { opacity: 0.55; }
+      }
+      .rf-historico-pulse { animation: rfHistoricoPulse 1.6s ease-in-out infinite; }
+    `}</style>
     <div className="min-h-screen bg-gray-50">
 
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
@@ -255,10 +448,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             <div>
               <h1 className="text-xl font-bold">RedFairy</h1>
               <p className="text-red-200 text-xs">{"Ol\u00e1, "}{profile?.nome?.split(' ')[0]}{"!"}</p>
-              <div style={{ display:'flex', flexDirection:'column', gap:'1px', marginTop:'2px' }}>
-                <span style={{ color:'rgba(252,165,165,0.7)', fontSize:'8px', fontFamily:'monospace' }}>{"Ctrl+M \u264220  Ctrl+B \u264250"}</span>
-                <span style={{ color:'rgba(252,165,165,0.7)', fontSize:'8px', fontFamily:'monospace' }}>{"Ctrl+F \u264020  Ctrl+G \u264050"}</span>
-              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -379,9 +568,18 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
       <div className="max-w-3xl mx-auto px-4 py-6">
         <div className="flex gap-2 mb-6">
-          <button onClick={() => setTela('historico')}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'historico' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
-            {"Hist\u00f3rico"}
+          <button
+            onClick={() => {
+              // Sempre volta pra tela 'historico'; abre o grafico se houver dados suficientes.
+              // handleVerGrafico aborta sozinho com mensagem se houver < 2 pontos.
+              setTela('historico');
+              handleVerGrafico();
+            }}
+            className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${avaliacoes.length >= 2 ? 'rf-historico-pulse' : ''} ${tela === 'historico' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
+            <span className="text-sm font-medium">{"Hist\u00f3rico"}</span>
+            <span className="text-[10px] tracking-widest opacity-80 leading-none mt-0.5">
+              {"EVOLU\u00c7\u00c3O | GR\u00c1FICO"}
+            </span>
           </button>
           <button onClick={() => { setTela('nova'); setResultado(null) }}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'nova' || tela === 'resultado' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
@@ -391,6 +589,58 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
         {tela === 'historico' && (
           <div className="space-y-3">
+            {showBoasVindas && profile && (
+              <div className="bg-white rounded-2xl p-5 border-2 border-red-200 shadow-sm mb-4">
+                <div className="mb-3">
+                  <h2 className="text-xl font-bold text-red-700 mb-1">
+                    {"Ol\u00e1, "}{profile.nome?.split(' ')[0] || ''}{"!"}
+                  </h2>
+                  <p className="text-sm text-gray-600">{"Bem-vindo(a) ao RedFairy"}</p>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3">
+                  <p className="text-sm text-gray-800 mb-1">
+                    {"Voc\u00ea agora tem acesso \u00e0 plataforma por "}<strong>1 ano</strong>{"."}
+                  </p>
+                  <p className="text-xs text-gray-700 leading-relaxed">
+                    {"Traga todos os seus futuros hemogramas. N\u00f3s vamos avaliar, p\u00f4r a sua evolu\u00e7\u00e3o em um gr\u00e1fico, e medicar se for necess\u00e1rio."}
+                  </p>
+                </div>
+
+                <label className="flex items-start gap-3 p-3 border-2 border-amber-300 bg-amber-50 rounded-xl cursor-pointer mb-3">
+                  <input
+                    type="checkbox"
+                    checked={querPedidoGratis}
+                    onChange={(e) => setQuerPedidoGratis(e.target.checked)}
+                    className="mt-1 w-5 h-5 accent-red-700"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-amber-900">
+                      {"Quero o meu primeiro pedido de exames (GRATUITO)"}
+                    </p>
+                    <p className="text-xs text-amber-800 mt-1">
+                      {"Inclui: Hemograma, Ferritina e Satura\u00e7\u00e3o da Transferrina"}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1 italic">
+                      {"Pedidos futuros: R$ 60,00 cada"}
+                    </p>
+                  </div>
+                </label>
+
+                <button
+                  onClick={handleConfirmarBoasVindas}
+                  disabled={salvandoBoasVindas}
+                  className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-2.5 rounded-xl disabled:opacity-50 text-sm"
+                >
+                  {salvandoBoasVindas ? 'Salvando...' : 'Continuar'}
+                </button>
+              </div>
+            )}
+
+            {historicoMsg && (
+              <p className="text-xs text-center mb-3 font-medium text-red-700">{historicoMsg}</p>
+            )}
+
             {avaliacoes.length === 0 ? (
               <div className="bg-white rounded-2xl p-8 text-center text-gray-400 border">
                 <img src={logo} alt="RedFairy" className="w-12 h-12 object-contain mx-auto mb-3"
@@ -408,7 +658,13 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     {new Date(av.data_coleta + 'T12:00:00').toLocaleDateString('pt-BR')}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    {"Hb: "}{av.hemoglobina}{" | Ferritina: "}{av.ferritina}{" | VCM: "}{av.vcm}
+                    {[
+                      av.hemoglobina != null && `Hb: ${av.hemoglobina}`,
+                      av.vcm != null && `VCM: ${av.vcm}`,
+                      av.rdw != null && `RDW: ${av.rdw}`,
+                      av.ferritina != null && `Ferritina: ${av.ferritina}`,
+                      av.sat_transferrina != null && `Sat.Transf: ${av.sat_transferrina}`,
+                    ].filter(Boolean).join(' | ')}
                   </p>
                 </div>
                 <span className={`text-xs font-bold px-3 py-1 rounded-full ${colorBadge[av.diagnostico_color] || colorBadge.yellow}`}>
@@ -458,7 +714,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 onClick={() => setMostrarExamesExtras(true)}
                 className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center"
               >
-                <span>{"\ud83d\udccb J\u00c1 TENHO A FERRITINA E A SATURA\u00c7\u00c3O DA TRANSFERRINA"}</span>
+                <span>{"\ud83d\udccb TENHO A FERRITINA E A SATURA\u00c7\u00c3O DA TRANSFERRINA"}</span>
                 <span className="text-xs font-normal opacity-90 mt-1">{"Aprofundar o diagn\u00f3stico"}</span>
               </button>
             )}
@@ -599,19 +855,42 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         onSalvo={(novoProfile) => {
           setShowCompletarPerfil(false)
           setProfile(novoProfile)
+          setShowPagamento(true)
         }}
       />
     )}
 
-    {showBoasVindas && profile && (
-      <BoasVindasModal
+    {showPagamento && profile && (
+      <PagamentoCadastroModal
         profile={profile}
-        onClose={() => {
-          setShowBoasVindas(false)
-          setProfile(p => ({ ...p, boas_vindas_vista: true }))
+        onPago={() => {
+          setShowPagamento(false)
+          setShowBoasVindas(true)
+        }}
+        onSairSemPagar={() => {
+          setShowPagamento(false)
+          // Desloga: limpa credenciais locais do paciente
+          try {
+            localStorage.removeItem('paciente_id')
+            localStorage.removeItem('paciente_cpf')
+            localStorage.removeItem('paciente_nome')
+            localStorage.removeItem('paciente_login_at')
+          } catch (e) {}
+          if (onVoltar) onVoltar()
         }}
       />
     )}
+
+    {historicoData && (
+      <HistoricoChartModal
+        cpf={historicoData.cpf}
+        serie={historicoData.serie}
+        sexo={profile?.sexo}
+        gestante={!!profile?.gestante}
+        onFechar={() => setHistoricoData(null)}
+      />
+    )}
+
     </>
   )
 }
