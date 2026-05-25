@@ -65,6 +65,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   const refCpfInput = useRef(null);
   const refDnInput = useRef(null);
   const refSexoSelect = useRef(null);
+  const refDataColeta = useRef(null);
   const [etapaInicio, setEtapaInicio] = useState(1);
 
   const [historicoBuscando, setHistoricoBuscando] = useState(false);
@@ -97,6 +98,20 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
     setInputs(prev => ({ ...prev, [name]: v }))
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }))
+    // Valida\u00e7\u00e3o imediata de CPF: assim que atingir 11 d\u00edgitos, valida; se inv\u00e1lido, marca erro.
+    // Isso bloqueia o restante do modal (sexo/datas/hemograma) at\u00e9 CPF ficar v\u00e1lido.
+    if (name === 'cpf' && typeof v === 'string') {
+      const digits = v.replace(/\D/g, '');
+      if (digits.length === 11) {
+        if (!validarCPF(v)) {
+          setErros(prev => ({ ...prev, cpf: 'CPF inv\u00e1lido' }));
+        } else {
+          setErros(prev => ({ ...prev, cpf: null }));
+        }
+      } else {
+        setErros(prev => ({ ...prev, cpf: null }));
+      }
+    }
   }
 
   function formatarCPF(valor) {
@@ -202,7 +217,15 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     if (!inputs.hemoglobina) errors.hemoglobina = "Obrigat\u00f3rio"
     if (!inputs.vcm) errors.vcm = "Obrigat\u00f3rio"
     if (!inputs.rdw) errors.rdw = "Obrigat\u00f3rio"
-    if (!inputs.data_coleta) errors.data_coleta = 'Informe a data da coleta'
+    if (!inputs.data_coleta) errors.data_coleta = 'Informe a data do hemograma'
+    else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(inputs.data_coleta)) errors.data_coleta = 'Use o formato DD/MM/AAAA'
+    else {
+      const [d, m, a] = inputs.data_coleta.split('/').map(Number);
+      const dt = new Date(a, m - 1, d);
+      const valida = dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+      if (!valida || a < 1900) errors.data_coleta = 'Data inv\u00e1lida';
+      else if (dt > new Date()) errors.data_coleta = 'Data n\u00e3o pode ser futura';
+    }
     if (inputs.sexo === 'F' && inputs.gestante && !inputs.semanas_gestacao) {
       errors.semanas_gestacao = 'Informe as semanas'
     }
@@ -228,11 +251,18 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
     const _hoje = new Date();
     const _dataHojeISO = `${_hoje.getFullYear()}-${String(_hoje.getMonth()+1).padStart(2,'0')}-${String(_hoje.getDate()).padStart(2,'0')}`;
+    // Converte data_coleta de DD/MM/AAAA (BR) para YYYY-MM-DD (ISO) para usar no engine e no onConcluir.
+    let dataColetaISO = '';
+    if (inputs.data_coleta && /^\d{2}\/\d{2}\/\d{4}$/.test(inputs.data_coleta)) {
+      const [_d, _m, _a] = inputs.data_coleta.split('/');
+      dataColetaISO = `${_a}-${_m}-${_d}`;
+    }
     const inputsNumericos = {
       ...inputs,
       idade: idadeCalc,
       data_nascimento: dataNascimentoISO,
-      dataColeta: _dataHojeISO,
+      data_coleta: dataColetaISO || inputs.data_coleta,
+      dataColeta: dataColetaISO || _dataHojeISO,
       hemoglobina: Number(inputs.hemoglobina),
       vcm: Number(inputs.vcm),
       rdw: Number(inputs.rdw),
@@ -307,30 +337,86 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     return () => clearTimeout(t);
   }, []);
 
-  // Paciente ja logado: CPF veio preenchido e bloqueado. Pular direto pro Sexo.
+  // Paciente ja logado: CPF veio preenchido e bloqueado.
+  // Modo paciente: pula direto pra DATA DE NASCIMENTO (ordem invertida vs medico).
+  // Modo medico (caso raro de cpfBloqueado em medico): mantem foco em Sexo.
   useEffect(() => {
     if (!cpfBloqueado) return;
-    setEtapaInicio(3);
-    const t = setTimeout(() => {
-      if (refSexoSelect.current) refSexoSelect.current.focus();
-    }, 150);
-    return () => clearTimeout(t);
+    if (modoMedico) {
+      setEtapaInicio(2);
+      const t = setTimeout(() => {
+        if (refSexoSelect.current) refSexoSelect.current.focus();
+      }, 150);
+      return () => clearTimeout(t);
+    } else {
+      // Paciente: etapa 2 = DataNasc ativo (semantica diferente do medico).
+      setEtapaInicio(2);
+      const t = setTimeout(() => {
+        if (refDnInput.current) refDnInput.current.focus();
+      }, 150);
+      return () => clearTimeout(t);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fluxo seamless de foco. Etapas numericas tem semantica DIFERENTE entre modos:
+  //   MEDICO:   1 = CPF,      2 = Sexo,     3 = DataNasc, 4 = DataColeta, >=5 = hemograma
+  //   PACIENTE: 1 = (CPF lock), 2 = DataNasc, 3 = Sexo,     4 = DataColeta, >=5 = hemograma
+  // A numeracao e' a mesma para reaproveitar a logica de cor amarela/disabled dos campos;
+  // o que muda e' a *associacao* etapa->campo nos branches abaixo.
+
+  // ============ FLUXO MEDICO ============
+
+  // [Medico] CPF valido -> Sexo
   useEffect(() => {
     if (!modoMedico) return;
     const digits = String(inputs.cpf || '').replace(/\D/g, '');
     if (digits.length === 11 && validarCPF(inputs.cpf) && etapaInicio === 1) {
       setEtapaInicio(2);
       setTimeout(() => {
-        if (refDnInput.current) refDnInput.current.focus();
+        if (refSexoSelect.current) refSexoSelect.current.focus();
       }, 100);
     }
   }, [inputs.cpf, modoMedico, etapaInicio]);
 
+  // [Medico] Sexo escolhido -> Data Nasc
   useEffect(() => {
     if (!modoMedico) return;
+    if (etapaInicio !== 2) return;
+    if (!inputs.sexo) return;
+    setEtapaInicio(3);
+    setTimeout(() => {
+      if (refDnInput.current) refDnInput.current.focus();
+    }, 100);
+  }, [inputs.sexo, modoMedico, etapaInicio]);
+
+  // [Medico] Data Nasc valida -> Data do Hemograma
+  useEffect(() => {
+    if (!modoMedico) return;
+    if (etapaInicio !== 3) return;
+    const dn = String(inputs.dataNascimento || '').trim();
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) return;
+    const [d, m, a] = dn.split('/').map(Number);
+    const dt = new Date(a, m - 1, d);
+    const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+    if (!valida || a < 1900 || dt > new Date()) return;
+    const t = setTimeout(() => {
+      setEtapaInicio(4);
+      setTimeout(() => {
+        if (refDataColeta.current) refDataColeta.current.focus();
+      }, 100);
+    }, 800);
+    return () => clearTimeout(t);
+  }, [inputs.dataNascimento, modoMedico, etapaInicio]);
+
+  // ============ FLUXO PACIENTE ============
+  // Paciente nao usa CPF (vem bloqueado, ja tratado em outro useEffect que pula pra etapa 2).
+  // Ordem invertida vs medico: DataNasc PRIMEIRO, Sexo DEPOIS.
+  // Bariatrica/Gestante ficam visiveis no caminho mas NAO travam o foco.
+
+  // [Paciente] Data Nasc valida -> Sexo
+  useEffect(() => {
+    if (modoMedico) return;
     if (etapaInicio !== 2) return;
     const dn = String(inputs.dataNascimento || '').trim();
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) return;
@@ -347,8 +433,47 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     return () => clearTimeout(t);
   }, [inputs.dataNascimento, modoMedico, etapaInicio]);
 
+  // [Paciente] Sexo escolhido -> Data do Hemograma
+  useEffect(() => {
+    if (modoMedico) return;
+    if (etapaInicio !== 3) return;
+    if (!inputs.sexo) return;
+    setEtapaInicio(4);
+    setTimeout(() => {
+      if (refDataColeta.current) refDataColeta.current.focus();
+    }, 100);
+  }, [inputs.sexo, modoMedico, etapaInicio]);
+
+  // ============ FLUXO COMUM (Data do Hemograma -> HB) ============
+  // Mesma regra para os dois modos: data valida + (data_estimada) -> salta pra HB;
+  // sem data_estimada -> libera HB mas nao muda foco (usuario clica).
+  useEffect(() => {
+    if (etapaInicio < 4) return;
+    const dc = String(inputs.data_coleta || '').trim();
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dc)) return;
+    const [d, m, a] = dc.split('/').map(Number);
+    const dt = new Date(a, m - 1, d);
+    const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+    if (!valida || a < 1900 || dt > new Date()) return;
+    if (inputs.data_estimada) {
+      const t = setTimeout(() => {
+        if (etapaInicio < 5) setEtapaInicio(5);
+        setTimeout(() => {
+          if (refHbHemograma.current && document.activeElement !== refHbHemograma.current) {
+            refHbHemograma.current.focus();
+          }
+        }, 100);
+      }, 600);
+      return () => clearTimeout(t);
+    } else if (etapaInicio === 4) {
+      setEtapaInicio(5);
+    }
+  }, [inputs.data_coleta, inputs.data_estimada, etapaInicio]);
+
   useEffect(() => {
     if (!inputs.sexo) return;
+    // Em ambos os modos, nao forcamos foco em HB antes do fluxo de cabecalho terminar (etapaInicio>=5).
+    if (etapaInicio < 5) return;
     const targets = { 1: refHbHemograma, 2: refVcmHemograma, 3: refRdwHemograma };
     const target = targets[etapaHemograma];
     const t = setTimeout(() => {
@@ -357,7 +482,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       }
     }, 100);
     return () => clearTimeout(t);
-  }, [etapaHemograma, inputs.sexo, inputs.bariatrica, inputs.gestante]);
+  }, [etapaHemograma, inputs.sexo, inputs.bariatrica, inputs.gestante, etapaInicio, modoMedico]);
 
   function agendarAvancoHemograma(etapaAtual, valorAtual, maxChars) {
     if (timerHemogramaRef.current) clearTimeout(timerHemogramaRef.current);
@@ -366,9 +491,11 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       setEtapaHemograma(prev => Math.max(prev, etapaAtual + 1));
       return;
     }
+    // 1300ms (era 1000) \u2014 d\u00e1 conforto extra no mobile, especialmente quando o usu\u00e1rio digita
+    // um decimal e demora pra encontrar o ponto/v\u00edrgula no teclado num\u00e9rico.
     timerHemogramaRef.current = setTimeout(() => {
       setEtapaHemograma(prev => Math.max(prev, etapaAtual + 1));
-    }, 1000);
+    }, 1300);
   }
 
   function revalidaGestante(pc) {
@@ -471,46 +598,70 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     setHistoricoData({ cpf: cpfDigits, serie });
   }
 
+  // Mapeamento etapa->campo varia por modo (medico: Sexo na 2, DataNasc na 3 | paciente: invertido).
+  // Essas flags evitam repetir o ternario em cada bloco de UI.
+  const sexoAtivo  = modoMedico ? etapaInicio === 2 : etapaInicio === 3;
+  const sexoPassou = modoMedico ? etapaInicio  >  2 : etapaInicio  >  3;
+  const dnAtivo    = modoMedico ? etapaInicio === 3 : etapaInicio === 2;
+  const dnPassou   = modoMedico ? etapaInicio  >  3 : etapaInicio  >  2;
+
   return (<>
     <style>{`
       @keyframes rfArrowPulse {
-        0%, 100% { transform: translateX(0); opacity: 0.6; }
-        50% { transform: translateX(8px); opacity: 1; }
+        0%, 100% { transform: translateY(0); opacity: 0.6; }
+        50% { transform: translateY(-6px); opacity: 1; }
       }
       .rf-arrow-x { animation: rfArrowPulse 1s ease-in-out infinite; }
+      @keyframes rfPlayBlink {
+        0%, 100% { background-color: #b91c1c; box-shadow: 0 0 0 0 rgba(185,28,28,0.7); }
+        50%      { background-color: #ef4444; box-shadow: 0 0 0 8px rgba(185,28,28,0); }
+      }
+      .rf-play-ready { animation: rfPlayBlink 1s ease-in-out infinite; }
     `}</style>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl relative">
-        <button
-          onClick={onFechar}
-          aria-label="Fechar"
-          className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-red-700 hover:bg-red-800 text-white text-sm flex items-center justify-center transition-colors shadow-md"
-          style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
-          {"\u2715"}
-        </button>
+        {/* Barra do topo no padr\u00e3o da landing: fundo branco, logo-fada \u00e0 esquerda + "RedFairy" em serif (dois tons),
+            X de fechar na extremidade direita centralizado verticalmente. Substitui a Fada grande + nome que ocupavam muito espa\u00e7o vertical. */}
+        <div style={{ background: '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
+              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+            </h2>
+          </div>
+          <button
+            onClick={onFechar}
+            aria-label="Fechar"
+            className="w-7 h-7 rounded-full bg-red-700 hover:bg-red-800 text-white text-sm flex items-center justify-center transition-colors shadow-md"
+            style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
+            {"\u2715"}
+          </button>
+        </div>
 
-        {/* Aviso no topo: "NAO TEM UM HEMOGRAMA?... FECHE A JANELA" + setinha pro X */}
-        <div style={{ background: '#FEF2F2', borderBottom: '1px solid #FECACA', padding: '10px 14px 10px 14px', position: 'relative' }}>
-          <div style={{ paddingRight: 76 }}>
-            <p style={{ fontSize: '0.78rem', fontWeight: 600, color: '#7B1E1E', letterSpacing: '0.5px', minHeight: '1.05rem', lineHeight: 1.3, margin: 0 }}>
+        {/* Faixa pink mais estreita: 1 linha de texto principal + subtexto menor (centralizados). Seta vertical alinhada ao centro do X acima. */}
+        <div style={{ background: '#FEF2F2', padding: '6px 14px 6px 14px', position: 'relative' }}>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#7B1E1E', letterSpacing: '0.5px', lineHeight: 1.2, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {twTopo}
             </p>
-            <p style={{ fontSize: '0.66rem', fontWeight: 700, color: '#991B1B', letterSpacing: '0.5px', marginTop: 3, opacity: 0.8 }}>
+            <p style={{ fontSize: '0.6rem', fontWeight: 700, color: '#991B1B', letterSpacing: '0.5px', marginTop: 1, opacity: 0.8, lineHeight: 1.2 }}>
               {"SEUS DADOS DE LOGIN EST\u00c3O SALVOS"}
             </p>
           </div>
-          <span className="rf-arrow-x" style={{ position: 'absolute', top: 8, right: 56, fontSize: '1.6rem', color: '#b91c1c', fontWeight: 900, pointerEvents: 'none', lineHeight: 1 }}>
-            {"\u2192"}
+          {/* Seta dentro da faixa pink, levemente \u00e0 direita do centro do X. */}
+          <span className="rf-arrow-x" style={{ position: 'absolute', top: 6, right: 22, fontSize: '1.4rem', color: '#b91c1c', fontWeight: 900, pointerEvents: 'none', lineHeight: 1 }}>
+            {"\u2191"}
           </span>
         </div>
 
-        <div className="bg-white px-6 pt-4 pb-4 rounded-t-2xl text-center">
-          <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
-          <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
-          <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">{"\ud83e\ude7a Triagem do Eritron"}</p>
-          <h3 className="text-base font-semibold text-gray-800 mt-3 leading-tight">{fraseAbertura}</h3>
-          <p className="text-xs text-gray-500 mt-1">{"Preencha os dados b\u00e1sicos para uma avalia\u00e7\u00e3o inicial."}</p>
+        {/* Subt\u00edtulo TRIAGEM DO ERITRON centralizado abaixo da faixa pink (sem logo grande nem nome RedFairy duplicados) */}
+        <div className="bg-white px-6 pt-5 pb-2 text-center">
+          <p className="text-xs uppercase tracking-widest text-gray-500">{"\ud83e\ude7a Triagem do Eritron"}</p>
+          <h3 className="text-base font-semibold text-gray-800 mt-1 leading-tight">{fraseAbertura}</h3>
+          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed px-2">{modoMedico
+            ? "Com apenas tr\u00eas par\u00e2metros do eritrograma o algoritmo faz uma avalia\u00e7\u00e3o inicial. Com FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA (%) voc\u00ea pode aprofundar o diagn\u00f3stico, agora ou no futuro."
+            : "Com apenas tr\u00eas par\u00e2metros do Hemograma o algoritmo faz uma avalia\u00e7\u00e3o inicial. Ao se cadastrar voc\u00ea receber\u00e1 um pedido m\u00e9dico para um novo HEMOGRAMA + FERRITINA + SATURA\u00c7\u00c3O DA TRANSFERRINA (%) para aprofundar o diagn\u00f3stico."}</p>
         </div>
 
         <div className="p-6 space-y-4">
@@ -519,24 +670,41 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               <label className="block text-sm font-medium text-gray-600 mb-1">
                 CPF{modoMedico ? ' do Paciente' : ''}
               </label>
-              <input
-                ref={refCpfInput}
-                type="text"
-                name="cpf"
-                value={inputs.cpf}
-                onChange={e => handleChange({ target: { name: 'cpf', value: formatarCPF(e.target.value) } })}
-                placeholder="000.000.000-00"
-                disabled={cpfBloqueado}
-                readOnly={cpfBloqueado}
-                tabIndex={cpfBloqueado ? -1 : 0}
-                className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
-                  cpfBloqueado ? 'border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed' :
-                  erros.cpf ? 'border-red-500' :
-                  etapaInicio === 1 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
-                  'border-yellow-300 bg-yellow-50'
-                }`}
-              />
+              {/* CPF 2/3 + bot\u00e3o Buscar Hist\u00f3rico 1/3 lado a lado para reduzir altura do modal */}
+              <div className="flex gap-2 items-start">
+                <input
+                  ref={refCpfInput}
+                  type="text"
+                  name="cpf"
+                  value={inputs.cpf}
+                  onChange={e => handleChange({ target: { name: 'cpf', value: formatarCPF(e.target.value) } })}
+                  placeholder="000.000.000-00"
+                  disabled={cpfBloqueado}
+                  readOnly={cpfBloqueado}
+                  tabIndex={cpfBloqueado ? -1 : 0}
+                  style={{ flex: '2 1 0' }}
+                  className={`border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                    cpfBloqueado ? 'border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed' :
+                    erros.cpf ? 'border-red-500' :
+                    etapaInicio === 1 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
+                    'border-yellow-300 bg-yellow-50'
+                  }`}
+                />
+                {modoMedico && (
+                  <button
+                    type="button"
+                    onClick={handleBuscarHistorico}
+                    disabled={historicoBuscando}
+                    style={{ flex: '1 1 0' }}
+                    className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-xs px-2 py-2.5 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap">
+                    {historicoBuscando ? 'Buscando...' : "\ud83d\udcca Buscar Hist\u00f3rico"}
+                  </button>
+                )}
+              </div>
               {erros.cpf && <p className="text-red-500 text-xs mt-1">{erros.cpf}</p>}
+              {modoMedico && historicoMsg && (
+                <p className="text-xs text-center mt-1 font-medium text-red-700">{historicoMsg}</p>
+              )}
 
               {(modoMedico || cpfBloqueado) && pacienteConhecido === 'BLOQUEADO' && (
                 <div className="mt-3 p-4 rounded-xl bg-red-50 border-2 border-red-300">
@@ -580,21 +748,6 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   </p>
                 );
               })()}
-
-              {modoMedico && (
-                <div className="mt-2">
-                  <button
-                    type="button"
-                    onClick={handleBuscarHistorico}
-                    disabled={historicoBuscando}
-                    className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-xs px-3 py-2 rounded-lg transition-colors disabled:opacity-50">
-                    {historicoBuscando ? 'Buscando...' : "\ud83d\udcca Buscar hist\u00f3rico do paciente"}
-                  </button>
-                  {historicoMsg && (
-                    <p className="text-xs text-center mt-1 font-medium text-red-700">{historicoMsg}</p>
-                  )}
-                </div>
-              )}
             </div>
           )}
 
@@ -607,12 +760,12 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   name="sexo"
                   value={inputs.sexo}
                   onChange={handleChange}
-                  disabled={pacConhSexoOk}
+                  disabled={pacConhSexoOk || (!sexoAtivo && !sexoPassou)}
                   className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
                     pacConhSexoOk ? 'border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed' :
                     erros.sexo ? 'border-red-500' :
-                    etapaInicio === 3 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
-                    etapaInicio > 3 ? 'border-yellow-300 bg-yellow-50' :
+                    sexoAtivo  ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
+                    sexoPassou ? 'border-yellow-300 bg-yellow-50' :
                     'border-gray-200 bg-gray-50 text-gray-400'
                   }`}
                 >
@@ -630,7 +783,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   name="dataNascimento"
                   value={inputs.dataNascimento}
                   onChange={handleChange}
-                  disabled={pacConhDataNascOk}
+                  disabled={pacConhDataNascOk || (!dnAtivo && !dnPassou)}
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -640,6 +793,8 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                         const dt = new Date(a, m - 1, d);
                         const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
                         if (valida && a >= 1900 && dt <= new Date()) {
+                          // No paciente, etapa 3 = Sexo (proximo apos DataNasc) — coincide com o
+                          // comportamento pre-existente do medico, entao mesmo codigo serve aos dois.
                           setEtapaInicio(3);
                           setTimeout(() => {
                             if (refSexoSelect.current) refSexoSelect.current.focus();
@@ -654,8 +809,8 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
                     pacConhDataNascOk ? 'border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed' :
                     erros.dataNascimento ? 'border-red-500' :
-                    etapaInicio === 2 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
-                    etapaInicio >= 3 ? 'border-yellow-300 bg-yellow-50' :
+                    dnAtivo  ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
+                    dnPassou ? 'border-yellow-300 bg-yellow-50' :
                     'border-gray-200 bg-gray-50 text-gray-400'
                   }`}
                 />
@@ -668,109 +823,124 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             const reval = revalidaGestante(pacienteConhecido);
             const lockedGestante = !!pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && reval.gestanteAtual;
             const semanasAuto = lockedGestante ? reval.semanas : null;
+            const showSemanas = lockedGestante || inputs.gestante;
             return (
               <div className="rounded-xl border border-pink-200 bg-pink-50 p-3">
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="gestante"
-                    checked={lockedGestante ? true : inputs.gestante}
-                    onChange={lockedGestante ? undefined : handleChange}
-                    disabled={lockedGestante}
-                    className="mt-1"
-                  />
-                  <div>
-                    <p className="text-sm font-medium text-pink-700">
+                {/* Layout horizontal: GESTANTE checkbox \u00e0 esquerda (sem subtexto desnecess\u00e1rio) +
+                    SEMANAS DE GESTA\u00c7\u00c3O \u00e0 direita quando marcado, economizando altura no modal. */}
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer" style={{ flex: '1 1 0' }}>
+                    <input
+                      type="checkbox"
+                      name="gestante"
+                      checked={lockedGestante ? true : inputs.gestante}
+                      onChange={lockedGestante ? undefined : handleChange}
+                      disabled={lockedGestante}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm font-medium text-pink-700">
                       {"Gestante"}{lockedGestante ? " (j\u00e1 registrada)" : ""}
-                    </p>
-                    <p className="text-xs text-pink-600">
-                      {lockedGestante
-                        ? "Esta paciente j\u00e1 est\u00e1 cadastrada como gestante."
-                        : (modoMedico ? "Marque se a paciente est\u00e1 gr\u00e1vida" : "Marque se est\u00e1 gr\u00e1vida")}
-                    </p>
-                  </div>
-                </label>
-                {(lockedGestante || inputs.gestante) && (
-                  <div className="mt-2">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">{"Semanas de gesta\u00e7\u00e3o"}</label>
-                    {lockedGestante ? (
-                      <div className="w-full border-2 border-pink-300 bg-pink-100 rounded-lg px-3 py-2 text-sm text-pink-900 font-semibold">
-                        {semanasAuto !== null ? semanasAuto + ' semanas (calculado)' : 'Sem dado registrado'}
-                      </div>
-                    ) : (
-                      <>
+                    </span>
+                  </label>
+                  {showSemanas && (
+                    <div style={{ flex: '1 1 0' }}>
+                      {lockedGestante ? (
+                        <div className="w-full border-2 border-pink-300 bg-pink-100 rounded-lg px-2 py-1.5 text-xs text-pink-900 font-semibold whitespace-nowrap">
+                          {semanasAuto !== null ? semanasAuto + ' sem. (calc.)' : 'sem dado'}
+                        </div>
+                      ) : (
                         <input
                           type="number"
                           name="semanas_gestacao"
                           value={inputs.semanas_gestacao}
                           onChange={handleChange}
                           min="1" max="42"
-                          placeholder="Ex: 24"
-                          className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400 ${erros.semanas_gestacao ? 'border-red-500' : 'border-2 border-red-500'}`}
+                          placeholder={"Semanas de gesta\u00e7\u00e3o"}
+                          className={`w-full border-2 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-pink-400 ${erros.semanas_gestacao ? 'border-red-500' : 'border-pink-400 bg-white'}`}
                         />
-                        {erros.semanas_gestacao && <p className="text-red-500 text-xs mt-1">{erros.semanas_gestacao}</p>}
-                      </>
-                    )}
-                  </div>
-                )}
+                      )}
+                    </div>
+                  )}
+                </div>
+                {erros.semanas_gestacao && <p className="text-red-500 text-xs mt-1">{erros.semanas_gestacao}</p>}
               </div>
             );
           })()}
 
-          {!pacienteConhecido && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="bariatrica"
-                  checked={inputs.bariatrica}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-                <div>
-                  <p className="text-sm font-medium text-amber-700">
+          {pacienteConhecido !== 'BLOQUEADO' && inputs.sexo && (() => {
+            // Card Bari\u00e1trica aparece SEMPRE (paciente ainda nao registrado: editavel;
+            // paciente conhecido com bariatrica=true no perfil: pre-marcado e disabled,
+            // pois a condicao bariatrica e' permanente uma vez registrada).
+            // S\u00f3 aparece ap\u00f3s sele\u00e7\u00e3o do sexo \u2014 evita texto gen\u00e9rico "Sou paciente bari\u00e1trico/a".
+            const bariatricaLocked = !!pacienteConhecido && pacienteConhecido.bariatrica === true;
+            const checked = bariatricaLocked ? true : inputs.bariatrica;
+            return (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <label className={`flex items-center gap-2 ${bariatricaLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    name="bariatrica"
+                    checked={checked}
+                    onChange={bariatricaLocked ? undefined : handleChange}
+                    disabled={bariatricaLocked}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-amber-700">
                     {modoMedico
-                      ? (inputs.sexo === 'F' ? "Paciente bari\u00e1trica" : inputs.sexo === 'M' ? "Paciente bari\u00e1trico" : "Paciente bari\u00e1trico/a")
-                      : (inputs.sexo === 'F' ? "Sou bari\u00e1trica" : inputs.sexo === 'M' ? "Sou bari\u00e1trico" : "Sou paciente bari\u00e1trico/a")}
-                  </p>
-                  <p className="text-xs text-amber-600">
-                    {modoMedico
-                      ? "Marque se o(a) paciente fez cirurgia bari\u00e1trica"
-                      : "Marque se voc\u00ea fez cirurgia bari\u00e1trica (by-pass / gastrectomia)"}
-                  </p>
-                </div>
-              </label>
-            </div>
-          )}
+                      ? (inputs.sexo === 'F' ? "Paciente bari\u00e1trica" : "Paciente bari\u00e1trico")
+                      : (inputs.sexo === 'F' ? "Sou bari\u00e1trica" : "Sou bari\u00e1trico")}
+                    {bariatricaLocked ? " (j\u00e1 registrado)" : ""}
+                  </span>
+                </label>
+              </div>
+            );
+          })()}
 
           {pacienteConhecido !== 'BLOQUEADO' && (<>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Data da coleta</label>
-              <input
-                type="date"
-                name="data_coleta"
-                value={inputs.data_coleta}
-                onChange={handleChange}
-                className={'w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ' + (erros.data_coleta ? 'border-red-500' : (inputs.data_coleta ? 'border-yellow-300 bg-yellow-50' : 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400'))}
-              />
-              {erros.data_coleta && <p className="text-red-500 text-xs mt-1">{erros.data_coleta}</p>}
-              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+              <label className="block text-xs font-medium text-gray-600 mb-1">{"Data do Hemograma"}</label>
+              {/* Mesmo padr\u00e3o de grid grid-cols-2 do bloco Sexo/Data Nascimento, garantindo larguras id\u00eanticas. */}
+              <div className="grid grid-cols-2 gap-3 items-start">
                 <input
-                  type="checkbox"
-                  name="data_estimada"
-                  checked={inputs.data_estimada}
-                  onChange={handleChange}
-                  className="w-3.5 h-3.5"
+                  ref={refDataColeta}
+                  type="text"
+                  name="data_coleta"
+                  value={inputs.data_coleta}
+                  onChange={e => {
+                    // M\u00e1scara DD/MM/AAAA igual \u00e0 Data de Nascimento
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+                    let v = digits;
+                    if (digits.length <= 2) v = digits;
+                    else if (digits.length <= 4) v = digits.slice(0, 2) + '/' + digits.slice(2);
+                    else v = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4);
+                    handleChange({ target: { name: 'data_coleta', value: v } });
+                  }}
+                  disabled={modoMedico && etapaInicio < 4}
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="DD/MM/AAAA"
+                  className={'w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ' + ((modoMedico && etapaInicio < 4) ? 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed' : erros.data_coleta ? 'border-red-500' : (etapaInicio === 4 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : 'border-yellow-300 bg-yellow-50'))}
                 />
-                <span className="text-xs text-gray-500">Data estimada</span>
-              </label>
+                <label className="flex items-center gap-2 cursor-pointer self-center">
+                  <input
+                    type="checkbox"
+                    name="data_estimada"
+                    checked={inputs.data_estimada}
+                    onChange={handleChange}
+                    className="w-3.5 h-3.5"
+                  />
+                  <span className="text-xs text-gray-500">Data estimada</span>
+                </label>
+              </div>
+              {erros.data_coleta && <p className="text-red-500 text-xs mt-1">{erros.data_coleta}</p>}
             </div>
 
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-gray-600 mb-2">{"\ud83d\udcca Hemograma"}</p>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Hb (g/dL)</label>
+              {/* Grid 5 colunas: Hb (col-span-2), VCM (1), RDW (1), PLAY (1). PLAY substitui o bot\u00e3o CONFIRMO redondo. */}
+              <div className="grid grid-cols-5 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-gray-600 mb-1 whitespace-nowrap">{"HEMOGLOBINA (g/dL)"}</label>
                   <input
                     ref={refHbHemograma}
                     type="text"
@@ -778,13 +948,13 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                     name="hemoglobina"
                     value={inputs.hemoglobina}
                     maxLength={4}
-                    disabled={etapaHemograma < 1}
+                    disabled={etapaHemograma < 1 || (modoMedico && etapaInicio < 5)}
                     onChange={e => {
                       let v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.').slice(0, 4);
                       handleChange({ target: { name: 'hemoglobina', value: v } });
                       agendarAvancoHemograma(1, v, 4);
                     }}
-                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                    className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
                       etapaHemograma === 1
                         ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400'
                         : etapaHemograma > 1
@@ -803,13 +973,13 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                     name="vcm"
                     value={inputs.vcm}
                     maxLength={5}
-                    disabled={etapaHemograma < 2}
+                    disabled={etapaHemograma < 2 || (modoMedico && etapaInicio < 5)}
                     onChange={e => {
                       let v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.').slice(0, 5);
                       handleChange({ target: { name: 'vcm', value: v } });
                       agendarAvancoHemograma(2, v, 5);
                     }}
-                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                    className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
                       etapaHemograma === 2
                         ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400'
                         : etapaHemograma > 2
@@ -828,13 +998,13 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                     name="rdw"
                     value={inputs.rdw}
                     maxLength={4}
-                    disabled={etapaHemograma < 3}
+                    disabled={etapaHemograma < 3 || (modoMedico && etapaInicio < 5)}
                     onChange={e => {
                       let v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.').slice(0, 4);
                       handleChange({ target: { name: 'rdw', value: v } });
                       agendarAvancoHemograma(3, v, 4);
                     }}
-                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                    className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
                       etapaHemograma === 3
                         ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400'
                         : etapaHemograma > 3
@@ -844,31 +1014,43 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   />
                   {erros.rdw && <p className="text-red-500 text-xs mt-0.5">{erros.rdw}</p>}
                 </div>
+                {/* 5\u00aa coluna: tri\u00e2ngulo PLAY \u2014 cinza quando faltam campos, vermelho piscando quando os 3 est\u00e3o preenchidos. */}
+                <div className="flex flex-col items-center justify-end pb-[3px]">
+                  {(() => {
+                    const ready = etapaHemograma >= 4 && inputs.hemoglobina && inputs.vcm && inputs.rdw;
+                    return (
+                      <button
+                        onClick={ready ? handleAvaliar : undefined}
+                        disabled={!ready}
+                        aria-label="Prosseguir"
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-md ${ready ? 'rf-play-ready cursor-pointer' : 'bg-gray-300 cursor-not-allowed'}`}>
+                        <span style={{ fontSize: '1.1rem', lineHeight: 1, color: '#fff', marginLeft: 3 }}>{"\u25B6"}</span>
+                      </button>
+                    );
+                  })()}
+                </div>
+              </div>
+              {/* Frase de orienta\u00e7\u00e3o subiu para logo abaixo dos campos do hemograma (em mai\u00fasculas, laranja, centralizada),
+                  com bot\u00e3o "\u2190 VOLTAR" no canto esquerdo no mesmo n\u00edvel \u2014 economiza altura. */}
+              <div className="relative mt-2 min-h-[1.25rem]">
+                <button
+                  onClick={onFechar}
+                  className="absolute left-0 top-0 text-xs text-gray-500 hover:text-gray-800 underline whitespace-nowrap">
+                  {"\u2190 VOLTAR"}
+                </button>
+                {etapaHemograma < 4 && (
+                  <p className="text-[0.7rem] text-center tracking-wide font-semibold" style={{ color: '#EA580C' }}>
+                    {"PREENCHA OS CAMPOS AMARELOS EM SEQU\u00caNCIA"}
+                  </p>
+                )}
               </div>
             </div>
           </>)}
         </div>
 
-        {pacienteConhecido !== 'BLOQUEADO' && (
-          <div className="px-6 pb-6 flex flex-col items-center gap-2">
-            {etapaHemograma >= 4 && inputs.hemoglobina && inputs.vcm && inputs.rdw && (
-              <div className="flex flex-col items-center gap-1">
-                <button
-                  onClick={handleAvaliar}
-                  aria-label="Confirmar e avaliar"
-                  className="w-14 h-14 rounded-full bg-gray-400 hover:bg-gray-500 text-red-700 font-bold flex items-center justify-center transition-colors shadow-md"
-                  style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, sans-serif' }}>
-                  <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>{"\u2714"}</span>
-                </button>
-                <span className="text-xs font-bold text-red-800 tracking-wide">CONFIRMO</span>
-              </div>
-            )}
-            {etapaHemograma < 4 && (
-              <p className="text-xs text-gray-400 text-center">{"Preencha os campos amarelos em sequ\u00eancia"}</p>
-            )}
-            {erroGeral && (
-              <p className="text-xs text-red-600 font-semibold text-center mt-2">{erroGeral}</p>
-            )}
+        {pacienteConhecido !== 'BLOQUEADO' && erroGeral && (
+          <div className="px-6 pb-3 flex flex-col items-center gap-2">
+            <p className="text-xs text-red-600 font-semibold text-center mt-2">{erroGeral}</p>
           </div>
         )}
       </div>
