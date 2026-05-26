@@ -153,7 +153,12 @@ export default function App() {
       const pseudoSession = { user: { id: pacienteLocalId } }
       return <PatientDashboard session={pseudoSession} onVoltar={() => setModo('home')} abrirOBA={!!localStorage.getItem('rf_flag')} />
     }
-    // Fallback antigo: Supabase Auth
+    // Sem paciente_id E sem dadosPreCadastro: estado dessincronizado, volta pra home.
+    if (!dadosPreCadastro.cpf && !dadosPreCadastro.semCpf) {
+      setTimeout(() => setModo('home'), 0);
+      return null;
+    }
+    // Fallback antigo: Supabase Auth (so chega aqui com dadosPreCadastro preenchido)
     if (!session) return <AuthPage
       onLogin={() => {}}
       onVoltar={() => { setModo('home'); setDadosPreCadastro({ cpf: '', sexo: '', dataNascimento: '' }) }}
