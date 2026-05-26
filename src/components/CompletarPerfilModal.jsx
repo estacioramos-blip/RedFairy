@@ -105,9 +105,13 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
             <input
               type="email"
               value={email}
-              onChange={e => { setEmail(e.target.value); setErro('') }}
+              onChange={e => { setEmail(e.target.value.toLowerCase()); setErro('') }}
               className={inputCls}
               placeholder="seu@email.com"
+              style={{ textTransform: 'lowercase' }}
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck="false"
             />
           </div>
 
