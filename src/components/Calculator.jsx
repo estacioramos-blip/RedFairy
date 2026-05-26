@@ -6,6 +6,7 @@ import { avaliarOBA } from '../engine/obaEngine';
 import OBAModal from './OBAModal';
 import TriagemModal from './TriagemModal';
 import TriagemResultadoModal from './TriagemResultadoModal';
+import TermosModalShared from './TermosModal';
 import ResultCard from './ResultCard';
 import heroImg from '../assets/redfairy-hero.png';
 import fairyChatImg from '../assets/fairy-chat.png';
@@ -49,40 +50,7 @@ const IconMedicamentos = () => (
 )
 
 function TermosModal({ onFechar }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }} onClick={onFechar}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col" style={{ maxHeight:'85vh' }} onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <div>
-            <p className="font-bold text-red-700 text-sm">{"Termos e Condi\u00e7\u00f5es de Uso \u2014 Profissionais de Sa\u00fade"}</p>
-            <p className="text-gray-400 text-xs">{"RedFairy \u2014 Vers\u00e3o 1.0 \u2014 Abril de 2026"}</p>
-          </div>
-          <button
-            onClick={onFechar}
-            className="text-gray-400 hover:text-gray-600 text-xl"
-            style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
-            {"\u2715"}
-          </button>
-        </div>
-        <div className="overflow-y-auto p-5 text-xs text-gray-700 leading-relaxed space-y-4">
-          <p className="font-bold text-red-700 uppercase tracking-wide mb-1">{"Termos e Condi\u00e7\u00f5es de Uso \u2014 Profissionais de Sa\u00fade"}</p>
-          <p><strong>1. Natureza da Plataforma.</strong>{" O RedFairy \u00e9 uma ferramenta digital de apoio \u00e0 decis\u00e3o cl\u00ednica. N\u00c3O substitui o julgamento cl\u00ednico do profissional de sa\u00fade, o exame f\u00edsico nem a anamnese detalhada. Os resultados gerados s\u00e3o orientativos e n\u00e3o constituem laudos m\u00e9dicos."}</p>
-          <p><strong>2. Elegibilidade.</strong>{" O acesso ao m\u00f3dulo profissional \u00e9 restrito a profissionais de sa\u00fade com registro ativo em conselho de classe (CRM, COREN, CRN, CRF ou equivalente). Ao se cadastrar, o profissional declara possuir habilita\u00e7\u00e3o legal para exerc\u00edcio da profiss\u00e3o, sendo legalmente respons\u00e1vel por esta informa\u00e7\u00e3o."}</p>
-          <p><strong>{"3. Responsabilidade Cl\u00ednica."}</strong>{" M\u00e9dicos ser\u00e3o integralmente respons\u00e1veis pelas decis\u00f5es cl\u00ednicas tomadas com base nos resultados gerados. A plataforma mant\u00e9m um canal de comunica\u00e7\u00e3o aberto para d\u00favidas ou esclarecimentos. O RedFairy \u00e9 uma ferramenta auxiliar \u2014 a responsabilidade diagn\u00f3stica e terap\u00eautica \u00e9 exclusivamente do m\u00e9dico. Profissionais de sa\u00fade n\u00e3o m\u00e9dicos que utilizem a plataforma n\u00e3o devem fazer prescri\u00e7\u00f5es nem recomenda\u00e7\u00f5es terap\u00eauticas quando recomendado pelo algoritmo, e devem orientar os pacientes a consultarem os seus m\u00e9dicos, ou os m\u00e9dicos da plataforma."}</p>
-          <p><strong>4. Consentimento dos Pacientes.</strong>{" Ao inserir dados de pacientes, o profissional declara ter obtido o consentimento informado do titular dos dados, em conformidade com a legisla\u00e7\u00e3o vigente e com o C\u00f3digo de \u00c9tica Profissional. De prefer\u00eancia, as avalia\u00e7\u00f5es devem ser feitas na presen\u00e7a dos pacientes, ou quando os pacientes encaminhem os seus resultados diretamente para o m\u00e9dico, por qualquer meio."}</p>
-          <p><strong>5. Programa de Afiliados.</strong>{" Ao avaliar pacientes na plataforma, o profissional integra automaticamente o Programa de Afiliados RedFairy, com suporte dos patrocinadores da Operadora. As regras e benef\u00edcios s\u00e3o estabelecidos em documento pr\u00f3prio que ser\u00e1 enviado aos profissionais, e podem ser alterados com aviso pr\u00e9vio de 30 dias."}</p>
-          <p><strong>{"6. Prote\u00e7\u00e3o de Dados \u2014 LGPD."}</strong>{" Os dados inseridos s\u00e3o tratados em conformidade com a Lei n\u00ba 13.709/2018. O profissional \u00e9 corespons\u00e1vel pelo tratamento adequado dos dados dos seus pacientes inseridos na plataforma."}</p>
-          <p><strong>7. Propriedade Intelectual.</strong>{" Todo o conte\u00fado da plataforma, incluindo o algoritmo, as matrizes de decis\u00e3o e as orienta\u00e7\u00f5es terap\u00eauticas, \u00e9 de propriedade exclusiva da Cytomica. \u00c9 vedada reprodu\u00e7\u00e3o, c\u00f3pia ou distribui\u00e7\u00e3o sem autoriza\u00e7\u00e3o expressa."}</p>
-          <p><strong>{"8. Limita\u00e7\u00e3o de Responsabilidade."}</strong>{" A Cytomica n\u00e3o se responsabiliza por danos decorrentes do uso inadequado da plataforma ou de decis\u00f5es cl\u00ednicas baseadas exclusivamente nos resultados gerados, sem a devida avalia\u00e7\u00e3o profissional."}</p>
-          <p><strong>9. Foro.</strong>{" Comarca de Salvador, Estado da Bahia. Lei aplic\u00e1vel: legisla\u00e7\u00e3o brasileira vigente, especialmente a LGPD e o C\u00f3digo de \u00c9tica Profissional."}</p>
-          <p className="text-gray-400 text-center text-xs">cytomica.com | redfairy.bio | contato@redfairy.bio</p>
-        </div>
-        <div className="p-4 border-t border-gray-100">
-          <button onClick={onFechar} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">Fechar</button>
-        </div>
-      </div>
-    </div>
-  )
+  return <TermosModalShared tipo="medico" onFechar={onFechar} />
 }
 
 function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
@@ -595,6 +563,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
   const [resultado, setResultado] = useState(null);
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false);
+  const ferritinaRef = useRef(null);
   const [showTriagem, setShowTriagem] = useState(true);
   const [triagemResultado, setTriagemResultado] = useState(null);
   const [triagemInputs, setTriagemInputs] = useState(null);
@@ -606,13 +575,25 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [afiliadoSalvo, setAfiliadoSalvo] = useState(false);
   const [afiliadoCEP, setAfiliadoCEP] = useState('');
   const [afiliadoCPF, setAfiliadoCPF] = useState('');
+  const [afiliadoCPFErro, setAfiliadoCPFErro] = useState('');
   const refAfilCEP = useRef(null);
   const refAfilCPF = useRef(null);
+  const refAfilPix = useRef(null);
   const [etapaAfil, setEtapaAfil] = useState(1);
   useEffect(() => {
     if (showAfiliados) {
       setEtapaAfil(1);
       const t = setTimeout(() => { if (refAfilCEP.current) refAfilCEP.current.focus(); }, 250);
+      // Recarrega medicoDados (celular/email) ao abrir o modal de afiliados,
+      // pra garantir que os checkboxes "TELEFONE/EMAIL" usem dados FRESCOS do banco.
+      if (medicoCRM) {
+        (async () => {
+          try {
+            const { data: medFresh } = await supabase.from('medicos').select('nome, crm, celular, email').eq('crm', medicoCRM).maybeSingle();
+            if (medFresh) setMedicoDados(medFresh);
+          } catch (e) {}
+        })();
+      }
       return () => clearTimeout(t);
     }
   }, [showAfiliados]);
@@ -625,6 +606,24 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       return () => clearTimeout(t);
     }
   }, [afiliadoCEP, showAfiliados, etapaAfil]);
+  // Recalcula idade automaticamente sempre que dataNascimento muda (incluindo quando setada via setInputs externamente,
+  // por exemplo no fluxo Triagem\u2192Calculator pelo bot\u00e3o "APROFUNDAR AVALIA\u00c7\u00c3O INICIADA").
+  useEffect(() => {
+    const dn = String(inputs.dataNascimento || '').trim();
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) return;
+    const [d, m, a] = dn.split('/').map(Number);
+    const dt = new Date(a, m - 1, d);
+    const valida = dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+    if (!valida || a < 1900 || dt > new Date()) return;
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - a;
+    const mDiff = hoje.getMonth() - (m - 1);
+    if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--;
+    const idadeStr = String(idade);
+    if (inputs.idade !== idadeStr) {
+      setInputs(prev => ({ ...prev, idade: idadeStr }));
+    }
+  }, [inputs.dataNascimento]);
   const [pixTipo, setPixTipo] = useState('');
   const [showConviteAfiliado, setShowConviteAfiliado] = useState(false);
   const [destinoAposConvite, setDestinoAposConvite] = useState(null);
@@ -660,6 +659,77 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   useEffect(() => {
     if (preFlag === 'bariatrica') { setInputs(prev => ({ ...prev, bariatrica: true })) }
   }, [preFlag]);
+
+  // Pre-preenchimento via triagem nao-cadastrada (paciente clicou em "TENHO TAMBEM FERRITINA"
+  // dentro do TriagemModal). App grava em localStorage.rf_triagem_prefill antes de mudar pra calculadora.
+  useEffect(() => {
+    let prefill = null;
+    try {
+      const raw = localStorage.getItem('rf_triagem_prefill');
+      if (raw) prefill = JSON.parse(raw);
+    } catch (e) {}
+    if (prefill) {
+      try { localStorage.removeItem('rf_triagem_prefill'); } catch (e) {}
+      // Calcula idade a partir da data de nascimento (formato DD/MM/AAAA do TriagemModal)
+      let idadeCalc = '';
+      const dnStr = prefill.dataNascimento || '';
+      if (dnStr) {
+        try {
+          const partes = String(dnStr).split('/');
+          if (partes.length === 3) {
+            const [d, m, a] = partes.map(Number);
+            const nasc = new Date(a, m - 1, d);
+            const hoje = new Date();
+            let i = hoje.getFullYear() - nasc.getFullYear();
+            const mes = hoje.getMonth() - nasc.getMonth();
+            if (mes < 0 || (mes === 0 && hoje.getDate() < nasc.getDate())) i--;
+            if (i >= 0 && i < 130) idadeCalc = String(i);
+          }
+        } catch (e) {}
+      }
+      // TriagemModal envia dataColeta em ISO (YYYY-MM-DD do <input type="date">).
+      // Calculator usa formato DD/MM/AAAA internamente. Converter:
+      let dataColetaBR = '';
+      if (prefill.dataColeta) {
+        const s = String(prefill.dataColeta);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+          const [a, m, d] = s.split('-');
+          dataColetaBR = `${d}/${m}/${a}`;
+        } else {
+          dataColetaBR = s; // ja em outro formato
+        }
+      }
+      setInputs(prev => ({
+        ...prev,
+        cpf: prefill.cpf || prev.cpf,
+        sexo: prefill.sexo || prev.sexo,
+        dataNascimento: dnStr || prev.dataNascimento,
+        idade: idadeCalc || prev.idade,
+        dataColeta: dataColetaBR || prev.dataColeta,
+        hemoglobina: prefill.hemoglobina != null ? String(prefill.hemoglobina) : prev.hemoglobina,
+        vcm: prefill.vcm != null ? String(prefill.vcm) : prev.vcm,
+        rdw: prefill.rdw != null ? String(prefill.rdw) : prev.rdw,
+        gestante: prefill.gestante || prev.gestante || false,
+        semanas_gestacao: prefill.semanas_gestacao || prev.semanas_gestacao,
+        bariatrica: prefill.bariatrica || prev.bariatrica || false,
+        bariatrica_medico: prefill.bariatrica || prev.bariatrica_medico || false,
+      }));
+      // Como ja temos Hb/VCM/RDW pre-preenchidos, nao abrir TriagemModal.
+      setShowTriagem(false);
+      setDadosVieramDaTriagem(true);
+      // Como veio pelo botao azul (paciente ja diz que tem Ferritina e SatTransf),
+      // ja libera os campos extras direto.
+      setMostrarExamesExtras(true);
+      // Auto-foco no campo Ferritina. Estrategia: tentar varias vezes ate funcionar.
+      // O Calculator monta grande, e o LabInput pode demorar pra entrar no DOM.
+      const tentarFocar = (tentativa) => {
+        const el = ferritinaRef.current;
+        if (el && !el.disabled) { try { el.focus(); el.select && el.select(); } catch (e) {} return; }
+        if (tentativa < 20) setTimeout(() => tentarFocar(tentativa + 1), 150);
+      };
+      setTimeout(() => tentarFocar(0), 200);
+    }
+  }, []);
 
   useEffect(() => {
     let pedirLogin = false;
@@ -858,8 +928,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     }
     if (!inputs.dataColeta) novosErros.dataColeta = 'Informe a data da coleta';
     else {
-      const hojeStr = new Date().toISOString().split('T')[0];
-      if (inputs.dataColeta > hojeStr) novosErros.dataColeta = "Data da coleta n\u00e3o pode ser no futuro";
+      // inputs.dataColeta esta em DD/MM/AAAA; converter pra comparar com hoje
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(inputs.dataColeta)) {
+        const [d, m, a] = inputs.dataColeta.split('/').map(Number);
+        const dtColeta = new Date(a, m - 1, d);
+        const hoje = new Date();
+        hoje.setHours(23, 59, 59, 999);
+        const valida = dtColeta.getFullYear() === a && dtColeta.getMonth() === m - 1 && dtColeta.getDate() === d;
+        if (!valida) novosErros.dataColeta = "Data inv\u00e1lida";
+        else if (dtColeta > hoje) novosErros.dataColeta = "Data da coleta n\u00e3o pode ser no futuro";
+      } else {
+        novosErros.dataColeta = "Use o formato DD/MM/AAAA";
+      }
     }
     if (!inputs.hemoglobina) novosErros.hemoglobina = "Campo obrigat\u00f3rio";
     if (!inputs.vcm)         novosErros.vcm = "Campo obrigat\u00f3rio";
@@ -892,6 +972,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) return null;
         const [d, m, a] = dn.split('/').map(Number);
         return `${a}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      })(),
+      dataColeta: (() => {
+        const dc = String(inputs.dataColeta || '').trim();
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dc)) {
+          const [d, m, a] = dc.split('/').map(Number);
+          return `${a}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        }
+        return dc; // ja em ISO ou outro formato
       })(),
       ferritina:   Number(sanitizarNumero(inputs.ferritina)),
       hemoglobina: Number(sanitizarNumero(inputs.hemoglobina)),
@@ -979,15 +1067,25 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     setCopiado(false);
 
     if (inputs.cpf.trim() && res.encontrado) {
-      const { count: totalAvals } = await supabase.from('avaliacoes').select('*', { count: 'exact', head: true }).eq('medico_crm', medicoCRM)
-      const { data: medDados } = await supabase.from('medicos').select('cep, cpf, pix_chave').eq('crm', medicoCRM).maybeSingle()
-      if (!medDados?.cep || !medDados?.cpf || !medDados?.pix_chave) {
-        if ((totalAvals || 0) === 0) setTimeout(() => setShowAfiliados(true), 1200)
-        else setTimeout(() => setShowAfiliadosBanner(true), 1200)
+      // Logica de afiliados/banner SO se for medico logado (medicoCRM existe).
+      // Paciente vindo da triagem pelo botao azul nao entra aqui.
+      if (medicoCRM) {
+        const { count: totalAvals } = await supabase.from('avaliacoes').select('*', { count: 'exact', head: true }).eq('medico_crm', medicoCRM)
+        const { data: medDados } = await supabase.from('medicos').select('cep, cpf, pix_chave').eq('crm', medicoCRM).maybeSingle()
+        if (!medDados?.cep || !medDados?.cpf || !medDados?.pix_chave) {
+          if ((totalAvals || 0) === 0) setTimeout(() => setShowAfiliados(true), 1200)
+          else setTimeout(() => setShowAfiliadosBanner(true), 1200)
+        }
+      }
+      // dataColeta esta em DD/MM/AAAA; Supabase coluna date espera YYYY-MM-DD
+      let dataColetaISO = inputs.dataColeta;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(inputs.dataColeta || '')) {
+        const [d, m, a] = inputs.dataColeta.split('/');
+        dataColetaISO = `${a}-${m}-${d}`;
       }
       await supabase.from('avaliacoes').insert({
         cpf: inputs.cpf.replace(/\D/g, ''),
-        data_coleta: inputs.dataColeta,
+        data_coleta: dataColetaISO,
         ferritina: Number(inputs.ferritina),
         hemoglobina: Number(inputs.hemoglobina),
         vcm: Number(inputs.vcm),
@@ -1018,7 +1116,25 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   function handleCopiar() {
     if (!resultado) return;
     const texto = formatarParaCopiar(resultado, resultado._inputs);
-    navigator.clipboard.writeText(texto).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 3000); });
+    // Copia pra clipboard (para o usu\u00e1rio poder colar em outro lugar)
+    // E ABRE WhatsApp Web/App pra ele enviar pro paciente em 1 clique.
+    // O telefone do paciente, se houver, vem em resultado._inputs.celularPaciente ou similar; sen\u00e3o,
+    // abre o WhatsApp sem destinat\u00e1rio (o usu\u00e1rio escolhe no contato).
+    try {
+      navigator.clipboard.writeText(texto).then(() => {
+        setCopiado(true);
+        setTimeout(() => setCopiado(false), 3000);
+      });
+    } catch (e) {}
+    try {
+      const celRaw = (resultado._inputs && (resultado._inputs.celularPaciente || resultado._inputs.celular)) || '';
+      const cel = String(celRaw).replace(/\D/g, '');
+      // Mensagem encoded
+      const msgEnc = encodeURIComponent(texto);
+      // Se tem celular, manda pra ele; sen\u00e3o, abre WhatsApp sem destinat\u00e1rio
+      const url = cel ? `https://wa.me/55${cel}?text=${msgEnc}` : `https://wa.me/?text=${msgEnc}`;
+      window.open(url, '_blank');
+    } catch (e) {}
   }
 
   function handleLimpar() {
@@ -1036,16 +1152,29 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             setTriagemInputs(novosInputs);
             setDadosVieramDaTriagem(true);
             setEditandoDadosPaciente(false);
+            // Converte data_coleta (ISO: YYYY-MM-DD) para o formato DD/MM/AAAA usado no Calculator.
+            // novosInputs.dataNascimento j\u00e1 vem em DD/MM/AAAA da TriagemModal.
+            let dataColetaBR = '';
+            if (novosInputs.data_coleta) {
+              const m = String(novosInputs.data_coleta).match(/^(\d{4})-(\d{2})-(\d{2})/);
+              if (m) dataColetaBR = `${m[3]}/${m[2]}/${m[1]}`;
+            }
             setInputs(prev => ({
               ...prev,
               cpf: novosInputs.cpf || prev.cpf,
               sexo: novosInputs.sexo || prev.sexo,
               idade: String(novosInputs.idade || prev.idade || ''),
+              dataNascimento: novosInputs.dataNascimento || prev.dataNascimento || '',
+              dataColeta: dataColetaBR || prev.dataColeta || '',
               gestante: novosInputs.gestante || prev.gestante || false,
               semanas_gestacao: novosInputs.semanas_gestacao ? String(novosInputs.semanas_gestacao) : prev.semanas_gestacao,
               hemoglobina: String(novosInputs.hemoglobina || prev.hemoglobina || ''),
               vcm: String(novosInputs.vcm || prev.vcm || ''),
               rdw: String(novosInputs.rdw || prev.rdw || ''),
+              // Propaga a flag bari\u00e1trica capturada na triagem para ambos os caminhos
+              // (bariatrica do hist\u00f3rico e bariatrica_medico do topo).
+              bariatrica: novosInputs.bariatrica || prev.bariatrica || false,
+              bariatrica_medico: novosInputs.bariatrica || prev.bariatrica_medico || false,
             }));
           }}
           onFechar={() => {
@@ -1150,10 +1279,27 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       else if (digits.length > 3) fmt = digits.slice(0,3) + '.' + digits.slice(3);
                       setAfiliadoCPF(fmt);
                       if (pixTipo === 'cpf') setAfiliadoPix(fmt);
+                      // Valida\u00e7\u00e3o imediata do CPF do m\u00e9dico:
+                      // - 11 d\u00edgitos + inv\u00e1lido \u2192 mostra erro
+                      // - 11 d\u00edgitos + v\u00e1lido \u2192 limpa erro e move foco para Chave PIX
+                      // - menos de 11 \u2192 limpa erro (n\u00e3o reclama enquanto digita)
+                      if (digits.length === 11) {
+                        if (!validarCPF(fmt)) {
+                          setAfiliadoCPFErro("CPF inv\u00e1lido");
+                        } else {
+                          setAfiliadoCPFErro('');
+                          setTimeout(() => { if (refAfilPix.current) refAfilPix.current.focus(); }, 50);
+                        }
+                      } else {
+                        setAfiliadoCPFErro('');
+                      }
                     }}
                     placeholder="000.000.000-00" inputMode="numeric"
-                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 ${etapaAfil === 2 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : 'border-gray-200 focus:ring-red-400'}`}
+                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 ${afiliadoCPFErro ? 'border-red-500 bg-red-50 focus:ring-red-400' : (etapaAfil === 2 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : 'border-gray-200 focus:ring-red-400')}`}
                   />
+                  {afiliadoCPFErro && (
+                    <p className="text-red-600 text-xs mt-1 font-semibold">{afiliadoCPFErro}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-2">Chave Pix</label>
@@ -1187,19 +1333,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     </label>
                   </div>
                   <p className="text-xs text-red-800 font-semibold mb-1">DIGITE ou marque um check-box acima</p>
-                  <input type="text" value={afiliadoPix}
+                  <input ref={refAfilPix} type="text" value={afiliadoPix}
                     onChange={e => { setAfiliadoPix(e.target.value); if (pixTipo) setPixTipo('outra'); }}
                     placeholder={"Chave aleat\u00f3ria ou outra chave PIX"}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                   />
                 </div>
               </div>
-              {afiliadoSalvo ? (
-                <p className="text-green-600 text-sm font-bold text-center">{"\u2705 Dados salvos! Bem-vindo ao Programa de Afiliados!"}</p>
-              ) : (
+              {afiliadoSalvo ? null : (
                 <div className="space-y-2">
-                {afiliadoCEP.trim() && afiliadoCPF.trim() && afiliadoPix.trim() && (
-                  <button disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim()}
+                {afiliadoCEP.trim() && afiliadoCPF.trim() && afiliadoPix.trim() && !afiliadoCPFErro && (
+                  <button disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || !!afiliadoCPFErro}
                     onClick={async () => {
                       setAfiliadoSalvando(true);
                       const { error } = await supabase.from('medicos').update({
@@ -1209,7 +1353,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       }).eq('crm', medicoCRM);
                       setAfiliadoSalvando(false);
                       if (error) { alert('Erro ao salvar. Tente novamente.'); return; }
-                      setAfiliadoSalvo(true); setTimeout(() => { setShowAfiliados(false); setShowFelicitacoes(true); }, 1500);
+                      // Direto para tela de felicita\u00e7\u00f5es sem mensagem intermedi\u00e1ria "Dados salvos"
+                      setAfiliadoSalvo(true); setShowAfiliados(false); setShowFelicitacoes(true);
                     }}
                     className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                     {afiliadoSalvando ? 'Salvando...' : "Confirmar dados \u2192"}
@@ -1388,8 +1533,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <div>
                 <label className="label">CPF</label>
                 <input type="text" name="cpf" value={inputs.cpf} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="000.000.000-00" maxLength={14} inputMode="numeric" className={`input ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
-                <p className="text-xs text-gray-400 mt-0.5">Vincula ao paciente</p>
-                <p className="text-xs text-orange-500 mt-0.5">{"Digite apenas os n\u00fameros, sem pontos ou h\u00edfen"}</p>
+                {(!dadosVieramDaTriagem || editandoDadosPaciente) && (
+                  <p className="text-xs text-orange-500 mt-0.5">{"Digite apenas os n\u00fameros, sem pontos ou h\u00edfen"}</p>
+                )}
                 {erros.cpf && <p className="text-red-500 text-xs mt-1">{erros.cpf}</p>}
               </div>
               <div>
@@ -1405,21 +1551,27 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 {inputs.idade && !erros.dataNascimento && <p className="text-red-600 text-xs mt-1 font-semibold">Idade: {inputs.idade} anos</p>}
                 {erros.dataNascimento && <p className="text-red-500 text-xs mt-1">{erros.dataNascimento}</p>}
               </div>
+              {(!dadosVieramDaTriagem || editandoDadosPaciente || inputs.bariatrica_medico) && (
               <div className="col-span-2">
-                <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+                <label className={`flex items-start gap-2 p-3 rounded-xl border-2 transition-all ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'cursor-default' : 'cursor-pointer'} ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
                   <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0 disabled:opacity-50" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm leading-tight">
                       {inputs.sexo === 'F' ? "Paciente Bari\u00e1trica" : "Paciente Bari\u00e1trico"}
                     </p>
                     <p className="text-xs opacity-70 leading-tight mt-0.5">
-                      {inputs.sexo === 'F'
-                        ? "Se a paciente avaliada \u00e9 BARI\u00c1TRICA ela receber\u00e1 a ANAMNESE do Projeto OBA, e passar\u00e1 a ter o acompanhamento din\u00e2mico para a melhor qualidade de vida."
-                        : "Se o paciente avaliado \u00e9 BARI\u00c1TRICO ele receber\u00e1 a ANAMNESE do Projeto OBA, e passar\u00e1 a ter o acompanhamento din\u00e2mico para a melhor qualidade de vida."}
+                      {(dadosVieramDaTriagem && !editandoDadosPaciente && inputs.bariatrica_medico)
+                        ? (inputs.sexo === 'F'
+                            ? "NA CONDI\u00c7\u00c3O DE BARI\u00c1TRICA VOC\u00ca PASSAR\u00c1 POR AVALIA\u00c7\u00c3O ESPEC\u00cdFICA"
+                            : "NA CONDI\u00c7\u00c3O DE BARI\u00c1TRICO VOC\u00ca PASSAR\u00c1 POR AVALIA\u00c7\u00c3O ESPEC\u00cdFICA")
+                        : (inputs.sexo === 'F'
+                            ? "Se a paciente avaliada \u00e9 BARI\u00c1TRICA ela receber\u00e1 a ANAMNESE do Projeto OBA, e passar\u00e1 a ter o acompanhamento din\u00e2mico para a melhor qualidade de vida."
+                            : "Se o paciente avaliado \u00e9 BARI\u00c1TRICO ele receber\u00e1 a ANAMNESE do Projeto OBA, e passar\u00e1 a ter o acompanhamento din\u00e2mico para a melhor qualidade de vida.")}
                     </p>
                   </div>
                 </label>
               </div>
+              )}
             </div>
           </section>
 
@@ -1471,6 +1623,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
             <div className="grid grid-cols-2 gap-3 mt-3">
               <LabInput
+                ref={ferritinaRef}
                 label="Ferritina"
                 unit="ng/mL"
                 name="ferritina"
@@ -1504,7 +1657,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <IconHistorico /> {"Hist\u00f3rico Cl\u00ednico"}
             </h2>
             <div className="grid grid-cols-2 gap-2">
-              {!inputs.bariatrica_medico && <CheckboxCard name="bariatrica" label={"Bari\u00e1trica"} sublabel="By-pass / Gastrectomia" checked={inputs.bariatrica} onChange={handleChange} color="amber" highlight={preFlag === 'bariatrica'} />}
+              {/* Espelha o card "Bari\u00e1trico" do TOPO: se marcado em "Dados do Paciente", aparece aqui tamb\u00e9m marcado e desabilitado. */}
+              <CheckboxCard name="bariatrica" label={"Bari\u00e1trica"} sublabel="By-pass / Gastrectomia" checked={inputs.bariatrica || inputs.bariatrica_medico} onChange={handleChange} color="amber" highlight={preFlag === 'bariatrica'} disabled={!!inputs.bariatrica_medico} />
               <CheckboxCard name="vegetariano" label="Vegetariano/Vegano" sublabel="Dieta sem carne" checked={inputs.vegetariano} onChange={handleChange} color="green" />
               <CheckboxCard name="perda" label="Hemorragia" sublabel={"Inclui doa\u00e7\u00e3o de sangue, sangria, ou sangramento"} checked={inputs.perda} onChange={handleChange} color="red" />
               <CheckboxCard name="alcoolista" label="Alcoolista" sublabel={"Uso cr\u00f4nico de \u00e1lcool"} checked={inputs.alcoolista} onChange={handleChange} color="amber" />
@@ -1519,7 +1673,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               {inputs.sexo === 'F' && (
                 <>
                   <CheckboxCard name="hipermenorreia" label="Hipermenorreia" sublabel="Fluxo excessivo" checked={inputs.hipermenorreia} onChange={handleChange} color="pink" />
-                  <CheckboxCard name="gestante" label="Gestante" sublabel="Gravidez atual" checked={inputs.gestante} onChange={handleChange} color="pink" />
+                  <CheckboxCard name="gestante" label="Gestante" sublabel="Gravidez atual" checked={inputs.gestante} onChange={handleChange} color="pink" disabled={dadosVieramDaTriagem && !editandoDadosPaciente && inputs.gestante} />
                 </>
               )}
             </div>
@@ -1616,11 +1770,22 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               resultado={resultado}
               onCopiar={handleCopiar}
               copiado={copiado}
-              modoPaciente={false}
+              modoPaciente={!medicoCRM}
               medicoNome={medicoNome}
               medicoCRM={medicoCRM}
               medicoDados={medicoDados}
+              onVoltar={medicoCRM ? onVoltar : undefined}
             />
+            {!medicoCRM && (
+              <div className="mt-8 mb-12 text-center">
+                <p className="text-red-700 font-black text-xl tracking-wide">{"AN\u00c1LISE CONCLU\u00cdDA"}</p>
+                <button
+                  onClick={() => { if (onVoltar) onVoltar(); }}
+                  className="mt-3 inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium transition-colors">
+                  <span>{"\u2190"}</span><span>{"Voltar"}</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -1707,6 +1872,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               setMedicoCRM(crm);
               setCadastrado(true);
               setShowAuthMedicoOverlay(false);
+              // Recarrega medicoDados com os valores FRESCOS do banco (nome, celular, email).
+              // Sem isso, os checkboxes "MEU TELEFONE \u00c9 O MEU PIX" e "MEU E-MAIL" ficariam vazios.
+              try {
+                const { data: medFresh } = await supabase.from('medicos').select('nome, crm, celular, email').eq('crm', crm).maybeSingle();
+                if (medFresh) setMedicoDados(medFresh);
+              } catch (e) {}
               if (afiliacaoRecusada) {
                 setAfiliacaoRecusada(false);
                 setShowFelicitacoes(true);
@@ -1837,7 +2008,7 @@ const LabInput = React.forwardRef(function LabInput({ label, unit, name, referen
       </label>
       <input ref={ref} type="text" inputMode="decimal" name={name} value={value} onChange={onChange} disabled={disabled} placeholder={disabled && hint ? hint : "0"}
         onKeyDown={e => { if (e.key === 'Enter' && onEnter) { e.preventDefault(); onEnter(); } }}
-        className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : (!value && !disabled) ? 'border-yellow-400 bg-yellow-50' : borderColor === 'red' ? 'border-red-500' : borderColor === 'blue' ? 'border-blue-500' : 'border-gray-200'}`} />
+        className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : borderColor === 'red' ? 'border-red-500' : borderColor === 'blue' ? (!value && !disabled ? 'border-blue-500 bg-yellow-50' : 'border-blue-500') : (!value && !disabled) ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200'}`} />
       <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
       {hint && !disabled && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
       {aberrante && <p className="text-xs font-bold text-yellow-600 mt-0.5">{"\u26a0 VALOR ABERRANTE \u2014 CONFIRME"}</p>}
@@ -1858,11 +2029,11 @@ const colorMap = {
   yellow: 'border-yellow-400 bg-yellow-50 text-yellow-700',
 };
 
-function CheckboxCard({ name, label, sublabel, checked, onChange, color, highlight }) {
+function CheckboxCard({ name, label, sublabel, checked, onChange, color, highlight, disabled }) {
   return (
-    <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${checked ? colorMap[color] : 'border-gray-200 bg-gray-50 text-gray-600'}`}
+    <label className={`flex items-start gap-2 p-3 rounded-xl border-2 transition-all ${disabled ? 'cursor-default opacity-70' : 'cursor-pointer'} ${checked ? colorMap[color] : 'border-gray-200 bg-gray-50 text-gray-600'}`}
       style={highlight && !checked ? { borderColor:'#7B1E1E', boxShadow:'0 0 0 2px rgba(123,30,30,0.3)' } : highlight && checked ? { borderColor:'#7B1E1E', boxShadow:'0 0 0 3px rgba(123,30,30,0.4)' } : {}}>
-      <input type="checkbox" name={name} checked={checked} onChange={onChange} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
+      <input type="checkbox" name={name} checked={checked} onChange={onChange} disabled={disabled} className={`mt-0.5 w-4 h-4 flex-shrink-0 ${disabled ? 'cursor-default' : 'cursor-pointer'}`} />
       <div className="min-w-0">
         <p className="font-medium text-sm leading-tight">{label}</p>
         <p className="text-xs opacity-70 leading-tight mt-0.5">{sublabel}</p>
