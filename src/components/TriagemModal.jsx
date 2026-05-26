@@ -15,7 +15,7 @@ import HistoricoChartModal from './HistoricoChartModal';
  *   onConcluir:       function(resultado, inputs) - chamada apos avaliar com sucesso
  *   onFechar:         function() - usuario fechou sem avaliar
  */
-export default function TriagemModal({ modoMedico = false, isDemoPaciente = false, cpfPrefill = '', cpfBloqueado = false, onConcluir, onFechar }) {
+export default function TriagemModal({ modoMedico = false, isDemoPaciente = false, cpfPrefill = '', cpfBloqueado = false, onConcluir, onFechar, onAprofundar }) {
   // Formata CPF inicial (se vier prefilled como digitos puros)
   const formatarCPFInicial = (raw) => {
     const d = String(raw || '').replace(/\D/g, '').slice(0, 11);
@@ -337,37 +337,20 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     return () => clearTimeout(t);
   }, []);
 
-  // Paciente ja logado: CPF veio preenchido e bloqueado.
-  // Modo paciente: pula direto pra DATA DE NASCIMENTO (ordem invertida vs medico).
-  // Modo medico (caso raro de cpfBloqueado em medico): mantem foco em Sexo.
+  // Paciente ja logado: CPF veio preenchido e bloqueado. Pular direto pro Sexo.
   useEffect(() => {
     if (!cpfBloqueado) return;
-    if (modoMedico) {
-      setEtapaInicio(2);
-      const t = setTimeout(() => {
-        if (refSexoSelect.current) refSexoSelect.current.focus();
-      }, 150);
-      return () => clearTimeout(t);
-    } else {
-      // Paciente: etapa 2 = DataNasc ativo (semantica diferente do medico).
-      setEtapaInicio(2);
-      const t = setTimeout(() => {
-        if (refDnInput.current) refDnInput.current.focus();
-      }, 150);
-      return () => clearTimeout(t);
-    }
+    setEtapaInicio(3);
+    const t = setTimeout(() => {
+      if (refSexoSelect.current) refSexoSelect.current.focus();
+    }, 150);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fluxo seamless de foco. Etapas numericas tem semantica DIFERENTE entre modos:
-  //   MEDICO:   1 = CPF,      2 = Sexo,     3 = DataNasc, 4 = DataColeta, >=5 = hemograma
-  //   PACIENTE: 1 = (CPF lock), 2 = DataNasc, 3 = Sexo,     4 = DataColeta, >=5 = hemograma
-  // A numeracao e' a mesma para reaproveitar a logica de cor amarela/disabled dos campos;
-  // o que muda e' a *associacao* etapa->campo nos branches abaixo.
-
-  // ============ FLUXO MEDICO ============
-
-  // [Medico] CPF valido -> Sexo
+  // Fluxo seamless de foco em modo m\u00e9dico:
+  //   etapaInicio 1 = CPF, 2 = Sexo, 3 = DataNasc, 4 = DataColeta, >=5 = pronto para hemograma
+  // CPF v\u00e1lido (11 d\u00edgitos) \u2192 Sexo
   useEffect(() => {
     if (!modoMedico) return;
     const digits = String(inputs.cpf || '').replace(/\D/g, '');
@@ -379,7 +362,21 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
   }, [inputs.cpf, modoMedico, etapaInicio]);
 
-  // [Medico] Sexo escolhido -> Data Nasc
+  // Paciente conhecido com sexo+dataNasc completos: campos Sexo e DataNasc somem do DOM
+  // (linha {!pacConhCompleto && ...}), entao precisamos pular etapaInicio direto pra 4
+  // (DataColeta) e focar nela. Sem isso, etapaInicio fica preso em 2 e DataColeta+HB
+  // ficam disabled. So' dispara depois de buscarCpfConhecido() popular pacienteConhecido.
+  useEffect(() => {
+    if (!modoMedico) return;
+    if (!pacConhCompleto) return;
+    if (etapaInicio >= 4) return;
+    setEtapaInicio(4);
+    setTimeout(() => {
+      if (refDataColeta.current) refDataColeta.current.focus();
+    }, 100);
+  }, [modoMedico, pacConhCompleto, etapaInicio]);
+
+  // Sexo escolhido \u2192 Data Nasc
   useEffect(() => {
     if (!modoMedico) return;
     if (etapaInicio !== 2) return;
@@ -390,7 +387,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }, 100);
   }, [inputs.sexo, modoMedico, etapaInicio]);
 
-  // [Medico] Data Nasc valida -> Data do Hemograma
+  // Data Nasc v\u00e1lida \u2192 Data do Hemograma
   useEffect(() => {
     if (!modoMedico) return;
     if (etapaInicio !== 3) return;
@@ -409,45 +406,10 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     return () => clearTimeout(t);
   }, [inputs.dataNascimento, modoMedico, etapaInicio]);
 
-  // ============ FLUXO PACIENTE ============
-  // Paciente nao usa CPF (vem bloqueado, ja tratado em outro useEffect que pula pra etapa 2).
-  // Ordem invertida vs medico: DataNasc PRIMEIRO, Sexo DEPOIS.
-  // Bariatrica/Gestante ficam visiveis no caminho mas NAO travam o foco.
-
-  // [Paciente] Data Nasc valida -> Sexo
+  // Data do Hemograma v\u00e1lida + (data estimada marcada): pula direto para HEMOGLOBINA.
+  // Se data estimada n\u00e3o for marcada, o usu\u00e1rio decide quando avan\u00e7ar (clica em HB).
   useEffect(() => {
-    if (modoMedico) return;
-    if (etapaInicio !== 2) return;
-    const dn = String(inputs.dataNascimento || '').trim();
-    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dn)) return;
-    const [d, m, a] = dn.split('/').map(Number);
-    const dt = new Date(a, m - 1, d);
-    const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
-    if (!valida || a < 1900 || dt > new Date()) return;
-    const t = setTimeout(() => {
-      setEtapaInicio(3);
-      setTimeout(() => {
-        if (refSexoSelect.current) refSexoSelect.current.focus();
-      }, 100);
-    }, 800);
-    return () => clearTimeout(t);
-  }, [inputs.dataNascimento, modoMedico, etapaInicio]);
-
-  // [Paciente] Sexo escolhido -> Data do Hemograma
-  useEffect(() => {
-    if (modoMedico) return;
-    if (etapaInicio !== 3) return;
-    if (!inputs.sexo) return;
-    setEtapaInicio(4);
-    setTimeout(() => {
-      if (refDataColeta.current) refDataColeta.current.focus();
-    }, 100);
-  }, [inputs.sexo, modoMedico, etapaInicio]);
-
-  // ============ FLUXO COMUM (Data do Hemograma -> HB) ============
-  // Mesma regra para os dois modos: data valida + (data_estimada) -> salta pra HB;
-  // sem data_estimada -> libera HB mas nao muda foco (usuario clica).
-  useEffect(() => {
+    if (!modoMedico) return;
     if (etapaInicio < 4) return;
     const dc = String(inputs.data_coleta || '').trim();
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dc)) return;
@@ -455,6 +417,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     const dt = new Date(a, m - 1, d);
     const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
     if (!valida || a < 1900 || dt > new Date()) return;
+    // Se data estimada marcada: salta foco para HB.
     if (inputs.data_estimada) {
       const t = setTimeout(() => {
         if (etapaInicio < 5) setEtapaInicio(5);
@@ -466,14 +429,15 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       }, 600);
       return () => clearTimeout(t);
     } else if (etapaInicio === 4) {
+      // Sem checkbox e ainda na etapa 4: libera o resto, mas n\u00e3o muda foco.
       setEtapaInicio(5);
     }
-  }, [inputs.data_coleta, inputs.data_estimada, etapaInicio]);
+  }, [inputs.data_coleta, inputs.data_estimada, modoMedico, etapaInicio]);
 
   useEffect(() => {
     if (!inputs.sexo) return;
-    // Em ambos os modos, nao forcamos foco em HB antes do fluxo de cabecalho terminar (etapaInicio>=5).
-    if (etapaInicio < 5) return;
+    // Em modo m\u00e9dico, n\u00e3o forcamos foco em HB antes de o fluxo de cabe\u00e7alho terminar (etapaInicio>=5).
+    if (modoMedico && etapaInicio < 5) return;
     const targets = { 1: refHbHemograma, 2: refVcmHemograma, 3: refRdwHemograma };
     const target = targets[etapaHemograma];
     const t = setTimeout(() => {
@@ -598,13 +562,6 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     setHistoricoData({ cpf: cpfDigits, serie });
   }
 
-  // Mapeamento etapa->campo varia por modo (medico: Sexo na 2, DataNasc na 3 | paciente: invertido).
-  // Essas flags evitam repetir o ternario em cada bloco de UI.
-  const sexoAtivo  = modoMedico ? etapaInicio === 2 : etapaInicio === 3;
-  const sexoPassou = modoMedico ? etapaInicio  >  2 : etapaInicio  >  3;
-  const dnAtivo    = modoMedico ? etapaInicio === 3 : etapaInicio === 2;
-  const dnPassou   = modoMedico ? etapaInicio  >  3 : etapaInicio  >  2;
-
   return (<>
     <style>{`
       @keyframes rfArrowPulse {
@@ -659,9 +616,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
         <div className="bg-white px-6 pt-5 pb-2 text-center">
           <p className="text-xs uppercase tracking-widest text-gray-500">{"\ud83e\ude7a Triagem do Eritron"}</p>
           <h3 className="text-base font-semibold text-gray-800 mt-1 leading-tight">{fraseAbertura}</h3>
-          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed px-2">{modoMedico
-            ? "Com apenas tr\u00eas par\u00e2metros do eritrograma o algoritmo faz uma avalia\u00e7\u00e3o inicial. Com FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA (%) voc\u00ea pode aprofundar o diagn\u00f3stico, agora ou no futuro."
-            : "Com apenas tr\u00eas par\u00e2metros do Hemograma o algoritmo faz uma avalia\u00e7\u00e3o inicial. Ao se cadastrar voc\u00ea receber\u00e1 um pedido m\u00e9dico para um novo HEMOGRAMA + FERRITINA + SATURA\u00c7\u00c3O DA TRANSFERRINA (%) para aprofundar o diagn\u00f3stico."}</p>
+          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed px-2">{"Com apenas tr\u00eas par\u00e2metros do eritrograma o algoritmo faz uma avalia\u00e7\u00e3o inicial. Com FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA (%) voc\u00ea pode aprofundar o diagn\u00f3stico, agora ou no futuro."}</p>
         </div>
 
         <div className="p-6 space-y-4">
@@ -760,12 +715,12 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   name="sexo"
                   value={inputs.sexo}
                   onChange={handleChange}
-                  disabled={pacConhSexoOk || (!sexoAtivo && !sexoPassou)}
+                  disabled={pacConhSexoOk || (modoMedico && etapaInicio < 2)}
                   className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
                     pacConhSexoOk ? 'border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed' :
                     erros.sexo ? 'border-red-500' :
-                    sexoAtivo  ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
-                    sexoPassou ? 'border-yellow-300 bg-yellow-50' :
+                    etapaInicio === 2 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
+                    etapaInicio > 2 ? 'border-yellow-300 bg-yellow-50' :
                     'border-gray-200 bg-gray-50 text-gray-400'
                   }`}
                 >
@@ -783,7 +738,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   name="dataNascimento"
                   value={inputs.dataNascimento}
                   onChange={handleChange}
-                  disabled={pacConhDataNascOk || (!dnAtivo && !dnPassou)}
+                  disabled={pacConhDataNascOk || (modoMedico && etapaInicio < 3)}
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -793,8 +748,6 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                         const dt = new Date(a, m - 1, d);
                         const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
                         if (valida && a >= 1900 && dt <= new Date()) {
-                          // No paciente, etapa 3 = Sexo (proximo apos DataNasc) — coincide com o
-                          // comportamento pre-existente do medico, entao mesmo codigo serve aos dois.
                           setEtapaInicio(3);
                           setTimeout(() => {
                             if (refSexoSelect.current) refSexoSelect.current.focus();
@@ -809,8 +762,8 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
                     pacConhDataNascOk ? 'border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed' :
                     erros.dataNascimento ? 'border-red-500' :
-                    dnAtivo  ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
-                    dnPassou ? 'border-yellow-300 bg-yellow-50' :
+                    etapaInicio === 3 ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' :
+                    etapaInicio > 3 ? 'border-yellow-300 bg-yellow-50' :
                     'border-gray-200 bg-gray-50 text-gray-400'
                   }`}
                 />
@@ -867,34 +820,31 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             );
           })()}
 
-          {pacienteConhecido !== 'BLOQUEADO' && inputs.sexo && (() => {
-            // Card Bari\u00e1trica aparece SEMPRE (paciente ainda nao registrado: editavel;
-            // paciente conhecido com bariatrica=true no perfil: pre-marcado e disabled,
-            // pois a condicao bariatrica e' permanente uma vez registrada).
-            // S\u00f3 aparece ap\u00f3s sele\u00e7\u00e3o do sexo \u2014 evita texto gen\u00e9rico "Sou paciente bari\u00e1trico/a".
-            const bariatricaLocked = !!pacienteConhecido && pacienteConhecido.bariatrica === true;
-            const checked = bariatricaLocked ? true : inputs.bariatrica;
-            return (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                <label className={`flex items-center gap-2 ${bariatricaLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                  <input
-                    type="checkbox"
-                    name="bariatrica"
-                    checked={checked}
-                    onChange={bariatricaLocked ? undefined : handleChange}
-                    disabled={bariatricaLocked}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm font-medium text-amber-700">
+          {!pacienteConhecido && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="bariatrica"
+                  checked={inputs.bariatrica}
+                  onChange={handleChange}
+                  className="mt-1"
+                />
+                <div>
+                  <p className="text-sm font-medium text-amber-700">
                     {modoMedico
-                      ? (inputs.sexo === 'F' ? "Paciente bari\u00e1trica" : "Paciente bari\u00e1trico")
-                      : (inputs.sexo === 'F' ? "Sou bari\u00e1trica" : "Sou bari\u00e1trico")}
-                    {bariatricaLocked ? " (j\u00e1 registrado)" : ""}
-                  </span>
-                </label>
-              </div>
-            );
-          })()}
+                      ? (inputs.sexo === 'F' ? "Paciente bari\u00e1trica" : inputs.sexo === 'M' ? "Paciente bari\u00e1trico" : "Paciente bari\u00e1trico/a")
+                      : (inputs.sexo === 'F' ? "Sou bari\u00e1trica" : inputs.sexo === 'M' ? "Sou bari\u00e1trico" : "Sou paciente bari\u00e1trico/a")}
+                  </p>
+                  <p className="text-xs text-amber-600">
+                    {modoMedico
+                      ? "Marque se o(a) paciente fez cirurgia bari\u00e1trica"
+                      : "Marque se voc\u00ea fez cirurgia bari\u00e1trica (by-pass / gastrectomia)"}
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
 
           {pacienteConhecido !== 'BLOQUEADO' && (<>
             <div>
@@ -1048,9 +998,19 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           </>)}
         </div>
 
-        {pacienteConhecido !== 'BLOQUEADO' && erroGeral && (
+        {pacienteConhecido !== 'BLOQUEADO' && (
           <div className="px-6 pb-3 flex flex-col items-center gap-2">
-            <p className="text-xs text-red-600 font-semibold text-center mt-2">{erroGeral}</p>
+            {etapaHemograma >= 4 && inputs.hemoglobina && inputs.vcm && inputs.rdw && onAprofundar && (
+              <button
+                onClick={() => onAprofundar(inputs)}
+                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center mb-1">
+                <span>{"\ud83d\udccb TENHO TAMB\u00c9M FERRITINA E SAT. DA TRANSFERRINA"}</span>
+                <span className="text-xs font-normal opacity-90 mt-1">{"Avalia\u00e7\u00e3o completa do eritron"}</span>
+              </button>
+            )}
+            {erroGeral && (
+              <p className="text-xs text-red-600 font-semibold text-center mt-2">{erroGeral}</p>
+            )}
           </div>
         )}
       </div>
