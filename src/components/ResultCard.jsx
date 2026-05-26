@@ -490,12 +490,15 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
     if (!medicoCRM) return
     setSalvando(true)
     const cpf = resultado._inputs?.cpf?.replace(/\D/g, '') || null
-    await supabase.from('avaliacoes')
-      .update({ medico_quer_receber: true })
-      .eq('medico_crm', medicoCRM)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .catch(() => {})
+    try {
+      await supabase.from('avaliacoes')
+        .update({ medico_quer_receber: true })
+        .eq('medico_crm', medicoCRM)
+        .order('created_at', { ascending: false })
+        .limit(1);
+    } catch (e) {
+      console.error('Erro ao atualizar preferencia:', e);
+    }
     setSalvando(false)
     setSalvo(true)
   }
@@ -547,7 +550,7 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
         <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-start gap-3">
           <span className="text-green-600 text-lg flex-shrink-0">{"\ud83d\udcb0"}</span>
           <p className="text-green-800 text-xs leading-relaxed">
-            {"Quando este paciente se cadastrar no RedFairy, voc\u00ea receber\u00e1 uma notifica\u00e7\u00e3o por WhatsApp e um cr\u00e9dito de "}<strong>{"10 d\u00f3lares digitais"}</strong>{" na sua carteira KlipBit."}
+            {"Foram computados "}<strong>{"Cr\u00e9ditos"}</strong>{" para voc\u00ea no "}<strong>{"4DOC \u2014 Programa Patrocinado de M\u00e9dicos Afiliados"}</strong>{"."}
           </p>
         </div>
 
@@ -583,6 +586,14 @@ function DocumentoMedicoPanel({ resultado }) {
       if (pixConf?.valor) setPixChave(pixConf.valor);
 
       const cpfInput = resultado?._inputs?.cpf?.replace(/\D/g, '');
+      // Fallbacks vindos da pr\u00f3pria avalia\u00e7\u00e3o (triagem -> Calculator: paciente n\u00e3o-cadastrado).
+      // Calculator usa dataNascimento em DD/MM/AAAA; HTML input type=date precisa de YYYY-MM-DD.
+      const dnRaw = resultado?._inputs?.dataNascimento || '';
+      let dnISO = '';
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dnRaw)) {
+        const [d, m, a] = dnRaw.split('/');
+        dnISO = `${a}-${m}-${d}`;
+      }
       if (cpfInput) {
         const { data: profile } = await supabase
           .from('profiles')
@@ -592,12 +603,12 @@ function DocumentoMedicoPanel({ resultado }) {
         if (profile) {
           setDadosPaciente({
             nome:      profile.nome || '',
-            dataNasc:  profile.data_nascimento || '',
+            dataNasc:  profile.data_nascimento || dnISO || '',
             celular:   profile.celular || '',
             cpf:       profile.cpf || cpfInput,
           });
         } else {
-          setDadosPaciente(p => ({ ...p, cpf: cpfInput }));
+          setDadosPaciente(p => ({ ...p, cpf: cpfInput, dataNasc: dnISO || p.dataNasc }));
         }
       }
     }
@@ -655,17 +666,21 @@ function DocumentoMedicoPanel({ resultado }) {
 
     const textoCompleto = msgs.join('\n---\n');
 
-    await supabase.from('pedidos_documento').insert({
-      cpf: dadosPaciente.cpf || null,
-      nome: dadosPaciente.nome.trim(),
-      data_nascimento: dadosPaciente.dataNasc,
-      celular: dadosPaciente.celular,
-      tipos_documento: documentos.map((_, i) => tiposDoc.exames && i === 0 ? 'exames' : 'prescricao'),
-      texto_documentos: textoCompleto,
-      valor_total: total,
-      status: 'aguardando_pagamento',
-      created_at: new Date().toISOString(),
-    }).catch(() => {});
+    try {
+      await supabase.from('pedidos_documento').insert({
+        cpf: dadosPaciente.cpf || null,
+        nome: dadosPaciente.nome.trim(),
+        data_nascimento: dadosPaciente.dataNasc,
+        celular: dadosPaciente.celular,
+        tipos_documento: documentos.map((_, i) => tiposDoc.exames && i === 0 ? 'exames' : 'prescricao'),
+        texto_documentos: textoCompleto,
+        valor_total: total,
+        status: 'aguardando_pagamento',
+        created_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.error('Erro ao salvar pedido_documento:', e);
+    }
 
     const urlWA = `https://wa.me/${WHATSAPP_MEDICO}?text=${encodeURIComponent(msgs.join('%0A---%0A'))}`;
     window.open(urlWA, '_blank');
@@ -679,12 +694,15 @@ function DocumentoMedicoPanel({ resultado }) {
     const urlPago = `https://wa.me/${WHATSAPP_MEDICO}?text=${encodeURIComponent(msgPago)}`;
     window.open(urlPago, '_blank');
 
-    await supabase.from('pedidos_documento')
-      .update({ status: 'pago', pago_em: new Date().toISOString() })
-      .eq('celular', dadosPaciente.celular)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .catch(() => {});
+    try {
+      await supabase.from('pedidos_documento')
+        .update({ status: 'pago', pago_em: new Date().toISOString() })
+        .eq('celular', dadosPaciente.celular)
+        .order('created_at', { ascending: false })
+        .limit(1);
+    } catch (e) {
+      console.error('Erro ao atualizar pedido_documento:', e);
+    }
 
     setEtapa('concluido');
   }
@@ -746,15 +764,15 @@ function DocumentoMedicoPanel({ resultado }) {
         </div>
         <div>
           <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Data de nascimento</label>
-          <input style={inputStyle} type="date" value={dadosPaciente.dataNasc} onChange={e => setDadosPaciente(p => ({ ...p, dataNasc: e.target.value }))} />
+          <input style={{ ...inputStyle, ...(dadosPaciente.dataNasc ? { background:'#f3f4f6', color:'#6b7280' } : {}) }} type="date" value={dadosPaciente.dataNasc} disabled={!!dadosPaciente.dataNasc} onChange={e => setDadosPaciente(p => ({ ...p, dataNasc: e.target.value }))} />
         </div>
         <div>
           <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Celular com DDD</label>
           <input style={inputStyle} type="tel" placeholder="(00) 00000-0000" value={dadosPaciente.celular} onChange={e => setDadosPaciente(p => ({ ...p, celular: e.target.value }))} />
         </div>
         <div>
-          <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">CPF (opcional)</label>
-          <input style={inputStyle} type="text" placeholder="000.000.000-00" value={dadosPaciente.cpf} onChange={e => setDadosPaciente(p => ({ ...p, cpf: e.target.value }))} />
+          <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">CPF</label>
+          <input style={{ ...inputStyle, ...(dadosPaciente.cpf ? { background:'#f3f4f6', color:'#6b7280' } : {}) }} type="text" placeholder="000.000.000-00" value={dadosPaciente.cpf} disabled={!!dadosPaciente.cpf} onChange={e => setDadosPaciente(p => ({ ...p, cpf: e.target.value }))} />
         </div>
         {erro && <p className="text-red-500 text-xs">{erro}</p>}
         <button onClick={enviarWhatsApp} disabled={enviando}
@@ -824,7 +842,7 @@ function DocumentoMedicoPanel({ resultado }) {
 }
 
 
-export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, medicoNome, medicoCRM, medicoDados }) {
+export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, medicoNome, medicoCRM, medicoDados, onVoltar }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
@@ -1009,12 +1027,37 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
         <div className="p-6 space-y-5">
 
-          {resultado.fraseData && (
-            <div className={`rounded-xl border px-4 py-3 text-sm ${fraseDataColor[resultado.fraseData.tipo]}`}>
-              <span className="font-semibold">{"\ud83d\udcc5 "}{resultado.diasDesdeColeta}{" dia(s) desde a coleta"}</span>
-              <p className="mt-1">{resultado.fraseData.texto}</p>
-            </div>
-          )}
+          {resultado.fraseData && (() => {
+            // Fallback: se diasDesdeColeta veio NaN/undef, calcula daqui usando _inputs.dataColeta (DD/MM/AAAA)
+            let dias = resultado.diasDesdeColeta;
+            if (dias == null || Number.isNaN(Number(dias))) {
+              const dc = resultado._inputs?.dataColeta || '';
+              if (/^\d{2}\/\d{2}\/\d{4}$/.test(dc)) {
+                const [d, m, a] = dc.split('/').map(Number);
+                const dtColeta = new Date(a, m - 1, d);
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                dtColeta.setHours(0, 0, 0, 0);
+                dias = Math.floor((hoje.getTime() - dtColeta.getTime()) / 86400000);
+              } else if (/^\d{4}-\d{2}-\d{2}$/.test(dc)) {
+                const dtColeta = new Date(dc);
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                dtColeta.setHours(0, 0, 0, 0);
+                dias = Math.floor((hoje.getTime() - dtColeta.getTime()) / 86400000);
+              }
+            }
+            return (
+              <div className={`rounded-xl border px-4 py-3 text-sm ${fraseDataColor[resultado.fraseData.tipo]}`}>
+                <span className="font-semibold">{"\ud83d\udcc5 "}{dias != null && !Number.isNaN(Number(dias)) ? dias : '?'}{" dia(s) desde a coleta"}</span>
+                <p className="mt-1">{
+                  (dias != null && !Number.isNaN(Number(dias)) && typeof resultado.fraseData.texto === 'string')
+                    ? resultado.fraseData.texto.replace(/\bNaN\b/g, String(dias))
+                    : resultado.fraseData.texto
+                }</p>
+              </div>
+            );
+          })()}
 
           <div>
             <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>{"\ud83c\udff7\ufe0f Diagn\u00f3stico"}</h4>
@@ -1149,6 +1192,13 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           ${copiado ? 'bg-green-500 text-white' : `${scheme.badge} text-white hover:opacity-90`}`}>
         {copiado ? "\u2705 Resultado Copiado!" : "\ud83d\udccb Copiar Resultado Completo para WhatsApp"}
       </button>
+      {/* Bot\u00e3o Voltar no rodap\u00e9 \u2014 disponibiliza ao m\u00e9dico uma sa\u00edda discreta para encerrar a avalia\u00e7\u00e3o ap\u00f3s copiar o resultado, sem precisar usar o bot\u00e3o de menu superior. */}
+      {!modoPaciente && onVoltar && (
+        <button onClick={onVoltar}
+          className="mt-3 w-full py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 underline">
+          {"\u2190 Voltar"}
+        </button>
+      )}
     </>
   );
 }
