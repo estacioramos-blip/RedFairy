@@ -820,31 +820,34 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             );
           })()}
 
-          {!pacienteConhecido && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="bariatrica"
-                  checked={inputs.bariatrica}
-                  onChange={handleChange}
-                  className="mt-1"
-                />
-                <div>
-                  <p className="text-sm font-medium text-amber-700">
+          {pacienteConhecido !== 'BLOQUEADO' && inputs.sexo && (() => {
+            // Card Bari\u00e1trica aparece SEMPRE (paciente ainda nao registrado: editavel;
+            // paciente conhecido com bariatrica=true no perfil: pre-marcado e disabled,
+            // pois a condicao bariatrica e' permanente uma vez registrada).
+            // S\u00f3 aparece ap\u00f3s sele\u00e7\u00e3o do sexo \u2014 evita texto gen\u00e9rico "Sou paciente bari\u00e1trico/a".
+            const bariatricaLocked = !!pacienteConhecido && pacienteConhecido.bariatrica === true;
+            const checked = bariatricaLocked ? true : inputs.bariatrica;
+            return (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <label className={`flex items-center gap-2 ${bariatricaLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    name="bariatrica"
+                    checked={checked}
+                    onChange={bariatricaLocked ? undefined : handleChange}
+                    disabled={bariatricaLocked}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm font-medium text-amber-700">
                     {modoMedico
-                      ? (inputs.sexo === 'F' ? "Paciente bari\u00e1trica" : inputs.sexo === 'M' ? "Paciente bari\u00e1trico" : "Paciente bari\u00e1trico/a")
-                      : (inputs.sexo === 'F' ? "Sou bari\u00e1trica" : inputs.sexo === 'M' ? "Sou bari\u00e1trico" : "Sou paciente bari\u00e1trico/a")}
-                  </p>
-                  <p className="text-xs text-amber-600">
-                    {modoMedico
-                      ? "Marque se o(a) paciente fez cirurgia bari\u00e1trica"
-                      : "Marque se voc\u00ea fez cirurgia bari\u00e1trica (by-pass / gastrectomia)"}
-                  </p>
-                </div>
-              </label>
-            </div>
-          )}
+                      ? (inputs.sexo === 'F' ? "Paciente bari\u00e1trica" : "Paciente bari\u00e1trico")
+                      : (inputs.sexo === 'F' ? "Sou bari\u00e1trica" : "Sou bari\u00e1trico")}
+                    {bariatricaLocked ? " (j\u00e1 registrado)" : ""}
+                  </span>
+                </label>
+              </div>
+            );
+          })()}
 
           {pacienteConhecido !== 'BLOQUEADO' && (<>
             <div>
