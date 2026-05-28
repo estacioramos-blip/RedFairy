@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import HistoricoChartModal from './HistoricoChartModal';
 
 const colorScheme = {
   green:  { bg: 'bg-green-50',  border: 'border-green-400',  badge: 'bg-green-600',  text: 'text-green-800'  },
@@ -846,6 +847,67 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
+  // Historico/grafico de evolucao no fim da avaliacao.
+  // Modo medico: botao aparece se paciente tem >= 2 avaliacoes.
+  // Modo paciente (tratado como nao-cadastrado por ora): mostra convite ao cadastro.
+  const [historicoData, setHistoricoData] = useState(null);
+  const [historicoBuscando, setHistoricoBuscando] = useState(false);
+  const [historicoMsg, setHistoricoMsg] = useState('');
+  const [totalRegistrosHist, setTotalRegistrosHist] = useState(0);
+
+  const cpfResultado = String(resultado?._inputs?.cpf || '').replace(/\D/g, '');
+
+  // Conta quantos pontos (triagens + avaliacoes) o paciente tem, pra decidir
+  // se mostra o botao de grafico (>= 2). So' roda no modo medico com CPF valido.
+  useEffect(() => {
+    if (modoPaciente) return;
+    if (cpfResultado.length !== 11) return;
+    let cancelado = false;
+    (async () => {
+      try {
+        const [tRes, aRes] = await Promise.all([
+          supabase.from('triagens').select('id', { count: 'exact', head: true }).eq('cpf', cpfResultado),
+          supabase.from('avaliacoes').select('id', { count: 'exact', head: true }).eq('cpf', cpfResultado),
+        ]);
+        if (cancelado) return;
+        const total = (tRes.count || 0) + (aRes.count || 0);
+        setTotalRegistrosHist(total);
+      } catch (e) { /* silencioso */ }
+    })();
+    return () => { cancelado = true; };
+  }, [cpfResultado, modoPaciente]);
+
+  async function handleVerHistorico() {
+    if (cpfResultado.length !== 11) return;
+    setHistoricoBuscando(true);
+    setHistoricoMsg('');
+    const norm = (v) => {
+      const n = Number(v);
+      return (v === null || v === undefined || v === '' || isNaN(n)) ? null : n;
+    };
+    const [tRes, aRes] = await Promise.all([
+      supabase.from('triagens').select('created_at, hemoglobina, vcm, rdw').eq('cpf', cpfResultado).order('created_at', { ascending: true }),
+      supabase.from('avaliacoes').select('data_coleta, hemoglobina, vcm, rdw, ferritina, sat_transf').eq('cpf', cpfResultado).order('data_coleta', { ascending: true }),
+    ]);
+    setHistoricoBuscando(false);
+    if (tRes.error && aRes.error) {
+      setHistoricoMsg('Erro ao buscar hist\u00f3rico.');
+      setTimeout(() => setHistoricoMsg(''), 4000);
+      return;
+    }
+    const serie = [];
+    (tRes.data || []).forEach((r) => serie.push({ data: r.created_at, hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw), ferritina: null, sat: null, origem: 'triagem' }));
+    (aRes.data || []).forEach((r) => serie.push({ data: r.data_coleta, hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw), ferritina: norm(r.ferritina), sat: norm(r.sat_transf), origem: 'avaliacao' }));
+    serie.sort((a, b) => new Date(a.data) - new Date(b.data));
+    const pontosG1 = serie.filter((p) => p.hb !== null || p.vcm !== null || p.rdw !== null);
+    if (pontosG1.length < 2) {
+      setHistoricoMsg('N\u00c3O H\u00c1 ELEMENTOS PARA GR\u00c1FICO');
+      setTimeout(() => setHistoricoMsg(''), 4000);
+      return;
+    }
+    setHistoricoData({ cpf: cpfResultado, serie });
+  }
+
   const [verObsoleto, setVerObsoleto] = useState(false);
   if (resultado.obsoleto && !verObsoleto) {
     return (
@@ -1013,7 +1075,9 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               return (
                 <div className="text-xs opacity-75 mt-1 leading-snug">
                   <div>{cabecalho}{" \u00b7 "}{labs.join(" \u00b7 ")}</div>
-                  <div>{"Flags: "}{flagsAtivas.length > 0 ? flagsAtivas.join(', ') : 'nenhuma'}</div>
+                  {flagsAtivas.length > 0 && (
+                    <div>{"Flags: "}{flagsAtivas.join(', ')}</div>
+                  )}
                 </div>
               )
             })()}
@@ -1187,6 +1251,26 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
         <DocumentoMedicoPanel resultado={resultado} />
       )}
 
+      {/* Historico de evolucao no fim da avaliacao */}
+      {!modoPaciente && totalRegistrosHist >= 2 && (
+        <div className="mt-6">
+          <button onClick={handleVerHistorico} disabled={historicoBuscando}
+            className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50">
+            {historicoBuscando ? 'Buscando...' : "\ud83d\udcc8 Ver Hist\u00f3rico de Evolu\u00e7\u00e3o"}
+          </button>
+          {historicoMsg && (
+            <p className="text-xs text-center mt-2 font-medium text-red-700">{historicoMsg}</p>
+          )}
+        </div>
+      )}
+      {modoPaciente && (
+        <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center">
+          <p className="text-sm font-bold text-blue-700 leading-snug">
+            {"CADASTRE-SE PARA TER ACESSO \u00c0 AVALIA\u00c7\u00c3O COMPLETA COM GR\u00c1FICOS DE EVOLU\u00c7\u00c3O"}
+          </p>
+        </div>
+      )}
+
       <button onClick={onCopiar}
         className={`mt-6 w-full py-3 rounded-xl font-bold text-sm transition-all
           ${copiado ? 'bg-green-500 text-white' : `${scheme.badge} text-white hover:opacity-90`}`}>
@@ -1198,6 +1282,16 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           className="mt-3 w-full py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 underline">
           {"\u2190 Voltar"}
         </button>
+      )}
+
+      {historicoData && (
+        <HistoricoChartModal
+          cpf={historicoData.cpf}
+          serie={historicoData.serie}
+          sexo={resultado?._inputs?.sexo}
+          gestante={!!resultado?._inputs?.gestante}
+          onFechar={() => setHistoricoData(null)}
+        />
       )}
     </>
   );
