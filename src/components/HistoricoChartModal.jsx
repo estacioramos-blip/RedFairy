@@ -134,7 +134,12 @@ export default function HistoricoChartModal({ cpf, serie, sexo, gestante, onFech
   const tituloTela = tela === 1 ? 'Triagem do Eritron' : 'Aprofundamento';
 
   function proximo() {
-    setTela((prev) => (prev === 1 && totalTelas === 2) ? 2 : 1);
+    // Tela 1 -> Tela 2. Tela 2 -> fecha o modal (sem loop de ida e volta).
+    if (tela === 1 && totalTelas === 2) {
+      setTela(2);
+    } else {
+      onFechar();
+    }
   }
 
   return (
@@ -161,8 +166,9 @@ export default function HistoricoChartModal({ cpf, serie, sexo, gestante, onFech
             <button
               onClick={onFechar}
               aria-label="Fechar"
-              className="text-gray-400 hover:text-gray-700 text-2xl leading-none px-2">
-              {"\u00d7"}
+              className="w-8 h-8 rounded-full bg-red-700 hover:bg-red-800 text-white flex items-center justify-center flex-shrink-0 transition-colors"
+              style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
+              {"\u2715"}
             </button>
           </div>
         </div>
@@ -205,15 +211,27 @@ export default function HistoricoChartModal({ cpf, serie, sexo, gestante, onFech
         <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
           <div className="text-[11px] text-gray-500">
             {totalTelas === 2
-              ? (tela === 1 ? 'Proxima tela: Aprofundamento' : 'Proxima tela: Triagem')
+              ? (tela === 1 ? 'Proxima tela: Aprofundamento' : 'Fim do historico')
               : 'Sem dados de Ferritina/Sat para Aprofundamento'}
           </div>
-          {totalTelas === 2 && (
+          {totalTelas === 2 ? (
             <button
               onClick={proximo}
               className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2 rounded-xl text-sm transition-colors flex items-center gap-2">
-              <span>{"Pr\u00f3ximo"}</span>
-              <span style={{ fontSize: '1.1rem' }}>{"\u2192"}</span>
+              {tela === 1 ? (
+                <>
+                  <span>{"Pr\u00f3ximo"}</span>
+                  <span style={{ fontSize: '1.1rem' }}>{"\u2192"}</span>
+                </>
+              ) : (
+                <span>{"Fechar"}</span>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={onFechar}
+              className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2 rounded-xl text-sm transition-colors">
+              {"Fechar"}
             </button>
           )}
         </div>
