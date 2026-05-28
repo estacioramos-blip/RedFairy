@@ -651,7 +651,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       const { data: md } = await supabase.from('medicos').select('nome, email').eq('crm', medicoCRM).maybeSingle();
       completo = !!(md && md.nome && String(md.nome).trim() && md.email && String(md.email).trim());
     } catch (e) { completo = false; }
-    if (completo) { setShowFelicitacoes(true); }
+    // Medico ja cadastrado (nome+email completos) = veterano: NAO mostra "Estamos felizes",
+    // vai direto pro Calculator (dados ja preenchidos pela triagem). O modal de boas-vindas
+    // so' faz sentido para quem acabou de se cadastrar (fluxo via showAuthMedicoOverlay).
+    if (completo) { /* veterano: segue direto no Calculator, sem modal */ }
     else { setShowAuthMedicoOverlay('cadastro'); }
   }
   const [showBeneficios, setShowBeneficios] = useState(false);
@@ -659,77 +662,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   useEffect(() => {
     if (preFlag === 'bariatrica') { setInputs(prev => ({ ...prev, bariatrica: true })) }
   }, [preFlag]);
-
-  // Pre-preenchimento via triagem nao-cadastrada (paciente clicou em "TENHO TAMBEM FERRITINA"
-  // dentro do TriagemModal). App grava em localStorage.rf_triagem_prefill antes de mudar pra calculadora.
-  useEffect(() => {
-    let prefill = null;
-    try {
-      const raw = localStorage.getItem('rf_triagem_prefill');
-      if (raw) prefill = JSON.parse(raw);
-    } catch (e) {}
-    if (prefill) {
-      try { localStorage.removeItem('rf_triagem_prefill'); } catch (e) {}
-      // Calcula idade a partir da data de nascimento (formato DD/MM/AAAA do TriagemModal)
-      let idadeCalc = '';
-      const dnStr = prefill.dataNascimento || '';
-      if (dnStr) {
-        try {
-          const partes = String(dnStr).split('/');
-          if (partes.length === 3) {
-            const [d, m, a] = partes.map(Number);
-            const nasc = new Date(a, m - 1, d);
-            const hoje = new Date();
-            let i = hoje.getFullYear() - nasc.getFullYear();
-            const mes = hoje.getMonth() - nasc.getMonth();
-            if (mes < 0 || (mes === 0 && hoje.getDate() < nasc.getDate())) i--;
-            if (i >= 0 && i < 130) idadeCalc = String(i);
-          }
-        } catch (e) {}
-      }
-      // TriagemModal envia dataColeta em ISO (YYYY-MM-DD do <input type="date">).
-      // Calculator usa formato DD/MM/AAAA internamente. Converter:
-      let dataColetaBR = '';
-      if (prefill.dataColeta) {
-        const s = String(prefill.dataColeta);
-        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-          const [a, m, d] = s.split('-');
-          dataColetaBR = `${d}/${m}/${a}`;
-        } else {
-          dataColetaBR = s; // ja em outro formato
-        }
-      }
-      setInputs(prev => ({
-        ...prev,
-        cpf: prefill.cpf || prev.cpf,
-        sexo: prefill.sexo || prev.sexo,
-        dataNascimento: dnStr || prev.dataNascimento,
-        idade: idadeCalc || prev.idade,
-        dataColeta: dataColetaBR || prev.dataColeta,
-        hemoglobina: prefill.hemoglobina != null ? String(prefill.hemoglobina) : prev.hemoglobina,
-        vcm: prefill.vcm != null ? String(prefill.vcm) : prev.vcm,
-        rdw: prefill.rdw != null ? String(prefill.rdw) : prev.rdw,
-        gestante: prefill.gestante || prev.gestante || false,
-        semanas_gestacao: prefill.semanas_gestacao || prev.semanas_gestacao,
-        bariatrica: prefill.bariatrica || prev.bariatrica || false,
-        bariatrica_medico: prefill.bariatrica || prev.bariatrica_medico || false,
-      }));
-      // Como ja temos Hb/VCM/RDW pre-preenchidos, nao abrir TriagemModal.
-      setShowTriagem(false);
-      setDadosVieramDaTriagem(true);
-      // Como veio pelo botao azul (paciente ja diz que tem Ferritina e SatTransf),
-      // ja libera os campos extras direto.
-      setMostrarExamesExtras(true);
-      // Auto-foco no campo Ferritina. Estrategia: tentar varias vezes ate funcionar.
-      // O Calculator monta grande, e o LabInput pode demorar pra entrar no DOM.
-      const tentarFocar = (tentativa) => {
-        const el = ferritinaRef.current;
-        if (el && !el.disabled) { try { el.focus(); el.select && el.select(); } catch (e) {} return; }
-        if (tentativa < 20) setTimeout(() => tentarFocar(tentativa + 1), 150);
-      };
-      setTimeout(() => tentarFocar(0), 200);
-    }
-  }, []);
 
   useEffect(() => {
     let pedirLogin = false;
@@ -1611,14 +1543,25 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
 
             {!mostrarExamesExtras && (
-              <button
-                type="button"
-                onClick={() => setMostrarExamesExtras(true)}
-                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center mt-3"
-              >
-                <span>{"\ud83d\udd2c J\u00c1 TENHO A FERRITINA E A SATURA\u00c7\u00c3O DA TRANSFERRINA"}</span>
-                <span className="text-xs font-normal opacity-90 mt-1">{"Aprofundar o diagn\u00f3stico"}</span>
-              </button>
+              <div className="flex items-center gap-3 mt-3 px-1">
+                <style>{`
+                  @keyframes rfPlayBlinkBlue {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.6); }
+                    50%      { box-shadow: 0 0 0 8px rgba(37,99,235,0); }
+                  }
+                  .rf-play-blue { animation: rfPlayBlinkBlue 1s ease-in-out infinite; }
+                `}</style>
+                <p className="text-sm font-semibold text-blue-700 leading-snug flex-1">
+                  {"Para digitar FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA (%) acione o bot\u00e3o"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setMostrarExamesExtras(true)}
+                  aria-label="Liberar campos de Ferritina e Satura\u00e7\u00e3o da Transferrina"
+                  className="rf-play-blue flex-shrink-0 w-12 h-12 rounded-full bg-gray-300 hover:bg-gray-400 flex items-center justify-center transition-colors">
+                  <span style={{ color: '#2563eb', fontSize: '1.3rem', lineHeight: 1 }}>{"\u25b6"}</span>
+                </button>
+              </div>
             )}
 
             <div className="grid grid-cols-2 gap-3 mt-3">

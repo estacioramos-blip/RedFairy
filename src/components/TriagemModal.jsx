@@ -257,10 +257,20 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       const [_d, _m, _a] = inputs.data_coleta.split('/');
       dataColetaISO = `${_a}-${_m}-${_d}`;
     }
+    // Deriva dataNascimento em DD/MM/AAAA a partir do ISO. Necessario porque, para
+    // paciente CONHECIDO, o campo nem aparece e inputs.dataNascimento fica vazio -
+    // o dado real vem de pacienteConhecido.data_nascimento (ja convertido em dataNascimentoISO).
+    // O Calculator espera novosInputs.dataNascimento em DD/MM/AAAA.
+    let dataNascimentoBR = inputs.dataNascimento || '';
+    if (dataNascimentoISO && /^\d{4}-\d{2}-\d{2}$/.test(dataNascimentoISO)) {
+      const [_a, _m, _d] = dataNascimentoISO.split('-');
+      dataNascimentoBR = `${_d}/${_m}/${_a}`;
+    }
     const inputsNumericos = {
       ...inputs,
       idade: idadeCalc,
       data_nascimento: dataNascimentoISO,
+      dataNascimento: dataNascimentoBR,
       data_coleta: dataColetaISO || inputs.data_coleta,
       dataColeta: dataColetaISO || _dataHojeISO,
       hemoglobina: Number(inputs.hemoglobina),
