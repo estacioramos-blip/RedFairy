@@ -208,15 +208,15 @@ const LANDING_CSS = `
   .ind.auto-dot::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--cherry); display: block; flex-shrink: 0; margin-top: 3px; }
   .ind:hover { border-color: var(--border2); }
 
-  .terapeutica { background: var(--gray-bg); }
+  .terapeutica { background: var(--white); }
   .terap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
-  .terap-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.2rem; transition: all 0.2s; }
+  .terap-card { background: var(--white); border: 2px solid #7f1d1d; border-radius: var(--radius); padding: 1rem 1.2rem 0.6rem; transition: all 0.2s; }
   .terap-card:hover { box-shadow: var(--shadow); }
-  .terap-card .tc-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 0.8rem; background: var(--cherry-bg); }
-  .terap-card h4 { font-size: 0.95rem; margin-bottom: 0.3rem; }
-  .terap-card p { font-size: 0.83rem; color: var(--text-sec); }
+  .terap-card .tc-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 0.6rem; background: var(--cherry-bg); }
+  .terap-card h4 { font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .terap-card p { font-size: 0.83rem; color: var(--text-sec); margin-bottom: 0; }
 
-  .como { background: var(--white); }
+  .como { background: var(--gray-bg); }
   .como-tabs-wrap { display: flex; justify-content: center; margin-top: 2rem; margin-bottom: 2.5rem; }
   .como-tabs { display: inline-flex; gap: 0.5rem; }
   .como-tab { padding: 0.85rem 0; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; background: #9CA3AF; color: white; transition: all 0.25s; font-family: inherit; width: 200px; text-align: center; }
@@ -478,13 +478,35 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   }
 
   const [crmMedicoExpand, setCrmMedicoExpand] = useState(false);
-  const [crmMedicoValor, setCrmMedicoValor] = useState('');
-  const crmMedicoValido = /^\d+\/[A-Z]{2}$/.test((crmMedicoValor || '').trim().toUpperCase());
+  // Fluxo seamless: dois campos (Numero + UF) que se juntam internamente em '123456/BA'.
+  const UFS_VALIDAS_LP = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+  const [crmMedicoNum, setCrmMedicoNum] = useState('');
+  const [crmMedicoUF, setCrmMedicoUF] = useState('');
+  const refCrmNumLP = useRef(null);
+  const refCrmUfLP = useRef(null);
+  // crmMedicoValor agora derivado (mantido para nao reescrever continuarComoMedico/caixaAvancarCrm/caixaConcluir).
+  const crmMedicoValor = (crmMedicoNum && crmMedicoUF) ? `${crmMedicoNum}/${crmMedicoUF}` : '';
+  const crmMedicoValido = !!(crmMedicoNum && crmMedicoUF.length === 2 && UFS_VALIDAS_LP.includes(crmMedicoUF));
   function continuarComoMedico() {
     if (!crmMedicoValido) return;
     try { localStorage.setItem('rf_crm_prefill', crmMedicoValor.trim().toUpperCase()); } catch(e) {}
     onModoMedico();
   }
+
+  // Timer 1300ms: numero -> UF. Tambem avanca imediato com 6 digitos.
+  useEffect(() => {
+    if (!crmMedicoNum) return;
+    if (crmMedicoNum.length === 6) {
+      if (refCrmUfLP.current) refCrmUfLP.current.focus();
+      return;
+    }
+    const t = setTimeout(() => {
+      if (refCrmUfLP.current && document.activeElement === refCrmNumLP.current) {
+        refCrmUfLP.current.focus();
+      }
+    }, 1300);
+    return () => clearTimeout(t);
+  }, [crmMedicoNum]);
 
   const [fluxoEtapa, setFluxoEtapa] = useState('inicio');
   const [fluxoFade, setFluxoFade] = useState(false);
@@ -495,10 +517,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     let i = 0;
     setTwTexto('');
     const iv = setInterval(() => {
-      i++;
+      i += 3;
       setTwTexto(full.slice(0, i));
-      if (i >= full.length) clearInterval(iv);
-    }, 8);
+      if (i >= full.length) { setTwTexto(full); clearInterval(iv); }
+    }, 20);
     return () => clearInterval(iv);
   }, [fluxoEtapa]);
 
@@ -545,13 +567,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   useEffect(() => {
     if (fluxoEtapa !== 'medico') return;
     const full = caixaPasso === 'crm'
-      ? 'DIGITE O SEU CRM/UF'
+      ? 'DIGITE O SEU CRM \u2794 UF'
       : (caixaModo === 'cadastro' ? 'CRIE AGORA A SUA SENHA' : 'DIGITE A SUA SENHA');
     let i = 0; setCaixaTw('');
     const iv = setInterval(() => {
-      i++; setCaixaTw(full.slice(0, i));
-      if (i >= full.length) clearInterval(iv);
-    }, 8);
+      i += 3; setCaixaTw(full.slice(0, i));
+      if (i >= full.length) { setCaixaTw(full); clearInterval(iv); }
+    }, 20);
     return () => clearInterval(iv);
   }, [fluxoEtapa, caixaPasso]);
   async function caixaAvancarCrm() {
@@ -575,6 +597,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     setCaixaSenha('');
     setCaixaPasso('senha');
   }
+
+  // Seamless: quando UF eh completada (2 letras validas), dispara avancar pra senha.
+  useEffect(() => {
+    if (caixaPasso !== 'crm') return;
+    if (crmMedicoUF.length === 2 && UFS_VALIDAS_LP.includes(crmMedicoUF) && crmMedicoNum) {
+      caixaAvancarCrm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [crmMedicoUF, crmMedicoNum, caixaPasso]);
   async function caixaConcluir() {
     if (!crmMedicoValido || !caixaSenhaValida || caixaBuscando) return;
     setCaixaErro('');
@@ -664,9 +695,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       : (cpfPacModo === 'cadastro' ? "CRIE AGORA A SUA SENHA" : "DIGITE A SUA SENHA");
     let i = 0; setCpfPacTw('');
     const iv = setInterval(() => {
-      i++; setCpfPacTw(full.slice(0, i));
-      if (i >= full.length) clearInterval(iv);
-    }, 8);
+      i += 3; setCpfPacTw(full.slice(0, i));
+      if (i >= full.length) { setCpfPacTw(full); clearInterval(iv); }
+    }, 20);
     return () => clearInterval(iv);
   }, [fluxoEtapa, cpfPacPasso, cpfPacModo]);
   async function cpfPacAvancar() {
@@ -1055,7 +1086,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           style={{ cursor: 'pointer' }}
         >
           <img src={logo} alt="RedFairy" style={{ height:36 }} />
-          <span>Red<em>Fairy</em></span>
+          <span>Red<em>Fairy</em><sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup></span>
         </a>
         <div className={`nav-links${navOpen ? ' open' : ''}`}>
           <a
@@ -1224,16 +1255,34 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
                   {caixaPasso === 'crm' && (
                     <>
-                      <input
-                        autoFocus
-                        type="text"
-                        value={crmMedicoValor}
-                        onChange={e => setCrmMedicoValor(e.target.value.toUpperCase())}
-                        onKeyDown={e => { if (e.key === 'Enter' && crmMedicoValido) caixaAvancarCrm(); }}
-                        placeholder="Ex: 6302/BA"
-                        className="rf-cx-input"
-                        style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center' }}
-                      />
+                      <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'8px' }}>
+                        <input
+                          ref={refCrmNumLP}
+                          autoFocus
+                          type="text"
+                          value={crmMedicoNum}
+                          onChange={e => setCrmMedicoNum(String(e.target.value || '').replace(/\D/g, '').slice(0, 6))}
+                          placeholder="Ex: 6302"
+                          inputMode="numeric"
+                          maxLength={6}
+                          className="rf-cx-input"
+                          style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center' }}
+                        />
+                        <input
+                          ref={refCrmUfLP}
+                          type="text"
+                          value={crmMedicoUF}
+                          onChange={e => setCrmMedicoUF(String(e.target.value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2))}
+                          onKeyDown={e => { if (e.key === 'Enter' && crmMedicoValido) caixaAvancarCrm(); }}
+                          placeholder="UF"
+                          maxLength={2}
+                          className="rf-cx-input"
+                          style={{ width:'100%', border: (crmMedicoUF.length === 2 && !UFS_VALIDAS_LP.includes(crmMedicoUF)) ? '2px solid #ef4444' : '2px solid #facc15', background: (crmMedicoUF.length === 2 && !UFS_VALIDAS_LP.includes(crmMedicoUF)) ? '#fef2f2' : '#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center', textTransform:'uppercase' }}
+                        />
+                      </div>
+                      {crmMedicoUF.length === 2 && !UFS_VALIDAS_LP.includes(crmMedicoUF) && (
+                        <p style={{ fontSize:'0.7rem', color:'#dc2626', fontWeight:700, margin:'6px 0 0', textAlign:'center' }}>{"UF inv\u00e1lida"}</p>
+                      )}
                       <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 12px', textAlign:'center' }}>LOGIN NO SISTEMA</p>
                       <button
                         onClick={caixaAvancarCrm}
@@ -1475,7 +1524,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               </div>
             </div>
 
-            <div className="trust" style={{ justifyContent:'center', marginTop:'1rem' }}>
+            <div className="trust" style={{ justifyContent:'center', marginTop:'2.5rem' }}>
               <div className="trust-i">
                 <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 <span>{"30 vari\u00e1veis cl\u00ednicas"}</span>
@@ -1486,6 +1535,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               </div>
 
             </div>
+
+            {/* Cr\u00e9ditos: mesma fonte/cor do rodap\u00e9 */}
+            <p style={{ fontSize:'0.65rem', color:'var(--text-light)', textAlign:'center', margin:'0.6rem 0 0', letterSpacing:'-0.01em' }}>
+              <span style={{ fontFamily:"'DM Serif Display',serif", color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em><sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup></span>
+              {" by "}<a href="https://cytomica.com" target="_blank" rel="noopener noreferrer" style={{color:'var(--text-sec)'}}>cytomica.com</a>{"  \u00b7  \u00a9 2026  \u00b7  E.F. Ramos, M.D. CRM 6302|BA"}
+            </p>
 
           </div>
 
@@ -1644,13 +1699,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         <div className="container">
           <div className="reveal">
             <span className="tag">Sobre</span>
-            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>RedFairy | OBA</h2>
+            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>RedFairy<sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup> | OBA</h2>
           </div>
 
           <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 760, marginLeft: 'auto', marginRight: 'auto' }}>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>RedFairy<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup></strong>{" e o "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>TM</sup>{" \u2014 Otimizar o Bari\u00e1trico"}</strong>{" representam uma iniciativa institucional de "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Cytomica"}<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup></strong>{", com forte compromisso \u00e9tico e social, voltada \u00e0 melhoria da qualidade de vida de pacientes com doen\u00e7as e condi\u00e7\u00f5es cr\u00f4nicas ou agudas que afetam a produ\u00e7\u00e3o de hemoglobina e de c\u00e9lulas vermelhas. Entre eles, destacam-se os pacientes bari\u00e1tricos, que frequentemente demandam aten\u00e7\u00e3o cl\u00ednica especializada."}
+              <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>RedFairy<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup></strong>{" e o "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>TM</sup>{" \u2014 Otimizar o Bari\u00e1trico"}</strong>{" representam uma iniciativa institucional de "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Cytomica"}<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup></strong>{", com forte compromisso \u00e9tico e social, voltada \u00e0 melhoria da qualidade de vida de pacientes com doen\u00e7as e condi\u00e7\u00f5es cr\u00f4nicas ou agudas que afetam a produ\u00e7\u00e3o de hemoglobina e de c\u00e9lulas vermelhas. Entre eles, destacam-se os pacientes bari\u00e1tricos, que frequentemente demandam aten\u00e7\u00e3o cl\u00ednica especializada."}
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
@@ -1703,7 +1758,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 760, marginLeft: 'auto', marginRight: 'auto' }}>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              {"O "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Afiliados RedFairy | OBA"}</strong>{" est\u00e1 aberto ao apoio de "}<strong>{"empresas, filantropos, organiza\u00e7\u00f5es sociais e funda\u00e7\u00f5es"}</strong>{" comprometidos com a amplia\u00e7\u00e3o do acesso \u00e0 iniciativa."}
+              {"O "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Afiliados RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" | OBA"}</strong>{" est\u00e1 aberto ao apoio de "}<strong>{"empresas, filantropos, organiza\u00e7\u00f5es sociais e funda\u00e7\u00f5es"}</strong>{" comprometidos com a amplia\u00e7\u00e3o do acesso \u00e0 iniciativa."}
             </p>
 
             <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
@@ -1757,21 +1812,21 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       </section>
 
 
-      <section id="indicacoes">
+      <section id="indicacoes" style={{ background:'var(--gray-bg)', padding:'5rem 0' }}>
         <div className="container">
           <div className="reveal center">
             <span className="tag">{"Indica\u00e7\u00f5es"}</span>
-            <h2 className="stitle">{"Para quem \u00e9 o RedFairy?"}</h2>
+            <h2 className="stitle">{"Para quem \u00e9 o RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>{"?"}</h2>
           </div>
           <div className="reveal" style={{ maxWidth: 880, margin: '1.5rem auto 0', lineHeight: 1.7, color: 'var(--text-sec)', fontSize: '0.88rem', fontWeight: 600, textAlign: 'justify' }}>
             <p style={{ marginBottom: '1.1rem' }}>
               {"No Brasil, anemia, defici\u00eancia de ferro e dist\u00farbios gen\u00e9ticos ou adquiridos da hemoglobina, das hem\u00e1cias e do seu metabolismo, atingem dezenas de milh\u00f5es de pessoas \u2014 incluindo crian\u00e7as, idosos, gestantes, vegetarianos, bari\u00e1tricos, gastrectomizados, doadores de sangue, pessoas com sangramentos cr\u00f4nicos, uso de testosterona, abuso de \u00e1lcool, doen\u00e7a cel\u00edaca, defici\u00eancia de G-6-PD, sobrecarga de ferro ou necessidade de sangrias terap\u00eauticas. Em conjunto, essas condi\u00e7\u00f5es envolvem mais de "}<strong style={{ color: 'var(--wine)' }}>{"55 milh\u00f5es de brasileiros"}</strong>{" que vivem sob dano hematol\u00f3gico-nutricional relevante, muitos sem acesso poss\u00edvel a avalia\u00e7\u00e3o especializada."}
             </p>
             <p style={{ marginBottom: '1.1rem' }}>
-              <strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" transforma o hemograma em uma porta de entrada inteligente para triagem, orienta\u00e7\u00e3o diagn\u00f3stica, seguimento estruturado e cuidado m\u00e9dico em hematologia para essas condi\u00e7\u00f5es. Em um pa\u00eds continental, desigual e com car\u00eancia de hematologistas em extensas regi\u00f5es, o sistema ocupa uma lacuna assistencial com orienta\u00e7\u00e3o m\u00e9dica fundamentada, solicita\u00e7\u00e3o de exames e prescri\u00e7\u00f5es emitidas por hematologistas atrav\u00e9s da Plataforma do Conselho Federal de Medicina."}
+              <strong style={{ color: 'var(--wine)' }}>{"RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" | OBA"}</strong>{" transforma o hemograma em uma porta de entrada inteligente para triagem, orienta\u00e7\u00e3o diagn\u00f3stica, seguimento estruturado e cuidado m\u00e9dico em hematologia para essas condi\u00e7\u00f5es. Em um pa\u00eds continental, desigual e com car\u00eancia de hematologistas em extensas regi\u00f5es, o sistema ocupa uma lacuna assistencial com orienta\u00e7\u00e3o m\u00e9dica fundamentada, solicita\u00e7\u00e3o de exames e prescri\u00e7\u00f5es emitidas por hematologistas atrav\u00e9s da Plataforma do Conselho Federal de Medicina."}
             </p>
             <p style={{ marginBottom: '0.5rem' }}>
-              {"Para ampliar essa rede de cuidado, "}<strong style={{ color: 'var(--wine)' }}>{"RedFairy\u00ae | OBA"}</strong>{" inclui o 4DOC - Programa de Afiliados Patrocinado para M\u00e9dicos, que reconhece e apoia profissionais que identificam pacientes afetados e os orientam a se cadastrar no sistema, gerando cr\u00e9ditos institucionais vinculados ao encaminhamento e fortalecendo a triagem, a preven\u00e7\u00e3o, a redu\u00e7\u00e3o de sequelas, e o diagn\u00f3stico precoce de hemopatias no Brasil."}
+              {"Para ampliar essa rede de cuidado, "}<strong style={{ color: 'var(--wine)' }}>{"RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" | OBA"}</strong>{" inclui o 4DOC - Programa de Afiliados Patrocinado para M\u00e9dicos, que reconhece e apoia profissionais que identificam pacientes afetados e os orientam a se cadastrar no sistema, gerando cr\u00e9ditos institucionais vinculados ao encaminhamento e fortalecendo a triagem, a preven\u00e7\u00e3o, a redu\u00e7\u00e3o de sequelas, e o diagn\u00f3stico precoce de hemopatias no Brasil."}
             </p>
             {medicoLogado && (
               <p style={{ textAlign: 'center', margin: '1.2rem 0 0', cursor: 'pointer' }}
@@ -1798,15 +1853,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <span className="tag">{"Orienta\u00e7\u00f5es Terap\u00eauticas"}</span>
             <h2 className="stitle">{"Muito al\u00e9m do diagn\u00f3stico"}</h2>
             <p className="sdesc-bold" style={{ margin:"0 auto" }}>
-              {"O RedFairy \u00e9 um algoritmo m\u00e9dico, que n\u00e3o apenas avalia: ele orienta."}<br />
+              {"O RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.55em', fontWeight: 500 }}>{"\u00ae"}</sup>{" \u00e9 um algoritmo m\u00e9dico, que n\u00e3o apenas avalia: ele orienta."}<br />
               {"Gera recomenda\u00e7\u00f5es personalizadas com base no perfil completo do paciente."}
             </p>
           </div>
           <div className="terap-grid reveal">
-            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc89"}</div><h4>{"C\u00e1lculo de dose para infus\u00e3o de ferro"}</h4><p>{"Dose ideal de ferro endovenoso baseada no d\u00e9ficit estimado e peso do paciente."}</p></div>
-            <div className="terap-card"><div className="tc-icon">{"\ud83e\ude78"}</div><h4>{"Sangrias terap\u00eauticas"}</h4><p>{"N\u00famero de sess\u00f5es, volume e intervalo entre sangrias para siderose e poliglobulia."}</p></div>
-            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc8a"}</div><h4>{"Reposi\u00e7\u00e3o de ferro oral"}</h4><p>{"Dose, tipo de sal de ferro, hor\u00e1rio e dura\u00e7\u00e3o do tratamento via oral."}</p></div>
-            <div className="terap-card"><div className="tc-icon">{"\ud83d\udcc8"}</div><h4>{"Gr\u00e1fico multiparam\u00e9trico"}</h4><p>{"Acompanhamento evolutivo do eritron ao longo do tempo para cada paciente."}</p></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc89"}</div><h4>{"INFUS\u00d5ES | FERRO ENDOVENOSO"}</h4><p>{"Prescri\u00e7\u00e3o m\u00e9dica do medicamento adequado, doses, n\u00famero de aplica\u00e7\u00f5es e intervalos ideais."}</p></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83e\ude78"}</div><h4>{"SANGRIAS TERAP\u00caUTICAS"}</h4><p>{"N\u00famero de sess\u00f5es, volumes e intervalos para abordagem de sideroses e poliglobulia."}</p></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc8a"}</div><h4>{"REPOSI\u00c7\u00c3O | FERRO ORAL"}</h4><p>{"Prescri\u00e7\u00e3o m\u00e9dica do medicamento ideal, dose e dura\u00e7\u00e3o ajustada do tratamento."}</p></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udcc8"}</div><h4>{"GR\u00c1FICOS CL\u00cdNICOS"}</h4><p>{"Visualiza\u00e7\u00e3o e follow-up da evolu\u00e7\u00e3o."}</p></div>
           </div>
           <div style={{ marginTop:'2rem', padding:'0 0 0.5rem' }}>
             <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
@@ -2014,7 +2069,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     {"\ud83d\udd2c Avaliar Eritron"}
                   </button>
                   <p style={{ color:'rgba(255,255,255,0.2)', fontSize:8, textAlign:'center', margin:'8px 0 0', letterSpacing:'0.3px' }}>
-                    {"RedFairy \u00b7 Cuidar do Seu Eritron \u00b7 by cytomica.com \u00a9 2026"}
+                    {"RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.7em', fontWeight: 500 }}>{"\u00ae"}</sup>{" \u00b7 Cuidar do Seu Eritron \u00b7 by cytomica.com \u00a9 2026"}
                   </p>
                 </div>
 
@@ -2045,7 +2100,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                         if (bari) localStorage.setItem('rf_flag', 'bariatrica')
                         onModoMedico()
                       }} style={{ background:'#7B1E1E', color:'white', border:'none', borderRadius:7, padding:'7px 12px', fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
-                        {"Acessar RedFairy completo \u2192"}
+                        {"Acessar RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.7em', fontWeight: 500 }}>{"\u00ae"}</sup>{" completo \u2192"}
                       </button>
                   </div>
                   <button onClick={() => rfReset2()} style={{ width:'100%', background:'rgba(255,255,255,0.12)', color:'rgba(255,255,255,0.6)', border:'none', borderRadius:8, padding:8, fontSize:10, cursor:'pointer', fontFamily:'inherit' }}>
@@ -2067,11 +2122,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           <div className="reveal">
             <span className="tag">Projeto OBA</span>
             <h2 className="stitle">{"Otimizar o Bari\u00e1trico"}</h2>
-            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', maxWidth:580, lineHeight:1.7, fontWeight:700 }}>{"Milhares de bari\u00e1tricos vivem desassistidos. O Projeto OBA \u00e9 um sub-algoritmo especializado dentro do RedFairy que cuida especificamente de quem fez cirurgia bari\u00e1trica."}</p>
+            <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', maxWidth:580, lineHeight:1.7, fontWeight:700 }}>{"Milhares de bari\u00e1tricos vivem desassistidos. O Projeto OBA \u00e9 um sub-algoritmo especializado dentro do RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" que cuida especificamente de quem fez cirurgia bari\u00e1trica."}</p>
           </div>
           <div className="oba-grid">
             <div className="oba-narrative reveal">
-              <div className="oba-metaphor"><p>{"A cirurgia bari\u00e1trica corta as asas da sua fada vermelha."}<br />{"Ela continua com seus superpoderes, mas para voar precisa da ajuda do RedFairy."}</p></div>
+              <div className="oba-metaphor"><p>{"A cirurgia bari\u00e1trica corta as asas da sua fada vermelha."}<br />{"Ela continua com seus superpoderes, mas para voar precisa da ajuda do RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{"."}</p></div>
               <p>{"O bypass g\u00e1strico e a gastrectomia causam uma "}<strong>{"s\u00edndrome disabsortiva"}</strong>{" que prejudica a absor\u00e7\u00e3o de ferro, vitamina B12 e outros elementos essenciais."}</p>
               <p>{"O Projeto OBA oferece um "}<strong>{"tratamento de manuten\u00e7\u00e3o indefinido"}</strong>{": monitoramento cont\u00ednuo, c\u00e1lculo de reposi\u00e7\u00e3o personalizado e orienta\u00e7\u00f5es espec\u00edficas."}</p>
               <div className="oba-cta-row">
@@ -2089,7 +2144,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               <div className="oba-feat"><div className="of-icon">{"\ud83d\udc8a"}</div><div><h4>{"Reposi\u00e7\u00e3o personalizada"}</h4><p>{"C\u00e1lculo de ferro, B12 e outros elementos prejudicados pela s\u00edndrome disabsortiva."}</p></div></div>
               <div className="oba-feat"><div className="of-icon">{"\ud83d\udcc8"}</div><div><h4>{"Monitoramento cont\u00ednuo"}</h4><p>{"Evolu\u00e7\u00e3o dos par\u00e2metros com gr\u00e1ficos e alertas personalizados."}</p></div></div>
               <div className="oba-feat"><div className="of-icon">{"\ud83d\udcb0"}</div><div><h4>{"Muito mais acess\u00edvel"}</h4><p>{"Custa uma fra\u00e7\u00e3o do acompanhamento m\u00e9dico tradicional recorrente."}</p></div></div>
-              <div className="oba-feat"><div className="of-icon">{"\ud83d\udd17"}</div><div><h4>{"Manuten\u00e7\u00e3o indefinida"}</h4><p>{"O bari\u00e1trico precisa de cuidado cont\u00ednuo. O RedFairy est\u00e1 sempre ao seu lado."}</p></div></div>
+              <div className="oba-feat"><div className="of-icon">{"\ud83d\udd17"}</div><div><h4>{"Manuten\u00e7\u00e3o indefinida"}</h4><p>{"O bari\u00e1trico precisa de cuidado cont\u00ednuo. O RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" est\u00e1 sempre ao seu lado."}</p></div></div>
             </div>
           </div>
         </div>
@@ -2133,7 +2188,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       <footer style={{ padding:'0.8rem 1rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
         <p style={{ fontSize:'0.65rem', color:'var(--text-light)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:'0 0 0.3rem', letterSpacing:'-0.01em' }}>
           <img src={logo} alt="" style={{ height:14, verticalAlign:'middle', marginRight:4 }} />
-          <span style={{ fontFamily:"'DM Serif Display',serif", color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em></span>
+          <span style={{ fontFamily:"'DM Serif Display',serif", color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em><sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup></span>
           {" \u00b7 Cuidar do Seu Eritron \u00b7 by "}<a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a>{" \u00a9 2026 \u00b7 E.F. Ramos, M.D. CRM 6302 BA \u00b7 "}<a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a>
         </p>
         <p style={{ fontSize:'0.62rem', color:'var(--text-light)', margin:0 }}>

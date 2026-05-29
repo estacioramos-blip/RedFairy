@@ -100,7 +100,8 @@ function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
 function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadastro', onVoltarParaConvite }) {
   const [showReversaoAdesao, setShowReversaoAdesao] = useState(false);
   const [modo, setModo] = useState(modoInicial)
-  const refCrmLogin = useRef(null);
+  // Lista oficial das 27 UFs (estados + DF). Usada para validar a UF do conselho.
+  const UFS_VALIDAS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
   const [vamosTxt, setVamosTxt] = useState('');
   useEffect(() => {
     const full = 'Vamos! ...';
@@ -113,21 +114,44 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   }, []);
   useEffect(() => {
     if (modo === 'login') {
-      const t = setTimeout(() => { if (refCrmLogin.current) refCrmLogin.current.focus(); }, 200);
+      const t = setTimeout(() => { if (refCrmNumLogin.current) refCrmNumLogin.current.focus(); }, 200);
       return () => clearTimeout(t);
     }
   }, [modo]);
 
-  const [loginConselho, setLoginConselho] = useState('')
+  // Fluxo seamless: campos separados para n\u00famero (6 d\u00edgitos) e UF (2 letras).
+  // O estado loginConselho continua existindo, derivado de loginCrmNum + loginCrmUF
+  // ('123456/BA'), para n\u00e3o reescrever handleLogin/queries Supabase.
+  const [loginCrmNum, setLoginCrmNum] = useState('')
+  const [loginCrmUF, setLoginCrmUF] = useState('')
+  const loginConselho = (loginCrmNum && loginCrmUF) ? `${loginCrmNum}/${loginCrmUF}` : '';
   const [loginSenha, setLoginSenha] = useState('')
   const [loginErro, setLoginErro] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
+  const refCrmNumLogin = useRef(null);
+  const refCrmUfLogin = useRef(null);
 
   const [nome, setNome] = useState('')
   const [tipoConselho, setTipoConselho] = useState('CRM')
-  const [conselho, setConselho] = useState(() => {
-    try { return localStorage.getItem('rf_crm_prefill') || '' } catch(e) { return '' }
-  })
+  // Mesmo padr\u00e3o no cadastro: campos separados + derivado 'conselho' para o resto do c\u00f3digo.
+  const [crmNum, setCrmNum] = useState(() => {
+    try {
+      const raw = localStorage.getItem('rf_crm_prefill') || '';
+      const m = raw.match(/^(\d+)\/[A-Z]{2}$/i);
+      return m ? m[1] : '';
+    } catch(e) { return ''; }
+  });
+  const [crmUF, setCrmUF] = useState(() => {
+    try {
+      const raw = localStorage.getItem('rf_crm_prefill') || '';
+      const m = raw.match(/^\d+\/([A-Z]{2})$/i);
+      return m ? m[1].toUpperCase() : '';
+    } catch(e) { return ''; }
+  });
+  const conselho = (crmNum && crmUF) ? `${crmNum}/${crmUF}` : '';
+  const refCrmNum = useRef(null);
+  const refCrmUf = useRef(null);
+  const refCelular = useRef(null);
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -142,18 +166,55 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   const [showEsqueciSenha, setShowEsqueciSenha] = useState(false)
   const refSenhaLogin = useRef(null);
   const [etapaLogin, setEtapaLogin] = useState(1);
+
+  // Timer 1300ms apos digitar no NUMERO do CRM (login): se >= 1 digito, espera 1300ms
+  // ocioso e move o foco para o campo UF. Se atingir 6 digitos antes, avanca imediato.
   useEffect(() => {
     if (modo !== 'login') return;
-    if (etapaLogin !== 1) return;
-    const v = (loginConselho || '').trim().toUpperCase();
-    if (/^\d+\/[A-Z]{2}$/.test(v)) {
-      const t = setTimeout(() => {
-        setEtapaLogin(2);
-        if (refSenhaLogin.current) refSenhaLogin.current.focus();
-      }, 1000);
-      return () => clearTimeout(t);
+    if (!loginCrmNum) return;
+    if (loginCrmNum.length === 6) {
+      if (refCrmUfLogin.current) refCrmUfLogin.current.focus();
+      return;
     }
-  }, [loginConselho, modo, etapaLogin]);
+    const t = setTimeout(() => {
+      if (refCrmUfLogin.current && document.activeElement === refCrmNumLogin.current) {
+        refCrmUfLogin.current.focus();
+      }
+    }, 1300);
+    return () => clearTimeout(t);
+  }, [loginCrmNum, modo]);
+
+  // UF do login completa (2 letras validas) -> foco automatico na Senha.
+  useEffect(() => {
+    if (modo !== 'login') return;
+    if (loginCrmUF.length === 2 && UFS_VALIDAS.includes(loginCrmUF)) {
+      setEtapaLogin(2);
+      if (refSenhaLogin.current) refSenhaLogin.current.focus();
+    }
+  }, [loginCrmUF, modo]);
+
+  // Mesmo padrao no CADASTRO.
+  useEffect(() => {
+    if (modo !== 'cadastro') return;
+    if (!crmNum) return;
+    if (crmNum.length === 6) {
+      if (refCrmUf.current) refCrmUf.current.focus();
+      return;
+    }
+    const t = setTimeout(() => {
+      if (refCrmUf.current && document.activeElement === refCrmNum.current) {
+        refCrmUf.current.focus();
+      }
+    }, 1300);
+    return () => clearTimeout(t);
+  }, [crmNum, modo]);
+
+  useEffect(() => {
+    if (modo !== 'cadastro') return;
+    if (crmUF.length === 2 && UFS_VALIDAS.includes(crmUF)) {
+      if (refCelular.current) refCelular.current.focus();
+    }
+  }, [crmUF, modo]);
 
   function formatarCelular(valor) {
     const digits = valor.replace(/\D/g, '').slice(0, 11)
@@ -162,14 +223,20 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`
   }
 
-  function formatarConselho(valor) {
-    return valor.toUpperCase().replace(/[^0-9/A-Z]/g, '').slice(0, 12)
+  // Sanitizadores dos novos campos separados.
+  function sanitizarCrmNum(valor) {
+    return String(valor || '').replace(/\D/g, '').slice(0, 6);
+  }
+  function sanitizarCrmUF(valor) {
+    return String(valor || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
   }
 
   async function handleLogin() {
     setLoginErro('')
+    if (!loginCrmNum) { setLoginErro("Informe o n\u00famero do CRM."); return }
+    if (!loginCrmUF) { setLoginErro("Informe a UF."); return }
+    if (!UFS_VALIDAS.includes(loginCrmUF)) { setLoginErro("UF inv\u00e1lida."); return }
     const conselhoLimpo = loginConselho.trim().toUpperCase()
-    if (!conselhoLimpo) { setLoginErro("Informe o n\u00famero do conselho de classe."); return }
     if (!loginSenha) { setLoginErro('Informe a senha.'); return }
     setLoginLoading(true)
     const { data: medico } = await supabase
@@ -191,7 +258,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     const conselhoLimpo = conselho.trim().toUpperCase()
     const celularDigits = celular.replace(/\D/g, '')
     if (!nome.trim() || nome.trim().length < 5) { setCadErro('Informe seu nome completo.'); return }
-    if (!conselhoLimpo) { setCadErro("Informe o n\u00famero do conselho de classe/UF."); return }
+    if (!crmNum) { setCadErro("Informe o n\u00famero do CRM."); return }
+    if (!crmUF) { setCadErro("Informe a UF."); return }
+    if (!UFS_VALIDAS.includes(crmUF)) { setCadErro("UF inv\u00e1lida."); return }
     if (celularDigits.length < 10) { setCadErro("Informe um celular v\u00e1lido com DDD."); return }
     if (!email || !email.includes('@')) { setCadErro("Informe um e-mail v\u00e1lido."); return }
     if (!jaLogadoSemSenha && (!senha || senha.length < 6)) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
@@ -277,11 +346,22 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
               {"\u2190 Voltar"}
             </button>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM/UF"}</label>
-              <input ref={refCrmLogin} type="text" value={loginConselho}
-                onChange={e => setLoginConselho(formatarConselho(e.target.value))}
-                placeholder="Ex: 6302/BA" autoComplete="off" name="rf-crm-login"
-                className={`${inputClass} ${etapaLogin === 1 ? 'border-yellow-400 bg-yellow-50' : 'bg-yellow-50 border-yellow-300'}`} />
+              <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM e UF"}</label>
+              <div className="grid grid-cols-3 gap-2">
+                <input ref={refCrmNumLogin} type="text" value={loginCrmNum}
+                  onChange={e => setLoginCrmNum(sanitizarCrmNum(e.target.value))}
+                  placeholder="Ex: 6302" autoComplete="off" name="rf-crm-num-login"
+                  inputMode="numeric" maxLength={6}
+                  className={`col-span-2 ${inputClass} ${etapaLogin === 1 ? 'border-yellow-400 bg-yellow-50' : 'bg-yellow-50 border-yellow-300'}`} />
+                <input ref={refCrmUfLogin} type="text" value={loginCrmUF}
+                  onChange={e => setLoginCrmUF(sanitizarCrmUF(e.target.value))}
+                  placeholder="UF" autoComplete="off" name="rf-crm-uf-login"
+                  maxLength={2}
+                  className={`${inputClass} text-center uppercase ${etapaLogin === 1 ? 'border-yellow-400 bg-yellow-50' : 'bg-yellow-50 border-yellow-300'} ${loginCrmUF.length === 2 && !UFS_VALIDAS.includes(loginCrmUF) ? 'border-red-500' : ''}`} />
+              </div>
+              {loginCrmUF.length === 2 && !UFS_VALIDAS.includes(loginCrmUF) && (
+                <p className="text-red-500 text-xs mt-1">{"UF inv\u00e1lida"}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
@@ -333,14 +413,25 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
                 placeholder={"Jo\u00e3o da Silva"} className={inputClass} autoComplete="off" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM/UF"}</label>
-              <input type="text" value={conselho} onChange={e => setConselho(formatarConselho(e.target.value))}
-                placeholder="Ex: 6302/BA" className={inputClass} autoComplete="off" />
+              <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM e UF"}</label>
+              <div className="grid grid-cols-3 gap-2">
+                <input ref={refCrmNum} type="text" value={crmNum}
+                  onChange={e => setCrmNum(sanitizarCrmNum(e.target.value))}
+                  placeholder="Ex: 6302" className={inputClass} autoComplete="off"
+                  inputMode="numeric" maxLength={6} />
+                <input ref={refCrmUf} type="text" value={crmUF}
+                  onChange={e => setCrmUF(sanitizarCrmUF(e.target.value))}
+                  placeholder="UF" maxLength={2}
+                  className={`${inputClass} text-center uppercase ${crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) ? 'border-red-500' : ''}`} autoComplete="off" />
+              </div>
+              {crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) && (
+                <p className="text-red-500 text-xs mt-1">{"UF inv\u00e1lida"}</p>
+              )}
               <p className="text-xs text-red-800 font-medium mt-0.5">{"Este ser\u00e1 seu login permanente"}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
-              <input type="tel" value={celular} onChange={e => setCelular(formatarCelular(e.target.value))}
+              <input ref={refCelular} type="tel" value={celular} onChange={e => setCelular(formatarCelular(e.target.value))}
                 placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} autoComplete="off" />
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
@@ -1447,6 +1538,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       )}
 
       <main className="max-w-2xl mx-auto px-3 py-5">
+        {!resultado && (
         <form onSubmit={handleSubmit} className="space-y-4">
 
           <section className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
@@ -1706,6 +1798,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           )}
 
         </form>
+        )}
 
         {resultado && (
           <div id="resultado" className="mt-6">
@@ -1718,6 +1811,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               medicoCRM={medicoCRM}
               medicoDados={medicoDados}
               onVoltar={medicoCRM ? onVoltar : undefined}
+              onNovaAvaliacao={() => { setResultado(null); setCopiado(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             />
             {!medicoCRM && (
               <div className="mt-8 mb-12 text-center">
