@@ -283,7 +283,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
   const [form, setForm] = useState({
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
-    imc_antes: '', imc_atual: '',
+    altura: '',
     ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
     status_intestinal: '', status_fibromialgia: [], calprotectina: '', indican: '',
@@ -407,6 +407,13 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
   const kgPerdidos = (!isNaN(pesoAntes) && !isNaN(pesoAtual) && pesoAntes > pesoAtual) ? pesoAntes - pesoAtual : null
   const kgGanhou   = (!isNaN(pesoMin) && !isNaN(pesoAtual) && pesoAtual > pesoMin) ? pesoAtual - pesoMin : null
 
+  // IMC calculado a partir da ALTURA (cm) + peso (kg). Substitui os antigos
+  // campos manuais de IMC. imc_antes usa o peso pré-cirurgia; imc_atual o atual.
+  const alturaCm = parseFloat(form.altura)
+  const alturaM  = (!isNaN(alturaCm) && alturaCm > 0) ? alturaCm / 100 : null
+  const imcAntes = (alturaM && !isNaN(pesoAntes)) ? pesoAntes / (alturaM * alturaM) : null
+  const imcAtual = (alturaM && !isNaN(pesoAtual)) ? pesoAtual / (alturaM * alturaM) : null
+
   function toggleAtividade(val) {
     if (val === "SEDENT\u00c1RIO") sf('atividade_fisica', form.atividade_fisica.includes("SEDENT\u00c1RIO") ? [] : ["SEDENT\u00c1RIO"])
     else if (!form.atividade_fisica.includes("SEDENT\u00c1RIO")) sf('atividade_fisica', tog(form.atividade_fisica, val))
@@ -421,6 +428,9 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       peso_antes:         pesoAntes || null,
       peso_atual:         pesoAtual || null,
       peso_minimo_pos:    pesoMin || null,
+      imc_antes:          imcAntes !== null ? +imcAntes.toFixed(1) : null,
+      imc_atual:          imcAtual !== null ? +imcAtual.toFixed(1) : null,
+      altura:             alturaCm || null,
       ganhou_peso_apos:   (kgGanhou !== null && kgGanhou > 0) ? true : form.ganhou_peso_apos,
       fez_plasma_argonio: form.fez_plasma_argonio,
       status_glicemico:   form.status_glicemico || null,
@@ -455,6 +465,13 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       tiroxina:           form.tiroxina,
       methotrexato:       form.methotrexato,
       hivTratamento:      form.hivTratamento,
+      // Acompanhamento: estes 3 campos sao LIDOS por buildModAcompanhamento no
+      // engine (obaEngine.js:1569-1571). Sem eles, o engine recebia undefined e
+      // disparava sempre o alerta GRAVE falso "SEM ACOMPANHAMENTO ESPECIALIZADO".
+      acompanhamento:     form.acompanhamento || null,
+      especialistas:      form.especialistas,
+      semEspecialista:    form.semEspecialista,
+      indicacao_cirurgia: form.indicacao_cirurgia || null,
     }
   }
 
@@ -816,19 +833,21 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             </p>
           )}
 
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem', marginTop:'0.8rem' }}>
-            <div>
-              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>IMC antes da cirurgia</label>
-              <input style={inp} type="number" step="0.1" placeholder="Ex: 42" value={form.imc_antes} onChange={e => sf('imc_antes', e.target.value)} />
-              <p style={{ fontSize:'0.65rem', color:'#6B7280', marginTop:'0.25rem' }}>Normal: 18.5 a 24.9</p>
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Altura (cm)</label>
+          <input style={inp} type="number" step="1" placeholder="Ex: 165" value={form.altura} onChange={e => sf('altura', e.target.value)} />
+          <p style={{ fontSize:'0.65rem', color:'#6B7280', marginTop:'0.25rem' }}>{"O IMC \u00e9 calculado automaticamente a partir do peso e da altura."}</p>
+          {(imcAntes !== null || imcAtual !== null) && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem', marginTop:'0.5rem' }}>
+              <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.5rem 0.8rem' }}>
+                <p style={{ fontSize:'0.68rem', color:'#6B7280', marginBottom:'0.1rem' }}>IMC antes</p>
+                <p style={{ fontSize:'0.95rem', fontWeight:700, color:'#374151' }}>{imcAntes !== null ? imcAntes.toFixed(1) : "\u2014"}</p>
+              </div>
+              <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.5rem 0.8rem' }}>
+                <p style={{ fontSize:'0.68rem', color:'#6B7280', marginBottom:'0.1rem' }}>IMC atual</p>
+                <p style={{ fontSize:'0.95rem', fontWeight:700, color:'#374151' }}>{imcAtual !== null ? imcAtual.toFixed(1) : "\u2014"}</p>
+              </div>
             </div>
-            <div>
-              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>IMC atual</label>
-              <input style={inp} type="number" step="0.1" placeholder="Ex: 28" value={form.imc_atual} onChange={e => sf('imc_atual', e.target.value)} />
-              <p style={{ fontSize:'0.65rem', color:'#6B7280', marginTop:'0.25rem' }}>Normal: 18.5 a 24.9</p>
-            </div>
-          </div>
-          <p style={{ fontSize:'0.7rem', color:'#6B7280', marginTop:'0.3rem', fontStyle:'italic' }}>{"Opcional \u2014 se n\u00e3o souber, deixe em branco."}</p>
+          )}
 
           {kgPerdidos !== null && kgPerdidos > 0 && (
             <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:8, padding:'0.5rem 0.9rem', marginTop:'0.5rem' }}>

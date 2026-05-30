@@ -109,6 +109,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modEritron = buildModEritron(resultadoEritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir, alertas, examesSuger)
   modulos.push(modEritron)
 
+  // ── 1b. MÓDULO CONTEXTO DA INDICAÇÃO CIRÚRGICA ──────────────────────────
+  const modIndic = buildModIndicacao(dadosOBA, alertas)
+  if (modIndic) modulos.push(modIndic)
+
   // ── 2. MÓDULO B12 ────────────────────────────────────────────────────────
   const modB12 = buildModB12(examesOBA, dadosOBA, disab, alertas, examesSuger)
   if (modB12) modulos.push(modB12)
@@ -263,6 +267,38 @@ function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir,
     nivel:  color === 'green' ? NORMAL : color === 'yellow' ? LEVE : color === 'orange' ? MODERADO : GRAVE,
     linhas,
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO 1b — CONTEXTO DA INDICAÇÃO CIRÚRGICA
+// Lê dadosOBA.indicacao_cirurgia. OBESIDADE pura = caso padrão (sem output).
+// Valores possíveis (form): OBESIDADE | METÁBOLICA (...) | OBESIDADE + DIABETES |
+// HEMOCROMATOSE | GASTRECTOMIA POR OUTRAS CAUSAS
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModIndicacao(dadosOBA, alertas) {
+  const indic = (dadosOBA.indicacao_cirurgia || '').toUpperCase()
+  if (!indic || indic === 'OBESIDADE') return null
+
+  const linhas = []
+  let nivel = NORMAL
+
+  if (indic.includes('HEMOCROMATOSE')) {
+    linhas.push('CIRURGIA INDICADA POR HEMOCROMATOSE (INDICAÇÃO MUITO RARA): ATENÇÃO — O CONTEXTO DE FERRO ESTÁ INVERTIDO. A SUPLEMENTAÇÃO DE FERRO É CONTRAINDICADA. A DISABSORÇÃO PÓS-CIRÚRGICA PODE TER EFEITO PROTETOR AO REDUZIR A ABSORÇÃO DE FERRO. FERRITINA E SATURAÇÃO DA TRANSFERRINA DEVEM SER MANTIDAS NO LIMITE INFERIOR DA NORMALIDADE. CONFIRMAR MUTAÇÃO HFE E RASTREAR FAMILIARES. SANGRIAS TERAPÊUTICAS PODEM PERMANECER INDICADAS MESMO APÓS A CIRURGIA.')
+    nivel = MODERADO
+    alertas.push({ nivel: MODERADO, texto: 'CIRURGIA POR HEMOCROMATOSE: contexto de ferro invertido — suplementação de ferro contraindicada.' })
+  } else if (indic.includes('METÁBOLICA') || indic.includes('METABÓLICA') || indic.includes('DIABETES')) {
+    linhas.push('É IMPORTANTE AVALIAR QUANTO DO OBJETIVO DA CIRURGIA FOI ATINGIDO, COMPARANDO OS EXAMES ANTERIORES AO PROCEDIMENTO COM OS POSTERIORES. ORGANIZE OS EXAMES PRÉ E PÓS-CIRÚRGICOS POR DATA E MARQUE UMA TELECONSULTA MÉDICA VIA PLATAFORMA PARA SER ADEQUADAMENTE ORIENTADO. SE OS EXAMES TÊM MAIS DE 90 DIAS, SOLICITE AO MÉDICO O PEDIDO PARA NOVOS EXAMES.')
+    nivel = LEVE
+    alertas.push({ nivel: LEVE, texto: 'INDICAÇÃO METABÓLICA/DIABETES: avaliar quanto do objetivo da cirurgia foi atingido — comparar exames pré e pós e marcar teleconsulta.' })
+  } else if (indic.includes('GASTRECTOMIA')) {
+    linhas.push('CIRURGIA POR GASTRECTOMIA DE OUTRA CAUSA: É FUNDAMENTAL MARCAR UMA TELECONSULTA VIA PLATAFORMA PARA QUE UM MÉDICO REVISE OS EXAMES E INVESTIGUE A ENFERMIDADE QUE LEVOU À CIRURGIA, CONSIDERADA A POSSIBILIDADE DE RECIDIVA E EVENTUAL PERDA DE CONTROLE SOBRE A DOENÇA.')
+    nivel = MODERADO
+    alertas.push({ nivel: MODERADO, texto: 'GASTRECTOMIA POR OUTRA CAUSA: revisar exames e investigar recidiva da doença de base — marcar teleconsulta.' })
+  } else {
+    return null
+  }
+
+  return { id: 'indicacao', titulo: 'CONTEXTO DA INDICAÇÃO CIRÚRGICA', nivel, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -868,24 +904,13 @@ function buildModPonderal(dados, alertas) {
     }
 
     if (!isNaN(pesoMin) && pesoMin < pesoAtual) {
+      // Apenas dado bruto. O JULGAMENTO (gravidade/conduta) do reganho fica a
+      // cargo do VEREDITO ao final (reganho % sobre o MENOR PESO × meta). O
+      // antigo cálculo por "% do peso perdido" foi removido por contradizer o
+      // veredito (mesmo paciente recebia "reganho leve" e "objetivo alcançado").
       const reganho = pesoAtual - pesoMin
       linhas.push(`MENOR PESO ALCANÇADO: ${pesoMin} kg`)
       linhas.push(`REGANHO DESDE O NADIR: ${reganho.toFixed(1)} kg`)
-      const pctReganho = (reganho / (pesoAntes - pesoMin)) * 100
-
-      if (pctReganho > 50) {
-        nivelGeral = GRAVE
-        linhas.push('REGANHO DE PESO EXPRESSIVO (> 50% DO PESO PERDIDO). FALHA BARIÁTRICA SIGNIFICATIVA. INVESTIGAR CAUSA (COMPORTAMENTAL, HORMONAL, ESTRUTURAL) E CONSIDERAR REVISÃO CIRÚRGICA OU TERAPIA ADJUVANTE.')
-        alertas.push({ nivel: GRAVE, texto: `REGANHO EXPRESSIVO: ${reganho.toFixed(1)} kg (${pctReganho.toFixed(0)}% do peso perdido).` })
-      } else if (pctReganho > 20) {
-        nivelGeral = MODERADO
-        linhas.push('REGANHO DE PESO MODERADO (20–50% DO PESO PERDIDO). INTERVENÇÃO NECESSÁRIA: AVALIAÇÃO NUTRICIONAL INTENSIVA, PSICOLÓGICA E CONSIDERAR FARMACOTERAPIA ADJUVANTE.')
-        alertas.push({ nivel: MODERADO, texto: `REGANHO MODERADO: ${reganho.toFixed(1)} kg (${pctReganho.toFixed(0)}% do peso perdido).` })
-      } else if (reganho > 5) {
-        if (nivelGeral === NORMAL) nivelGeral = LEVE
-        linhas.push(`REGANHO DE PESO LEVE (${reganho.toFixed(1)} kg). ATENÇÃO AO PADRÃO ALIMENTAR E ATIVIDADE FÍSICA PARA EVITAR PROGRESSÃO.`)
-        alertas.push({ nivel: LEVE, texto: `REGANHO: ${reganho.toFixed(1)} kg — ATENÇÃO.` })
-      }
     }
 
     // Velocidade de perda
@@ -898,14 +923,55 @@ function buildModPonderal(dados, alertas) {
     }
   }
 
-  // Meta
-  if (meta === 'PERDER' && !isNaN(metaKg) && metaKg > 0) {
-    linhas.push(`META DO PACIENTE: PERDER MAIS ${metaKg} kg. PLANEJAR COM EQUIPE MULTIDISCIPLINAR.`)
-  } else if (meta === 'MANTER') {
-    linhas.push('META DO PACIENTE: MANTER O PESO ATUAL. FOCO NA CONSOLIDAÇÃO DOS HÁBITOS ADQUIRIDOS.')
-  } else if (meta === 'GANHAR' && !isNaN(metaKg)) {
-    if (nivelGeral === NORMAL) nivelGeral = LEVE
-    linhas.push(`META DO PACIENTE: GANHAR ${metaKg} kg. NO CONTEXTO BARIÁTRICO, GANHO DE PESO INTENCIONAL DEVE SER ACOMPANHADO POR NUTRICIONISTA PARA GARANTIR QUE SEJA MASSA MUSCULAR E NÃO GORDURA.`)
+  // ── VEREDITO DO OBJETIVO DA CIRURGIA (baixo peso / reganho × meta) ──────────
+  // Cruza o status pondéral atual com a meta declarada (projeto de vida).
+  // Prioridade (1ª que casar vence): P1 baixo peso (IMC<20) > P2 reganho>15%
+  // sobre o menor peso (nadir) > P3 controlado (reganho<=15% e IMC ok).
+  if (meta) {
+    const metaLabel = meta === 'PERDER' ? 'PERDER PESO' : meta === 'GANHAR' ? 'GANHAR PESO' : 'MANTER O PESO'
+    linhas.push(`META DO PACIENTE: ${metaLabel}${(meta !== 'MANTER' && !isNaN(metaKg) && metaKg > 0) ? ` (${metaKg} kg)` : ''}.`)
+
+    const imcAtualVer  = parseFloat(dados.imc_atual)
+    const pctSobreNadir = (!isNaN(pesoMin) && !isNaN(pesoAtual) && pesoMin > 0)
+      ? ((pesoAtual - pesoMin) / pesoMin) * 100
+      : null
+
+    if (!isNaN(imcAtualVer) && imcAtualVer < 20) {
+      // P1 — baixo peso / perda excessiva
+      if (meta === 'GANHAR') {
+        linhas.push('PERDA DE PESO EXCESSIVA — IMC ATUAL ABAIXO DO IDEAL. COMO VOCÊ DESEJA GANHAR PESO, BUSQUE AVALIAÇÃO DO CIRURGIÃO E DE ENDOCRINOLOGISTA OU METABOLOGISTA PARA ORIENTAR A RECUPERAÇÃO PONDERAL COM SEGURANÇA.')
+        alertas.push({ nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20) + META GANHAR: buscar cirurgião e endocrinologista/metabologista.' })
+      } else if (meta === 'MANTER') {
+        linhas.push('SEU IMC ESTÁ ABAIXO DO IDEAL E VOCÊ DESEJA MANTER O PESO. BUSQUE AVALIAÇÃO DE ENDOCRINOLOGISTA/NUTRÓLOGO — NESSE NÍVEL DE IMC A MANUTENÇÃO PODE NÃO SER SEGURA.')
+        alertas.push({ nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20) + META MANTER: avaliação de endocrinologista/nutrólogo.' })
+      } else {
+        linhas.push('ATENÇÃO: SEU IMC JÁ ESTÁ ABAIXO DO IDEAL E VOCÊ DESEJA PERDER MAIS PESO — ISSO PODE SER PERIGOSO. BUSQUE AVALIAÇÃO MÉDICA (ENDOCRINOLOGISTA/METABOLOGISTA).')
+        alertas.push({ nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20) + META PERDER: avaliação médica — pode ser perigoso.' })
+      }
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+    } else if (pctSobreNadir !== null && pctSobreNadir > 15) {
+      // P2 — reganho > 15% sobre o menor peso pós-cirurgia
+      if (meta === 'MANTER') {
+        linhas.push('VOCÊ DESEJA MANTER O PESO, MAS HÁ REGANHO SIGNIFICATIVO (MAIS DE 15% SOBRE O MENOR PESO PÓS-CIRURGIA). PROCURE ORIENTAÇÃO DE NUTRÓLOGO PARA INTERROMPER A TENDÊNCIA DE GANHO.')
+      } else if (meta === 'PERDER') {
+        linhas.push('REGANHO SIGNIFICATIVO E META DE PERDER PESO: É NECESSÁRIA ORIENTAÇÃO DE NUTRÓLOGO PARA INTERROMPER A TENDÊNCIA E REVERTER O GANHO DE PESO.')
+      } else {
+        linhas.push('VOCÊ DESEJA GANHAR PESO, MAS HÁ REGANHO SIGNIFICATIVO (MAIS DE 15% SOBRE O MENOR PESO). O GANHO DEVE SER SUPERVISIONADO POR NUTRÓLOGO PARA NÃO COMPROMETER O RESULTADO DA CIRURGIA.')
+      }
+      alertas.push({ nivel: MODERADO, texto: `REGANHO > 15% SOBRE O MENOR PESO + META ${metaLabel}: orientação de nutrólogo.` })
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+    } else if (pctSobreNadir !== null) {
+      // P3 — controlado (reganho <= 15%) e IMC ok (>= 20 ou desconhecido)
+      if (meta === 'MANTER') {
+        linhas.push('OBJETIVO DA CIRURGIA ALCANÇADO: O PESO ESTÁ CONTROLADO (REGANHO ATÉ 15% SOBRE O MENOR PESO) E ALINHADO À SUA META DE MANUTENÇÃO. MANTER OS HÁBITOS ADQUIRIDOS E O ACOMPANHAMENTO.')
+      } else if (meta === 'PERDER') {
+        linhas.push('PESO CONTROLADO. COMO VOCÊ DESEJA PERDER MAIS PESO, O ACOMPANHAMENTO COM NUTRICIONISTA AJUDA A ATINGIR A META COM SEGURANÇA.')
+        if (nivelGeral === NORMAL) nivelGeral = LEVE
+      } else {
+        linhas.push('PESO CONTROLADO. COMO VOCÊ DESEJA GANHAR PESO, FAÇA-O SOB ORIENTAÇÃO DE NUTRICIONISTA PARA PRIORIZAR MASSA MAGRA E NÃO GORDURA.')
+        if (nivelGeral === NORMAL) nivelGeral = LEVE
+      }
+    }
   }
 
   return {
