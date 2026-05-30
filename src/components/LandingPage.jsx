@@ -513,41 +513,52 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   }, [crmMedicoNum]);
 
   const [fluxoEtapa, setFluxoEtapa] = useState('inicio');
-  // Tooltip "Procure no exame..." aparece no hover (desktop) ou toque (mobile) sobre
-  // 'TEM UM HEMOGRAMA?' ou botao hemacia/ENTRE. Reaparece a cada hover/toque novo.
-  // Estado: 'hidden' | 'in' | 'out'. Apos 4500ms vira 'out' (fade-out 300ms) e depois 'hidden'.
-  // Em mobile, tap em qualquer lugar fora do bot\u00e3o/frase tamb\u00e9m fecha.
+  // Tooltip "Procure no exame...":
+  //  - Desktop: aparece no hover, some apos 4500ms (com fade-out 320ms)
+  //  - Mobile: auto-aparece 800ms apos o mount (sem timeout), some no primeiro toque
+  // Estado: 'hidden' | 'in' | 'out'.
   const [hintHero, setHintHero] = useState('hidden');
   const hintTimerRef = useRef(null);
   const hintHideTimerRef = useRef(null);
-  function mostrarHintHero() {
+  // Detecta touch device (sem mouse hover fino). Roda uma vez no mount.
+  const isMobile = (() => {
+    if (typeof window === 'undefined') return false;
+    try { return window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse)').matches; } catch (e) { return false; }
+  })();
+  function mostrarHintHero(opts) {
+    const { semTimeout = false } = opts || {};
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (hintHideTimerRef.current) clearTimeout(hintHideTimerRef.current);
     setHintHero('in');
-    hintTimerRef.current = setTimeout(() => {
-      setHintHero('out');
-      hintHideTimerRef.current = setTimeout(() => setHintHero('hidden'), 320);
-    }, 4500);
+    if (!semTimeout) {
+      hintTimerRef.current = setTimeout(() => {
+        setHintHero('out');
+        hintHideTimerRef.current = setTimeout(() => setHintHero('hidden'), 320);
+      }, 4500);
+    }
   }
   function esconderHintHero() {
-    // Fade-out manual (usado em mobile quando o usuario toca fora).
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (hintHideTimerRef.current) clearTimeout(hintHideTimerRef.current);
     setHintHero('out');
     hintHideTimerRef.current = setTimeout(() => setHintHero('hidden'), 320);
   }
-  // Em mobile: tap fora do bot\u00e3o hem\u00e1cia / frase fecha o tooltip.
-  // Os triggers (bot\u00e3o e frase) marcam o evento com data-hinttrigger para o listener ignorar.
+  // Em mobile: auto-aparece 800ms apos mount, sem timeout (espera toque).
   useEffect(() => {
+    if (!isMobile) return;
+    const t = setTimeout(() => mostrarHintHero({ semTimeout: true }), 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Em mobile: qualquer toque na tela fecha o tooltip (inclusive no proprio botao).
+  useEffect(() => {
+    if (!isMobile) return;
     if (hintHero !== 'in') return;
-    function onTouch(e) {
-      const tgt = e.target;
-      if (tgt && tgt.closest && tgt.closest('[data-hinttrigger="1"]')) return;
-      esconderHintHero();
-    }
-    window.addEventListener('touchstart', onTouch, { passive: true });
+    function onTouch() { esconderHintHero(); }
+    // Usa { once: true } pra fechar so' no primeiro toque depois que o tooltip subiu.
+    window.addEventListener('touchstart', onTouch, { passive: true, once: true });
     return () => window.removeEventListener('touchstart', onTouch);
-  }, [hintHero]);
+  }, [hintHero, isMobile]);
   const [fluxoFade, setFluxoFade] = useState(false);
   const [twTexto, setTwTexto] = useState('');
   useEffect(() => {
@@ -1227,7 +1238,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
               {fluxoEtapa === 'inicio' && (
                 <>
-                  <p data-hinttrigger="1" onMouseEnter={mostrarHintHero} onTouchStart={mostrarHintHero}
+                  <p onMouseEnter={mostrarHintHero}
                     style={{ fontSize:'1rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0 0 0.5rem', minHeight:'1.3rem', cursor:'default' }}>
                     {twTexto}
                   </p>
@@ -1250,8 +1261,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     }}
                     onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; mostrarHintHero(); }}
                     onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
-                    onTouchStart={mostrarHintHero}
-                    data-hinttrigger="1"
                     style={{ position:'relative', width:96, height:96, borderRadius:'50%', background:'none', backgroundColor:'transparent', border:'none', outline:'none', padding:0, margin:0, cursor:'pointer', transition:'transform 0.15s ease', animation:'heartbeat 1.6s ease-in-out infinite', WebkitAppearance:'none', MozAppearance:'none', appearance:'none', boxShadow:'none' }}>
                     <img src={redcell1} alt="ENTRE"
                       style={{ width:'100%', height:'100%', objectFit:'contain', display:'block', pointerEvents:'none', background:'transparent' }} />
@@ -1260,7 +1269,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     </span>
                     </button>
                     {hintHero !== 'hidden' && (
-                      <div role="tooltip" data-hinttrigger="1"
+                      <div role="tooltip"
                         style={{ position:'absolute', left:'calc(100% + 18px)', top:'50%', transform:'translateY(-50%)', background:'#f3f4f6', color:'#374151', fontSize:'0.7rem', fontWeight:500, lineHeight:1.35, padding:'6px 10px', borderRadius:'8px', border:'1.5px solid #7B1E1E', boxShadow:'0 2px 8px rgba(0,0,0,0.08)', maxWidth:'180px', textAlign:'left', zIndex:50, pointerEvents:'none', animation: hintHero === 'in' ? 'fadeInHint 0.35s ease-out forwards' : 'fadeOutHint 0.3s ease-in forwards' }}>
                         {"Procure no exame e anote: DATA, HEMOGLOBINA, VCM e RDW"}
                       </div>
