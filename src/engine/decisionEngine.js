@@ -370,6 +370,38 @@ export function avaliarPaciente(inputs) {
 
   const achadosParalelos = detectarAchadosParalelos(inputs);
 
+  // ── Enriquecimento da lista de PROXIMOS EXAMES com regras pos-matching ──
+  // Comeca com o array original da matriz (clonado pra nao mutar).
+  let proximosExames = Array.isArray(resultado.proximosExames) ? [...resultado.proximosExames] : [];
+
+  // Regra 1: Saturacao da Transferrina > 50% E Ferritina > 1000 ng/mL
+  //   -> sugerir RNM do Abdome Superior com Protocolo de Ferro (avaliar sobrecarga
+  //   hepatica de ferro / sideremia / hemocromatose).
+  if (Number(inputs.satTransf) > 50 && Number(inputs.ferritina) > 1000) {
+    const rnm = 'RESSONANCIA NUCLEAR MAGNETICA DO ABDOME SUPERIOR COM PROTOCOLO DE FERRO';
+    if (!proximosExames.some(e => /RESSON/i.test(String(e)))) {
+      proximosExames.push(rnm);
+    }
+  }
+
+  // Regra 2: Paciente bariatrica feminina com 45+ anos -> Densitometria Ossea
+  //   (a cirurgia bariatrica reduz absorcao de calcio e vit D; mulher 45+ tem risco
+  //   adicional de osteoporose pos-menopausa).
+  if (inputs.bariatrica && inputs.sexo === 'F' && Number(inputs.idade) >= 45) {
+    const den = 'DENSITOMETRIA OSSEA';
+    if (!proximosExames.some(e => /DENSITOMETR/i.test(String(e)))) {
+      proximosExames.push(den);
+    }
+  }
+
+  // ── Separacao LAB vs IMAGEM ────────────────────────────────────────────
+  // Lista oficial de palavras-chave de exames de imagem (case-insensitive).
+  // Qualquer exame que casar com um destes padroes vai pro array de IMAGEM;
+  // o resto fica em LAB.
+  const PADROES_IMAGEM = /ULTRASSON|COLONOSCOP|ENDOSCOP|RESSON|RNM|DENSITOMETR/i;
+  const proximosExamesImagem = proximosExames.filter(e => PADROES_IMAGEM.test(String(e)));
+  const proximosExamesLab = proximosExames.filter(e => !PADROES_IMAGEM.test(String(e)));
+
   return {
     encontrado: true,
     id: resultado.id,
@@ -378,7 +410,9 @@ export function avaliarPaciente(inputs) {
     diagnostico: diagnosticoFinal,
     recomendacao: recomendacaoFinal,
     comentarios,
-    proximosExames: resultado.proximosExames,
+    proximosExames,
+    proximosExamesLab,
+    proximosExamesImagem,
     fraseData,
     fraseHipermenorreia: fraseHiper,
     g6pdAlerta,
@@ -476,6 +510,8 @@ export function triagemEritron(inputs) {
       classificacaoVCM: 'NORMOCÍTICA',
       isAnisocitica: false,
       proximosExames: [],
+      proximosExamesLab: [],
+      proximosExamesImagem: [],
       comentarios: [],
       achadosParalelos: [],
       g6pdAlerta: null,
@@ -526,6 +562,8 @@ export function triagemEritron(inputs) {
     isAnisocitica,
     gravidadeHb,
     proximosExames: ['FERRITINA', 'SATURAÇÃO DA TRANSFERRINA'],
+    proximosExamesLab: ['FERRITINA', 'SATURAÇÃO DA TRANSFERRINA'],
+    proximosExamesImagem: [],
     comentarios: [],
     achadosParalelos: [],
     g6pdAlerta: null,
