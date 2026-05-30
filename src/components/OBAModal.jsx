@@ -442,6 +442,8 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       status_dental:      form.status_dental || null,
       status_gestacional: form.status_gestacional || null,
       semanas_gestacao:   form.semanas_gestacao ? parseFloat(form.semanas_gestacao) : null,
+      gestacoes_previas:  form.gestacoes_previas !== '' ? parseInt(form.gestacoes_previas) : null,
+      abortamentos_espontaneos: form.abortamentos_espontaneos,
       compulsoes:         form.compulsoes,
       medicamentos:       form.medicamentos,
       atividade_fisica:   form.atividade_fisica,
@@ -473,6 +475,8 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       especialistas:      form.especialistas,
       semEspecialista:    form.semEspecialista,
       indicacao_cirurgia: form.indicacao_cirurgia || null,
+      teve_covid:         form.teve_covid,
+      cirurgia_plastica:  form.cirurgia_plastica,
     }
   }
 

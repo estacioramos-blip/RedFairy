@@ -161,6 +161,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modGest = buildModGestacional(dadosOBA, mesesPos, alertas, examesSuger)
   if (modGest) modulos.push(modGest)
 
+  // ── 13b. MÓDULO HISTÓRIA OBSTÉTRICA (gestações prévias / abortamentos) ────
+  const modObst = buildModObstetrico(dadosOBA, alertas, examesSuger)
+  if (modObst) modulos.push(modObst)
+
   // ── 14. MÓDULO ACOMPANHAMENTO ────────────────────────────────────────────
   const modAcomp = buildModAcompanhamento(dadosOBA, alertas)
   if (modAcomp) modulos.push(modAcomp)
@@ -1098,6 +1102,8 @@ function buildModVascular(dados, alertas, suger) {
     } else {
       linhas.push('SEM USO ATUAL DE ANTICOAGULANTE: AVALIAR SE HÁ INDICAÇÃO DE PROFILAXIA OU TRATAMENTO ANTICOAGULANTE.')
     }
+    linhas.push('NA INVESTIGAÇÃO DA TROMBOSE COM HEMATOLOGISTA, O D-DÍMERO PODE AUXILIAR (POR EXEMPLO, NA DEFINIÇÃO DA DURAÇÃO DA ANTICOAGULAÇÃO E NA AVALIAÇÃO DE TROMBOFILIA). HISTÓRICO DE COVID-19 REFORÇA ESSA INVESTIGAÇÃO.')
+    suger.push('D-DÍMERO (NA AVALIAÇÃO COM HEMATOLOGISTA)')
     alertas.push({ nivel: GRAVE, texto: 'HISTÓRICO DE TROMBOSE COM RISCO AUMENTADO DE TEV NO BARIÁTRICO.' })
   }
 
@@ -1130,6 +1136,13 @@ function buildModVascular(dados, alertas, suger) {
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     linhas.push('HIPOTENSÃO ARTERIAL: COMUM NO PÓS-BARIÁTRICO POR DESHIDRATAÇÃO, DESNUTRIÇÃO PROTEICA OU AJUSTE EXCESSIVO DE ANTI-HIPERTENSIVOS. REVISÃO MEDICAMENTOSA INDICADA.')
     alertas.push({ nivel: LEVE, texto: 'HIPOTENSÃO — REVISAR MEDICAÇÃO E HIDRATAÇÃO.' })
+  }
+
+  // Sequelas trombóticas pós-COVID
+  if (dados.teve_covid) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    linhas.push('HISTÓRICO DE COVID-19: PARTE DOS PACIENTES EVOLUI COM SEQUELAS TROMBÓTICAS QUE PODEM COMPROMETER A QUALIDADE DE VIDA. AVALIAR SINTOMAS RESIDUAIS (DISPNEIA, FADIGA, DOR) E HISTÓRICO TROMBÓTICO.')
   }
 
   if (!temAlgo) return null
@@ -1469,6 +1482,13 @@ function buildModComportamental(dados) {
     suger.push('ULTRASSONOGRAFIA RENAL (RASTREIO DE LITÍASE — TOPIRAMATO)')
   }
 
+  // Cirurgia plástica pós-bariátrica (projeto de vida + preparo pré-operatório)
+  if (dados.cirurgia_plastica === true) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    linhas.push('CIRURGIA PLÁSTICA PÓS-BARIÁTRICA: O DESEJO DE REALIZÁ-LA REFLETE AUTOESTIMA PRESERVADA E DEVE SER VALORIZADO. COMO SÃO PROCEDIMENTOS ELETIVOS — ÀS VEZES MAIS DE UMA INTERVENÇÃO, COM RISCOS ACUMULADOS — A BOA REPOSIÇÃO DE FERRO, VITAMINA B12, FOLATOS, VITAMINA D E PROTEÍNAS DEVE PRECEDER A CIRURGIA E PODE PERMITIR A PROGRAMAÇÃO DE AUTO-TRANSFUSÕES.')
+  }
+
   if (!temAlgo) return null
 
   return {
@@ -1533,6 +1553,42 @@ function buildModGestacional(dados, mesesPos, alertas, suger) {
     nivel:  nivelGeral,
     linhas,
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO 13b — HISTÓRIA OBSTÉTRICA (gestações prévias / abortamentos)
+// Sexo F. Diferente do gestacional (gravidez ATUAL), olha o HISTÓRICO: o angulo
+// e o ferro — multiparidade deplecta reservas; abortamentos podem sinalizar
+// trombofilia (conecta com o modulo vascular).
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModObstetrico(dados, alertas, suger) {
+  if ((dados.sexo || 'F') !== 'F') return null
+  const n = parseInt(dados.gestacoes_previas)
+  const aborto = dados.abortamentos_espontaneos === true
+  const temGest = !isNaN(n) && n > 0
+  if (!temGest && !aborto) return null
+
+  const linhas = []
+  let nivel = NORMAL
+
+  if (temGest) {
+    if (n >= 4) {
+      nivel = MODERADO
+      linhas.push(`GRANDE MULTÍPARA (${n} GESTAÇÕES): DEPLEÇÃO CUMULATIVA DE FERRO POR GESTAÇÕES E LACTAÇÕES SUCESSIVAS — REFORÇA A NECESSIDADE DE REPOSIÇÃO E MONITORAMENTO DA FERRITINA.`)
+      alertas.push({ nivel: MODERADO, texto: `GRANDE MULTÍPARA (${n} gestações): depleção cumulativa de ferro — reforçar reposição.` })
+    } else {
+      nivel = LEVE
+      linhas.push(`HISTÓRICO DE ${n} GESTAÇÃO(ÕES): CADA GESTAÇÃO E LACTAÇÃO CONSOME FERRO — CONSIDERAR NO BALANÇO DA SIDEROPENIA.`)
+    }
+  }
+
+  if (aborto) {
+    if (nivel === NORMAL) nivel = LEVE
+    linhas.push('HISTÓRICO DE ABORTAMENTO(S) ESPONTÂNEO(S): INVESTIGAR CAUSAS (TROMBOFILIA / SÍNDROME ANTIFOSFOLÍPIDE, DEFICIÊNCIAS NUTRICIONAIS), ESPECIALMENTE SE HOUVER HISTÓRICO DE TROMBOSE.')
+    suger.push('AVALIAÇÃO PARA TROMBOFILIA (SE ABORTAMENTOS DE REPETIÇÃO)')
+  }
+
+  return { id: 'obstetrico', titulo: 'HISTÓRIA OBSTÉTRICA', nivel, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
