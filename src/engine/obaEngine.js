@@ -182,6 +182,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modFibro = buildModFibromialgia(dadosOBA, examesOBA, alertas, examesSuger)
   if (modFibro) modulos.push(modFibro)
 
+  // ── 18. MÓDULO STATUS NEUROLÓGICO ────────────────────────────────────────
+  const modNeuro = buildModNeurologico(dadosOBA, alertas, examesSuger)
+  if (modNeuro) modulos.push(modNeuro)
+
   // ── Ordenar alertas por prioridade ──────────────────────────────────────
   const prioridade = { [GRAVE]: 0, [MODERADO]: 1, [LEVE]: 2 }
   alertas.sort((a, b) => prioridade[a.nivel] - prioridade[b.nivel])
@@ -299,6 +303,30 @@ function buildModIndicacao(dadosOBA, alertas) {
   }
 
   return { id: 'indicacao', titulo: 'CONTEXTO DA INDICAÇÃO CIRÚRGICA', nivel, linhas }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO 18 — STATUS NEUROLÓGICO (sintomas → carências)
+// Lê dadosOBA.status_neurologico (checklist). Dispara se houver qualquer sintoma
+// diferente de "SEM QUEIXAS". Correlaciona sintomas neuro pós-bariátricos com
+// carências de B12/B1(tiamina)/cobre — gatilho independente do laboratório.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModNeurologico(dadosOBA, alertas, suger) {
+  const lista = Array.isArray(dadosOBA.status_neurologico) ? dadosOBA.status_neurologico : []
+  const sintomas = lista.filter(s => s && s !== 'SEM QUEIXAS')
+  if (sintomas.length === 0) return null
+
+  const linhas = []
+  linhas.push(`SINTOMAS NEUROLÓGICOS RELATADOS: ${sintomas.join(', ')}.`)
+  linhas.push('NO PÓS-BARIÁTRICO, MANIFESTAÇÕES NEUROLÓGICAS SÃO SINAIS DE ALERTA PARA CARÊNCIAS NUTRICIONAIS — ESPECIALMENTE VITAMINA B12, TIAMINA (B1) E COBRE. RECOMENDA-SE DOSAR ESSES NUTRIENTES E AVALIAÇÃO NEUROLÓGICA. O TRATAMENTO PRECOCE PODE REVERTER OS SINTOMAS; A DEMORA PODE TORNÁ-LOS PERMANENTES.')
+
+  alertas.push({ nivel: MODERADO, texto: `SINTOMAS NEUROLÓGICOS (${sintomas.length}): investigar B12/B1/cobre e avaliação neurológica.` })
+  suger.push('VITAMINA B12 SÉRICA')
+  suger.push('TIAMINA (VITAMINA B1)')
+  suger.push('COBRE SÉRICO')
+  suger.push('AVALIAÇÃO NEUROLÓGICA')
+
+  return { id: 'neurologico', titulo: 'STATUS NEUROLÓGICO', nivel: MODERADO, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
