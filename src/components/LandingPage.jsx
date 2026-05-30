@@ -119,7 +119,7 @@ const LANDING_CSS = `
   @keyframes fadeInHint { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fadeOutHint { from { opacity: 1; } to { opacity: 0; } }
   @keyframes pulseSoftRed { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
-  @keyframes pulseSoftBlack { 0%,100% { box-shadow: 0 0 0 0 rgba(31,41,55,0.45); } 50% { box-shadow: 0 0 0 8px rgba(31,41,55,0); } }
+  @keyframes pulseSoftLight { 0%,100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.55); } 50% { box-shadow: 0 0 0 8px rgba(255,255,255,0); } }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.4rem; margin-bottom: 0.8rem; font-weight: 700; }
 
   .hero-textbox {
@@ -513,9 +513,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   }, [crmMedicoNum]);
 
   const [fluxoEtapa, setFluxoEtapa] = useState('inicio');
-  // Tooltip "Procure no exame..." aparece no hover sobre 'TEM UM HEMOGRAMA?' ou botao
-  // hemacia/ENTRE. Reaparece a cada hover novo. Estado: 'hidden' | 'in' | 'out'.
-  // 'in' = visivel com fade-in. Apos 4500ms, vira 'out' (fade-out 300ms) e depois 'hidden'.
+  // Tooltip "Procure no exame..." aparece no hover (desktop) ou toque (mobile) sobre
+  // 'TEM UM HEMOGRAMA?' ou botao hemacia/ENTRE. Reaparece a cada hover/toque novo.
+  // Estado: 'hidden' | 'in' | 'out'. Apos 4500ms vira 'out' (fade-out 300ms) e depois 'hidden'.
+  // Em mobile, tap em qualquer lugar fora do bot\u00e3o/frase tamb\u00e9m fecha.
   const [hintHero, setHintHero] = useState('hidden');
   const hintTimerRef = useRef(null);
   const hintHideTimerRef = useRef(null);
@@ -528,6 +529,25 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       hintHideTimerRef.current = setTimeout(() => setHintHero('hidden'), 320);
     }, 4500);
   }
+  function esconderHintHero() {
+    // Fade-out manual (usado em mobile quando o usuario toca fora).
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    if (hintHideTimerRef.current) clearTimeout(hintHideTimerRef.current);
+    setHintHero('out');
+    hintHideTimerRef.current = setTimeout(() => setHintHero('hidden'), 320);
+  }
+  // Em mobile: tap fora do bot\u00e3o hem\u00e1cia / frase fecha o tooltip.
+  // Os triggers (bot\u00e3o e frase) marcam o evento com data-hinttrigger para o listener ignorar.
+  useEffect(() => {
+    if (hintHero !== 'in') return;
+    function onTouch(e) {
+      const tgt = e.target;
+      if (tgt && tgt.closest && tgt.closest('[data-hinttrigger="1"]')) return;
+      esconderHintHero();
+    }
+    window.addEventListener('touchstart', onTouch, { passive: true });
+    return () => window.removeEventListener('touchstart', onTouch);
+  }, [hintHero]);
   const [fluxoFade, setFluxoFade] = useState(false);
   const [twTexto, setTwTexto] = useState('');
   useEffect(() => {
@@ -1207,7 +1227,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
               {fluxoEtapa === 'inicio' && (
                 <>
-                  <p onMouseEnter={mostrarHintHero}
+                  <p data-hinttrigger="1" onMouseEnter={mostrarHintHero} onTouchStart={mostrarHintHero}
                     style={{ fontSize:'1rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0 0 0.5rem', minHeight:'1.3rem', cursor:'default' }}>
                     {twTexto}
                   </p>
@@ -1230,6 +1250,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     }}
                     onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; mostrarHintHero(); }}
                     onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
+                    onTouchStart={mostrarHintHero}
+                    data-hinttrigger="1"
                     style={{ position:'relative', width:96, height:96, borderRadius:'50%', background:'none', backgroundColor:'transparent', border:'none', outline:'none', padding:0, margin:0, cursor:'pointer', transition:'transform 0.15s ease', animation:'heartbeat 1.6s ease-in-out infinite', WebkitAppearance:'none', MozAppearance:'none', appearance:'none', boxShadow:'none' }}>
                     <img src={redcell1} alt="ENTRE"
                       style={{ width:'100%', height:'100%', objectFit:'contain', display:'block', pointerEvents:'none', background:'transparent' }} />
@@ -1238,7 +1260,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     </span>
                     </button>
                     {hintHero !== 'hidden' && (
-                      <div role="tooltip"
+                      <div role="tooltip" data-hinttrigger="1"
                         style={{ position:'absolute', left:'calc(100% + 18px)', top:'50%', transform:'translateY(-50%)', background:'#f3f4f6', color:'#374151', fontSize:'0.7rem', fontWeight:500, lineHeight:1.35, padding:'6px 10px', borderRadius:'8px', border:'1.5px solid #7B1E1E', boxShadow:'0 2px 8px rgba(0,0,0,0.08)', maxWidth:'180px', textAlign:'left', zIndex:50, pointerEvents:'none', animation: hintHero === 'in' ? 'fadeInHint 0.35s ease-out forwards' : 'fadeOutHint 0.3s ease-in forwards' }}>
                         {"Procure no exame e anote: DATA, HEMOGLOBINA, VCM e RDW"}
                       </div>
@@ -2187,7 +2209,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <li>{"Programa 4DOC de benef\u00edcios para afiliados"}</li>
               </ul>
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', marginTop:'auto' }}>
-                <button onClick={onModoMedico}
+                <button onClick={() => {
+                  // Se medico ja logado, vai direto pro Calculator (entra como antes).
+                  // Senao, abre a caixa "DIGITE O SEU CRM \u2794 UF" na hero e scrolla pra cima.
+                  if (medicoLogado) { entrarLogadoDireto(); return; }
+                  irPara('medico');
+                  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+                }}
                   onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
                   style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease', border:'4px solid #ef4444', color:'#ef4444', fontSize:'0.62rem', animation:'pulseSoftRed 2s ease-in-out infinite' }}>
@@ -2207,10 +2235,25 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <li>{"Apenas R$ 149,90 por ano, via PIX"}</li>
               </ul>
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', marginTop:'auto' }}>
-                <button onClick={onModoPaciente}
+                <button onClick={() => {
+                  // Mesma logica do botao PACIENTE da escolha hero (linha ~1258).
+                  // Se ja esta logado, vai direto pro dashboard. Senao, abre a caixa
+                  // "DIGITE O SEU CPF" na hero e scrolla pra cima.
+                  let temPacienteIdLive = false;
+                  try { temPacienteIdLive = !!localStorage.getItem('paciente_id'); } catch (e) {}
+                  if (pacienteLogadoFlag && !temPacienteIdLive) {
+                    setPacienteLogadoFlag(false);
+                    setPacienteLogado('');
+                  } else if (pacienteLogadoFlag && temPacienteIdLive) {
+                    onIrDashboardPaciente && onIrDashboardPaciente();
+                    return;
+                  }
+                  irPara('paciente');
+                  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+                }}
                   onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease', border:'4px solid #1f2937', color:'#1f2937', fontSize:'0.62rem', animation:'pulseSoftBlack 2s ease-in-out infinite', animationDelay:'1s' }}>
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease', border:'4px solid #1f2937', color:'#1f2937', fontSize:'0.62rem', animation:'pulseSoftLight 2s ease-in-out infinite', animationDelay:'1s' }}>
                   PACIENTE
                 </button>
                 <span style={{ fontSize:'0.62rem', fontWeight:700, letterSpacing:'1.5px', color:'rgba(255,255,255,0.85)' }}>ENTRE</span>
