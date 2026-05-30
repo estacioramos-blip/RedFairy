@@ -186,6 +186,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modNeuro = buildModNeurologico(dadosOBA, alertas, examesSuger)
   if (modNeuro) modulos.push(modNeuro)
 
+  // ── 19. MÓDULO STATUS ENDOSCÓPICO ────────────────────────────────────────
+  const modEndo = buildModEndoscopico(dadosOBA, alertas, examesSuger)
+  if (modEndo) modulos.push(modEndo)
+
   // ── Ordenar alertas por prioridade ──────────────────────────────────────
   const prioridade = { [GRAVE]: 0, [MODERADO]: 1, [LEVE]: 2 }
   alertas.sort((a, b) => prioridade[a.nivel] - prioridade[b.nivel])
@@ -327,6 +331,56 @@ function buildModNeurologico(dadosOBA, alertas, suger) {
   suger.push('AVALIAÇÃO NEUROLÓGICA')
 
   return { id: 'neurologico', titulo: 'STATUS NEUROLÓGICO', nivel: MODERADO, linhas }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO 19 — STATUS ENDOSCÓPICO (achados → conduta)
+// Lê dadosOBA.status_endoscopico (checklist). Cada achado != "NORMAL" gera sua
+// conduta. DIVERTÍCULOS (colonoscopia) entra como fonte de sangramento que
+// agrava a sideropenia. Cruza ESOFAGITE/DRGE com a armadilha do IBP crônico.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModEndoscopico(dadosOBA, alertas, suger) {
+  const lista = Array.isArray(dadosOBA.status_endoscopico) ? dadosOBA.status_endoscopico : []
+  const achados = lista.filter(s => s && s !== 'NORMAL')
+  if (achados.length === 0) return null
+
+  const ordem = { [NORMAL]: 0, [LEVE]: 1, [MODERADO]: 2, [GRAVE]: 3 }
+  let nivel = NORMAL
+  const bump = (alvo) => { if (ordem[alvo] > ordem[nivel]) nivel = alvo }
+  const has = (x) => achados.includes(x)
+
+  const linhas = []
+
+  if (has('DIVERTÍCULOS')) {
+    linhas.push('DIVERTÍCULOS: A DIVERTICULITE É FONTE DE SANGRAMENTO QUE AGRAVA A SIDEROPENIA E PODE EXIGIR MAIOR REPOSIÇÃO DE FERRO ENDOVENOSO. INVESTIGAR SANGRAMENTO ATIVO E ACOMPANHAR COM GASTROENTEROLOGISTA/COLOPROCTOLOGISTA.')
+    alertas.push({ nivel: MODERADO, texto: 'DIVERTÍCULOS: fonte de sangramento — agrava sideropenia, pode exigir ferro endovenoso.' })
+    suger.push('SANGUE OCULTO NAS FEZES')
+    suger.push('COLONOSCOPIA')
+    bump(MODERADO)
+  }
+  if (has('H. PYLORI')) {
+    linhas.push('H. PYLORI: COMPROMETE A ABSORÇÃO DE B12 E FERRO E CAUSA GASTRITE. ERRADICAR E CORRELACIONAR COM OS DÉFICITS; REAVALIAR APÓS O TRATAMENTO.')
+    alertas.push({ nivel: MODERADO, texto: 'H. PYLORI: compromete absorção de B12/ferro — erradicar e reavaliar.' })
+    suger.push('PESQUISA DE H. PYLORI (CONTROLE PÓS-TRATAMENTO)')
+    bump(MODERADO)
+  }
+  if (has('BARRETT')) {
+    linhas.push('BARRETT: LESÃO PRÉ-MALIGNA — EXIGE VIGILÂNCIA ENDOSCÓPICA PERIÓDICA COM GASTROENTEROLOGISTA.')
+    alertas.push({ nivel: MODERADO, texto: 'ESÔFAGO DE BARRETT: lesão pré-maligna — vigilância endoscópica periódica.' })
+    suger.push('ENDOSCOPIA DIGESTIVA ALTA (VIGILÂNCIA DE BARRETT)')
+    bump(MODERADO)
+  }
+  if (has('GASTRITE')) {
+    linhas.push('GASTRITE: PODE CAUSAR SANGRAMENTO OCULTO E CONTRIBUIR PARA ANEMIA FERROPRIVA. INVESTIGAR E TRATAR.')
+    suger.push('SANGUE OCULTO NAS FEZES')
+    bump(LEVE)
+  }
+  if (has('ESOFAGITE') || has('DRGE')) {
+    linhas.push('ESOFAGITE / DRGE: REFLUXO COMUM NO PÓS-BARIÁTRICO; PODE SANGRAR. MANEJO COM GASTROENTEROLOGISTA. ATENÇÃO: O USO CRÔNICO DE IBP PARA O REFLUXO AGRAVA O DÉFICIT DE B12 E FERRO.')
+    bump(LEVE)
+  }
+
+  return { id: 'endoscopico', titulo: 'STATUS ENDOSCÓPICO', nivel, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -40,6 +40,7 @@ const STATUS_ENDOSCOPICO_OPS = [
   'BARRETT',
   'DRGE',
   'H. PYLORI',
+  'DIVERTÍCULOS',
 ]
 
 const STATUS_NEUROLOGICO_OPS = [
