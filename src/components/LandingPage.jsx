@@ -472,6 +472,22 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     })
     return () => { cancelado = true; sub?.subscription?.unsubscribe?.() }
   }, [])
+
+  // Corrige refresh abrindo a landing no meio (no nivel do botao hemacia) em mobile:
+  // o navegador restaura a posicao de scroll anterior e/ou o autoFocus de inputs do
+  // fluxo CRM/UF/CPF puxa a tela pra baixo. Forca o topo no mount e desativa a
+  // restauracao automatica do scroll.
+  useEffect(() => {
+    try {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+      }
+    } catch (e) {}
+    // Dois disparos: imediato e apos o paint, pra vencer o autoFocus/layout tardio.
+    window.scrollTo(0, 0);
+    const t = setTimeout(() => window.scrollTo(0, 0), 0);
+    return () => clearTimeout(t);
+  }, [])
   async function fazerLogoffPaciente() {
     try {
       localStorage.removeItem('paciente_id')
