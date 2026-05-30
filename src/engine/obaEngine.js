@@ -1540,7 +1540,6 @@ function buildModGestacional(dados, mesesPos, alertas, suger) {
 // ─────────────────────────────────────────────────────────────────────────────
 function buildModIntestinal(dados, alertas, suger) {
   const intestinal = dados.status_intestinal || ''
-  if (!intestinal || intestinal === 'INTESTINO FUNCIONA BEM') return null
 
   const linhas = []
   let nivelGeral = NORMAL
@@ -1579,6 +1578,31 @@ function buildModIntestinal(dados, alertas, suger) {
     suger.push('PESQUISA DE GORDURA FECAL (ESTEATORREIA)')
     suger.push('AVALIAÇÃO COM GASTROENTEROLOGISTA')
   }
+
+  // ── Marcadores laboratoriais intestinais (independentes do status acima) ──
+  const calpro = parseFloat(dados.calprotectina)
+  if (!isNaN(calpro) && calpro > 50) {
+    if (calpro > 150) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push(`CALPROTECTINA FECAL ELEVADA (${calpro} µg/g): MARCADOR DE INFLAMAÇÃO INTESTINAL. INVESTIGAR DOENÇA INFLAMATÓRIA INTESTINAL, INFECÇÃO/SIBO OU ENTEROPATIA. CORRELACIONAR COM DIARREIA E ANEMIA; ENCAMINHAR AO GASTROENTEROLOGISTA.`)
+      alertas.push({ nivel: MODERADO, texto: `CALPROTECTINA ELEVADA: ${calpro} µg/g — inflamação intestinal, investigar.` })
+      suger.push('AVALIAÇÃO COM GASTROENTEROLOGISTA')
+    } else {
+      if (nivelGeral === NORMAL) nivelGeral = LEVE
+      linhas.push(`CALPROTECTINA FECAL LEVEMENTE ELEVADA (${calpro} µg/g): INFLAMAÇÃO INTESTINAL DISCRETA. REPETIR O EXAME E CORRELACIONAR COM OS SINTOMAS.`)
+      alertas.push({ nivel: LEVE, texto: `CALPROTECTINA LEVEMENTE ELEVADA: ${calpro} µg/g — repetir e correlacionar.` })
+    }
+  }
+
+  const indican = (dados.indican || '').toString()
+  if (/POSITIVO/i.test(indican)) {
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    linhas.push('INDICAN PLASMÁTICO POSITIVO: SUGERE MÁ DIGESTÃO DE PROTEÍNAS / PUTREFAÇÃO INTESTINAL, FREQUENTEMENTE ASSOCIADA A SUPERCRESCIMENTO BACTERIANO (SIBO). INVESTIGAR SIBO E OTIMIZAR A DIGESTÃO.')
+    alertas.push({ nivel: LEVE, texto: 'INDICAN POSITIVO: possível SIBO / má digestão proteica — investigar.' })
+    suger.push('TESTE RESPIRATÓRIO PARA SIBO')
+  }
+
+  if (linhas.length === 0) return null
 
   return {
     id:     'intestinal',
