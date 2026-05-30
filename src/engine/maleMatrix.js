@@ -553,7 +553,7 @@ export const maleMatrix = [
   // ─── ID 25 — BARIÁTRICA COMPENSADO ──────────────────────────────────────────
   {
     id: 25,
-    label: "BARIÁTRICA COM POUCO TEMPO PÓS CIRURGIA E/OU SUPORTE ADEQUADO",
+    label: "BARIÁTRICO COM POUCO TEMPO PÓS CIRURGIA E/OU SUPORTE ADEQUADO",
     color: "green",
     conditions: {
       ferritina:   { min: 24,  max: 336  },
@@ -578,7 +578,7 @@ export const maleMatrix = [
   // ─── ID 26 — BARIÁTRICA COM FERRITINA ELEVADA ───────────────────────────────
   {
     id: 26,
-    label: "BARIÁTRICA COM FERRITINA ELEVADA",
+    label: "BARIÁTRICO COM FERRITINA ELEVADA",
     color: "yellow",
     conditions: {
       ferritina:   { min: 337, max: 99999},
@@ -603,7 +603,7 @@ export const maleMatrix = [
   // ─── ID 27 — BARIÁTRICA COM FERRITINA BAIXA E ANISOCITOSE ───────────────────
   {
     id: 27,
-    label: "BARIÁTRICA COM FERRITINA BAIXA E ANISOCITOSE",
+    label: "BARIÁTRICO COM FERRITINA BAIXA E ANISOCITOSE",
     color: "yellow",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -628,7 +628,7 @@ export const maleMatrix = [
   // ─── ID 28 — BARIÁTRICA COM MODERADA ANEMIA FERROPRIVA ──────────────────────
   {
     id: 28,
-    label: "BARIÁTRICA COM MODERADA ANEMIA FERROPRIVA",
+    label: "BARIÁTRICO COM MODERADA ANEMIA FERROPRIVA",
     color: "orange",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -653,7 +653,7 @@ export const maleMatrix = [
   // ─── ID 29 — BARIÁTRICA COM IMPORTANTE ANEMIA FERROPRIVA ────────────────────
   {
     id: 29,
-    label: "BARIÁTRICA COM IMPORTANTE ANEMIA FERROPRIVA OU MISTA",
+    label: "BARIÁTRICO COM IMPORTANTE ANEMIA FERROPRIVA OU MISTA",
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -678,7 +678,7 @@ export const maleMatrix = [
   // ─── ID 30 — BARIÁTRICA COM GRAVE ANEMIA FERROPRIVA ─────────────────────────
   {
     id: 30,
-    label: "BARIÁTRICA COM GRAVE ANEMIA FERROPRIVA OU MISTA",
+    label: "BARIÁTRICO COM GRAVE ANEMIA FERROPRIVA OU MISTA",
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -853,7 +853,7 @@ export const maleMatrix = [
   // ─── ID 37 — BARIÁTRICA VEGETARIANO SEM ANEMIA ──────────────────────────────
   {
     id: 37,
-    label: "BARIÁTRICA VEGETARIANO SEM ANEMIA OU SIDEROPENIA",
+    label: "BARIÁTRICO VEGETARIANO SEM ANEMIA OU SIDEROPENIA",
     color: "green",
     conditions: {
       ferritina:   { min: 24,  max: 336  },
@@ -878,7 +878,7 @@ export const maleMatrix = [
   // ─── ID 38 — BARIÁTRICA VEGETARIANO SEM ANEMIA COM SIDEROPENIA INCIPIENTE ────
   {
     id: 38,
-    label: "BARIÁTRICA VEGETARIANO SEM ANEMIA COM SIDEROPENIA INCIPIENTE",
+    label: "BARIÁTRICO VEGETARIANO SEM ANEMIA COM SIDEROPENIA INCIPIENTE",
     color: "yellow",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -903,7 +903,7 @@ export const maleMatrix = [
   // ─── ID 39 — BARIÁTRICA VEGETARIANO SEM ANEMIA COM SIDEROPENIA LEVE ──────────
   {
     id: 39,
-    label: "BARIÁTRICA VEGETARIANO SEM ANEMIA COM SIDEROPENIA LEVE",
+    label: "BARIÁTRICO VEGETARIANO SEM ANEMIA COM SIDEROPENIA LEVE",
     color: "yellow",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -928,7 +928,7 @@ export const maleMatrix = [
   // ─── ID 40 — BARIÁTRICA VEGETARIANO COM SIDEROPENIA + ANEMIA MODERADA ────────
   {
     id: 40,
-    label: "BARIÁTRICA VEGETARIANO COM SIDEROPENIA + ANEMIA MODERADA",
+    label: "BARIÁTRICO VEGETARIANO COM SIDEROPENIA + ANEMIA MODERADA",
     color: "orange",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -953,7 +953,7 @@ export const maleMatrix = [
   // ─── ID 41 — BARIÁTRICA VEGETARIANO COM SIDEROPENIA + ANEMIA IMPORTANTE ──────
   {
     id: 41,
-    label: "BARIÁTRICA VEGETARIANO COM SIDEROPENIA + ANEMIA IMPORTANTE",
+    label: "BARIÁTRICO VEGETARIANO COM SIDEROPENIA + ANEMIA IMPORTANTE",
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -978,7 +978,7 @@ export const maleMatrix = [
   // ─── ID 42 — BARIÁTRICA VEGETARIANO COM SIDEROPENIA + ANEMIA GRAVE ───────────
   {
     id: 42,
-    label: "BARIÁTRICA VEGETARIANO COM SIDEROPENIA E ANEMIA GRAVE",
+    label: "BARIÁTRICO VEGETARIANO COM SIDEROPENIA E ANEMIA GRAVE",
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1003,7 +1003,7 @@ export const maleMatrix = [
   // ─── ID 43 — BARIÁTRICA SEM ANEMIA COM HISTÓRICO DE HEMORRAGIA ──────────────
   {
     id: 43,
-    label: "BARIÁTRICA SEM ANEMIA COM HISTÓRICO DE HEMORRAGIA",
+    label: "BARIÁTRICO SEM ANEMIA COM HISTÓRICO DE HEMORRAGIA",
     color: "green",
     conditions: {
       ferritina:   { min: 24,  max: 336  },
@@ -1028,7 +1028,7 @@ export const maleMatrix = [
   // ─── ID 44 — BARIÁTRICA SEM ANEMIA + HEMORRAGIA + SIDEROPENIA INCIPIENTE ─────
   {
     id: 44,
-    label: "BARIÁTRICA SEM ANEMIA COM HEMORRAGIA E SIDEROPENIA INCIPIENTE",
+    label: "BARIÁTRICO SEM ANEMIA COM HEMORRAGIA E SIDEROPENIA INCIPIENTE",
     color: "yellow",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1053,7 +1053,7 @@ export const maleMatrix = [
   // ─── ID 45 — BARIÁTRICA SEM ANEMIA + HEMORRAGIA + SIDEROPENIA + ANISOCITOSE ──
   {
     id: 45,
-    label: "BARIÁTRICA SEM ANEMIA COM HEMORRAGIA E SIDEROPENIA E ANISOCITOSE",
+    label: "BARIÁTRICO SEM ANEMIA COM HEMORRAGIA E SIDEROPENIA E ANISOCITOSE",
     color: "yellow",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1078,7 +1078,7 @@ export const maleMatrix = [
   // ─── ID 46 — BARIÁTRICA + ANEMIA MODERADA + HEMORRAGIA + SIDEROPENIA ─────────
   {
     id: 46,
-    label: "BARIÁTRICA COM ANEMIA MODERADA E HEMORRAGIA E SIDEROPENIA",
+    label: "BARIÁTRICO COM ANEMIA MODERADA E HEMORRAGIA E SIDEROPENIA",
     color: "orange",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1103,7 +1103,7 @@ export const maleMatrix = [
   // ─── ID 47 — BARIÁTRICA + ANEMIA IMPORTANTE + HEMORRAGIA + SIDEROPENIA ───────
   {
     id: 47,
-    label: "BARIÁTRICA COM ANEMIA IMPORTANTE E HEMORRAGIA E SIDEROPENIA",
+    label: "BARIÁTRICO COM ANEMIA IMPORTANTE E HEMORRAGIA E SIDEROPENIA",
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1128,7 +1128,7 @@ export const maleMatrix = [
   // ─── ID 48 — BARIÁTRICA + ANEMIA GRAVE + HEMORRAGIA + SIDEROPENIA ────────────
   {
     id: 48,
-    label: "BARIÁTRICA COM ANEMIA GRAVE E HEMORRAGIA E SIDEROPENIA",
+    label: "BARIÁTRICO COM ANEMIA GRAVE E HEMORRAGIA E SIDEROPENIA",
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1303,7 +1303,7 @@ export const maleMatrix = [
   // ─── ID 55 — BARIÁTRICA + VEGETARIANO + HEMORRAGIA SEM ANEMIA ───────────────
   {
     id: 55,
-    label: "BARIÁTRICA + VEGETARIANO + HEMORRAGIA SEM ANEMIA",
+    label: "BARIÁTRICO + VEGETARIANO + HEMORRAGIA SEM ANEMIA",
     color: "green",
     conditions: {
       ferritina:   { min: 24,  max: 336  },
@@ -1328,7 +1328,7 @@ export const maleMatrix = [
   // ─── ID 56 — BARIÁTRICA + VEGETARIANO + HEMORRAGIA + FERRITINA BAIXA ─────────
   {
     id: 56,
-    label: "BARIÁTRICA + VEGETARIANO + HEMORRAGIA + FERRITINA BAIXA SEM ANEMIA",
+    label: "BARIÁTRICO + VEGETARIANO + HEMORRAGIA + FERRITINA BAIXA SEM ANEMIA",
     color: "yellow",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1353,7 +1353,7 @@ export const maleMatrix = [
   // ─── ID 57 — BARIÁTRICA + VEGETARIANO + HEMORRAGIA + SIDEROPENIA ─────────────
   {
     id: 57,
-    label: "BARIÁTRICA + VEGETARIANO + HEMORRAGIA SEM ANEMIA + SIDEROPENIA",
+    label: "BARIÁTRICO + VEGETARIANO + HEMORRAGIA SEM ANEMIA + SIDEROPENIA",
     color: "yellow",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1378,7 +1378,7 @@ export const maleMatrix = [
   // ─── ID 58 — BARIÁTRICA + VEGETARIANO + HEMORRAGIA + ANEMIA MODERADA ─────────
   {
     id: 58,
-    label: "BARIÁTRICA + VEGETARIANO + HEMORRAGIA + ANEMIA MODERADA + SIDEROPENIA",
+    label: "BARIÁTRICO + VEGETARIANO + HEMORRAGIA + ANEMIA MODERADA + SIDEROPENIA",
     color: "orange",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1403,7 +1403,7 @@ export const maleMatrix = [
   // ─── ID 59 — BARIÁTRICA + VEGETARIANO + HEMORRAGIA + ANEMIA IMPORTANTE ────────
   {
     id: 59,
-    label: "BARIÁTRICA + VEGETARIANO + HEMORRAGIA + ANEMIA IMPORTANTE + SIDEROPENIA",
+    label: "BARIÁTRICO + VEGETARIANO + HEMORRAGIA + ANEMIA IMPORTANTE + SIDEROPENIA",
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
@@ -1428,7 +1428,7 @@ export const maleMatrix = [
   // ─── ID 60 — BARIÁTRICA + VEGETARIANO + HEMORRAGIA + ANEMIA GRAVE ────────────
   {
     id: 60,
-    label: "BARIÁTRICA + VEGETARIANO + HEMORRAGIA + ANEMIA GRAVE + SIDEROPENIA",
+    label: "BARIÁTRICO + VEGETARIANO + HEMORRAGIA + ANEMIA GRAVE + SIDEROPENIA",
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 23   },
