@@ -495,6 +495,11 @@ export function triagemEritron(inputs) {
   // Classificação RDW (anisocitose)
   const isAnisocitica = rdw > 15;
 
+  // Crítica de exames antigos — calculada ANTES dos branches para que tanto
+  // ERITRON NORMAL quanto ERITRON ANORMAL recebam a fraseData.
+  const dias = calcularDias(inputs.dataColeta);
+  const fraseData = getFraseData(dias);
+
   // ────── ERITRON NORMAL ──────
   if (classificacaoHb === 'NORMAL' && classificacaoVCM === 'NORMOCÍTICA' && !isAnisocitica) {
     return {
@@ -515,7 +520,9 @@ export function triagemEritron(inputs) {
       comentarios: [],
       achadosParalelos: [],
       g6pdAlerta: null,
-      obsoleto: false,
+      fraseData,
+      diasDesdeColeta: dias,
+      obsoleto: dias > 730,
       _inputs: inputs,
     };
   }
@@ -548,6 +555,8 @@ export function triagemEritron(inputs) {
   const recomendacao = 'PARA UM DIAGNÓSTICO MAIS PRECISO, PRECISA-SE NO MÍNIMO DE FERRITINA E SATURAÇÃO DA TRANSFERRINA.';
   const recomendacaoFull = recomendacao + ' Esses exames são de baixo custo, com resultados rápidos, e normalmente cobertos por planos de saúde.';
 
+  // dias e fraseData já foram calculados antes dos branches (ERITRON NORMAL/ANORMAL).
+
   return {
     encontrado: true,
     triagem: true,
@@ -567,7 +576,9 @@ export function triagemEritron(inputs) {
     comentarios: [],
     achadosParalelos: [],
     g6pdAlerta: null,
-    obsoleto: false,
+    fraseData,
+    diasDesdeColeta: dias,
+    obsoleto: dias > 730,
     _inputs: inputs,
   };
 }

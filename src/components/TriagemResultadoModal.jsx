@@ -383,13 +383,22 @@ export default function TriagemResultadoModal({
       style={{ background: 'rgba(0,0,0,0.6)' }}>
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl">
 
-        <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
-          <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
-          <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
-          <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">
+        {/* Header compacto horizontal: logo-fada + "RedFairy" em serif (dois tons),
+            no padrão da landing/TriagemModal. Reduz a altura do modal. */}
+        <div style={{ background: '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }} className="rounded-t-2xl">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
+              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+            </h2>
+          </div>
+        </div>
+
+        <div className="bg-white px-6 pt-3 pb-4 text-center">
+          <p className="text-xs uppercase tracking-widest text-gray-500">
             {isNormal ? "\u2705 Triagem Conclu\u00edda" : "\ud83e\ude7a Triagem - Achados"}
           </p>
-          <h3 className={`text-lg font-bold mt-3 leading-tight ${
+          <h3 className={`text-lg font-bold mt-2 leading-tight ${
             isNormal
               ? 'text-green-700'
               : resultado.color === 'red'
@@ -570,6 +579,44 @@ export default function TriagemResultadoModal({
               )}
             </div>
           )}
+
+          {/* Crítica de exames antigos (fraseData vinda do engine). */}
+          {resultado.fraseData && (() => {
+            // Dias: usa diasDesdeColeta do engine; se ausente, recalcula de inputs.data_coleta.
+            let dias = resultado.diasDesdeColeta;
+            if (dias == null || Number.isNaN(Number(dias))) {
+              const dc = inputs?.data_coleta || '';
+              let dt = null;
+              if (/^\d{2}\/\d{2}\/\d{4}$/.test(dc)) {
+                const [d, m, a] = dc.split('/').map(Number);
+                dt = new Date(a, m - 1, d);
+              } else if (/^\d{4}-\d{2}-\d{2}$/.test(dc)) {
+                dt = new Date(dc);
+              }
+              if (dt && !Number.isNaN(dt.getTime())) {
+                const hoje = new Date(); hoje.setHours(0,0,0,0); dt.setHours(0,0,0,0);
+                dias = Math.floor((hoje.getTime() - dt.getTime()) / 86400000);
+              }
+            }
+            const tipo = resultado.fraseData.tipo;
+            // A = recente (verde), B = atenção (amarelo), C = não confiável (vermelho)
+            const estilo = tipo === 'A'
+              ? { bg: '#f0fdf4', border: '#bbf7d0', color: '#15803d' }
+              : tipo === 'B'
+                ? { bg: '#fffbeb', border: '#fde68a', color: '#b45309' }
+                : { bg: '#fef2f2', border: '#fecaca', color: '#b91c1c' };
+            const temDias = dias != null && !Number.isNaN(Number(dias));
+            const texto = (temDias && typeof resultado.fraseData.texto === 'string')
+              ? resultado.fraseData.texto.replace(/\bNaN\b/g, String(dias))
+              : resultado.fraseData.texto;
+            return (
+              <div className="rounded-xl border px-4 py-3 mt-3 text-sm"
+                style={{ background: estilo.bg, borderColor: estilo.border, color: estilo.color }}>
+                <p className="font-semibold mb-1">{"\ud83d\udcc5 "}{temDias ? dias : '?'}{" dia(s) desde a coleta"}</p>
+                <p style={{ lineHeight: 1.4 }}>{texto}</p>
+              </div>
+            );
+          })()}
 
           {erroSalvamento && (
             <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700">
