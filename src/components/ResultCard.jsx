@@ -843,7 +843,7 @@ function DocumentoMedicoPanel({ resultado }) {
 }
 
 
-export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, medicoNome, medicoCRM, medicoDados, onVoltar }) {
+export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, medicoNome, medicoCRM, medicoDados, onVoltar, onNovaAvaliacao }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
@@ -1221,16 +1221,52 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
           <div>
             <h4 className={`font-semibold text-sm uppercase tracking-wide mb-2 ${scheme.text}`}>{"\ud83e\uddea Pr\u00f3ximos Exames Sugeridos"}</h4>
-            <div className="bg-white rounded-xl p-4 border border-gray-100">
-              <div className="grid grid-cols-2 gap-1">
-                {resultado.proximosExames.map((exame, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
-                    <span className="text-gray-400">{"\u2022"}</span>
-                    {exame}
-                  </div>
-                ))}
-              </div>
-            </div>
+            {(() => {
+              // Usa os arrays separados do engine; se nao existirem (retorno antigo),
+              // trata tudo como laboratorio para nao perder exames.
+              const temSeparacao = Array.isArray(resultado.proximosExamesLab) || Array.isArray(resultado.proximosExamesImagem);
+              const listaLab = temSeparacao
+                ? (resultado.proximosExamesLab || [])
+                : (resultado.proximosExames || []);
+              const listaImagem = temSeparacao
+                ? (resultado.proximosExamesImagem || [])
+                : [];
+              return (
+                <div className="space-y-3">
+                  {listaLab.length > 0 && (
+                    <div className="bg-white rounded-xl p-4 border border-gray-100">
+                      <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">{"\ud83d\udd2c Laborat\u00f3rio"}</p>
+                      <div className="grid grid-cols-2 gap-1">
+                        {listaLab.map((exame, i) => (
+                          <div key={`lab-${i}`} className="flex items-center gap-2 text-sm text-gray-700">
+                            <span className="text-gray-400">{"\u2022"}</span>
+                            {exame}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {listaImagem.length > 0 && (
+                    <div className="bg-white rounded-xl p-4 border border-gray-100">
+                      <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">{"\ud83e\ude7b Imagem"}</p>
+                      <div className="grid grid-cols-1 gap-1">
+                        {listaImagem.map((exame, i) => (
+                          <div key={`img-${i}`} className="flex items-center gap-2 text-sm text-gray-700">
+                            <span className="text-gray-400">{"\u2022"}</span>
+                            {exame}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {listaLab.length === 0 && listaImagem.length === 0 && (
+                    <div className="bg-white rounded-xl p-4 border border-gray-100">
+                      <p className="text-sm text-gray-400">{"Nenhum exame adicional sugerido."}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
         </div>
@@ -1276,12 +1312,22 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           ${copiado ? 'bg-green-500 text-white' : `${scheme.badge} text-white hover:opacity-90`}`}>
         {copiado ? "\u2705 Resultado Copiado!" : "\ud83d\udccb Copiar Resultado Completo para WhatsApp"}
       </button>
-      {/* Bot\u00e3o Voltar no rodap\u00e9 \u2014 disponibiliza ao m\u00e9dico uma sa\u00edda discreta para encerrar a avalia\u00e7\u00e3o ap\u00f3s copiar o resultado, sem precisar usar o bot\u00e3o de menu superior. */}
-      {!modoPaciente && onVoltar && (
-        <button onClick={onVoltar}
-          className="mt-3 w-full py-2 rounded-xl text-sm text-gray-600 hover:text-gray-900 underline">
-          {"\u2190 Voltar"}
-        </button>
+      {/* Design B: do resultado, m\u00e9dico volta ao formul\u00e1rio (Nova Avalia\u00e7\u00e3o) ou sai pra landing (Fechar e Sair). */}
+      {!modoPaciente && (
+        <div className="mt-3 flex gap-3">
+          {onNovaAvaliacao && (
+            <button onClick={onNovaAvaliacao}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">
+              {"\u2190 Nova Avalia\u00e7\u00e3o"}
+            </button>
+          )}
+          {onVoltar && (
+            <button onClick={onVoltar}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-700 hover:bg-red-800 transition-colors">
+              {"Fechar e Sair"}
+            </button>
+          )}
+        </div>
       )}
 
       {historicoData && (
