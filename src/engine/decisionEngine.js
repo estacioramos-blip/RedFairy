@@ -135,12 +135,27 @@ export function avaliarPaciente(inputs) {
     comentarios.push({ titulo: 'FERRO ORAL', texto: resultado.comentarioFerroOral });
   } else if ((inputs.ferro_oral || inputs.ferro_injetavel) && resultado?.comentarioFerro) {
     // Fallback: comentario generico quando nao ha especifico
-    const titulo = inputs.ferro_injetavel && inputs.ferro_oral
+    const usouAmbas = inputs.ferro_injetavel && inputs.ferro_oral;
+    const titulo = usouAmbas
       ? 'FERRO ORAL + INJETÁVEL'
       : inputs.ferro_injetavel
         ? 'FERRO INJETÁVEL'
         : 'FERRO ORAL';
-    comentarios.push({ titulo, texto: resultado.comentarioFerro });
+    // Ajuste de via: alguns textos genericos acoplam as duas vias
+    // ("FERRO ORAL OU INJETAVEL") para DESCREVER o que o paciente usou. Se so
+    // uma via foi marcada, colapsa a expressao para a via efetivamente usada.
+    // NAO toca em frases de ORIENTACAO (ex.: "CUIDADO ... SE PARENTERAL" ou
+    // "A REPOSICAO PODE SER POR VIA ORAL OU INTRAVENOSA"), corretas para
+    // qualquer via — por isso o alvo e estritamente "ORAL OU INJETAVEL".
+    let textoFerro = resultado.comentarioFerro;
+    if (!usouAmbas) {
+      const via    = inputs.ferro_injetavel ? 'INJETÁVEL' : 'ORAL';
+      const viaMin = inputs.ferro_injetavel ? 'injetável' : 'oral';
+      textoFerro = textoFerro
+        .replace(/ORAL OU INJET[ÁA]VEL/g, via)
+        .replace(/oral ou injet[áa]vel/g, viaMin);
+    }
+    comentarios.push({ titulo, texto: textoFerro });
   }
   // ── Medicamentos que podem causar macrocitose ──────────────────────────────
   if (inputs.metformina) {
