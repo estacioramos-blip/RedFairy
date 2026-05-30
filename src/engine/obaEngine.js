@@ -1013,14 +1013,14 @@ function buildModPonderal(dados, alertas) {
   // Cruza o status pondéral atual com a meta declarada (projeto de vida).
   // Prioridade (1ª que casar vence): P1 baixo peso (IMC<20) > P2 reganho>15%
   // sobre o menor peso (nadir) > P3 controlado (reganho<=15% e IMC ok).
+  const imcAtualVer  = parseFloat(dados.imc_atual)
+  const pctSobreNadir = (!isNaN(pesoMin) && !isNaN(pesoAtual) && pesoMin > 0)
+    ? ((pesoAtual - pesoMin) / pesoMin) * 100
+    : null
+
   if (meta) {
     const metaLabel = meta === 'PERDER' ? 'PERDER PESO' : meta === 'GANHAR' ? 'GANHAR PESO' : 'MANTER O PESO'
     linhas.push(`META DO PACIENTE: ${metaLabel}${(meta !== 'MANTER' && !isNaN(metaKg) && metaKg > 0) ? ` (${metaKg} kg)` : ''}.`)
-
-    const imcAtualVer  = parseFloat(dados.imc_atual)
-    const pctSobreNadir = (!isNaN(pesoMin) && !isNaN(pesoAtual) && pesoMin > 0)
-      ? ((pesoAtual - pesoMin) / pesoMin) * 100
-      : null
 
     if (!isNaN(imcAtualVer) && imcAtualVer < 20) {
       // P1 — baixo peso / perda excessiva
@@ -1057,6 +1057,18 @@ function buildModPonderal(dados, alertas) {
         linhas.push('PESO CONTROLADO. COMO VOCÊ DESEJA GANHAR PESO, FAÇA-O SOB ORIENTAÇÃO DE NUTRICIONISTA PARA PRIORIZAR MASSA MAGRA E NÃO GORDURA.')
         if (nivelGeral === NORMAL) nivelGeral = LEVE
       }
+    }
+  } else {
+    // Sem meta declarada: ainda assim sinaliza reganho/baixo peso com gravidade
+    // própria — senão essas situações ficariam silenciosas só por falta da meta.
+    if (!isNaN(imcAtualVer) && imcAtualVer < 20) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('IMC ATUAL ABAIXO DO IDEAL (PERDA DE PESO POSSIVELMENTE EXCESSIVA): BUSQUE AVALIAÇÃO MÉDICA (ENDOCRINOLOGISTA/NUTRÓLOGO) PARA AVALIAR A RECUPERAÇÃO PONDERAL.')
+      alertas.push({ nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20): avaliação médica para recuperação ponderal.' })
+    } else if (pctSobreNadir !== null && pctSobreNadir > 15) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('REGANHO SIGNIFICATIVO (MAIS DE 15% SOBRE O MENOR PESO PÓS-CIRURGIA): PROCURE ORIENTAÇÃO DE NUTRÓLOGO PARA AVALIAR A TENDÊNCIA DE GANHO.')
+      alertas.push({ nivel: MODERADO, texto: 'REGANHO > 15% SOBRE O MENOR PESO: orientação de nutrólogo.' })
     }
   }
 
