@@ -54,7 +54,7 @@ const LANDING_CSS = `
   .btn-secondary:hover { background: #374151; border-color: #374151; transform: translateY(-2px); }
 
   /* WHATSAPP */
-  .whatsapp-btn { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; width: 38px; height: 38px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; }
+  .whatsapp-btn { position: fixed; bottom: 3.5rem; right: 1.5rem; z-index: 999; width: 38px; height: 38px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(37,211,102,0.4); transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; }
   .whatsapp-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(37,211,102,0.5); }
   .whatsapp-btn svg { width: 20px; height: 20px; fill: white; }
 
@@ -116,6 +116,10 @@ const LANDING_CSS = `
   @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(220,38,38,0.8), 0 0 0 0 rgba(220,38,38,0.4);}70%{box-shadow:0 0 0 12px rgba(220,38,38,0), 0 0 0 24px rgba(220,38,38,0);}100%{box-shadow:0 0 0 0 rgba(220,38,38,0), 0 0 0 0 rgba(220,38,38,0);} }
   @keyframes pulseGray { 0%{box-shadow:0 0 0 0 rgba(31,41,55,0.8), 0 0 0 0 rgba(31,41,55,0.4);}70%{box-shadow:0 0 0 12px rgba(31,41,55,0), 0 0 0 24px rgba(31,41,55,0);}100%{box-shadow:0 0 0 0 rgba(31,41,55,0), 0 0 0 0 rgba(31,41,55,0);} }
   @keyframes heartbeat { 0%{transform:scale(1);}14%{transform:scale(1.10);}28%{transform:scale(1);}42%{transform:scale(1.10);}70%{transform:scale(1);} }
+  @keyframes fadeInHint { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeOutHint { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes pulseSoftRed { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+  @keyframes pulseSoftBlack { 0%,100% { box-shadow: 0 0 0 0 rgba(31,41,55,0.45); } 50% { box-shadow: 0 0 0 8px rgba(31,41,55,0); } }
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.4rem; margin-bottom: 0.8rem; font-weight: 700; }
 
   .hero-textbox {
@@ -162,7 +166,7 @@ const LANDING_CSS = `
   .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
   section { padding: 3rem 2rem; scroll-margin-top: 80px; }
   .center { text-align: center; }
-  .tag { display: inline-block; font-size: 0.73rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--cherry); margin-bottom: 0.6rem; }
+  .tag { display: inline-block; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: var(--cherry); margin-bottom: 0.6rem; }
   .stitle { font-size: 2.3rem; color: var(--text); margin-bottom: 0.7rem; font-weight: 800; }
   .sdesc { font-size: 1.02rem; color: var(--text-sec); max-width: 580px; line-height: 1.7; font-weight: 600; }
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
@@ -261,7 +265,7 @@ const LANDING_CSS = `
   .oba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: start; margin-top: 2.5rem; }
   .oba-narrative p { color: rgba(255,255,255,0.7); font-size: 0.93rem; line-height: 1.8; margin-bottom: 1rem; }
   .oba-narrative strong { color: var(--oba-orange-light); }
-  .oba-metaphor { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 12px; padding: 1.3rem 1.5rem; margin: 1.5rem 0; }
+  .oba-metaphor { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 12px; padding: 1.3rem 1.5rem; margin: 0 0 1.5rem; }
   .oba-metaphor p { font-size: 1rem; font-weight: 600; color: var(--white); text-align: center; margin: 0; line-height: 1.5; }
   .oba-features { display: flex; flex-direction: column; gap: 1rem; }
   .oba-feat { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 1.3rem; display: flex; gap: 0.8rem; align-items: flex-start; transition: all 0.2s; }
@@ -509,6 +513,21 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   }, [crmMedicoNum]);
 
   const [fluxoEtapa, setFluxoEtapa] = useState('inicio');
+  // Tooltip "Procure no exame..." aparece no hover sobre 'TEM UM HEMOGRAMA?' ou botao
+  // hemacia/ENTRE. Reaparece a cada hover novo. Estado: 'hidden' | 'in' | 'out'.
+  // 'in' = visivel com fade-in. Apos 4500ms, vira 'out' (fade-out 300ms) e depois 'hidden'.
+  const [hintHero, setHintHero] = useState('hidden');
+  const hintTimerRef = useRef(null);
+  const hintHideTimerRef = useRef(null);
+  function mostrarHintHero() {
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    if (hintHideTimerRef.current) clearTimeout(hintHideTimerRef.current);
+    setHintHero('in');
+    hintTimerRef.current = setTimeout(() => {
+      setHintHero('out');
+      hintHideTimerRef.current = setTimeout(() => setHintHero('hidden'), 320);
+    }, 4500);
+  }
   const [fluxoFade, setFluxoFade] = useState(false);
   const [twTexto, setTwTexto] = useState('');
   useEffect(() => {
@@ -1188,34 +1207,43 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
               {fluxoEtapa === 'inicio' && (
                 <>
-                  <p style={{ fontSize:'1rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0 0 0.5rem', minHeight:'1.3rem' }}>
+                  <p onMouseEnter={mostrarHintHero}
+                    style={{ fontSize:'1rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0 0 0.5rem', minHeight:'1.3rem', cursor:'default' }}>
                     {twTexto}
                   </p>
-                  <button onClick={() => {
-                    if (medicoLogado) { entrarLogadoDireto(); return; }
-                    // Checa localStorage live (n\u00e3o state estale): se nao tem paciente_id real,
-                    // nao tenta ir pro dashboard (cairia em AuthPage legacy "Modo Paciente").
-                    let temPacienteIdLive = false;
-                    try { temPacienteIdLive = !!localStorage.getItem('paciente_id'); } catch (e) {}
-                    if (pacienteLogadoFlag && !temPacienteIdLive) {
-                      // Estado dessincronizado: limpa flag e segue pra escolha.
-                      setPacienteLogadoFlag(false);
-                      setPacienteLogado('');
-                    } else if (pacienteLogadoFlag && temPacienteIdLive) {
-                      onIrDashboardPaciente && onIrDashboardPaciente();
-                      return;
-                    }
-                    irPara('escolha');
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
-                  style={{ position:'relative', width:96, height:96, borderRadius:'50%', background:'none', backgroundColor:'transparent', border:'none', outline:'none', padding:0, margin:0, cursor:'pointer', transition:'transform 0.15s ease', animation:'heartbeat 1.6s ease-in-out infinite', WebkitAppearance:'none', MozAppearance:'none', appearance:'none', boxShadow:'none' }}>
+                  <div style={{ position:'relative', display:'inline-block' }}>
+                    <button onClick={() => {
+                      if (medicoLogado) { entrarLogadoDireto(); return; }
+                      // Checa localStorage live (n\u00e3o state estale): se nao tem paciente_id real,
+                      // nao tenta ir pro dashboard (cairia em AuthPage legacy "Modo Paciente").
+                      let temPacienteIdLive = false;
+                      try { temPacienteIdLive = !!localStorage.getItem('paciente_id'); } catch (e) {}
+                      if (pacienteLogadoFlag && !temPacienteIdLive) {
+                        // Estado dessincronizado: limpa flag e segue pra escolha.
+                        setPacienteLogadoFlag(false);
+                        setPacienteLogado('');
+                      } else if (pacienteLogadoFlag && temPacienteIdLive) {
+                        onIrDashboardPaciente && onIrDashboardPaciente();
+                        return;
+                      }
+                      irPara('escolha');
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; mostrarHintHero(); }}
+                    onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
+                    style={{ position:'relative', width:96, height:96, borderRadius:'50%', background:'none', backgroundColor:'transparent', border:'none', outline:'none', padding:0, margin:0, cursor:'pointer', transition:'transform 0.15s ease', animation:'heartbeat 1.6s ease-in-out infinite', WebkitAppearance:'none', MozAppearance:'none', appearance:'none', boxShadow:'none' }}>
                     <img src={redcell1} alt="ENTRE"
                       style={{ width:'100%', height:'100%', objectFit:'contain', display:'block', pointerEvents:'none', background:'transparent' }} />
                     <span style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -50%)', color:'#fff', fontWeight:900, fontSize:'0.85rem', letterSpacing:'1px', paddingLeft:'1px', textShadow:'0 1px 3px rgba(0,0,0,0.55), 0 0 2px rgba(0,0,0,0.4)', pointerEvents:'none', userSelect:'none', whiteSpace:'nowrap' }}>
                       ENTRE
                     </span>
-                  </button>
+                    </button>
+                    {hintHero !== 'hidden' && (
+                      <div role="tooltip"
+                        style={{ position:'absolute', left:'calc(100% + 18px)', top:'50%', transform:'translateY(-50%)', background:'#f3f4f6', color:'#374151', fontSize:'0.7rem', fontWeight:500, lineHeight:1.35, padding:'6px 10px', borderRadius:'8px', border:'1.5px solid #7B1E1E', boxShadow:'0 2px 8px rgba(0,0,0,0.08)', maxWidth:'180px', textAlign:'left', zIndex:50, pointerEvents:'none', animation: hintHero === 'in' ? 'fadeInHint 0.35s ease-out forwards' : 'fadeOutHint 0.3s ease-in forwards' }}>
+                        {"Procure no exame e anote: DATA, HEMOGLOBINA, VCM e RDW"}
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
 
@@ -1537,7 +1565,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             </div>
 
             {/* Cr\u00e9ditos: mesma fonte/cor do rodap\u00e9 */}
-            <p style={{ fontSize:'0.65rem', color:'var(--text-light)', textAlign:'center', margin:'0.6rem 0 0', letterSpacing:'-0.01em' }}>
+            <p style={{ fontSize:'0.75rem', color:'var(--text-light)', textAlign:'center', margin:'0.6rem 0 0', letterSpacing:'-0.01em' }}>
               <span style={{ fontFamily:"'DM Serif Display',serif", color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em><sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup></span>
               {" by "}<a href="https://cytomica.com" target="_blank" rel="noopener noreferrer" style={{color:'var(--text-sec)'}}>cytomica.com</a>{"  \u00b7  \u00a9 2026  \u00b7  E.F. Ramos, M.D. CRM 6302|BA"}
             </p>
@@ -1812,11 +1840,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       </section>
 
 
-      <section id="indicacoes" style={{ background:'var(--gray-bg)', padding:'5rem 0' }}>
+      <section id="indicacoes" style={{ background:'var(--gray-bg)', padding:'5rem 1.25rem' }}>
         <div className="container">
           <div className="reveal center">
             <span className="tag">{"Indica\u00e7\u00f5es"}</span>
-            <h2 className="stitle">{"Para quem \u00e9 o RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>{"?"}</h2>
+            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>{"Para quem \u00e9 o RedFairy"}<sup style={{ color: '#000', fontSize: '0.7em', fontWeight: 600, verticalAlign: 'super', marginLeft: '2px' }}>{"\u00ae"}</sup>{"?"}</h2>
           </div>
           <div className="reveal" style={{ maxWidth: 880, margin: '1.5rem auto 0', lineHeight: 1.7, color: 'var(--text-sec)', fontSize: '0.88rem', fontWeight: 600, textAlign: 'justify' }}>
             <p style={{ marginBottom: '1.1rem' }}>
@@ -1851,7 +1879,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         <div className="container">
           <div className="reveal center">
             <span className="tag">{"Orienta\u00e7\u00f5es Terap\u00eauticas"}</span>
-            <h2 className="stitle">{"Muito al\u00e9m do diagn\u00f3stico"}</h2>
+            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>{"Muito al\u00e9m do diagn\u00f3stico"}</h2>
             <p className="sdesc-bold" style={{ margin:"0 auto" }}>
               {"O RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.55em', fontWeight: 500 }}>{"\u00ae"}</sup>{" \u00e9 um algoritmo m\u00e9dico, que n\u00e3o apenas avalia: ele orienta."}<br />
               {"Gera recomenda\u00e7\u00f5es personalizadas com base no perfil completo do paciente."}
@@ -1863,15 +1891,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <div className="terap-card"><div className="tc-icon">{"\ud83d\udc8a"}</div><h4>{"REPOSI\u00c7\u00c3O | FERRO ORAL"}</h4><p>{"Prescri\u00e7\u00e3o m\u00e9dica do medicamento ideal, dose e dura\u00e7\u00e3o ajustada do tratamento."}</p></div>
             <div className="terap-card"><div className="tc-icon">{"\ud83d\udcc8"}</div><h4>{"GR\u00c1FICOS CL\u00cdNICOS"}</h4><p>{"Visualiza\u00e7\u00e3o e follow-up da evolu\u00e7\u00e3o."}</p></div>
           </div>
-          <div style={{ marginTop:'2rem', padding:'0 0 0.5rem' }}>
-            <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
-            <p style={{ color:'#1F2937', fontSize:'0.92rem', fontWeight:600, textAlign:'center', margin:'0 0 0.3rem' }}>
-              {"Para fazer uma avalia\u00e7\u00e3o voc\u00ea vai precisar de algumas informa\u00e7\u00f5es do eritrograma:"}
-            </p>
-            <p style={{ color:'#6B7280', fontSize:'0.85rem', fontWeight:600, textAlign:'center', margin:0 }}>
-              {"Hemoglobina \u00b7 VCM \u00b7 RDW + Ferritina e Satura\u00e7\u00e3o da Transferrina"}
-            </p>
-          </div>
         </div>
       </section>
 
@@ -1879,11 +1898,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         <div className="container">
           <div className="center reveal">
             <span className="tag">Como Funciona</span>
-            <h2 className="stitle">{"Simples para m\u00e9dicos e pacientes"}</h2>
+            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>{"Simples para m\u00e9dicos e pacientes"}</h2>
           </div>
           <div className="como-tabs-wrap reveal">
             <div className="como-tabs">
-              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}><span>{"Para M\u00e9dicos"}</span><span style={{ display:"block", fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7, marginTop:"0.1rem" }}>{"M\u00c9DICOS"}</span></button>
+              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}><span>{"Para M\u00e9dicos"}</span></button>
               <button className={`como-tab paciente${activeTab === 'paciente' ? ' active' : ''}`} onClick={() => setActiveTab('paciente')}>Para Pacientes</button>
             </div>
           </div>
@@ -1986,12 +2005,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         <div className="container">
           <div className="center reveal" style={{ marginBottom:'2.5rem' }}>
             <span className="tag">Experimente Agora</span>
-            <h2 className="stitle">{"Fa\u00e7a uma avalia\u00e7\u00e3o gratuita"}</h2>
+            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>{"Fa\u00e7a uma avalia\u00e7\u00e3o gratuita"}</h2>
             <p className="sdesc" style={{ margin:'0 auto' }}>{"Sem cadastro. Insira os dados e veja o diagn\u00f3stico."}</p>
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
-            <div style={{ width:300, background:'#1A1A2E', borderRadius:40, border:'8px solid #2A2A3E', boxShadow:'0 0 0 2px #111, inset 0 0 0 1px rgba(255,255,255,0.05)', overflow:'hidden' }}>
+            <div style={{ width:320, background:'#1A1A2E', borderRadius:40, border:'8px solid #2A2A3E', boxShadow:'0 0 0 2px #111, inset 0 0 0 1px rgba(255,255,255,0.05)', overflow:'hidden' }}>
 
               <div style={{ background:'#111', height:26, display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <div style={{ width:60, height:13, background:'#1A1A2E', borderRadius:'0 0 10px 10px' }} />
@@ -2002,47 +2021,47 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               </div>
               <div style={{ background:'linear-gradient(135deg,#7B1E1E,#DC2626)', padding:'8px 14px', display:'flex', alignItems:'center', gap:8 }}>
                 <img src={logo} alt="RedFairy" style={{ height:24, objectFit:'contain', filter:'brightness(0) invert(1)' }} />
-                <p style={{ color:'rgba(255,255,255,0.65)', fontSize:8, margin:0, letterSpacing:'0.5px' }}>Eritron e Metabolismo do Ferro</p>
+                <p style={{ color:'rgba(255,255,255,0.65)', fontSize:9, margin:0, letterSpacing:'0.5px' }}>Eritrog\u00eanese e Metabolismo do Ferro</p>
               </div>
 
-              <div id="rf-screen" style={{ background:'#0F0F1A', height:500, overflowY:'auto' }}>
+              <div id="rf-screen" style={{ background:'#0F0F1A', height:540, overflowY:'auto' }}>
 
                 <div id="rf-view-form" style={{ padding:11 }}>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sexo</label>
-                      <select id="rf-sexo" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none' }}>
+                      <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sexo</label>
+                      <select id="rf-sexo" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none' }}>
                         <option value="F">Feminino</option><option value="M">Masculino</option>
                       </select>
                     </div>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Idade</label>
-                      <input type="number" id="rf-idade" placeholder="35" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Idade</label>
+                      <input type="number" id="rf-idade" placeholder="35" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Hb (g/dL)</label>
-                      <input type="number" id="rf-hb2" step="0.1" placeholder="12.5" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>HEMOGLOBINA g/dL</label>
+                      <input type="number" id="rf-hb2" step="0.1" placeholder="12.5" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Ferritina (ng/mL)</label>
-                      <input type="number" id="rf-ferr2" step="0.1" placeholder="15" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Ferritina (ng/mL)</label>
+                      <input type="number" id="rf-ferr2" step="0.1" placeholder="15" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>VCM (fL)</label>
-                      <input type="number" id="rf-vcm2" step="0.1" placeholder="82" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>VCM / fL</label>
+                      <input type="number" id="rf-vcm2" step="0.1" placeholder="82" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                     <div>
-                      <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>RDW (%)</label>
-                      <input type="number" id="rf-rdw2" step="0.1" placeholder="13.5" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>RDW-CV (%)</label>
+                      <input type="number" id="rf-rdw2" step="0.1" placeholder="13.5" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                   </div>
                   <div style={{ marginBottom:10 }}>
-                    <label style={{ color:'rgba(255,255,255,0.75)', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sat. Transferrina (%)</label>
-                    <input type="number" id="rf-sat2" step="0.1" placeholder="25" style={{ width:'100%', background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'white', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                    <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>SATURA\u00c7\u00c3O DA TRANSFERRINA (%)</label>
+                    <input type="number" id="rf-sat2" step="0.1" placeholder="25" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                   </div>
 
                   <div style={{ marginBottom:10 }}>
@@ -2056,7 +2075,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     </div>
                     <p style={{ color:'rgba(255,255,255,0.65)', fontSize:8, textTransform:'uppercase', letterSpacing:1, margin:'0 0 5px' }}>Medicamentos</p>
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:4 }}>
-                      {[['aspirina','Aspirina'],['b12','Vitamina B12'],['ferroMed','Ferro Oral/EV']].map(([k,l]) => (
+                      {[['aspirina','Aspirina'],['b12','Vitamina B12'],['ferroOral','Ferro Oral'],['ferroEV','Ferro E.V. / I.M.']].map(([k,l]) => (
                         <label key={k} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.28)', borderRadius:6, padding:'5px 6px', cursor:'pointer', fontSize:9, color:'rgba(255,255,255,0.7)' }}>
                           <input type="checkbox" id={`rf2-${k}`} style={{ width:10, height:10, accentColor:'#DC2626', flexShrink:0 }} /> {l}
                         </label>
@@ -2154,45 +2173,58 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         <div className="container">
           <div className="center reveal" style={{ marginBottom:'2.5rem' }}>
             <span className="tag">Comece Agora</span>
-            <h2 style={{ fontSize:'1.6rem', fontWeight:800, color:'var(--wine)', marginBottom:'0.8rem' }}>{"Cuide da sua Hemoglobina, ela \u00e9 a sua vida."}</h2>
+            <h2 style={{ fontSize:'1.6rem', fontWeight:800, color:'#000', marginBottom:'0.8rem' }}>{"Cuidar da Hemoglobina \u00e9 cuidar da Vida"}</h2>
           </div>
           <div className="cta-cards reveal">
             <div className="cta-c cta-doc">
               <div className="ci">{"\ud83e\ude7a"}</div>
-              <h3>{"Modo M\u00e9dico"}<br/><span style={{ fontSize:"0.65rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>{"M\u00c9DICOS"}</span></h3>
-              <p>{"Avalia\u00e7\u00e3o r\u00e1pida sem cadastro. Insira o CPF e os dados do paciente e obtenha diagn\u00f3stico com orienta\u00e7\u00f5es terap\u00eauticas."}</p>
+              <h3>{"Modo M\u00e9dico"}</h3>
+              <p>{"Algoritmo poderoso e simples: com apenas o CPF e poucos dados do paciente voc\u00ea faz uma triagem e pode aprofundar a avalia\u00e7\u00e3o, e obt\u00e9m orienta\u00e7\u00f5es para melhor diagn\u00f3stico e tratamento."}</p>
               <ul>
-                <li>Acesso 100% gratuito</li>
-                <li>{"Sem cadastro necess\u00e1rio"}</li>
-                <li>{"Orienta\u00e7\u00f5es terap\u00eauticas com dosagens"}</li>
-                <li>Ganhe 10 USDC por paciente cadastrado</li>
+                <li>{"Acesso 100% gratuito para m\u00e9dicos"}</li>
+                <li>{"Cadastro m\u00ednimo"}</li>
+                <li>{"Orienta\u00e7\u00f5es fundamentadas"}</li>
+                <li>{"Programa 4DOC de benef\u00edcios para afiliados"}</li>
               </ul>
-              <button className="btn-cta-doc" onClick={onModoMedico} style={{ flexDirection:"column", gap:"0.1rem" }}>{"Acessar como M\u00e9dico"}<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>{"AINDA N\u00c3O AFILIADO"}</span></button>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', marginTop:'auto' }}>
+                <button onClick={onModoMedico}
+                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease', border:'4px solid #ef4444', color:'#ef4444', fontSize:'0.62rem', animation:'pulseSoftRed 2s ease-in-out infinite' }}>
+                  {"M\u00c9DICO"}
+                </button>
+                <span style={{ fontSize:'0.62rem', fontWeight:700, letterSpacing:'1.5px', color:'#ef4444' }}>ENTRE</span>
+              </div>
             </div>
             <div className="cta-c cta-pat">
               <div className="ci">{"\u2764\ufe0f"}</div>
               <h3>Modo Paciente</h3>
-              <p>{"Cadastre-se e acompanhe a evolu\u00e7\u00e3o do seu eritron ao longo do tempo."}</p>
+              <p>{"Cadastre-se e acompanhe a evolu\u00e7\u00e3o dos seus exames ao longo do tempo. Reduza a necessidade de consultas m\u00e9dicas. Economize, evite agendamentos, e reduza tempo e o custo dos deslocamentos."}</p>
               <ul>
-                <li>{"Primeira avalia\u00e7\u00e3o j\u00e1 dispon\u00edvel"}</li>
-                <li>{"Gr\u00e1fico evolutivo multiparam\u00e9trico"}</li>
+                <li>{"A primeira avalia\u00e7\u00e3o pode ser feita por seu m\u00e9dico, ou por voc\u00ea"}</li>
+                <li>{"Obtenha pedidos de exames e receitas m\u00e9dicas"}</li>
                 <li>{"Orienta\u00e7\u00f5es em linguagem acess\u00edvel"}</li>
-                <li>{"R$ 149,90/ano via PIX"}</li>
+                <li>{"Apenas R$ 149,90 por ano, via PIX"}</li>
               </ul>
-              <button className="btn-cta-pat" onClick={onModoPaciente} style={{ flexDirection:"column", gap:"0.1rem" }}>{"Acessar como Paciente"}<span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", opacity:0.7 }}>{"AINDA N\u00c3O CADASTRADO"}</span></button>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', marginTop:'auto' }}>
+                <button onClick={onModoPaciente}
+                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
+                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease', border:'4px solid #1f2937', color:'#1f2937', fontSize:'0.62rem', animation:'pulseSoftBlack 2s ease-in-out infinite', animationDelay:'1s' }}>
+                  PACIENTE
+                </button>
+                <span style={{ fontSize:'0.62rem', fontWeight:700, letterSpacing:'1.5px', color:'rgba(255,255,255,0.85)' }}>ENTRE</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <footer style={{ padding:'0.8rem 1rem', borderTop:'1px solid var(--border)', textAlign:'center' }}>
-        <p style={{ fontSize:'0.65rem', color:'var(--text-light)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:'0 0 0.3rem', letterSpacing:'-0.01em' }}>
+        <p style={{ fontSize:'0.65rem', color:'var(--text-light)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', margin:0, letterSpacing:'-0.01em' }}>
           <img src={logo} alt="" style={{ height:14, verticalAlign:'middle', marginRight:4 }} />
           <span style={{ fontFamily:"'DM Serif Display',serif", color:'var(--wine)' }}>Red<em style={{color:'var(--cherry)',fontStyle:'normal'}}>Fairy</em><sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup></span>
-          {" \u00b7 Cuidar do Seu Eritron \u00b7 by "}<a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a>{" \u00a9 2026 \u00b7 E.F. Ramos, M.D. CRM 6302 BA \u00b7 "}<a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a>
-        </p>
-        <p style={{ fontSize:'0.62rem', color:'var(--text-light)', margin:0 }}>
-          <span style={{ color:'var(--cherry)', fontWeight:700 }}>*</span>{" V\u00e1lido para todos os m\u00e9dicos com registro no CRM."}
+          {" \u00b7 by "}<a href="https://cytomica.com" style={{color:'var(--text-sec)'}}>cytomica.com</a>{" \u00a9 2026 \u00b7 E.F. Ramos, M.D. CRM 6302 BA \u00b7 "}<a href="https://drestacioramos.com.br" style={{color:'var(--text-sec)'}}>drestacioramos.com.br</a>
         </p>
       </footer>
 
