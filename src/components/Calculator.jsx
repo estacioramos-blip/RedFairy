@@ -644,7 +644,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', dataNascimento: '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
     ferritina: _demo?.ferr || '', hemoglobina: _demo?.hb || '', vcm: _demo?.vcm || '', rdw: _demo?.rdw || '', satTransf: _demo?.sat || '',
     bariatrica: _demo?.bariatrica || preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica',
-    bariatrica_medico: _demo?.bariatrica || false, vegetariano: false, perda: false,
+    bariatrica_medico: _demo?.bariatrica || preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica', vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '', alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false,
     tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false,
@@ -751,7 +751,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [showBeneficios, setShowBeneficios] = useState(false);
 
   useEffect(() => {
-    if (preFlag === 'bariatrica') { setInputs(prev => ({ ...prev, bariatrica: true })) }
+    if (preFlag === 'bariatrica') { setInputs(prev => ({ ...prev, bariatrica: true, bariatrica_medico: true })) }
   }, [preFlag]);
 
   useEffect(() => {
@@ -895,7 +895,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (name === 'bariatrica') { if (!checked) setDadosOBAColetados(null); }
     if (name === 'bariatrica_medico') {
       if (checked) setInputs(prev => ({ ...prev, bariatrica: true, bariatrica_medico: true }));
-      else setInputs(prev => ({ ...prev, bariatrica_medico: false }));
+      else { setInputs(prev => ({ ...prev, bariatrica: false, bariatrica_medico: false })); setDadosOBAColetados(null); }
     }
     if (LIMITES_ABERRANTE[name] && value !== '') {
       const num = parseFloat(String(value).replace(',', '.'));
@@ -1575,7 +1575,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 {inputs.idade && !erros.dataNascimento && <p className="text-red-600 text-xs mt-1 font-semibold">Idade: {inputs.idade} anos</p>}
                 {erros.dataNascimento && <p className="text-red-500 text-xs mt-1">{erros.dataNascimento}</p>}
               </div>
-              {(!dadosVieramDaTriagem || editandoDadosPaciente || inputs.bariatrica_medico) && (
               <div className="col-span-2">
                 <label className={`flex items-start gap-2 p-3 rounded-xl border-2 transition-all ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'cursor-default' : 'cursor-pointer'} ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
                   <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0 disabled:opacity-50" />
@@ -1595,7 +1594,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   </div>
                 </label>
               </div>
-              )}
             </div>
           </section>
 
@@ -1692,8 +1690,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <IconHistorico /> {"Hist\u00f3rico Cl\u00ednico"}
             </h2>
             <div className="grid grid-cols-2 gap-2">
-              {/* Espelha o card "Bari\u00e1trico" do TOPO: se marcado em "Dados do Paciente", aparece aqui tamb\u00e9m marcado e desabilitado. */}
-              <CheckboxCard name="bariatrica" label={"Bari\u00e1trica"} sublabel="By-pass / Gastrectomia" checked={inputs.bariatrica || inputs.bariatrica_medico} onChange={handleChange} color="amber" highlight={preFlag === 'bariatrica'} disabled={!!inputs.bariatrica_medico} />
+              {/* Bari\u00e1trico/a foi movido para "Dados do Paciente" (entrada inicial, sempre presente). */}
               <CheckboxCard name="vegetariano" label="Vegetariano/Vegano" sublabel="Dieta sem carne" checked={inputs.vegetariano} onChange={handleChange} color="green" />
               <CheckboxCard name="perda" label="Hemorragia" sublabel={"Inclui doa\u00e7\u00e3o de sangue, sangria, ou sangramento"} checked={inputs.perda} onChange={handleChange} color="red" />
               <CheckboxCard name="alcoolista" label="Alcoolista" sublabel={"Uso cr\u00f4nico de \u00e1lcool"} checked={inputs.alcoolista} onChange={handleChange} color="amber" />

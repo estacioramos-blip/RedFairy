@@ -689,6 +689,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 <p className="text-xs text-gray-400 mt-0.5">Idade calculada a partir da data de nascimento no seu cadastro</p>
               )}
             </div>
+
+            {/* Bariátrico/a: dado inicial, sempre presente (movido do Histórico Clínico). */}
+            <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-sm
+              ${inputs.bariatrica ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+              <input type="checkbox" name="bariatrica" checked={inputs.bariatrica} onChange={handleChange} className="mt-0.5" />
+              <div>
+                <p className="font-medium">{inputs.sexo === 'F' ? 'Paciente Bariátrica' : 'Paciente Bariátrico'}</p>
+                <p className="text-xs opacity-70">By-pass / Gastrectomia — você receberá a anamnese do Projeto OBA</p>
+              </div>
+            </label>
+
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Data da Coleta</label>
               <input type="date" name="dataColeta" value={inputs.dataColeta} onChange={handleChange}
@@ -744,7 +755,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               <h3 className="text-sm font-semibold text-gray-700 mb-3">{"Hist\u00f3rico Cl\u00ednico"}</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { name: 'bariatrica', label: "Bari\u00e1trica", sub: 'By-pass / Gastrectomia', color: 'amber' },
                   { name: 'vegetariano', label: 'Vegetariano/Vegano', sub: 'Dieta sem carne', color: 'green' },
                   { name: 'perda', label: "Perda / Hemorragia", sub: "Inclui doa\u00e7\u00e3o de sangue, sangria, ou sangramento", color: 'red' },
                   ...(inputs.sexo === 'F' ? [
