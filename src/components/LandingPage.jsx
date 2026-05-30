@@ -75,9 +75,12 @@ const LANDING_CSS = `
     .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
 
     #landing-nav { display: flex !important; justify-content: space-between !important; }
-    .nav-links { display: none; }
+    .nav-links { display: flex !important; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 0.6rem; position: fixed; top: 0; right: 0; bottom: 0; width: 78%; max-width: 280px; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 4.5rem 1.4rem 1.5rem; border-left: 1px solid var(--border); box-shadow: -8px 0 30px rgba(0,0,0,0.12); z-index: 200; transform: translateX(100%); transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
+    .nav-links.open { transform: translateX(0); }
+    .nav-links a { font-size: 0.85rem; padding: 0.5rem 0.2rem; }
+    .nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.18); z-index: 199; opacity: 0; pointer-events: none; transition: opacity 0.28s ease; }
+    .nav-overlay.open { opacity: 1; pointer-events: auto; }
     .hamburger { display: flex; }
-    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: var(--white); padding: 1rem 0.6rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); z-index: 200; }
 
     .hero { padding: 5rem 0 3rem; }
     .hero-wrap { grid-template-columns: 1fr !important; gap: 2rem; text-align: center; max-width: 100% !important; padding: 0 0.6rem; width: 100% !important; box-sizing: border-box !important; }
@@ -1138,6 +1141,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           <img src={logo} alt="RedFairy" style={{ height:36 }} />
           <span>Red<em>Fairy</em><sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup></span>
         </a>
+        <div className={`nav-overlay${navOpen ? ' open' : ''}`} onClick={() => setNavOpen(false)} aria-hidden="true" />
         <div className={`nav-links${navOpen ? ' open' : ''}`}>
           <a
             href="#home"
