@@ -57,7 +57,7 @@ Persistir decisões **conforme acontecem**, não em lote no fim — a sessão po
 | Service | Expected account | Verify command |
 |---------|------------------|----------------|
 | GitHub | `estacioramos-blip` (repo `estacioramos-blip/RedFairy`) | `gh auth status` |
-| Vercel | ⚠️ A PREENCHER (`npx vercel whoami`) | `npx vercel whoami` |
+| Vercel | scope `estacioramos-blips-projects` | `npx vercel whoami` |
 
 **Vercel project IDs:** deploy é via **integração GitHub→Vercel** (push em `main`), não pelo CLI local — não há `.vercel/project.json` na máquina. orgId/projectId ficam no dashboard da Vercel (preencher se algum dia usar o CLI).
 **Qualquer divergência → PARE e avise o Estácio.** (Conta errada = deploy no projeto errado ou vazamento de env vars.)
