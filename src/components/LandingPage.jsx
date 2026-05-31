@@ -25,6 +25,10 @@ const LANDING_CSS = `
     --text-light: #9CA3AF; --bg: #FAFAFA; --white: #FFFFFF;
     --border: #F3F4F6; --border2: #E5E7EB; --radius: 14px;
     --shadow: 0 4px 20px rgba(0,0,0,0.06);
+    /* Paleta de secoes: cinza claro + pink (alternancia global) */
+    --rf-gray: #F4F5F7; --rf-pink: #FBEEEE;
+    /* Circulos vermelhos tenues (todas as secoes exceto OBA) */
+    --rf-circles: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='820'%3E%3Cg fill='none' stroke='%23dc2626' stroke-opacity='0.07' stroke-width='1.4'%3E%3Ccircle cx='160' cy='130' r='95'/%3E%3Ccircle cx='1040' cy='190' r='150'/%3E%3Ccircle cx='910' cy='660' r='110'/%3E%3Ccircle cx='250' cy='700' r='80'/%3E%3Ccircle cx='600' cy='410' r='200'/%3E%3C/g%3E%3C/svg%3E");
   }
   html { scroll-behavior: smooth; }
   body { font-family: 'DM Sans', -apple-system, sans-serif; color: var(--text); background: var(--white); line-height: 1.65; overflow-x: hidden; -webkit-font-smoothing: antialiased; scrollbar-gutter: stable; }
@@ -40,14 +44,14 @@ const LANDING_CSS = `
   .nav-links { display: flex; gap: 1.8rem; align-items: center; justify-content: center; justify-self: center; }
   .nav-links a { text-decoration: none; font-size: 0.95rem; font-weight: 600; color: var(--wine); transition: color 0.2s; }
   .nav-links a:hover { color: var(--cherry); }
-  .btn-sm { padding: 0.5rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; cursor: pointer; border: none; font-family: inherit; }
+  .btn-sm { padding: 0.5rem 1.2rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; cursor: pointer; border: none; font-family: inherit; }
   .btn-wine { background: var(--wine); color: var(--white) !important; }
   .btn-wine:hover { background: var(--cherry); }
   .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px; flex-direction: column; gap: 4px; }
   .hamburger span { display: block; width: 20px; height: 2px; background: var(--text); border-radius: 2px; }
 
   /* BUTTONS */
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.25s; font-family: inherit; min-width: 180px; height: 60px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem 2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; text-decoration: none; border: none; cursor: pointer; transition: all 0.25s; font-family: inherit; min-width: 180px; height: 60px; }
   .btn-primary { background: var(--wine); color: var(--white); }
   .btn-primary:hover { background: var(--cherry); transform: translateY(-2px); }
   .btn-secondary { background: #9CA3AF; color: var(--white); border: 1.5px solid #9CA3AF; }
@@ -59,7 +63,9 @@ const LANDING_CSS = `
   .whatsapp-btn svg { width: 20px; height: 20px; fill: white; }
 
   /* HERO */
-  .hero { min-height: auto; display: flex; align-items: center; justify-content: center; padding: 4rem 2rem 1rem; background: var(--white); position: relative; overflow: hidden; }
+  .hero { min-height: auto; display: flex; align-items: center; justify-content: center; padding: 4rem 2rem 1rem; position: relative; overflow: hidden; background: radial-gradient(125% 92% at 50% -8%, #FFFFFF 0%, #FDF7F7 42%, #F7EBEB 100%), var(--white); }
+  .hero::before { content: ''; position: absolute; inset: -14% -14% 30% -14%; z-index: 0; pointer-events: none; background: radial-gradient(40% 52% at 15% 26%, rgba(220,38,38,0.09), transparent 70%), radial-gradient(46% 58% at 87% 14%, rgba(123,30,30,0.12), transparent 72%), radial-gradient(36% 44% at 66% 82%, rgba(239,68,68,0.06), transparent 70%); filter: blur(8px); }
+  .hero::after { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.45; mix-blend-mode: multiply; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); }
   .hero-wrap { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; z-index: 2; }
   .hero-badge { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; background: #374151; color: var(--white); padding: 0.7rem 2.5rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; margin-bottom: 1.2rem; letter-spacing: 0.3px; text-align: center; width: 100%; max-width: 480px; box-sizing: border-box; }
   .hero-badge .dot { width: 12px; height: 12px; border-radius: 50%; background: #22C55E; animation: pDot 2s ease-in-out infinite; flex-shrink: 0; }
@@ -126,8 +132,8 @@ const LANDING_CSS = `
   .hero-badge-sub { font-size: 0.78rem; color: var(--text-sec); margin-top: -0.4rem; margin-bottom: 0.8rem; font-weight: 700; }
 
   .hero-textbox {
-    background: var(--white); border: 1px solid var(--border); border-radius: 16px;
-    padding: 2rem 2.5rem; box-shadow: var(--shadow);
+    background: var(--white); border: 1px solid rgba(123,30,30,0.10); border-radius: 20px;
+    padding: 2.3rem 2.6rem; box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 22px 48px -16px rgba(123,30,30,0.40), 0 6px 18px rgba(0,0,0,0.07);
     position: relative; overflow: hidden; cursor: pointer; margin: 0 auto 0.8rem;
     width: 100%; max-width: 700px; text-align: center;
   }
@@ -141,9 +147,66 @@ const LANDING_CSS = `
   .hero-textbox.reveal-img .hero-textbox-bg { filter: blur(0px); opacity: 0.9; }
   .hero-textbox .htb-content { position: relative; z-index: 1; transition: opacity 0.6s ease; }
   .hero-textbox.reveal-img .htb-content { opacity: 0; }
-  .hero h1 { font-size: 3.6rem; line-height: 1.12; color: var(--text); margin-bottom: 1.2rem; font-weight: 800; }
-  .hero h1 .red { color: var(--cherry); }
-  .hero-philosophy { font-style: normal; font-size: 1.15rem; color: var(--wine); margin-bottom: 0; line-height: 1.65; font-weight: 700; }
+  .hero h1 { font-family: 'DM Serif Display', serif; font-weight: 400; font-size: 3.3rem; line-height: 1.08; letter-spacing: -0.015em; color: var(--text); margin-bottom: 1.2rem; text-wrap: balance; }
+  .hero h1 .red { color: var(--cherry); font-style: italic; }
+  .hero-philosophy { font-style: normal; font-size: 1.18rem; color: var(--wine); margin-bottom: 0; line-height: 1.6; font-weight: 700; letter-spacing: 0.01em; }
+
+  /* ===== REDESIGN: circulos / fluxo (sangue e fluxo) ===== */
+  .rf-circles { position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+  .rf-c { position:absolute; border-radius:50%; border:1.5px solid rgba(220,38,38,0.12); will-change: transform; }
+  .rf-c1 { width:540px; height:540px; top:-200px; left:-180px; border-color:rgba(220,38,38,0.10); animation: rfDrift1 24s ease-in-out infinite; }
+  .rf-c2 { width:360px; height:360px; bottom:-150px; right:-110px; border-color:rgba(123,30,30,0.13); animation: rfDrift2 30s ease-in-out infinite; }
+  .rf-c3 { width:240px; height:240px; top:8%; right:6%; border-color:rgba(239,68,68,0.10); border-width:1px; animation: rfDrift3 20s ease-in-out infinite; }
+  .rf-c4 { width:160px; height:160px; bottom:14%; left:8%; border-color:rgba(220,38,38,0.12); border-width:1px; animation: rfDrift1 18s ease-in-out infinite reverse; }
+  .rf-c5 { width:700px; height:700px; top:-280px; right:-340px; border-color:rgba(123,30,30,0.06); animation: rfDrift2 36s ease-in-out infinite; }
+  @keyframes rfDrift1 { 0%,100%{transform:translate(0,0) rotate(0deg);} 50%{transform:translate(26px,-18px) rotate(8deg);} }
+  @keyframes rfDrift2 { 0%,100%{transform:translate(0,0) rotate(0deg);} 50%{transform:translate(-22px,16px) rotate(-6deg);} }
+  @keyframes rfDrift3 { 0%,100%{transform:translate(0,0);} 50%{transform:translate(14px,18px);} }
+
+  /* Medalhao: wrapper relativo (texto pode transbordar o circulo). O circulo em si recorta a foto. */
+  .rf-hero-medal { position:relative; width:clamp(224px, 37vh, 337px); aspect-ratio:1/1; margin:0 auto; cursor:pointer; flex-shrink:0; animation: heroReveal 0.9s cubic-bezier(0.22,1,0.36,1) both; }
+  .rf-hero-stage { position:absolute; inset:0; border-radius:50%; overflow:hidden; box-shadow:0 20px 50px -18px rgba(123,30,30,0.55), 0 6px 18px rgba(0,0,0,0.10); }
+  .rf-hero-img { position:absolute; inset:0; background-size:cover; background-position:center; transform:scale(1.03); }
+  .rf-hero-scrim { position:absolute; inset:0; z-index:1; background:linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(250,237,237,0.90) 100%); transition:opacity 0.6s ease; }
+  .rf-hero-medal.reveal-img .rf-hero-scrim { opacity:0.10; }
+  /* Overlay mais largo que o circulo: texto grande pode passar das bordas */
+  .rf-hero-overlay { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:150%; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; overflow:visible; transition:opacity 0.6s ease; }
+  .rf-hero-medal.reveal-img .rf-hero-overlay { opacity:0; pointer-events:none; }
+  .rf-hero-overlay h1 { font-family:'DM Serif Display', serif; font-weight:400; font-size:3.5rem; line-height:1.1; letter-spacing:-0.015em; color:var(--text); margin:0 0 0.6rem; text-wrap:balance; text-shadow:0 1px 12px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.8); }
+  .rf-hero-overlay h1 .red { color:var(--cherry); font-style:normal; }
+  .rf-hero-sub { font-size:clamp(0.85rem,2vh,1.05rem); color:#1F2937; font-weight:600; line-height:1.45; max-width:340px; margin:0 auto; text-shadow:0 1px 8px rgba(255,255,255,0.9); }
+  @keyframes heroReveal { from { opacity:0; transform:translateY(18px) scale(0.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+  /* Coluna do hero ocupa a 1a tela: imagem (topo) / hemacia (centro) / info (base) */
+  .rf-herocol { display:flex; flex-direction:column; align-items:center; width:100%; min-height:calc(100vh - 5.5rem); justify-content:space-between; gap:0.8rem; }
+  .rf-hero-bottom { width:100%; display:flex; flex-direction:column; align-items:center; gap:0.3rem; }
+
+  /* Linha de fluxo: hemacia centralizada; circulo-dica + pontos a esquerda, somem apos 5s */
+  .rf-flowrow { position:relative; display:flex; align-items:center; justify-content:center; min-height:112px; }
+  .rf-hemacia-wrap { position:relative; display:inline-flex; align-items:center; justify-content:center; }
+  .rf-hint-group { position:absolute; top:50%; right:100%; margin-right:6px; transform:translateY(-50%); display:flex; align-items:center; opacity:0; }
+  .rf-hint-group.in { animation: fadeInHint 0.35s ease-out forwards; }
+  .rf-hint-group.out { animation: fadeOutHint 0.3s ease-in forwards; }
+  .rf-hint-circle { position:relative; width:118px; height:118px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-align:center; padding:16px; box-sizing:border-box; background:rgba(255,255,255,0.80); backdrop-filter:blur(2px); flex-shrink:0; }
+  .rf-hint-circle span { font-size:0.72rem; font-weight:600; color:#374151; line-height:1.28; letter-spacing:0.1px; }
+  .rf-hint-circle::after { content:''; position:absolute; inset:0; border-radius:50%; border:1px solid rgba(220,38,38,0.30); }
+  .rf-hint-circle::before { content:''; position:absolute; inset:-3px; border-radius:50%; background:conic-gradient(from 0deg, transparent 0 58%, rgba(220,38,38,0.6) 72%, rgba(239,68,68,0.18) 82%, transparent 92%); -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px)); mask:radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px)); animation: rfSpin 6s linear infinite; }
+  .rf-dots { position:relative; width:56px; height:16px; margin:0 7px; flex-shrink:0; }
+  .rf-dots i { position:absolute; top:50%; left:0; width:7px; height:7px; border-radius:50%; background:#dc2626; transform:translateY(-50%); box-shadow:0 0 6px rgba(220,38,38,0.5); animation: rfDotFlow 2.2s ease-in-out infinite; }
+  .rf-dots i:nth-child(2){ animation-delay:0.55s; }
+  .rf-dots i:nth-child(3){ animation-delay:1.1s; }
+  @keyframes rfDotFlow { 0%{left:0; opacity:0; transform:translateY(-50%) scale(0.6);} 15%{opacity:1; transform:translateY(-50%) scale(1);} 85%{opacity:1;} 100%{left:100%; opacity:0; transform:translateY(-50%) scale(0.6);} }
+  @keyframes rfSpin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 768px) {
+    .rf-hero-medal { width:clamp(187px, 31vh, 271px); margin:-1rem auto 0; }
+    .rf-hero-overlay { width:170%; }
+    .rf-hero-overlay h1 { font-size:clamp(1.8rem, 7vw, 2.6rem); }
+    .rf-hint-circle { width:88px; height:88px; padding:11px; }
+    .rf-hint-circle span { font-size:0.54rem; }
+    .rf-dots { width:30px; margin:0 4px; }
+    .rf-c5, .rf-c3 { display:none; }
+    .rf-herocol { min-height:calc(100vh - 6rem); gap:0.3rem; justify-content:space-evenly; }
+  }
   .hero-desc { font-size: 1.02rem; color: var(--text-sec); max-width: 100%; line-height: 1.7; margin-bottom: 1.2rem; font-weight: 700; text-align: center; }
   .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; justify-content: center; }
   .trust { margin-top: 2rem; display: flex; gap: 1.8rem; align-items: center; flex-wrap: wrap; justify-content: center; }
@@ -160,7 +223,7 @@ const LANDING_CSS = `
   .fairy-quote p { font-size: 1.45rem; color: var(--text); line-height: 1.5; font-weight: 800; font-family: 'DM Sans', sans-serif; }
   .fairy-quote .question { color: var(--wine); font-weight: 700; margin-top: 1rem; font-size: 1.2rem; font-family: 'DM Sans', sans-serif; font-style: normal; }
 
-  .oba-home-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 16px; padding: 1.2rem 2rem; transition: all 0.3s; box-shadow: 0 4px 20px rgba(232,114,12,0.2); width: 100%; max-width: 380px; }
+  .oba-home-btn { display: flex; flex-direction: column; align-items: center; text-decoration: none; background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 999px; padding: 1.2rem 2.5rem; transition: all 0.3s; box-shadow: 0 4px 20px rgba(232,114,12,0.2); width: 100%; max-width: 380px; }
   .oba-home-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(232,114,12,0.3); }
   .oba-home-btn .oba-title { font-size: 1.1rem; font-weight: 800; color: var(--white); letter-spacing: 1px; }
   .oba-home-btn .oba-sub { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: rgba(255,255,255,0.9); margin-top: 0.15rem; font-weight: 700; }
@@ -174,7 +237,7 @@ const LANDING_CSS = `
   .sdesc { font-size: 1.02rem; color: var(--text-sec); max-width: 580px; line-height: 1.7; font-weight: 600; }
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
-  .filosofia { background: var(--gray-bg); color: var(--text); position: relative; margin-top: 5rem; padding-top: 1.5rem; padding-bottom: 1.5rem; }
+  .filosofia { background: var(--rf-circles) center/cover no-repeat, var(--rf-gray); color: var(--text); position: relative; margin-top: 5rem; padding-top: 1.5rem; padding-bottom: 1.5rem; }
   .filosofia .tag { color: var(--cherry); margin-bottom: 0.3rem; }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 1.5rem; }
   .fil-img-box .fil-content p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
@@ -215,18 +278,18 @@ const LANDING_CSS = `
   .ind.auto-dot::before { content: ''; width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--cherry); display: block; flex-shrink: 0; margin-top: 3px; }
   .ind:hover { border-color: var(--border2); }
 
-  .terapeutica { background: var(--white); }
+  .terapeutica { background: var(--rf-circles) center/cover no-repeat, var(--rf-gray); position: relative; }
   .terap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
-  .terap-card { background: var(--white); border: 2px solid #7f1d1d; border-radius: var(--radius); padding: 1rem 1.2rem 0.6rem; transition: all 0.2s; }
+  .terap-card { background: var(--white); border: 2px solid #7f1d1d; border-radius: var(--radius); padding: 1rem 1.2rem; transition: all 0.2s; display: flex; gap: 0.8rem; align-items: flex-start; }
   .terap-card:hover { box-shadow: var(--shadow); }
-  .terap-card .tc-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 0.6rem; background: var(--cherry-bg); }
-  .terap-card h4 { font-size: 0.95rem; margin-bottom: 0.2rem; }
-  .terap-card p { font-size: 0.83rem; color: var(--text-sec); margin-bottom: 0; }
+  .terap-card .tc-icon { width: 44px; height: 44px; min-width: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background: var(--cherry-bg); }
+  .terap-card h4 { font-size: 0.92rem; margin-bottom: 0.25rem; font-weight: 700; }
+  .terap-card p { font-size: 0.82rem; color: var(--text-sec); margin-bottom: 0; line-height: 1.6; }
 
-  .como { background: var(--gray-bg); }
+  .como { background: var(--rf-circles) center/cover no-repeat, var(--rf-pink); position: relative; }
   .como-tabs-wrap { display: flex; justify-content: center; margin-top: 2rem; margin-bottom: 2.5rem; }
   .como-tabs { display: inline-flex; gap: 0.5rem; }
-  .como-tab { padding: 0.85rem 0; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; background: #9CA3AF; color: white; transition: all 0.25s; font-family: inherit; width: 200px; text-align: center; }
+  .como-tab { padding: 0.85rem 0; border-radius: 999px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; background: #9CA3AF; color: white; transition: all 0.25s; font-family: inherit; width: 200px; text-align: center; }
   .como-tab:hover { background: #374151; }
   .como-tab.active { background: var(--wine); color: white; box-shadow: 0 4px 14px rgba(123,30,30,0.25); }
   .como-tab.active:hover { background: var(--cherry); }
@@ -234,7 +297,7 @@ const LANDING_CSS = `
   .como-tab.paciente.active:hover { background: #4B5563; }
   .como-content { min-height: 300px; }
   .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
-  .flow-step { text-align: center; background: white; border: 1px solid var(--border2); border-radius: 14px; padding: 1.5rem 1rem; }
+  .flow-step { text-align: center; background: white; border: 2px solid #7f1d1d; border-radius: 14px; padding: 1.5rem 1rem; }
   .flow-num { width: 44px; height: 44px; border-radius: 50%; background: var(--wine); color: white; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.8rem; transition: background 0.2s ease; }
   .flow-step.medico .flow-num { background: #7B1E1E; color: white; }
   .flow-step.medico:hover .flow-num { background: #EF4444; }
@@ -250,17 +313,26 @@ const LANDING_CSS = `
   .reward-amount { font-size: 2rem; font-weight: 800; color: white; white-space: nowrap; }
   .klipbit-k { width: 36px; height: 36px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 900; color: var(--wine); font-family: serif; }
   .patient-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
-  .pf-card { background: white; border-radius: 12px; padding: 1.5rem; border: 1px solid var(--border2); }
+  .pf-card { background: white; border-radius: 12px; padding: 1.5rem; border: 2px solid #374151; }
   .pf-icon { width: 36px; height: 36px; margin-bottom: 0.8rem; color: var(--wine); }
   .pf-card h4 { font-size: 0.9rem; margin-bottom: 0.3rem; font-weight: 700; }
   .pf-card p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
-  .pricing-box { background: #FFF1F2; border: 1px solid #FECDD3; border-radius: 14px; padding: 2.5rem 2rem; text-align: center; margin-top: 1.5rem; }
+  .pricing-box { background: var(--rf-gray); border: 2px solid #7f1d1d; border-radius: 14px; padding: 2.5rem 2rem; text-align: center; margin-top: 1.5rem; }
   .price { font-size: 3.5rem; font-weight: 800; color: var(--wine); }
   .price-sub { font-size: 0.95rem; color: var(--wine); margin-bottom: 1.2rem; font-weight: 400; }
   .pix-methods { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
   .pix-tag { background: white; border: 1px solid #FECDD3; border-radius: 8px; padding: 0.4rem 0.9rem; font-size: 0.82rem; color: var(--wine); font-weight: 500; display: flex; align-items: center; gap: 0.4rem; }
 
-  .oba { background: linear-gradient(170deg, var(--oba-blue-dark) 0%, #334155 60%, #1E293B 100%); color: var(--white); position: relative; overflow: hidden; }
+  /* OBA: cor escura distinta + grid fino vermelho tenue (so' nesta secao) */
+  .oba {
+    background-color: #141A26;
+    background-image:
+      linear-gradient(rgba(220,38,38,0.22) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(220,38,38,0.22) 1px, transparent 1px),
+      linear-gradient(165deg, #1A2233 0%, #243042 55%, #141A26 100%);
+    background-size: 34px 34px, 34px 34px, cover, cover;
+    background-repeat: repeat, repeat, no-repeat, no-repeat;
+    color: var(--white); position: relative; overflow: hidden; }
   .oba::before { content: ''; position: absolute; top: -30%; right: -15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(232,114,12,0.12), transparent 70%); border-radius: 50%; }
   .oba .container { position: relative; z-index: 2; }
   .oba .tag { color: var(--oba-orange-light); }
@@ -271,8 +343,8 @@ const LANDING_CSS = `
   .oba-metaphor { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue)); border-radius: 12px; padding: 1.3rem 1.5rem; margin: 0 0 1.5rem; }
   .oba-metaphor p { font-size: 1rem; font-weight: 600; color: var(--white); text-align: center; margin: 0; line-height: 1.5; }
   .oba-features { display: flex; flex-direction: column; gap: 1rem; }
-  .oba-feat { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 1.3rem; display: flex; gap: 0.8rem; align-items: flex-start; transition: all 0.2s; }
-  .oba-feat:hover { border-color: rgba(232,114,12,0.3); background: rgba(232,114,12,0.05); }
+  .oba-feat { background: #19212F; border: 1px solid rgba(226,232,240,0.45); border-radius: 14px; padding: 1.3rem; display: flex; gap: 0.8rem; align-items: flex-start; transition: all 0.2s; }
+  .oba-feat:hover { border-color: rgba(226,232,240,0.7); background: #202B3D; }
   .oba-feat .of-icon { width: 38px; height: 38px; min-width: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; background: rgba(232,114,12,0.15); }
   .oba-feat h4 { font-size: 0.9rem; color: var(--white); margin-bottom: 0.2rem; }
   .oba-feat p { font-size: 0.82rem; color: rgba(255,255,255,0.55); margin: 0; }
@@ -280,28 +352,50 @@ const LANDING_CSS = `
   .btn-oba-main { background: linear-gradient(135deg, var(--oba-orange), var(--oba-blue-dark)); color: var(--white); box-shadow: 0 6px 25px rgba(232,114,12,0.3); }
   .btn-oba-main:hover { transform: translateY(-2px); }
 
-  .cta-final { background: var(--gray-bg); }
+  .cta-final { background: var(--rf-circles) center/cover no-repeat, var(--rf-pink); position: relative; }
   .cta-final .tag { color: var(--cherry); }
-  .cta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
-  .cta-c { border-radius: 16px; padding: 0.8rem 1.2rem; transition: transform 0.25s; display: flex; flex-direction: column; justify-content: space-between; }
-  .cta-c:hover { transform: translateY(-4px); }
-  .cta-doc { background: #D1D5DB; border: 1px solid #9CA3AF; box-shadow: var(--shadow); }
-  .cta-pat { background: var(--wine); border: 1px solid var(--wine-dark); box-shadow: 0 8px 30px rgba(123,30,30,0.2); }
-  .cta-c .ci { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 0.8rem; }
+  /* COMECE AGORA \u2014 colunas leves: card so' com texto, bullets fora, comprimido embaixo */
+  .cta-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.5rem; align-items: start; }
+  .cta-col { display: flex; flex-direction: column; align-items: center; gap: 1.1rem; }
+  .cta-c { border-radius: 28px; padding: 1.6rem 1.6rem 1.4rem; background: rgba(255,255,255,0.92); border: 2px solid #7f1d1d; box-shadow: 0 10px 30px -14px rgba(123,30,30,0.18); width: 100%; text-align: center; }
+  .cta-c .ci { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; margin: 0 auto 0.8rem; }
   .cta-doc .ci { background: var(--cherry-bg); }
-  .cta-pat .ci { background: rgba(255,255,255,0.18); }
-  .cta-doc h3 { color: var(--text); font-size: 1.25rem; margin-bottom: 0.4rem; }
-  .cta-pat h3 { color: var(--white); font-size: 1.25rem; margin-bottom: 0.4rem; }
-  .cta-doc p { color: var(--text-sec); font-size: 0.88rem; margin-bottom: 1.2rem; line-height: 1.6; }
-  .cta-pat p { color: rgba(255,255,255,0.8); font-size: 0.88rem; margin-bottom: 1.2rem; line-height: 1.6; }
-  .cta-c ul { list-style: none; margin-bottom: 1.5rem; padding: 0; }
-  .cta-doc li { font-size: 0.84rem; color: var(--text-sec); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem; }
-  .cta-doc li::before { content: '\u2713'; color: var(--cherry); font-weight: 700; }
-  .cta-pat li { font-size: 0.84rem; color: rgba(255,255,255,0.9); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem; }
-  .cta-pat li::before { content: '\u2713'; color: rgba(255,255,255,0.6); font-weight: 700; }
-  .btn-cta-doc { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.25s; background: var(--wine); color: var(--white); height: 60px; }
+  .cta-pat .ci { background: #EEF2F6; }
+  .cta-c h3 { color: var(--text); font-size: 1.25rem; margin-bottom: 0.5rem; font-weight: 800; }
+  .cta-c p { color: var(--text-sec); font-size: 0.88rem; margin: 0; line-height: 1.65; }
+  .cta-bullets { list-style: none; padding: 0 1.6rem; margin: 0; width: 100%; display: flex; flex-direction: column; gap: 0.15rem; }
+  .cta-bullets li { font-size: 0.85rem; color: var(--text-sec); font-weight: 600; padding: 0.28rem 0; display: flex; align-items: flex-start; gap: 0.55rem; line-height: 1.45; }
+  .cta-bullets li::before { content: ''; width: 10px; height: 10px; margin-top: 4px; border-radius: 50%; flex-shrink: 0; background: radial-gradient(circle at 32% 28%, #ff8a8a, #dc2626 58%, #7B1E1E 100%); box-shadow: 0 1px 2px rgba(0,0,0,0.3), inset 0 1px 1.5px rgba(255,255,255,0.65); }
+  .cta-pat .cta-bullets li::before { background: radial-gradient(circle at 32% 28%, #94a3b8, #475569 58%, #1f2937 100%); }
+
+  /* COMPRIMIDO 3D (no lugar dos botoes circulares) \u2014 texto pode ultrapassar as bordas */
+  .rf-comprimido { position: relative; display: inline-flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; padding: 0; min-width: 130px; height: 58px; transition: transform 0.15s ease; }
+  .rf-comprimido:hover { transform: scale(1.06); }
+  .comp-pill { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 104px; height: 46px; border-radius: 999px; }
+  .comp-pill::after { content: ''; position: absolute; top: 15%; bottom: 15%; left: 50%; width: 2px; transform: translateX(-50%); background: linear-gradient(180deg, transparent, rgba(0,0,0,0.30), transparent); border-radius: 2px; }
+  .comp-label { position: relative; z-index: 1; font-family: 'DM Serif Display', serif; font-size: 1.6rem; font-weight: 400; letter-spacing: -0.01em; white-space: nowrap; line-height: 1; text-shadow: 0 1px 6px rgba(255,255,255,0.85); }
+  .comp-sub { font-size: 0.62rem; font-weight: 700; letter-spacing: 1.5px; }
+  .comp-medico .comp-pill { background: linear-gradient(160deg, #fff2f2 0%, #f0a6a6 44%, #dc2626 56%, #ffdada 100%); box-shadow: 0 6px 16px rgba(220,38,38,0.40), inset 0 2px 3px rgba(255,255,255,0.95), inset 0 -3px 6px rgba(123,30,30,0.45); }
+  .comp-medico .comp-label, .comp-medico .comp-sub { color: #7B1E1E; }
+  .comp-pat .comp-pill { background: linear-gradient(160deg, #f6f7f9 0%, #c9d0d9 44%, #334155 56%, #e8ebef 100%); box-shadow: 0 6px 16px rgba(31,41,55,0.40), inset 0 2px 3px rgba(255,255,255,0.95), inset 0 -3px 6px rgba(15,23,42,0.5); }
+  .comp-pat .comp-label, .comp-pat .comp-sub { color: #1f2937; }
+  /* Variante larga (capsula mais alta) + larguras especificas por texto */
+  .comp-wide { min-width: 150px; height: 60px; }
+  .comp-wide .comp-pill { width: 150px; height: 54px; }
+  .comp-wide .comp-label { font-size: 1.15rem; }
+  .comp-w-saiba { min-width: 158px; }
+  .comp-w-saiba .comp-pill { width: 158px; }
+  .comp-w-saiba .comp-label { font-size: 1.28rem; }
+  .comp-w-tab { min-width: 136px; }
+  .comp-w-tab .comp-pill { width: 136px; }
+  .comp-w-comecar { min-width: 132px; }
+  .comp-w-comecar .comp-pill { width: 132px; }
+  /* Aba inativa (como-funciona): comprimido apagado */
+  .rf-comprimido.is-off { opacity: 0.4; }
+  .rf-comprimido.is-off:hover { opacity: 0.66; }
+  .btn-cta-doc { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.25s; background: var(--wine); color: var(--white); height: 60px; }
   .btn-cta-doc:hover { background: var(--cherry); transform: translateY(-2px); }
-  .btn-cta-pat { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 10px; font-size: 0.95rem; font-weight: 600; border: 1.5px solid #9CA3AF; cursor: pointer; font-family: inherit; transition: all 0.25s; background: #9CA3AF; color: var(--white); height: 60px; }
+  .btn-cta-pat { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; border: 1.5px solid #9CA3AF; cursor: pointer; font-family: inherit; transition: all 0.25s; background: #9CA3AF; color: var(--white); height: 60px; }
   .btn-cta-pat:hover { background: #374151; border-color: #374151; transform: translateY(-2px); }
 
   footer { text-align: center; }
@@ -569,13 +663,14 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  // Em mobile: qualquer toque na tela fecha o tooltip (inclusive no proprio botao).
+  // Em mobile: cada toque na tela ALTERNA o tooltip (esconde se visivel, reaparece se oculto).
   useEffect(() => {
     if (!isMobile) return;
-    if (hintHero !== 'in') return;
-    function onTouch() { esconderHintHero(); }
-    // Usa { once: true } pra fechar so' no primeiro toque depois que o tooltip subiu.
-    window.addEventListener('touchstart', onTouch, { passive: true, once: true });
+    function onTouch() {
+      if (hintHero === 'in') esconderHintHero();
+      else mostrarHintHero({ semTimeout: true });
+    }
+    window.addEventListener('touchstart', onTouch, { passive: true });
     return () => window.removeEventListener('touchstart', onTouch);
   }, [hintHero, isMobile]);
   const [fluxoFade, setFluxoFade] = useState(false);
@@ -849,6 +944,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [showSobre, setShowSobre] = useState(false)
   const [showAfiliados, setShowAfiliados] = useState(false)
   const [showContato, setShowContato] = useState(false)
+  const [showIndMais, setShowIndMais] = useState(false)
   const [activeTab,   setActiveTab]   = useState('medico')
   const [showHtb,     setShowHtb]     = useState(false)
   const [showFil,     setShowFil]     = useState(false)
@@ -1037,6 +1133,41 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         />
       )}
 
+      {/* MODAL "LEIA MAIS" das Indicacoes */}
+      {showIndMais && (
+        <div
+          onClick={() => setShowIndMais(false)}
+          style={{ position:'fixed', inset:0, zIndex:2000, background:'rgba(15,18,25,0.75)', backdropFilter:'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem', animation:'fadeIn 0.2s ease' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background:'white', borderRadius:16, maxWidth:640, width:'100%', maxHeight:'85vh', overflowY:'auto', padding:'2.5rem 2rem 2rem', position:'relative', boxShadow:'0 20px 60px rgba(0,0,0,0.3)' }}
+          >
+            <button
+              onClick={() => setShowIndMais(false)}
+              aria-label="Fechar"
+              style={{ position:'absolute', top:'1rem', right:'1rem', background:'var(--wine)', border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', fontSize:'0.95rem', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', lineHeight:1, fontFamily:"'Apple Color Emoji','Segoe UI Symbol','Noto Sans Symbols',sans-serif", transition:'all 0.2s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background='var(--cherry)'; e.currentTarget.style.transform='scale(1.1)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background='var(--wine)'; e.currentTarget.style.transform='scale(1)' }}
+            >
+              {"✕"}
+            </button>
+            <h3 style={{ fontSize:'1.25rem', marginBottom:'1.2rem', color:'var(--wine)', fontWeight:800, paddingRight:'2rem', lineHeight:1.3 }}>
+              {"RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.5em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" | OBA – Otimizar o Bariátrico"}
+            </h3>
+            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.75, marginBottom:'1rem', textAlign:'justify' }}>
+              {"O RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.6em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" | OBA – Otimizar o Bariátrico é um algoritmo que transforma o hemograma em uma porta de entrada inteligente para triagem, orientação diagnóstica, seguimento estruturado e cuidado médico especial para essas condições, em especial para o paciente bariátrico."}
+            </p>
+            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.75, marginBottom:'1rem', textAlign:'justify' }}>
+              {"Em um país continental, desigual e com carência de hematologistas em extensas regiões, o RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.6em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" ocupa uma lacuna assistencial com medicina fundamentada, solicitação de exames e prescrições de especialistas."}
+            </p>
+            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.75, marginBottom:0, textAlign:'justify' }}>
+              {"Para ampliar essa rede de cuidado, o sistema inclui o 4DOC – Programa de Afiliados Patrocinado para Médicos – que apoia profissionais que avaliam e orientam os afetados a se cadastrar no sistema, gerando créditos institucionais vinculados, fortalecendo o diagnóstico precoce, o cuidado e a prevenção de sequelas."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {showContato && (
         <div
           onClick={() => setShowContato(false)}
@@ -1222,32 +1353,38 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       </nav>
 
       <section className="hero">
+        {/* Circulos de fluxo (sangue e fluxo) */}
+        <div className="rf-circles" aria-hidden="true">
+          <div className="rf-c rf-c1" />
+          <div className="rf-c rf-c2" />
+          <div className="rf-c rf-c3" />
+          <div className="rf-c rf-c4" />
+          <div className="rf-c rf-c5" />
+        </div>
         <div className="hero-wrap">
 
-          <div className="reveal">
+          <div className="reveal rf-herocol">
 
+            {/* Imagem circular (medalhao) no topo; hover/touch revela a imagem.
+                O texto fica FORA do circulo recortado (irmao), para poder ultrapassar a borda. */}
             <div
-              className={`hero-textbox${showHtb ? ' reveal-img' : ''}`}
+              className={`rf-hero-medal${showHtb ? ' reveal-img' : ''}`}
               onMouseEnter={onHtbEnter}
               onTouchStart={onHtbEnter}
             >
-              <div
-                className="hero-textbox-bg"
-                style={{ backgroundImage: `url(${filosofiaBg})` }}
-              />
-              <div className="htb-content">
+              <div className="rf-hero-stage">
+                <div className="rf-hero-img" style={{ backgroundImage: `url(${filosofiaBg})` }} />
+                <div className="rf-hero-scrim" />
+              </div>
+              <div className="rf-hero-overlay">
                 <div style={{ display:'grid' }}>
-                  <div style={{ gridArea:'1 / 1', opacity: heroVariant === 0 ? 1 : 0, transition:'opacity 1.2s ease', pointerEvents: heroVariant === 0 ? 'auto' : 'none' }}>
-                    <h1>{"Eu sou a sua fada vermelha, a sua "}<span className="red">Hemoglobina</span></h1>
-                    <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:800, textAlign:'center' }}>
-                      {"Eu uso poeira de estrelas para te entregar o ar."}<br/>{"Quanto tempo voc\u00ea vive sem ar?"}
-                    </p>
+                  <div style={{ gridArea:'1 / 1', opacity: heroVariant === 0 ? 1 : 0, visibility: heroVariant === 0 ? 'visible' : 'hidden', transition:'opacity 1.2s ease, visibility 1.2s ease' }}>
+                    <h1>{"Eu sou a "}<span className="red">HEMOGLOBINA</span><br/>{"\u2013 a VIDA."}</h1>
+                    <p className="rf-hero-sub">{"Eu uso p\u00f3 de estrelas para"}<br/>{"te entregar o ar."}</p>
                   </div>
-                  <div style={{ gridArea:'1 / 1', opacity: heroVariant === 1 ? 1 : 0, transition:'opacity 1.2s ease', pointerEvents: heroVariant === 1 ? 'auto' : 'none', display:'flex', flexDirection:'column', justifyContent:'center' }}>
-                    <h1>{"Diagn\u00f3stico e tratamento de dist\u00farbios do "}<span className="red">Eritron</span>{" humano"}</h1>
-                    <p className="hero-philosophy" style={{ fontStyle:'normal', fontWeight:800, textAlign:'center' }}>
-                      {"Entender e ajustar a produ\u00e7\u00e3o de hemoglobina e c\u00e9lulas vermelhas"}
-                    </p>
+                  <div style={{ gridArea:'1 / 1', opacity: heroVariant === 1 ? 1 : 0, visibility: heroVariant === 1 ? 'visible' : 'hidden', transition:'opacity 1.2s ease, visibility 1.2s ease' }}>
+                    <h1>{"Um sistema para cuidar do "}<span className="red">ERITRON</span>{" humano."}</h1>
+                    <p className="rf-hero-sub">{"Diagn\u00f3sticos e ajustes na"}<br/>{"produ\u00e7\u00e3o de hemoglobina"}<br/>{"e c\u00e9lulas vermelhas"}</p>
                   </div>
                 </div>
               </div>
@@ -1258,11 +1395,21 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
               {fluxoEtapa === 'inicio' && (
                 <>
-                  <p onMouseEnter={mostrarHintHero}
-                    style={{ fontSize:'1rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0 0 0.5rem', minHeight:'1.3rem', cursor:'default' }}>
+                  <p style={{ fontSize:'1rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0 0 0.5rem', minHeight:'1.3rem', cursor:'default' }}>
                     {twTexto}
                   </p>
-                  <div style={{ position:'relative', display:'inline-block' }}>
+                  <div className="rf-flowrow">
+                    <div className="rf-hemacia-wrap">
+                    {/* Circulo-dica (menor, a esquerda) + 3 pontos -> hemacia.
+                        Desktop: aparece no hover do botao, dura ~5s, some. Mobile: auto ~0.8s, some ao tocar. */}
+                    {hintHero !== 'hidden' && (
+                      <div className={`rf-hint-group ${hintHero}`} aria-hidden="true">
+                        <div className="rf-hint-circle">
+                          <span>{"Procure no exame e anote: DATA, HEMOGLOBINA, VCM e RDW"}</span>
+                        </div>
+                        <div className="rf-dots"><i/><i/><i/></div>
+                      </div>
+                    )}
                     <button onClick={() => {
                       if (medicoLogado) { entrarLogadoDireto(); return; }
                       // Checa localStorage live (n\u00e3o state estale): se nao tem paciente_id real,
@@ -1288,12 +1435,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                       ENTRE
                     </span>
                     </button>
-                    {hintHero !== 'hidden' && (
-                      <div role="tooltip"
-                        style={{ position:'absolute', left:'calc(100% + 18px)', top:'50%', transform:'translateY(-50%)', background:'#f3f4f6', color:'#374151', fontSize:'0.7rem', fontWeight:500, lineHeight:1.35, padding:'6px 10px', borderRadius:'8px', border:'1.5px solid #7B1E1E', boxShadow:'0 2px 8px rgba(0,0,0,0.08)', maxWidth:'180px', textAlign:'left', zIndex:50, pointerEvents:'none', animation: hintHero === 'in' ? 'fadeInHint 0.35s ease-out forwards' : 'fadeOutHint 0.3s ease-in forwards' }}>
-                        {"Procure no exame e anote: DATA, HEMOGLOBINA, VCM e RDW"}
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </>
               )}
@@ -1569,6 +1711,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
             </div>
 
+            <div className="rf-hero-bottom">
             {/* Marquee de indicacoes: 3 linhas, scroll infinito horizontal */}
             <div className="rf-marquee" aria-hidden="true">
               <div className="rf-marquee-row rf-marquee-row-1">
@@ -1603,7 +1746,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               </div>
             </div>
 
-            <div className="trust" style={{ justifyContent:'center', marginTop:'2.5rem' }}>
+            <div className="trust" style={{ justifyContent:'center', marginTop:'0.4rem' }}>
               <div className="trust-i">
                 <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                 <span>{"30 vari\u00e1veis cl\u00ednicas"}</span>
@@ -1621,6 +1764,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               {" by "}<a href="https://cytomica.com" target="_blank" rel="noopener noreferrer" style={{color:'var(--text-sec)'}}>cytomica.com</a>{"  \u00b7  \u00a9 2026  \u00b7  E.F. Ramos, M.D. CRM 6302|BA"}
             </p>
 
+            </div>
           </div>
 
           <div className="hero-visual reveal" style={{ transitionDelay:'0.15s' }}>
@@ -1639,7 +1783,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           .rf-marquee {
             width: 100%;
             max-width: 800px;
-            margin: 1.4rem auto 0.6rem;
+            margin: -1.5rem auto 0.9rem;
             display: flex;
             flex-direction: column;
             gap: 0.55rem;
@@ -1891,21 +2035,19 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       </section>
 
 
-      <section id="indicacoes" style={{ background:'var(--gray-bg)', padding:'5rem 1.25rem' }}>
+      <section id="indicacoes" style={{ background:'var(--rf-circles) center/cover no-repeat, var(--rf-pink)', padding:'5rem 1.25rem', position:'relative' }}>
         <div className="container">
           <div className="reveal center">
             <span className="tag">{"Indica\u00e7\u00f5es"}</span>
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>{"Para quem \u00e9 o RedFairy"}<sup style={{ color: '#000', fontSize: '0.7em', fontWeight: 600, verticalAlign: 'super', marginLeft: '2px' }}>{"\u00ae"}</sup>{"?"}</h2>
           </div>
           <div className="reveal" style={{ maxWidth: 880, margin: '1.5rem auto 0', lineHeight: 1.7, color: 'var(--text-sec)', fontSize: '0.88rem', fontWeight: 600, textAlign: 'justify' }}>
-            <p style={{ marginBottom: '1.1rem' }}>
-              {"No Brasil, anemia, defici\u00eancia de ferro e dist\u00farbios gen\u00e9ticos ou adquiridos da hemoglobina, das hem\u00e1cias e do seu metabolismo, atingem dezenas de milh\u00f5es de pessoas \u2014 incluindo crian\u00e7as, idosos, gestantes, vegetarianos, bari\u00e1tricos, gastrectomizados, doadores de sangue, pessoas com sangramentos cr\u00f4nicos, uso de testosterona, abuso de \u00e1lcool, doen\u00e7a cel\u00edaca, defici\u00eancia de G-6-PD, sobrecarga de ferro ou necessidade de sangrias terap\u00eauticas. Em conjunto, essas condi\u00e7\u00f5es envolvem mais de "}<strong style={{ color: 'var(--wine)' }}>{"55 milh\u00f5es de brasileiros"}</strong>{" que vivem sob dano hematol\u00f3gico-nutricional relevante, muitos sem acesso poss\u00edvel a avalia\u00e7\u00e3o especializada."}
-            </p>
-            <p style={{ marginBottom: '1.1rem' }}>
-              <strong style={{ color: 'var(--wine)' }}>{"RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" | OBA"}</strong>{" transforma o hemograma em uma porta de entrada inteligente para triagem, orienta\u00e7\u00e3o diagn\u00f3stica, seguimento estruturado e cuidado m\u00e9dico em hematologia para essas condi\u00e7\u00f5es. Em um pa\u00eds continental, desigual e com car\u00eancia de hematologistas em extensas regi\u00f5es, o sistema ocupa uma lacuna assistencial com orienta\u00e7\u00e3o m\u00e9dica fundamentada, solicita\u00e7\u00e3o de exames e prescri\u00e7\u00f5es emitidas por hematologistas atrav\u00e9s da Plataforma do Conselho Federal de Medicina."}
-            </p>
             <p style={{ marginBottom: '0.5rem' }}>
-              {"Para ampliar essa rede de cuidado, "}<strong style={{ color: 'var(--wine)' }}>{"RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" | OBA"}</strong>{" inclui o 4DOC - Programa de Afiliados Patrocinado para M\u00e9dicos, que reconhece e apoia profissionais que identificam pacientes afetados e os orientam a se cadastrar no sistema, gerando cr\u00e9ditos institucionais vinculados ao encaminhamento e fortalecendo a triagem, a preven\u00e7\u00e3o, a redu\u00e7\u00e3o de sequelas, e o diagn\u00f3stico precoce de hemopatias no Brasil."}
+              {"Anemia, defici\u00eancia de ferro, e dist\u00farbios gen\u00e9ticos ou adquiridos da hemoglobina e das c\u00e9lulas vermelhas atingem talvez cinquenta milh\u00f5es de pessoas no pa\u00eds, que vivem sob dano hematol\u00f3gico-nutricional relevante, muitos sem acesso a avalia\u00e7\u00e3o especializada. S\u00e3o crian\u00e7as, idosos, gestantes, vegetarianos, cel\u00edacos, bari\u00e1tricos, doadores de sangue, pessoas com sangramentos cr\u00f4nicos, ou em uso de testosterona, abuso de \u00e1lcool, deficientes em G-6-PD, ou com sobrecarga de ferro, eritrocitose e necessidade de sangrias terap\u00eauticas. "}
+              <button onClick={() => setShowIndMais(true)}
+                style={{ background:'none', border:'none', padding:0, margin:0, cursor:'pointer', color:'var(--wine)', fontWeight:800, fontSize:'0.88rem', fontFamily:'inherit', letterSpacing:'0.3px', whiteSpace:'nowrap' }}>
+                {"LEIA MAIS \u2192"}
+              </button>
             </p>
             {medicoLogado && (
               <p style={{ textAlign: 'center', margin: '1.2rem 0 0', cursor: 'pointer' }}
@@ -1916,12 +2058,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               </p>
             )}
           </div>
-          <div style={{ display:'flex', justifyContent:'center', marginTop:'1.8rem' }}>
-            <a href="#oba" className="oba-home-btn" style={{ padding:'0.7rem 1.5rem' }}>
-              <span className="oba-title">Projeto OBA</span>
-              <span className="oba-sub">{"Otimizar o Bari\u00e1trico"}</span>
-              <span className="oba-link">{"Saiba mais \u2192"}</span>
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'0.5rem', marginTop:'1.8rem' }}>
+            <span style={{ color:'#000', fontWeight:800, fontSize:'1.15rem', fontFamily:"'DM Sans', sans-serif", letterSpacing:'0.01em' }}>
+              {"Projeto OBA"}<sup style={{ fontSize:'0.5em', fontWeight:600, verticalAlign:'super', marginLeft:'1px' }}>{"\u00ae"}</sup>
+            </span>
+            <a href="#oba" className="rf-comprimido comp-pat comp-wide comp-w-saiba" aria-label="Projeto OBA \u2014 Saiba mais" style={{ textDecoration:'none' }}>
+              <span className="comp-pill" />
+              <span className="comp-label">{"SAIBA MAIS"}</span>
             </a>
+            <span style={{ color:'#000', fontSize:'0.62rem', fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase' }}>
+              {"Otimizar o Bari\u00e1trico"}
+            </span>
           </div>
         </div>
       </section>
@@ -1937,10 +2084,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             </p>
           </div>
           <div className="terap-grid reveal">
-            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc89"}</div><h4>{"INFUS\u00d5ES | FERRO ENDOVENOSO"}</h4><p>{"Prescri\u00e7\u00e3o m\u00e9dica do medicamento adequado, doses, n\u00famero de aplica\u00e7\u00f5es e intervalos ideais."}</p></div>
-            <div className="terap-card"><div className="tc-icon">{"\ud83e\ude78"}</div><h4>{"SANGRIAS TERAP\u00caUTICAS"}</h4><p>{"N\u00famero de sess\u00f5es, volumes e intervalos para abordagem de sideroses e poliglobulia."}</p></div>
-            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc8a"}</div><h4>{"REPOSI\u00c7\u00c3O | FERRO ORAL"}</h4><p>{"Prescri\u00e7\u00e3o m\u00e9dica do medicamento ideal, dose e dura\u00e7\u00e3o ajustada do tratamento."}</p></div>
-            <div className="terap-card"><div className="tc-icon">{"\ud83d\udcc8"}</div><h4>{"GR\u00c1FICOS CL\u00cdNICOS"}</h4><p>{"Visualiza\u00e7\u00e3o e follow-up da evolu\u00e7\u00e3o."}</p></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc89"}</div><div><h4>{"Infus\u00f5es | Ferro endovenoso"}</h4><p>{"Prescri\u00e7\u00e3o m\u00e9dica do medicamento adequado, doses, n\u00famero de aplica\u00e7\u00f5es e intervalos ideais."}</p></div></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83e\ude78"}</div><div><h4>{"Sangrias terap\u00eauticas"}</h4><p>{"N\u00famero de sess\u00f5es, volumes e intervalos para abordagem de sideroses e poliglobulia."}</p></div></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udc8a"}</div><div><h4>{"Reposi\u00e7\u00e3o | Ferro oral"}</h4><p>{"Prescri\u00e7\u00e3o m\u00e9dica do medicamento ideal, dose e dura\u00e7\u00e3o ajustada do tratamento."}</p></div></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udcc8"}</div><div><h4>{"Gr\u00e1ficos cl\u00ednicos"}</h4><p>{"Visualiza\u00e7\u00e3o e follow-up da evolu\u00e7\u00e3o."}<br/><br/></p></div></div>
           </div>
         </div>
       </section>
@@ -1952,9 +2099,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>{"Simples para m\u00e9dicos e pacientes"}</h2>
           </div>
           <div className="como-tabs-wrap reveal">
-            <div className="como-tabs">
-              <button className={`como-tab${activeTab === 'medico' ? ' active' : ''}`} onClick={() => setActiveTab('medico')}><span>{"Para M\u00e9dicos"}</span></button>
-              <button className={`como-tab paciente${activeTab === 'paciente' ? ' active' : ''}`} onClick={() => setActiveTab('paciente')}>Para Pacientes</button>
+            <div className="como-tabs" style={{ gap:'0.8rem' }}>
+              <button className={`rf-comprimido comp-medico comp-wide comp-w-tab${activeTab === 'medico' ? '' : ' is-off'}`} onClick={() => setActiveTab('medico')} aria-label="Para M\u00e9dicos">
+                <span className="comp-pill" />
+                <span className="comp-label" style={{ color:'#000' }}>{"M\u00c9DICOS"}</span>
+              </button>
+              <button className={`rf-comprimido comp-pat comp-wide comp-w-tab${activeTab === 'paciente' ? '' : ' is-off'}`} onClick={() => setActiveTab('paciente')} aria-label="Para Pacientes">
+                <span className="comp-pill" />
+                <span className="comp-label" style={{ color:'#000' }}>{"PACIENTES"}</span>
+              </button>
             </div>
           </div>
           <div className="como-content">
@@ -1968,11 +2121,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 </div>
                 <div style={{ margin:'1.5rem 0 0' }}>
                   <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
-                  <p style={{ color:'#7B1E1E', fontSize:'0.95rem', fontWeight:600, textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.5 }}>
-                    {"Avalie um paciente e torne-se membro do Programa de Afiliados patrocinado."}
+                  <p style={{ color:'#000', fontSize:'0.8rem', fontWeight:800, textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.5 }}>
+                    {"Doutor: Avalie um paciente e torne-se membro do Programa de Afiliados patrocinado."}
                   </p>
                   <p style={{ color:'#7B1E1E', fontSize:'0.85rem', fontWeight:500, textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.5, opacity:0.9 }}>
-                    {"Ao beneficiar pacientes, voc\u00ea tamb\u00e9m passa a auferir benef\u00edcios."}
+                    {"Beneficie pacientes e receba benef\u00edcios"}
                   </p>
                   <p style={{ color:'#991B1B', fontSize:'0.7rem', fontWeight:700, letterSpacing:'1px', textAlign:'center', margin:'0 0 0.6rem', textTransform:'uppercase', opacity:0.75 }}>
                     {"V\u00e1lido para m\u00e9dicos com registro no CRM"}
@@ -1999,7 +2152,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                     </svg>
-                    <h4>{"Gr\u00e1fico evolutivo"}</h4>
+                    <h4>{"Gr\u00e1ficos Evolutivos"}</h4>
                     <p>{"Acompanhe a evolu\u00e7\u00e3o dos par\u00e2metros ao longo do tempo em um painel visual."}</p>
                   </div>
                   <div className="pf-card">
@@ -2031,18 +2184,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <div className="pricing-box">
                   <div className="price">{"R$ 149,90"}</div>
                   <div className="price-sub">{"Por um ano de avalia\u00e7\u00f5es na plataforma"}</div>
-                  <div className="pix-methods">
-                    <div className="pix-tag">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M17 14h3M14 17v3M17 20h3"/></svg>
-                      QR Code PIX
-                    </div>
-                    <div className="pix-tag">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                      Chave PIX
-                    </div>
-                    <div className="pix-tag">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                      Copie e Cole
+                  <div className="pix-methods" style={{ justifyContent:'center' }}>
+                    <div style={{ background:'#fff', border:'2px solid #9CA3AF', borderRadius:10, padding:'0.55rem 2.6rem', fontSize:'1.05rem', fontWeight:800, color:'var(--wine)', letterSpacing:'2px' }}>
+                      PIX
                     </div>
                   </div>
                 </div>
@@ -2052,7 +2196,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         </div>
       </section>
 
-      <section id="avaliar" style={{ background:'white', padding:'5.5rem 2rem' }}>
+      <section id="avaliar" style={{ background:'var(--rf-circles) center/cover no-repeat, var(--rf-gray)', padding:'5.5rem 2rem', position:'relative' }}>
         <div className="container">
           <div className="center reveal" style={{ marginBottom:'2.5rem' }}>
             <span className="tag">Experimente Agora</span>
@@ -2061,7 +2205,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
-            <div style={{ width:320, background:'#1A1A2E', borderRadius:40, border:'8px solid #2A2A3E', boxShadow:'0 0 0 2px #111, inset 0 0 0 1px rgba(255,255,255,0.05)', overflow:'hidden' }}>
+            <div style={{ width:320, background:'#1A1A2E', borderRadius:40, padding:3, backgroundImage:'linear-gradient(150deg, #f4f4f6 0%, #b8bcc4 18%, #6e7480 38%, #d8dbe0 52%, #8a8f99 70%, #e8eaed 88%, #aeb2bb 100%)', boxShadow:'0 18px 50px -12px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.15)', overflow:'hidden' }}>
+              <div style={{ background:'#1A1A2E', borderRadius:37, border:'5px solid #15151f', overflow:'hidden' }}>
 
               <div style={{ background:'#111', height:26, display:'flex', alignItems:'center', justifyContent:'center' }}>
                 <div style={{ width:60, height:13, background:'#1A1A2E', borderRadius:'0 0 10px 10px' }} />
@@ -2182,6 +2327,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               <div style={{ background:'#0F0F1A', padding:7, display:'flex', justifyContent:'center' }}>
                 <div style={{ width:70, height:3, background:'rgba(255,255,255,0.2)', borderRadius:2 }} />
               </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2190,27 +2336,30 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       <section className="oba" id="oba">
         <div className="container">
           <div className="reveal">
-            <span className="tag">Projeto OBA</span>
-            <h2 className="stitle">{"Otimizar o Bari\u00e1trico"}</h2>
+            <span className="tag">{"Projeto OBA"}<sup style={{ fontSize:'0.6em', fontWeight:600, verticalAlign:'super', marginLeft:'1px' }}>{"\u00ae"}</sup></span>
+            <h2 className="stitle" style={{ fontSize:'1.6rem' }}>{"Otimizar o Bari\u00e1trico"}</h2>
             <p style={{ color:'rgba(255,255,255,0.55)', fontSize:'1rem', maxWidth:580, lineHeight:1.7, fontWeight:700 }}>{"Milhares de bari\u00e1tricos vivem desassistidos. O Projeto OBA \u00e9 um sub-algoritmo especializado dentro do RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" que cuida especificamente de quem fez cirurgia bari\u00e1trica."}</p>
           </div>
           <div className="oba-grid">
             <div className="oba-narrative reveal">
-              <div className="oba-metaphor"><p>{"A cirurgia bari\u00e1trica corta as asas da sua fada vermelha."}<br />{"Ela continua com seus superpoderes, mas para voar precisa da ajuda do RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{"."}</p></div>
               <p>{"O bypass g\u00e1strico e a gastrectomia causam uma "}<strong>{"s\u00edndrome disabsortiva"}</strong>{" que prejudica a absor\u00e7\u00e3o de ferro, vitamina B12 e outros elementos essenciais."}</p>
               <p>{"O Projeto OBA oferece um "}<strong>{"tratamento de manuten\u00e7\u00e3o indefinido"}</strong>{": monitoramento cont\u00ednuo, c\u00e1lculo de reposi\u00e7\u00e3o personalizado e orienta\u00e7\u00f5es espec\u00edficas."}</p>
-              <div className="oba-cta-row">
-                <button className="btn btn-oba-main" onClick={() => {
-                        localStorage.setItem('rf_flag', 'bariatrica')
-                        onModoPaciente && onModoPaciente()
-                      }} style={{ flexDirection:'column', gap:'0.2rem', alignItems:'center', animation:'pulse 1.5s ease-out infinite', margin:'0 auto', display:'flex', border:'2px solid rgba(220,38,38,0.8)' }}>
-                  <span>{"Sou Bari\u00e1trico \u2014 Come\u00e7ar"}</span>
-                  <span style={{ fontSize:'0.65rem', textTransform:'uppercase', letterSpacing:'1px', opacity:0.8, fontWeight:700 }}>{"Siga as Instru\u00e7\u00f5es"}</span>
+              <div className="oba-cta-row" style={{ flexDirection:'column', alignItems:'center', gap:'0.5rem' }}>
+                <span style={{ color:'#fff', fontWeight:800, fontSize:'1.15rem', fontFamily:"'DM Sans', sans-serif", letterSpacing:'0.01em' }}>
+                  {"Sou Bari\u00e1trico"}
+                </span>
+                <button className="rf-comprimido comp-pat comp-wide comp-w-comecar" aria-label="Sou Bari\u00e1trico \u2014 Come\u00e7ar"
+                  onClick={() => {
+                    localStorage.setItem('rf_flag', 'bariatrica')
+                    onModoPaciente && onModoPaciente()
+                  }}>
+                  <span className="comp-pill" />
+                  <span className="comp-label" style={{ color:'#000' }}>{"COME\u00c7AR"}</span>
                 </button>
               </div>
             </div>
             <div className="oba-features reveal" style={{ transitionDelay:'0.1s' }}>
-              <div className="oba-feat"><div className="of-icon">{"\ud83d\udd2c"}</div><div><h4>Mini-anamnese especializada</h4><p>{"Informa\u00e7\u00f5es adicionais para que o algoritmo cuide de voc\u00ea especificamente."}</p></div></div>
+              <div className="oba-feat"><div className="of-icon">{"\ud83d\udd2c"}</div><div><h4>Anamnese Especializada</h4><p>{"Informa\u00e7\u00f5es adicionais para que o algoritmo cuide de voc\u00ea especificamente."}</p></div></div>
               <div className="oba-feat"><div className="of-icon">{"\ud83d\udc8a"}</div><div><h4>{"Reposi\u00e7\u00e3o personalizada"}</h4><p>{"C\u00e1lculo de ferro, B12 e outros elementos prejudicados pela s\u00edndrome disabsortiva."}</p></div></div>
               <div className="oba-feat"><div className="of-icon">{"\ud83d\udcc8"}</div><div><h4>{"Monitoramento cont\u00ednuo"}</h4><p>{"Evolu\u00e7\u00e3o dos par\u00e2metros com gr\u00e1ficos e alertas personalizados."}</p></div></div>
               <div className="oba-feat"><div className="of-icon">{"\ud83d\udcb0"}</div><div><h4>{"Muito mais acess\u00edvel"}</h4><p>{"Custa uma fra\u00e7\u00e3o do acompanhamento m\u00e9dico tradicional recorrente."}</p></div></div>
@@ -2227,47 +2376,43 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <h2 style={{ fontSize:'1.6rem', fontWeight:800, color:'#000', marginBottom:'0.8rem' }}>{"Cuidar da Hemoglobina \u00e9 cuidar da Vida"}</h2>
           </div>
           <div className="cta-cards reveal">
-            <div className="cta-c cta-doc">
-              <div className="ci">{"\ud83e\ude7a"}</div>
-              <h3>{"Modo M\u00e9dico"}</h3>
-              <p>{"Algoritmo poderoso e simples: com apenas o CPF e poucos dados do paciente voc\u00ea faz uma triagem e pode aprofundar a avalia\u00e7\u00e3o, e obt\u00e9m orienta\u00e7\u00f5es para melhor diagn\u00f3stico e tratamento."}</p>
-              <ul>
+            <div className="cta-col">
+              <div className="cta-c cta-doc">
+                <div className="ci">{"\ud83e\ude7a"}</div>
+                <h3>{"Modo M\u00e9dico"}</h3>
+                <p>{"Algoritmo poderoso e simples: com apenas o CPF e poucos dados do paciente voc\u00ea faz uma triagem e pode aprofundar a avalia\u00e7\u00e3o, e obt\u00e9m orienta\u00e7\u00f5es para melhor diagn\u00f3stico e tratamento."}</p>
+              </div>
+              <ul className="cta-bullets">
                 <li>{"Acesso 100% gratuito para m\u00e9dicos"}</li>
                 <li>{"Cadastro m\u00ednimo"}</li>
                 <li>{"Orienta\u00e7\u00f5es fundamentadas"}</li>
                 <li>{"Programa 4DOC de benef\u00edcios para afiliados"}</li>
               </ul>
-              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', marginTop:'auto' }}>
-                <button onClick={() => {
-                  // Se medico ja logado, vai direto pro Calculator (entra como antes).
-                  // Senao, abre a caixa "DIGITE O SEU CRM \u2794 UF" na hero e scrolla pra cima.
+              <button className="rf-comprimido comp-medico" aria-label="Entrar como M\u00e9dico"
+                onClick={() => {
                   if (medicoLogado) { entrarLogadoDireto(); return; }
                   irPara('medico');
                   setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease', border:'4px solid #ef4444', color:'#ef4444', fontSize:'0.62rem', animation:'pulseSoftRed 2s ease-in-out infinite' }}>
-                  {"M\u00c9DICO"}
-                </button>
-                <span style={{ fontSize:'0.62rem', fontWeight:700, letterSpacing:'1.5px', color:'#ef4444' }}>ENTRE</span>
-              </div>
+                }}>
+                <span className="comp-pill" />
+                <span className="comp-label">{"ENTRE"}</span>
+              </button>
+              <span className="comp-sub" style={{ color:'#7B1E1E', marginTop:'-0.5rem' }}>{"M\u00c9DICO"}</span>
             </div>
-            <div className="cta-c cta-pat">
-              <div className="ci">{"\u2764\ufe0f"}</div>
-              <h3>Modo Paciente</h3>
-              <p>{"Cadastre-se e acompanhe a evolu\u00e7\u00e3o dos seus exames ao longo do tempo. Reduza a necessidade de consultas m\u00e9dicas. Economize, evite agendamentos, e reduza tempo e o custo dos deslocamentos."}</p>
-              <ul>
+            <div className="cta-col">
+              <div className="cta-c cta-pat">
+                <div className="ci">{"\u2764\ufe0f"}</div>
+                <h3>Modo Paciente</h3>
+                <p>{"Cadastre-se e acompanhe a evolu\u00e7\u00e3o dos seus exames ao longo do tempo. Reduza a necessidade de consultas m\u00e9dicas. Economize, evite agendamentos, e reduza tempo e o custo dos deslocamentos."}</p>
+              </div>
+              <ul className="cta-bullets">
                 <li>{"A primeira avalia\u00e7\u00e3o pode ser feita por seu m\u00e9dico, ou por voc\u00ea"}</li>
                 <li>{"Obtenha pedidos de exames e receitas m\u00e9dicas"}</li>
                 <li>{"Orienta\u00e7\u00f5es em linguagem acess\u00edvel"}</li>
                 <li>{"Apenas R$ 149,90 por ano, via PIX"}</li>
               </ul>
-              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', marginTop:'auto' }}>
-                <button onClick={() => {
-                  // Mesma logica do botao PACIENTE da escolha hero (linha ~1258).
-                  // Se ja esta logado, vai direto pro dashboard. Senao, abre a caixa
-                  // "DIGITE O SEU CPF" na hero e scrolla pra cima.
+              <button className="rf-comprimido comp-pat" aria-label="Entrar como Paciente"
+                onClick={() => {
                   let temPacienteIdLive = false;
                   try { temPacienteIdLive = !!localStorage.getItem('paciente_id'); } catch (e) {}
                   if (pacienteLogadoFlag && !temPacienteIdLive) {
@@ -2279,14 +2424,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                   }
                   irPara('paciente');
                   setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease', border:'4px solid #1f2937', color:'#1f2937', fontSize:'0.62rem', animation:'pulseSoftLight 2s ease-in-out infinite', animationDelay:'1s' }}>
-                  PACIENTE
-                </button>
-                <span style={{ fontSize:'0.62rem', fontWeight:700, letterSpacing:'1.5px', color:'rgba(255,255,255,0.85)' }}>ENTRE</span>
-              </div>
+                }}>
+                <span className="comp-pill" />
+                <span className="comp-label">{"ENTRE"}</span>
+              </button>
+              <span className="comp-sub" style={{ color:'#1f2937', marginTop:'-0.5rem' }}>{"PACIENTE"}</span>
             </div>
           </div>
         </div>
