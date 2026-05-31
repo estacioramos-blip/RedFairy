@@ -56,10 +56,10 @@ Persistir decisões **conforme acontecem**, não em lote no fim — a sessão po
 
 | Service | Expected account | Verify command |
 |---------|------------------|----------------|
-| GitHub | Estacio Ramos (⚠️ confirmar username `gh`) | `gh auth status` |
-| Vercel | ⚠️ A PREENCHER (rodar e fixar aqui) | `npx vercel whoami` |
+| GitHub | `estacioramos-blip` (repo `estacioramos-blip/RedFairy`) | `gh auth status` |
+| Vercel | ⚠️ A PREENCHER (`npx vercel whoami`) | `npx vercel whoami` |
 
-**Vercel project IDs (devem bater com `.vercel/project.json`):** orgId `⚠️ A PREENCHER` · projectId `⚠️ A PREENCHER`
+**Vercel project IDs:** deploy é via **integração GitHub→Vercel** (push em `main`), não pelo CLI local — não há `.vercel/project.json` na máquina. orgId/projectId ficam no dashboard da Vercel (preencher se algum dia usar o CLI).
 **Qualquer divergência → PARE e avise o Estácio.** (Conta errada = deploy no projeto errado ou vazamento de env vars.)
 
 > Na prática, o deploy hoje é por **push em `main` → Vercel auto-deploy → redfairy.bio**.
