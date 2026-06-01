@@ -25,11 +25,16 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     if (d.length <= 9) return d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6);
     return d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6,9) + '-' + d.slice(9);
   };
+  // Projeto OBA: paciente entrou pelo botao "Sou Bariatrico" (flag no localStorage).
+  // O sexo so' e' definido aqui dentro; o flag apenas marca a condicao bariatrica.
+  const flagBariatricaOBA = (() => {
+    try { return localStorage.getItem('rf_flag') === 'bariatrica'; } catch (e) { return false; }
+  })();
   const [inputs, setInputs] = useState({
     cpf: formatarCPFInicial(cpfPrefill),
     sexo: '',
     gestante: false,
-    bariatrica: false,
+    bariatrica: flagBariatricaOBA,
     semanas_gestacao: '',
     dataNascimento: '',
     hemoglobina: '',
@@ -53,6 +58,11 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }, 30);
     return () => clearInterval(iv);
   }, []);
+  // Projeto OBA: garante bariatrica=true mesmo apos carregar paciente conhecido
+  useEffect(() => {
+    if (!flagBariatricaOBA) return;
+    setInputs(prev => prev.bariatrica ? prev : { ...prev, bariatrica: true });
+  }, [flagBariatricaOBA, pacienteConhecido]);
   const [buscandoCpf, setBuscandoCpf] = useState(false);
 
   // Etapa do hemograma: 1=Hb ativo, 2=VCM ativo, 3=RDW ativo, 4=todos confirmados
@@ -835,7 +845,8 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             // paciente conhecido com bariatrica=true no perfil: pre-marcado e disabled,
             // pois a condicao bariatrica e' permanente uma vez registrada).
             // S\u00f3 aparece ap\u00f3s sele\u00e7\u00e3o do sexo \u2014 evita texto gen\u00e9rico "Sou paciente bari\u00e1trico/a".
-            const bariatricaLocked = !!pacienteConhecido && pacienteConhecido.bariatrica === true;
+            const lockedConhecido = !!pacienteConhecido && pacienteConhecido.bariatrica === true;
+            const bariatricaLocked = lockedConhecido || flagBariatricaOBA;
             const checked = bariatricaLocked ? true : inputs.bariatrica;
             return (
               <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
@@ -852,7 +863,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                     {modoMedico
                       ? (inputs.sexo === 'F' ? "Paciente bari\u00e1trica" : "Paciente bari\u00e1trico")
                       : (inputs.sexo === 'F' ? "Sou bari\u00e1trica" : "Sou bari\u00e1trico")}
-                    {bariatricaLocked ? " (j\u00e1 registrado)" : ""}
+                    {bariatricaLocked ? (lockedConhecido ? " (j\u00e1 registrado)" : " (Projeto OBA\u00ae)") : ""}
                   </span>
                 </label>
               </div>

@@ -709,6 +709,18 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       setFluxoFade(false);
     }, 260);
   }
+  // Projeto OBA: popup (5s) -> entrada de CPF/senha (paciente novo) com flag bariatrico
+  function irFluxoPacienteOBA() {
+    if (obaTimerRef.current) { clearTimeout(obaTimerRef.current); obaTimerRef.current = null; }
+    setObaPopup(false);
+    irPara('paciente');
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+  }
+  function iniciarFluxoOBA() {
+    try { localStorage.setItem('rf_flag', 'bariatrica'); } catch (e) {}
+    setObaPopup(true);
+    obaTimerRef.current = setTimeout(irFluxoPacienteOBA, 5000);
+  }
   function signInMedico() {
     try { localStorage.setItem('rf_open_login','1'); } catch(e){}
     onModoMedico();
@@ -949,6 +961,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [showAfiliados, setShowAfiliados] = useState(false)
   const [showContato, setShowContato] = useState(false)
   const [showIndMais, setShowIndMais] = useState(false)
+  const [obaPopup, setObaPopup] = useState(false)
   const [activeTab,   setActiveTab]   = useState('medico')
   const [showHtb,     setShowHtb]     = useState(false)
   const [showFil,     setShowFil]     = useState(false)
@@ -969,6 +982,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [fadaClicks, setFadaClicks] = useState(0)
   const fadaTimer = useRef(null)
   const filTimer = useRef(null)
+  const obaTimerRef = useRef(null)
 
   useEffect(() => {
     if (!document.getElementById('landing-css')) {
@@ -1154,6 +1168,34 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           onConcluir={() => { setShowOBA(false); onModoPaciente() }}
           onFechar={() => setShowOBA(false)}
         />
+      )}
+
+      {/* POPUP do Projeto OBA: explica o login e leva para a entrada de CPF (5s ou clique) */}
+      {obaPopup && (
+        <div
+          onClick={irFluxoPacienteOBA}
+          style={{ position:'fixed', inset:0, zIndex:2100, background:'rgba(15,18,25,0.78)', backdropFilter:'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem', animation:'fadeIn 0.2s ease' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background:'white', borderRadius:18, maxWidth:440, width:'100%', padding:'2.2rem 1.8rem 1.8rem', textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.35)', position:'relative' }}
+          >
+            <div style={{ fontFamily:"'DM Serif Display', serif", fontWeight:800, fontSize:'1.2rem', color:'var(--wine)', marginBottom:'0.9rem' }}>
+              {"Projeto OBA"}<sup style={{ color:'var(--cherry)', fontSize:'0.5em', fontWeight:600, verticalAlign:'super', marginLeft:'1px' }}>{"®"}</sup>
+            </div>
+            <p style={{ fontSize:'1rem', color:'var(--text)', lineHeight:1.65, fontWeight:600, margin:0 }}>
+              {"Para participar do "}<strong style={{ color:'var(--wine)' }}>{"Projeto OBA"}<sup style={{ color:'var(--cherry)', fontSize:'0.6em', fontWeight:600 }}>{"®"}</sup></strong>{" você precisa criar um "}<strong>{"ACESSO (LOGIN/SENHA)"}</strong>{" e se cadastrar na plataforma… em alguns segundos você iniciará esse processo. "}<strong style={{ color:'var(--cherry)' }}>{"Vamos!…"}</strong>
+            </p>
+            <button
+              onClick={irFluxoPacienteOBA}
+              style={{ marginTop:'1.4rem', background:'var(--wine)', color:'white', border:'none', borderRadius:999, padding:'0.7rem 2.2rem', fontSize:'0.95rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'background 0.2s' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background='var(--cherry)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background='var(--wine)' }}
+            >
+              {"Vamos! →"}
+            </button>
+          </div>
+        </div>
       )}
 
       {/* MODAL "LEIA MAIS" das Indicacoes */}
@@ -2365,10 +2407,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                   {"Sou Bari\u00e1trico"}
                 </span>
                 <button className="rf-comprimido comp-pat comp-wide comp-w-comecar" aria-label="Sou Bari\u00e1trico \u2014 Come\u00e7ar"
-                  onClick={() => {
-                    localStorage.setItem('rf_flag', 'bariatrica')
-                    onModoPaciente && onModoPaciente()
-                  }}>
+                  onClick={iniciarFluxoOBA}>
                   <span className="comp-pill" />
                   <span className="comp-label" style={{ color:'#000' }}>{"COME\u00c7AR"}</span>
                 </button>
