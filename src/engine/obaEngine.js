@@ -667,6 +667,14 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     suger.push('VITAMINA K')
   }
 
+  // Niacina (B3) — incomum no bariátrico; comentário simples quando baixa
+  const niacina = parseFloat(ex.niacina)
+  if (!isNaN(niacina) && niacina < 0.5) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    linhas.push(`NIACINA (B3) BAIXA (${niacina} mcg/mL): OS POLIVITAMÍNICOS DESENVOLVIDOS PARA PACIENTES BARIÁTRICOS NORMALMENTE SUPREM ESSA NECESSIDADE.`)
+  }
+
   if (!temAlgo) return null
 
   return {
@@ -1150,11 +1158,31 @@ function buildModVascular(dados, alertas, suger) {
     alertas.push({ nivel: LEVE, texto: 'HIPOTENSÃO — REVISAR MEDICAÇÃO E HIDRATAÇÃO.' })
   }
 
-  // Sequelas trombóticas pós-COVID
+  // Sequelas trombóticas e síndrome pós-COVID
   if (dados.teve_covid) {
     temAlgo = true
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     linhas.push('HISTÓRICO DE COVID-19: PARTE DOS PACIENTES EVOLUI COM SEQUELAS TROMBÓTICAS QUE PODEM COMPROMETER A QUALIDADE DE VIDA. AVALIAR SINTOMAS RESIDUAIS (DISPNEIA, FADIGA, DOR) E HISTÓRICO TROMBÓTICO.')
+
+    // Tríade: COVID prévia + evento trombótico + múltiplos sintomas fibromiálgicos
+    const fibroCount = (dados.status_fibromialgia || []).length
+    if (dados.trombose === true && fibroCount >= 2) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('SUSPEITA DE SÍNDROME PÓS-COVID: A COMBINAÇÃO DE COVID-19 PRÉVIA, EVENTO TROMBÓTICO E MÚLTIPLOS SINTOMAS (FADIGA, DORES, ALTERAÇÕES COGNITIVAS E DE HUMOR) LEVANTA A POSSIBILIDADE DE SÍNDROME PÓS-COVID — DOENÇA DA PROTEÍNA SPIKE E COVID-LONGA. IMPORTANTE AFASTAR ESSA HIPÓTESE COM AVALIAÇÃO MÉDICA ESPECÍFICA.')
+      alertas.push({ nivel: MODERADO, texto: 'POSSÍVEL SÍNDROME PÓS-COVID (PROTEÍNA SPIKE / COVID-LONGA) — IMPORTANTE AFASTAR ESSA POSSIBILIDADE.' })
+    }
+  }
+
+  // Imunização COVID-19 (interpretação simples a partir de vacina_covid)
+  if (Array.isArray(dados.vacina_covid) && dados.vacina_covid.length > 0) {
+    temAlgo = true
+    const imunizado = dados.vacina_covid.some(v => v && v !== 'NÃO TOMEI VACINA')
+    if (imunizado) {
+      linhas.push('IMUNIZAÇÃO COVID-19: VACINADO(A) — PROVAVELMENTE IMUNIZADO(A). CONVERSE COM O SEU MÉDICO SOBRE A IMUNIZAÇÃO (REFORÇOS E ATUALIZAÇÃO DO ESQUEMA VACINAL).')
+    } else {
+      if (nivelGeral === NORMAL) nivelGeral = LEVE
+      linhas.push('IMUNIZAÇÃO COVID-19: SEM REGISTRO DE VACINAÇÃO — PROVAVELMENTE NÃO IMUNIZADO(A). CONVERSE COM O SEU MÉDICO SOBRE A IMUNIZAÇÃO.')
+    }
   }
 
   if (!temAlgo) return null
@@ -1175,11 +1203,17 @@ function buildModOsseo(dados, ex, alertas, suger) {
   const dental = dados.status_dental || ''
   const vitD = parseFloat(ex.vitamina_d)
   const ca = parseFloat(ex.calcio_ionico || ex.calcio || NaN)
+  const pth = parseFloat(ex.pth)
+  const mg = parseFloat(ex.magnesio)
+  const temLabOsseo = !isNaN(pth) || !isNaN(ca) || !isNaN(mg)
 
-  if (!osseo && !dental) return null
+  if (!osseo && !dental && !temLabOsseo) return null
 
   const linhas = []
   let nivelGeral = NORMAL
+  // Escalona a gravidade do modulo sem rebaixar
+  const rankNivel = { normal: 0, leve: 1, moderado: 2, grave: 3 }
+  const subirNivel = (n) => { if (rankNivel[n] > rankNivel[nivelGeral]) nivelGeral = n }
 
   if (osseo === 'OSTEOPOROSE') {
     nivelGeral = GRAVE
@@ -1194,9 +1228,9 @@ function buildModOsseo(dados, ex, alertas, suger) {
     linhas.push('OSTEOPENIA: ESTÁGIO INICIAL DE PERDA ÓSSEA. NO BARIÁTRICO, A PROGRESSÃO PARA OSTEOPOROSE É RISCO REAL SEM SUPLEMENTAÇÃO ADEQUADA. CITRATO DE CÁLCIO 1.200–1.500 MG/DIA + VITAMINA D PARA META ≥ 30 NG/ML. MONITORAR COM DENSITOMETRIA ANUALMENTE.')
     alertas.push({ nivel: MODERADO, texto: 'OSTEOPENIA — SUPLEMENTAÇÃO DE CÁLCIO E VITAMINA D OBRIGATÓRIA.' })
     suger.push('DENSITOMETRIA ÓSSEA (ANUAL)')
-  } else if (osseo === 'DENSITOMETRIA NORMAL') {
+  } else if (osseo === 'DENSITOMETRIA ÓSSEA NORMAL') {
     linhas.push('DENSITOMETRIA ÓSSEA NORMAL: MANTER SUPLEMENTAÇÃO PREVENTIVA DE CÁLCIO E VITAMINA D. REPETIR DENSITOMETRIA EM 2 ANOS.')
-  } else if (osseo === 'NÃO FIZ') {
+  } else if (osseo === 'NÃO FIZ DENSITOMETRIA') {
     linhas.push('DENSITOMETRIA ÓSSEA NÃO REALIZADA: SOLICITADA PARA TODOS OS PACIENTES BARIÁTRICOS, ESPECIALMENTE APÓS 2 ANOS DE CIRURGIA E EM MULHERES NO PERÍODO PÓS-MENOPAUSA.')
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     suger.push('DENSITOMETRIA ÓSSEA')
@@ -1209,14 +1243,69 @@ function buildModOsseo(dados, ex, alertas, suger) {
   }
 
   // Status dental
-  if (dental === 'PERDI MUITOS DENTES') {
+  if (dental === 'PERDI MAIS DE UM DENTE APÓS A CIRURGIA') {
     if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     linhas.push('PERDA DE DENTES SIGNIFICATIVA: PODE SER MANIFESTAÇÃO DE DEFICIÊNCIA DE VITAMINA D, CÁLCIO E VITAMINA C CRÔNICA, ALÉM DE REFLUXO ÁCIDO E HÁBITOS ALIMENTARES PÓS-BARIÁTRICOS. AVALIAÇÃO ODONTOLÓGICA E INVESTIGAÇÃO NUTRICIONAL.')
     alertas.push({ nivel: MODERADO, texto: 'PERDA DENTÁRIA SIGNIFICATIVA — INVESTIGAR DEFICIÊNCIAS NUTRICIONAIS.' })
-  } else if (dental === 'FREQUENTES PROBLEMAS DENTÁRIOS') {
+  } else if (dental === 'PRECISO TRATAMENTO ODONTOLÓGICO') {
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     linhas.push('PROBLEMAS DENTÁRIOS FREQUENTES: ASSOCIADOS À ACIDEZ BUCAL (REFLUXO), DEFICIÊNCIA DE CÁLCIO E VITAMINA D, E VÔMITOS FREQUENTES. AVALIAÇÃO ODONTOLÓGICA E CONTROLE DO REFLUXO INDICADOS.')
   }
+
+  // ── Bloco bioquímico ósseo-mineral: Vitamina D / PTH / Cálcio iônico / Magnésio ──
+  const vitDBaixa   = !isNaN(vitD) && vitD < 30
+  const vitDCritica = !isNaN(vitD) && vitD < 20
+
+  // Magnésio — pré-requisito para a ação do PTH e da vitamina D
+  if (!isNaN(mg)) {
+    if (mg < 1.7) {
+      linhas.push(`MAGNÉSIO BAIXO (${mg} MG/DL): A HIPOMAGNESEMIA É FREQUENTE NO BARIÁTRICO E PREJUDICA A SECREÇÃO E A AÇÃO DO PTH, ALÉM DA ATIVAÇÃO DA VITAMINA D. CORRIGIR O MAGNÉSIO É PRÉ-REQUISITO PARA QUE A REPOSIÇÃO DE CÁLCIO E VITAMINA D FUNCIONE.`)
+      alertas.push({ nivel: MODERADO, texto: 'HIPOMAGNESEMIA — CORRIGIR ANTES DE OTIMIZAR CÁLCIO E VITAMINA D.' })
+      subirNivel(MODERADO)
+    } else if (mg > 2.4) {
+      linhas.push(`MAGNÉSIO ELEVADO (${mg} MG/DL): INVESTIGAR FUNÇÃO RENAL E EXCESSO DE SUPLEMENTAÇÃO.`)
+      subirNivel(LEVE)
+    }
+  }
+
+  // Cálcio iônico
+  let caBaixo = false
+  if (!isNaN(ca)) {
+    if (ca < 1.15) {
+      caBaixo = true
+      linhas.push(`CÁLCIO IÔNICO BAIXO (${ca} MMOL/L): HIPOCALCEMIA. NO BARIÁTRICO, COMUMENTE SECUNDÁRIA À DEFICIÊNCIA DE VITAMINA D E À MÁ ABSORÇÃO. REPOR CITRATO DE CÁLCIO E CORRIGIR VITAMINA D E MAGNÉSIO.`)
+      alertas.push({ nivel: MODERADO, texto: 'HIPOCALCEMIA — REPOSIÇÃO DE CÁLCIO (CITRATO) E CORREÇÃO DE VITAMINA D.' })
+      subirNivel(MODERADO)
+    } else if (ca > 1.32) {
+      linhas.push(`CÁLCIO IÔNICO ELEVADO (${ca} MMOL/L): INVESTIGAR HIPERPARATIREOIDISMO PRIMÁRIO OU EXCESSO DE SUPLEMENTAÇÃO DE CÁLCIO E VITAMINA D.`)
+      subirNivel(LEVE)
+    }
+  }
+
+  // PTH intacto — eixo do hiperparatireoidismo secundário no bariátrico
+  if (!isNaN(pth)) {
+    if (pth > 65) {
+      if (!isNaN(ca) && ca > 1.32) {
+        linhas.push(`PTH ELEVADO (${pth} PG/ML) COM CÁLCIO ALTO: PADRÃO SUGESTIVO DE HIPERPARATIREOIDISMO PRIMÁRIO. INVESTIGAÇÃO ENDOCRINOLÓGICA INDICADA.`)
+        alertas.push({ nivel: GRAVE, texto: 'PTH E CÁLCIO ELEVADOS — INVESTIGAR HIPERPARATIREOIDISMO PRIMÁRIO.' })
+        subirNivel(GRAVE)
+      } else {
+        const grave = vitDCritica || caBaixo
+        linhas.push(`PTH ELEVADO (${pth} PG/ML) COM CÁLCIO NORMAL OU BAIXO: HIPERPARATIREOIDISMO SECUNDÁRIO — RESPOSTA CLÁSSICA À DEFICIÊNCIA DE VITAMINA D E CÁLCIO NO BARIÁTRICO, COM ESTÍMULO CONTÍNUO À REABSORÇÃO ÓSSEA. OTIMIZAR VITAMINA D (META ≥ 30 NG/ML), CITRATO DE CÁLCIO E MAGNÉSIO; REAVALIAR O PTH APÓS A CORREÇÃO.`)
+        alertas.push({ nivel: grave ? GRAVE : MODERADO, texto: 'HIPERPARATIREOIDISMO SECUNDÁRIO — OTIMIZAR VITAMINA D, CÁLCIO E MAGNÉSIO.' })
+        subirNivel(grave ? GRAVE : MODERADO)
+        suger.push('PTH INTACTO (REAVALIAR APÓS CORREÇÃO)')
+      }
+    } else if (pth < 15) {
+      linhas.push(`PTH BAIXO (${pth} PG/ML): AVALIAR HIPERCALCEMIA, HIPOPARATIREOIDISMO OU EXCESSO DE VITAMINA D E CÁLCIO.`)
+      subirNivel(LEVE)
+    }
+  } else if (vitDBaixa) {
+    // Vitamina D baixa sem PTH medido → dosar para flagrar hiperparatireoidismo secundário
+    suger.push('PTH INTACTO')
+  }
+
+  if (linhas.length === 0) return null
 
   return {
     id:     'osseo',

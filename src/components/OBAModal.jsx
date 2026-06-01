@@ -476,6 +476,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
       semEspecialista:    form.semEspecialista,
       indicacao_cirurgia: form.indicacao_cirurgia || null,
       teve_covid:         form.teve_covid,
+      vacina_covid:       form.vacina_covid,
       cirurgia_plastica:  form.cirurgia_plastica,
     }
   }

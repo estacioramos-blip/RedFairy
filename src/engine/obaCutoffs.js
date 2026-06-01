@@ -56,6 +56,11 @@ export const OBA_CUTOFFS = {
   ca199:          { min: 0,     max: 37    },
   cea:            { min: 0,     max: 5.0   },
 
+  // Eixo osseo-mineral
+  pth:            { min: 15,    max: 65    },  // PTH intacto (pg/mL)
+  calcio_ionico:  { min: 1.15,  max: 1.32  },  // mmol/L
+  magnesio:       { min: 1.7,   max: 2.4   },  // mg/dL
+
   // Outros
   estradiol:      { min: 5,     max: 400   },  // permissivo (nao-gestante)
 }
