@@ -9,6 +9,8 @@ import { supabase } from '../lib/supabase'
 
 const LANDING_CSS = `
   .rf-cx-input::placeholder { color:#9ca3af; opacity:1; font-weight:600; letter-spacing:0.5px; }
+  /* Mockup demo: mascaras de Ferritina e Saturacao em azul claro */
+  #rf-ferr2::placeholder, #rf-sat2::placeholder { color:#38BDF8; opacity:1; }
 
   .rf-fadewrap { transition: opacity 0.25s ease; }
   .rf-fadewrap.out { opacity: 0; }
@@ -81,8 +83,8 @@ const LANDING_CSS = `
     .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }
 
     #landing-nav { display: flex !important; justify-content: space-between !important; }
-    .nav-links { display: flex !important; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 0.6rem; position: fixed; top: 0; right: 0; bottom: 0; width: 25%; max-width: 200px; background: rgba(255,255,255,0.78); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); padding: 4.5rem 1.1rem 1.5rem; border-left: 1px solid var(--border); box-shadow: -8px 0 30px rgba(0,0,0,0.12); z-index: 200; transform: translateX(100%); transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1); }
-    .nav-links.open { transform: translateX(0); }
+    .nav-links { display: flex !important; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 0.6rem; position: fixed; top: 0; right: -230px; bottom: 0; width: 25%; max-width: 200px; background: rgba(255,255,255,0.96); padding: 4.5rem 1.1rem 1.5rem; border-left: 1px solid var(--border); box-shadow: -8px 0 30px rgba(0,0,0,0.12); z-index: 200; transition: right 0.34s cubic-bezier(0.22, 1, 0.36, 1); }
+    .nav-links.open { right: 0; }
     .nav-links a { font-size: 0.85rem; padding: 0.5rem 0.2rem; }
     .nav-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.18); z-index: 199; opacity: 0; pointer-events: none; transition: opacity 0.28s ease; }
     .nav-overlay.open { opacity: 1; pointer-events: auto; }
@@ -237,7 +239,7 @@ const LANDING_CSS = `
   .sdesc { font-size: 1.02rem; color: var(--text-sec); max-width: 580px; line-height: 1.7; font-weight: 600; }
   .sdesc-bold { font-size: 1rem; font-weight: 700; color: var(--text); max-width: 580px; line-height: 1.75; }
 
-  .filosofia { background: var(--rf-circles) center/cover no-repeat, var(--rf-gray); color: var(--text); position: relative; margin-top: 5rem; padding-top: 1.5rem; padding-bottom: 1.5rem; }
+  .filosofia { background: var(--rf-circles) center/cover no-repeat, var(--rf-gray); color: var(--text); position: relative; margin-top: 0; padding-top: 4rem; padding-bottom: 1.5rem; }
   .filosofia .tag { color: var(--cherry); margin-bottom: 0.3rem; }
   .filosofia-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; margin-top: 1.5rem; }
   .fil-img-box .fil-content p { font-size: 0.95rem; color: var(--text-sec); line-height: 1.85; margin-bottom: 1rem; font-weight: 600; }
@@ -270,7 +272,7 @@ const LANDING_CSS = `
   .cycle-step { display: flex; align-items: center; gap: 0.8rem; padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
   .cycle-step:last-child { border: none; }
   .cycle-step .icon { font-size: 1.3rem; width: 42px; min-width: 42px; text-align: center; display: flex; align-items: center; justify-content: center; }
-  .cycle-step .desc { font-size: 0.95rem; color: var(--text-sec); font-weight: 700; }
+  .cycle-step .desc { font-size: 0.88rem; color: var(--text-sec); font-weight: 600; line-height: 1.5; }
   .fairy-mini { height: 38px; width: 38px; object-fit: contain; opacity: 0.85; }
 
   .indicacoes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.6rem; margin-top: 2rem; align-items: start; }
@@ -390,9 +392,11 @@ const LANDING_CSS = `
   .comp-w-tab .comp-pill { width: 136px; }
   .comp-w-comecar { min-width: 132px; }
   .comp-w-comecar .comp-pill { width: 132px; }
-  /* Aba inativa (como-funciona): comprimido apagado */
-  .rf-comprimido.is-off { opacity: 0.4; }
-  .rf-comprimido.is-off:hover { opacity: 0.66; }
+  .comp-w-escolha { min-width: 126px; }
+  .comp-w-escolha .comp-pill { width: 126px; }
+  /* Aba inativa (como-funciona): esmaece SO' a pilula, mantendo o texto preto/legivel */
+  .rf-comprimido.is-off .comp-pill { opacity: 0.42; }
+  .rf-comprimido.is-off:hover .comp-pill { opacity: 0.7; }
   .btn-cta-doc { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.25s; background: var(--wine); color: var(--white); height: 60px; }
   .btn-cta-doc:hover { background: var(--cherry); transform: translateY(-2px); }
   .btn-cta-pat { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.85rem 2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; border: 1.5px solid #9CA3AF; cursor: pointer; font-family: inherit; transition: all 0.25s; background: #9CA3AF; color: var(--white); height: 60px; }
@@ -1054,8 +1058,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       return
     }
     if (erro) erro.style.display='none'
+    // Ferritina saudavel e' sexo-especifica (igual a mascara/Calculator): F ate 150, M ate 336.
+    // Ajusta o teto da entrada Saudavel (id:3) e o piso do Processo Inflamatorio (id:5).
+    const sexo = document.getElementById('rf-sexo')?.value || 'F'
+    const ferrSaudavelMax = sexo === 'M' ? 336 : 150
+    const matrix = rfMatrix2.map(m => {
+      if (m.id === 3) return { ...m, c:{ ...m.c, f:{ a:m.c.f.a, b:ferrSaudavelMax } } }
+      if (m.id === 5) return { ...m, c:{ ...m.c, f:{ a:ferrSaudavelMax + 1, b:m.c.f.b } } }
+      return m
+    })
     const iR = (v,r) => v>=r.a && v<=r.b
-    const res = rfMatrix2.find(m => iR(hb,m.c.h)&&iR(ferr,m.c.f)&&iR(vcm,m.c.v)&&iR(rdw,m.c.r)&&iR(sat,m.c.s))
+    const res = matrix.find(m => iR(hb,m.c.h)&&iR(ferr,m.c.f)&&iR(vcm,m.c.v)&&iR(rdw,m.c.r)&&iR(sat,m.c.s))
     const form = document.getElementById('rf-view-form')
     const result = document.getElementById('rf-view-result')
     const screen = document.getElementById('rf-screen')
@@ -1090,6 +1103,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     if (form) form.style.display='block'
     if (result) result.style.display='none'
     if (screen) screen.scrollTop=0
+  }
+
+  // Mockup demo: placeholders com a FAIXA de referencia (mesmos valores do Calculator).
+  // Hb e Ferritina variam por sexo; VCM e RDW tem a mesma faixa nos dois.
+  function rfMascarasSexo(sexo) {
+    const n = sexo === 'M'
+      ? { hb:'13.5-17.5', ferr:'24-336', vcm:'80-100', rdw:'11.5-15' }
+      : { hb:'12-15.5',   ferr:'25-150', vcm:'80-100', rdw:'11.5-15' };
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.placeholder = v; };
+    set('rf-hb2', n.hb); set('rf-ferr2', n.ferr); set('rf-vcm2', n.vcm); set('rf-rdw2', n.rdw);
   }
 
   function rfAvaliar() {
@@ -1155,13 +1178,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <h3 style={{ fontSize:'1.25rem', marginBottom:'1.2rem', color:'var(--wine)', fontWeight:800, paddingRight:'2rem', lineHeight:1.3 }}>
               {"RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.5em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" | OBA – Otimizar o Bariátrico"}
             </h3>
-            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.75, marginBottom:'1rem', textAlign:'justify' }}>
+            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.55, marginBottom:'1rem', textAlign:'justify' }}>
               {"O RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.6em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" | OBA – Otimizar o Bariátrico é um algoritmo que transforma o hemograma em uma porta de entrada inteligente para triagem, orientação diagnóstica, seguimento estruturado e cuidado médico especial para essas condições, em especial para o paciente bariátrico."}
             </p>
-            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.75, marginBottom:'1rem', textAlign:'justify' }}>
+            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.55, marginBottom:'1rem', textAlign:'justify' }}>
               {"Em um país continental, desigual e com carência de hematologistas em extensas regiões, o RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.6em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" ocupa uma lacuna assistencial com medicina fundamentada, solicitação de exames e prescrições de especialistas."}
             </p>
-            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.75, marginBottom:0, textAlign:'justify' }}>
+            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.55, marginBottom:0, textAlign:'justify' }}>
               {"Para ampliar essa rede de cuidado, o sistema inclui o 4DOC – Programa de Afiliados Patrocinado para Médicos – que apoia profissionais que avaliam e orientam os afetados a se cadastrar no sistema, gerando créditos institucionais vinculados, fortalecendo o diagnóstico precoce, o cuidado e a prevenção de sequelas."}
             </p>
           </div>
@@ -1441,14 +1464,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               )}
 
               {fluxoEtapa === 'escolha' && (
-                <div style={{ display:'flex', gap:'0.9rem', justifyContent:'center', width:'100%' }}>
-                  <button onClick={() => irPara('medico')}
-                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'4px solid #ef4444', color:'#ef4444', fontSize:'0.62rem' }}>
-                    MEDICO
+                <div style={{ display:'flex', gap:'0.9rem', justifyContent:'center', alignItems:'center', width:'100%' }}>
+                  <button className="rf-comprimido comp-medico comp-wide comp-w-escolha" aria-label="Médico" onClick={() => irPara('medico')}>
+                    <span className="comp-pill" />
+                    <span className="comp-label" style={{ color:'#000' }}>{"MÉDICO"}</span>
                   </button>
-                  <button onClick={() => {
+                  <button className="rf-comprimido comp-pat comp-wide comp-w-escolha" aria-label="Paciente" onClick={() => {
                     let temPacienteIdLive = false;
                     try { temPacienteIdLive = !!localStorage.getItem('paciente_id'); } catch (e) {}
                     if (pacienteLogadoFlag && !temPacienteIdLive) {
@@ -1459,11 +1480,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                       return;
                     }
                     irPara('paciente');
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform='scale(1.06)'; e.currentTarget.style.boxShadow='0 6px 18px rgba(0,0,0,0.18)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform='scale(1)'; e.currentTarget.style.boxShadow='none'; }}
-                  style={{ width:72, height:72, borderRadius:'50%', background:'#d1d5db', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', cursor:'pointer', fontWeight:900, letterSpacing:'1px', textAlign:'center', padding:0, transition:'transform 0.15s ease, box-shadow 0.15s ease', border:'4px solid #1f2937', color:'#1f2937', fontSize:'0.62rem' }}>
-                    PACIENTE
+                  }}>
+                    <span className="comp-pill" />
+                    <span className="comp-label" style={{ color:'#000' }}>{"PACIENTE"}</span>
                   </button>
                 </div>
               )}
@@ -1829,35 +1848,30 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
       <section className="filosofia" id="filosofia" style={{ display: showFilosofia ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
-          <div className="reveal">
+          <div className="reveal center">
             <span className="tag">Filosofia</span>
           </div>
           <div className="filosofia-grid">
             <div className="reveal">
               <div
-                className={`hero-textbox${showFil ? ' reveal-img' : ''}`}
-                style={{ marginBottom:'1rem' }}
+                className={`rf-hero-medal${showFil ? ' reveal-img' : ''}`}
                 onMouseEnter={onFilEnter}
                 onTouchStart={onFilEnter}
+                style={{ margin:'0 auto 1.2rem' }}
               >
-                <div
-                  className="hero-textbox-bg"
-                  style={{ backgroundImage: `url(${fairy3})` }}
-                />
-                <div className="htb-content">
-                  <h1 style={{ fontSize:'2.2rem', lineHeight:1.2, marginBottom:'0.8rem', color:'#1F2937', fontWeight:800 }}>
-                    {"Vida \u00e9 ventila\u00e7\u00e3o e perfus\u00e3o. \u00c9 a sua "}<span style={{ color:'#DC2626' }}>Hemoglobina</span>{" que faz isso."}
-                  </h1>
-                  <p style={{ fontStyle:'normal', fontWeight:700, fontSize:'0.9rem', color:'#7B1E1E', lineHeight:1.6 }}>
-                    Cuide dela. Saiba mais:
-                  </p>
+                <div className="rf-hero-stage">
+                  <div className="rf-hero-img" style={{ backgroundImage: `url(${fairy3})` }} />
+                  <div className="rf-hero-scrim" />
+                </div>
+                <div className="rf-hero-overlay">
+                  <h1>{"Vida \u00e9 ventila\u00e7\u00e3o e perfus\u00e3o."}<br/>{"\u00c9 a sua "}<span className="red">Hemoglobina</span>{" que"}<br/>{"faz isso."}</h1>
                 </div>
               </div>
               <div style={{ padding:'0.5rem 0' }}>
-                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>{"Com Ferro, a Natureza faz a Hemoglobina, a prote\u00edna vermelha e mais importante da sua vida."}</p>
-                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>{"Ela sustenta a ventila\u00e7\u00e3o e realiza a perfus\u00e3o: capta o oxig\u00eanio do ar que ventila os pulm\u00f5es e o entrega a todas as suas c\u00e9lulas \u2014 vinte vezes por minuto."}</p>
-                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, marginBottom:'0.8rem', fontWeight:600 }}>{"Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas c\u00e9lulas, e o leva aos seus pulm\u00f5es para que voc\u00ea o expire no ar do mundo."}</p>
-                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.8, fontWeight:600 }}>{"No ambiente, uma prote\u00edna verde \u2014 a clorofila, m\u00e3e da Hemoglobina \u2014 usa a luz do sol para partir o CO2 e fazer a\u00e7\u00facar a partir de carbono e \u00e1gua, devolvendo o oxig\u00eanio ao ar do planeta, em um ciclo virtuoso perfeito."}</p>
+                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.65, marginBottom:'0.8rem', fontWeight:600 }}>{"Com Ferro, a Natureza faz a Hemoglobina, a prote\u00edna vermelha e mais importante da sua vida."}</p>
+                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.65, marginBottom:'0.8rem', fontWeight:600 }}>{"Ela sustenta a ventila\u00e7\u00e3o e realiza a perfus\u00e3o: capta o oxig\u00eanio do ar que ventila os pulm\u00f5es e o entrega a todas as suas c\u00e9lulas \u2014 vinte vezes por minuto."}</p>
+                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.65, marginBottom:'0.8rem', fontWeight:600 }}>{"Ao mesmo tempo, a Hemoglobina captura o CO2 produzido pela queima do alimento em suas c\u00e9lulas, e o leva aos seus pulm\u00f5es para que voc\u00ea o expire no ar do mundo."}</p>
+                <p style={{ fontSize:'0.9rem', color:'var(--text-sec)', lineHeight:1.65, fontWeight:600 }}>{"No ambiente, uma prote\u00edna verde \u2014 a clorofila, m\u00e3e da Hemoglobina \u2014 usa a luz do sol para partir o CO2 e fazer a\u00e7\u00facar a partir de carbono e \u00e1gua, devolvendo o oxig\u00eanio ao ar do planeta, em um ciclo virtuoso perfeito."}</p>
               </div>
             </div>
             <div className="reveal" style={{ transitionDelay:'0.1s' }}>
@@ -1920,26 +1934,26 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
       <section className="filosofia" id="sobre" style={{ display: showSobre ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
-          <div className="reveal">
+          <div className="reveal center">
             <span className="tag">Sobre</span>
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>RedFairy<sup style={{ color: 'var(--cherry)', fontSize: '0.45em', fontWeight: 500, verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup> | OBA</h2>
           </div>
 
           <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 760, marginLeft: 'auto', marginRight: 'auto' }}>
 
-            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
               <strong style={{ color: 'var(--wine)', fontWeight: 700 }}>RedFairy<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup></strong>{" e o "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>TM</sup>{" \u2014 Otimizar o Bari\u00e1trico"}</strong>{" representam uma iniciativa institucional de "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Cytomica"}<sup style={{ fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup></strong>{", com forte compromisso \u00e9tico e social, voltada \u00e0 melhoria da qualidade de vida de pacientes com doen\u00e7as e condi\u00e7\u00f5es cr\u00f4nicas ou agudas que afetam a produ\u00e7\u00e3o de hemoglobina e de c\u00e9lulas vermelhas. Entre eles, destacam-se os pacientes bari\u00e1tricos, que frequentemente demandam aten\u00e7\u00e3o cl\u00ednica especializada."}
             </p>
 
-            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
               {"A iniciativa oferece "}<strong>{"avalia\u00e7\u00f5es iniciais gratuitas"}</strong>{", acionadas por m\u00e9dicos com o apoio de um algoritmo m\u00e9dico avan\u00e7ado, seguidas, quando necess\u00e1rio, de acompanhamento acess\u00edvel, com suporte de intelig\u00eancia artificial e assist\u00eancia m\u00e9dica por telemedicina."}
             </p>
 
-            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
               {"Desenvolvido ao longo de anos sob a orienta\u00e7\u00e3o do "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Dr. Est\u00e1cio Ferreira Ramos"}</strong>{", hematologista e pesquisador, o projeto re\u00fane rigor m\u00e9dico, inova\u00e7\u00e3o e prop\u00f3sito social."}
             </p>
 
-            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
               {"O empreendimento inclui ainda um "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Afiliados Patrocinado"}</strong>{", destinado a ampliar o alcance da iniciativa e favorecer o acesso de um n\u00famero crescente de pacientes \u00e0 avalia\u00e7\u00e3o e ao cuidado."}
             </p>
 
@@ -1973,22 +1987,22 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
       <section className="filosofia" id="afiliados" style={{ display: showAfiliados ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
-          <div className="reveal">
+          <div className="reveal center">
             <span className="tag">Afiliados</span>
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>Programa de Afiliados</h2>
           </div>
 
           <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 760, marginLeft: 'auto', marginRight: 'auto' }}>
 
-            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
               {"O "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Afiliados RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" | OBA"}</strong>{" est\u00e1 aberto ao apoio de "}<strong>{"empresas, filantropos, organiza\u00e7\u00f5es sociais e funda\u00e7\u00f5es"}</strong>{" comprometidos com a amplia\u00e7\u00e3o do acesso \u00e0 iniciativa."}
             </p>
 
-            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
               {"Seu objetivo \u00e9 estimular e reconhecer "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"m\u00e9dicos"}</strong>{" que contribuam para expandir seu alcance, seja por meio de avalia\u00e7\u00f5es, seja por a\u00e7\u00f5es, ideias e iniciativas de difus\u00e3o. Ao realizar a primeira avalia\u00e7\u00e3o de um paciente, o m\u00e9dico j\u00e1 pode optar por integrar o Programa."}
             </p>
 
-            <p style={{ fontSize: '1rem', color: 'var(--text-sec)', lineHeight: 1.85, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
+            <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
               {"Apoiar o programa \u00e9 fortalecer o acesso de pessoas com condi\u00e7\u00f5es ligadas ao "}<strong>{"ferro e \u00e0 hemoglobina"}</strong>{" a mais sa\u00fade, desempenho e qualidade de vida."}
             </p>
 
@@ -2041,7 +2055,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <span className="tag">{"Indica\u00e7\u00f5es"}</span>
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>{"Para quem \u00e9 o RedFairy"}<sup style={{ color: '#000', fontSize: '0.7em', fontWeight: 600, verticalAlign: 'super', marginLeft: '2px' }}>{"\u00ae"}</sup>{"?"}</h2>
           </div>
-          <div className="reveal" style={{ maxWidth: 880, margin: '1.5rem auto 0', lineHeight: 1.7, color: 'var(--text-sec)', fontSize: '0.88rem', fontWeight: 600, textAlign: 'justify' }}>
+          <div className="reveal" style={{ maxWidth: 880, margin: '1.5rem auto 0', lineHeight: 1.5, color: 'var(--text-sec)', fontSize: '0.88rem', fontWeight: 600, textAlign: 'justify' }}>
             <p style={{ marginBottom: '0.5rem' }}>
               {"Anemia, defici\u00eancia de ferro, e dist\u00farbios gen\u00e9ticos ou adquiridos da hemoglobina e das c\u00e9lulas vermelhas atingem talvez cinquenta milh\u00f5es de pessoas no pa\u00eds, que vivem sob dano hematol\u00f3gico-nutricional relevante, muitos sem acesso a avalia\u00e7\u00e3o especializada. S\u00e3o crian\u00e7as, idosos, gestantes, vegetarianos, cel\u00edacos, bari\u00e1tricos, doadores de sangue, pessoas com sangramentos cr\u00f4nicos, ou em uso de testosterona, abuso de \u00e1lcool, deficientes em G-6-PD, ou com sobrecarga de ferro, eritrocitose e necessidade de sangrias terap\u00eauticas. "}
               <button onClick={() => setShowIndMais(true)}
@@ -2078,7 +2092,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           <div className="reveal center">
             <span className="tag">{"Orienta\u00e7\u00f5es Terap\u00eauticas"}</span>
             <h2 className="stitle" style={{ fontSize: '1.6rem' }}>{"Muito al\u00e9m do diagn\u00f3stico"}</h2>
-            <p className="sdesc-bold" style={{ margin:"0 auto" }}>
+            <p className="sdesc" style={{ margin:"0 auto" }}>
               {"O RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.55em', fontWeight: 500 }}>{"\u00ae"}</sup>{" \u00e9 um algoritmo m\u00e9dico, que n\u00e3o apenas avalia: ele orienta."}<br />
               {"Gera recomenda\u00e7\u00f5es personalizadas com base no perfil completo do paciente."}
             </p>
@@ -2087,7 +2101,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <div className="terap-card"><div className="tc-icon">{"\ud83d\udc89"}</div><div><h4>{"Infus\u00f5es | Ferro endovenoso"}</h4><p>{"Prescri\u00e7\u00e3o m\u00e9dica do medicamento adequado, doses, n\u00famero de aplica\u00e7\u00f5es e intervalos ideais."}</p></div></div>
             <div className="terap-card"><div className="tc-icon">{"\ud83e\ude78"}</div><div><h4>{"Sangrias terap\u00eauticas"}</h4><p>{"N\u00famero de sess\u00f5es, volumes e intervalos para abordagem de sideroses e poliglobulia."}</p></div></div>
             <div className="terap-card"><div className="tc-icon">{"\ud83d\udc8a"}</div><div><h4>{"Reposi\u00e7\u00e3o | Ferro oral"}</h4><p>{"Prescri\u00e7\u00e3o m\u00e9dica do medicamento ideal, dose e dura\u00e7\u00e3o ajustada do tratamento."}</p></div></div>
-            <div className="terap-card"><div className="tc-icon">{"\ud83d\udcc8"}</div><div><h4>{"Gr\u00e1ficos cl\u00ednicos"}</h4><p>{"Visualiza\u00e7\u00e3o e follow-up da evolu\u00e7\u00e3o."}<br/><br/></p></div></div>
+            <div className="terap-card"><div className="tc-icon">{"\ud83d\udcc8"}</div><div><h4>{"Gr\u00e1ficos cl\u00ednicos"}</h4><p>{"Visualiza\u00e7\u00e3o e follow-up da evolu\u00e7\u00e3o."}<br/>{"Gr\u00e1ficos com par\u00e2metros individualizados."}</p></div></div>
           </div>
         </div>
       </section>
@@ -2121,7 +2135,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 </div>
                 <div style={{ margin:'1.5rem 0 0' }}>
                   <div style={{ height:1.5, background:'#7B1E1E', borderRadius:1, marginBottom:'0.8rem' }} />
-                  <p style={{ color:'#000', fontSize:'0.8rem', fontWeight:800, textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.5 }}>
+                  <p style={{ color:'#374151', fontSize:'0.8rem', fontWeight:800, textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.5 }}>
                     {"Doutor: Avalie um paciente e torne-se membro do Programa de Afiliados patrocinado."}
                   </p>
                   <p style={{ color:'#7B1E1E', fontSize:'0.85rem', fontWeight:500, textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.5, opacity:0.9 }}>
@@ -2149,8 +2163,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 </div>
                 <div className="patient-features">
                   <div className="pf-card">
-                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 3v18h18"/>
+                      <path d="m19 9-5 5-4-4-3 3"/>
                     </svg>
                     <h4>{"Gr\u00e1ficos Evolutivos"}</h4>
                     <p>{"Acompanhe a evolu\u00e7\u00e3o dos par\u00e2metros ao longo do tempo em um painel visual."}</p>
@@ -2173,9 +2188,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     </p>
                   </div>
                   <div className="pf-card">
-                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                      <path d="M18.364 5.636a9 9 0 0 1 0 12.728" strokeDasharray="2 2"/>
+                    <svg className="pf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.3.3 0 1 0 .3.3"/>
+                      <path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/>
+                      <circle cx="20" cy="10" r="2"/>
                     </svg>
                     <h4>{"Conectado ao seu m\u00e9dico"}</h4>
                     <p>{"A avalia\u00e7\u00e3o do m\u00e9dico j\u00e1 est\u00e1 no seu perfil quando voc\u00ea se cadastrar."}</p>
@@ -2226,7 +2242,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
                       <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Sexo</label>
-                      <select id="rf-sexo" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none' }}>
+                      <select id="rf-sexo" defaultValue="F" onChange={(e) => rfMascarasSexo(e.target.value)} style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none' }}>
                         <option value="F">Feminino</option><option value="M">Masculino</option>
                       </select>
                     </div>
@@ -2238,21 +2254,21 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
                       <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>HEMOGLOBINA g/dL</label>
-                      <input type="number" id="rf-hb2" step="0.1" placeholder="12.5" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <input type="number" id="rf-hb2" step="0.1" placeholder="12-15.5" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                     <div>
                       <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>Ferritina (ng/mL)</label>
-                      <input type="number" id="rf-ferr2" step="0.1" placeholder="15" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <input type="number" id="rf-ferr2" step="0.1" placeholder="25-150" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                   </div>
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:6 }}>
                     <div>
                       <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>VCM / fL</label>
-                      <input type="number" id="rf-vcm2" step="0.1" placeholder="82" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <input type="number" id="rf-vcm2" step="0.1" placeholder="80-100" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                     <div>
                       <label style={{ color:'#fff', fontSize:8, textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:3 }}>RDW-CV (%)</label>
-                      <input type="number" id="rf-rdw2" step="0.1" placeholder="13.5" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
+                      <input type="number" id="rf-rdw2" step="0.1" placeholder="11.5-15" style={{ width:'100%', background:'#e5e7eb', border:'1px solid rgba(255,255,255,0.3)', borderRadius:6, padding:'5px 6px', color:'#000', fontSize:11, outline:'none', boxSizing:'border-box' }} />
                     </div>
                   </div>
                   <div style={{ marginBottom:10 }}>
@@ -2378,8 +2394,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           <div className="cta-cards reveal">
             <div className="cta-col">
               <div className="cta-c cta-doc">
-                <div className="ci">{"\ud83e\ude7a"}</div>
-                <h3>{"Modo M\u00e9dico"}</h3>
+                <div style={{ display:'flex', alignItems:'center', gap:'0.6rem', marginBottom:'0.5rem' }}>
+                  <div className="ci" style={{ margin:0, flexShrink:0 }}>{"\ud83e\ude7a"}</div>
+                  <h3 style={{ flex:1, textAlign:'center', margin:0 }}>{"Modo M\u00e9dico"}</h3>
+                  <span aria-hidden="true" style={{ width:52, flexShrink:0 }} />
+                </div>
                 <p>{"Algoritmo poderoso e simples: com apenas o CPF e poucos dados do paciente voc\u00ea faz uma triagem e pode aprofundar a avalia\u00e7\u00e3o, e obt\u00e9m orienta\u00e7\u00f5es para melhor diagn\u00f3stico e tratamento."}</p>
               </div>
               <ul className="cta-bullets">
@@ -2395,14 +2414,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                   setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
                 }}>
                 <span className="comp-pill" />
-                <span className="comp-label">{"ENTRE"}</span>
+                <span className="comp-label" style={{ color:'#000' }}>{"ENTRE"}</span>
               </button>
               <span className="comp-sub" style={{ color:'#7B1E1E', marginTop:'-0.5rem' }}>{"M\u00c9DICO"}</span>
             </div>
             <div className="cta-col">
               <div className="cta-c cta-pat">
-                <div className="ci">{"\u2764\ufe0f"}</div>
-                <h3>Modo Paciente</h3>
+                <div style={{ display:'flex', alignItems:'center', gap:'0.6rem', marginBottom:'0.5rem' }}>
+                  <div className="ci" style={{ margin:0, flexShrink:0 }}>{"\u2764\ufe0f"}</div>
+                  <h3 style={{ flex:1, textAlign:'center', margin:0 }}>Modo Paciente</h3>
+                  <span aria-hidden="true" style={{ width:52, flexShrink:0 }} />
+                </div>
                 <p>{"Cadastre-se e acompanhe a evolu\u00e7\u00e3o dos seus exames ao longo do tempo. Reduza a necessidade de consultas m\u00e9dicas. Economize, evite agendamentos, e reduza tempo e o custo dos deslocamentos."}</p>
               </div>
               <ul className="cta-bullets">

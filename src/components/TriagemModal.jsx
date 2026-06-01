@@ -43,7 +43,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   // Typewriter do aviso de topo: "NAO TEM UM HEMOGRAMA?..."
   const [twTopo, setTwTopo] = useState('');
   useEffect(() => {
-    const full = "N\u00c3O TEM UM HEMOGRAMA?... FECHE ESSA JANELA E VOLTE DEPOIS.";
+    const full = "N\u00c3O TEM UM HEMOGRAMA?... FECHE A JANELA E VOLTE DEPOIS.";
     let i = 0;
     setTwTopo('');
     const iv = setInterval(() => {
@@ -607,17 +607,17 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
         </div>
 
         {/* Faixa pink mais estreita: 1 linha de texto principal + subtexto menor (centralizados). Seta vertical alinhada ao centro do X acima. */}
-        <div style={{ background: '#FEF2F2', padding: '6px 14px 6px 14px', position: 'relative' }}>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '0.7rem', fontWeight: 600, color: '#7B1E1E', letterSpacing: '0.5px', lineHeight: 1.2, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ background: '#FEF2F2', padding: '6px 14px 6px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+            <p style={{ fontSize: '0.62rem', fontWeight: 600, color: '#7B1E1E', letterSpacing: '0.5px', lineHeight: 1.2, margin: 0 }}>
               {twTopo}
             </p>
             <p style={{ fontSize: '0.6rem', fontWeight: 700, color: '#991B1B', letterSpacing: '0.5px', marginTop: 1, opacity: 0.8, lineHeight: 1.2 }}>
               {"SEUS DADOS DE LOGIN EST\u00c3O SALVOS"}
             </p>
           </div>
-          {/* Seta dentro da faixa pink, levemente \u00e0 direita do centro do X. */}
-          <span className="rf-arrow-x" style={{ position: 'absolute', top: 6, right: 22, fontSize: '1.4rem', color: '#b91c1c', fontWeight: 900, pointerEvents: 'none', lineHeight: 1 }}>
+          {/* Seta em coluna propria (item flex): nunca sobrepoe o texto. Alinhada sob o X. */}
+          <span className="rf-arrow-x" style={{ fontSize: '1.4rem', color: '#b91c1c', fontWeight: 900, pointerEvents: 'none', lineHeight: 1, flexShrink: 0, marginRight: '8px' }}>
             {"\u2191"}
           </span>
         </div>
@@ -903,7 +903,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               {/* Grid 5 colunas: Hb (col-span-2), VCM (1), RDW (1), PLAY (1). PLAY substitui o bot\u00e3o CONFIRMO redondo. */}
               <div className="grid grid-cols-5 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-xs font-medium text-gray-600 mb-1 whitespace-nowrap">{"HEMOGLOBINA (g/dL)"}</label>
+                  <label className="block text-[0.66rem] font-medium text-gray-600 mb-1 whitespace-nowrap">{"HEMOGLOBINA (g/dL)"}</label>
                   <input
                     ref={refHbHemograma}
                     type="text"
@@ -928,7 +928,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   {erros.hemoglobina && <p className="text-red-500 text-xs mt-0.5">{erros.hemoglobina}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">VCM (fL)</label>
+                  <label className="block text-[0.66rem] font-medium text-gray-600 mb-1 whitespace-nowrap">VCM (fL)</label>
                   <input
                     ref={refVcmHemograma}
                     type="text"
@@ -953,7 +953,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   {erros.vcm && <p className="text-red-500 text-xs mt-0.5">{erros.vcm}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">RDW-CV (%)</label>
+                  <label className="block text-[0.66rem] font-medium text-gray-600 mb-1 whitespace-nowrap">RDW-CV (%)</label>
                   <input
                     ref={refRdwHemograma}
                     type="text"
@@ -995,14 +995,14 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               </div>
               {/* Frase de orienta\u00e7\u00e3o subiu para logo abaixo dos campos do hemograma (em mai\u00fasculas, laranja, centralizada),
                   com bot\u00e3o "\u2190 VOLTAR" no canto esquerdo no mesmo n\u00edvel \u2014 economiza altura. */}
-              <div className="relative mt-2 min-h-[1.25rem]">
+              <div className="flex items-center gap-2 mt-2 min-h-[1.25rem]">
                 <button
                   onClick={onFechar}
-                  className="absolute left-0 top-0 text-xs text-gray-500 hover:text-gray-800 underline whitespace-nowrap">
+                  className="flex-shrink-0 text-xs text-gray-500 hover:text-gray-800 underline whitespace-nowrap">
                   {"\u2190 VOLTAR"}
                 </button>
                 {etapaHemograma < 4 && (
-                  <p className="text-[0.7rem] text-center tracking-wide font-semibold" style={{ color: '#EA580C' }}>
+                  <p className="flex-1 text-[0.66rem] text-center tracking-wide font-semibold" style={{ color: '#EA580C' }}>
                     {"PREENCHA OS CAMPOS AMARELOS EM SEQU\u00caNCIA"}
                   </p>
                 )}
