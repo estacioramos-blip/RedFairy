@@ -2,7 +2,7 @@
 title: Decision Log
 type: decision-log
 status: active
-version: "1.2"
+version: "1.3"
 updated: "2026-06-02"
 ---
 
@@ -14,6 +14,31 @@ updated: "2026-06-02"
 > **Gatilhos** (qualquer um → registrar): direção de produto, mudança de escopo, preço/taxa,
 > modelo de negócio, escolha de stack, postura de segurança, mudança de regra, ou qualquer coisa
 > que contradiga uma decisão anterior. Entrada mais nova no topo.
+
+---
+
+## 2026-06-02 — DEC-008 — Segurança: autenticação real do médico (Supabase Auth) → pré-requisito do RLS
+
+**Contexto / achados (auditoria 2026-06-02):**
+- 🔴 **CRÍTICO:** senha do médico em **texto puro** na coluna `medicos.senha_klipbit`; o login lê a coluna com a *anon key* e compara **no navegador** (`Calculator.jsx`). Qualquer um baixa todas as senhas. O login do médico **não cria sessão** (só `localStorage`).
+- 🟠 **RLS desligado** (DEC-002): a anon key lê/escreve tudo — CPFs e diagnósticos de pacientes (LGPD), `medicos` (com senhas), `config` (**chave Pix**).
+- 🟡 Admin sem senha (5 cliques no logo). 
+- O login do **paciente** já é Supabase Auth correto (hash no servidor) — não mexer.
+
+**Decisão:** O médico passa a ser **usuário real do Supabase Auth** (como o paciente). Isso elimina a senha em texto puro e cria `auth.uid()` — **pré-requisito para ligar o RLS**. Ordem de execução: **(1) auth do médico → (2) auth do admin → (3) RLS por papel.** RLS não pode vir antes porque, sem identidade real do médico no servidor, as políticas não conseguem distinguí-lo (ele seria anônimo).
+
+**Parâmetros decididos:**
+- **Login mantém CRM/UF** (experiência atual + identidade do 4DOC): o app traduz CRM→email nos bastidores e chama `signInWithPassword`.
+- **Cadastro** passa a usar `auth.signUp(email, senha)`; a linha em `medicos` ganha `user_id` (= `auth.uid()`). A coluna `senha_klipbit` é **removida** ao fim da migração.
+- **Migração dos médicos atuais:** script único com a **service role** (fora do navegador) recria os usuários do Auth a partir de email+senha atuais — preserva a senha (médico não percebe). Fallback de redefinição por email para quem não tiver email válido.
+- **Papel:** existe linha em `medicos` com `user_id = auth.uid()` → médico; `is_admin = true` → admin.
+
+**Sub-decisões em aberto (a detalhar antes de cada passo):**
+- Email de Auth do médico: **real** (do cadastro, permite reset por email) vs sintético derivado do CRM. (Recomendação: real.)
+- Mecanismo exato das políticas RLS por tabela (staging primeiro — RLS errado quebra o app no ar).
+- Mitigação interina da exposição de senha enquanto a migração não conclui.
+
+**Supersedes:** aprofunda DEC-002 (RLS desligado) com o caminho concreto para ligá-lo.
 
 ---
 
