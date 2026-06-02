@@ -37,6 +37,7 @@ updated: "2026-06-02"
 | 017 | 2026-06-02 | Admin — aba 💊 Medicamentos | Phase 2 | DEC-007 | AdminPage: catálogo por classe, radio p/ marca ativa (uma por classe), edição de parâmetros de infusão e contador; degrada com aviso se a tabela não existir. |
 | 018 | 2026-06-02 | Modal ferro EV — 2 receitas do catálogo | Phase 2 | DEC-007 | `ModalFerroEV` lê as marcas ativas (alta_dose + dose_fracionada) e renderiza 2 receitas com frascos/sessões calculados da dose de Ganzoni, no lugar das opções Sacarato/Ferrinject fixas. Falta `gerarSolicitacaoCFM` (2 receitas) + contador na geração do documento. |
 | 019 | 2026-06-02 | Solicitação CFM com 2 receitas + contador de cota | Phase 2 | DEC-007 | `gerarSolicitacaoCFM` monta a conduta de ferro EV com as 2 marcas ativas (dose de Ganzoni → frascos/sessões); `prescricoes_emitidas++` ao copiar o documento (1×/ficha), só quando há indicação de ferro EV (exclui SOBRECARGA). Helpers `calcReceita`/`primeiroNumero` movidos p/ `ferroProtocol.js` (fonte única). |
+| 020 | 2026-06-02 | Segurança — auth do médico via RPC (bcrypt) | Phase 2 | DEC-008 | `migrate_medico_auth.sql`: RPCs `register_medico`/`login_medico`/`complete_medico` (bcrypt, retorno {ok,id,nome,crm,is_admin,erro}) + coluna `is_admin`. Calculator e LandingPage (caixa do hero) cortados para as RPCs; `senha_klipbit` eliminado do cliente. Falta: auth do admin, RLS gateway, versionar RPCs de paciente. |
 
 ---
 

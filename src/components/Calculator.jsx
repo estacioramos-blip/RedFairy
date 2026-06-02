@@ -270,18 +270,26 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     const conselhoLimpo = loginConselho.trim().toUpperCase()
     if (!loginSenha) { setLoginErro('Informe a senha.'); return }
     setLoginLoading(true)
-    const { data: medico } = await supabase
-      .from('medicos')
-      .select('id, nome, crm, senha_klipbit')
-      .eq('crm', conselhoLimpo)
-      .single()
+    let resp = null
+    try {
+      const { data, error } = await supabase.rpc('login_medico', { p_crm: conselhoLimpo, p_senha: loginSenha })
+      if (error) { setLoginLoading(false); setLoginErro('Erro de conex\u00e3o. Tente novamente.'); return }
+      resp = data
+    } catch (e) { setLoginLoading(false); setLoginErro('Erro de conex\u00e3o. Tente novamente.'); return }
     setLoginLoading(false)
-    if (!medico) { setLoginErro("Conselho n\u00e3o encontrado. Verifique ou cadastre-se."); return }
-    if (medico.senha_klipbit !== loginSenha) { setLoginErro('Senha incorreta.'); return }
-    localStorage.setItem('medico_crm', medico.crm)
-    localStorage.setItem('medico_nome', medico.nome || '')
+    if (!resp || !resp.ok) {
+      const e = resp && resp.erro
+      setLoginErro(e === 'CRM nao encontrado' ? 'Conselho n\u00e3o encontrado. Verifique ou cadastre-se.'
+        : e === 'Senha incorreta' ? 'Senha incorreta.'
+        : (e || 'Falha no login.'))
+      return
+    }
+    const _crm = resp.crm || conselhoLimpo
+    localStorage.setItem('medico_crm', _crm)
+    localStorage.setItem('medico_nome', resp.nome || '')
     localStorage.setItem('medico_login_at', Date.now().toString())
-    onConcluir(medico.nome || '', medico.crm)
+    try { resp.is_admin ? localStorage.setItem('medico_is_admin', '1') : localStorage.removeItem('medico_is_admin') } catch (e) {}
+    onConcluir(resp.nome || '', _crm)
   }
 
   async function handleCadastro() {
@@ -296,35 +304,44 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     if (!email || !email.includes('@')) { setCadErro("Informe um e-mail v\u00e1lido."); return }
     if (!jaLogadoSemSenha && (!senha || senha.length < 6)) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
     setCadLoading(true)
-    const { data: existing, error: errExisting } = await supabase
-      .from('medicos')
-      .select('id, nome, crm')
-      .eq('crm', conselhoLimpo)
-      .maybeSingle()
-    const partes = conselhoLimpo.split('/')
-    const uf = partes[1] || ''
-    let opError = null
-    let opData = null
-    if (existing) {
-      const _upd = { nome: nome.trim(), uf, celular: celularDigits, email: email.trim().toLowerCase() };
-      if (!jaLogadoSemSenha) { _upd.senha_klipbit = senha; }
-      const { data, error } = await supabase.from('medicos').update(_upd).eq('crm', conselhoLimpo).select()
-      opError = error
-      opData = data
-    } else {
-      const payload = {
-        nome: nome.trim(), crm: conselhoLimpo, uf, celular: celularDigits,
-        email: email.trim().toLowerCase(), senha_klipbit: senha,
-      }
-      const { data, error } = await supabase.from('medicos').insert(payload).select()
-      opError = error
-      opData = data
+    // Médico já identificado em sessão anterior (cadastro mínimo pela caixa do
+    // hero): aqui só completa o perfil (nome/celular/email), sem recriar a conta.
+    if (jaLogadoSemSenha) {
+      try {
+        const { error } = await supabase.rpc('complete_medico', {
+          p_crm: conselhoLimpo, p_nome: nome.trim(),
+          p_celular: celularDigits, p_email: email.trim().toLowerCase(),
+        })
+        if (error) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
+      } catch (e) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
+      setCadLoading(false)
+      localStorage.setItem('medico_crm', conselhoLimpo)
+      localStorage.setItem('medico_nome', nome.trim())
+      localStorage.setItem('medico_login_at', Date.now().toString())
+      setCadSucesso(true)
+      return
     }
+    const uf = conselhoLimpo.split('/')[1] || ''
+    let resp = null
+    try {
+      const { data, error } = await supabase.rpc('register_medico', {
+        p_nome: nome.trim(), p_crm: conselhoLimpo, p_uf: uf,
+        p_celular: celularDigits, p_email: email.trim().toLowerCase(), p_senha: senha,
+      })
+      if (error) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
+      resp = data
+    } catch (e) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
     setCadLoading(false)
-    if (opError) { setCadErro('Erro ao salvar. Tente novamente.'); return }
-    localStorage.setItem('medico_crm', conselhoLimpo)
-    localStorage.setItem('medico_nome', nome.trim())
+    if (!resp || !resp.ok) {
+      setCadErro(resp && resp.erro === 'CRM ja cadastrado'
+        ? 'Este CRM já está cadastrado. Faça login.'
+        : ((resp && resp.erro) || 'Erro ao salvar. Tente novamente.'))
+      return
+    }
+    localStorage.setItem('medico_crm', resp.crm || conselhoLimpo)
+    localStorage.setItem('medico_nome', resp.nome || nome.trim())
     localStorage.setItem('medico_login_at', Date.now().toString())
+    try { if (resp.is_admin) localStorage.setItem('medico_is_admin', '1') } catch (e) {}
     setCadSucesso(true)
   }
 

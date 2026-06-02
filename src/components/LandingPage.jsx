@@ -796,47 +796,46 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     }
     const crmLimpo = crmMedicoValor.trim().toUpperCase();    if (caixaModo === 'login') {
       setCaixaBuscando(true);
-      let medico = null;
+      let resp = null;
       try {
-        const { data } = await supabase
-          .from('medicos')
-          .select('id, nome, crm, senha_klipbit')
-          .eq('crm', crmLimpo)
-          .maybeSingle();
-        medico = data;
-      } catch (e) { medico = null; }
+        const { data, error } = await supabase.rpc('login_medico', { p_crm: crmLimpo, p_senha: caixaSenha });
+        if (error) { setCaixaBuscando(false); setCaixaErro('ERRO DE CONEXAO. TENTE NOVAMENTE.'); return; }
+        resp = data;
+      } catch (e) { setCaixaBuscando(false); setCaixaErro('ERRO DE CONEXAO. TENTE NOVAMENTE.'); return; }
       setCaixaBuscando(false);
-      if (!medico) { setCaixaErro('CONSELHO NAO ENCONTRADO'); return; }
-      if (medico.senha_klipbit !== caixaSenha) { setCaixaErro('SENHA INCORRETA'); return; }
+      if (!resp || !resp.ok) {
+        setCaixaErro(resp && resp.erro === 'CRM nao encontrado' ? 'CONSELHO NAO ENCONTRADO'
+          : resp && resp.erro === 'Senha incorreta' ? 'SENHA INCORRETA'
+          : 'FALHA NO LOGIN');
+        return;
+      }
       try {
-        localStorage.setItem('medico_crm', medico.crm);
-        localStorage.setItem('medico_nome', medico.nome || '');
+        const _crm = resp.crm || crmLimpo;
+        localStorage.setItem('medico_crm', _crm);
+        localStorage.setItem('medico_nome', resp.nome || '');
         localStorage.setItem('medico_login_at', Date.now().toString());
-        localStorage.setItem('rf_crm_prefill', medico.crm);
+        localStorage.setItem('rf_crm_prefill', _crm);
+        resp.is_admin ? localStorage.setItem('medico_is_admin', '1') : localStorage.removeItem('medico_is_admin');
       } catch (e) {}
       onModoMedico();
       return;
     }
 
     setCaixaBuscando(true);
-    const partes = crmLimpo.split('/');
-    const uf = partes[1] || '';
-    let erroInsert = null;
+    const uf = crmLimpo.split('/')[1] || '';
+    let resp = null;
     try {
-      const { error } = await supabase.from('medicos').insert({
-        crm: crmLimpo,
-        uf,
-        celular: '',
-        email: '',
-        senha_klipbit: caixaSenha,
+      const { data, error } = await supabase.rpc('register_medico', {
+        p_nome: '', p_crm: crmLimpo, p_uf: uf, p_celular: '', p_email: '', p_senha: caixaSenha,
       });
-      erroInsert = error;
-    } catch (e) {
-      erroInsert = e;
-    }
+      if (error) { setCaixaBuscando(false); setCaixaErro('NAO FOI POSSIVEL CRIAR. TENTE NOVAMENTE.'); return; }
+      resp = data;
+    } catch (e) { setCaixaBuscando(false); setCaixaErro('NAO FOI POSSIVEL CRIAR. TENTE NOVAMENTE.'); return; }
     setCaixaBuscando(false);
-    if (erroInsert) {
-      setCaixaErro('NAO FOI POSSIVEL CRIAR. TENTE NOVAMENTE.');
+    if (!resp || !resp.ok) {
+      setCaixaErro(resp && resp.erro === 'CRM ja cadastrado'
+        ? 'CRM JA CADASTRADO. FACA LOGIN.'
+        : 'NAO FOI POSSIVEL CRIAR. TENTE NOVAMENTE.');
       return;
     }
     try {
