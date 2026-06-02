@@ -166,6 +166,11 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   const [showEsqueciSenha, setShowEsqueciSenha] = useState(false)
   const refSenhaLogin = useRef(null);
   const [etapaLogin, setEtapaLogin] = useState(1);
+  // Redesenho do cadastro: refs de nome/email + fundo-imagem revelavel.
+  const refNomeCad = useRef(null);
+  const refEmailCad = useRef(null);
+  const [bgRevelado, setBgRevelado] = useState(false);
+  const [splashAtivo, setSplashAtivo] = useState(true);
 
   // Timer 1300ms apos digitar no NUMERO do CRM (login): se >= 1 digito, espera 1300ms
   // ocioso e move o foco para o campo UF. Se atingir 6 digitos antes, avanca imediato.
@@ -193,9 +198,10 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     }
   }, [loginCrmUF, modo]);
 
-  // Mesmo padrao no CADASTRO.
+  // Mesmo padrao no CADASTRO. So' ativa apos o nome (o cursor comeca no nome).
   useEffect(() => {
     if (modo !== 'cadastro') return;
+    if (!nome.trim()) return;
     if (!crmNum) return;
     if (crmNum.length === 6) {
       if (refCrmUf.current) refCrmUf.current.focus();
@@ -211,10 +217,35 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
 
   useEffect(() => {
     if (modo !== 'cadastro') return;
-    if (crmUF.length === 2 && UFS_VALIDAS.includes(crmUF)) {
+    if (crmUF.length === 2 && UFS_VALIDAS.includes(crmUF) && nome.trim()) {
       if (refCelular.current) refCelular.current.focus();
     }
   }, [crmUF, modo]);
+
+  // Splash de entrada: imagem inteira + "Vamos!..." por 2s; depois surgem os campos
+  // e o cursor vai pro NOME (no cadastro).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSplashAtivo(false);
+      if (modo === 'cadastro') setTimeout(() => { if (refNomeCad.current) refNomeCad.current.focus(); }, 50);
+    }, 4000);
+    return () => clearTimeout(t);
+  }, []);
+  // NOME -> CELULAR apos 2,5s ocioso (se o cursor ainda estiver no nome).
+  useEffect(() => {
+    if (modo !== 'cadastro' || !nome.trim()) return;
+    const t = setTimeout(() => {
+      if (refCelular.current && document.activeElement === refNomeCad.current) refCelular.current.focus();
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [nome, modo]);
+  // CELULAR completo (11 digitos) -> EMAIL.
+  useEffect(() => {
+    if (modo !== 'cadastro') return;
+    if (celular.replace(/\D/g, '').length >= 11 && refEmailCad.current && document.activeElement === refCelular.current) {
+      refEmailCad.current.focus();
+    }
+  }, [celular, modo]);
 
   function formatarCelular(valor) {
     const digits = valor.replace(/\D/g, '').slice(0, 11)
@@ -298,6 +329,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   }
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+  const inputAmarelo = "w-full border-2 border-yellow-400 bg-yellow-50 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
 
   useEffect(() => {
     if (cadSucesso) {
@@ -315,18 +347,27 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
           {"\u2190 Voltar"}
         </button>
       )}
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md space-y-5" style={{ overflow: 'hidden' }}>
-        <div style={{ position: 'relative' }}>
-          <img src={telefonista3Img} alt="Vamos!" style={{ width: '100%', height: 'auto', display: 'block' }} />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 50%, transparent)', padding: '40px 24px 34px' }}>
-            <p style={{ color: '#ffffff', fontSize: '26px', fontWeight: 800, lineHeight: 1.15, margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>{vamosTxt}</p>
+      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md" style={{ overflow: 'hidden', position: 'relative' }}
+        onMouseEnter={() => setBgRevelado(true)} onMouseLeave={() => setBgRevelado(false)} onTouchStart={() => setBgRevelado(true)}>
+        {/* Imagem de fundo: inteira (contain) e afastada, esmaecida; revela no hover (igual a' hero) */}
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundColor: '#FDF7F7', backgroundImage: `url(${telefonista3Img})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', filter: bgRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+        {/* SPLASH de entrada: imagem INTEIRA + "Vamos!..." por 2s, antes dos campos */}
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', backgroundImage: `url(${telefonista3Img})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', opacity: splashAtivo ? 1 : 0, pointerEvents: splashAtivo ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: '28%', padding: '0 24px', textAlign: 'center' }}>
+            <p style={{ color: '#ffffff', fontSize: '42px', fontWeight: 900, lineHeight: 1.1, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{vamosTxt}</p>
           </div>
         </div>
-        <div className="px-8 pb-8 pt-2 space-y-5">
+        {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons */}
+        <div style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
+            <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+          </h2>
+        </div>
+        <div className="px-8 pb-8 pt-3 space-y-5" style={{ position: 'relative', zIndex: 1 }}>
         <div className="text-center">
-          <img src={logo} alt="RedFairy" className="w-16 h-16 object-contain mx-auto mb-3" />
           <h2 className="text-xl font-bold text-red-700">
-            {modo === 'login' ? "Acesso M\u00e9dico" : 'Primeiro Acesso'}
+            {modo === 'login' ? "Acesso M\u00e9dico" : "Primeiro Acesso M\u00e9dico"}
           </h2>
           <p className="text-gray-500 text-sm mt-1">
             {modo === 'login' ? 'Entre com seu conselho e senha' : 'Crie seu acesso ao RedFairy'}
@@ -409,20 +450,20 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             </button>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
-              <input type="text" value={nome} onChange={e => setNome(e.target.value.toUpperCase())} style={{ textTransform: 'uppercase' }}
-                placeholder={"Jo\u00e3o da Silva"} className={inputClass} autoComplete="off" />
+              <input ref={refNomeCad} type="text" value={nome} onChange={e => setNome(e.target.value.toUpperCase())} style={{ textTransform: 'uppercase' }}
+                className={inputAmarelo} autoComplete="off" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM e UF"}</label>
               <div className="grid grid-cols-3 gap-2">
                 <input ref={refCrmNum} type="text" value={crmNum}
                   onChange={e => setCrmNum(sanitizarCrmNum(e.target.value))}
-                  placeholder="Ex: 6302" className={inputClass} autoComplete="off"
+                  placeholder="Ex: 6302" className={inputAmarelo} autoComplete="off"
                   inputMode="numeric" maxLength={6} />
                 <input ref={refCrmUf} type="text" value={crmUF}
                   onChange={e => setCrmUF(sanitizarCrmUF(e.target.value))}
                   placeholder="UF" maxLength={2}
-                  className={`${inputClass} text-center uppercase ${crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) ? 'border-red-500' : ''}`} autoComplete="off" />
+                  className={`${inputAmarelo} text-center uppercase ${crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) ? 'border-red-500' : ''}`} autoComplete="off" />
               </div>
               {crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) && (
                 <p className="text-red-500 text-xs mt-1">{"UF inv\u00e1lida"}</p>
@@ -432,7 +473,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
               <input ref={refCelular} type="tel" value={celular} onChange={e => setCelular(formatarCelular(e.target.value))}
-                placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputClass} autoComplete="off" />
+                placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputAmarelo} autoComplete="off" />
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
               <p className="text-blue-800 text-xs font-bold mb-1">{"\u2728 Programa de Afiliados"}</p>
@@ -442,14 +483,14 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value.toLowerCase())}
-                placeholder="seu@email.com" className={inputClass} autoComplete="off" />
+              <input ref={refEmailCad} type="email" value={email} onChange={e => setEmail(e.target.value.toLowerCase())}
+                placeholder="seu@email.com" className={inputAmarelo} autoComplete="off" />
             </div>
             <div>
               {!jaLogadoSemSenha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie uma Senha</label>
               <div style={{ position: 'relative' }}>
                 <input type={showSenha ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)}
-                  placeholder={"M\u00ednimo 6 caracteres"} className={inputClass} autoComplete="new-password"
+                  placeholder={"M\u00ednimo 6 caracteres"} className={inputAmarelo} autoComplete="new-password"
                   style={{ paddingRight: '40px' }} />
                 <button type="button" onClick={() => setShowSenha(!showSenha)}
                   style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9ca3af' }}
@@ -465,10 +506,14 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             </div>
             {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
             {showTC && <TermosModal onFechar={() => setShowTC(false)} />}
-            <button onClick={handleCadastro} disabled={cadLoading}
-              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
-              {cadLoading ? 'Cadastrando...' : "Continue \u2192"}
-            </button>
+            <style>{`@keyframes rfPlayConfirm { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.55);} 50%{box-shadow:0 0 0 9px rgba(220,38,38,0);} } .rf-play-confirm{ animation: rfPlayConfirm 1.1s ease-in-out infinite; }`}</style>
+            <div className="flex flex-col items-end gap-1 pt-1">
+              <button onClick={handleCadastro} disabled={cadLoading} aria-label="Confirmar cadastro"
+                className="w-14 h-14 rounded-full bg-red-700 hover:bg-red-800 text-white flex items-center justify-center transition-colors shadow-md disabled:opacity-50 rf-play-confirm">
+                <span style={{ fontSize: '1.3rem', lineHeight: 1, marginLeft: 3 }}>{cadLoading ? '\u2026' : "\u25b6"}</span>
+              </button>
+              <span className="text-xs font-bold text-red-800 tracking-wide">{cadLoading ? '...' : 'CONFIRME'}</span>
+            </div>
             <button type="button" onClick={() => setShowReversaoAdesao(true)}
               className="w-full text-center text-gray-400 hover:text-gray-600 text-xs font-medium py-1">
               {"N\u00e3o quero fornecer esses dados agora"}
@@ -671,10 +716,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const refAfilCPF = useRef(null);
   const refAfilPix = useRef(null);
   const [etapaAfil, setEtapaAfil] = useState(1);
+  const [splashAfil, setSplashAfil] = useState(true);
+  const [bgAfilRevelado, setBgAfilRevelado] = useState(false);
   useEffect(() => {
     if (showAfiliados) {
       setEtapaAfil(1);
-      const t = setTimeout(() => { if (refAfilCEP.current) refAfilCEP.current.focus(); }, 250);
+      // SPLASH de entrada: imagem inteira + greeting por 2s; depois revela os campos e foca o CEP
+      setSplashAfil(true); setBgAfilRevelado(false);
+      const t = setTimeout(() => { setSplashAfil(false); if (refAfilCEP.current) refAfilCEP.current.focus(); }, 5000);
       // Recarrega medicoDados (celular/email) ao abrir o modal de afiliados,
       // pra garantir que os checkboxes "TELEFONE/EMAIL" usem dados FRESCOS do banco.
       if (medicoCRM) {
@@ -1303,17 +1352,29 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
       {showAfiliados && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', flexShrink: 0 }}>
-              <img src={welcomeImg} alt="Bem-vindo ao Programa de Afiliados"
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%' }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 50%, transparent)', padding: '24px 24px 16px' }}>
-                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '2px', margin: 0, fontWeight: 600, textShadow: '0 2px 6px rgba(0,0,0,0.6)' }}>Bem-vindo ao</p>
-                <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 800, margin: '2px 0 0', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>Programa de Afiliados Patrocinado</h2>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column', position: 'relative' }}
+            onMouseEnter={() => setBgAfilRevelado(true)} onMouseLeave={() => setBgAfilRevelado(false)} onTouchStart={() => setBgAfilRevelado(true)}>
+            {/* Imagem de fundo: inteira (contain) e esmaecida; revela no hover (igual a' hero) */}
+            {/* Imagem de fundo: faixa de largura cheia, cortada na cintura, CENTRADA no modal; revela no hover */}
+            <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)', backgroundImage: `url(${welcomeImg})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgAfilRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgAfilRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+            {/* SPLASH de entrada: imagem (largura cheia, cortada na cintura, centrada) + greeting por 5s, antes dos campos */}
+            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashAfil ? 1 : 0, pointerEvents: splashAfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
+              <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)' }}>
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${welcomeImg})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: '6%', padding: '0 28px', textAlign: 'center' }}>
+                  <p style={{ color: '#ffffff', fontSize: '26px', fontWeight: 900, lineHeight: 1.18, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{"Bem-Vindo ao 4DOC® Programa Patrocinado de Médicos Afiliados"}</p>
+                </div>
               </div>
             </div>
+            {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons */}
+            <div style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+              <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
+                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+              </h2>
+            </div>
 
-            <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1 }}>
+            <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
               <p className="text-gray-700 text-sm leading-relaxed">
                 {"Para concluir a sua inscri\u00e7\u00e3o no "}<strong>Programa de Afiliados Patrocinado</strong>{" de RedFairy e receber os benef\u00edcios previstos, precisamos do seu "}<strong>CEP</strong>{", "}<strong>CPF</strong>{" e da sua "}<strong>chave Pix</strong>{"."}
               </p>

@@ -743,6 +743,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [caixaBuscando, setCaixaBuscando] = useState(false);
   const [caixaErro, setCaixaErro] = useState('');
   const [caixaAceitoTC, setCaixaAceitoTC] = useState(false);
+  const refCaixaSenha = useRef(null);
   const caixaSenhaValida = (caixaSenha || '').length >= 6;
   useEffect(() => {
     if (fluxoEtapa !== 'medico') return;
@@ -1579,6 +1580,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     <>
                       <div style={{ position:'relative' }}>
                         <input
+                          ref={refCaixaSenha}
                           autoFocus
                           type={caixaShowSenha ? 'text' : 'password'}
                           value={caixaSenha}
@@ -1604,7 +1606,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                           <input
                             type="checkbox"
                             checked={caixaAceitoTC}
-                            onChange={e => setCaixaAceitoTC(e.target.checked)}
+                            onChange={e => { setCaixaAceitoTC(e.target.checked); if (e.target.checked) setTimeout(() => refCaixaSenha.current && refCaixaSenha.current.focus(), 0); }}
                             style={{ width:'14px', height:'14px', cursor:'pointer', accentColor:'#ef4444', marginTop:'2px', flexShrink:0 }} />
                           <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', letterSpacing:'0.3px', lineHeight:1.3 }}>
                             {"Li e aceito os "}

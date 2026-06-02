@@ -436,6 +436,9 @@ export default function TriagemResultadoModal({
               if (txt === traco) return 'text-gray-400';
               return 'text-red-700 font-semibold';
             };
+            const renderInterp = (txt) => (txt === setaUp || txt === setaDn)
+              ? <span style={{ fontSize:'1.6rem', fontWeight:800, lineHeight:1, display:'inline-block' }}>{txt}</span>
+              : txt;
             return (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-xs">
@@ -444,7 +447,7 @@ export default function TriagemResultadoModal({
                       <th className={cell + ' text-left font-semibold'}>{"Par\u00e2metro"}</th>
                       <th className={cell + ' text-right font-semibold'}>Valor</th>
                       <th className={cell + ' text-left font-semibold'}>Und</th>
-                      <th className={cell + ' text-left font-semibold'}>{"Interpreta\u00e7\u00e3o"}</th>
+                      <th className={cell + ' text-center font-semibold'}>{"Interpreta\u00e7\u00e3o"}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -452,19 +455,19 @@ export default function TriagemResultadoModal({
                       <td className={cell + ' font-medium text-gray-800'}>Hemoglobina</td>
                       <td className={cell + ' text-right tabular-nums'}>{isNaN(hb) ? traco : hb.toFixed(1)}</td>
                       <td className={cell + ' text-gray-600'}>g/dL</td>
-                      <td className={cell + ' ' + corInterp(hbInterp)}>{hbInterp}</td>
+                      <td className={cell + ' text-center ' + corInterp(hbInterp)}>{renderInterp(hbInterp)}</td>
                     </tr>
                     <tr className="border-b border-gray-100">
                       <td className={cell + ' font-medium text-gray-800'}>{"Volume Globular M\u00e9dio"}</td>
                       <td className={cell + ' text-right tabular-nums'}>{isNaN(vcm) ? traco : vcm.toFixed(1)}</td>
                       <td className={cell + ' text-gray-600'}>fL</td>
-                      <td className={cell + ' ' + corInterp(vcmInterp)}>{vcmInterp}</td>
+                      <td className={cell + ' text-center ' + corInterp(vcmInterp)}>{renderInterp(vcmInterp)}</td>
                     </tr>
                     <tr>
                       <td className={cell + ' font-medium text-gray-800'}>RDW</td>
                       <td className={cell + ' text-right tabular-nums'}>{isNaN(rdw) ? traco : rdw.toFixed(1)}</td>
                       <td className={cell + ' text-gray-600'}>CV %</td>
-                      <td className={cell + ' ' + corInterp(rdwInterp)}>{rdwInterp}</td>
+                      <td className={cell + ' text-center ' + corInterp(rdwInterp)}>{renderInterp(rdwInterp)}</td>
                     </tr>
                   </tbody>
                 </table>
