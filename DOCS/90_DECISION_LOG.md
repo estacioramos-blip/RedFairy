@@ -17,28 +17,32 @@ updated: "2026-06-02"
 
 ---
 
-## 2026-06-02 — DEC-008 — Segurança: autenticação real do médico (Supabase Auth) → pré-requisito do RLS
+## 2026-06-02 — DEC-008 — Segurança: autenticação do médico via RPC (espelha o paciente) → caminho do RLS
 
 **Contexto / achados (auditoria 2026-06-02):**
 - 🔴 **CRÍTICO:** senha do médico em **texto puro** na coluna `medicos.senha_klipbit`; o login lê a coluna com a *anon key* e compara **no navegador** (`Calculator.jsx`). Qualquer um baixa todas as senhas. O login do médico **não cria sessão** (só `localStorage`).
 - 🟠 **RLS desligado** (DEC-002): a anon key lê/escreve tudo — CPFs e diagnósticos de pacientes (LGPD), `medicos` (com senhas), `config` (**chave Pix**).
 - 🟡 Admin sem senha (5 cliques no logo). 
-- O login do **paciente** já é Supabase Auth correto (hash no servidor) — não mexer.
+- O **paciente** já migrou para um padrão **RPC + `localStorage.paciente_id`** (`login_paciente`/`register_paciente`, senha verificada no servidor). O caminho Supabase Auth é **fallback legado**. ⚠️ Essas RPCs **não estão versionadas no repo** (só no Supabase) — dívida a corrigir.
 
-**Decisão:** O médico passa a ser **usuário real do Supabase Auth** (como o paciente). Isso elimina a senha em texto puro e cria `auth.uid()` — **pré-requisito para ligar o RLS**. Ordem de execução: **(1) auth do médico → (2) auth do admin → (3) RLS por papel.** RLS não pode vir antes porque, sem identidade real do médico no servidor, as políticas não conseguem distinguí-lo (ele seria anônimo).
+**Decisão (corrigida 2026-06-02):** O médico segue o **mesmo padrão atual do paciente** — autenticação via **RPC com hash no servidor** (`login_medico`/`register_medico`), CRM+senha → retorna os dados do médico → `localStorage`. **NÃO** vamos para Supabase Auth (contraria a direção atual do código e reintroduz conflito de sessão — `App.jsx:136` trata "tem sessão" como "é paciente").
+
+**Por que RPC e não Supabase Auth:**
+- Consistente com o paciente (mesma mecânica), menos reescrita.
+- Fecha o vazamento: a senha vira **hash** no servidor (pgcrypto); a anon key para de ler a coluna de senha.
+- Sem `auth.uid()` para ninguém → o RLS vira **modelo gateway**: negar anon nas tabelas sensíveis e acessar via funções `SECURITY DEFINER` que autenticam pelo id/credencial recebidos.
 
 **Parâmetros decididos:**
-- **Login mantém CRM/UF** (experiência atual + identidade do 4DOC): o app traduz CRM→email nos bastidores e chama `signInWithPassword`.
-- **Cadastro** passa a usar `auth.signUp(email, senha)`; a linha em `medicos` ganha `user_id` (= `auth.uid()`). A coluna `senha_klipbit` é **removida** ao fim da migração.
-- **Migração dos médicos atuais:** script único com a **service role** (fora do navegador) recria os usuários do Auth a partir de email+senha atuais — preserva a senha (médico não percebe). Fallback de redefinição por email para quem não tiver email válido.
-- **Papel:** existe linha em `medicos` com `user_id = auth.uid()` → médico; `is_admin = true` → admin.
+- **Login mantém CRM/UF** (experiência atual + identidade do 4DOC).
+- `medicos.senha_klipbit` (texto puro) → substituída por **`senha_hash`** (pgcrypto `crypt`/`gen_salt`). `register_medico` grava o hash; `login_medico` valida com `crypt(senha, senha_hash)`.
+- **Migração:** banco só tem dados de **teste** → **recomeço limpo** (limpa `medicos`, re-cadastra pelo novo fluxo). O admin (6302/BA) é marcado (`is_admin`) após o re-cadastro.
+- **Papel:** linha em `medicos` → médico; `is_admin = true` → admin. (Sem `user_id`/Auth.)
 
-**Sub-decisões em aberto (a detalhar antes de cada passo):**
-- Email de Auth do médico: **real** (do cadastro, permite reset por email) vs sintético derivado do CRM. (Recomendação: real.)
-- Mecanismo exato das políticas RLS por tabela (staging primeiro — RLS errado quebra o app no ar).
-- Mitigação interina da exposição de senha enquanto a migração não conclui.
+**Ordem de execução:** (1) RPCs `login_medico`/`register_medico` + `senha_hash` espelhando o paciente → (2) cortar cadastro/login do app para as RPCs → (3) remover `senha_klipbit` → (4) auth do admin → (5) RLS gateway (negar anon + RPCs), em staging.
 
-**Supersedes:** aprofunda DEC-002 (RLS desligado) com o caminho concreto para ligá-lo.
+**Pré-requisito:** ver as RPCs `login_paciente`/`register_paciente` (só no Supabase) para espelhar a estrutura/hash — e **versioná-las no repo** ao fazer isso.
+
+**Supersedes:** corrige a direção "Supabase Auth" cogitada mais cedo nesta sessão (baseada em leitura incompleta — o paciente já não usa Auth). Aprofunda DEC-002 com o caminho concreto (gateway) para o RLS.
 
 ---
 
