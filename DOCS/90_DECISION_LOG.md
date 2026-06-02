@@ -2,7 +2,7 @@
 title: Decision Log
 type: decision-log
 status: active
-version: "1.1"
+version: "1.2"
 updated: "2026-06-02"
 ---
 
@@ -14,6 +14,33 @@ updated: "2026-06-02"
 > **Gatilhos** (qualquer um → registrar): direção de produto, mudança de escopo, preço/taxa,
 > modelo de negócio, escolha de stack, postura de segurança, mudança de regra, ou qualquer coisa
 > que contradiga uma decisão anterior. Entrada mais nova no topo.
+
+---
+
+## 2026-06-02 — DEC-007 — Catálogo de medicamentos de ferro EV + prescrição patrocinada (4DOC)
+
+**Decisão:** A plataforma passa a manter um **catálogo de medicamentos de ferro endovenoso** (backend), e a prescrição de ferro EV deixa de ter marcas fixas no código. Em vez de uma "regra simplificada", a conduta de cada caso gera **sempre DUAS receitas** — uma de **alta dose** e uma de **dose fracionada** — usando a marca que estiver **ativa** em cada classe no backend.
+
+**Razão / modelo de negócio:**
+- **Acesso do paciente:** nem todo paciente compra Ferinject/Monofer (caros). Emitir as duas classes deixa o paciente aplicar conforme o acesso — plano de saúde, **posto do SUS**, centro de infusão, ou compra direta.
+- **Programa 4DOC patrocinado:** o Dr. Ramos negocia com os fabricantes benefícios para os médicos afiliados em troca de volume de prescrição. A **alavanca comercial** é *qual marca está ativa em cada classe* — controlada pelo backend.
+
+**Classes (sempre as duas prescritas):**
+- 🟥 **`alta_dose`** — 1–2 infusões, dose alta por sessão. Concorrência: **Ferinject** (carboximaltose férrica, Takeda/Vifor) × **Monofer** (derisomaltose férrica, Pfizer — não causa hipofosfatemia).
+- 🟦 **`dose_fracionada`** — sacarato (*iron sucrose*), ~200 mg/sessão, várias sessões; acessível no SUS. Concorrência: **Noripurum EV** (Takeda) × **Ferropurum** (Blau) × **Sucrofer** (União Química).
+- **Uma marca `ativo=true` por classe** (MVP — sem rotação por cota ainda; troca manual no admin). Cota por contagem fica para depois (campos `prescricoes_emitidas`/`cota_total` já criados).
+
+**Lista (pesquisa 2026-06-02 — registro/comercialização no Brasil):**
+- Confirmados EV: Noripurum EV, Ferropurum, Sucrofer (sacarato 20 mg/mL · 100 mg/amp); Ferinject (carboximaltose 50 mg/mL · 500 mg); Monofer (derisomaltose 100 mg/mL · frascos 500 e 1000 mg).
+- **Fora:** Dexfer e Endofer (são **orais**, não EV); Ferumoxytol, gluconato férrico IV e ferro-dextrana — **sem registro ANVISA** confirmado.
+
+**Impacto técnico:**
+- Nova tabela `medicamentos` (catálogo editável) + seed das 5 drogas. Config dropa a ideia de "classe padrão".
+- `ResultCard`/`ModalFerroEV` e `AdminPage.gerarSolicitacaoCFM` passam a **ler do catálogo** (2 receitas), no lugar de "Ferro Sacarato ou Carboximaltose" fixos.
+- Nova aba **💊 Medicamentos** no AdminPage (escolher marca ativa por classe + editar parâmetros).
+- **Contagem de prescrição ao gerar o documento** (gancho para cota futura).
+
+**Supersedes:** revoga a resposta "fixar uma classe padrão" cogitada antes (nunca codada) — agora **sempre as duas classes**. Estende a implementação do DEC-006 (mg de Ganzoni → nº de ampolas/sessões por marca do catálogo).
 
 ---
 

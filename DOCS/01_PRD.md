@@ -2,8 +2,8 @@
 title: Product Requirements Document
 type: prd
 status: active
-version: "1.0"
-updated: "2026-05-31"
+version: "1.1"
+updated: "2026-06-02"
 ---
 
 # RedFairy — Product Requirements Document (PRD v1.0)
@@ -67,6 +67,11 @@ em **redfairy.bio**.
 ### 5. Crítica de exames antigos
 - `getFraseData` calcula a idade dos exames por faixas de dias e sinaliza por gravidade (verde/amarelo/vermelho).
 
+### 6. Dose de ferro EV (Ganzoni) + catálogo de medicamentos patrocinado (ver DEC-006, DEC-007)
+- Cálculo da dose de reposição de ferro endovenoso pela **Fórmula de Ganzoni** com o **peso real** do paciente (`src/engine/ferroProtocol.js`).
+- **Catálogo de medicamentos** (tabela `medicamentos`, editável no admin): cada caso com indicação de ferro EV gera **sempre 2 receitas** — uma de **alta dose** (Ferinject × Monofer) e uma de **dose fracionada** (sacaratos: Noripurum × Ferropurum × Sucrofer) — usando a marca **ativa** de cada classe.
+- A escolha da marca ativa por classe é a alavanca do **Programa 4DOC patrocinado** (benefícios negociados com fabricantes). Contagem de prescrição na geração do documento (gancho para cota futura).
+
 ---
 
 ## Scope (V1)
@@ -77,6 +82,7 @@ em **redfairy.bio**.
 - Contas de médico (CRM/UF, afiliado 4DOC) e de paciente (logado/cadastrado).
 - Histórico e gráficos para paciente cadastrado.
 - Separação Lab/Imagem dos próximos exames (no engine).
+- Dose de ferro EV por Ganzoni (peso real) + catálogo de medicamentos com 2 receitas por classe (DEC-006, DEC-007).
 
 **Excluído (adiado para V2+):**
 - UI completa do split Lab/Imagem + geração de pedidos de imagem separados — **em andamento**.
