@@ -57,3 +57,22 @@ export function calcularDeficitFerroGanzoni({ sexo, peso, hb, gestante = false }
     formula: `${p} × (${alvo} − ${h}) × ${CONSTANTE_GANZONI} + ${FERRO_RESERVA_MG} = ${total} mg`,
   };
 }
+
+// Extrai o primeiro número de um texto livre (ex.: "500, 1000" → 500).
+export function primeiroNumero(txt) {
+  const m = String(txt ?? '').match(/\d+/);
+  return m ? Number(m[0]) : null;
+}
+
+/**
+ * A partir da dose total (mg) e dos parâmetros de uma droga do catálogo
+ * (campos `frascos_mg` e `dose_max_sessao_mg`), calcula quantos frascos e
+ * quantas sessões. Tolerante a campos vazios.
+ */
+export function calcReceita(doseTotal, med) {
+  const frasco = primeiroNumero(med.frascos_mg) || med.dose_max_sessao_mg || 100;
+  const maxSessao = med.dose_max_sessao_mg || frasco;
+  const frascos = Math.max(1, Math.ceil(doseTotal / frasco));
+  const sessoes = Math.max(1, Math.ceil(doseTotal / maxSessao));
+  return { frasco, maxSessao, frascos, sessoes };
+}

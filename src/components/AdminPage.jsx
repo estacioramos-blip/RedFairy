@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
 
 const eritronColor = {
   green:  { bg: 'bg-green-100',  text: 'text-green-800',  label: 'Normal'   },
@@ -32,7 +33,52 @@ function formatarData(dateStr) {
   return new Date(dateStr).toLocaleDateString('pt-BR');
 }
 
-function gerarSolicitacaoCFM(avaliacao, oba) {
+// Indicação de ferro EV: diagnóstico grave/moderado, ferropriva, e NÃO sobrecarga.
+function indicaFerroEV(avaliacao) {
+  const cor = avaliacao.diagnostico_color;
+  const label = (avaliacao.diagnostico_label || '').toUpperCase();
+  return (cor === 'red' || cor === 'orange') && label.includes('FERRO') && !label.includes('SOBRECARGA');
+}
+
+// Monta a conduta de ferro EV com as DUAS marcas ativas do catálogo (DEC-007),
+// já com a dose de Ganzoni (se houver peso) convertida em frascos/sessões.
+function montarCondutaFerro(avaliacao, medsAtivos) {
+  const calc = calcularDeficitFerroGanzoni({
+    sexo: avaliacao.sexo, peso: avaliacao.peso, hb: avaliacao.hemoglobina, gestante: !!avaliacao.gestante,
+  });
+  const rotulo = { alta_dose: 'ALTA DOSE', dose_fracionada: 'DOSE FRACIONADA' };
+  const acesso = { alta_dose: 'plano de saúde / centro de infusão / compra', dose_fracionada: 'sacarato — disponível no SUS' };
+
+  let t = `CONDUTA INDICADA — REPOSIÇÃO DE FERRO ENDOVENOSO (Fórmula de Ganzoni):\n`;
+  t += calc
+    ? `Déficit estimado: ${calc.deficitMg} mg (peso ${calc.peso} kg, Hb ${calc.hbAtual} g/dL, alvo ${calc.hbAlvo} g/dL).\n`
+    : `Peso não informado — calcular a dose: peso × (Hb alvo − Hb atual) × 2,4 + 500.\n`;
+  t += `A plataforma sugere DUAS opções, conforme o acesso do paciente:\n`;
+
+  let n = 0;
+  for (const classe of ['alta_dose', 'dose_fracionada']) {
+    const med = (medsAtivos || []).find(m => m.classe === classe);
+    if (!med) continue;
+    n++;
+    t += `\n${n}) ${rotulo[classe]} — ${med.nome_comercial} (${med.principio_ativo}${med.fabricante ? ', ' + med.fabricante : ''}):\n`;
+    t += `   Para: ${acesso[classe]}.\n`;
+    if (calc) {
+      const r = calcReceita(calc.deficitMg, med);
+      t += `   ${r.frascos} frasco(s) de ${r.frasco} mg · ${r.sessoes} sessão(ões) de até ${r.maxSessao} mg.\n`;
+    }
+    const inf = [];
+    if (med.diluicao) inf.push(`diluir em ${med.diluicao}`);
+    if (med.tempo_infusao) inf.push(`infundir em ${med.tempo_infusao}`);
+    if (med.intervalo_sessoes && med.intervalo_sessoes !== '—') inf.push(`intervalo ${med.intervalo_sessoes}`);
+    if (inf.length) t += `   ${inf.join('; ')}.\n`;
+    if (med.observacoes) t += `   Obs.: ${med.observacoes}\n`;
+  }
+  if (n === 0) t += `\n(Nenhuma marca ativa no catálogo — configurar no painel admin → Medicamentos.)\n`;
+  t += `\nMonitoramento: repetir hemograma em 4 semanas; ferritina e saturação em 8 semanas.\n\n`;
+  return t;
+}
+
+function gerarSolicitacaoCFM(avaliacao, oba, medsAtivos = []) {
   const sexo = avaliacao.sexo === 'M' ? 'masculino' : 'feminino';
   const hoje = new Date().toLocaleDateString('pt-BR');
   let texto = `SOLICITA\u00c7\u00c3O M\u00c9DICA \u2014 ${hoje}\n\n`;
@@ -49,8 +95,8 @@ function gerarSolicitacaoCFM(avaliacao, oba) {
 
   const cor = avaliacao.diagnostico_color;
   if (cor === 'red' || cor === 'orange') {
-    if (avaliacao.diagnostico_label?.toUpperCase().includes('FERRO')) {
-      texto += `CONDUTA INDICADA:\nReposi\u00e7\u00e3o de Ferro Endovenoso conforme F\u00f3rmula de Ganzoni.\nIniciar com Ferro Sacarato ou Carboximaltose F\u00e9rrica, sob monitoramento laboratorial.\n\n`;
+    if (indicaFerroEV(avaliacao)) {
+      texto += montarCondutaFerro(avaliacao, medsAtivos);
     } else if (avaliacao.diagnostico_label?.toUpperCase().includes('SANGRIA')) {
       texto += `CONDUTA INDICADA:\nSangria Terap\u00eautica para redu\u00e7\u00e3o da sobrecarga de ferro.\nMonitorar Hb, ferritina e satura\u00e7\u00e3o de transferrina antes de cada sess\u00e3o.\n\n`;
     } else {
@@ -240,7 +286,15 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
   const [modAberto, setModAberto] = useState(null);
   const [showSolicitacao, setShowSolicitacao] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [medsAtivos, setMedsAtivos] = useState([]);
+  const [contabilizado, setContabilizado] = useState(false);
   const ultima = avaliacoes[0];
+
+  // Marcas ativas do catálogo (1 por classe) — para a conduta de ferro EV.
+  useEffect(() => {
+    supabase.from('medicamentos').select('*').eq('ativo', true)
+      .then(({ data }) => setMedsAtivos(data || []));
+  }, []);
 
   useEffect(() => {
     if (!cpf || cpf.startsWith('sem_cpf') || !ultima?.bariatrica) return;
@@ -256,10 +310,20 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
   }, [cpf]);
 
   function copiarSolicitacao() {
-    const texto = gerarSolicitacaoCFM(ultima, null);
+    const texto = gerarSolicitacaoCFM(ultima, null, medsAtivos);
     navigator.clipboard.writeText(texto).then(() => {
       setCopiado(true);
       setTimeout(() => setCopiado(false), 3000);
+      // Contabiliza a prescrição (cota do fabricante) só quando há indicação de
+      // ferro EV e marcas ativas — uma vez por ficha aberta.
+      if (!contabilizado && indicaFerroEV(ultima) && medsAtivos.length) {
+        setContabilizado(true);
+        medsAtivos.forEach(m => {
+          supabase.from('medicamentos')
+            .update({ prescricoes_emitidas: (m.prescricoes_emitidas || 0) + 1 })
+            .eq('id', m.id);
+        });
+      }
     });
   }
 
@@ -480,7 +544,7 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
               </button>
             </div>
             <pre className="p-4 text-xs text-gray-700 leading-relaxed whitespace-pre-wrap font-mono overflow-x-auto">
-              {gerarSolicitacaoCFM(ultima, null)}
+              {gerarSolicitacaoCFM(ultima, null, medsAtivos)}
             </pre>
           </div>
         )}

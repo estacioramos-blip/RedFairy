@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import HistoricoChartModal from './HistoricoChartModal';
-import { calcularDeficitFerroGanzoni } from '../engine/ferroProtocol';
+import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
 
 const colorScheme = {
   green:  { bg: 'bg-green-50',  border: 'border-green-400',  badge: 'bg-green-600',  text: 'text-green-800'  },
@@ -42,22 +42,6 @@ function calcularSangria(ferritina, satTransf, sexo, peso, hbAtual, isPolicitemi
   const sangriaEstimadas = Math.max(Math.ceil((ferritina - ferritinAlvo) / 100), 1);
   const penultima = Math.max(sangriaEstimadas - 1, 1);
   return { volume, intervalo, sangriaEstimadas, penultima, ferritinAlvo, hbMin };
-}
-
-// Extrai o primeiro número de um texto livre (ex.: "500, 1000" -> 500).
-function primeiroNumero(txt) {
-  const m = String(txt ?? '').match(/\d+/);
-  return m ? Number(m[0]) : null;
-}
-
-// A partir da dose total (mg) e dos parâmetros da droga do catálogo, calcula
-// quantos frascos e quantas sessões. Tolerante a campos vazios.
-function calcReceita(doseTotal, med) {
-  const frasco = primeiroNumero(med.frascos_mg) || med.dose_max_sessao_mg || 100;
-  const maxSessao = med.dose_max_sessao_mg || frasco;
-  const frascos = Math.max(1, Math.ceil(doseTotal / frasco));
-  const sessoes = Math.max(1, Math.ceil(doseTotal / maxSessao));
-  return { frasco, maxSessao, frascos, sessoes };
 }
 
 const CLASSES_RECEITA = [

@@ -36,6 +36,7 @@ updated: "2026-06-02"
 | 016 | 2026-06-02 | Catálogo de medicamentos — schema + seed | Phase 2 | DEC-007 | `migrate_add_medicamentos.sql`: tabela `medicamentos` (classe alta_dose/dose_fracionada, params de infusão, ativo, contador de cota) + seed das 5 drogas EV do Brasil (Ferinject, Monofer, Noripurum, Ferropurum, Sucrofer). Só schema+doc; aba admin e wiring do modal nos próximos passos. |
 | 017 | 2026-06-02 | Admin — aba 💊 Medicamentos | Phase 2 | DEC-007 | AdminPage: catálogo por classe, radio p/ marca ativa (uma por classe), edição de parâmetros de infusão e contador; degrada com aviso se a tabela não existir. |
 | 018 | 2026-06-02 | Modal ferro EV — 2 receitas do catálogo | Phase 2 | DEC-007 | `ModalFerroEV` lê as marcas ativas (alta_dose + dose_fracionada) e renderiza 2 receitas com frascos/sessões calculados da dose de Ganzoni, no lugar das opções Sacarato/Ferrinject fixas. Falta `gerarSolicitacaoCFM` (2 receitas) + contador na geração do documento. |
+| 019 | 2026-06-02 | Solicitação CFM com 2 receitas + contador de cota | Phase 2 | DEC-007 | `gerarSolicitacaoCFM` monta a conduta de ferro EV com as 2 marcas ativas (dose de Ganzoni → frascos/sessões); `prescricoes_emitidas++` ao copiar o documento (1×/ficha), só quando há indicação de ferro EV (exclui SOBRECARGA). Helpers `calcReceita`/`primeiroNumero` movidos p/ `ferroProtocol.js` (fonte única). |
 
 ---
 
