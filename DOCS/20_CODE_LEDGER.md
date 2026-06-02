@@ -34,6 +34,8 @@ updated: "2026-06-02"
 | 014 | 2026-06-02 | UI — redesign modais Médico/Afiliados + foco senha + setas | Phase 2 | — | AuthMedico/Afiliados com splash de imagem, campos amarelos, fundo revelável e botão ▶ CONFIRME; foco na senha ao aceitar termos (landing); setas ↑↓ centradas/ampliadas no TriagemResultadoModal. (commit 3c24878) |
 | 015 | 2026-06-02 | Ferro EV — Fórmula de Ganzoni com peso real | Phase 2 | DEC-006 | Novo `ferroProtocol.js` (função pura, gestante 11,5); ModalFerroEV usa peso real (pré-preenchido, editável, pede peso se ausente) no lugar de 70 kg fixo; campo Peso no Calculator + coluna `peso` em `avaliacoes`/`triagens` (`migrate_add_peso.sql`). Lado paciente pendente. |
 | 016 | 2026-06-02 | Catálogo de medicamentos — schema + seed | Phase 2 | DEC-007 | `migrate_add_medicamentos.sql`: tabela `medicamentos` (classe alta_dose/dose_fracionada, params de infusão, ativo, contador de cota) + seed das 5 drogas EV do Brasil (Ferinject, Monofer, Noripurum, Ferropurum, Sucrofer). Só schema+doc; aba admin e wiring do modal nos próximos passos. |
+| 017 | 2026-06-02 | Admin — aba 💊 Medicamentos | Phase 2 | DEC-007 | AdminPage: catálogo por classe, radio p/ marca ativa (uma por classe), edição de parâmetros de infusão e contador; degrada com aviso se a tabela não existir. |
+| 018 | 2026-06-02 | Modal ferro EV — 2 receitas do catálogo | Phase 2 | DEC-007 | `ModalFerroEV` lê as marcas ativas (alta_dose + dose_fracionada) e renderiza 2 receitas com frascos/sessões calculados da dose de Ganzoni, no lugar das opções Sacarato/Ferrinject fixas. Falta `gerarSolicitacaoCFM` (2 receitas) + contador na geração do documento. |
 
 ---
 

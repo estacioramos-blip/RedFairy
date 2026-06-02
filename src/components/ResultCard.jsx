@@ -44,14 +44,42 @@ function calcularSangria(ferritina, satTransf, sexo, peso, hbAtual, isPolicitemi
   return { volume, intervalo, sangriaEstimadas, penultima, ferritinAlvo, hbMin };
 }
 
+// Extrai o primeiro número de um texto livre (ex.: "500, 1000" -> 500).
+function primeiroNumero(txt) {
+  const m = String(txt ?? '').match(/\d+/);
+  return m ? Number(m[0]) : null;
+}
+
+// A partir da dose total (mg) e dos parâmetros da droga do catálogo, calcula
+// quantos frascos e quantas sessões. Tolerante a campos vazios.
+function calcReceita(doseTotal, med) {
+  const frasco = primeiroNumero(med.frascos_mg) || med.dose_max_sessao_mg || 100;
+  const maxSessao = med.dose_max_sessao_mg || frasco;
+  const frascos = Math.max(1, Math.ceil(doseTotal / frasco));
+  const sessoes = Math.max(1, Math.ceil(doseTotal / maxSessao));
+  return { frasco, maxSessao, frascos, sessoes };
+}
+
+const CLASSES_RECEITA = [
+  { id: 'alta_dose',       rotulo: 'Alta dose',       acesso: 'plano de saúde · centro de infusão · compra' },
+  { id: 'dose_fracionada', rotulo: 'Dose fracionada', acesso: 'sacarato · disponível no SUS' },
+];
+
 function ModalFerroEV({ onClose, hbAtual, sexo, gestante, pesoInicial }) {
+  const [meds, setMeds] = useState(null); // null = carregando; [] = sem catálogo
+  useEffect(() => {
+    let alive = true;
+    supabase.from('medicamentos').select('*').eq('ativo', true)
+      .then(({ data }) => { if (alive) setMeds(data || []); })
+      .catch(() => { if (alive) setMeds([]); });
+    return () => { alive = false; };
+  }, []);
   const pesoIni = (pesoInicial !== undefined && pesoInicial !== null && String(pesoInicial).trim() !== '') ? String(pesoInicial) : '';
   const [peso, setPeso] = useState(pesoIni);
   const pesoNum = Number(peso);
   const pesoValido = Number.isFinite(pesoNum) && pesoNum >= 30 && pesoNum <= 250;
   const calc = pesoValido ? calcularDeficitFerroGanzoni({ sexo, peso: pesoNum, hb: hbAtual, gestante }) : null;
   const doseTotal = calc ? calc.deficitMg : 0;
-  const sessoes = doseTotal > 0 ? Math.ceil(doseTotal / 200) : 0;
   const hbAlvo = calc ? calc.hbAlvo : (sexo === 'M' ? 13.5 : (gestante ? 11.5 : 12.0));
   const deficit = Math.max(hbAlvo - Number(hbAtual), 0).toFixed(1);
   return (
@@ -95,22 +123,35 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante, pesoInicial }) {
           </div>
           {pesoValido && (
           <div className="space-y-3">
-            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">{"Op\u00e7\u00f5es de Reposi\u00e7\u00e3o"}</p>
-            <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
-              <p className="font-semibold text-gray-800">{"Op\u00e7\u00e3o 1 \u2014 Ferro Sacarato (100 mg/ampola)"}</p>
-              <p>{"\u2022 Usar "}<strong>2 ampolas (200 mg)</strong>{" por sess\u00e3o, dilu\u00eddas em "}<strong>100 mL de SF 0,9%</strong></p>
-              <p>{"\u2022 Infundir em "}<strong>{"30\u201360 minutos"}</strong></p>
-              <p>{"\u2022 Intervalo m\u00ednimo entre sess\u00f5es: "}<strong>{"48\u201372 horas"}</strong></p>
-              <p>{"\u2022 Sess\u00f5es necess\u00e1rias: "}<strong>{sessoes}{" sess\u00e3o(\u00f5es) de 200 mg"}</strong></p>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
-              <p className="font-semibold text-gray-800">{"Op\u00e7\u00e3o 2 \u2014 Ferrinject\u00ae Carboximaltose (500 mg/ampola)"}</p>
-              <p>{"\u2022 Cada ampola cont\u00e9m "}<strong>500 mg</strong>{" de ferro"}</p>
-              <p>{"\u2022 Pode-se infundir "}<strong>{"at\u00e9 1.000 mg"}</strong>{" (2 ampolas) em sess\u00e3o \u00fanica"}</p>
-              <p>{"\u2022 Diluir em "}<strong>250 mL de SF 0,9%</strong>{" e infundir em "}<strong>{"15\u201330 minutos"}</strong></p>
-              <p>{"\u2022 Sess\u00f5es necess\u00e1rias: "}<strong>{Math.ceil(doseTotal / 1000)}{" sess\u00e3o(\u00f5es) de 1.000 mg"}</strong>{" ou "}<strong>{Math.ceil(doseTotal / 500)}{" de 500 mg"}</strong></p>
-              <p>{"\u2022 Intervalo m\u00ednimo entre sess\u00f5es: "}<strong>7 dias</strong></p>
-            </div>
+            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">{"Receitas sugeridas (2)"}</p>
+            <p className="text-xs text-gray-500" style={{ marginTop: '-4px' }}>{"A plataforma emite duas receitas \u2014 o paciente aplica conforme o acesso dele."}</p>
+            {meds === null ? (
+              <p className="text-sm text-gray-400">{"Carregando medicamentos..."}</p>
+            ) : CLASSES_RECEITA.map(cl => {
+              const med = meds.find(m => m.classe === cl.id);
+              if (!med) return (
+                <div key={cl.id} className="bg-gray-50 rounded-xl p-4 text-sm text-gray-500">
+                  <p className="font-semibold text-gray-700">{cl.rotulo}</p>
+                  <p className="text-xs mt-1">{"Nenhuma marca configurada nesta classe (defina no painel admin \u2192 \ud83d\udc8a Medicamentos)."}</p>
+                </div>
+              );
+              const r = calcReceita(doseTotal, med);
+              return (
+                <div key={cl.id} className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-1">
+                  <p className="text-xs font-bold text-red-700 uppercase tracking-wide">{cl.rotulo}</p>
+                  <p className="text-xs text-gray-400">{cl.acesso}</p>
+                  <p className="font-semibold text-gray-800 pt-1">{med.nome_comercial}
+                    <span className="font-normal text-gray-500 text-xs">{" \u00b7 "}{med.principio_ativo}</span></p>
+                  {med.fabricante && <p className="text-xs text-gray-400">{"Fabricante: "}{med.fabricante}</p>}
+                  <p>{"\u2022 Dose total: "}<strong>{doseTotal} mg</strong></p>
+                  <p>{"\u2022 Frascos: "}<strong>{r.frascos}{" de "}{r.frasco} mg</strong></p>
+                  <p>{"\u2022 Sess\u00f5es: "}<strong>{r.sessoes}{" de at\u00e9 "}{r.maxSessao} mg</strong></p>
+                  {med.diluicao && <p>{"\u2022 Diluir em "}<strong>{med.diluicao}</strong>{med.tempo_infusao ? <>{", infundir em "}<strong>{med.tempo_infusao}</strong></> : null}</p>}
+                  {med.intervalo_sessoes && med.intervalo_sessoes !== '\u2014' && <p>{"\u2022 Intervalo entre sess\u00f5es: "}<strong>{med.intervalo_sessoes}</strong></p>}
+                  {med.observacoes && <p className="text-xs text-gray-500 italic pt-1">{med.observacoes}</p>}
+                </div>
+              );
+            })}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 space-y-2">
               <p className="font-semibold">{"\u2600\ufe0f Vitamina D \u2014 Importante!"}</p>
               <p>{"A "}<strong>{"hipofosfatemia p\u00f3s-reposi\u00e7\u00e3o de ferro"}</strong>{" \u00e9 um risco real, especialmente em pacientes com defici\u00eancia de vitamina D."}</p>
