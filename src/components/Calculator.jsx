@@ -686,7 +686,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const _demo = (() => { try { const d = localStorage.getItem('rf_demo_dados'); if (d) { localStorage.removeItem('rf_demo_dados'); return JSON.parse(d) } } catch(e) {} return null })()
 
   const [inputs, setInputs] = useState({
-    cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', dataNascimento: '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
+    cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', peso: _demo?.peso || '', dataNascimento: '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
     ferritina: _demo?.ferr || '', hemoglobina: _demo?.hb || '', vcm: _demo?.vcm || '', rdw: _demo?.rdw || '', satTransf: _demo?.sat || '',
     bariatrica: !!(_demo?.bariatrica),
     bariatrica_medico: !!(_demo?.bariatrica), vegetariano: false, perda: false,
@@ -978,7 +978,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       return;
     }
     let valorAjustado = (type === 'checkbox') ? checked : value;
-    if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf'].includes(name) && typeof valorAjustado === 'string') {
+    if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf', 'peso'].includes(name) && typeof valorAjustado === 'string') {
       valorAjustado = valorAjustado.replace(',', '.');
     }
     const novoValor = name === 'cpf' ? formatarCPF(valorAjustado) : valorAjustado;
@@ -1201,6 +1201,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       await supabase.from('avaliacoes').insert({
         cpf: inputs.cpf.replace(/\D/g, ''),
         data_coleta: dataColetaISO,
+        peso: inputs.peso !== '' && Number.isFinite(Number(inputs.peso)) ? Number(inputs.peso) : null,
         ferritina: Number(inputs.ferritina),
         hemoglobina: Number(inputs.hemoglobina),
         vcm: Number(inputs.vcm),
@@ -1678,6 +1679,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <input type="text" name="dataNascimento" value={inputs.dataNascimento} onChange={handleChange} onBlur={(e) => checarDataNascimento(e.target)} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="DD/MM/AAAA" inputMode="numeric" maxLength={10} autoComplete="off" className={`input ${erros.dataNascimento ? 'border-red-500' : ''} ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
                 {inputs.idade && !erros.dataNascimento && <p className="text-red-600 text-xs mt-1 font-semibold">Idade: {inputs.idade} anos</p>}
                 {erros.dataNascimento && <p className="text-red-500 text-xs mt-1">{erros.dataNascimento}</p>}
+              </div>
+              <div>
+                <label className="label">Peso (kg)</label>
+                <input type="text" name="peso" value={inputs.peso} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="Ex: 72" inputMode="decimal" maxLength={6} autoComplete="off" className={`input ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
+                <p className="text-xs text-gray-400 mt-0.5">{"Opcional — usado no cálculo de dose de ferro EV"}</p>
               </div>
               <div className="col-span-2">
                 <label className={`flex items-start gap-2 p-3 rounded-xl border-2 transition-all ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'cursor-default' : 'cursor-pointer'} ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>

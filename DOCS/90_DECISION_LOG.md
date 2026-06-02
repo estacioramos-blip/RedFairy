@@ -2,7 +2,7 @@
 title: Decision Log
 type: decision-log
 status: active
-version: "1.0"
+version: "1.1"
 updated: "2026-06-02"
 ---
 
@@ -14,6 +14,39 @@ updated: "2026-06-02"
 > **Gatilhos** (qualquer um → registrar): direção de produto, mudança de escopo, preço/taxa,
 > modelo de negócio, escolha de stack, postura de segurança, mudança de regra, ou qualquer coisa
 > que contradiga uma decisão anterior. Entrada mais nova no topo.
+
+---
+
+## 2026-06-02 — DEC-006 — Protocolo de dose de ferro endovenoso (Fórmula de Ganzoni)
+
+**Decisão:** A plataforma passa a calcular automaticamente a dose de reposição de ferro endovenoso pela **Fórmula de Ganzoni**, substituindo a antiga "regra simplificada" (que não existe mais no código) e a frase fixa de conduta.
+
+> **Déficit de ferro (mg) = peso (kg) × (Hb alvo − Hb atual) × 2,4 + 500**
+
+**Parâmetros (definição clínica do Dr. Ramos, hematologista):**
+- **Hb alvo:** ♂ **13,5** g/dL · ♀ **12,0** g/dL (limite inferior do normal por sexo).
+- **Hb alvo na gestante:** **11,5** g/dL (carve-out clínico distinto da ♀ não-gestante).
+- **Ferro de reserva:** **500 mg** fixo (adultos).
+- **Constante:** **2,4** (fixa — embute volemia e conteúdo de ferro da Hb).
+- **Clamp:** se Hb atual ≥ Hb alvo, a parcela da Hb zera (repõe só os 500 mg de reserva).
+
+**Razão:**
+- A "regra simplificada" anterior foi perdida e era menos precisa; Ganzoni é o padrão consagrado e individualiza pelo peso.
+- A landing já promete "Cálculo de dose para infusão de ferro" (`public/index.html`), até então sem implementação real.
+
+**Impacto:**
+- **Coleta de PESO (kg) de todo paciente na triagem** (Calculator do médico + TriagemModal do paciente; salvar em `avaliacoes`/`triagens`). É campo novo de dado clínico.
+- Novo módulo de engine `src/engine/ferroProtocol.js` (função pura de cálculo).
+- O cálculo só dispara em diagnósticos com **indicação de ferro EV**; **nunca** em sobrecarga (Sat > 50 / ferritina alta) — onde o ferro é contraindicado.
+- A conversão mg → nº de ampolas/infusões dependerá do **catálogo de medicamentos** (dose máxima por sessão de sacarato/carboximaltose) — integração subsequente.
+
+**Implementação (2026-06-02):**
+- `ResultCard.jsx` — o `ModalFerroEV` agora usa `ferroProtocol.js` com o **peso real** (pré-preenchido da triagem, editável no modal). Se o peso não foi informado, o modal **pede o peso** antes de calcular (não cai mais em 70 kg fixo).
+- Substituiu a antiga `calcularFerroEV` (peso 70 kg fixo; Hb alvo ♂14,0/♀12,5) — esses valores foram aposentados em favor dos alvos acima.
+- O gate de exibição (`precisaFerroEV`) já existia e está mantido: dispara só com texto "ENDOVENOSA/INTRAVENOSA" no diagnóstico/recomendação e Hb abaixo do alvo; nunca em verde → exclui sobrecarga.
+- Coleta de peso implementada no **Calculator (médico)** + coluna `peso` em `avaliacoes`/`triagens` (`migrate_add_peso.sql`). Lado **paciente (TriagemModal)** ainda pendente.
+
+**Supersedes:** aposenta os parâmetros do antigo modal de ferro EV (70 kg fixo; Hb alvo ♂14,0/♀12,5).
 
 ---
 

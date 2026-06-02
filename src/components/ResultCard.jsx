@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import HistoricoChartModal from './HistoricoChartModal';
+import { calcularDeficitFerroGanzoni } from '../engine/ferroProtocol';
 
 const colorScheme = {
   green:  { bg: 'bg-green-50',  border: 'border-green-400',  badge: 'bg-green-600',  text: 'text-green-800'  },
@@ -31,17 +32,6 @@ const obaLevelLabel = {
 
 const WHATSAPP_MEDICO = '5571997110804';
 
-function calcularFerroEV(hbAtual, sexo, gestante) {
-  const pesoReferencia = 70;
-  const hbAlvo = sexo === 'M' ? 14.0 : (gestante ? 11.5 : 12.5);
-  const deficit = Math.max(hbAlvo - hbAtual, 0);
-  const doseTotal = deficit > 0
-    ? Math.round((pesoReferencia * deficit * 2.4 + 500) / 100) * 100
-    : 0;
-  const sessoes = doseTotal > 0 ? Math.ceil(doseTotal / 200) : 0;
-  return { doseTotal, sessoes, hbAlvo, deficit: deficit.toFixed(1) };
-}
-
 function calcularSangria(ferritina, satTransf, sexo, peso, hbAtual, isPolicitemiaVera) {
   const ferritinAlvo = sexo === 'M' ? 150 : 100;
   const hbMin = sexo === 'M' ? 13.0 : 12.0;
@@ -54,8 +44,16 @@ function calcularSangria(ferritina, satTransf, sexo, peso, hbAtual, isPolicitemi
   return { volume, intervalo, sangriaEstimadas, penultima, ferritinAlvo, hbMin };
 }
 
-function ModalFerroEV({ onClose, hbAtual, sexo, gestante }) {
-  const { doseTotal, sessoes, hbAlvo, deficit } = calcularFerroEV(hbAtual, sexo, gestante);
+function ModalFerroEV({ onClose, hbAtual, sexo, gestante, pesoInicial }) {
+  const pesoIni = (pesoInicial !== undefined && pesoInicial !== null && String(pesoInicial).trim() !== '') ? String(pesoInicial) : '';
+  const [peso, setPeso] = useState(pesoIni);
+  const pesoNum = Number(peso);
+  const pesoValido = Number.isFinite(pesoNum) && pesoNum >= 30 && pesoNum <= 250;
+  const calc = pesoValido ? calcularDeficitFerroGanzoni({ sexo, peso: pesoNum, hb: hbAtual, gestante }) : null;
+  const doseTotal = calc ? calc.deficitMg : 0;
+  const sessoes = doseTotal > 0 ? Math.ceil(doseTotal / 200) : 0;
+  const hbAlvo = calc ? calc.hbAlvo : (sexo === 'M' ? 13.5 : (gestante ? 11.5 : 12.0));
+  const deficit = Math.max(hbAlvo - Number(hbAtual), 0).toFixed(1);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
@@ -72,17 +70,30 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante }) {
               <span className="font-semibold">{"F\u00f3rmula de Ganzoni:"}</span><br/>
               {"Dose (mg) = Peso \u00d7 (Hb alvo \u2212 Hb atual) \u00d7 2,4 + 500"}
             </p>
-            <div className="border-t border-red-200 pt-2 text-sm text-gray-700 space-y-1">
-              <p>{"\u2022 Peso de refer\u00eancia: "}<strong>70 kg</strong></p>
-              <p>{"\u2022 Hb atual: "}<strong>{hbAtual} g/dL</strong></p>
-              <p>{"\u2022 Hb alvo: "}<strong>{hbAlvo} g/dL</strong></p>
-              <p>{"\u2022 D\u00e9ficit: "}<strong>{deficit} g/dL</strong></p>
+            <div className="border-t border-red-200 pt-2">
+              <label className="block text-xs font-medium text-gray-600 mb-1">{"Peso do paciente (kg)"}</label>
+              <input type="number" value={peso} onChange={e => setPeso(e.target.value)} placeholder="Ex: 72"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+              {peso !== '' && !pesoValido && <p className="text-red-500 text-xs mt-1">{"Peso deve estar entre 30 e 250 kg."}</p>}
             </div>
-            <div className="bg-red-700 text-white rounded-lg px-4 py-2 text-center mt-2">
-              <p className="text-xs opacity-80">Dose Total Estimada</p>
-              <p className="text-2xl font-black">{doseTotal} mg</p>
-            </div>
+            {pesoValido ? (
+              <>
+                <div className="border-t border-red-200 pt-2 text-sm text-gray-700 space-y-1">
+                  <p>{"\u2022 Peso: "}<strong>{pesoNum} kg</strong></p>
+                  <p>{"\u2022 Hb atual: "}<strong>{hbAtual} g/dL</strong></p>
+                  <p>{"\u2022 Hb alvo: "}<strong>{hbAlvo} g/dL</strong></p>
+                  <p>{"\u2022 D\u00e9ficit: "}<strong>{deficit} g/dL</strong></p>
+                </div>
+                <div className="bg-red-700 text-white rounded-lg px-4 py-2 text-center mt-2">
+                  <p className="text-xs opacity-80">Dose Total Estimada</p>
+                  <p className="text-2xl font-black">{doseTotal} mg</p>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-gray-500 pt-1">{"Informe o peso do paciente para calcular a dose."}</p>
+            )}
           </div>
+          {pesoValido && (
           <div className="space-y-3">
             <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">{"Op\u00e7\u00f5es de Reposi\u00e7\u00e3o"}</p>
             <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-2">
@@ -119,9 +130,12 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante }) {
               <p>{"\u2022 Esperar eleva\u00e7\u00e3o de Hb de "}<strong>{"1\u20132 g/dL"}</strong>{" por sess\u00e3o de 200 mg"}</p>
             </div>
           </div>
+          )}
+          {pesoValido && (
           <p className="text-xs text-gray-400 text-center">
-            {"* Estimativa para paciente de 70 kg. Dose final deve ser ajustada pelo m\u00e9dico assistente conforme peso real e resposta cl\u00ednica."}
+            {"* Dose final deve ser ajustada pelo m\u00e9dico assistente conforme resposta cl\u00ednica."}
           </p>
+          )}
           <button onClick={onClose}
             className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
             Fechar
@@ -988,7 +1002,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
   const _hbAtualFerroEV = Number(resultado._inputs?.hemoglobina ?? 0);
   const _sexoFerroEV = resultado._inputs?.sexo || 'M';
   const _gestanteFerroEV = Boolean(resultado._inputs?.gestante);
-  const _hbAlvoFerroEV = _sexoFerroEV === 'M' ? 14.0 : (_gestanteFerroEV ? 11.5 : 12.5);
+  const _hbAlvoFerroEV = _sexoFerroEV === 'M' ? 13.5 : (_gestanteFerroEV ? 11.5 : 12.0);
   const _deficitHbFerroEV = Math.max(_hbAlvoFerroEV - _hbAtualFerroEV, 0);
   const _bloqueioVerde = resultado.color === 'green';
 
@@ -1033,7 +1047,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
   return (
     <>
-      {showFerroEV && <ModalFerroEV onClose={() => setShowFerroEV(false)} hbAtual={hbAtual} sexo={sexo} gestante={resultado._inputs?.gestante} />}
+      {showFerroEV && <ModalFerroEV onClose={() => setShowFerroEV(false)} hbAtual={hbAtual} sexo={sexo} gestante={resultado._inputs?.gestante} pesoInicial={resultado._inputs?.peso} />}
       {showSangria && (
         <ModalSangria
           onClose={() => setShowSangria(false)}
