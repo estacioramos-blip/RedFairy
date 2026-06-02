@@ -27,7 +27,7 @@ export default function HistoricoChartModal({ cpf, serie, sexo, gestante, onFech
   })();
   const faixaVCM = [80, 100];
   const faixaRDW = [11.5, 15];
-  const faixaFerritina = sexo === 'M' ? [24, 336] : [25, 150];
+  const faixaFerritina = sexo === 'M' ? [24, 300] : [25, 150];
   const faixaSat = [20, 50];
 
   // ---------- Preparo dos dados ----------

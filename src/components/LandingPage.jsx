@@ -719,7 +719,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   function iniciarFluxoOBA() {
     try { localStorage.setItem('rf_flag', 'bariatrica'); } catch (e) {}
     setObaPopup(true);
-    obaTimerRef.current = setTimeout(irFluxoPacienteOBA, 5000);
+    obaTimerRef.current = setTimeout(irFluxoPacienteOBA, 8000);
   }
   function signInMedico() {
     try { localStorage.setItem('rf_open_login','1'); } catch(e){}
@@ -1072,10 +1072,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       return
     }
     if (erro) erro.style.display='none'
-    // Ferritina saudavel e' sexo-especifica (igual a mascara/Calculator): F ate 150, M ate 336.
+    // Ferritina saudavel e' sexo-especifica (igual a mascara/Calculator): F ate 150, M ate 300.
     // Ajusta o teto da entrada Saudavel (id:3) e o piso do Processo Inflamatorio (id:5).
     const sexo = document.getElementById('rf-sexo')?.value || 'F'
-    const ferrSaudavelMax = sexo === 'M' ? 336 : 150
+    const ferrSaudavelMax = sexo === 'M' ? 300 : 150
     const matrix = rfMatrix2.map(m => {
       if (m.id === 3) return { ...m, c:{ ...m.c, f:{ a:m.c.f.a, b:ferrSaudavelMax } } }
       if (m.id === 5) return { ...m, c:{ ...m.c, f:{ a:ferrSaudavelMax + 1, b:m.c.f.b } } }
@@ -1123,7 +1123,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   // Hb e Ferritina variam por sexo; VCM e RDW tem a mesma faixa nos dois.
   function rfMascarasSexo(sexo) {
     const n = sexo === 'M'
-      ? { hb:'13.5-17.5', ferr:'24-336', vcm:'80-100', rdw:'11.5-15' }
+      ? { hb:'13.5-17.5', ferr:'24-300', vcm:'80-100', rdw:'11.5-15' }
       : { hb:'12-15.5',   ferr:'25-150', vcm:'80-100', rdw:'11.5-15' };
     const set = (id, v) => { const el = document.getElementById(id); if (el) el.placeholder = v; };
     set('rf-hb2', n.hb); set('rf-ferr2', n.ferr); set('rf-vcm2', n.vcm); set('rf-rdw2', n.rdw);

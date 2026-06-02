@@ -13,7 +13,7 @@ export const OBA_CUTOFFS = {
   plaquetas:      { min: 150,   max: 400   },  // x1000
 
   // Ferro/vitaminas criticos em bariatrica
-  ferritina_oba:  { min: 25,    max: 336   },  // permissivo (H ate 336)
+  ferritina_oba:  { min: 25,    max: 300   },  // permissivo (H ate 300)
   vitamina_b12:   { min: 300,   max: 900   },
   vitamina_d:     { min: 30,    max: 100   },
 

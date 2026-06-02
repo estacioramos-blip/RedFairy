@@ -66,7 +66,7 @@ function classificarHbAlta(hb, sexo, gestante) {
 function getRefs(sexo) {
   return {
     ferritinaMin: sexo === 'M' ? 24 : 25,
-    ferritinaMax: sexo === 'M' ? 336 : 150,
+    ferritinaMax: sexo === 'M' ? 300 : 150,
     vcmMin: 80,
     vcmMax: 100,
     rdwMin: 11.5,

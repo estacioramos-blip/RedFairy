@@ -118,7 +118,7 @@ const EXAMES_BASE = [
   { key: 'neutrofilos',    label: "Neutr\u00f3filos Segmentados",  unit: '%',      ref: "40\u201370%" },
   { key: 'neutrofilos_ul', label: "Neutr\u00f3filos (calculado)",  unit: '/uL',    ref: "1.800\u20137.700", readOnly: true },
   { key: 'plaquetas',      label: 'Plaquetas',                unit: "x1000/\u00b5L", ref: "150\u2013400", hint: 'Ex: 250 = 250.000/\u00b5L' },
-  { key: 'ferritina_oba',  label: 'Ferritina',                unit: 'ng/mL',  ref: "H: 24\u2013336 / F: 25\u2013150" },
+  { key: 'ferritina_oba',  label: 'Ferritina',                unit: 'ng/mL',  ref: "H: 24\u2013300 / F: 25\u2013150" },
   { key: 'vitamina_b12',   label: 'Vitamina B12',             unit: 'pg/mL',  ref: "300\u2013900 (bari: >300)" },
   { key: 'vitamina_d',     label: 'Vitamina D 25-OH',         unit: 'ng/mL',  ref: "30\u2013100 (bari: >30)" },
   { key: 'tsh',            label: 'TSH',                      unit: 'mUI/L',  ref: "0,4\u20134,5" },

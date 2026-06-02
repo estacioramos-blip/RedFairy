@@ -31,7 +31,7 @@ export const maleMatrix = [
     label: "SAUDÁVEL COMPENSADO",
     color: "green",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
@@ -281,7 +281,7 @@ export const maleMatrix = [
     label: "VEGETARIANO COMPENSADO",
     color: "green",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 75,  max: 100  },
       rdw:         { min: 11.5,max: 16   },
@@ -431,7 +431,7 @@ export const maleMatrix = [
     label: "VEGETARIANO COM DÉFICIT INCIPIENTE DE VITAMINA B12",
     color: "yellow",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 101, max: 999  },
       rdw:         { min: 15.1,max: 999  },
@@ -456,7 +456,7 @@ export const maleMatrix = [
     label: "VEGETARIANO COM DÉFICIT MODERADO DE VITAMINA B12",
     color: "orange",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 12.5,max: 13.4 },
       vcm:         { min: 106, max: 999  },
       rdw:         { min: 15.1,max: 999  },
@@ -481,7 +481,7 @@ export const maleMatrix = [
     label: "VEGETARIANO COM DÉFICIT IMPORTANTE DE VITAMINA B12",
     color: "red",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 8.0, max: 12.4 },
       vcm:         { min: 106, max: 999  },
       rdw:         { min: 15.1,max: 999  },
@@ -556,7 +556,7 @@ export const maleMatrix = [
     label: "BARIÁTRICO COM POUCO TEMPO PÓS CIRURGIA E/OU SUPORTE ADEQUADO",
     color: "green",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 75,  max: 100  },
       rdw:         { min: 11.5,max: 16   },
@@ -581,7 +581,7 @@ export const maleMatrix = [
     label: "BARIÁTRICO COM FERRITINA ELEVADA",
     color: "yellow",
     conditions: {
-      ferritina:   { min: 337, max: 99999},
+      ferritina:   { min: 301, max: 99999},
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
@@ -706,7 +706,7 @@ export const maleMatrix = [
     label: "ERITRON NORMAL COM HISTÓRICO DE HEMORRAGIA",
     color: "green",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 75,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
@@ -731,7 +731,7 @@ export const maleMatrix = [
     label: "ERITROGRAMA NORMAL COM HISTÓRICO DE HEMORRAGIA + SIDEROSE",
     color: "yellow",
     conditions: {
-      ferritina:   { min: 337, max: 99999},
+      ferritina:   { min: 301, max: 99999},
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
@@ -856,7 +856,7 @@ export const maleMatrix = [
     label: "BARIÁTRICO VEGETARIANO SEM ANEMIA OU SIDEROPENIA",
     color: "green",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
@@ -1006,7 +1006,7 @@ export const maleMatrix = [
     label: "BARIÁTRICO SEM ANEMIA COM HISTÓRICO DE HEMORRAGIA",
     color: "green",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
@@ -1156,7 +1156,7 @@ export const maleMatrix = [
     label: "VEGETARIANO COM HEMORRAGIA SEM ANEMIA",
     color: "green",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
@@ -1306,7 +1306,7 @@ export const maleMatrix = [
     label: "BARIÁTRICO + VEGETARIANO + HEMORRAGIA SEM ANEMIA",
     color: "green",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
@@ -1556,7 +1556,7 @@ export const maleMatrix = [
     label: "HEMOGLOBINOPATIA C HETEROZIGÓTICA",
     color: "orange",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 12.5,max: 13.5 },
       vcm:         { min: 75,  max: 100  },
       rdw:         { min: 14.1,max: 15.5 },
@@ -1631,7 +1631,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA LEVE A MODERADA",
     color: "orange",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 12.5,max: 13.4 },
       vcm:         { min: 101, max: 115  },
       rdw:         { min: 15.6,max: 999  },
@@ -1656,7 +1656,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA IMPORTANTE",
     color: "red",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 8.0, max: 12.4 },
       vcm:         { min: 105, max: 120  },
       rdw:         { min: 16.1,max: 999  },
@@ -1681,7 +1681,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA SEVERA",
     color: "red",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 3.0, max: 7.9  },
       vcm:         { min: 108, max: 130  },
       rdw:         { min: 11.5,max: 15   },
@@ -1706,7 +1706,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA LEVE OU MODERADA DO BARIÁTRICO",
     color: "orange",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 12.5,max: 13.4 },
       vcm:         { min: 100, max: 105  },
       rdw:         { min: 15.1,max: 999  },
@@ -1731,7 +1731,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA IMPORTANTE DO BARIÁTRICO",
     color: "red",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 8.0, max: 12.4 },
       vcm:         { min: 106, max: 999  },
       rdw:         { min: 15.1,max: 999  },
@@ -1756,7 +1756,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA SEVERA DO BARIÁTRICO",
     color: "red",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 3.0, max: 7.9  },
       vcm:         { min: 108, max: 999  },
       rdw:         { min: 11.5,max: 15   },
@@ -1781,7 +1781,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA LEVE A MODERADA EM VEGETARIANO",
     color: "orange",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 12.5,max: 13.4 },
       vcm:         { min: 100, max: 105  },
       rdw:         { min: 15.1,max: 999  },
@@ -1806,7 +1806,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA IMPORTANTE DO VEGETARIANO",
     color: "red",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 8.0, max: 12.4 },
       vcm:         { min: 106, max: 999  },
       rdw:         { min: 15.1,max: 999  },
@@ -1831,7 +1831,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA SEVERA DO VEGETARIANO",
     color: "red",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 3.0, max: 7.9  },
       vcm:         { min: 108, max: 999  },
       rdw:         { min: 11.5,max: 15   },
@@ -1981,7 +1981,7 @@ export const maleMatrix = [
     label: "ANEMIA MACROCÍTICA POR DEFICIÊNCIA DE FOLATOS",
     color: "orange",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 8.0, max: 13.4 },
       vcm:         { min: 101, max: 999  },
       rdw:         { min: 15.1,max: 999  },
@@ -2083,7 +2083,7 @@ export const maleMatrix = [
     label: "MACROCITOSE SEM ANEMIA",
     color: "yellow",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 101, max: 999  },
       rdw:         { min: 15.1,max: 999  },
@@ -2263,7 +2263,7 @@ export const maleMatrix = [
     label: "ANEMIA PERSISTENTE COM HEMORRAGIA E FERRO EM REPOSIÇÃO — ERITROPOESE EM RECUPERAÇÃO",
     color: "yellow",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 10.0,max: 13.4 },
       vcm:         { min: 75,  max: 105  },
       rdw:         { min: 16.0,max: 999  },
@@ -2288,7 +2288,7 @@ export const maleMatrix = [
     label: "ALCOOLISTA COM ERITRON PRESERVADO",
     color: "yellow",
     conditions: {
-      ferritina:   { min: 24,  max: 336  },
+      ferritina:   { min: 24,  max: 300  },
       hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15.0 },

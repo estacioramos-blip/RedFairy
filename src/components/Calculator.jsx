@@ -1660,7 +1660,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 label="Ferritina"
                 unit="ng/mL"
                 name="ferritina"
-                reference={inputs.sexo === 'M' ? '24-336' : '25-150'}
+                reference={inputs.sexo === 'M' ? '24-300' : '25-150'}
                 value={inputs.ferritina}
                 onChange={handleChange}
                 error={erros.ferritina}
