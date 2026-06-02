@@ -97,8 +97,9 @@ export default function AdminPage({ onVoltar }) {
         </div>
         <div className="max-w-3xl mx-auto flex gap-2 mt-3">
           {[
-            { id: 'pacientes', label: "\ud83d\udc65 Pacientes" },
-            { id: 'config',    label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
+            { id: 'pacientes',    label: "\ud83d\udc65 Pacientes" },
+            { id: 'medicamentos', label: "\ud83d\udc8a Medicamentos" },
+            { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
           ].map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
@@ -111,8 +112,9 @@ export default function AdminPage({ onVoltar }) {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-6">
-        {aba === 'pacientes' && <AbaPacientes />}
-        {aba === 'config'    && <AbaConfig />}
+        {aba === 'pacientes'    && <AbaPacientes />}
+        {aba === 'medicamentos' && <AbaMedicamentos />}
+        {aba === 'config'       && <AbaConfig />}
       </div>
     </div>
   );
@@ -592,6 +594,169 @@ function AbaConfig() {
             {salvando ? 'Salvando...' : "Salvar configura\u00e7\u00f5es"}
           </button>
         </>
+      )}
+    </div>
+  );
+}
+
+// \u2500\u2500 Aba Medicamentos (DEC-007) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Cat\u00e1logo de ferro EV. Sempre 2 receitas por caso: a plataforma usa a marca
+// ATIVA de cada classe (alta_dose / dose_fracionada). Aqui o admin escolhe a
+// marca ativa por classe (radio) e edita os par\u00e2metros de infus\u00e3o de cada droga.
+const CLASSES_MED = [
+  { id: 'alta_dose',       titulo: "\ud83d\udfe5 Alta dose", sub: "1\u20132 infus\u00f5es \u00b7 plano / centro de infus\u00e3o / compra" },
+  { id: 'dose_fracionada', titulo: "\ud83d\udfe6 Dose fracionada", sub: "sacarato \u00b7 ~200 mg/sess\u00e3o \u00b7 acess\u00edvel no SUS" },
+];
+const CAMPOS_MED = [
+  { key: 'fabricante',         label: 'Fabricante',         tipo: 'text' },
+  { key: 'concentracao_mg_ml', label: 'Conc. (mg/mL)',      tipo: 'number' },
+  { key: 'frascos_mg',         label: 'Frascos (mg)',       tipo: 'text' },
+  { key: 'dose_max_sessao_mg', label: 'Dose m\u00e1x/sess\u00e3o (mg)',tipo: 'number' },
+  { key: 'diluicao',           label: 'Dilui\u00e7\u00e3o',           tipo: 'text' },
+  { key: 'tempo_infusao',      label: 'Tempo de infus\u00e3o',   tipo: 'text' },
+  { key: 'intervalo_sessoes',  label: 'Intervalo sess\u00f5es',  tipo: 'text' },
+];
+
+function AbaMedicamentos() {
+  const [meds, setMeds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [sucesso, setSucesso] = useState('');
+  const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    async function carregar() {
+      const { data, error } = await supabase
+        .from('medicamentos')
+        .select('*')
+        .order('classe', { ascending: true })
+        .order('nome_comercial', { ascending: true });
+      if (error) setErro("N\u00e3o foi poss\u00edvel carregar o cat\u00e1logo. A migration migrate_add_medicamentos.sql j\u00e1 foi aplicada?");
+      setMeds(data || []);
+      setLoading(false);
+    }
+    carregar();
+  }, []);
+
+  function setCampo(id, key, valor) {
+    setMeds(prev => prev.map(m => m.id === id ? { ...m, [key]: valor } : m));
+  }
+
+  // Ativa uma marca e desativa as demais da MESMA classe (uma ativa por classe).
+  function ativar(id, classe) {
+    setMeds(prev => prev.map(m =>
+      m.classe === classe ? { ...m, ativo: m.id === id } : m
+    ));
+  }
+
+  async function salvar() {
+    setSalvando(true); setSucesso(''); setErro('');
+    const num = (v) => (v === '' || v === null || v === undefined || isNaN(Number(v))) ? null : Number(v);
+    for (const m of meds) {
+      const { error } = await supabase.from('medicamentos').update({
+        fabricante: m.fabricante || null,
+        concentracao_mg_ml: num(m.concentracao_mg_ml),
+        frascos_mg: m.frascos_mg || null,
+        dose_max_sessao_mg: num(m.dose_max_sessao_mg),
+        diluicao: m.diluicao || null,
+        tempo_infusao: m.tempo_infusao || null,
+        intervalo_sessoes: m.intervalo_sessoes || null,
+        cota_total: num(m.cota_total),
+        observacoes: m.observacoes || null,
+        ativo: !!m.ativo,
+      }).eq('id', m.id);
+      if (error) { setErro("Erro ao salvar: " + error.message); setSalvando(false); return; }
+    }
+    setSalvando(false);
+    setSucesso("Cat\u00e1logo salvo com sucesso!");
+    setTimeout(() => setSucesso(''), 3000);
+  }
+
+  if (loading) return <div className="text-center py-12 text-gray-400">Carregando cat\u00e1logo...</div>;
+
+  const inputClass = "w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400";
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-gray-700">{"Cat\u00e1logo de Ferro Endovenoso"}</h2>
+        <p className="text-sm text-gray-400 mt-1">
+          {"Cada caso com indica\u00e7\u00e3o de ferro EV gera "}<strong>duas receitas</strong>{" \u2014 uma por classe. "}
+          {"Marque a marca "}<strong>ativa</strong>{" de cada classe (a que a plataforma vai prescrever) e ajuste os par\u00e2metros."}
+        </p>
+      </div>
+
+      {erro && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center text-red-700 text-sm font-medium">
+          {"\u26a0\ufe0f "}{erro}
+        </div>
+      )}
+
+      {CLASSES_MED.map(cl => {
+        const doClasse = meds.filter(m => m.classe === cl.id);
+        const ativaNome = doClasse.find(m => m.ativo)?.nome_comercial;
+        return (
+          <div key={cl.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+              <p className="font-bold text-gray-700 text-sm">{cl.titulo}</p>
+              <p className="text-xs text-gray-400">{cl.sub}</p>
+              <p className="text-xs mt-1">
+                {ativaNome
+                  ? <span className="text-green-700 font-bold">{"Ativa: "}{ativaNome}</span>
+                  : <span className="text-red-500 font-bold">{"\u26a0\ufe0f Nenhuma marca ativa nesta classe"}</span>}
+              </p>
+            </div>
+            <div className="p-3 space-y-3">
+              {doClasse.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-2">{"Nenhum medicamento nesta classe."}</p>
+              )}
+              {doClasse.map(m => (
+                <div key={m.id}
+                  className={`rounded-xl border-2 p-3 transition-all ${m.ativo ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-white'}`}>
+                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                    <input type="radio" name={`ativa_${cl.id}`} checked={!!m.ativo}
+                      onChange={() => ativar(m.id, m.classe)}
+                      className="w-4 h-4 cursor-pointer" style={{ accentColor: '#16a34a' }} />
+                    <div className="min-w-0">
+                      <span className="font-bold text-gray-800 text-sm">{m.nome_comercial}</span>
+                      <span className="text-xs text-gray-400 ml-2">{m.principio_ativo}</span>
+                    </div>
+                    {m.ativo && <span className="ml-auto text-xs bg-green-600 text-white font-bold px-2 py-0.5 rounded-full">ATIVA</span>}
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {CAMPOS_MED.map(c => (
+                      <div key={c.key}>
+                        <label className="block text-xs text-gray-500 mb-0.5">{c.label}</label>
+                        <input type={c.tipo} value={m[c.key] ?? ''} step={c.tipo === 'number' ? 'any' : undefined}
+                          onChange={e => setCampo(m.id, c.key, e.target.value)} className={inputClass} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2">
+                    <label className="block text-xs text-gray-500 mb-0.5">{"Observa\u00e7\u00f5es"}</label>
+                    <textarea value={m.observacoes ?? ''} rows={2}
+                      onChange={e => setCampo(m.id, 'observacoes', e.target.value)}
+                      className={inputClass + ' resize-none'} />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">{"Prescri\u00e7\u00f5es emitidas: "}<strong>{m.prescricoes_emitidas ?? 0}</strong></p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      {sucesso && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center text-green-700 text-sm font-medium">
+          {"\u2705 "}{sucesso}
+        </div>
+      )}
+
+      {meds.length > 0 && (
+        <button onClick={salvar} disabled={salvando}
+          className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+          {salvando ? 'Salvando...' : "Salvar cat\u00e1logo"}
+        </button>
       )}
     </div>
   );
