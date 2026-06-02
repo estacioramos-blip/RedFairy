@@ -306,7 +306,7 @@ const LANDING_CSS = `
   .flow-step.paciente .flow-num { background: #1F2937; color: white; }
   .flow-step.paciente:hover .flow-num { background: #9CA3AF; }
   .flow-step h4 { font-size: 0.92rem; margin-bottom: 0.4rem; font-weight: 700; }
-  .flow-step p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.6; }
+  .flow-step p { font-size: 0.82rem; color: var(--text-sec); line-height: 1.4; }
   .reward-banner { background: #22863A; border-radius: 14px; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; }
   .reward-text h4 { color: white; font-size: 1rem; margin-bottom: 0.3rem; font-weight: 700; }
   .reward-text p { color: rgba(255,255,255,0.9); font-size: 0.85rem; line-height: 1.6; }
@@ -1206,7 +1206,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ background:'white', borderRadius:16, maxWidth:640, width:'100%', maxHeight:'85vh', overflowY:'auto', padding:'2.5rem 2rem 2rem', position:'relative', boxShadow:'0 20px 60px rgba(0,0,0,0.3)' }}
+            style={{ background:'var(--rf-circles) center/cover no-repeat, var(--rf-pink)', borderRadius:16, maxWidth:640, width:'100%', maxHeight:'85vh', overflowY:'auto', padding:'2.5rem 2rem 2rem', position:'relative', boxShadow:'0 20px 60px rgba(0,0,0,0.3)' }}
           >
             <button
               onClick={() => setShowIndMais(false)}
@@ -1220,13 +1220,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <h3 style={{ fontSize:'1.25rem', marginBottom:'1.2rem', color:'var(--wine)', fontWeight:800, paddingRight:'2rem', lineHeight:1.3 }}>
               {"RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.5em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" | OBA – Otimizar o Bariátrico"}
             </h3>
-            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.55, marginBottom:'1rem', textAlign:'justify' }}>
+            <p style={{ color:'var(--text-sec)', fontSize:'0.88rem', fontWeight:600, lineHeight:1.5, marginBottom:'1rem', textAlign:'justify' }}>
               {"O RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.6em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" | OBA – Otimizar o Bariátrico é um algoritmo que transforma o hemograma em uma porta de entrada inteligente para triagem, orientação diagnóstica, seguimento estruturado e cuidado médico especial para essas condições, em especial para o paciente bariátrico."}
             </p>
-            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.55, marginBottom:'1rem', textAlign:'justify' }}>
+            <p style={{ color:'var(--text-sec)', fontSize:'0.88rem', fontWeight:600, lineHeight:1.5, marginBottom:'1rem', textAlign:'justify' }}>
               {"Em um país continental, desigual e com carência de hematologistas em extensas regiões, o RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.6em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" ocupa uma lacuna assistencial com medicina fundamentada, solicitação de exames e prescrições de especialistas."}
             </p>
-            <p style={{ color:'var(--text-sec)', fontSize:'0.95rem', lineHeight:1.55, marginBottom:0, textAlign:'justify' }}>
+            <p style={{ color:'var(--text-sec)', fontSize:'0.88rem', fontWeight:600, lineHeight:1.5, marginBottom:0, textAlign:'justify' }}>
               {"Para ampliar essa rede de cuidado, o sistema inclui o 4DOC – Programa de Afiliados Patrocinado para Médicos – que apoia profissionais que avaliam e orientam os afetados a se cadastrar no sistema, gerando créditos institucionais vinculados, fortalecendo o diagnóstico precoce, o cuidado e a prevenção de sequelas."}
             </p>
           </div>
@@ -2170,7 +2170,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             {activeTab === 'medico' && (
               <div>
                 <div className="flow">
-                  <div className="flow-step medico"><div className="flow-num">1</div><h4>{"Acesse o Modo M\u00e9dico"}<br/><span style={{ fontSize:"0.6rem", fontWeight:700, letterSpacing:"1.5px", color:"var(--cherry)", textTransform:"uppercase" }}>{"M\u00e9dicos"}</span></h4><p>{"Gratuito, sem cadastro. Use o seu CRM para acesso imediato \u00e0 calculadora cl\u00ednica."}</p></div>
+                  <div className="flow-step medico"><div className="flow-num">1</div><h4>{"Acesse o Modo M\u00e9dico"}</h4><p>{"Gratuito, sem cadastro. Use o seu CRM para acesso imediato \u00e0 calculadora cl\u00ednica."}</p></div>
                   <div className="flow-step medico"><div className="flow-num">2</div><h4>Insira o CPF do paciente</h4><p>{"\u00danica informa\u00e7\u00e3o de identifica\u00e7\u00e3o. Vincula os dados ao paciente automaticamente."}</p></div>
                   <div className="flow-step medico"><div className="flow-num">3</div><h4>{"Preencha os par\u00e2metros"}</h4><p>{"Apenas cinco par\u00e2metros laboratoriais e algumas caixinhas com dados cl\u00ednicos."}</p></div>
                   <div className="flow-step medico"><div className="flow-num">4</div><h4>Avalie e oriente</h4><p>{"Diagn\u00f3stico, orienta\u00e7\u00f5es terap\u00eauticas e dosagens em segundos."}</p></div>
@@ -2409,7 +2409,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <button className="rf-comprimido comp-pat comp-wide comp-w-comecar" aria-label="Sou Bari\u00e1trico \u2014 Come\u00e7ar"
                   onClick={iniciarFluxoOBA}>
                   <span className="comp-pill" />
-                  <span className="comp-label" style={{ color:'#000' }}>{"COME\u00c7AR"}</span>
+                  <span className="comp-label" style={{ color:'#E8720C' }}>{"COME\u00c7AR"}</span>
                 </button>
               </div>
             </div>

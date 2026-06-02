@@ -3,7 +3,7 @@ title: Code Ledger
 type: code-ledger
 status: active
 version: "1.0"
-updated: "2026-06-01"
+updated: "2026-06-02"
 ---
 
 # RedFairy — Code Ledger
@@ -27,6 +27,10 @@ updated: "2026-06-01"
 | 007 | 2026-06-01 | Ferritina ♂ teto do normal 336→300 | Phase 4 | DEC-003 | Ajuste coordenado: matriz M, cutoffs OBA, fallback, V.R., gráfico e demo; bandas contíguas; feminino mantido em 150. |
 | 008 | 2026-06-01 | Fix: bariátrico vazando no Calculator médico | Phase 2 | DEC-004 | Calculator deixa de herdar `rf_flag` (sinal do paciente OBA); bariátrico no médico só por dado de demo explícito. Corrige paciente novo nascendo marcado bariátrico. |
 | 009 | 2026-06-01 | Calculator — campos Hb/VCM/RDW (formato + seamless) | Phase 2 | — | Formato compacto do TriagemModal (Hb em 2 colunas, label nowrap — "(g/dL)" não quebra); auto-salto de cursor Hb→VCM→RDW (por tamanho ou 1,3s), sem travar. |
+| 010 | 2026-06-02 | Validação — sem data futura em todos os campos | Phase 2 | DEC-005 | `type=date` com `max=hoje`; máscaras DD/MM/AAAA avisam + limpam + refocam (TriagemModal, Calculator, OBAModal, PatientDashboard, ResultCard, AuthPage). |
+| 011 | 2026-06-02 | Validação — idade na data de nascimento | Phase 2 | DEC-005 | Idade > 120 rejeitada; ≥ 100 pede confirmação (Calculator + TriagemModal). |
+| 012 | 2026-06-02 | Nomes em caixa alta (médico/paciente) | Phase 2 | — | ResultCard e CompletarPerfilModal convertem nome para maiúsculas; demais já estavam. |
+| 013 | 2026-06-02 | Landing — ajustes de design | Phase 2 | — | Popup LEIA MAIS com fundo pink+aros e fonte/cor da seção (continuação); remove "MÉDICOS" solto e reduz entrelinha em COMO FUNCIONA; "COMEÇAR" laranja no OBA. |
 
 ---
 

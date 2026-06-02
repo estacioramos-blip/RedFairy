@@ -702,7 +702,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Data da Coleta</label>
-              <input type="date" name="dataColeta" value={inputs.dataColeta} onChange={handleChange}
+              <input type="date" name="dataColeta" max={new Date().toISOString().split('T')[0]} value={inputs.dataColeta} onChange={handleChange}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -790,7 +790,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     </div>
                     <div>
                       <label className="block text-xs font-medium text-gray-600 mb-1">{"DUM "}<span className="text-gray-400 font-normal">(opcional)</span></label>
-                      <input type="date" name="dum" value={inputs.dum} onChange={handleChange}
+                      <input type="date" name="dum" max={new Date().toISOString().split('T')[0]} value={inputs.dum} onChange={handleChange}
                         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
                     </div>
                   </div>

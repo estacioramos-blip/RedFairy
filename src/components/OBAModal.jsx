@@ -659,7 +659,7 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
           )}
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#374151', marginBottom:'0.5rem' }}>Data dos exames</label>
-          <input style={inp} type="date" value={dataExames} onChange={e => setDataExames(e.target.value)} />
+          <input style={inp} type="date" max={new Date().toISOString().split('T')[0]} value={dataExames} onChange={e => setDataExames(e.target.value)} />
           {diasExames !== null && (
             <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:8, padding:'0.5rem 0.9rem', marginTop:'0.4rem', marginBottom:'0.8rem' }}>
               <p style={{ color:'#0369A1', fontSize:'0.85rem', fontWeight:700 }}>

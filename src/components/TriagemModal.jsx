@@ -416,7 +416,24 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     const [d, m, a] = dn.split('/').map(Number);
     const dt = new Date(a, m - 1, d);
     const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
-    if (!valida || a < 1900 || dt > new Date()) return;
+    const ehFutura = valida && a >= 1900 && dt > new Date();
+    if (!valida || a < 1900 || ehFutura) {
+      setErros(prev => ({ ...prev, dataNascimento: ehFutura ? 'A data de nascimento não pode ser no futuro.' : 'Data inválida.' }));
+      setInputs(prev => ({ ...prev, dataNascimento: '' }));
+      setTimeout(() => { if (refDnInput.current) refDnInput.current.focus(); }, 0);
+      return;
+    }
+    // Limites de idade: >120 rejeita; >=100 pede confirmacao.
+    const hoje = new Date();
+    let idadeCalc = hoje.getFullYear() - a;
+    const mDiffN = hoje.getMonth() - (m - 1);
+    if (mDiffN < 0 || (mDiffN === 0 && hoje.getDate() < d)) idadeCalc--;
+    if (idadeCalc > 120 || (idadeCalc >= 100 && !window.confirm(`A data informada resulta em ${idadeCalc} anos. Confirma?`))) {
+      setErros(prev => ({ ...prev, dataNascimento: idadeCalc > 120 ? 'Idade acima de 120 anos não é aceita — verifique a data.' : 'Confirme a data de nascimento.' }));
+      setInputs(prev => ({ ...prev, dataNascimento: '' }));
+      setTimeout(() => { if (refDnInput.current) refDnInput.current.focus(); }, 0);
+      return;
+    }
     const t = setTimeout(() => {
       setEtapaInicio(4);
       setTimeout(() => {
@@ -436,7 +453,14 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     const [d, m, a] = dc.split('/').map(Number);
     const dt = new Date(a, m - 1, d);
     const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
-    if (!valida || a < 1900 || dt > new Date()) return;
+    // Data invalida ou futura: AVISAR, LIMPAR o campo e refocar o cursor no inicio.
+    const ehFutura = valida && a >= 1900 && dt > new Date();
+    if (!valida || a < 1900 || ehFutura) {
+      setErros(prev => ({ ...prev, data_coleta: ehFutura ? 'A data do hemograma não pode ser no futuro.' : 'Data inválida.' }));
+      setInputs(prev => ({ ...prev, data_coleta: '' }));
+      setTimeout(() => { if (refDataColeta.current) refDataColeta.current.focus(); }, 0);
+      return;
+    }
     // Se data estimada marcada: salta foco para HB.
     if (inputs.data_estimada) {
       const t = setTimeout(() => {

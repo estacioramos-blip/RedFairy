@@ -734,6 +734,43 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (v.length >= maxChars) { if (nextRef && nextRef.current) nextRef.current.focus(); return; }
     timerHemoRef.current = setTimeout(() => { if (nextRef && nextRef.current) nextRef.current.focus(); }, 1300);
   }
+  // Data futura/invalida em campo de mascara: AVISA, LIMPA o campo e refoca o cursor no inicio.
+  function checarDataFutura(name, el, msgFutura) {
+    const v = String(inputs[name] || '').trim();
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return;
+    const [d, m, a] = v.split('/').map(Number);
+    const dt = new Date(a, m - 1, d);
+    const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+    const ehFutura = valida && a >= 1900 && dt > new Date();
+    if (!valida || a < 1900 || ehFutura) {
+      setInputs(prev => ({ ...prev, [name]: '' }));
+      setErros(prev => ({ ...prev, [name]: ehFutura ? msgFutura : 'Data inválida.' }));
+      if (el) setTimeout(() => el.focus(), 0);
+    }
+  }
+  // Data de nascimento: futuro/invalida + limites de idade (>120 rejeita, >=100 confirma).
+  function checarDataNascimento(el) {
+    const v = String(inputs.dataNascimento || '').trim();
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return;
+    const [d, m, a] = v.split('/').map(Number);
+    const dt = new Date(a, m - 1, d);
+    const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+    const limpar = (msg) => {
+      setInputs(prev => ({ ...prev, dataNascimento: '', idade: '' }));
+      setErros(prev => ({ ...prev, dataNascimento: msg }));
+      if (el) setTimeout(() => el.focus(), 0);
+    };
+    if (!valida || a < 1900) { limpar('Data inválida.'); return; }
+    if (dt > new Date()) { limpar('A data de nascimento não pode ser no futuro.'); return; }
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - a;
+    const mDiff = hoje.getMonth() - (m - 1);
+    if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--;
+    if (idade > 120) { limpar('Idade acima de 120 anos não é aceita — verifique a data.'); return; }
+    if (idade >= 100 && !window.confirm(`A data informada resulta em ${idade} anos. Confirma?`)) {
+      limpar('Confirme a data de nascimento.');
+    }
+  }
   const [conviteRecusado, setConviteRecusado] = useState(false);
   const [afiliacaoRecusada, setAfiliacaoRecusada] = useState(false);
   function podeConvite() {
@@ -1577,7 +1614,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               </div>
               <div>
                 <label className="label">Data de Nascimento</label>
-                <input type="text" name="dataNascimento" value={inputs.dataNascimento} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="DD/MM/AAAA" inputMode="numeric" maxLength={10} autoComplete="off" className={`input ${erros.dataNascimento ? 'border-red-500' : ''} ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
+                <input type="text" name="dataNascimento" value={inputs.dataNascimento} onChange={handleChange} onBlur={(e) => checarDataNascimento(e.target)} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="DD/MM/AAAA" inputMode="numeric" maxLength={10} autoComplete="off" className={`input ${erros.dataNascimento ? 'border-red-500' : ''} ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
                 {inputs.idade && !erros.dataNascimento && <p className="text-red-600 text-xs mt-1 font-semibold">Idade: {inputs.idade} anos</p>}
                 {erros.dataNascimento && <p className="text-red-500 text-xs mt-1">{erros.dataNascimento}</p>}
               </div>
@@ -1617,6 +1654,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   if (refHbForm.current) refHbForm.current.focus();
                 }
               }}
+              onBlur={(e) => checarDataFutura('dataColeta', e.target, 'A data da coleta não pode ser no futuro.')}
               inputMode="numeric"
               maxLength={10}
               placeholder="DD/MM/AAAA"
@@ -1730,7 +1768,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">{"DUM "}<span className="text-gray-400 font-normal">(opcional)</span></label>
-                    <input type="date" name="dum" value={inputs.dum} onChange={handleChange}
+                    <input type="date" name="dum" max={new Date().toISOString().split('T')[0]} value={inputs.dum} onChange={handleChange}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400" />
                   </div>
                 </div>

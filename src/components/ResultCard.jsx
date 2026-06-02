@@ -761,11 +761,11 @@ function DocumentoMedicoPanel({ resultado }) {
       <div className="p-4 space-y-3">
         <div>
           <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Nome completo</label>
-          <input style={inputStyle} type="text" placeholder="Como no RG" value={dadosPaciente.nome} onChange={e => setDadosPaciente(p => ({ ...p, nome: e.target.value }))} />
+          <input style={{ ...inputStyle, textTransform:'uppercase' }} type="text" placeholder="Como no RG" value={dadosPaciente.nome} onChange={e => setDadosPaciente(p => ({ ...p, nome: e.target.value.toUpperCase() }))} />
         </div>
         <div>
           <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Data de nascimento</label>
-          <input style={{ ...inputStyle, ...(dadosPaciente.dataNasc ? { background:'#f3f4f6', color:'#6b7280' } : {}) }} type="date" value={dadosPaciente.dataNasc} disabled={!!dadosPaciente.dataNasc} onChange={e => setDadosPaciente(p => ({ ...p, dataNasc: e.target.value }))} />
+          <input style={{ ...inputStyle, ...(dadosPaciente.dataNasc ? { background:'#f3f4f6', color:'#6b7280' } : {}) }} type="date" max={new Date().toISOString().split('T')[0]} value={dadosPaciente.dataNasc} disabled={!!dadosPaciente.dataNasc} onChange={e => setDadosPaciente(p => ({ ...p, dataNasc: e.target.value }))} />
         </div>
         <div>
           <label className="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wide">Celular com DDD</label>

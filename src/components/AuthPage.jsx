@@ -348,6 +348,20 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
                   <label className="block text-sm font-medium text-gray-600 mb-1">Data de nascimento</label>
                   <input type="text" value={dataNascimento}
                     onChange={e => setDataNascimento(formatarDataNascimento(e.target.value))}
+                    onBlur={e => {
+                      const v = String(dataNascimento || '').trim();
+                      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(v)) return;
+                      const [d, m, a] = v.split('/').map(Number);
+                      const dt = new Date(a, m - 1, d);
+                      const valida = dt && dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+                      const ehFutura = valida && a >= 1900 && dt > new Date();
+                      if (!valida || a < 1900 || ehFutura) {
+                        const el = e.target;
+                        setDataNascimento('');
+                        setErro(ehFutura ? 'A data de nascimento não pode ser no futuro.' : 'Data de nascimento inválida.');
+                        setTimeout(() => el.focus(), 0);
+                      }
+                    }}
                     placeholder="DD/MM/AAAA" maxLength={10} inputMode="numeric"
                     className={inputClass} />
                 </div>

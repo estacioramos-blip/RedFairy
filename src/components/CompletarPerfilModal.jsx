@@ -78,8 +78,9 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
               type="text"
               autoFocus
               value={nome}
-              onChange={e => { setNome(e.target.value); setErro('') }}
+              onChange={e => { setNome(e.target.value.toUpperCase()); setErro('') }}
               className={inputCls}
+              style={{ textTransform:'uppercase' }}
               placeholder="Como voce quer ser chamado(a)"
             />
           </div>

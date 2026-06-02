@@ -3,7 +3,7 @@ title: Decision Log
 type: decision-log
 status: active
 version: "1.0"
-updated: "2026-06-01"
+updated: "2026-06-02"
 ---
 
 # RedFairy — Decision Log
@@ -14,6 +14,22 @@ updated: "2026-06-01"
 > **Gatilhos** (qualquer um → registrar): direção de produto, mudança de escopo, preço/taxa,
 > modelo de negócio, escolha de stack, postura de segurança, mudança de regra, ou qualquer coisa
 > que contradiga uma decisão anterior. Entrada mais nova no topo.
+
+---
+
+## 2026-06-02 — DEC-005 — Validação de datas e idade nos formulários
+
+**Decisão:** Nenhum campo de data aceita data futura. A data de nascimento valida a idade resultante: **> 120 anos é rejeitada**; **≥ 100 anos exige confirmação** explícita.
+
+**Razão:**
+- Erro grosseiro de digitação travava o fluxo em silêncio (data futura) ou distorcia o diagnóstico (a idade entra na avaliação).
+- Sanidade clínica: exame não é colhido "amanhã"; 120 anos é o limite plausível.
+
+**Impacto:**
+- `type="date"` recebe `max={hoje}` (bloqueio na origem). Máscaras DD/MM/AAAA: data futura/inválida → avisa, **limpa o campo e refoca** o cursor.
+- Data de nascimento (Calculator + TriagemModal): idade > 120 rejeita; ≥ 100 confirma via diálogo.
+
+**Supersedes:** —
 
 ---
 
