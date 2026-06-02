@@ -538,6 +538,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       localStorage.removeItem('medico_crm');
       localStorage.removeItem('medico_nome');
       localStorage.removeItem('medico_login_at');
+      localStorage.removeItem('medico_is_admin');
     } catch(e) {}
     setMedicoLogado('');
   }

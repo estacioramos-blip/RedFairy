@@ -46,6 +46,7 @@ export default function App() {
       localStorage.removeItem('medico_crm')
       localStorage.removeItem('medico_nome')
       localStorage.removeItem('medico_login_at')
+      localStorage.removeItem('medico_is_admin')
     } catch (e) {}
     setShowInatividade(false)
     setLandingKey(k => k + 1)
@@ -172,6 +173,22 @@ export default function App() {
   }
 
   if (modo === 'admin') {
+    const ehAdmin = (() => { try { return localStorage.getItem('medico_is_admin') === '1' } catch (e) { return false } })()
+    if (!ehAdmin) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full text-center space-y-3">
+            <p style={{ fontSize: '2rem' }}>{"🔒"}</p>
+            <p className="font-bold text-gray-800">Acesso restrito</p>
+            <p className="text-sm text-gray-500">{"Esta área é exclusiva do administrador. Entre com a conta de administrador (médico) para acessar."}</p>
+            <button onClick={() => setModo('home')}
+              className="mt-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-xl text-sm transition-colors">
+              {"← Voltar"}
+            </button>
+          </div>
+        </div>
+      )
+    }
     return <AdminPage onVoltar={() => setModo('home')} />
   }
 if (modo === 'home') {

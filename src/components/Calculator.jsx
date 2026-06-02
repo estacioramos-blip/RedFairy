@@ -689,6 +689,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
   function handleLogout() {
     localStorage.removeItem('medico_crm')
     localStorage.removeItem('medico_nome')
+    localStorage.removeItem('medico_is_admin')
     setCadastrado(false)
     setMedicoNome('')
     setMedicoCRM('')
@@ -895,6 +896,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         localStorage.removeItem('medico_crm')
         localStorage.removeItem('medico_nome')
         localStorage.removeItem('medico_login_at')
+        localStorage.removeItem('medico_is_admin')
         // setSessaoExpirada(true)  // estado vive no Calculator pai, nao no Form
         return
       }
