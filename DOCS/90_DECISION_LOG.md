@@ -3,7 +3,7 @@ title: Decision Log
 type: decision-log
 status: active
 version: "1.0"
-updated: "2026-05-31"
+updated: "2026-06-01"
 ---
 
 # RedFairy — Decision Log
@@ -14,6 +14,40 @@ updated: "2026-05-31"
 > **Gatilhos** (qualquer um → registrar): direção de produto, mudança de escopo, preço/taxa,
 > modelo de negócio, escolha de stack, postura de segurança, mudança de regra, ou qualquer coisa
 > que contradiga uma decisão anterior. Entrada mais nova no topo.
+
+---
+
+## 2026-06-01 — DEC-004 — Fluxo de entrada do Projeto OBA: login antes da triagem
+
+**Decisão:** O botão "Sou Bariátrico / COMEÇAR" (página Projeto OBA) deixa de cair direto na triagem e passa a: popup explicativo (8s) → entrada de CPF / criação de senha (como qualquer paciente novo) → TriagemModal já com o flag bariátrico marcado e travado.
+
+**Razão:**
+- O fluxo antigo pulava a criação de ACESSO (login/senha) — inconsistente com o cadastro de paciente.
+- O seguimento OBA pressupõe paciente cadastrado (modelo de negócio: acompanhamento recorrente de baixo custo).
+- O sexo (bariátrico/bariátrica) só é definido na triagem; o flag apenas marca a condição, que é permanente uma vez registrada.
+
+**Impacto:**
+- `LandingPage` (popup + roteamento para a entrada de CPF) e `TriagemModal` (consome `rf_flag`, trava o checkbox bariátrico, rótulo "(Projeto OBA®)").
+- Sem mudança de escopo do PRD — correção de fluxo dentro do Projeto OBA (Phase 2).
+
+**Supersedes:** —
+
+---
+
+## 2026-06-01 — DEC-003 — Ferritina: teto do normal masculino 336 → 300 ng/mL
+
+**Decisão:** Baixar o limite superior da ferritina normal masculina de 336 para 300 ng/mL em todo o sistema (matriz M, cutoffs OBA, fallback, V.R. exibido, gráfico de histórico e demo da landing). Feminino mantido em 150.
+
+**Razão:**
+- Pesquisa de consenso (Cleveland Clinic, Red Cross Lifeblood, ASH) mostra faixa ampla entre laboratórios; 336 estava no lado alto e deixava passar como "saudável" ferritinas que merecem investigação.
+- Decisão clínica do Dr. Ramos (hematologista).
+
+**Impacto:**
+- Homens com ferritina 301–336 e saturação normal passam de "SAUDÁVEL" para "PROCESSO INFLAMATÓRIO / DOENÇA CRÔNICA" (ou "BARIÁTRICO COM FERRITINA ELEVADA"). Bandas mantidas contíguas (piso da banda elevada bariátrica 337→301).
+- Mantida intacta a entrada feminina ID 65 (hemoglobinopatia C), onde 25–336 é envelope de "ferritina adequada", não o teto do normal.
+- Commit `17d74d7`.
+
+**Supersedes:** —
 
 ---
 

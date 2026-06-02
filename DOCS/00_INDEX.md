@@ -32,11 +32,13 @@ Leia SÓ o arquivo relevante para a tarefa. Nunca pré-carregue todos os docs.
 ## Current Status
 
 **Phase:** 2 — Build out
-**Next Action:** UI do split Lab/Imagem no ResultCard (+ pedidos de imagem separados). Projeto OBA evoluindo em paralelo.
+**Next Action:** Refino do algoritmo — mapear gaps/discrepâncias da matriz (em curso). Pendente: UI do split Lab/Imagem no ResultCard. OBA evoluindo.
 **Blocking Items:** Nenhum. Dívida aberta: RLS desabilitado no Supabase (decisão DEC-002).
 
-**Handoff note (2026-05-31):** Instalado o Product OS e preenchidos os 8 arquivos de `/DOCS`
-a partir do código real (commit pendente de OK do Estácio). Trabalho recente foi todo no
-Projeto OBA. Próximo foco em aberto: ou continuar OBA, ou atacar a UI do split Lab/Imagem.
+**Handoff note (2026-06-01):** Sessão produtiva — redesign da Landing, ajustes do TriagemModal (mobile),
+auditoria de inputs órfãos do OBA (ósseo-mineral, COVID/imunização, niacina), novo fluxo de entrada do
+OBA (DEC-004), ferritina ♂ 336→300 (DEC-003), fix do bariátrico vazando no Calculator e formatação +
+seamless dos campos Hb/VCM/RDW. Em andamento: revisão de consistência do fluxo pelo Estácio + mapeamento
+de gaps da matriz. Product OS sincronizado.
 
-**Last Updated:** 2026-05-31
+**Last Updated:** 2026-06-01

@@ -3,7 +3,7 @@ title: Code Ledger
 type: code-ledger
 status: active
 version: "1.0"
-updated: "2026-05-31"
+updated: "2026-06-01"
 ---
 
 # RedFairy — Code Ledger
@@ -20,13 +20,20 @@ updated: "2026-05-31"
 |---|------|---------|-------------------|--------------|---------|
 | 001 | 2026-05-31 | Product OS adotado | Phase 2 | DEC-001 | Estrutura `/DOCS` preenchida a partir do código real (PRD, rules, roadmap, ledger, decision log) |
 | 002 | até 2026-05-30 | **Baseline — estado existente** | Phases 1–2 | — | Motor de decisão (matrizes M/F, achados paralelos, triagem parcial), contas médico/paciente, histórico+gráficos, crítica de exames antigos, separação Lab/Imagem no engine, Projeto OBA (engine+cutoffs+modal). App em produção em redfairy.bio. |
+| 003 | 2026-06-01 | Redesign da LandingPage | Phase 2 | — | Hero (medalhão circular, comprimidos 3D, hover), paleta pink/cinza alternada, fix do menu mobile (slide), seções centralizadas, máscaras de V.R. por sexo no mockup. |
+| 004 | 2026-06-01 | TriagemModal — ajustes mobile | Phase 2 | — | Fontes do topo e dos labels (Hb/VCM/RDW) reduzidas e em linha única; seta em coluna própria; "VOLTAR"/"PREENCHA" sem sobreposição. |
+| 005 | 2026-06-01 | OBA — auditoria de inputs órfãos | Phase 2 | — | Conecta PTH/magnésio/cálcio iônico (módulo ósseo-mineral + cutoffs), vacina_covid (imunização) e niacina; flag de Síndrome pós-COVID; corrige 4 ramos mortos de status ósseo/dental. |
+| 006 | 2026-06-01 | Fluxo de entrada do Projeto OBA | Phase 2 | DEC-004 | Botão COMEÇAR → popup (8s) → login CPF/senha → triagem com flag bariátrico travado. |
+| 007 | 2026-06-01 | Ferritina ♂ teto do normal 336→300 | Phase 4 | DEC-003 | Ajuste coordenado: matriz M, cutoffs OBA, fallback, V.R., gráfico e demo; bandas contíguas; feminino mantido em 150. |
+| 008 | 2026-06-01 | Fix: bariátrico vazando no Calculator médico | Phase 2 | DEC-004 | Calculator deixa de herdar `rf_flag` (sinal do paciente OBA); bariátrico no médico só por dado de demo explícito. Corrige paciente novo nascendo marcado bariátrico. |
+| 009 | 2026-06-01 | Calculator — campos Hb/VCM/RDW (formato + seamless) | Phase 2 | — | Formato compacto do TriagemModal (Hb em 2 colunas, label nowrap — "(g/dL)" não quebra); auto-salto de cursor Hb→VCM→RDW (por tamanho ou 1,3s), sem travar. |
 
 ---
 
 ## Current Status
 
 **Active Phase:** Phase 2 — Build out
-**Next Action:** UI do split Lab/Imagem no ResultCard (+ geração de pedidos de imagem separados). OBA segue evoluindo em paralelo.
+**Next Action:** Refino do algoritmo — mapear gaps/discrepâncias da matriz (em curso). Pendente: UI do split Lab/Imagem no ResultCard. OBA evoluindo.
 **Blocking Items:** Nenhum. (Dívida aberta: RLS desabilitado no Supabase — ver DEC-002.)
 
 ---

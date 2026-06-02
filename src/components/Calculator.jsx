@@ -643,8 +643,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [inputs, setInputs] = useState({
     cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', dataNascimento: '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
     ferritina: _demo?.ferr || '', hemoglobina: _demo?.hb || '', vcm: _demo?.vcm || '', rdw: _demo?.rdw || '', satTransf: _demo?.sat || '',
-    bariatrica: _demo?.bariatrica || preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica',
-    bariatrica_medico: _demo?.bariatrica || preFlag === 'bariatrica' || localStorage.getItem('rf_flag') === 'bariatrica', vegetariano: false, perda: false,
+    bariatrica: !!(_demo?.bariatrica),
+    bariatrica_medico: !!(_demo?.bariatrica), vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '', alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false,
     tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false,
@@ -724,6 +724,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const refHbForm = useRef(null);
   const refVcmForm = useRef(null);
   const refRdwForm = useRef(null);
+  // Seamless: o cursor salta Hb -> VCM -> RDW (ao atingir o tamanho, ou apos 1.3s de pausa). Sem travar campos.
+  const timerHemoRef = useRef(null);
+  function avancarSeamless(e, maxChars, nextRef) {
+    handleChange(e);
+    const v = String(e.target.value || '');
+    if (timerHemoRef.current) clearTimeout(timerHemoRef.current);
+    if (v.length < 1) return;
+    if (v.length >= maxChars) { if (nextRef && nextRef.current) nextRef.current.focus(); return; }
+    timerHemoRef.current = setTimeout(() => { if (nextRef && nextRef.current) nextRef.current.focus(); }, 1300);
+  }
   const [conviteRecusado, setConviteRecusado] = useState(false);
   const [afiliacaoRecusada, setAfiliacaoRecusada] = useState(false);
   function podeConvite() {
@@ -749,10 +759,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     else { setShowAuthMedicoOverlay('cadastro'); }
   }
   const [showBeneficios, setShowBeneficios] = useState(false);
-
-  useEffect(() => {
-    if (preFlag === 'bariatrica') { setInputs(prev => ({ ...prev, bariatrica: true, bariatrica_medico: true })) }
-  }, [preFlag]);
 
   useEffect(() => {
     let pedirLogin = false;
@@ -1626,9 +1632,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <h2 className="text-base font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <IconExames /> Exames Laboratoriais
             </h2>
-            <div className="grid grid-cols-3 gap-3">
-              <LabInput ref={refHbForm} onEnter={() => refVcmForm.current && refVcmForm.current.focus()} label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={handleChange} error={erros.hemoglobina} aberrante={!!aberrantes["hemoglobina"]} borderColor="red" />
-              <LabInput ref={refVcmForm} onEnter={() => refRdwForm.current && refRdwForm.current.focus()} label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={handleChange} error={erros.vcm} aberrante={!!aberrantes["vcm"]} borderColor="red" />
+            <div className="grid grid-cols-4 gap-3">
+              <div className="col-span-2">
+                <LabInput ref={refHbForm} onEnter={() => refVcmForm.current && refVcmForm.current.focus()} label="Hemoglobina" unit="g/dL" name="hemoglobina" reference={inputs.sexo === 'M' ? '13.5-17.5' : '12-15.5'} value={inputs.hemoglobina} onChange={(e) => avancarSeamless(e, 4, refVcmForm)} error={erros.hemoglobina} aberrante={!!aberrantes["hemoglobina"]} borderColor="red" />
+              </div>
+              <LabInput ref={refVcmForm} onEnter={() => refRdwForm.current && refRdwForm.current.focus()} label="VCM" unit="fL" name="vcm" reference="80-100" value={inputs.vcm} onChange={(e) => avancarSeamless(e, 5, refRdwForm)} error={erros.vcm} aberrante={!!aberrantes["vcm"]} borderColor="red" />
               <LabInput ref={refRdwForm} onEnter={() => refRdwForm.current && refRdwForm.current.blur()} label="RDW-CV" unit="%" name="rdw" reference="11.5-15" value={inputs.rdw} onChange={handleChange} error={erros.rdw} aberrante={!!aberrantes["rdw"]} borderColor="red" />
             </div>
 
@@ -2037,13 +2045,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 const LabInput = React.forwardRef(function LabInput({ label, unit, name, reference, value, onChange, error, hint, aberrante, disabled, borderColor, onEnter }, ref) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-600 mb-1">
-        {label} <span className="text-xs text-gray-400">({unit})</span>
+      <label className="block text-[0.66rem] font-medium text-gray-600 mb-1 whitespace-nowrap">
+        {label} <span className="text-gray-400">({unit})</span>
       </label>
       <input ref={ref} type="text" inputMode="decimal" name={name} value={value} onChange={onChange} disabled={disabled} placeholder={disabled && hint ? hint : "0"}
         onKeyDown={e => { if (e.key === 'Enter' && onEnter) { e.preventDefault(); onEnter(); } }}
         className={`w-full border-2 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic ${error ? 'border-red-500' : aberrante ? 'border-yellow-400' : borderColor === 'red' ? 'border-red-500' : borderColor === 'blue' ? (!value && !disabled ? 'border-blue-500 bg-yellow-50' : 'border-blue-500') : (!value && !disabled) ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200'}`} />
-      <p className="text-xs text-gray-400 mt-0.5">Ref: {reference}</p>
+      <p className="text-[0.6rem] text-gray-400 mt-0.5">Ref: {reference}</p>
       {hint && !disabled && <p className="text-xs text-orange-500 mt-0.5">{hint}</p>}
       {aberrante && <p className="text-xs font-bold text-yellow-600 mt-0.5">{"\u26a0 VALOR ABERRANTE \u2014 CONFIRME"}</p>}
       {error && <p className="text-red-500 text-xs">{error}</p>}

@@ -3,7 +3,7 @@ title: Roadmap
 type: roadmap
 status: active
 version: "1.0"
-updated: "2026-05-31"
+updated: "2026-06-01"
 ---
 
 # RedFairy — Roadmap
@@ -61,8 +61,10 @@ updated: "2026-05-31"
 **Status:** 🟡 ongoing
 
 - [ ] Refinamento geral do algoritmo (fidelidade clínica) — objetivo principal de fundo
+  - [x] Ferritina ♂: teto do normal 336→300 ng/mL (DEC-003)
+  - [ ] Mapear gaps/discrepâncias da matriz (situações clínicas não identificadas) — em curso
 - [ ] Endurecer segurança: avaliar reativar RLS no Supabase (ver Decision Log)
 
 ---
 
-**Last Updated:** 2026-05-31 · **Current Phase:** 2 (Build out)
+**Last Updated:** 2026-06-01 · **Current Phase:** 2 (Build out)
