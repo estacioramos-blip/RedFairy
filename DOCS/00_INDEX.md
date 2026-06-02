@@ -35,10 +35,13 @@ Leia SÓ o arquivo relevante para a tarefa. Nunca pré-carregue todos os docs.
 **Next Action:** Refino do algoritmo — mapear gaps/discrepâncias da matriz (em curso). Pendente: UI do split Lab/Imagem no ResultCard. OBA evoluindo.
 **Blocking Items:** Nenhum. Dívida aberta: RLS desabilitado no Supabase (decisão DEC-002).
 
-**Handoff note (2026-06-01):** Sessão produtiva — redesign da Landing, ajustes do TriagemModal (mobile),
-auditoria de inputs órfãos do OBA (ósseo-mineral, COVID/imunização, niacina), novo fluxo de entrada do
-OBA (DEC-004), ferritina ♂ 336→300 (DEC-003), fix do bariátrico vazando no Calculator e formatação +
-seamless dos campos Hb/VCM/RDW. Em andamento: revisão de consistência do fluxo pelo Estácio + mapeamento
-de gaps da matriz. Product OS sincronizado.
+**Handoff note (2026-06-02):** Última sessão entregou (tudo commitado/pushado, último commit `3ea1711`):
+validação de datas — **sem data futura em nenhum campo** + limites de idade (**>120 rejeita, ≥100 confirma**)
+[DEC-005]; **nomes em caixa alta**; fix do **bariátrico vazando** no Calculator; **formato + seamless** dos
+campos Hb/VCM/RDW; **ferritina ♂ 336→300** (DEC-003); **novo fluxo OBA** (DEC-004); auditoria de inputs
+órfãos do OBA; redesign da Landing + ajustes de design (popup LEIA MAIS pink, COMO FUNCIONA, COMEÇAR laranja).
+**Pendente p/ retomar:** (1) **mapear gaps/discrepâncias da matriz** — tema de fundo que o Estácio quer atacar;
+(2) Estácio ia **revisar a consistência do fluxo** em produção (testar datas/idade/nomes); (3) **UI do split
+Lab/Imagem** no ResultCard. ⚠️ Confirmar com o Estácio o threshold "**idade ≥ 100 confirma**" (interpretado do "1000").
 
-**Last Updated:** 2026-06-01
+**Last Updated:** 2026-06-02
