@@ -2,7 +2,7 @@
 title: Decision Log
 type: decision-log
 status: active
-version: "1.4"
+version: "1.5"
 updated: "2026-06-03"
 ---
 
@@ -14,6 +14,28 @@ updated: "2026-06-03"
 > **Gatilhos** (qualquer um → registrar): direção de produto, mudança de escopo, preço/taxa,
 > modelo de negócio, escolha de stack, postura de segurança, mudança de regra, ou qualquer coisa
 > que contradiga uma decisão anterior. Entrada mais nova no topo.
+
+---
+
+## 2026-06-03 — DEC-010 — Catálogo de suplementos orais (amplia além do ferro EV)
+
+**Decisão:** O catálogo de prescrição da plataforma deixa de ser exclusivo de **ferro endovenoso** (tabela `medicamentos`, DEC-007) e passa a incluir também **suplementos orais/injetáveis** numa nova tabela **`suplementos`**, organizada por `categoria`: `polivitaminico_bariatrico`, `b12_injetavel`, `b12_sublingual`, `b12_oral`, `ferro_oral`. Primeira categoria populada: **polivitamínicos bariátricos** (Baristar [ativa], Bariat XR, Multi Bariátrico Catarinense, Complete Bari).
+
+**Razão:**
+- O **Projeto OBA** (bariátricos) trata da **síndrome disabsortiva pós-cirúrgica** — esses pacientes precisam de reposição contínua (polivitamínico específico, B12, ferro oral), não só ferro EV pontual. O catálogo precisa cobrir o que a plataforma de fato vai prescrever.
+- A marca **"ativa" por categoria** estende a alavanca do **Programa 4DOC patrocinado** (DEC-007) aos suplementos.
+
+**Como (estrutura):**
+- **Tabela única `suplementos`** com coluna `categoria` (não uma tabela por tipo) — evita repetir schema/admin/queries por categoria; nova categoria = novo valor no CHECK.
+- Mantém `medicamentos` (ferro EV) **intacta** — ferro EV é dose por peso + infusão (mundo à parte); o resto é posologia fixa.
+- Campos: `nome_comercial`, `fabricante`, `categoria`, `principio_ativo`, `concentracao`, `posologia`, `via`, `apresentacao`, `composicao`, `observacoes`, `indicacao` (contexto clínico — "para quem/quando"), `ativo` (marca preferida da categoria), `prescricoes_emitidas`/`cota_total` (cota futura). Arquivos: `migrate_suplementos.sql` (1º lote) + `migrate_suplementos_b12_ferro.sql` (2º lote + coluna `indicacao`).
+- **Separação "o quê" × "quando":** `suplementos` (catálogo + `indicacao` em texto) é o *o quê*; os **critérios de escolha** (Hb, macrocitose, contexto) ficam no **engine** (futuro `b12Protocol.js`, espelhando `ferroProtocol.js`), nunca no Calculator — que só coleta os dados. Ex. do protocolo B12 do bariátrico: anemia importante → IM (1 caixa = 3 doses) → migra p/ sublingual; sem anemia / macrocitose leve → sublingual só; vegetariano → oral.
+
+**Populado (2026-06-03):** 5 categorias, 15 marcas. `polivitaminico_bariatrico` (Baristar ativa, Bariat XR, Multi Bariátrico Catarinense, Complete Bari); `b12_sublingual` (MecoBe ativa, Dozemast); `b12_injetavel` (Citoneurin ativa, Nevrix IM, cianocobalamina pura); `b12_oral` (cianocobalamina pura ativa, Renovi B); `ferro_oral` (Noripurum ativa, Neutrofer, Combiron, Folifer). Vários campos de sal/fabricante marcados "a confirmar" (revisão médica).
+
+**Pendente:** (1) `b12Protocol.js` no engine — a lógica do "quando". (2) Tela/admin para exibir/editar `suplementos` (nada no app lê a tabela ainda). (3) Refinar os "a confirmar". (4) RLS: tabela criada sem RLS por ora — quando voltar ao RLS, dar o mesmo tratamento da Fase 1 (leitura pública + escrita só RPC admin).
+
+**Supersedes:** estende DEC-007 (que era ferro EV "escopo fechado") — o catálogo agora é multi-categoria.
 
 ---
 

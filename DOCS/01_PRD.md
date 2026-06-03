@@ -2,8 +2,8 @@
 title: Product Requirements Document
 type: prd
 status: active
-version: "1.1"
-updated: "2026-06-02"
+version: "1.2"
+updated: "2026-06-03"
 ---
 
 # RedFairy — Product Requirements Document (PRD v1.0)
@@ -71,6 +71,7 @@ em **redfairy.bio**.
 - Cálculo da dose de reposição de ferro endovenoso pela **Fórmula de Ganzoni** com o **peso real** do paciente (`src/engine/ferroProtocol.js`).
 - **Catálogo de medicamentos** (tabela `medicamentos`, editável no admin): cada caso com indicação de ferro EV gera **sempre 2 receitas** — uma de **alta dose** (Ferinject × Monofer) e uma de **dose fracionada** (sacaratos: Noripurum × Ferropurum × Sucrofer) — usando a marca **ativa** de cada classe.
 - A escolha da marca ativa por classe é a alavanca do **Programa 4DOC patrocinado** (benefícios negociados com fabricantes). Contagem de prescrição na geração do documento (gancho para cota futura).
+- **Catálogo de suplementos orais/injetáveis** (tabela `suplementos`, por `categoria` — ver DEC-010): amplia a prescrição além do ferro EV para **polivitamínicos bariátricos**, **B12** (injetável/sublingual/oral) e **ferro oral**. Marca **ativa** por categoria (mesma alavanca 4DOC). Primeira categoria populada: polivitamínicos bariátricos. Condições/contextos de prescrição por categoria: lapidação posterior.
 
 ---
 
