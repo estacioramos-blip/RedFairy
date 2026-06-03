@@ -41,6 +41,7 @@ updated: "2026-06-02"
 | 021 | 2026-06-02 | Segurança — admin exige is_admin | Phase 2 | DEC-008 | App.jsx: painel admin (5 cliques) só abre se `medico_is_admin` no localStorage (vem do login_medico); senão mostra "Acesso restrito". Flag limpo em todos os logouts. Trava acesso casual; proteção forte dos dados vem no RLS gateway. |
 | 022 | 2026-06-03 | Fix — entrada do painel admin (botão na landing) | Phase 2 | DEC-008 | Os "5 cliques" ficaram órfãos (logo na hero antiga, substituída pela LandingPage) → admin inacessível. Novo botão ⚙️ Admin no chip "LOGADO MÉDICO" da navbar, visível só se `medico_is_admin`; prop `onModoAdmin` → setModo('admin'). |
 | 023 | 2026-06-03 | Segurança — versionar RPCs de paciente | Phase 2 | DEC-008 | `functions_paciente.sql`: register_paciente/login_paciente/lookup_cpf_triagem capturadas verbatim do Supabase (estavam só no banco). Confirmado bcrypt no paciente. Só versionamento (já existem no banco); fonte da verdade para o RLS gateway. |
+| 024 | 2026-06-03 | Segurança — plano do RLS gateway (mapeamento) | Phase 2 | DEC-008 | `DOCS/91_RLS_PLAN.md`: mapa dos 74 acessos diretos / 10 tabelas, sensibilidade e proteção por tabela; achado-chave: sem `auth.uid()`, leituras por CPF/CRM são falsificáveis → decidido **token de sessão** (crachá). Ordem: token → Fase 1 (fáceis) → Fase 2 (saúde) → Fase 3 (médico/admin). Só plano, nada ligado. |
 
 ---
 
