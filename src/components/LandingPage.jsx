@@ -597,6 +597,25 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     const t = setTimeout(() => window.scrollTo(0, 0), 0);
     return () => clearTimeout(t);
   }, [])
+
+  // Endireita o smartphone 3D quando a secao "Experimente Agora" entra na viewport.
+  // Dispara uma unica vez (desconecta o observer apos endireitar).
+  useEffect(() => {
+    const el = refPhoneMock.current;
+    if (!el) return;
+    // Se IntersectionObserver nao existir (browsers muito antigos), endireita direto.
+    if (typeof IntersectionObserver === 'undefined') { setPhoneEndireitado(true); return; }
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setPhoneEndireitado(true);
+          obs.disconnect();
+        }
+      });
+    }, { threshold: 0.35 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [])
   async function fazerLogoffPaciente() {
     try {
       localStorage.removeItem('paciente_id')
@@ -642,6 +661,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   }, [crmMedicoNum]);
 
   const [fluxoEtapa, setFluxoEtapa] = useState('inicio');
+  // Efeito 3D do mockup do smartphone na secao "Experimente Agora":
+  // comeca inclinado (lateral pra direita + levemente pra tras) e endireita
+  // suavemente quando a secao entra na viewport. Dispara uma unica vez.
+  const [phoneEndireitado, setPhoneEndireitado] = useState(false);
+  const refPhoneMock = useRef(null);
   // Tooltip "Procure no exame...":
   //  - Desktop: aparece no hover, some apos 4500ms (com fade-out 320ms)
   //  - Mobile: auto-aparece 800ms apos o mount (sem timeout), some no primeiro toque
@@ -2285,7 +2309,20 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center' }}>
-            <div style={{ width:320, background:'#1A1A2E', borderRadius:40, padding:3, backgroundImage:'linear-gradient(150deg, #f4f4f6 0%, #b8bcc4 18%, #6e7480 38%, #d8dbe0 52%, #8a8f99 70%, #e8eaed 88%, #aeb2bb 100%)', boxShadow:'0 18px 50px -12px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.15)', overflow:'hidden' }}>
+            {/* Wrapper 3D: da' a perspectiva. O celular comeca inclinado pra direita
+                (rotateY) + levemente pra tras (rotateX) e endireita ao entrar na viewport. */}
+            <div ref={refPhoneMock} style={{ perspective:'1400px', perspectiveOrigin:'50% 40%' }}>
+            <div style={{
+              width:320, background:'#1A1A2E', borderRadius:40, padding:3,
+              backgroundImage:'linear-gradient(150deg, #f4f4f6 0%, #b8bcc4 18%, #6e7480 38%, #d8dbe0 52%, #8a8f99 70%, #e8eaed 88%, #aeb2bb 100%)',
+              boxShadow:'0 18px 50px -12px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.15)',
+              overflow:'hidden',
+              transformStyle:'preserve-3d',
+              transition:'transform 2.5s cubic-bezier(0.22, 1, 0.36, 1)',
+              transform: phoneEndireitado
+                ? 'rotateX(0deg) rotateY(0deg) rotateZ(0deg)'
+                : 'rotateX(14deg) rotateY(-32deg) rotateZ(3deg)',
+            }}>
               <div style={{ background:'#1A1A2E', borderRadius:37, border:'5px solid #15151f', overflow:'hidden' }}>
 
               <div style={{ background:'#111', height:26, display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -2408,6 +2445,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <div style={{ width:70, height:3, background:'rgba(255,255,255,0.2)', borderRadius:2 }} />
               </div>
               </div>
+            </div>
             </div>
           </div>
         </div>
