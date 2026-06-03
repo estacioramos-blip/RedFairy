@@ -71,12 +71,11 @@ funções-crachá `token_medico_ok`/`token_admin_ok`/`token_paciente_ok` para as
 RPCs das próximas fases. Cliente guarda `medico_token`/`paciente_token` no
 localStorage (login/cadastro) e limpa no logout. Não-destrutivo.
 
-**Fase 1 — Tabelas fáceis (baixo risco): 🚧 EM ANDAMENTO (2026-06-03)**
-- RPCs admin `salvar_medicamento`/`salvar_config` (checam `token_admin_ok`) — `migrate_rls_fase1_rpcs.sql` ✅; AdminPage convertido p/ usá-las ✅.
-- Falta **ligar o RLS** — `migrate_rls_fase1_enable.sql` (rodar SÓ após o deploy do AdminPage):
-  - `medicamentos`: SELECT público, escrita via RPC.
-  - `config`: SELECT público (preços/Pix exibidos), escrita via RPC.
-  - `leads_comerciais`: só INSERT anon, sem SELECT.
+**Fase 1 — Tabelas fáceis: ✅ FECHADA (2026-06-03)**
+- RPCs admin `salvar_medicamento`/`salvar_config` (crachá `token_admin_ok`); AdminPage salva via RPC.
+- RLS ligado (`migrate_rls_fase1_enable.sql`): `medicamentos`/`config` SELECT público + escrita só-RPC; `leads_comerciais` só INSERT.
+- **Achado no caminho:** as tabelas `medicamentos` e `leads_comerciais` **nunca tinham sido criadas** no Supabase (só `config` existia) — o catálogo DEC-007 vinha degradando calado. Criadas agora (`migrate_add_medicamentos.sql` + `migrate_create_leads.sql`); catálogo finalmente vivo.
+- Validado em produção: catálogo (5 drogas), modal com 2 receitas, leitura/escrita de config sob RLS — tudo ok.
 
 **Fase 2 — Dados de saúde (o núcleo, alto valor):** converter `avaliacoes`,
 `triagens`, `oba_anamnese`, `profiles` para RPCs com token; depois ligar RLS
