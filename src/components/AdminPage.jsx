@@ -565,6 +565,7 @@ function AbaConfig() {
   const [valor, setValor] = useState('');
   const [valorDoc, setValorDoc] = useState('');
   const [pixChave, setPixChave] = useState('');
+  const [valorAnuidade, setValorAnuidade] = useState('');
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState('');
@@ -577,9 +578,12 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'valor_documento_medico').single();
       const { data: pixConfig } = await supabase
         .from('config').select('valor').eq('chave', 'pix_chave').single();
+      const { data: anuConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'valor_anuidade').maybeSingle();
       setValor(valConfig?.valor || '');
       setValorDoc(docConfig?.valor || '');
       setPixChave(pixConfig?.valor || '');
+      setValorAnuidade(anuConfig?.valor || '149.90');
       setLoading(false);
     }
     carregar();
@@ -592,6 +596,7 @@ function AbaConfig() {
       { p_chave: 'valor_solicitacao_medica', p_valor: valor,    p_descricao: "Valor em R$ da solicita\u00e7\u00e3o m\u00e9dica via Pix" },
       { p_chave: 'valor_documento_medico',   p_valor: valorDoc, p_descricao: "Valor em R$ da gera\u00e7\u00e3o de documento m\u00e9dico (prescri\u00e7\u00e3o/pedido de exames)" },
       { p_chave: 'pix_chave',                p_valor: pixChave, p_descricao: "Chave Pix para recebimento de solicita\u00e7\u00f5es m\u00e9dicas" },
+      { p_chave: 'valor_anuidade',           p_valor: valorAnuidade, p_descricao: "Valor em R$ da anuidade do paciente (exibido na landing e cobrado no Pix de cadastro)" },
     ];
     for (const it of itens) {
       const { data, error } = await supabase.rpc('salvar_config', { ...cred, ...it });
@@ -632,6 +637,13 @@ function AbaConfig() {
             <input type="number" step="0.01" min="0" value={valorDoc}
               onChange={e => setValorDoc(e.target.value)} placeholder="Ex: 29.90" className={inputClass} />
             <p className="text-xs text-gray-400 mt-1">{"Valor cobrado por documento m\u00e9dico gerado via WhatsApp (prescri\u00e7\u00e3o, pedido de exames)."}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor da Anuidade do Paciente (R$)"}</label>
+            <input type="number" step="0.01" min="0" value={valorAnuidade}
+              onChange={e => setValorAnuidade(e.target.value)} placeholder="Ex: 149.90" className={inputClass} />
+            <p className="text-xs text-gray-400 mt-1">{"Exibido na landing e cobrado no Pix do cadastro do paciente. O c\u00f3digo Pix \u00e9 gerado automaticamente com este valor."}</p>
           </div>
 
           <div>

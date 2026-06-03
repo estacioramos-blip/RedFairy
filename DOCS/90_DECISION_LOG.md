@@ -2,8 +2,8 @@
 title: Decision Log
 type: decision-log
 status: active
-version: "1.3"
-updated: "2026-06-02"
+version: "1.4"
+updated: "2026-06-03"
 ---
 
 # RedFairy — Decision Log
@@ -14,6 +14,21 @@ updated: "2026-06-02"
 > **Gatilhos** (qualquer um → registrar): direção de produto, mudança de escopo, preço/taxa,
 > modelo de negócio, escolha de stack, postura de segurança, mudança de regra, ou qualquer coisa
 > que contradiga uma decisão anterior. Entrada mais nova no topo.
+
+---
+
+## 2026-06-03 — DEC-009 — Anuidade do paciente dinâmica (config + Pix gerado)
+
+**Decisão:** O valor da anuidade do paciente deixa de ser fixo no código (R$ 149,90 espalhado em 5 lugares) e passa a vir da **`config.valor_anuidade`**, editável no painel admin. O **código Pix copia-e-cola** do pagamento é **gerado dinamicamente** a partir do valor.
+
+**Razão:** O Estácio precisa poder mudar o preço sem mexer no código. Mas o código Pix tem o valor + um **dígito verificador (CRC16)** embutidos — então mudar só o texto exibido faria o paciente **ver** um valor e **pagar** outro (ou ter o Pix recusado). A geração dinâmica mantém valor exibido e cobrado sempre consistentes.
+
+**Como:**
+- `src/lib/pix.js` — gerador de BR Code (EMV + CRC16-CCITT). **Verificado:** `gerarPixAnuidade(149.90)` reproduz **exatamente** o código original (CRC `BA6A`) — só então confiável para outros valores.
+- `config.valor_anuidade` (default 149,90 por fallback). Admin edita via `salvar_config` (RPC com crachá — DEC-008).
+- Exibição dinâmica: PagamentoCadastroModal, LandingPage (3 lugares), TermosModal.
+
+**Supersedes:** —
 
 ---
 

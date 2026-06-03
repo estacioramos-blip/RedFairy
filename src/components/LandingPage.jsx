@@ -6,6 +6,7 @@ import fairy3 from '../../redfairy3.png'
 import OBAModal from './OBAModal'
 import TermosModal from './TermosModal'
 import { supabase } from '../lib/supabase'
+import { formatarBRL, VALOR_ANUIDADE_PADRAO } from '../lib/pix'
 
 const LANDING_CSS = `
   .rf-cx-input::placeholder { color:#9ca3af; opacity:1; font-weight:600; letter-spacing:0.5px; }
@@ -524,6 +525,14 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [medicoLogado, setMedicoLogado] = useState(() => {
     try { return localStorage.getItem('medico_nome') || ''; } catch(e) { return ''; }
   })
+
+  // Valor da anuidade do paciente, lido do banco (config.valor_anuidade).
+  const [valorAnuidade, setValorAnuidade] = useState(VALOR_ANUIDADE_PADRAO);
+  useEffect(() => {
+    supabase.from('config').select('valor').eq('chave', 'valor_anuidade').maybeSingle()
+      .then(({ data }) => { const n = Number(data?.valor); if (Number.isFinite(n) && n > 0) setValorAnuidade(n); });
+  }, []);
+  const anuidadeBRL = formatarBRL(valorAnuidade); // ex.: "149,90"
 
   // Controla qual modal de Termos esta aberto: null, 'medico', 'paciente'
   const [tcAberto, setTcAberto] = useState(null);
@@ -2213,7 +2222,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <div className="flow">
                   <div className="flow-step paciente"><div className="flow-num">1</div><h4>Informe seu CPF</h4><p>{"Se o seu m\u00e9dico j\u00e1 fez a primeira avalia\u00e7\u00e3o, seus dados j\u00e1 estar\u00e3o aqui. Se ele n\u00e3o fez, voc\u00ea mesmo faz. Tenha em m\u00e3os o seu Hemograma, a Ferritina e a Satura\u00e7\u00e3o da Transferrina."}</p></div>
                   <div className="flow-step paciente"><div className="flow-num">2</div><h4>{"Complete ou Fa\u00e7a um Novo Cadastro"}</h4><p>{"Cadastro simples com e-mail, senha e celular. R\u00e1pido e seguro."}</p></div>
-                  <div className="flow-step paciente"><div className="flow-num">3</div><h4>Assine via PIX</h4><p>{"R$ 149,90/ano via QR Code, Chave PIX ou Copie e Cole."}</p></div>
+                  <div className="flow-step paciente"><div className="flow-num">3</div><h4>Assine via PIX</h4><p>{"R$ "}{anuidadeBRL}{"/ano via QR Code, Chave PIX ou Copie e Cole."}</p></div>
                   <div className="flow-step paciente"><div className="flow-num">4</div><h4>Acompanhe seu eritron</h4><p>{"Novas avalia\u00e7\u00f5es geram o gr\u00e1fico multiparam\u00e9trico da sua sa\u00fade eritrocit\u00e1ria."}</p></div>
                 </div>
                 <div className="patient-features">
@@ -2253,7 +2262,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                   </div>
                 </div>
                 <div className="pricing-box">
-                  <div className="price">{"R$ 149,90"}</div>
+                  <div className="price">{"R$ "}{anuidadeBRL}</div>
                   <div className="price-sub">{"Por um ano de avalia\u00e7\u00f5es na plataforma"}</div>
                   <div className="pix-methods" style={{ justifyContent:'center' }}>
                     <div style={{ background:'#fff', border:'2px solid #9CA3AF', borderRadius:10, padding:'0.55rem 2.6rem', fontSize:'1.05rem', fontWeight:800, color:'var(--wine)', letterSpacing:'2px' }}>
@@ -2483,7 +2492,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <li>{"A primeira avalia\u00e7\u00e3o pode ser feita por seu m\u00e9dico, ou por voc\u00ea"}</li>
                 <li>{"Obtenha pedidos de exames e receitas m\u00e9dicas"}</li>
                 <li>{"Orienta\u00e7\u00f5es em linguagem acess\u00edvel"}</li>
-                <li>{"Apenas R$ 149,90 por ano, via PIX"}</li>
+                <li>{"Apenas R$ "}{anuidadeBRL}{" por ano, via PIX"}</li>
               </ul>
               <button className="rf-comprimido comp-pat" aria-label="Entrar como Paciente"
                 onClick={() => {

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
+import { gerarPixAnuidade, formatarBRL, VALOR_ANUIDADE_PADRAO } from '../lib/pix'
 import logo from '../assets/logo.png'
 
 /**
@@ -19,18 +20,23 @@ import logo from '../assets/logo.png'
  *   onSairSemPagar:    funcao() - chamada quando o paciente fecha sem pagar
  */
 
-const PIX_VALOR = 149.90
-const PIX_COPIA_COLA = "00020126580014BR.GOV.BCB.PIX01367f45b640-5732-4d2a-bb9a-f3de223d9eab5204000053039865406149.905802BR5925CYTOMICA - MEDICINA, PESQ6009SAO PAULO61080540900062250521MRltMfAMak4i2IRfy0kup6304BA6A"
-
 export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar }) {
   const [copiado, setCopiado] = useState(false)
   const [confirmandoSaida, setConfirmandoSaida] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
+  // Valor da anuidade lido do banco (config.valor_anuidade); cai no padrão se ausente.
+  const [valor, setValor] = useState(VALOR_ANUIDADE_PADRAO)
+  useEffect(() => {
+    supabase.from('config').select('valor').eq('chave', 'valor_anuidade').maybeSingle()
+      .then(({ data }) => { const n = Number(data?.valor); if (Number.isFinite(n) && n > 0) setValor(n); })
+  }, [])
+  // Código Pix gerado dinamicamente a partir do valor (com CRC recalculado).
+  const pixCode = gerarPixAnuidade(valor)
 
   async function copiarPix() {
     try {
-      await navigator.clipboard.writeText(PIX_COPIA_COLA)
+      await navigator.clipboard.writeText(pixCode)
       setCopiado(true)
       setTimeout(() => setCopiado(false), 2500)
     } catch (e) {
@@ -50,7 +56,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
         status: 'ativa',
         data_inicio: agora.toISOString(),
         data_fim: umAno.toISOString(),
-        valor_pago: PIX_VALOR,
+        valor_pago: valor,
       })
       .select()
       .maybeSingle()
@@ -105,7 +111,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           <img src={logo} alt="RedFairy" style={{ width: 56, height: 56, margin: '0 auto 8px' }} />
           <h2 className="text-xl font-bold text-red-700">{"Ativar seu cadastro"}</h2>
           <p className="text-xs text-gray-500 mt-1">
-            {"Pague R$ 149,90 via PIX e tenha acesso \u00e0 plataforma por 1 ano."}
+            {"Pague R$ "}{formatarBRL(valor)}{" via PIX e tenha acesso \u00e0 plataforma por 1 ano."}
           </p>
         </div>
 
@@ -115,7 +121,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
             {"Valor a pagar"}
           </div>
           <div className="text-3xl font-black text-red-700">
-            {"R$ 149,90"}
+            {"R$ "}{formatarBRL(valor)}
           </div>
           <div className="text-xs text-gray-500 mt-1">
             {"Assinatura anual \u2014 acesso completo"}
@@ -125,7 +131,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
         {/* QR Code */}
         <div className="flex flex-col items-center bg-white border border-gray-200 rounded-xl p-4 mb-3">
           <QRCodeSVG
-            value={PIX_COPIA_COLA}
+            value={pixCode}
             size={200}
             level="M"
             includeMargin={false}
@@ -144,7 +150,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
             <input
               type="text"
               readOnly
-              value={PIX_COPIA_COLA}
+              value={pixCode}
               className="flex-1 border border-gray-200 rounded-lg px-2 py-2 text-xs text-gray-600 bg-gray-50 font-mono truncate"
               onFocus={(e) => e.target.select()}
             />

@@ -1,4 +1,6 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { supabase } from '../lib/supabase'
+import { formatarBRL, VALOR_ANUIDADE_PADRAO } from '../lib/pix'
 
 /**
  * TermosModal - modal compartilhado de Termos e Condicoes de Uso.
@@ -33,7 +35,7 @@ function ConteudoMedico() {
   )
 }
 
-function ConteudoPaciente() {
+function ConteudoPaciente({ anuidadeBRL }) {
   return (
     <>
       <p className="font-bold text-red-700 uppercase tracking-wide mb-1">
@@ -41,7 +43,7 @@ function ConteudoPaciente() {
       </p>
       <p><strong>{"1. O que \u00e9 o RedFairy."}</strong>{" O RedFairy \u00e9 uma plataforma digital para acompanhamento do seu eritron (gl\u00f3bulos vermelhos e hemoglobina). Voc\u00ea registra seus hemogramas, recebe orienta\u00e7\u00f5es automatizadas e pode solicitar pedidos m\u00e9dicos de exames complementares. O RedFairy \u00e9 uma ferramenta de apoio \u2014 N\u00c3O substitui consultas m\u00e9dicas, exame f\u00edsico nem laudos profissionais."}</p>
       <p><strong>{"2. Quem pode usar."}</strong>{" Maiores de 18 anos com CPF v\u00e1lido. Menores de idade devem ser cadastrados por respons\u00e1vel legal, que se responsabiliza pelo uso da plataforma e pela veracidade dos dados informados."}</p>
-      <p><strong>{"3. Assinatura anual."}</strong>{" O acesso \u00e0 plataforma \u00e9 anual e custa R$ 149,90 \u2014 pagos via PIX no momento do cadastro. A vig\u00eancia \u00e9 de 365 dias a partir da confirma\u00e7\u00e3o do pagamento. N\u00e3o h\u00e1 renova\u00e7\u00e3o autom\u00e1tica: ao final do per\u00edodo, voc\u00ea ser\u00e1 convidado a renovar manualmente."}</p>
+      <p><strong>{"3. Assinatura anual."}</strong>{" O acesso \u00e0 plataforma \u00e9 anual e custa R$ "}{anuidadeBRL}{" \u2014 pagos via PIX no momento do cadastro. A vig\u00eancia \u00e9 de 365 dias a partir da confirma\u00e7\u00e3o do pagamento. N\u00e3o h\u00e1 renova\u00e7\u00e3o autom\u00e1tica: ao final do per\u00edodo, voc\u00ea ser\u00e1 convidado a renovar manualmente."}</p>
       <p><strong>{"4. Documentos m\u00e9dicos."}</strong>{" Pedidos de exames e prescri\u00e7\u00f5es geradas pela plataforma s\u00e3o emitidos por m\u00e9dicos parceiros do RedFairy, com base nos dados que voc\u00ea informar. O primeiro pedido ap\u00f3s o cadastro \u00e9 gratuito; pedidos subsequentes custam R$ 60,00 cada. A emiss\u00e3o depende da an\u00e1lise cl\u00ednica do m\u00e9dico respons\u00e1vel."}</p>
       <p><strong>{"5. Sua responsabilidade."}</strong>{" Voc\u00ea \u00e9 respons\u00e1vel pela veracidade dos dados que insere (hemogramas, idade, sexo, condi\u00e7\u00f5es cl\u00ednicas). Resultados imprecisos podem gerar orienta\u00e7\u00f5es incorretas. Em caso de d\u00favida, sempre consulte um m\u00e9dico de sua confian\u00e7a."}</p>
       <p><strong>{"6. Prote\u00e7\u00e3o dos seus dados \u2014 LGPD."}</strong>{" Seus dados s\u00e3o tratados em conformidade com a Lei n\u00ba 13.709/2018 (LGPD). N\u00c3O compartilhamos suas informa\u00e7\u00f5es com terceiros sem o seu consentimento, exceto quando exigido por lei. Voc\u00ea pode solicitar exclus\u00e3o ou portabilidade dos seus dados a qualquer momento via contato@redfairy.bio."}</p>
@@ -53,6 +55,13 @@ function ConteudoPaciente() {
 }
 
 export default function TermosModal({ tipo = 'paciente', onFechar }) {
+  // Valor da anuidade do banco, para o texto dos termos refletir o preço atual.
+  const [anuidadeBRL, setAnuidadeBRL] = useState(formatarBRL(VALOR_ANUIDADE_PADRAO))
+  useEffect(() => {
+    supabase.from('config').select('valor').eq('chave', 'valor_anuidade').maybeSingle()
+      .then(({ data }) => { const n = Number(data?.valor); if (Number.isFinite(n) && n > 0) setAnuidadeBRL(formatarBRL(n)) })
+  }, [])
+
   const titulo = tipo === 'medico'
     ? "Termos e Condi\u00e7\u00f5es de Uso \u2014 Profissionais de Sa\u00fade"
     : "Termos e Condi\u00e7\u00f5es de Uso \u2014 Pacientes"
@@ -82,7 +91,7 @@ export default function TermosModal({ tipo = 'paciente', onFechar }) {
         </div>
 
         <div className="overflow-y-auto p-5 text-xs text-gray-700 leading-relaxed space-y-4">
-          {tipo === 'medico' ? <ConteudoMedico /> : <ConteudoPaciente />}
+          {tipo === 'medico' ? <ConteudoMedico /> : <ConteudoPaciente anuidadeBRL={anuidadeBRL} />}
           <p className="text-gray-400 text-center text-xs pt-2">
             {"cytomica.com | redfairy.bio | contato@redfairy.bio"}
           </p>
