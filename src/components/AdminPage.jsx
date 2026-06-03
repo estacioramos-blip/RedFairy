@@ -153,6 +153,7 @@ export default function AdminPage({ onVoltar }) {
             { id: 'pacientes',    label: "\ud83d\udc65 Pacientes" },
             { id: 'medicamentos', label: "\ud83d\udc8a Medicamentos" },
             { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
+            { id: 'medicos',      label: "\ud83e\ude7a M\u00e9dicos" },
             { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
           ].map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
@@ -169,6 +170,7 @@ export default function AdminPage({ onVoltar }) {
         {aba === 'pacientes'    && <AbaPacientes />}
         {aba === 'medicamentos' && <AbaMedicamentos />}
         {aba === 'suplementos'  && <AbaSuplementos />}
+        {aba === 'medicos'      && <AbaMedicos />}
         {aba === 'config'       && <AbaConfig />}
       </div>
     </div>
@@ -1034,6 +1036,121 @@ function AbaSuplementos() {
           {salvando ? 'Salvando...' : "Salvar cat\u00e1logo"}
         </button>
       )}
+    </div>
+  );
+}
+
+// \u2500\u2500 Aba M\u00e9dicos (DEC-011) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Lista os m\u00e9dicos cadastrados com regi\u00e3o (por UF), status de afiliado e
+// estat\u00edsticas: n\u00ba de pacientes triados e n\u00ba convertidos (cadastraram + pagaram,
+// atribu\u00eddos ao 1\u00ba m\u00e9dico que triou). n_convertidos \u00e9 o "cr\u00e9dito" da fase 1.
+const UF_REGIAO = {
+  AC:'Norte', AP:'Norte', AM:'Norte', PA:'Norte', RO:'Norte', RR:'Norte', TO:'Norte',
+  AL:'Nordeste', BA:'Nordeste', CE:'Nordeste', MA:'Nordeste', PB:'Nordeste',
+  PE:'Nordeste', PI:'Nordeste', RN:'Nordeste', SE:'Nordeste',
+  DF:'Centro-Oeste', GO:'Centro-Oeste', MT:'Centro-Oeste', MS:'Centro-Oeste',
+  ES:'Sudeste', MG:'Sudeste', RJ:'Sudeste', SP:'Sudeste',
+  PR:'Sul', RS:'Sul', SC:'Sul',
+};
+function regiaoDe(uf) {
+  return UF_REGIAO[(uf || '').toUpperCase().trim()] || 'N\u00e3o informada';
+}
+
+function AbaMedicos() {
+  const [medicos, setMedicos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
+  const [busca, setBusca] = useState('');
+
+  useEffect(() => {
+    async function carregar() {
+      const { data, error } = await supabase.rpc('admin_listar_medicos', credAdmin());
+      if (error) setErro("N\u00e3o foi poss\u00edvel carregar. A migration migrate_admin_medicos.sql j\u00e1 foi aplicada?");
+      else if (data && !data.ok) setErro(data.erro || 'Sem permiss\u00e3o de admin.');
+      else setMedicos(data?.medicos || []);
+      setLoading(false);
+    }
+    carregar();
+  }, []);
+
+  if (loading) return <div className="text-center py-12 text-gray-400">Carregando m\u00e9dicos...</div>;
+
+  const termo = busca.trim().toLowerCase();
+  const filtrados = !termo ? medicos : medicos.filter(m =>
+    (m.nome || '').toLowerCase().includes(termo) ||
+    (m.crm || '').toLowerCase().includes(termo) ||
+    (m.uf || '').toLowerCase().includes(termo) ||
+    regiaoDe(m.uf).toLowerCase().includes(termo)
+  );
+
+  const totalAfiliados = medicos.filter(m => m.afiliado).length;
+  const porRegiao = {};
+  medicos.forEach(m => { const r = regiaoDe(m.uf); porRegiao[r] = (porRegiao[r] || 0) + 1; });
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-gray-700">{"M\u00e9dicos cadastrados"}</h2>
+        <p className="text-sm text-gray-400 mt-1">
+          {"Contas de m\u00e9dicos, regi\u00e3o (por UF), status de afiliado 4DOC e "}
+          <strong>cr\u00e9ditos</strong>{" (pacientes que triaram e depois se cadastraram + pagaram)."}
+        </p>
+        <div className="flex flex-wrap gap-3 mt-3 text-sm">
+          <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{medicos.length} m\u00e9dico(s)</span>
+          <span className="bg-green-100 rounded-full px-3 py-1 font-medium text-green-700">{totalAfiliados} afiliado(s)</span>
+          {Object.entries(porRegiao).sort((a,b)=>b[1]-a[1]).map(([r,n]) => (
+            <span key={r} className="bg-red-50 rounded-full px-3 py-1 font-medium text-red-700">{r}: {n}</span>
+          ))}
+        </div>
+      </div>
+
+      {erro && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center text-red-700 text-sm font-medium">
+          {"\u26a0\ufe0f "}{erro}
+        </div>
+      )}
+
+      {!erro && (
+        <input type="text" value={busca} onChange={e => setBusca(e.target.value)}
+          placeholder="Buscar por nome, CRM, UF ou regi\u00e3o..."
+          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+      )}
+
+      {!erro && filtrados.length === 0 && (
+        <p className="text-center text-gray-400 py-8 text-sm">{"Nenhum m\u00e9dico encontrado."}</p>
+      )}
+
+      {filtrados.map(m => (
+        <div key={m.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-bold text-gray-800">
+                {m.nome || <span className="text-gray-400 italic">sem nome</span>}
+                {m.is_admin && <span className="ml-2 text-xs bg-gray-800 text-white font-bold px-2 py-0.5 rounded-full">ADMIN</span>}
+              </p>
+              <p className="text-sm text-gray-500">
+                CRM {m.crm} \u00b7 {regiaoDe(m.uf)}{m.cep ? ` \u00b7 CEP ${m.cep}` : ''}
+              </p>
+              {(m.celular || m.email) && (
+                <p className="text-xs text-gray-400 mt-0.5">{[m.celular, m.email].filter(Boolean).join(' \u00b7 ')}</p>
+              )}
+            </div>
+            <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${m.afiliado ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+              {m.afiliado ? 'Afiliado 4DOC' : 'Perfil incompleto'}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            <div className="bg-gray-50 rounded-xl px-3 py-2 text-center">
+              <p className="text-2xl font-extrabold text-gray-700">{m.n_triados}</p>
+              <p className="text-xs text-gray-500">pacientes triados</p>
+            </div>
+            <div className="bg-red-50 rounded-xl px-3 py-2 text-center">
+              <p className="text-2xl font-extrabold text-red-700">{m.n_convertidos}</p>
+              <p className="text-xs text-red-500">cr\u00e9ditos (convertidos)</p>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
