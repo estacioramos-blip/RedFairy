@@ -520,7 +520,7 @@ const RF_INDICACOES = [
 ];
 
 
-export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, onIrDashboardPaciente }) {
+export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, onIrDashboardPaciente, onModoAdmin }) {
   const [medicoLogado, setMedicoLogado] = useState(() => {
     try { return localStorage.getItem('medico_nome') || ''; } catch(e) { return ''; }
   })
@@ -1388,6 +1388,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <span style={{ color: '#b91c1c', fontSize: '9px', fontWeight: 700, letterSpacing: '1px' }}>LOGADO</span>
                 <span style={{ color: '#b91c1c', fontSize: '8px', fontWeight: 700, letterSpacing: '1px', marginTop: '2px' }}>{"M\u00c9DICO"}</span>
               </div>
+              {(() => { try { return localStorage.getItem('medico_is_admin') === '1'; } catch (e) { return false; } })() && (
+                <button onClick={() => onModoAdmin && onModoAdmin()} aria-label="Painel Admin" title="Painel Admin"
+                  style={{ background: '#b91c1c', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, padding: '5px 12px', borderRadius: '8px', lineHeight: 1 }}>
+                  {"\u2699\ufe0f Admin"}
+                </button>
+              )}
               <button onClick={fazerLogoffLanding} aria-label="Sair" title="Sair"
                 style={{ background: '#e5e7eb', color: '#b91c1c', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: 700, padding: '5px 12px', borderRadius: '8px', lineHeight: 1 }}>
                 Sair

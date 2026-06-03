@@ -196,6 +196,7 @@ if (modo === 'home') {
     <LandingPage key={landingKey}
       onModoMedico={(flag) => { if (flag) localStorage.setItem('rf_flag', flag); handleDemoMedico(); }}
       onModoPaciente={() => setModo('triagem-direta')}
+      onModoAdmin={() => setModo('admin')}
       onIrDashboardPaciente={() => setModo('paciente')}
       onIrLogin={(payload) => {
         // payload opcional do fluxo PACIENTE da landing: { cpf, etapa, semCpf }

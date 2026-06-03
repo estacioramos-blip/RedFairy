@@ -39,6 +39,7 @@ updated: "2026-06-02"
 | 019 | 2026-06-02 | Solicitação CFM com 2 receitas + contador de cota | Phase 2 | DEC-007 | `gerarSolicitacaoCFM` monta a conduta de ferro EV com as 2 marcas ativas (dose de Ganzoni → frascos/sessões); `prescricoes_emitidas++` ao copiar o documento (1×/ficha), só quando há indicação de ferro EV (exclui SOBRECARGA). Helpers `calcReceita`/`primeiroNumero` movidos p/ `ferroProtocol.js` (fonte única). |
 | 020 | 2026-06-02 | Segurança — auth do médico via RPC (bcrypt) | Phase 2 | DEC-008 | `migrate_medico_auth.sql`: RPCs `register_medico`/`login_medico`/`complete_medico` (bcrypt, retorno {ok,id,nome,crm,is_admin,erro}) + coluna `is_admin`. Calculator e LandingPage (caixa do hero) cortados para as RPCs; `senha_klipbit` eliminado do cliente. Falta: auth do admin, RLS gateway, versionar RPCs de paciente. |
 | 021 | 2026-06-02 | Segurança — admin exige is_admin | Phase 2 | DEC-008 | App.jsx: painel admin (5 cliques) só abre se `medico_is_admin` no localStorage (vem do login_medico); senão mostra "Acesso restrito". Flag limpo em todos os logouts. Trava acesso casual; proteção forte dos dados vem no RLS gateway. |
+| 022 | 2026-06-03 | Fix — entrada do painel admin (botão na landing) | Phase 2 | DEC-008 | Os "5 cliques" ficaram órfãos (logo na hero antiga, substituída pela LandingPage) → admin inacessível. Novo botão ⚙️ Admin no chip "LOGADO MÉDICO" da navbar, visível só se `medico_is_admin`; prop `onModoAdmin` → setModo('admin'). |
 
 ---
 
