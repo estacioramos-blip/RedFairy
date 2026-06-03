@@ -49,23 +49,21 @@ updated: "2026-06-02"
 
 **Active Phase:** Phase 2 — Build out
 
-**Handoff (2026-06-02, fim de sessão):**
-Sessão entregou 3 frentes (commits 014–021, tudo em `main`/produção):
-1. **Ferro EV por Ganzoni** com peso real (DEC-006) — `ferroProtocol.js`, peso no Calculator (coluna `peso` em avaliacoes/triagens via `migrate_add_peso.sql`).
-2. **Catálogo de medicamentos patrocinado** (DEC-007) — tabela `medicamentos` + aba 💊 no admin + modal/CFM com 2 receitas (alta_dose × dose_fracionada) + contador de cota. `migrate_add_medicamentos.sql`.
-3. **Segurança DEC-008** — auth do médico via RPC com **bcrypt** (`migrate_medico_auth.sql`: register/login/complete_medico) e painel admin exige `is_admin`. `senha_klipbit` fora do cliente.
+**Handoff (2026-06-03, fim de sessão):**
+Continuação da frente de **segurança (DEC-008)** + versionamento + plano do RLS (commits 022–024, em `main`/produção):
+1. **Auth do médico validada em produção** ✅ — Estácio re-cadastrou o `6302/BA`, rodou `UPDATE ... is_admin=true`, e confirmou: cadastro/login (bcrypt) e painel admin funcionando.
+2. **Fix do acesso ao admin** (022) — os "5 cliques" estavam órfãos (hero antiga); agora há botão **⚙️ Admin** no chip "LOGADO MÉDICO" da landing, visível só se `medico_is_admin`. ⚠️ O flag é gravado **no login** — re-cadastrar não basta; tem que `UPDATE is_admin` e **logar de novo**.
+3. **RPCs de paciente versionadas** (023) — `functions_paciente.sql` (register/login/lookup, todas bcrypt confirmado).
+4. **Plano do RLS gateway** (024) — `DOCS/91_RLS_PLAN.md`: 74 acessos diretos / 10 tabelas mapeados; decidido **token de sessão** (crachá) porque sem `auth.uid()` as leituras por CPF/CRM são falsificáveis.
 
-**⏳ AGUARDANDO TESTE DO ESTÁCIO** (migration + `DELETE FROM medicos` já rodados; push feito):
-1. Re-cadastrar `6302/BA` pelo app; depois `UPDATE medicos SET is_admin=true WHERE crm='6302/BA';`
-2. Testar login de médico (caixa do hero + Calculator) e painel admin (logado como 6302/BA → 5 cliques).
+**Next Action — construir o TOKEN (a fundação, antes da Fase 1):**
+- Coluna de token (hash) em `profiles`/`medicos`; `login_paciente`/`login_medico` geram e devolvem o token; cliente guarda no localStorage; cada RPC sensível valida `(cpf/crm + token)` (+ `is_admin` p/ admin).
+- Depois: Fase 1 (medicamentos leitura-pública/escrita-admin, leads, config) → Fase 2 (avaliacoes/triagens/oba/profiles) → Fase 3 (medicos + escrita config). Código→RPC **antes** de ligar RLS, em staging, 1 tabela por vez. (Ver `91_RLS_PLAN.md`.)
+- Quick win seguro p/ aquecer: cortar `select('*')` em `profiles` (PatientDashboard:120 vaza o hash `senha_klipbit`).
 
-**Next Action (DEC-008 — continuar):**
-- **RLS gateway** (grande/arriscado, fazer em staging): ligar RLS + converter acessos diretos a `medicos`/`avaliacoes`/`triagens`/`config` para RPC. Há SELECTs/UPDATE diretos em `medicos` no Calculator (749, 855, 901, 1206, 1494, 2042/2052/2105) e LandingPage (768).
-- **Versionar no repo** as RPCs de paciente (`login_paciente`/`register_paciente`/`lookup_cpf_triagem`) — hoje só no Supabase. (register_paciente já capturado no histórico do chat; usa bcrypt — paciente está seguro.)
+**Pendências de produto (backlog):** peso no fluxo do paciente (TriagemModal→triagens, coluna já existe); rotação por cota do catálogo (campos prontos); UI split Lab/Imagem no ResultCard; limpar código morto dos 5-cliques (handleLogoClick + hero órfã em App.jsx).
 
-**Pendências de produto (backlog):** peso no fluxo do paciente (TriagemModal→triagens, coluna já existe); rotação por cota do catálogo (campos prontos); UI split Lab/Imagem no ResultCard.
-
-**Blocking Items:** Nenhum. (Dívida: RLS ainda desabilitado — DEC-002/DEC-008; admin gate é client-side até o RLS gateway.)
+**Blocking Items:** Nenhum. (Dívida: RLS ainda desabilitado — DEC-002/DEC-008; admin gate é client-side até o token+RLS.)
 
 ---
 
