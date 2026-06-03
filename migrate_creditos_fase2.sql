@@ -235,3 +235,6 @@ END;
 $function$;
 
 GRANT EXECUTE ON FUNCTION public.admin_listar_medicos(text, text) TO anon, authenticated;
+
+-- Recarrega o cache de schema do PostgREST (DDL: coluna/tabela/função novas).
+NOTIFY pgrst, 'reload schema';

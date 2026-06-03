@@ -52,3 +52,6 @@ GRANT EXECUTE ON FUNCTION public.salvar_suplemento(text,text,bigint,jsonb) TO an
 ALTER TABLE public.suplementos ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS supl_public_read ON public.suplementos;
 CREATE POLICY supl_public_read ON public.suplementos FOR SELECT USING (true);
+
+-- Recarrega o cache de schema do PostgREST (DDL: função/policy novas).
+NOTIFY pgrst, 'reload schema';

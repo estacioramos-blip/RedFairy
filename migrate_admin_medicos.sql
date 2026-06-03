@@ -95,3 +95,6 @@ END;
 $function$;
 
 GRANT EXECUTE ON FUNCTION public.admin_listar_medicos(text, text) TO anon, authenticated;
+
+-- Recarrega o cache de schema do PostgREST (senão a RPC nova some da REST → PGRST202).
+NOTIFY pgrst, 'reload schema';
