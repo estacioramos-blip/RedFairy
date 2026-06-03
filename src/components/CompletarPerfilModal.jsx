@@ -47,7 +47,7 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
         celular: celDigits,
       })
       .eq('id', profile.id)
-      .select()
+      .select('id, nome, cpf, sexo, data_nascimento, celular, bariatrica, gestante, boas_vindas_vista')
       .maybeSingle()
     setLoading(false)
     if (error) { setErro('Erro ao salvar. Tente novamente.'); return }
