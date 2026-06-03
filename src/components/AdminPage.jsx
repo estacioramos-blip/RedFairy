@@ -910,21 +910,24 @@ function AbaSuplementos() {
 
   async function salvar() {
     setSalvando(true); setSucesso(''); setErro('');
+    const cred = credAdmin();
     for (const s of supls) {
-      const { error } = await supabase.from('suplementos').update({
-        fabricante: s.fabricante || null,
-        principio_ativo: s.principio_ativo || null,
-        concentracao: s.concentracao || null,
-        posologia: s.posologia || null,
-        via: s.via || null,
-        apresentacao: s.apresentacao || null,
-        composicao: s.composicao || null,
-        indicacao: s.indicacao || null,
-        observacoes: s.observacoes || null,
-        ativo: !!s.ativo,
-      }).eq('id', s.id);
-      if (error) {
-        setErro("Erro ao salvar: " + error.message);
+      const { data, error } = await supabase.rpc('salvar_suplemento', {
+        ...cred, p_id: s.id, p_dados: {
+          fabricante: s.fabricante || null,
+          principio_ativo: s.principio_ativo || null,
+          concentracao: s.concentracao || null,
+          posologia: s.posologia || null,
+          via: s.via || null,
+          apresentacao: s.apresentacao || null,
+          composicao: s.composicao || null,
+          indicacao: s.indicacao || null,
+          observacoes: s.observacoes || null,
+          ativo: !!s.ativo,
+        },
+      });
+      if (error || (data && !data.ok)) {
+        setErro("Erro ao salvar: " + (error?.message || data?.erro || 'sem permiss\u00e3o de admin'));
         setSalvando(false); return;
       }
     }
