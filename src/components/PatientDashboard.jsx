@@ -367,6 +367,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   function handleSairDespedida() {
     try {
       localStorage.removeItem('paciente_id')
+      localStorage.removeItem('paciente_token')
       localStorage.removeItem('paciente_cpf')
       localStorage.removeItem('paciente_nome')
       localStorage.removeItem('paciente_login_at')
@@ -882,6 +883,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // Desloga: limpa credenciais locais do paciente
           try {
             localStorage.removeItem('paciente_id')
+            localStorage.removeItem('paciente_token')
             localStorage.removeItem('paciente_cpf')
             localStorage.removeItem('paciente_nome')
             localStorage.removeItem('paciente_login_at')

@@ -47,6 +47,7 @@ export default function App() {
       localStorage.removeItem('medico_nome')
       localStorage.removeItem('medico_login_at')
       localStorage.removeItem('medico_is_admin')
+      localStorage.removeItem('medico_token')
     } catch (e) {}
     setShowInatividade(false)
     setLandingKey(k => k + 1)

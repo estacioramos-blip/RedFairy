@@ -64,9 +64,12 @@ só o CRM.
 
 ## Plano em fases (cada fase testável, sem derrubar produção)
 
-**Fase 0 — Decisão de token (pré-requisito):** definir o mecanismo de
-credencial para leituras (token no login). Sem isso, as Fases 2+ ficam
-falsificáveis. *(Ver decisão aberta abaixo.)*
+**Fase 0 — Token (pré-requisito): ✅ FEITO (2026-06-03)**
+`migrate_token_sessao.sql`: colunas `session_token_hash`/`session_token_exp` em
+`profiles`/`medicos`; `login_*`/`register_*` emitem token (hash sha256, 30 dias);
+funções-crachá `token_medico_ok`/`token_admin_ok`/`token_paciente_ok` para as
+RPCs das próximas fases. Cliente guarda `medico_token`/`paciente_token` no
+localStorage (login/cadastro) e limpa no logout. Não-destrutivo.
 
 **Fase 1 — Tabelas fáceis (baixo risco):**
 - `medicamentos`: ligar RLS, liberar SELECT anon, escrita via RPC admin.

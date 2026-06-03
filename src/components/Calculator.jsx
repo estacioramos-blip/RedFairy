@@ -288,6 +288,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     localStorage.setItem('medico_crm', _crm)
     localStorage.setItem('medico_nome', resp.nome || '')
     localStorage.setItem('medico_login_at', Date.now().toString())
+    if (resp.token) localStorage.setItem('medico_token', resp.token)
     try { resp.is_admin ? localStorage.setItem('medico_is_admin', '1') : localStorage.removeItem('medico_is_admin') } catch (e) {}
     onConcluir(resp.nome || '', _crm)
   }
@@ -341,6 +342,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
     localStorage.setItem('medico_crm', resp.crm || conselhoLimpo)
     localStorage.setItem('medico_nome', resp.nome || nome.trim())
     localStorage.setItem('medico_login_at', Date.now().toString())
+    if (resp.token) localStorage.setItem('medico_token', resp.token)
     try { if (resp.is_admin) localStorage.setItem('medico_is_admin', '1') } catch (e) {}
     setCadSucesso(true)
   }
@@ -690,6 +692,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
     localStorage.removeItem('medico_crm')
     localStorage.removeItem('medico_nome')
     localStorage.removeItem('medico_is_admin')
+    localStorage.removeItem('medico_token')
     setCadastrado(false)
     setMedicoNome('')
     setMedicoCRM('')
@@ -897,6 +900,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         localStorage.removeItem('medico_nome')
         localStorage.removeItem('medico_login_at')
         localStorage.removeItem('medico_is_admin')
+        localStorage.removeItem('medico_token')
         // setSessaoExpirada(true)  // estado vive no Calculator pai, nao no Form
         return
       }

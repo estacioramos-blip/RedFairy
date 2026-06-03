@@ -60,6 +60,7 @@ export default function TriagemDireta({ onVoltar, onCadastrar, onIrDashboard }) 
             if (pacienteLogado) {
               try {
                 localStorage.removeItem('paciente_id')
+                localStorage.removeItem('paciente_token')
                 localStorage.removeItem('paciente_cpf')
                 localStorage.removeItem('paciente_nome')
                 localStorage.removeItem('paciente_login_at')

@@ -539,6 +539,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       localStorage.removeItem('medico_nome');
       localStorage.removeItem('medico_login_at');
       localStorage.removeItem('medico_is_admin');
+      localStorage.removeItem('medico_token');
     } catch(e) {}
     setMedicoLogado('');
   }
@@ -590,6 +591,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   async function fazerLogoffPaciente() {
     try {
       localStorage.removeItem('paciente_id')
+      localStorage.removeItem('paciente_token')
       localStorage.removeItem('paciente_cpf')
       localStorage.removeItem('paciente_nome')
       localStorage.removeItem('paciente_login_at')
@@ -816,6 +818,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         localStorage.setItem('medico_nome', resp.nome || '');
         localStorage.setItem('medico_login_at', Date.now().toString());
         localStorage.setItem('rf_crm_prefill', _crm);
+        if (resp.token) localStorage.setItem('medico_token', resp.token);
         resp.is_admin ? localStorage.setItem('medico_is_admin', '1') : localStorage.removeItem('medico_is_admin');
       } catch (e) {}
       onModoMedico();
@@ -844,6 +847,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       localStorage.setItem('medico_nome', '');
       localStorage.setItem('medico_login_at', Date.now().toString());
       localStorage.setItem('rf_crm_prefill', crmLimpo);
+      if (resp.token) localStorage.setItem('medico_token', resp.token);
     } catch (e) {}
     onModoMedico();
   }
@@ -933,6 +937,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       localStorage.setItem('paciente_cpf', cpfPacDigitos);
       localStorage.setItem('paciente_nome', resp.nome || '');
       localStorage.setItem('paciente_login_at', Date.now().toString());
+      if (resp.token) localStorage.setItem('paciente_token', resp.token);
     } catch (e) {}
     setPacienteLogado(resp.nome || '');
     setPacienteLogadoFlag(true);
