@@ -152,6 +152,7 @@ export default function AdminPage({ onVoltar }) {
           {[
             { id: 'pacientes',    label: "\ud83d\udc65 Pacientes" },
             { id: 'medicamentos', label: "\ud83d\udc8a Medicamentos" },
+            { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
             { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
           ].map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
@@ -167,6 +168,7 @@ export default function AdminPage({ onVoltar }) {
       <div className="max-w-3xl mx-auto px-4 py-6">
         {aba === 'pacientes'    && <AbaPacientes />}
         {aba === 'medicamentos' && <AbaMedicamentos />}
+        {aba === 'suplementos'  && <AbaSuplementos />}
         {aba === 'config'       && <AbaConfig />}
       </div>
     </div>
@@ -845,6 +847,185 @@ function AbaMedicamentos() {
       )}
 
       {meds.length > 0 && (
+        <button onClick={salvar} disabled={salvando}
+          className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
+          {salvando ? 'Salvando...' : "Salvar cat\u00e1logo"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// \u2500\u2500 Aba Suplementos (DEC-010) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Cat\u00e1logo de suplementos orais/injet\u00e1veis (polivitam\u00ednicos, B12, ferro oral).
+// Uma marca ATIVA por categoria (alavanca 4DOC) \u2014 radio escolhe qual a plataforma
+// prescreve. RLS est\u00e1 OFF nesta tabela, ent\u00e3o a escrita \u00e9 direta (update().eq()).
+const CATEGORIAS_SUPL = [
+  { id: 'polivitaminico_bariatrico', titulo: "\ud83e\uddec Polivitam\u00ednico bari\u00e1trico", sub: "multivitam\u00ednico p\u00f3s-cirurgia bari\u00e1trica" },
+  { id: 'b12_injetavel',  titulo: "\ud83d\udc89 B12 injet\u00e1vel",  sub: "cianocobalamina / combos B1+B6+B12 \u2014 IM" },
+  { id: 'b12_sublingual', titulo: "\ud83d\udc45 B12 sublingual", sub: "mecobalamina \u2014 absor\u00e7\u00e3o pela mucosa" },
+  { id: 'b12_oral',       titulo: "\ud83d\udc8a B12 oral",       sub: "cianocobalamina \u2014 reposi\u00e7\u00e3o diet\u00e9tica" },
+  { id: 'ferro_oral',     titulo: "\ud83e\ude78 Ferro oral",     sub: "sais de ferro \u2014 uma linha por marca" },
+];
+const CAMPOS_SUPL = [
+  { key: 'fabricante',      label: 'Fabricante' },
+  { key: 'principio_ativo', label: 'Princ\u00edpio ativo' },
+  { key: 'concentracao',    label: 'Concentra\u00e7\u00e3o' },
+  { key: 'posologia',       label: 'Posologia' },
+  { key: 'via',             label: 'Via' },
+  { key: 'apresentacao',    label: 'Apresenta\u00e7\u00e3o' },
+];
+
+function AbaSuplementos() {
+  const [supls, setSupls] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [salvando, setSalvando] = useState(false);
+  const [sucesso, setSucesso] = useState('');
+  const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    async function carregar() {
+      const { data, error } = await supabase
+        .from('suplementos')
+        .select('*')
+        .order('categoria', { ascending: true })
+        .order('nome_comercial', { ascending: true });
+      if (error) setErro("N\u00e3o foi poss\u00edvel carregar o cat\u00e1logo. As migrations migrate_suplementos.sql / migrate_suplementos_b12_ferro.sql j\u00e1 foram aplicadas?");
+      setSupls(data || []);
+      setLoading(false);
+    }
+    carregar();
+  }, []);
+
+  function setCampo(id, key, valor) {
+    setSupls(prev => prev.map(s => s.id === id ? { ...s, [key]: valor } : s));
+  }
+
+  // Ativa uma marca e desativa as demais da MESMA categoria (uma ativa por categoria).
+  function ativar(id, categoria) {
+    setSupls(prev => prev.map(s =>
+      s.categoria === categoria ? { ...s, ativo: s.id === id } : s
+    ));
+  }
+
+  async function salvar() {
+    setSalvando(true); setSucesso(''); setErro('');
+    for (const s of supls) {
+      const { error } = await supabase.from('suplementos').update({
+        fabricante: s.fabricante || null,
+        principio_ativo: s.principio_ativo || null,
+        concentracao: s.concentracao || null,
+        posologia: s.posologia || null,
+        via: s.via || null,
+        apresentacao: s.apresentacao || null,
+        composicao: s.composicao || null,
+        indicacao: s.indicacao || null,
+        observacoes: s.observacoes || null,
+        ativo: !!s.ativo,
+      }).eq('id', s.id);
+      if (error) {
+        setErro("Erro ao salvar: " + error.message);
+        setSalvando(false); return;
+      }
+    }
+    setSalvando(false);
+    setSucesso("Cat\u00e1logo de suplementos salvo com sucesso!");
+    setTimeout(() => setSucesso(''), 3000);
+  }
+
+  if (loading) return <div className="text-center py-12 text-gray-400">Carregando cat\u00e1logo...</div>;
+
+  const inputClass = "w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400";
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-gray-700">{"Cat\u00e1logo de Suplementos"}</h2>
+        <p className="text-sm text-gray-400 mt-1">
+          {"Marque a marca "}<strong>ativa</strong>{" de cada categoria (a que a plataforma vai sugerir) e ajuste os dados cl\u00ednicos. "}
+          {"Cada categoria tem uma \u00fanica marca ativa."}
+        </p>
+      </div>
+
+      {erro && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center text-red-700 text-sm font-medium">
+          {"\u26a0\ufe0f "}{erro}
+        </div>
+      )}
+
+      {CATEGORIAS_SUPL.map(cat => {
+        const daCategoria = supls.filter(s => s.categoria === cat.id);
+        const ativaNome = daCategoria.find(s => s.ativo)?.nome_comercial;
+        return (
+          <div key={cat.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
+              <p className="font-bold text-gray-700 text-sm">{cat.titulo}</p>
+              <p className="text-xs text-gray-400">{cat.sub}</p>
+              <p className="text-xs mt-1">
+                {ativaNome
+                  ? <span className="text-green-700 font-bold">{"Ativa: "}{ativaNome}</span>
+                  : <span className="text-red-500 font-bold">{"\u26a0\ufe0f Nenhuma marca ativa nesta categoria"}</span>}
+              </p>
+            </div>
+            <div className="p-3 space-y-3">
+              {daCategoria.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-2">{"Nenhum suplemento nesta categoria."}</p>
+              )}
+              {daCategoria.map(s => (
+                <div key={s.id}
+                  className={`rounded-xl border-2 p-3 transition-all ${s.ativo ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-white'}`}>
+                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                    <input type="radio" name={`ativa_${cat.id}`} checked={!!s.ativo}
+                      onChange={() => ativar(s.id, s.categoria)}
+                      className="w-4 h-4 cursor-pointer" style={{ accentColor: '#16a34a' }} />
+                    <div className="min-w-0">
+                      <span className="font-bold text-gray-800 text-sm">{s.nome_comercial}</span>
+                      <span className="text-xs text-gray-400 ml-2">{s.principio_ativo}</span>
+                    </div>
+                    {s.ativo && <span className="ml-auto text-xs bg-green-600 text-white font-bold px-2 py-0.5 rounded-full">ATIVA</span>}
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {CAMPOS_SUPL.map(c => (
+                      <div key={c.key}>
+                        <label className="block text-xs text-gray-500 mb-0.5">{c.label}</label>
+                        <input type="text" value={s[c.key] ?? ''}
+                          onChange={e => setCampo(s.id, c.key, e.target.value)} className={inputClass} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2">
+                    <label className="block text-xs text-gray-500 mb-0.5">{"Composi\u00e7\u00e3o"}</label>
+                    <textarea value={s.composicao ?? ''} rows={2}
+                      onChange={e => setCampo(s.id, 'composicao', e.target.value)}
+                      className={inputClass + ' resize-none'} />
+                  </div>
+                  <div className="mt-2">
+                    <label className="block text-xs text-gray-500 mb-0.5">{"Indica\u00e7\u00e3o (para quem / quando)"}</label>
+                    <textarea value={s.indicacao ?? ''} rows={2}
+                      onChange={e => setCampo(s.id, 'indicacao', e.target.value)}
+                      className={inputClass + ' resize-none'} />
+                  </div>
+                  <div className="mt-2">
+                    <label className="block text-xs text-gray-500 mb-0.5">{"Observa\u00e7\u00f5es"}</label>
+                    <textarea value={s.observacoes ?? ''} rows={2}
+                      onChange={e => setCampo(s.id, 'observacoes', e.target.value)}
+                      className={inputClass + ' resize-none'} />
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">{"Prescri\u00e7\u00f5es emitidas: "}<strong>{s.prescricoes_emitidas ?? 0}</strong></p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      {sucesso && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center text-green-700 text-sm font-medium">
+          {"\u2705 "}{sucesso}
+        </div>
+      )}
+
+      {supls.length > 0 && (
         <button onClick={salvar} disabled={salvando}
           className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
           {salvando ? 'Salvando...' : "Salvar cat\u00e1logo"}
