@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import logo from '../assets/logo.png'
 import redcell1 from '../assets/redcell1.png'
+import laiseImg from '../assets/LAISE H.png'
 import filosofiaBg from '../../redfairy-filosofia-bg.png'
 import fairy3 from '../../redfairy3.png'
 import OBAModal from './OBAModal'
@@ -999,6 +1000,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [showSobre, setShowSobre] = useState(false)
   const [showAfiliados, setShowAfiliados] = useState(false)
   const [showContato, setShowContato] = useState(false)
+  const [bgContatoRevelado, setBgContatoRevelado] = useState(false)
+  const [contatoEntrada, setContatoEntrada] = useState(false)
   const [showIndMais, setShowIndMais] = useState(false)
   const [obaPopup, setObaPopup] = useState(false)
   const [activeTab,   setActiveTab]   = useState('medico')
@@ -1054,9 +1057,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
 
   useEffect(() => {
     if (!showContato) return
+    // Entrada: foto nitida e bem visivel por 3s, depois esmaece
+    setContatoEntrada(true)
+    const t = setTimeout(() => setContatoEntrada(false), 3000)
     const onKey = (e) => { if (e.key === 'Escape') setShowContato(false) }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => { clearTimeout(t); window.removeEventListener('keydown', onKey); setContatoEntrada(false) }
   }, [showContato])
 
   function handleFadaClick() {
@@ -1284,6 +1290,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
         >
           <div
             onClick={(e) => e.stopPropagation()}
+            onMouseEnter={() => setBgContatoRevelado(true)}
+            onMouseLeave={() => setBgContatoRevelado(false)}
+            onTouchStart={() => setBgContatoRevelado(true)}
             style={{
               background: 'white', borderRadius: 16, maxWidth: 560, width: '100%',
               maxHeight: '90vh', overflowY: 'auto', position: 'relative',
@@ -1291,7 +1300,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               padding: '2.5rem 2rem 2rem',
             }}
           >
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+            {/* Foto da Laise como fundo: esmaecida/borrada; revela no hover (mesmo padrao do Primeiro Acesso Medico) */}
+            <div aria-hidden="true" style={{
+              position: 'absolute', inset: 0, backgroundColor: '#FDF7F7',
+              backgroundImage: `url(${laiseImg})`, backgroundSize: 'cover', backgroundPosition: '40% center',
+              backgroundRepeat: 'no-repeat',
+              filter: (contatoEntrada || bgContatoRevelado) ? 'blur(0px)' : 'blur(10px)',
+              opacity: contatoEntrada ? 0.9 : (bgContatoRevelado ? 0.5 : 0.35),
+              transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none',
+            }} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
               <span className="tag" style={{ color: 'var(--cherry)' }}>Contato</span>
               <h2 style={{ fontSize: '1.8rem', color: 'var(--wine)', fontWeight: 800, marginTop: '0.4rem' }}>
                 Fale com a gente
@@ -1308,7 +1327,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 2, color: 'var(--text-light)', fontWeight: 700, marginBottom: '0.8rem' }}>
+              <h3 style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 2, color: '#000', fontWeight: 700, marginBottom: '0.8rem' }}>
                 {"Endere\u00e7o para Correspond\u00eancia"}
               </h3>
               <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.7, fontWeight: 500, margin: 0 }}>
@@ -1321,7 +1340,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <div style={{ marginBottom: '1.5rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border)' }}>
               <p style={{ fontSize: '0.95rem', color: 'var(--text)', lineHeight: 1.7, fontWeight: 500, margin: 0, textAlign: 'center' }}>
                 <strong style={{ color: 'var(--wine)', fontWeight: 700, letterSpacing: '0.5px' }}>{"CYTOMICA"}<sup style={{ fontSize: '0.6em', fontWeight: 500 }}>{"\u00ae"}</sup></strong><br/>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-sec)' }}>CNPJ 57.561.446/0001-02</span>
+                <span style={{ fontSize: '0.82rem', color: '#000', fontWeight: 600 }}>CNPJ 57.561.446/0001-02</span>
               </p>
             </div>
 
@@ -1364,6 +1383,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               >
                 {"\u2715"}
               </button>
+            </div>
             </div>
           </div>
         </div>
