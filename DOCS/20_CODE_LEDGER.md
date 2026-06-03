@@ -53,19 +53,23 @@ updated: "2026-06-02"
 
 **Active Phase:** Phase 2 — Build out
 
-**Handoff (2026-06-03, fim de sessão):**
-Continuação da frente de **segurança (DEC-008)** + versionamento + plano do RLS (commits 022–024, em `main`/produção):
-1. **Auth do médico validada em produção** ✅ — Estácio re-cadastrou o `6302/BA`, rodou `UPDATE ... is_admin=true`, e confirmou: cadastro/login (bcrypt) e painel admin funcionando.
-2. **Fix do acesso ao admin** (022) — os "5 cliques" estavam órfãos (hero antiga); agora há botão **⚙️ Admin** no chip "LOGADO MÉDICO" da landing, visível só se `medico_is_admin`. ⚠️ O flag é gravado **no login** — re-cadastrar não basta; tem que `UPDATE is_admin` e **logar de novo**.
-3. **RPCs de paciente versionadas** (023) — `functions_paciente.sql` (register/login/lookup, todas bcrypt confirmado).
-4. **Plano do RLS gateway** (024) — `DOCS/91_RLS_PLAN.md`: 74 acessos diretos / 10 tabelas mapeados; decidido **token de sessão** (crachá) porque sem `auth.uid()` as leituras por CPF/CRM são falsificáveis.
+**Handoff (2026-06-03 — sessão 2, fim):**
+Avançou muito a segurança (DEC-008) + anuidade dinâmica (DEC-009). Tudo em `main`/produção (commits 025–028):
+1. **Token de sessão (crachá)** ✅ — `migrate_token_sessao.sql` aplicado e validado (`tem_token=true`). login_*/register_* emitem token (sha256, 30d); crachás `token_medico_ok`/`token_admin_ok`/`token_paciente_ok`; cliente guarda `medico_token`/`paciente_token`.
+2. **RLS Fase 1 FECHADA** ✅ — medicamentos/config (SELECT público, escrita só-RPC via `salvar_medicamento`/`salvar_config`) + leads_comerciais (só INSERT). Validado em produção.
+3. **Conserto: tabelas fantasma** — `medicamentos` e `leads_comerciais` NUNCA existiram no banco (só `config`); criadas agora. Catálogo DEC-007 finalmente vivo.
+4. **Anuidade dinâmica (DEC-009)** ✅ — `src/lib/pix.js` (gerador Pix EMV+CRC16, verificado contra o código real 149,90); valor vem de `config.valor_anuidade`; admin edita; landing/modal/termos exibem do banco. Display validado por Estácio.
+5. **Tabelas de pagamento verificadas** — `assinaturas`, `pedidos_documento`, `profiles.boas_vindas_vista` existem e completas. (Bônus: `assinaturas` tem colunas Stripe sem uso — fluxo atual é Pix manual "Já paguei", baseado em confiança.)
 
-**Next Action — construir o TOKEN (a fundação, antes da Fase 1):**
-- Coluna de token (hash) em `profiles`/`medicos`; `login_paciente`/`login_medico` geram e devolvem o token; cliente guarda no localStorage; cada RPC sensível valida `(cpf/crm + token)` (+ `is_admin` p/ admin).
-- Depois: Fase 1 (medicamentos leitura-pública/escrita-admin, leads, config) → Fase 2 (avaliacoes/triagens/oba/profiles) → Fase 3 (medicos + escrita config). Código→RPC **antes** de ligar RLS, em staging, 1 tabela por vez. (Ver `91_RLS_PLAN.md`.)
-- Quick win seguro p/ aquecer: cortar `select('*')` em `profiles` (PatientDashboard:120 vaza o hash `senha_klipbit`).
+**Pendências desta frente:**
+- Teste funcional do código Pix gerado (scanear/conferir) — a matemática está verificada, mas não foi testado no banco real ainda.
 
-**Pendências de produto (backlog):** peso no fluxo do paciente (TriagemModal→triagens, coluna já existe); rotação por cota do catálogo (campos prontos); UI split Lab/Imagem no ResultCard; limpar código morto dos 5-cliques (handleLogoClick + hero órfã em App.jsx).
+**Next Action — RLS Fase 2 (dados de saúde) ou Pagamento automático:**
+- **Fase 2 (recomendado p/ segurança):** proteger `avaliacoes`/`triagens`/`oba_anamnese`/`profiles` + as sensíveis `assinaturas`/`pedidos_documento` com o token (RPCs de leitura/escrita validando crachá → ligar RLS). Converter código→RPC ANTES de ligar RLS, 1 tabela por vez. Ver `DOCS/91_RLS_PLAN.md`.
+- **Pagamento automático:** colunas Stripe já existem em `assinaturas`; sair do "confia no paciente" p/ verificação real (gateway/webhook).
+- Quick win: cortar `select('*')` em `profiles` (PatientDashboard:120 traz o hash `senha_klipbit` p/ o cliente).
+
+**Backlog produto:** peso no fluxo do paciente (TriagemModal→triagens, coluna existe); rotação por cota do catálogo; UI split Lab/Imagem no ResultCard; limpar código morto (handleLogoClick + hero órfã em App.jsx ~218-253).
 
 **Blocking Items:** Nenhum. (Dívida: RLS ainda desabilitado — DEC-002/DEC-008; admin gate é client-side até o token+RLS.)
 
