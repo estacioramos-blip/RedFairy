@@ -45,8 +45,24 @@ updated: "2026-06-02"
 ## Current Status
 
 **Active Phase:** Phase 2 — Build out
-**Next Action:** Refino do algoritmo — mapear gaps/discrepâncias da matriz (em curso). Pendente: UI do split Lab/Imagem no ResultCard. OBA evoluindo.
-**Blocking Items:** Nenhum. (Dívida aberta: RLS desabilitado no Supabase — ver DEC-002.)
+
+**Handoff (2026-06-02, fim de sessão):**
+Sessão entregou 3 frentes (commits 014–021, tudo em `main`/produção):
+1. **Ferro EV por Ganzoni** com peso real (DEC-006) — `ferroProtocol.js`, peso no Calculator (coluna `peso` em avaliacoes/triagens via `migrate_add_peso.sql`).
+2. **Catálogo de medicamentos patrocinado** (DEC-007) — tabela `medicamentos` + aba 💊 no admin + modal/CFM com 2 receitas (alta_dose × dose_fracionada) + contador de cota. `migrate_add_medicamentos.sql`.
+3. **Segurança DEC-008** — auth do médico via RPC com **bcrypt** (`migrate_medico_auth.sql`: register/login/complete_medico) e painel admin exige `is_admin`. `senha_klipbit` fora do cliente.
+
+**⏳ AGUARDANDO TESTE DO ESTÁCIO** (migration + `DELETE FROM medicos` já rodados; push feito):
+1. Re-cadastrar `6302/BA` pelo app; depois `UPDATE medicos SET is_admin=true WHERE crm='6302/BA';`
+2. Testar login de médico (caixa do hero + Calculator) e painel admin (logado como 6302/BA → 5 cliques).
+
+**Next Action (DEC-008 — continuar):**
+- **RLS gateway** (grande/arriscado, fazer em staging): ligar RLS + converter acessos diretos a `medicos`/`avaliacoes`/`triagens`/`config` para RPC. Há SELECTs/UPDATE diretos em `medicos` no Calculator (749, 855, 901, 1206, 1494, 2042/2052/2105) e LandingPage (768).
+- **Versionar no repo** as RPCs de paciente (`login_paciente`/`register_paciente`/`lookup_cpf_triagem`) — hoje só no Supabase. (register_paciente já capturado no histórico do chat; usa bcrypt — paciente está seguro.)
+
+**Pendências de produto (backlog):** peso no fluxo do paciente (TriagemModal→triagens, coluna já existe); rotação por cota do catálogo (campos prontos); UI split Lab/Imagem no ResultCard.
+
+**Blocking Items:** Nenhum. (Dívida: RLS ainda desabilitado — DEC-002/DEC-008; admin gate é client-side até o RLS gateway.)
 
 ---
 
