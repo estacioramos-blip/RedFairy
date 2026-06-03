@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
 
+// Credencial do admin (CRM + token de sessão) para as RPCs de escrita protegidas.
+function credAdmin() {
+  try {
+    return { p_crm: localStorage.getItem('medico_crm') || '', p_token: localStorage.getItem('medico_token') || '' };
+  } catch (e) { return { p_crm: '', p_token: '' }; }
+}
+
 const eritronColor = {
   green:  { bg: 'bg-green-100',  text: 'text-green-800',  label: 'Normal'   },
   yellow: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: "Aten\u00e7\u00e3o"  },
@@ -580,18 +587,21 @@ function AbaConfig() {
 
   async function salvar() {
     setSalvando(true); setSucesso('');
-    await supabase.from('config').upsert(
-      { chave: 'valor_solicitacao_medica', valor, descricao: "Valor em R$ da solicita\u00e7\u00e3o m\u00e9dica via Pix" },
-      { onConflict: 'chave' }
-    );
-    await supabase.from('config').upsert(
-      { chave: 'valor_documento_medico', valor: valorDoc, descricao: "Valor em R$ da gera\u00e7\u00e3o de documento m\u00e9dico (prescri\u00e7\u00e3o/pedido de exames)" },
-      { onConflict: 'chave' }
-    );
-    await supabase.from('config').upsert(
-      { chave: 'pix_chave', valor: pixChave, descricao: "Chave Pix para recebimento de solicita\u00e7\u00f5es m\u00e9dicas" },
-      { onConflict: 'chave' }
-    );
+    const cred = credAdmin();
+    const itens = [
+      { p_chave: 'valor_solicitacao_medica', p_valor: valor,    p_descricao: "Valor em R$ da solicita\u00e7\u00e3o m\u00e9dica via Pix" },
+      { p_chave: 'valor_documento_medico',   p_valor: valorDoc, p_descricao: "Valor em R$ da gera\u00e7\u00e3o de documento m\u00e9dico (prescri\u00e7\u00e3o/pedido de exames)" },
+      { p_chave: 'pix_chave',                p_valor: pixChave, p_descricao: "Chave Pix para recebimento de solicita\u00e7\u00f5es m\u00e9dicas" },
+    ];
+    for (const it of itens) {
+      const { data, error } = await supabase.rpc('salvar_config', { ...cred, ...it });
+      if (error || (data && !data.ok)) {
+        setSalvando(false);
+        setSucesso("\u26a0\ufe0f Erro ao salvar (sem permiss\u00e3o de admin?).");
+        setTimeout(() => setSucesso(''), 4000);
+        return;
+      }
+    }
     setSalvando(false);
     setSucesso("Configura\u00e7\u00f5es salvas com sucesso!");
     setTimeout(() => setSucesso(''), 3000);
@@ -715,21 +725,27 @@ function AbaMedicamentos() {
 
   async function salvar() {
     setSalvando(true); setSucesso(''); setErro('');
+    const cred = credAdmin();
     const num = (v) => (v === '' || v === null || v === undefined || isNaN(Number(v))) ? null : Number(v);
     for (const m of meds) {
-      const { error } = await supabase.from('medicamentos').update({
-        fabricante: m.fabricante || null,
-        concentracao_mg_ml: num(m.concentracao_mg_ml),
-        frascos_mg: m.frascos_mg || null,
-        dose_max_sessao_mg: num(m.dose_max_sessao_mg),
-        diluicao: m.diluicao || null,
-        tempo_infusao: m.tempo_infusao || null,
-        intervalo_sessoes: m.intervalo_sessoes || null,
-        cota_total: num(m.cota_total),
-        observacoes: m.observacoes || null,
-        ativo: !!m.ativo,
-      }).eq('id', m.id);
-      if (error) { setErro("Erro ao salvar: " + error.message); setSalvando(false); return; }
+      const { data, error } = await supabase.rpc('salvar_medicamento', {
+        ...cred, p_id: m.id, p_dados: {
+          fabricante: m.fabricante || null,
+          concentracao_mg_ml: num(m.concentracao_mg_ml),
+          frascos_mg: m.frascos_mg || null,
+          dose_max_sessao_mg: num(m.dose_max_sessao_mg),
+          diluicao: m.diluicao || null,
+          tempo_infusao: m.tempo_infusao || null,
+          intervalo_sessoes: m.intervalo_sessoes || null,
+          cota_total: num(m.cota_total),
+          observacoes: m.observacoes || null,
+          ativo: !!m.ativo,
+        },
+      });
+      if (error || (data && !data.ok)) {
+        setErro("Erro ao salvar: " + (error?.message || data?.erro || 'sem permissão de admin'));
+        setSalvando(false); return;
+      }
     }
     setSalvando(false);
     setSucesso("Cat\u00e1logo salvo com sucesso!");
