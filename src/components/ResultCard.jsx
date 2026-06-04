@@ -1177,13 +1177,13 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           </div>
 
           {!modoPaciente && resultado._inputs?.bariatrica && (() => {
-            const sx = resultado._inputs?.sexo || 'M'
-            const txt = sx === 'F'
-              ? "Avalia\u00e7\u00e3o salva sob o CPF da paciente. Ao se cadastrar, ela ter\u00e1 acesso ao Projeto OBA \u2014 Otimizar o Bari\u00e1trico."
-              : "Avalia\u00e7\u00e3o salva sob o CPF do paciente. Ao se cadastrar, ele ter\u00e1 acesso ao Projeto OBA \u2014 Otimizar o Bari\u00e1trico."
+            const ela = (resultado._inputs?.sexo || 'M') === 'F'
+            const txt = ela
+              ? "Oriente a paciente a se cadastrar no RedFairy: ao se cadastrar, ela preenche a anamnese do Projeto OBA \u2014 Otimizar o Bari\u00e1trico, e passa a ter acompanhamento din\u00e2mico personalizado. A avalia\u00e7\u00e3o j\u00e1 est\u00e1 salva sob o CPF dela."
+              : "Oriente o paciente a se cadastrar no RedFairy: ao se cadastrar, ele preenche a anamnese do Projeto OBA \u2014 Otimizar o Bari\u00e1trico, e passa a ter acompanhamento din\u00e2mico personalizado. A avalia\u00e7\u00e3o j\u00e1 est\u00e1 salva sob o CPF dele."
             return (
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                <p className="text-sm font-bold text-blue-800 mb-1">{"\ud83d\udce4 Encaminhamento ao Projeto OBA"}</p>
+              <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
+                <p className="text-sm font-bold text-blue-800 mb-1">{"\ud83d\udce4 Recomenda\u00e7\u00e3o \u2014 Projeto OBA"}</p>
                 <p className="text-gray-700 text-sm leading-relaxed">{txt}</p>
               </div>
             )
