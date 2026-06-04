@@ -182,6 +182,68 @@ export default function AdminPage({ onVoltar }) {
   );
 }
 
+// Funil de conversão (DEC-012): Testaram -> Cadastraram -> Pagaram + leads.
+function FunilPacientes() {
+  const [d, setD] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.rpc('admin_funil_pacientes', credAdmin());
+      if (!error && data && data.ok) setD(data);
+      setLoading(false);
+    })();
+  }, []);
+
+  if (loading || !d) return null;  // silencioso se falhar — não atrapalha a lista
+  const testaram = d.testaram || 0, cad = d.cadastraram || 0, pag = d.pagaram || 0;
+  const max = Math.max(testaram, cad, pag, 1);
+  const pct = (n) => Math.round((n / max) * 100);
+  const taxaPag = cad ? Math.round((pag / cad) * 100) : 0;
+  const etapas = [
+    { label: 'Testaram',    n: testaram, cor: '#9ca3af' },
+    { label: 'Cadastraram', n: cad,      cor: '#b91c1c' },
+    { label: 'Pagaram',     n: pag,      cor: '#16a34a' },
+  ];
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <h2 className="text-lg font-semibold text-gray-700">{"Funil de conversão"}</h2>
+      <p className="text-sm text-gray-400 mt-1 mb-3">{"Do teste ao pagamento. Quem testou e não se cadastrou é lead a recuperar."}</p>
+      <div className="space-y-2">
+        {etapas.map(e => (
+          <div key={e.label}>
+            <div className="flex justify-between text-xs mb-0.5">
+              <span className="font-medium text-gray-600">{e.label}</span>
+              <span className="font-bold text-gray-700">{e.n}</span>
+            </div>
+            <div className="h-6 bg-gray-100 rounded-lg overflow-hidden">
+              <div className="h-full rounded-lg" style={{ width: `${pct(e.n)}%`, background: e.cor, transition: 'width 0.5s ease' }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2 mt-4">
+        <div className="bg-green-50 rounded-xl px-2 py-2 text-center">
+          <p className="text-xl font-extrabold text-green-700">{d.testaram_cadastraram || 0}</p>
+          <p className="text-xs text-green-600">{"testaram e cadastraram"}</p>
+        </div>
+        <div className="bg-amber-50 rounded-xl px-2 py-2 text-center">
+          <p className="text-xl font-extrabold text-amber-700">{d.testaram_nao_cadastraram || 0}</p>
+          <p className="text-xs text-amber-600">{"testaram, não cadastraram"}</p>
+        </div>
+        <div className="bg-gray-50 rounded-xl px-2 py-2 text-center">
+          <p className="text-xl font-extrabold text-gray-700">{taxaPag}%</p>
+          <p className="text-xs text-gray-500">{"cadastro → pagamento"}</p>
+        </div>
+      </div>
+      {(d.cadastraram_sem_teste || 0) > 0 && (
+        <p className="text-xs text-gray-400 mt-3">{"Obs.: "}{d.cadastraram_sem_teste}{" cadastrados sem registro de teste (triagem apagada no cadastro)."}</p>
+      )}
+    </div>
+  );
+}
+
 function AbaPacientes() {
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -235,6 +297,7 @@ function AbaPacientes() {
 
   return (
     <div className="space-y-4">
+      <FunilPacientes />
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <input
           type="text"
