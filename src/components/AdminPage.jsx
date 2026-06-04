@@ -158,6 +158,7 @@ export default function AdminPage({ onVoltar }) {
             { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
             { id: 'medicos',      label: "\ud83e\ude7a M\u00e9dicos" },
             { id: 'prescricoes',  label: "\ud83d\udcca Prescri\u00e7\u00f5es" },
+            { id: 'recrutar',     label: "\ud83d\udce3 Recrutar" },
             { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
           ].map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
@@ -176,6 +177,7 @@ export default function AdminPage({ onVoltar }) {
         {aba === 'suplementos'  && <AbaSuplementos />}
         {aba === 'medicos'      && <AbaMedicos />}
         {aba === 'prescricoes'  && <AbaPrescricoes />}
+        {aba === 'recrutar'     && <AbaRecrutar />}
         {aba === 'config'       && <AbaConfig />}
       </div>
     </div>
@@ -1632,6 +1634,79 @@ function AbaPrescricoes() {
         </div>
         <p className="text-xs text-gray-400 mt-3">{"Atribuído à marca ATIVA atual · fonte: avaliações · histórico por marca = fase 2."}</p>
       </div>
+    </div>
+  );
+}
+
+// ── Aba Recrutar (DEC-012) ────────────────────────────────────────────────
+// CRMs que triam pacientes mas não têm conta — alvos de recrutamento 4DOC.
+function AbaRecrutar() {
+  const [crms, setCrms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.rpc('admin_crms_sem_conta', credAdmin());
+      if (error) setErro("Não foi possível carregar. A migration migrate_crms_sem_conta.sql já foi aplicada?");
+      else if (data && !data.ok) setErro(data.erro || 'Sem permissão de admin.');
+      else setCrms(data?.crms || []);
+      setLoading(false);
+    })();
+  }, []);
+
+  if (loading) return <div className="text-center py-12 text-gray-400">{"Carregando..."}</div>;
+  if (erro) return <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center text-red-700 text-sm font-medium">{"⚠️ "}{erro}</div>;
+
+  const ufDe = (crm) => ((crm || '').split('/')[1] || '').toUpperCase().trim();
+  const totalTriados = crms.reduce((s, c) => s + (c.n_triados || 0), 0);
+  const totalConv = crms.reduce((s, c) => s + (c.n_convertidos || 0), 0);
+  const porRegiao = {};
+  crms.forEach(c => { const r = regiaoDe(ufDe(c.crm)); porRegiao[r] = (porRegiao[r] || 0) + 1; });
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-gray-700">{"Recrutamento de afiliados"}</h2>
+        <p className="text-sm text-gray-400 mt-1">
+          {"Médicos que já usam a plataforma (triaram pacientes) mas NÃO criaram conta. Cada um é um afiliado 4DOC em potencial."}
+        </p>
+        <div className="flex flex-wrap gap-3 mt-3 text-sm">
+          <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{crms.length}{" sem conta"}</span>
+          <span className="bg-red-50 rounded-full px-3 py-1 font-medium text-red-700">{totalTriados}{" pacientes triados"}</span>
+          <span className="bg-amber-100 rounded-full px-3 py-1 font-medium text-amber-700">{totalConv}{" converteriam"}</span>
+          {Object.entries(porRegiao).sort((a, b) => b[1] - a[1]).map(([r, n]) => (
+            <span key={r} className="bg-gray-50 rounded-full px-3 py-1 font-medium text-gray-600">{r}: {n}</span>
+          ))}
+        </div>
+      </div>
+
+      {crms.length === 0 && (
+        <p className="text-center text-gray-400 py-8 text-sm">{"Nenhum CRM sem conta — todos os que triam já têm conta. 🎉"}</p>
+      )}
+
+      {crms.map((c, i) => (
+        <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-bold text-gray-800">{"CRM "}{c.crm}</p>
+            <p className="text-xs text-gray-400">{regiaoDe(ufDe(c.crm))}</p>
+          </div>
+          <div className="flex gap-2">
+            <div className="bg-gray-50 rounded-xl px-3 py-2 text-center" style={{ minWidth: 72 }}>
+              <p className="text-xl font-extrabold text-gray-700">{c.n_triados}</p>
+              <p className="text-xs text-gray-500">{"triados"}</p>
+            </div>
+            <div className="bg-amber-50 rounded-xl px-3 py-2 text-center" style={{ minWidth: 72 }}>
+              <p className="text-xl font-extrabold text-amber-700">{c.n_convertidos}</p>
+              <p className="text-xs text-amber-600">{"converteriam"}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {crms.length > 0 && (
+        <p className="text-xs text-gray-400">{"Dica: estes médicos já confiam na plataforma. Um convite pra criar conta no 4DOC transforma as triagens em comissões pra eles — e em afiliados pra você."}</p>
+      )}
     </div>
   );
 }
