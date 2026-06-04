@@ -80,7 +80,7 @@ function montarCondutaFerro(avaliacao, medsAtivos) {
     if (inf.length) t += `   ${inf.join('; ')}.\n`;
     if (med.observacoes) t += `   Obs.: ${med.observacoes}\n`;
   }
-  if (n === 0) t += `\n(Nenhuma marca ativa no catálogo — configurar no painel admin → Medicamentos.)\n`;
+  if (n === 0) t += `\n(Nenhuma marca ativa no catálogo — configurar no painel admin → Ferro EV.)\n`;
   t += `\nMonitoramento: repetir hemograma em 4 semanas; ferritina e saturação em 8 semanas.\n\n`;
   return t;
 }
@@ -151,7 +151,7 @@ export default function AdminPage({ onVoltar }) {
         <div className="max-w-3xl mx-auto flex gap-2 mt-3">
           {[
             { id: 'pacientes',    label: "\ud83d\udc65 Pacientes" },
-            { id: 'medicamentos', label: "\ud83d\udc8a Medicamentos" },
+            { id: 'medicamentos', label: "\ud83e\ude78 Ferro EV" },
             { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
             { id: 'medicos',      label: "\ud83e\ude7a M\u00e9dicos" },
             { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
@@ -1087,6 +1087,27 @@ function regiaoDe(uf) {
 
 const fmtUsd = (n) => 'US$ ' + (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtBrl = (n) => 'R$ '  + (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtData = (iso) => { if (!iso) return '—'; const d = new Date(iso); return isNaN(d) ? '—' : d.toLocaleDateString('pt-BR'); };
+// Mascara CPF preservando o miolo (LGPD): 013.529.807-54 -> ***.529.807-**
+const maskCpf = (cpf) => {
+  const s = (cpf || '').replace(/\D/g, '');
+  if (s.length !== 11) return cpf || '—';
+  return `***.${s.slice(3, 6)}.${s.slice(6, 9)}-**`;
+};
+const FILTROS_MED = [
+  { id: 'todos',       label: 'Todos' },
+  { id: 'a_pagar',     label: 'A pagar' },
+  { id: 'pagos',       label: 'Já pagos' },
+  { id: 'afiliados',   label: 'Afiliados' },
+  { id: 'incompletos', label: 'Perfil incompleto' },
+];
+function passaFiltroMed(m, f) {
+  if (f === 'a_pagar')     return (m.creditos_pendentes || 0) > 0;
+  if (f === 'pagos')       return (m.creditos_pagos || 0) > 0;
+  if (f === 'afiliados')   return !!m.afiliado;
+  if (f === 'incompletos') return !m.afiliado;
+  return true;
+}
 
 function AbaMedicos() {
   const [medicos, setMedicos] = useState([]);
@@ -1096,6 +1117,10 @@ function AbaMedicos() {
   const [erro, setErro] = useState('');
   const [busca, setBusca] = useState('');
   const [liquidando, setLiquidando] = useState('');
+  const [filtro, setFiltro] = useState('todos');
+  const [extratoMed, setExtratoMed] = useState(null);   // médico do extrato aberto
+  const [extrato, setExtrato] = useState(null);          // conversões carregadas
+  const [carregandoExtrato, setCarregandoExtrato] = useState(false);
 
   async function carregar() {
     const { data, error } = await supabase.rpc('admin_listar_medicos', credAdmin());
@@ -1123,21 +1148,54 @@ function AbaMedicos() {
     await carregar();
   }
 
+  async function abrirExtrato(m) {
+    setExtratoMed(m); setExtrato(null); setCarregandoExtrato(true);
+    const { data, error } = await supabase.rpc('admin_extrato_medico', { ...credAdmin(), p_medico_crm: m.crm });
+    setCarregandoExtrato(false);
+    if (error || (data && !data.ok)) { window.alert('Erro ao carregar extrato: ' + (error?.message || data?.erro || '')); return; }
+    setExtrato(data?.conversoes || []);
+  }
+
+  function textoExtrato(m, convs) {
+    const pend = m.creditos_pendentes || 0, pagos = m.creditos_pagos || 0;
+    const linhas = (convs || []).map((c, i) =>
+      `${i + 1}. ${c.nome || 'Paciente'} (${maskCpf(c.cpf)}) \u2014 ${fmtData(c.data_conversao)} \u2014 ${c.pago ? 'PAGO em ' + fmtData(c.data_pagamento) : 'A PAGAR'}`
+    ).join('\n');
+    return [
+      `EXTRATO 4DOC \u2014 ${m.nome || m.crm} (CRM ${m.crm})`,
+      m.pix_chave ? `PIX: ${m.pix_chave}` : 'PIX: n\u00e3o cadastrado',
+      `Comiss\u00e3o: ${fmtUsd(comissaoUsd)} por convers\u00e3o` + (cotacao ? ` \u00b7 cota\u00e7\u00e3o ${fmtBrl(cotacao)}` : ''),
+      ``,
+      `Convertidos: ${m.n_convertidos || 0}  |  A pagar: ${fmtUsd(pend * comissaoUsd)}${cotacao ? ' (' + fmtBrl(pend * comissaoUsd * cotacao) + ')' : ''}  |  J\u00e1 pago: ${fmtUsd(pagos * comissaoUsd)}`,
+      ``,
+      `Convers\u00f5es:`,
+      linhas || '(nenhuma)',
+    ].join('\n');
+  }
+
+  async function copiarExtrato(m, convs) {
+    try { await navigator.clipboard.writeText(textoExtrato(m, convs)); window.alert('Extrato copiado!'); }
+    catch (e) { window.alert('N\u00e3o foi poss\u00edvel copiar.'); }
+  }
+
   if (loading) return <div className="text-center py-12 text-gray-400">Carregando m\u00e9dicos...</div>;
 
   const termo = busca.trim().toLowerCase();
-  const filtrados = !termo ? medicos : medicos.filter(m =>
+  const filtrados = medicos.filter(m => passaFiltroMed(m, filtro) && (
+    !termo ||
     (m.nome || '').toLowerCase().includes(termo) ||
     (m.crm || '').toLowerCase().includes(termo) ||
     (m.uf || '').toLowerCase().includes(termo) ||
     regiaoDe(m.uf).toLowerCase().includes(termo)
-  );
+  ));
 
   const totalAfiliados = medicos.filter(m => m.afiliado).length;
   const porRegiao = {};
   medicos.forEach(m => { const r = regiaoDe(m.uf); porRegiao[r] = (porRegiao[r] || 0) + 1; });
   const totalPendentes = medicos.reduce((s, m) => s + (m.creditos_pendentes || 0), 0);
+  const totalPagos     = medicos.reduce((s, m) => s + (m.creditos_pagos || 0), 0);
   const totalUsdPend = totalPendentes * comissaoUsd;
+  const totalUsdPago = totalPagos * comissaoUsd;
 
   return (
     <div className="space-y-5">
@@ -1151,7 +1209,10 @@ function AbaMedicos() {
           <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{medicos.length}{" m\u00e9dico(s)"}</span>
           <span className="bg-green-100 rounded-full px-3 py-1 font-medium text-green-700">{totalAfiliados} afiliado(s)</span>
           <span className="bg-amber-100 rounded-full px-3 py-1 font-medium text-amber-700">
-            A pagar: {fmtUsd(totalUsdPend)}{cotacao ? ` \u2248 ${fmtBrl(totalUsdPend * cotacao)}` : ''}
+            {"A pagar: "}{fmtUsd(totalUsdPend)}{cotacao ? ` \u2248 ${fmtBrl(totalUsdPend * cotacao)}` : ''}
+          </span>
+          <span className="bg-green-50 rounded-full px-3 py-1 font-medium text-green-700">
+            {"J\u00e1 pago: "}{fmtUsd(totalUsdPago)}{cotacao ? ` \u2248 ${fmtBrl(totalUsdPago * cotacao)}` : ''}
           </span>
           {Object.entries(porRegiao).sort((a,b)=>b[1]-a[1]).map(([r,n]) => (
             <span key={r} className="bg-red-50 rounded-full px-3 py-1 font-medium text-red-700">{r}: {n}</span>
@@ -1160,6 +1221,17 @@ function AbaMedicos() {
         {!cotacao && (
           <p className="text-xs text-amber-600 mt-2">{"\u26a0\ufe0f Cota\u00e7\u00e3o do d\u00f3lar n\u00e3o definida \u2014 configure em Configura\u00e7\u00f5es para ver os valores em R$."}</p>
         )}
+        <div className="flex flex-wrap gap-2 mt-3">
+          {FILTROS_MED.map(f => {
+            const n = medicos.filter(m => passaFiltroMed(m, f.id)).length;
+            return (
+              <button key={f.id} onClick={() => setFiltro(f.id)}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${filtro === f.id ? 'bg-red-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                {f.label} ({n})
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {erro && (
@@ -1226,16 +1298,96 @@ function AbaMedicos() {
                 ? <p className="text-xs text-gray-500 mt-0.5">{"Pix: "}<span className="font-mono break-all">{m.pix_chave}</span></p>
                 : <p className="text-xs text-amber-600 mt-0.5">{"Sem chave Pix cadastrada."}</p>}
             </div>
-            {pend > 0 && (
-              <button onClick={() => liquidar(m)} disabled={liquidando === m.crm}
-                className="shrink-0 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors disabled:opacity-50">
-                {liquidando === m.crm ? 'Liquidando...' : 'Marcar como pago'}
+            <div className="shrink-0 flex gap-2">
+              <button onClick={() => abrirExtrato(m)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold px-4 py-2 rounded-xl transition-colors">
+                Extrato
               </button>
-            )}
+              {pend > 0 && (
+                <button onClick={() => liquidar(m)} disabled={liquidando === m.crm}
+                  className="bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors disabled:opacity-50">
+                  {liquidando === m.crm ? 'Liquidando...' : 'Marcar como pago'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
         );
       })}
+
+      {extratoMed && (
+        <ExtratoModal
+          medico={extratoMed} conversoes={extrato} carregando={carregandoExtrato}
+          comissaoUsd={comissaoUsd} cotacao={cotacao}
+          onCopiar={() => copiarExtrato(extratoMed, extrato)}
+          onFechar={() => { setExtratoMed(null); setExtrato(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ExtratoModal({ medico, conversoes, carregando, comissaoUsd, cotacao, onCopiar, onFechar }) {
+  const m = medico;
+  const pend = m.creditos_pendentes || 0, pagos = m.creditos_pagos || 0;
+  return (
+    <div onClick={onFechar}
+      style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(15,18,25,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div onClick={e => e.stopPropagation()}
+        className="bg-white rounded-2xl shadow-xl w-full max-w-lg" style={{ maxHeight: '88vh', overflowY: 'auto' }}>
+        <div className="px-5 py-4 border-b border-gray-100 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="font-bold text-gray-800">{"Extrato — "}{m.nome || m.crm}</p>
+            <p className="text-xs text-gray-500">{"CRM "}{m.crm}{" · "}{m.pix_chave ? <span className="font-mono break-all">{"Pix: "}{m.pix_chave}</span> : 'sem Pix'}</p>
+          </div>
+          <button onClick={onFechar} className="shrink-0 text-gray-400 hover:text-gray-600 text-xl leading-none">{"✕"}</button>
+        </div>
+
+        <div className="px-5 py-4">
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="bg-gray-50 rounded-xl px-2 py-2 text-center">
+              <p className="text-lg font-extrabold text-gray-700">{m.n_convertidos || 0}</p>
+              <p className="text-xs text-gray-500">convertidos</p>
+            </div>
+            <div className="bg-amber-50 rounded-xl px-2 py-2 text-center">
+              <p className="text-lg font-extrabold text-amber-700">{fmtUsd(pend * comissaoUsd)}</p>
+              <p className="text-xs text-amber-600">{"a pagar"}{cotacao ? ` · ${fmtBrl(pend * comissaoUsd * cotacao)}` : ''}</p>
+            </div>
+            <div className="bg-green-50 rounded-xl px-2 py-2 text-center">
+              <p className="text-lg font-extrabold text-green-700">{fmtUsd(pagos * comissaoUsd)}</p>
+              <p className="text-xs text-green-600">{"já pago"}</p>
+            </div>
+          </div>
+
+          {carregando ? (
+            <p className="text-center text-gray-400 py-6 text-sm">Carregando extrato...</p>
+          ) : (conversoes && conversoes.length > 0) ? (
+            <div className="divide-y divide-gray-100">
+              {conversoes.map((c, i) => (
+                <div key={i} className="py-2 flex items-center justify-between gap-2 text-sm">
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-700 truncate">{c.nome || 'Paciente'}</p>
+                    <p className="text-xs text-gray-400">{maskCpf(c.cpf)}{" · "}{fmtData(c.data_conversao)}</p>
+                  </div>
+                  <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${c.pago ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {c.pago ? `pago · ${fmtData(c.data_pagamento)}` : 'a pagar'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-400 py-6 text-sm">{"Sem conversões registradas."}</p>
+          )}
+        </div>
+
+        <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-2">
+          <button onClick={onFechar} className="px-4 py-2 rounded-xl text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200">Fechar</button>
+          <button onClick={onCopiar} disabled={carregando}
+            className="px-4 py-2 rounded-xl text-sm font-bold text-white bg-red-700 hover:bg-red-800 disabled:opacity-50">
+            Copiar extrato
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
