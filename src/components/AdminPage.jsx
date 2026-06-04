@@ -159,6 +159,7 @@ export default function AdminPage({ onVoltar }) {
             { id: 'medicos',      label: "\ud83e\ude7a M\u00e9dicos" },
             { id: 'prescricoes',  label: "\ud83d\udcca Prescri\u00e7\u00f5es" },
             { id: 'recrutar',     label: "\ud83d\udce3 Recrutar" },
+            { id: 'extratos',     label: "\ud83d\udccb Extratos OBA" },
             { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
           ].map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
@@ -178,6 +179,7 @@ export default function AdminPage({ onVoltar }) {
         {aba === 'medicos'      && <AbaMedicos />}
         {aba === 'prescricoes'  && <AbaPrescricoes />}
         {aba === 'recrutar'     && <AbaRecrutar />}
+        {aba === 'extratos'     && <AbaExtratos />}
         {aba === 'config'       && <AbaConfig />}
       </div>
     </div>
@@ -1736,6 +1738,132 @@ function AbaRecrutar() {
       {crms.length > 0 && (
         <p className="text-xs text-gray-400">{"Dica: estes médicos já confiam na plataforma. Um convite pra criar conta no 4DOC transforma as triagens em comissões pra eles — e em afiliados pra você."}</p>
       )}
+    </div>
+  );
+}
+
+// ── Aba Extratos OBA (DEC-015) ────────────────────────────────────────────
+// Extratos da anamnese OBA que médicos pediram (opt-in) e o ADM precisa entregar.
+function textoExtratoOba(e) {
+  const a = e.anamnese || {}, m = e.medico || {};
+  const ln = (label, val, unit) =>
+    (val !== null && val !== undefined && val !== '') ? `${label}: ${val}${unit ? ' ' + unit : ''}` : null;
+  return [
+    `EXTRATO ANAMNESE OBA — ${e.paciente_nome || e.cpf}`,
+    `Para: ${m.nome || m.crm || '—'}${m.crm ? ' (CRM ' + m.crm + ')' : ''}`,
+    ``,
+    `Cirurgia: ${a.tipo_cirurgia || '—'}${a.meses_pos_cirurgia ? ' · ' + a.meses_pos_cirurgia + ' meses pós-op' : ''}`,
+    ln('Peso antes', a.peso_antes, 'kg'),
+    ln('Peso atual', a.peso_atual, 'kg'),
+    ln('Kg perdidos', a.kg_perdidos, 'kg'),
+    ``,
+    `STATUS:`,
+    ln('  Glicêmico', a.status_glicemico),
+    ln('  Pressórico', a.status_pressorico),
+    ln('  Ósseo', a.status_osseo),
+    ln('  Dental', a.status_dental),
+    ln('  Intestinal', a.status_intestinal),
+    ln('  Neurológico', a.status_neurologico),
+    ``,
+    `LABS:`,
+    ln('  B12', a.vitamina_b12, 'pg/mL'),
+    ln('  Vit D', a.vitamina_d, 'ng/mL'),
+    ln('  Ferritina', a.ferritina_oba, 'ng/mL'),
+    ln('  Glicemia', a.glicemia, 'mg/dL'),
+    ln('  HbA1c', a.hb_glicada, '%'),
+    ln('  TSH', a.tsh, 'mUI/L'),
+  ].filter(x => x !== null).join('\n');
+}
+
+function AbaExtratos() {
+  const [extratos, setExtratos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
+  const [soPendentes, setSoPendentes] = useState(true);
+  const [marcando, setMarcando] = useState(0);
+
+  async function carregar() {
+    const { data, error } = await supabase.rpc('admin_extratos_oba', credAdmin());
+    if (error) setErro("Não foi possível carregar. A migration migrate_extratos_oba.sql já foi aplicada?");
+    else if (data && !data.ok) setErro(data.erro || 'Sem permissão de admin.');
+    else { setErro(''); setExtratos(data?.extratos || []); }
+    setLoading(false);
+  }
+  useEffect(() => { carregar(); }, []);
+
+  async function copiar(e) {
+    try { await navigator.clipboard.writeText(textoExtratoOba(e)); window.alert('Extrato copiado!'); }
+    catch (err) { window.alert('Não foi possível copiar.'); }
+  }
+  async function marcarEntregue(e) {
+    if (!window.confirm(`Marcar o extrato de ${e.paciente_nome || e.cpf} (CRM ${e.medico?.crm}) como ENTREGUE?`)) return;
+    setMarcando(e.id);
+    const { data, error } = await supabase.rpc('admin_marcar_extrato_entregue', { ...credAdmin(), p_id: e.id });
+    setMarcando(0);
+    if (error || (data && !data.ok)) { window.alert('Erro ao marcar: ' + (error?.message || data?.erro || '')); return; }
+    await carregar();
+  }
+
+  if (loading) return <div className="text-center py-12 text-gray-400">{"Carregando extratos..."}</div>;
+  if (erro) return <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center text-red-700 text-sm font-medium">{"⚠️ "}{erro}</div>;
+
+  const pendentes = extratos.filter(e => !e.entregue);
+  const lista = soPendentes ? pendentes : extratos;
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-gray-700">{"Extratos OBA a entregar"}</h2>
+        <p className="text-sm text-gray-400 mt-1">
+          {"Anamneses OBA que médicos pediram (opt-in na avaliação). Copie o extrato e envie ao médico (WhatsApp/Telegram/e-mail), depois marque como entregue."}
+        </p>
+        <div className="flex flex-wrap gap-2 mt-3">
+          <button onClick={() => setSoPendentes(true)}
+            className={`px-3 py-1 rounded-full text-xs font-bold ${soPendentes ? 'bg-red-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            {"Pendentes ("}{pendentes.length}{")"}
+          </button>
+          <button onClick={() => setSoPendentes(false)}
+            className={`px-3 py-1 rounded-full text-xs font-bold ${!soPendentes ? 'bg-red-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            {"Todos ("}{extratos.length}{")"}
+          </button>
+        </div>
+      </div>
+
+      {lista.length === 0 && (
+        <p className="text-center text-gray-400 py-8 text-sm">{soPendentes ? "Nenhum extrato pendente. 🎉" : "Nenhum extrato registrado ainda."}</p>
+      )}
+
+      {lista.map(e => (
+        <div key={e.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-bold text-gray-800">{e.paciente_nome || e.cpf}</p>
+              <p className="text-sm text-gray-500">
+                {"Médico: "}{e.medico?.nome || e.medico?.crm || '—'}{e.medico?.crm ? ` (CRM ${e.medico.crm})` : ''}
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {e.medico?.celular ? `📱 ${e.medico.celular}` : ''}{e.medico?.email ? ` · ✉️ ${e.medico.email}` : ''}
+                {e.medico?.usa_telegram ? ' · ✈️ usa Telegram' : ''}
+              </p>
+            </div>
+            <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${e.entregue ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+              {e.entregue ? `entregue · ${fmtData(e.data_entrega)}` : 'pendente'}
+            </span>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <button onClick={() => copiar(e)}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold px-4 py-2 rounded-xl transition-colors">
+              Copiar extrato
+            </button>
+            {!e.entregue && (
+              <button onClick={() => marcarEntregue(e)} disabled={marcando === e.id}
+                className="bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors disabled:opacity-50">
+                {marcando === e.id ? 'Marcando...' : 'Marcar como entregue'}
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
