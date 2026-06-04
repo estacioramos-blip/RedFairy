@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 
@@ -31,6 +31,11 @@ export default function TriagemResultadoModal({
   const [erroSalvamento, setErroSalvamento] = useState(null)
   const [pedNome, setPedNome] = useState('')
   const [pedCelular, setPedCelular] = useState('')
+  // Padrao seamless da tela "primeiro pedido gratuito": campo amarelo ativo + auto-avanco.
+  const [campoAtivoPed, setCampoAtivoPed] = useState('nome')
+  const pedCelRef = useRef(null)
+  const pedNomeTimer = useRef(null)
+  useEffect(() => () => { if (pedNomeTimer.current) clearTimeout(pedNomeTimer.current) }, [])
 
   if (!resultado) return null
 
@@ -155,7 +160,10 @@ export default function TriagemResultadoModal({
       return
     }
     if (resp.limite3) { setTela('limite3'); return }
-    if (resp.pedidoExames) { setTela('pedidoExames'); return }
+    // 'pedidoExames' e a tela de paciente ("primeiro pedido gratuito"): so faz
+    // sentido para o paciente. Em modo medico, cai na tela 'aguardo' (que tem
+    // mensagem propria para o medico).
+    if (resp.pedidoExames && !modoMedico) { setTela('pedidoExames'); return }
     // Paciente logado: pula a tela 'aguardo' (ja tem dashboard com historico)
     // e vai direto pro proximo (que volta pro dashboard / landing).
     if (userId) {
@@ -193,12 +201,14 @@ export default function TriagemResultadoModal({
       window.open('https://wa.me/5571997110804?text=' + texto, '_blank')
     }
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
-        <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
-          <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
-            <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
-            <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
-            <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">Pedido de exames</p>
+      <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.7)' }}>
+        <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl my-8 overflow-hidden">
+          {/* Header compacto com a fadinha RedFairy a' esquerda (padrao novo) */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
+            <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
+              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+            </h2>
           </div>
           <div className="p-6 space-y-4">
             <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
@@ -211,16 +221,25 @@ export default function TriagemResultadoModal({
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
               <input
-                type="text"
+                type="text" autoFocus
                 value={pedNome}
-                onChange={e => setPedNome(e.target.value.toUpperCase())}
+                onChange={e => {
+                  const val = e.target.value.toUpperCase()
+                  setPedNome(val)
+                  if (pedNomeTimer.current) clearTimeout(pedNomeTimer.current)
+                  pedNomeTimer.current = setTimeout(() => {
+                    if (val.trim().length > 2) pedCelRef.current?.focus()  // 2,5s parado \u2192 salta p/ celular
+                  }, 2500)
+                }}
+                onFocus={() => setCampoAtivoPed('nome')}
                 placeholder="Nome completo do paciente"
-                className="w-full border-2 border-yellow-400 bg-yellow-50 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className={`w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none border-2 transition-colors ${campoAtivoPed === 'nome' ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white'}`}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
               <input
+                ref={pedCelRef}
                 type="tel"
                 value={pedCelular}
                 onChange={e => {
@@ -231,21 +250,27 @@ export default function TriagemResultadoModal({
                   else if (d.length > 2) f = '(' + d.slice(0,2) + ') ' + d.slice(2)
                   setPedCelular(f)
                 }}
+                onFocus={() => setCampoAtivoPed('celular')}
                 placeholder="(00) 00000-0000"
                 inputMode="numeric"
-                className="w-full border-2 border-yellow-400 bg-yellow-50 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                className={`w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none border-2 transition-colors ${campoAtivoPed === 'celular' ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white'}`}
               />
             </div>
-            <button
-              onClick={enviarWhatsApp}
-              disabled={!podeEnviar}
-              className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed">
-              Solicitar exames pelo WhatsApp
-            </button>
+            {/* Botao cinza piscante com PLAY + "CONFIRMO" (vinho) \u2014 aparece quando os dados estao validos */}
+            {podeEnviar && (
+              <div className="flex flex-col items-center gap-1 pt-1">
+                <style>{`@keyframes rfPlayBlinkWinePed { 0%,100%{box-shadow:0 0 0 0 rgba(123,30,30,0.55);} 50%{box-shadow:0 0 0 9px rgba(123,30,30,0);} } .rf-play-wine-ped{ animation: rfPlayBlinkWinePed 1.1s ease-in-out infinite; }`}</style>
+                <button onClick={enviarWhatsApp} aria-label="Solicitar exames pelo WhatsApp"
+                  className="rf-play-wine-ped w-14 h-14 rounded-full bg-gray-300 hover:bg-gray-400 flex items-center justify-center transition-colors shadow-md">
+                  <span style={{ color: '#7B1E1E', fontSize: '1.4rem', lineHeight: 1, marginLeft: 3 }}>{"\u25b6"}</span>
+                </button>
+                <span className="text-xs font-bold tracking-wide" style={{ color: '#7B1E1E' }}>CONFIRMO</span>
+              </div>
+            )}
             <button
               onClick={onVoltarInicio}
-              className="w-full py-2.5 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold transition-colors text-sm">
-              Continuar
+              className="w-full text-center text-gray-400 hover:text-gray-600 text-xs font-medium py-1">
+              {"Continuar sem solicitar agora"}
             </button>
           </div>
         </div>
@@ -314,11 +339,16 @@ export default function TriagemResultadoModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ background: 'rgba(0,0,0,0.6)' }}>
         <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
-          <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
-            <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
-            <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
-            <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">{"\u2728 Triagem Salva"}</p>
-            <h3 className="text-lg font-semibold text-gray-800 mt-3 leading-tight">
+          {/* Header compacto com a fadinha RedFairy a' esquerda (padrao novo) */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
+            <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
+              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+            </h2>
+            <span className="ml-auto text-xs uppercase tracking-widest text-gray-500">{"\u2728 Triagem Salva"}</span>
+          </div>
+          <div className="px-6 pt-5 text-center">
+            <h3 className="text-lg font-semibold text-gray-800 leading-tight">
               {modoMedico ? 'Triagem salva' : "Estaremos aguardando voc\u00ea!"}
             </h3>
           </div>

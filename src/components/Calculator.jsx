@@ -376,22 +376,26 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             <p style={{ color: '#ffffff', fontSize: '42px', fontWeight: 900, lineHeight: 1.1, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{vamosTxt}</p>
           </div>
         </div>
-        {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons */}
-        <div style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons.
+            zIndex 10 (acima do splash zIndex 5) para o header ja aparecer durante a
+            imagem nitida de entrada (3s), nao so' quando surgem os campos. */}
+        <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
             <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
           </h2>
         </div>
-        <div className="px-8 pb-8 pt-3 space-y-5" style={{ position: 'relative', zIndex: 1 }}>
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-red-700">
+        {/* Titulo do modo (Primeiro Acesso / Acesso Medico): zIndex 10 p/ aparecer JUNTO do header
+            e da imagem desde o inicio (durante o splash), nao so' quando surgem os campos. */}
+        <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', padding: '6px 14px 10px', textAlign: 'center' }}>
+          <h2 className="text-xl font-bold text-red-700" style={{ margin: 0 }}>
             {modo === 'login' ? "Acesso M\u00e9dico" : "Primeiro Acesso M\u00e9dico"}
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm" style={{ margin: '2px 0 0' }}>
             {modo === 'login' ? 'Entre com seu conselho e senha' : 'Crie seu acesso ao RedFairy'}
           </p>
         </div>
+        <div className="px-8 pb-8 pt-3 space-y-5" style={{ position: 'relative', zIndex: 1 }}>
 
         {sessaoExpirada && (
           <div className="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 mb-2 text-center">
@@ -726,6 +730,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [triagemInputs, setTriagemInputs] = useState(null);
   const [showAfiliados, setShowAfiliados] = useState(false);
   const [showAfiliadosBanner, setShowAfiliadosBanner] = useState(false);
+  // Marca que o 4DOC ja foi oferecido (modal cheio) nesta sessao: evita o modal reaparecer
+  // depois que o medico ja declinou ("Preencher depois"). Apos isso, no maximo o banner.
+  const jaOfereceu4DOCRef = React.useRef(false);
+  React.useEffect(() => { if (showAfiliados) jaOfereceu4DOCRef.current = true; }, [showAfiliados]);
   const [afiliadoEndereco, setAfiliadoEndereco] = useState('');
   const [afiliadoPix, setAfiliadoPix] = useState('');
   const [afiliadoSalvando, setAfiliadoSalvando] = useState(false);
@@ -734,7 +742,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [afiliadoCPF, setAfiliadoCPF] = useState('');
   const [afiliadoCPFErro, setAfiliadoCPFErro] = useState('');
   const [usaTelegram, setUsaTelegram] = useState(false);
-  const [tgChatId, setTgChatId] = useState('');
   const refAfilCEP = useRef(null);
   const refAfilCPF = useRef(null);
   const refAfilPix = useRef(null);
@@ -851,11 +858,19 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   }
   const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(false);
   const [showFelicitacoes, setShowFelicitacoes] = useState(false);
+  // Modal de felicitacoes: imagem de fundo revela no hover (modal unico, sem splash de 2 fases).
+  const [bgFelicRevelado, setBgFelicRevelado] = useState(false);
 
   async function decidirPosTriagem() {
-    setTriagemResultado(null);
-    setShowTriagem(false);
-    if (podeConvite()) { setDestinoAposConvite('landing'); setShowConviteAfiliado(true); return; }
+    // Caminho convite (medico novo): tudo sincrono → fecha resultado e abre convite no mesmo tick.
+    if (podeConvite()) {
+      setDestinoAposConvite('landing'); setShowConviteAfiliado(true);
+      setTriagemResultado(null); setShowTriagem(false);
+      return;
+    }
+    // Caminho !convite: a query e' assincrona. NAO fecha o modal de resultado antes — senao o
+    // Calculator fica exposto durante o await (o "flash"). Fecha o resultado JUNTO com abrir o
+    // proximo destino (mesmo tick), depois que a query resolve.
     let completo = false;
     try {
       const { data: md } = await supabase.from('medicos').select('nome, email').eq('crm', medicoCRM).maybeSingle();
@@ -864,8 +879,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     // Medico ja cadastrado (nome+email completos) = veterano: NAO mostra "Estamos felizes",
     // vai direto pro Calculator (dados ja preenchidos pela triagem). O modal de boas-vindas
     // so' faz sentido para quem acabou de se cadastrar (fluxo via showAuthMedicoOverlay).
-    if (completo) { /* veterano: segue direto no Calculator, sem modal */ }
-    else { setShowAuthMedicoOverlay('cadastro'); }
+    if (!completo) { setShowAuthMedicoOverlay('cadastro'); }
+    setTriagemResultado(null); setShowTriagem(false);
   }
   const [showBeneficios, setShowBeneficios] = useState(false);
 
@@ -1215,7 +1230,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         const { count: totalAvals } = await supabase.from('avaliacoes').select('*', { count: 'exact', head: true }).eq('medico_crm', medicoCRM)
         const { data: medDados } = await supabase.from('medicos').select('cep, cpf, pix_chave').eq('crm', medicoCRM).maybeSingle()
         if (!medDados?.cep || !medDados?.cpf || !medDados?.pix_chave) {
-          if ((totalAvals || 0) === 0) setTimeout(() => setShowAfiliados(true), 1200)
+          // Se o 4DOC ja foi oferecido (e declinado) nesta sessao, nao reabre o modal cheio:
+          // no maximo o banner discreto. (Antes, o modal reaparecia logo apos a 1a avaliacao.)
+          if ((totalAvals || 0) === 0 && !jaOfereceu4DOCRef.current) setTimeout(() => setShowAfiliados(true), 1200)
           else setTimeout(() => setShowAfiliadosBanner(true), 1200)
         }
       }
@@ -1395,12 +1412,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 </div>
               </div>
             </div>
-            {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons */}
-            <div style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons.
+                zIndex 10 (acima do splash zIndex 5) p/ o header ja aparecer durante a imagem. */}
+            <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
               <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
               <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
                 <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
               </h2>
+            </div>
+            {/* Subtitulo vinho do programa: zIndex 10 p/ aparecer desde o inicio, junto do header */}
+            <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '0 14px 9px', flexShrink: 0 }}>
+              <p style={{ margin: 0, color: '#7B1E1E', fontWeight: 700, fontSize: '13px', letterSpacing: '0.3px' }}>{"4DOC® Programa de Afiliados"}</p>
             </div>
 
             <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
@@ -1500,36 +1522,32 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <input type="checkbox" checked={usaTelegram} onChange={e => setUsaTelegram(e.target.checked)} style={{ accentColor: '#7B1E1E' }} />
                 <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"USO TAMBÉM O TELEGRAM"}</span>
               </label>
-              {usaTelegram && (
-                <div className="mb-2">
-                  <input type="text" value={tgChatId}
-                    onChange={e => setTgChatId(e.target.value)}
-                    placeholder="Seu Chat ID do Telegram"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
-                  <p className="text-[11px] text-gray-400 mt-1">{"Para receber extratos OBA no Telegram: inicie o nosso bot e pegue seu ID no @userinfobot."}</p>
-                </div>
-              )}
               {afiliadoSalvo ? null : (
                 <div className="space-y-2">
                 {afiliadoCEP.trim() && afiliadoCPF.trim() && afiliadoPix.trim() && !afiliadoCPFErro && (
-                  <button disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || !!afiliadoCPFErro}
-                    onClick={async () => {
-                      setAfiliadoSalvando(true);
-                      const { error } = await supabase.from('medicos').update({
-                        endereco: '', cep: afiliadoCEP.trim(),
-                        cpf: afiliadoCPF.replace(/\D/g, ''),
-                        pix_chave: afiliadoPix.trim(),
-                        usa_telegram: usaTelegram,
-                        telegram_chat_id: usaTelegram ? (tgChatId.trim() || null) : null,
-                      }).eq('crm', medicoCRM);
-                      setAfiliadoSalvando(false);
-                      if (error) { alert('Erro ao salvar. Tente novamente.'); return; }
-                      // Direto para tela de felicita\u00e7\u00f5es sem mensagem intermedi\u00e1ria "Dados salvos"
-                      setAfiliadoSalvo(true); setShowAfiliados(false); setShowFelicitacoes(true);
-                    }}
-                    className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                    {afiliadoSalvando ? 'Salvando...' : "Confirmar dados \u2192"}
-                  </button>
+                  <div className="flex flex-col items-end gap-1 pt-1">
+                    {/* Botao cinza piscante com PLAY + "CONFIRMO" (vinho) \u2014 padrao novo, alinhado a' direita */}
+                    <style>{`@keyframes rfPlayBlinkWine { 0%,100%{box-shadow:0 0 0 0 rgba(123,30,30,0.55);} 50%{box-shadow:0 0 0 9px rgba(123,30,30,0);} } .rf-play-wine{ animation: rfPlayBlinkWine 1.1s ease-in-out infinite; }`}</style>
+                    <button disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || !!afiliadoCPFErro}
+                      onClick={async () => {
+                        setAfiliadoSalvando(true);
+                        const { error } = await supabase.from('medicos').update({
+                          endereco: '', cep: afiliadoCEP.trim(),
+                          cpf: afiliadoCPF.replace(/\D/g, ''),
+                          pix_chave: afiliadoPix.trim(),
+                          usa_telegram: usaTelegram,
+                        }).eq('crm', medicoCRM);
+                        setAfiliadoSalvando(false);
+                        if (error) { alert('Erro ao salvar. Tente novamente.'); return; }
+                        // Direto para tela de felicita\u00e7\u00f5es sem mensagem intermedi\u00e1ria "Dados salvos"
+                        setAfiliadoSalvo(true); setShowAfiliados(false); setShowFelicitacoes(true);
+                      }}
+                      aria-label="Confirmar dados"
+                      className="rf-play-wine w-14 h-14 rounded-full bg-gray-300 hover:bg-gray-400 flex items-center justify-center transition-colors shadow-md disabled:opacity-50">
+                      <span style={{ color: '#7B1E1E', fontSize: '1.4rem', lineHeight: 1, marginLeft: 3 }}>{afiliadoSalvando ? '\u2026' : "\u25b6"}</span>
+                    </button>
+                    <span className="text-xs font-bold tracking-wide" style={{ color: '#7B1E1E' }}>{afiliadoSalvando ? '...' : 'CONFIRMO'}</span>
+                  </div>
                 )}
                   <button onClick={() => setShowAfiliados(false)}
                     className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
@@ -1736,13 +1754,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       {inputs.sexo === 'F' ? "Paciente Bari\u00e1trica" : "Paciente Bari\u00e1trico"}
                     </p>
                     <p className="text-xs opacity-70 leading-tight mt-0.5">
-                      {(dadosVieramDaTriagem && !editandoDadosPaciente && inputs.bariatrica_medico)
+                      {(dadosVieramDaTriagem && !editandoDadosPaciente && inputs.bariatrica_medico && !medicoCRM)
                         ? (inputs.sexo === 'F'
                             ? "NA CONDI\u00c7\u00c3O DE BARI\u00c1TRICA VOC\u00ca PASSAR\u00c1 POR AVALIA\u00c7\u00c3O ESPEC\u00cdFICA"
                             : "NA CONDI\u00c7\u00c3O DE BARI\u00c1TRICO VOC\u00ca PASSAR\u00c1 POR AVALIA\u00c7\u00c3O ESPEC\u00cdFICA")
                         : (inputs.sexo === 'F'
-                            ? "Se a paciente avaliada \u00e9 BARI\u00c1TRICA ela receber\u00e1 a ANAMNESE do Projeto OBA, e passar\u00e1 a ter o acompanhamento din\u00e2mico para a melhor qualidade de vida."
-                            : "Se o paciente avaliado \u00e9 BARI\u00c1TRICO ele receber\u00e1 a ANAMNESE do Projeto OBA, e passar\u00e1 a ter o acompanhamento din\u00e2mico para a melhor qualidade de vida.")}
+                            ? "Na condi\u00e7\u00e3o de BARI\u00c1TRICA, uma vez CADASTRADA na plataforma a sua paciente ter\u00e1 acesso ao Projeto OBA, para melhor qualidade de vida."
+                            : "Na condi\u00e7\u00e3o de BARI\u00c1TRICO, uma vez CADASTRADO na plataforma o seu paciente ter\u00e1 acesso ao Projeto OBA, para melhor qualidade de vida.")}
                     </p>
                   </div>
                 </label>
@@ -2081,7 +2099,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               setMedicoNome(nome);
               setMedicoCRM(crm);
               setCadastrado(true);
-              setShowAuthMedicoOverlay(false);
+              // NAO fecha o overlay aqui: ele continua cobrindo o Calculator durante as
+              // queries abaixo, evitando o "flash" do formulario entre os modais. O overlay
+              // so' fecha JUNTO com a abertura do proximo modal (mesmo tick \u2192 sem buraco).
               // Recarrega medicoDados com os valores FRESCOS do banco (nome, celular, email).
               // Sem isso, os checkboxes "MEU TELEFONE \u00c9 O MEU PIX" e "MEU E-MAIL" ficariam vazios.
               try {
@@ -2091,6 +2111,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               if (afiliacaoRecusada) {
                 setAfiliacaoRecusada(false);
                 setShowFelicitacoes(true);
+                setShowAuthMedicoOverlay(false);
                 return;
               }
               try {
@@ -2106,6 +2127,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 }
               } catch (e) {
                 setShowAfiliados(true);
+              } finally {
+                setShowAuthMedicoOverlay(false);
               }
             }}
           />
@@ -2114,34 +2137,39 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
       {showFelicitacoes && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <div className="rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-4">
-            <div style={{ position: 'relative', width: '100%', background: '#fff' }}>
-              <img src={chatphone2Img} alt="RedFairy"
-                style={{ display: 'block', width: '100%', height: 'auto', objectFit: 'contain' }} />
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 55%, transparent)', padding: '40px 20px 16px' }}>
-                <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 800, lineHeight: 1.2, margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
-                  {"Estamos felizes de ter voc\u00ea no RedFairy"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>
-                </h2>
-              </div>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-4" style={{ position: 'relative' }}
+            onMouseEnter={() => setBgFelicRevelado(true)} onMouseLeave={() => setBgFelicRevelado(false)} onTouchStart={() => setBgFelicRevelado(true)}>
+            {/* Imagem de fundo: revela no hover (igual aos demais modais do padrao novo) */}
+            <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)', backgroundImage: `url(${chatphone2Img})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgFelicRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgFelicRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+            {/* Header fada \u2014 modal unico (sem splash de 2 fases): header + imagem hover + opcoes juntos */}
+            <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+              <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
+                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+              </h2>
             </div>
-            <div className="bg-red-700 px-5 py-5">
-              <p className="text-red-200 text-xs font-bold tracking-widest uppercase text-center mb-4">{"Agora voc\u00ea pode:"}</p>
+            {/* Conteudo: titulo + opcoes (transparente p/ a imagem aparecer no hover) */}
+            <div className="px-5 py-5" style={{ position: 'relative', zIndex: 1 }}>
+              <h2 className="text-center font-extrabold leading-tight mb-1" style={{ color: '#b91c1c', fontSize: '18px' }}>
+                {"Estamos felizes de ter voc\u00ea no RedFairy"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>
+              </h2>
+              <p className="text-red-700 text-xs font-bold tracking-widest uppercase text-center mb-4">{"Agora voc\u00ea pode:"}</p>
               <div className="space-y-2.5">
                 <button
                   onClick={() => { setShowFelicitacoes(false); }}
-                  className="w-full bg-white text-red-800 hover:bg-red-50 font-bold py-3 rounded-xl text-sm transition-colors">
+                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow">
                   {"APROFUNDAR AVALIA\u00c7\u00c3O INICIADA"}
                 </button>
                 <button
                   onClick={() => { setShowFelicitacoes(false); setShowTriagem(true); }}
-                  className="w-full bg-white text-red-800 hover:bg-red-50 font-bold py-3 rounded-xl text-sm transition-colors">
+                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow">
                   AVALIAR | REAVALIAR PACIENTE
                 </button>
                 <button
                   onClick={() => { setShowFelicitacoes(false); setShowOBA(true); }}
-                  className="w-full bg-white text-red-800 hover:bg-red-50 font-bold py-3 rounded-xl text-sm transition-colors flex flex-col items-center leading-tight">
+                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow flex flex-col items-center leading-tight">
                   <span>{"CONHECER O PROJETO OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup></span>
-                  <span style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '1px', opacity: 0.6 }}>{"OTIMIZAR O BARI\u00c1TRICO"}</span>
+                  <span style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '1px', opacity: 0.75 }}>{"OTIMIZAR O BARI\u00c1TRICO"}</span>
                 </button>
                 <button
                   onClick={async () => {
@@ -2161,12 +2189,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       alert("FILIE-SE PARA CONHECER OS BENEF\u00cdCIOS");
                     }
                   }}
-                  className="w-full bg-white text-red-800 hover:bg-red-50 font-bold py-3 rounded-xl text-sm transition-colors">
+                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow">
                   {"CONHECER OS BENEF\u00cdCIOS"}
                 </button>
                 <button
                   onClick={() => { setShowFelicitacoes(false); if (onVoltar) onVoltar(); }}
-                  className="w-full border-2 border-white/40 text-white hover:bg-red-800 font-semibold py-2.5 rounded-xl text-sm transition-colors">
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition-colors">
                   {"VOLTAR PARA O IN\u00cdCIO"}
                 </button>
               </div>
