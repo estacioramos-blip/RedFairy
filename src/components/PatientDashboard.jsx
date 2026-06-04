@@ -145,12 +145,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         setShowBoasVindas(true)
       }
     }
-    if (abrirOBA || localStorage.getItem('rf_flag') === 'bariatrica') {
-      localStorage.removeItem('rf_flag')
-      setTimeout(() => {
-        setTela('nova')
-        setInputs(prev => ({ ...prev, bariatrica: true }))
-      }, 400)
+    localStorage.removeItem('rf_flag')
+    // Bariátrico com perfil completo e boas-vindas já vistas (login de retorno):
+    // abre a anamnese OBA direto se ainda não preencheu.
+    if (prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista !== false) {
+      verificarEAbrirOBA(prof)
     }
     const { data: avals } = await supabase
       .from('avaliacoes').select('*')
@@ -158,6 +157,19 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       .order('data_coleta', { ascending: false })
     setAvaliacoes(avals || [])
     setLoading(false)
+  }
+
+  // Abre a anamnese OBA para paciente bariátrico que ainda NÃO preencheu.
+  // Detecção robusta (perfil OU triagem OU avaliação) — não depende do rf_flag/localStorage.
+  async function verificarEAbrirOBA(prof) {
+    try {
+      const cpf = (prof?.cpf || '').replace(/\D/g, '')
+      if (!cpf) return
+      // RPC SECURITY DEFINER: true se bariátrico (perfil/triagem/avaliação) e ainda
+      // sem anamnese OBA. Fura o RLS (a triagem órfã tem user_id=null).
+      const { data: precisa } = await supabase.rpc('paciente_precisa_oba', { p_cpf: cpf })
+      if (precisa === true) setTimeout(() => setShowOBAModal(true), 600)
+    } catch (e) { /* silencioso — não atrapalha o dashboard */ }
   }
 
   // Reune triagens + avaliacoes do paciente logado e abre o modal de grafico.
@@ -360,7 +372,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       setSalvandoBoasVindas(false)
       setShowBoasVindas(false)
       setProfile(p => ({ ...p, boas_vindas_vista: true }))
-      if (querPedidoGratis) {
+      // Bariátrica tem PRIORIDADE: abre a anamnese OBA e fica no dashboard.
+      // Só vai pra despedida (logout) se NÃO precisar do OBA e tiver pedido gratuito.
+      let precisaOBA = false
+      const cpfOBA = (profile?.cpf || '').replace(/\D/g, '')
+      if (cpfOBA) {
+        try { const { data } = await supabase.rpc('paciente_precisa_oba', { p_cpf: cpfOBA }); precisaOBA = data === true } catch (e) {}
+      }
+      if (precisaOBA) {
+        setTimeout(() => setShowOBAModal(true), 600)
+      } else if (querPedidoGratis) {
         setMostrarDespedida(true)
       }
     }

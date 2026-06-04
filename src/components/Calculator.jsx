@@ -733,6 +733,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [afiliadoCEP, setAfiliadoCEP] = useState('');
   const [afiliadoCPF, setAfiliadoCPF] = useState('');
   const [afiliadoCPFErro, setAfiliadoCPFErro] = useState('');
+  const [usaTelegram, setUsaTelegram] = useState(false);
   const refAfilCEP = useRef(null);
   const refAfilCPF = useRef(null);
   const refAfilPix = useRef(null);
@@ -879,6 +880,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [copiado, setCopiado] = useState(false);
   const [showOBA, setShowOBA] = useState(false);
   const [dadosOBAColetados, setDadosOBAColetados] = useState(null);
+  const [briefingOBAFechado, setBriefingOBAFechado] = useState(false); // painel-resumo do OBA na marcação de bariátrico
+  const [querExtratoOba, setQuerExtratoOba] = useState(false);          // médico opta por receber o extrato da anamnese
   const [erros, setErros] = useState({});
   const [aberrantes, setAberrantes] = useState({});
   const [showSobre, setShowSobre] = useState(false);
@@ -1009,8 +1012,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (erros[name]) setErros(prev => ({ ...prev, [name]: null }));
     if (name === 'bariatrica') { if (!checked) setDadosOBAColetados(null); }
     if (name === 'bariatrica_medico') {
-      if (checked) setInputs(prev => ({ ...prev, bariatrica: true, bariatrica_medico: true }));
-      else { setInputs(prev => ({ ...prev, bariatrica: false, bariatrica_medico: false })); setDadosOBAColetados(null); }
+      if (checked) { setInputs(prev => ({ ...prev, bariatrica: true, bariatrica_medico: true })); setBriefingOBAFechado(false); }
+      else { setInputs(prev => ({ ...prev, bariatrica: false, bariatrica_medico: false })); setDadosOBAColetados(null); setQuerExtratoOba(false); setBriefingOBAFechado(false); }
     }
     if (LIMITES_ABERRANTE[name] && value !== '') {
       const num = parseFloat(String(value).replace(',', '.'));
@@ -1247,6 +1250,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         diagnostico_label: res.label,
         diagnostico_color: res.color,
         medico_crm: medicoCRM || null,
+        quer_extrato_oba: querExtratoOba,
       });
     }
     setTimeout(() => { document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' }); }, 100);
@@ -1491,6 +1495,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   />
                 </div>
               </div>
+              <label className="flex items-center gap-2 cursor-pointer mt-1 mb-2">
+                <input type="checkbox" checked={usaTelegram} onChange={e => setUsaTelegram(e.target.checked)} style={{ accentColor: '#7B1E1E' }} />
+                <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"USO TAMBÉM O TELEGRAM"}</span>
+              </label>
               {afiliadoSalvo ? null : (
                 <div className="space-y-2">
                 {afiliadoCEP.trim() && afiliadoCPF.trim() && afiliadoPix.trim() && !afiliadoCPFErro && (
@@ -1501,6 +1509,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         endereco: '', cep: afiliadoCEP.trim(),
                         cpf: afiliadoCPF.replace(/\D/g, ''),
                         pix_chave: afiliadoPix.trim(),
+                        usa_telegram: usaTelegram,
                       }).eq('crm', medicoCRM);
                       setAfiliadoSalvando(false);
                       if (error) { alert('Erro ao salvar. Tente novamente.'); return; }
@@ -1726,6 +1735,26 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     </p>
                   </div>
                 </label>
+                {inputs.bariatrica_medico && !briefingOBAFechado && (
+                  <div className="mt-2 rounded-xl border-2 border-amber-300 bg-amber-50 p-3 relative">
+                    <button type="button" onClick={() => setBriefingOBAFechado(true)}
+                      className="absolute top-2 right-2 text-amber-500 hover:text-amber-700 text-lg leading-none" aria-label="Fechar">{"✕"}</button>
+                    <p className="text-sm font-bold text-amber-800 pr-6">{"ℹ️ Projeto OBA — o que o paciente vai responder"}</p>
+                    <p className="text-xs text-amber-700 mt-1">{"Ao se cadastrar, o paciente preenche a anamnese OBA (acompanhamento dinâmico do bariátrico). Ela cobre:"}</p>
+                    <ul className="text-xs text-amber-800 mt-2 space-y-1 list-disc pl-4">
+                      <li>{"Cirurgia: tipo, tempo pós-op, evolução de peso e metas"}</li>
+                      <li>{"STATUS clínicos: glicêmico, pressórico, ósseo, dental, gestacional, endoscópico, neurológico, intestinal"}</li>
+                      <li>{"Hábitos: compulsões, atividade física, emagrecedores, medicamentos"}</li>
+                      <li>{"Risco vascular: trombose, anticoagulação, varizes"}</li>
+                      <li>{"Painel laboratorial completo do bariátrico (B12, vit D, ferritina, PTH, cálcio, zinco, magnésio, vitaminas A/E/K/C, lipidograma avançado, hepático/renal, glicemia/HbA1c…)"}</li>
+                      <li>{"Metas e projetos de vida"}</li>
+                    </ul>
+                    <label className="flex items-start gap-2 mt-3 pt-2 border-t border-amber-200 cursor-pointer">
+                      <input type="checkbox" checked={querExtratoOba} onChange={e => setQuerExtratoOba(e.target.checked)} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
+                      <span className="text-xs font-semibold text-amber-800">{"Quero receber o extrato da anamnese deste paciente quando ele preencher."}</span>
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
           </section>
