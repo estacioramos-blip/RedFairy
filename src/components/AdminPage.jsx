@@ -570,6 +570,8 @@ function AbaConfig() {
   const [valorDoc, setValorDoc] = useState('');
   const [pixChave, setPixChave] = useState('');
   const [valorAnuidade, setValorAnuidade] = useState('');
+  const [comissaoUsd, setComissaoUsd] = useState('');
+  const [cotacaoDolar, setCotacaoDolar] = useState('');
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState('');
@@ -584,10 +586,16 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'pix_chave').single();
       const { data: anuConfig } = await supabase
         .from('config').select('valor').eq('chave', 'valor_anuidade').maybeSingle();
+      const { data: comConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'comissao_usd_por_conversao').maybeSingle();
+      const { data: cotConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'cotacao_dolar').maybeSingle();
       setValor(valConfig?.valor || '');
       setValorDoc(docConfig?.valor || '');
       setPixChave(pixConfig?.valor || '');
       setValorAnuidade(anuConfig?.valor || '149.90');
+      setComissaoUsd(comConfig?.valor || '10');
+      setCotacaoDolar(cotConfig?.valor || '');
       setLoading(false);
     }
     carregar();
@@ -601,6 +609,8 @@ function AbaConfig() {
       { p_chave: 'valor_documento_medico',   p_valor: valorDoc, p_descricao: "Valor em R$ da gera\u00e7\u00e3o de documento m\u00e9dico (prescri\u00e7\u00e3o/pedido de exames)" },
       { p_chave: 'pix_chave',                p_valor: pixChave, p_descricao: "Chave Pix para recebimento de solicita\u00e7\u00f5es m\u00e9dicas" },
       { p_chave: 'valor_anuidade',           p_valor: valorAnuidade, p_descricao: "Valor em R$ da anuidade do paciente (exibido na landing e cobrado no Pix de cadastro)" },
+      { p_chave: 'comissao_usd_por_conversao', p_valor: comissaoUsd,  p_descricao: "Valor em DÓLAR pago ao médico por paciente convertido" },
+      { p_chave: 'cotacao_dolar',            p_valor: cotacaoDolar,  p_descricao: "Cotação USD->BRL para converter a comissão dos médicos em reais" },
     ];
     for (const it of itens) {
       const { data, error } = await supabase.rpc('salvar_config', { ...cred, ...it });
@@ -648,6 +658,25 @@ function AbaConfig() {
             <input type="number" step="0.01" min="0" value={valorAnuidade}
               onChange={e => setValorAnuidade(e.target.value)} placeholder="Ex: 149.90" className={inputClass} />
             <p className="text-xs text-gray-400 mt-1">{"Exibido na landing e cobrado no Pix do cadastro do paciente. O c\u00f3digo Pix \u00e9 gerado automaticamente com este valor."}</p>
+          </div>
+
+          <div className="pt-4 border-t border-gray-100">
+            <h3 className="text-base font-semibold text-gray-700 mb-1">{"Comiss\u00e3o de Afiliados (4DOC)"}</h3>
+            <p className="text-sm text-gray-400 mb-3">{"Valor pago ao m\u00e9dico por paciente convertido e a cota\u00e7\u00e3o do d\u00f3lar para o equivalente em reais."}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Comiss\u00e3o por convers\u00e3o (US$)"}</label>
+                <input type="number" step="0.01" min="0" value={comissaoUsd}
+                  onChange={e => setComissaoUsd(e.target.value)} placeholder="Ex: 10" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"Em d\u00f3lar, por paciente triado + cadastrado + pago."}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Cota\u00e7\u00e3o do d\u00f3lar (R$/US$)"}</label>
+                <input type="number" step="0.0001" min="0" value={cotacaoDolar}
+                  onChange={e => setCotacaoDolar(e.target.value)} placeholder="Ex: 5.40" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"Atualize com a cota\u00e7\u00e3o atual. Usada para mostrar a comiss\u00e3o em R$."}</p>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -1056,22 +1085,43 @@ function regiaoDe(uf) {
   return UF_REGIAO[(uf || '').toUpperCase().trim()] || 'N\u00e3o informada';
 }
 
+const fmtUsd = (n) => 'US$ ' + (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtBrl = (n) => 'R$ '  + (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 function AbaMedicos() {
   const [medicos, setMedicos] = useState([]);
+  const [comissaoUsd, setComissaoUsd] = useState(0);
+  const [cotacao, setCotacao] = useState(0);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
   const [busca, setBusca] = useState('');
+  const [liquidando, setLiquidando] = useState('');
 
-  useEffect(() => {
-    async function carregar() {
-      const { data, error } = await supabase.rpc('admin_listar_medicos', credAdmin());
-      if (error) setErro("N\u00e3o foi poss\u00edvel carregar. A migration migrate_admin_medicos.sql j\u00e1 foi aplicada?");
-      else if (data && !data.ok) setErro(data.erro || 'Sem permiss\u00e3o de admin.');
-      else setMedicos(data?.medicos || []);
-      setLoading(false);
+  async function carregar() {
+    const { data, error } = await supabase.rpc('admin_listar_medicos', credAdmin());
+    if (error) setErro("N\u00e3o foi poss\u00edvel carregar. A migration migrate_admin_medicos.sql j\u00e1 foi aplicada?");
+    else if (data && !data.ok) setErro(data.erro || 'Sem permiss\u00e3o de admin.');
+    else {
+      setErro('');
+      setMedicos(data?.medicos || []);
+      setComissaoUsd(Number(data?.comissao_usd) || 0);
+      setCotacao(Number(data?.cotacao_dolar) || 0);
     }
-    carregar();
-  }, []);
+    setLoading(false);
+  }
+
+  useEffect(() => { carregar(); }, []);
+
+  async function liquidar(m) {
+    const n = m.creditos_pendentes || 0;
+    if (!n) return;
+    if (!window.confirm(`Marcar ${n} comiss\u00e3o(\u00f5es) de ${m.nome || m.crm} como PAGA(s)? (${fmtUsd(n * comissaoUsd)})`)) return;
+    setLiquidando(m.crm);
+    const { data, error } = await supabase.rpc('admin_liquidar_comissao', { ...credAdmin(), p_medico_crm: m.crm });
+    setLiquidando('');
+    if (error || (data && !data.ok)) { window.alert('Erro ao liquidar: ' + (error?.message || data?.erro || 'sem permiss\u00e3o')); return; }
+    await carregar();
+  }
 
   if (loading) return <div className="text-center py-12 text-gray-400">Carregando m\u00e9dicos...</div>;
 
@@ -1086,22 +1136,30 @@ function AbaMedicos() {
   const totalAfiliados = medicos.filter(m => m.afiliado).length;
   const porRegiao = {};
   medicos.forEach(m => { const r = regiaoDe(m.uf); porRegiao[r] = (porRegiao[r] || 0) + 1; });
+  const totalPendentes = medicos.reduce((s, m) => s + (m.creditos_pendentes || 0), 0);
+  const totalUsdPend = totalPendentes * comissaoUsd;
 
   return (
     <div className="space-y-5">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <h2 className="text-lg font-semibold text-gray-700">{"M\u00e9dicos cadastrados"}</h2>
         <p className="text-sm text-gray-400 mt-1">
-          {"Contas de m\u00e9dicos, regi\u00e3o (por UF), status de afiliado 4DOC e "}
-          <strong>cr\u00e9ditos</strong>{" (pacientes que triaram e depois se cadastraram + pagaram)."}
+          {"Regi\u00e3o (por UF), status de afiliado 4DOC e "}
+          <strong>comiss\u00e3o</strong>{" ("}{fmtUsd(comissaoUsd)}{" por paciente convertido)."}
         </p>
         <div className="flex flex-wrap gap-3 mt-3 text-sm">
           <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{medicos.length} m\u00e9dico(s)</span>
           <span className="bg-green-100 rounded-full px-3 py-1 font-medium text-green-700">{totalAfiliados} afiliado(s)</span>
+          <span className="bg-amber-100 rounded-full px-3 py-1 font-medium text-amber-700">
+            A pagar: {fmtUsd(totalUsdPend)}{cotacao ? ` \u2248 ${fmtBrl(totalUsdPend * cotacao)}` : ''}
+          </span>
           {Object.entries(porRegiao).sort((a,b)=>b[1]-a[1]).map(([r,n]) => (
             <span key={r} className="bg-red-50 rounded-full px-3 py-1 font-medium text-red-700">{r}: {n}</span>
           ))}
         </div>
+        {!cotacao && (
+          <p className="text-xs text-amber-600 mt-2">{"\u26a0\ufe0f Cota\u00e7\u00e3o do d\u00f3lar n\u00e3o definida \u2014 configure em Configura\u00e7\u00f5es para ver os valores em R$."}</p>
+        )}
       </div>
 
       {erro && (
@@ -1120,7 +1178,11 @@ function AbaMedicos() {
         <p className="text-center text-gray-400 py-8 text-sm">{"Nenhum m\u00e9dico encontrado."}</p>
       )}
 
-      {filtrados.map(m => (
+      {filtrados.map(m => {
+        const pend = m.creditos_pendentes || 0;
+        const pagos = m.creditos_pagos || 0;
+        const usdPend = pend * comissaoUsd;
+        return (
         <div key={m.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -1139,18 +1201,41 @@ function AbaMedicos() {
               {m.afiliado ? 'Afiliado 4DOC' : 'Perfil incompleto'}
             </span>
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-3">
+          <div className="grid grid-cols-3 gap-2 mt-3">
             <div className="bg-gray-50 rounded-xl px-3 py-2 text-center">
               <p className="text-2xl font-extrabold text-gray-700">{m.n_triados}</p>
-              <p className="text-xs text-gray-500">pacientes triados</p>
+              <p className="text-xs text-gray-500">triados</p>
             </div>
             <div className="bg-red-50 rounded-xl px-3 py-2 text-center">
               <p className="text-2xl font-extrabold text-red-700">{m.n_convertidos}</p>
-              <p className="text-xs text-red-500">cr\u00e9ditos (convertidos)</p>
+              <p className="text-xs text-red-500">convertidos</p>
+            </div>
+            <div className="bg-amber-50 rounded-xl px-3 py-2 text-center">
+              <p className="text-2xl font-extrabold text-amber-700">{pend}</p>
+              <p className="text-xs text-amber-600">a pagar</p>
             </div>
           </div>
+
+          <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
+            <div className="text-sm">
+              <span className="font-semibold text-gray-700">{"Comiss\u00e3o a pagar: "}</span>
+              <span className="font-bold text-amber-700">{fmtUsd(usdPend)}</span>
+              {cotacao ? <span className="text-gray-500">{" \u2248 "}{fmtBrl(usdPend * cotacao)}</span> : null}
+              {pagos > 0 && <span className="text-xs text-gray-400 ml-2">{"(j\u00e1 pago: "}{fmtUsd(pagos * comissaoUsd)}{")"}</span>}
+              {m.pix_chave
+                ? <p className="text-xs text-gray-500 mt-0.5">{"Pix: "}<span className="font-mono break-all">{m.pix_chave}</span></p>
+                : <p className="text-xs text-amber-600 mt-0.5">{"Sem chave Pix cadastrada."}</p>}
+            </div>
+            {pend > 0 && (
+              <button onClick={() => liquidar(m)} disabled={liquidando === m.crm}
+                className="shrink-0 bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors disabled:opacity-50">
+                {liquidando === m.crm ? 'Liquidando...' : 'Marcar como pago'}
+              </button>
+            )}
+          </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
