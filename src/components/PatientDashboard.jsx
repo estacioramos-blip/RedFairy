@@ -24,6 +24,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [loading, setLoading] = useState(true)
   const [showSobre, setShowSobre] = useState(false)
   const [showOBAModal, setShowOBAModal] = useState(false)
+  const [precisaOBA, setPrecisaOBA] = useState(false)  // bariátrico sem anamnese OBA → banner persistente
   const [showSaibaMais, setShowSaibaMais] = useState(false)
   const [fraseGestacaoConcluida, setFraseGestacaoConcluida] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
@@ -164,12 +165,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   async function verificarEAbrirOBA(prof) {
     try {
       const cpf = (prof?.cpf || '').replace(/\D/g, '')
-      if (!cpf) return
+      if (!cpf) return false
       // RPC SECURITY DEFINER: true se bariátrico (perfil/triagem/avaliação) e ainda
       // sem anamnese OBA. Fura o RLS (a triagem órfã tem user_id=null).
       const { data: precisa } = await supabase.rpc('paciente_precisa_oba', { p_cpf: cpf })
-      if (precisa === true) setTimeout(() => setShowOBAModal(true), 600)
-    } catch (e) { /* silencioso — não atrapalha o dashboard */ }
+      if (precisa === true) {
+        setPrecisaOBA(true)                                   // mantém o banner persistente
+        setTimeout(() => setShowOBAModal(true), 600)
+        return true
+      }
+      return false
+    } catch (e) { return false }  // silencioso — não atrapalha o dashboard
   }
 
   // Reune triagens + avaliacoes do paciente logado e abre o modal de grafico.
@@ -374,14 +380,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       setProfile(p => ({ ...p, boas_vindas_vista: true }))
       // Bariátrica tem PRIORIDADE: abre a anamnese OBA e fica no dashboard.
       // Só vai pra despedida (logout) se NÃO precisar do OBA e tiver pedido gratuito.
-      let precisaOBA = false
-      const cpfOBA = (profile?.cpf || '').replace(/\D/g, '')
-      if (cpfOBA) {
-        try { const { data } = await supabase.rpc('paciente_precisa_oba', { p_cpf: cpfOBA }); precisaOBA = data === true } catch (e) {}
-      }
-      if (precisaOBA) {
-        setTimeout(() => setShowOBAModal(true), 600)
-      } else if (querPedidoGratis) {
+      const precisa = await verificarEAbrirOBA(profile)
+      if (!precisa && querPedidoGratis) {
         setMostrarDespedida(true)
       }
     }
@@ -528,7 +528,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             dum: inputs.dum || null,
           }}
           onFechar={() => setShowOBAModal(false)}
-          onConcluir={() => setShowOBAModal(false)}
+          onConcluir={() => { setShowOBAModal(false); setPrecisaOBA(false) }}
         />
       )}
       {showSobre && (
@@ -610,6 +610,19 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             {"Nova Avalia\u00e7\u00e3o"}
           </button>
         </div>
+
+        {precisaOBA && !showOBAModal && (
+          <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-bold text-amber-800 text-sm">{"\ud83d\udccb Complete sua anamnese do Projeto OBA"}</p>
+              <p className="text-xs text-amber-700 mt-0.5">{"Como paciente bari\u00e1trico, a anamnese OBA libera o acompanhamento din\u00e2mico personalizado."}</p>
+            </div>
+            <button onClick={() => setShowOBAModal(true)}
+              className="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors">
+              Preencher
+            </button>
+          </div>
+        )}
 
         {tela === 'historico' && (
           <div className="space-y-3">
