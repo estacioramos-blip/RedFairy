@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import {
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
 import { supabase } from '../lib/supabase';
 import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
 
@@ -154,6 +157,7 @@ export default function AdminPage({ onVoltar }) {
             { id: 'medicamentos', label: "\ud83e\ude78 Ferro EV" },
             { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
             { id: 'medicos',      label: "\ud83e\ude7a M\u00e9dicos" },
+            { id: 'prescricoes',  label: "\ud83d\udcca Prescri\u00e7\u00f5es" },
             { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
           ].map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
@@ -171,6 +175,7 @@ export default function AdminPage({ onVoltar }) {
         {aba === 'medicamentos' && <AbaMedicamentos />}
         {aba === 'suplementos'  && <AbaSuplementos />}
         {aba === 'medicos'      && <AbaMedicos />}
+        {aba === 'prescricoes'  && <AbaPrescricoes />}
         {aba === 'config'       && <AbaConfig />}
       </div>
     </div>
@@ -1109,6 +1114,56 @@ function passaFiltroMed(m, f) {
   return true;
 }
 
+// Série mensal acumulada: médicos cadastrados e afiliados até o fim de cada mês.
+function dadosCrescimento(medicos) {
+  const valid = (medicos || []).filter(m => m.created_at && !isNaN(new Date(m.created_at)));
+  if (!valid.length) return [];
+  let cur = new Date(Math.min(...valid.map(m => +new Date(m.created_at))));
+  cur = new Date(cur.getFullYear(), cur.getMonth(), 1);
+  const hoje = new Date();
+  const fim = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const buckets = [];
+  let guard = 0;
+  while (cur <= fim && guard < 120) {
+    const fimMes = new Date(cur.getFullYear(), cur.getMonth() + 1, 0, 23, 59, 59);
+    buckets.push({
+      label: cur.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+      cadastrados: valid.filter(m => new Date(m.created_at) <= fimMes).length,
+      afiliados:   valid.filter(m => m.afiliado && new Date(m.created_at) <= fimMes).length,
+    });
+    cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    guard++;
+  }
+  return buckets;
+}
+
+function GraficoCrescimento({ medicos }) {
+  const dados = dadosCrescimento(medicos);
+  if (!dados.length) return null;
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{"Crescimento no 4DOC"}</h3>
+      <p className="text-xs text-gray-400 mb-3">{"Médicos cadastrados e afiliados, acumulado por mês."}</p>
+      <div style={{ width: '100%', height: 220 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={dados} margin={{ top: 6, right: 16, left: -10, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+            <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+            <Tooltip />
+            <Legend wrapperStyle={{ fontSize: 12 }} />
+            <Line type="monotone" dataKey="cadastrados" name="Cadastrados" stroke="#b91c1c" strokeWidth={2} dot={{ r: 3 }} />
+            <Line type="monotone" dataKey="afiliados"   name="Afiliados"   stroke="#16a34a" strokeWidth={2} dot={{ r: 3 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      {dados.length < 2 && (
+        <p className="text-xs text-gray-400 mt-2 text-center">{"Poucos dados ainda — o gráfico ganha forma conforme os médicos entram."}</p>
+      )}
+    </div>
+  );
+}
+
 function AbaMedicos() {
   const [medicos, setMedicos] = useState([]);
   const [comissaoUsd, setComissaoUsd] = useState(0);
@@ -1233,6 +1288,8 @@ function AbaMedicos() {
           })}
         </div>
       </div>
+
+      {!erro && <GraficoCrescimento medicos={medicos} />}
 
       {erro && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center text-red-700 text-sm font-medium">
@@ -1387,6 +1444,130 @@ function ExtratoModal({ medico, conversoes, carregando, comissaoUsd, cotacao, on
             Copiar extrato
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Aba Prescrições (DEC-012) ─────────────────────────────────────────────
+// Conta as indicações das avaliações, atribuídas à marca ATIVA de cada
+// categoria. Alavanca de negociação 4DOC. RPC admin_prescricoes.
+const CAT_LABEL = {
+  ferro_oral: 'Ferro oral',
+  b12_injetavel: 'B12 injetável',
+  b12_sublingual: 'B12 sublingual',
+  b12_oral: 'B12 oral',
+  polivitaminico_bariatrico: 'Polivitamínico',
+};
+const catLabel = (c) => CAT_LABEL[c] || (c || '').replace(/_/g, ' ');
+const mesLabelP = (ym) => {
+  if (!ym) return '';
+  const [y, m] = ym.split('-');
+  const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  return `${meses[Number(m) - 1] || m}/${(y || '').slice(2)}`;
+};
+
+function AbaPrescricoes() {
+  const [dados, setDados] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.rpc('admin_prescricoes', credAdmin());
+      if (error) setErro("Não foi possível carregar. A migration migrate_prescricoes.sql já foi aplicada?");
+      else if (data && !data.ok) setErro(data.erro || 'Sem permissão de admin.');
+      else setDados(data);
+      setLoading(false);
+    })();
+  }, []);
+
+  if (loading) return <div className="text-center py-12 text-gray-400">{"Carregando prescrições..."}</div>;
+  if (erro) return <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center text-red-700 text-sm font-medium">{"⚠️ "}{erro}</div>;
+
+  const porMarca = dados?.por_marca || [];
+  const total = porMarca.reduce((s, x) => s + (x.n || 0), 0);
+  const fabMap = {};
+  porMarca.forEach(x => { const f = x.fabricante || '—'; fabMap[f] = (fabMap[f] || 0) + (x.n || 0); });
+  const porFab = Object.entries(fabMap).map(([fabricante, n]) => ({ fabricante, n })).sort((a, b) => b.n - a.n);
+  const porMes = (dados?.por_mes || []).map(x => ({ label: mesLabelP(x.mes), n: x.n }));
+
+  const eixoX = { tick: { fontSize: 10, fill: '#9CA3AF' }, interval: 0, angle: -20, textAnchor: 'end', height: 54 };
+  const eixoY = { allowDecimals: false, tick: { fontSize: 11, fill: '#9CA3AF' } };
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-gray-700">{"Prescrições — alavanca 4DOC"}</h2>
+        <p className="text-sm text-gray-400 mt-1">
+          {"Indicações registradas nas avaliações, atribuídas à marca ATIVA de cada categoria. Ferramenta de negociação com os fabricantes."}
+        </p>
+        <div className="mt-3">
+          <span className="bg-red-50 rounded-full px-3 py-1 text-sm font-medium text-red-700">{"Total de prescrições: "}{total}</span>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">{"Por marca (ativa)"}</h3>
+        <div style={{ width: '100%', height: 250 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={porMarca} margin={{ top: 6, right: 16, left: -12, bottom: 4 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="marca" {...eixoX} />
+              <YAxis {...eixoY} />
+              <Tooltip />
+              <Bar dataKey="n" name="Prescrições" fill="#b91c1c" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">{"Por fabricante"}</h3>
+        <div style={{ width: '100%', height: 250 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={porFab} margin={{ top: 6, right: 16, left: -12, bottom: 4 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="fabricante" {...eixoX} />
+              <YAxis {...eixoY} />
+              <Tooltip />
+              <Bar dataKey="n" name="Prescrições" fill="#16a34a" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {porMes.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">{"Evolução por mês"}</h3>
+          <div style={{ width: '100%', height: 200 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={porMes} margin={{ top: 6, right: 16, left: -12, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+                <YAxis {...eixoY} />
+                <Tooltip />
+                <Line type="monotone" dataKey="n" name="Indicações" stroke="#b91c1c" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">{"Detalhe por marca"}</h3>
+        <div className="divide-y divide-gray-100">
+          {porMarca.map((x, i) => (
+            <div key={i} className="py-2 flex items-center justify-between gap-2 text-sm">
+              <div className="min-w-0">
+                <p className="font-medium text-gray-700">{x.marca}</p>
+                <p className="text-xs text-gray-400">{x.fabricante || '—'}{" · "}{catLabel(x.categoria)}</p>
+              </div>
+              <span className="shrink-0 font-bold text-red-700">{x.n}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400 mt-3">{"Atribuído à marca ATIVA atual · fonte: avaliações · histórico por marca = fase 2."}</p>
       </div>
     </div>
   );
