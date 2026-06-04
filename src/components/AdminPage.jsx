@@ -1145,10 +1145,10 @@ function AbaMedicos() {
         <h2 className="text-lg font-semibold text-gray-700">{"M\u00e9dicos cadastrados"}</h2>
         <p className="text-sm text-gray-400 mt-1">
           {"Regi\u00e3o (por UF), status de afiliado 4DOC e "}
-          <strong>comiss\u00e3o</strong>{" ("}{fmtUsd(comissaoUsd)}{" por paciente convertido)."}
+          <strong>{"comiss\u00e3o"}</strong>{" ("}{fmtUsd(comissaoUsd)}{" por paciente convertido)."}
         </p>
         <div className="flex flex-wrap gap-3 mt-3 text-sm">
-          <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{medicos.length} m\u00e9dico(s)</span>
+          <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{medicos.length}{" m\u00e9dico(s)"}</span>
           <span className="bg-green-100 rounded-full px-3 py-1 font-medium text-green-700">{totalAfiliados} afiliado(s)</span>
           <span className="bg-amber-100 rounded-full px-3 py-1 font-medium text-amber-700">
             A pagar: {fmtUsd(totalUsdPend)}{cotacao ? ` \u2248 ${fmtBrl(totalUsdPend * cotacao)}` : ''}
@@ -1170,7 +1170,7 @@ function AbaMedicos() {
 
       {!erro && (
         <input type="text" value={busca} onChange={e => setBusca(e.target.value)}
-          placeholder="Buscar por nome, CRM, UF ou regi\u00e3o..."
+          placeholder={"Buscar por nome, CRM, UF ou regi\u00e3o..."}
           className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
       )}
 
@@ -1191,7 +1191,7 @@ function AbaMedicos() {
                 {m.is_admin && <span className="ml-2 text-xs bg-gray-800 text-white font-bold px-2 py-0.5 rounded-full">ADMIN</span>}
               </p>
               <p className="text-sm text-gray-500">
-                CRM {m.crm} \u00b7 {regiaoDe(m.uf)}{m.cep ? ` \u00b7 CEP ${m.cep}` : ''}
+                {"CRM "}{m.crm}{" \u00b7 "}{regiaoDe(m.uf)}{m.cep ? `${" \u00b7 CEP "}${m.cep}` : ''}
               </p>
               {(m.celular || m.email) && (
                 <p className="text-xs text-gray-400 mt-0.5">{[m.celular, m.email].filter(Boolean).join(' \u00b7 ')}</p>
