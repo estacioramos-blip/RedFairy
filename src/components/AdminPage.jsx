@@ -642,6 +642,8 @@ function AbaConfig() {
   const [valorAnuidade, setValorAnuidade] = useState('');
   const [comissaoUsd, setComissaoUsd] = useState('');
   const [cotacaoDolar, setCotacaoDolar] = useState('');
+  const [tgToken, setTgToken] = useState('');
+  const [tgChat, setTgChat] = useState('');
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState('');
@@ -660,12 +662,18 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'comissao_usd_por_conversao').maybeSingle();
       const { data: cotConfig } = await supabase
         .from('config').select('valor').eq('chave', 'cotacao_dolar').maybeSingle();
+      const { data: tgTokConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'telegram_bot_token').maybeSingle();
+      const { data: tgChatConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'telegram_chat_id').maybeSingle();
       setValor(valConfig?.valor || '');
       setValorDoc(docConfig?.valor || '');
       setPixChave(pixConfig?.valor || '');
       setValorAnuidade(anuConfig?.valor || '149.90');
       setComissaoUsd(comConfig?.valor || '10');
       setCotacaoDolar(cotConfig?.valor || '');
+      setTgToken(tgTokConfig?.valor || '');
+      setTgChat(tgChatConfig?.valor || '');
       setLoading(false);
     }
     carregar();
@@ -681,6 +689,8 @@ function AbaConfig() {
       { p_chave: 'valor_anuidade',           p_valor: valorAnuidade, p_descricao: "Valor em R$ da anuidade do paciente (exibido na landing e cobrado no Pix de cadastro)" },
       { p_chave: 'comissao_usd_por_conversao', p_valor: comissaoUsd,  p_descricao: "Valor em DÓLAR pago ao médico por paciente convertido" },
       { p_chave: 'cotacao_dolar',            p_valor: cotacaoDolar,  p_descricao: "Cotação USD->BRL para converter a comissão dos médicos em reais" },
+      { p_chave: 'telegram_bot_token',       p_valor: tgToken,       p_descricao: "Token do Bot do Telegram para notificações da ADM" },
+      { p_chave: 'telegram_chat_id',         p_valor: tgChat,        p_descricao: "Chat ID do Telegram que recebe as notificações da ADM" },
     ];
     for (const it of itens) {
       const { data, error } = await supabase.rpc('salvar_config', { ...cred, ...it });
@@ -745,6 +755,25 @@ function AbaConfig() {
                 <input type="number" step="0.0001" min="0" value={cotacaoDolar}
                   onChange={e => setCotacaoDolar(e.target.value)} placeholder="Ex: 5.40" className={inputClass} />
                 <p className="text-xs text-gray-400 mt-1">{"Atualize com a cota\u00e7\u00e3o atual. Usada para mostrar a comiss\u00e3o em R$."}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-gray-100">
+            <h3 className="text-base font-semibold text-gray-700 mb-1">{"Notifica\u00e7\u00f5es no Telegram"}</h3>
+            <p className="text-sm text-gray-400 mb-3">{"A cada paciente convertido, a ADM recebe uma mensagem com o valor e o PIX do m\u00e9dico para pagar a comiss\u00e3o. Crie um bot no @BotFather e cole o token + chat ID."}</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Bot Token"}</label>
+                <input type="text" value={tgToken}
+                  onChange={e => setTgToken(e.target.value)} placeholder="Ex: 123456789:AAExxxxxxxxxxxxxxxxxxxxxx" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"Token gerado pelo @BotFather ao criar o bot."}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Chat ID"}</label>
+                <input type="text" value={tgChat}
+                  onChange={e => setTgChat(e.target.value)} placeholder="Ex: 987654321" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"ID do chat que recebe as mensagens (seu, ou de um grupo). Use o @userinfobot para descobrir o seu."}</p>
               </div>
             </div>
           </div>
