@@ -734,6 +734,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [afiliadoCPF, setAfiliadoCPF] = useState('');
   const [afiliadoCPFErro, setAfiliadoCPFErro] = useState('');
   const [usaTelegram, setUsaTelegram] = useState(false);
+  const [tgChatId, setTgChatId] = useState('');
   const refAfilCEP = useRef(null);
   const refAfilCPF = useRef(null);
   const refAfilPix = useRef(null);
@@ -1499,6 +1500,15 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <input type="checkbox" checked={usaTelegram} onChange={e => setUsaTelegram(e.target.checked)} style={{ accentColor: '#7B1E1E' }} />
                 <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"USO TAMBÉM O TELEGRAM"}</span>
               </label>
+              {usaTelegram && (
+                <div className="mb-2">
+                  <input type="text" value={tgChatId}
+                    onChange={e => setTgChatId(e.target.value)}
+                    placeholder="Seu Chat ID do Telegram"
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                  <p className="text-[11px] text-gray-400 mt-1">{"Para receber extratos OBA no Telegram: inicie o nosso bot e pegue seu ID no @userinfobot."}</p>
+                </div>
+              )}
               {afiliadoSalvo ? null : (
                 <div className="space-y-2">
                 {afiliadoCEP.trim() && afiliadoCPF.trim() && afiliadoPix.trim() && !afiliadoCPFErro && (
@@ -1510,6 +1520,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         cpf: afiliadoCPF.replace(/\D/g, ''),
                         pix_chave: afiliadoPix.trim(),
                         usa_telegram: usaTelegram,
+                        telegram_chat_id: usaTelegram ? (tgChatId.trim() || null) : null,
                       }).eq('crm', medicoCRM);
                       setAfiliadoSalvando(false);
                       if (error) { alert('Erro ao salvar. Tente novamente.'); return; }

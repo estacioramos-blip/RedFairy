@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS public.extratos_oba (
   id               BIGSERIAL PRIMARY KEY,
   cpf_paciente     TEXT NOT NULL,
   medico_crm       TEXT NOT NULL,
-  oba_anamnese_id  BIGINT,
+  oba_anamnese_id  UUID,
   entregue         BOOLEAN DEFAULT false,
   data_entrega     TIMESTAMPTZ,
   created_at       TIMESTAMPTZ DEFAULT now(),
