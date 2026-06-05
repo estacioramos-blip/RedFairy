@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
+import elaDigita from '../assets/ELA_DIGITA.png'
+import PlayButton from './PlayButton'
 
 /**
  * CompletarPerfilModal — tela bloqueante (uma vez) para o paciente recém-cadastrado
@@ -29,12 +31,27 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
   const [campoAtivo, setCampoAtivo] = useState('nome')
+  // SPLASH de entrada (padrão 4DOC): imagem nítida por 3s; depois revela os campos
+  // e foca o Nome. A imagem fica como fundo (hover) atrás dos inputs.
+  const [splashPerfil, setSplashPerfil] = useState(true)
+  const [bgPerfilRevelado, setBgPerfilRevelado] = useState(false)
 
+  const nomeRef = useRef(null)
   const celRef = useRef(null)
   const emailRef = useRef(null)
   const nomeTimer = useRef(null)
+  const emailTimer = useRef(null)
+  const confirmarRef = useRef(null)
 
-  useEffect(() => () => { if (nomeTimer.current) clearTimeout(nomeTimer.current) }, [])
+  useEffect(() => () => {
+    if (nomeTimer.current) clearTimeout(nomeTimer.current)
+    if (emailTimer.current) clearTimeout(emailTimer.current)
+  }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => { setSplashPerfil(false); nomeRef.current?.focus() }, 3000)
+    return () => clearTimeout(t)
+  }, [])
 
   const celDigits = (celular || '').replace(/\D/g, '')
   const nomeOk = (nome || '').trim().length >= 5
@@ -46,13 +63,22 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
     setNome(v.toUpperCase()); setErro('')
     if (nomeTimer.current) clearTimeout(nomeTimer.current)
     nomeTimer.current = setTimeout(() => {
-      if ((v || '').trim().length >= 5) celRef.current?.focus()  // 2,5s parado → salta p/ celular
-    }, 2500)
+      if ((v || '').trim().length >= 5) celRef.current?.focus()  // 3s parado → salta p/ celular
+    }, 3000)
   }
 
   function onCelChange(v) {
     const f = formatarCelular(v); setCelular(f); setErro('')
     if (f.replace(/\D/g, '').length === 11) emailRef.current?.focus()  // dígitos completos → foca e-mail
+  }
+
+  function onEmailChange(v) {
+    setEmail(v.toLowerCase()); setErro('')
+    if (emailTimer.current) clearTimeout(emailTimer.current)
+    emailTimer.current = setTimeout(() => {
+      // 2,5s parado com e-mail válido → salta o foco para o botão PLAY (CONFIRMO)
+      if (/\S+@\S+\.\S+/.test((v || '').trim())) confirmarRef.current?.focus()
+    }, 2500)
   }
 
   async function handleSalvar() {
@@ -85,27 +111,40 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-start justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl my-8 overflow-hidden">
-        {/* Barra superior com a fadinha RedFairy à esquerda */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden my-8" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column', position: 'relative' }}
+        onMouseEnter={() => setBgPerfilRevelado(true)} onMouseLeave={() => setBgPerfilRevelado(false)} onTouchStart={() => setBgPerfilRevelado(true)}>
+
+        {/* Imagem de fundo: faixa de largura cheia, esmaecida; revela no hover (atrás dos inputs) */}
+        <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)', backgroundImage: `url(${elaDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgPerfilRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgPerfilRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+
+        {/* SPLASH de entrada: imagem nítida (largura cheia, centrada) por 3s, antes dos campos */}
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashPerfil ? 1 : 0, pointerEvents: splashPerfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
+          <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)' }}>
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${elaDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
+          </div>
+        </div>
+
+        {/* Header padrão (logo-fada + RedFairy). zIndex 10 p/ aparecer já durante o splash. */}
+        <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
             <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
           </h2>
         </div>
+        {/* Título vinho: zIndex 10 p/ aparecer desde o início, junto do header */}
+        <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '0 14px 9px', flexShrink: 0 }}>
+          <p style={{ margin: 0, color: '#7B1E1E', fontWeight: 800, fontSize: '15px', letterSpacing: '0.2px' }}>{"Complete o seu Perfil"}</p>
+        </div>
 
-        <div className="p-5">
-          <p className="text-sm text-gray-500 mb-4">{"Complete seu perfil para finalizar o cadastro."}</p>
-
+        <div className="p-5" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
           <div className="space-y-3">
             <div>
               <label className={labelCls}>{"Nome completo"}</label>
               <input
-                type="text" autoFocus value={nome}
+                ref={nomeRef} type="text" value={nome}
                 onChange={e => onNomeChange(e.target.value)}
                 onFocus={() => setCampoAtivo('nome')}
                 className={fieldCls('nome')} style={{ textTransform: 'uppercase' }}
-                placeholder="Como você quer ser chamado(a)"
               />
             </div>
 
@@ -125,7 +164,7 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
               <label className={labelCls}>{"E-mail"}</label>
               <input
                 ref={emailRef} type="email" value={email}
-                onChange={e => { setEmail(e.target.value.toLowerCase()); setErro('') }}
+                onChange={e => onEmailChange(e.target.value)}
                 onFocus={() => setCampoAtivo('email')}
                 className={fieldCls('email')} style={{ textTransform: 'lowercase' }}
                 autoCapitalize="off" autoCorrect="off" spellCheck="false"
@@ -140,11 +179,15 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
             )}
 
             {tudoOk && (
-              <button
-                onClick={handleSalvar} disabled={loading}
-                className="w-full bg-red-700 hover:bg-red-800 disabled:opacity-50 text-white font-bold text-sm py-3 rounded-lg transition-colors mt-1 tracking-wide">
-                {loading ? "Salvando..." : "CONFIRMAR"}
-              </button>
+              <div className="flex flex-col items-end pt-2">
+                <PlayButton
+                  ref={confirmarRef}
+                  onClick={handleSalvar}
+                  loading={loading}
+                  label="CONFIRMO"
+                  ariaLabel="Confirmar perfil"
+                />
+              </div>
             )}
           </div>
         </div>

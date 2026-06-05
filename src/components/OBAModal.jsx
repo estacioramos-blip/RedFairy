@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { classificarValor } from '../engine/obaCutoffs'
 import logo from '../assets/logo.png'
+import PlayButton from './PlayButton'
 
 const TIPOS_CIRURGIA = ['Y DE ROUX', 'FOBI-CAPELLA', 'SLEEVE', "BANDA G\u00c1STRICA AJUST\u00c1VEL", "N\u00c3O SEI"]
 
@@ -269,7 +270,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFairy, onConcluir, onFechar }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, onConcluir, onFechar }) {
   //  States: declarados PRIMEIRO, antes de qualquer useEffect que os use 
   // BUG #4 e #5 corrigidos: ordem dos hooks. form, exames, dataExames,
   // aberrantesOBA, alertaPeso agora vem antes dos useEffects que os mexem.
@@ -305,9 +306,22 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
     compulsoes: [], medicamentos: [], emagrecedores: {},
   })
 
-  const saudacao = sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo'
-  const isFem = sexo === 'F'
+  // Detecção robusta de sexo feminino: aceita 'F', 'f', 'FEMININO', 'feminino'.
+  // Qualquer outro valor (M, masculino, vazio) é tratado como NÃO-feminino → some
+  // com os campos gestacionais (gestações prévias e status gestacional).
+  const isFem = /^f/i.test(String(sexo || '').trim())
+  const saudacao = isFem ? 'Bem-vinda' : 'Bem-vindo'
   const idadeNum = parseInt(idade) || 0
+  // Data de nascimento (ISO ou yyyy-mm-dd) → dd/mm/aaaa para exibição.
+  const dataNascFmt = (() => {
+    const s = String(dataNascimento || '').slice(0, 10)
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s)
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : (s || '—')
+  })()
+  const cpfFmt = (() => {
+    const d = String(cpf || '').replace(/\D/g, '')
+    return d.length === 11 ? `${d.slice(0,3)}.${d.slice(3,6)}.${d.slice(6,9)}-${d.slice(9)}` : (cpf || '—')
+  })()
 
   const examesExtras = idadeNum >= 40 ? (isFem ? EXAMES_MULHER_40 : EXAMES_HOMEM_40) : []
   const todosExames = [...EXAMES_BASE, ...examesExtras]
@@ -745,6 +759,26 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
         <Header sub={"Otimizar o Bari\u00e1trico"} />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
+          {/* Identifica\u00e7\u00e3o do paciente (nome, nascimento, sexo, CPF) */}
+          <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem 1rem' }}>
+            <div style={{ gridColumn:'1 / -1' }}>
+              <p style={{ fontSize:'0.62rem', textTransform:'uppercase', letterSpacing:'1px', color:'#9CA3AF', fontWeight:700, margin:0 }}>{"Nome"}</p>
+              <p style={{ fontSize:'0.9rem', color:'#374151', fontWeight:700, margin:0 }}>{nome || "\u2014"}</p>
+            </div>
+            <div>
+              <p style={{ fontSize:'0.62rem', textTransform:'uppercase', letterSpacing:'1px', color:'#9CA3AF', fontWeight:700, margin:0 }}>{"Nascimento"}</p>
+              <p style={{ fontSize:'0.85rem', color:'#374151', fontWeight:600, margin:0 }}>{dataNascFmt}</p>
+            </div>
+            <div>
+              <p style={{ fontSize:'0.62rem', textTransform:'uppercase', letterSpacing:'1px', color:'#9CA3AF', fontWeight:700, margin:0 }}>{"Sexo"}</p>
+              <p style={{ fontSize:'0.85rem', color:'#374151', fontWeight:600, margin:0 }}>{isFem ? 'Feminino' : 'Masculino'}</p>
+            </div>
+            <div style={{ gridColumn:'1 / -1' }}>
+              <p style={{ fontSize:'0.62rem', textTransform:'uppercase', letterSpacing:'1px', color:'#9CA3AF', fontWeight:700, margin:0 }}>{"CPF"}</p>
+              <p style={{ fontSize:'0.85rem', color:'#374151', fontWeight:600, margin:0 }}>{cpfFmt}</p>
+            </div>
+          </div>
+
           <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
             <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>{"O bari\u00e1trico \u00e9 um paciente complexo."}</p>
             <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>{"Precisamos de mais informa\u00e7\u00f5es para cuidar de voc\u00ea. Marque as caixinhas e preencha os campos:"}</p>
@@ -795,33 +829,6 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             value={form.indicacao_cirurgia}
             onChange={v => sf('indicacao_cirurgia', v)}
           />
-
-          {sexo === 'F' && (
-            <>
-              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"N\u00famero de gesta\u00e7\u00f5es pr\u00e9vias"}</label>
-              <input
-                style={inp}
-                type="number"
-                min="0"
-                max="20"
-                step="1"
-                placeholder="Ex: 2 (digite 0 se nunca engravidou)"
-                value={form.gestacoes_previas}
-                onChange={e => sf('gestacoes_previas', e.target.value)}
-              />
-
-              {form.gestacoes_previas !== '' && parseInt(form.gestacoes_previas) > 0 && (
-                <>
-                  <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Teve abortamentos espont\u00e2neos?"}</label>
-                  <RadioGroup
-                    options={['SIM',"N\u00c3O"]}
-                    value={form.abortamentos_espontaneos === true ? 'SIM' : form.abortamentos_espontaneos === false ? "N\u00c3O" : ''}
-                    onChange={v => sf('abortamentos_espontaneos', v === 'SIM')}
-                  />
-                </>
-              )}
-            </>
-          )}
 
           <SectionTitle>Status Ponderal</SectionTitle>
 
@@ -888,14 +895,42 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
             ))}
           </div>
 
-          {isFem && idadeNum >= 15 && (
+          {isFem && (
             <>
               <SectionTitle>Status Gestacional</SectionTitle>
-              <CheckRow label={"ESTOU GR\u00c1VIDA"} checked={form.status_gestacional === "GR\u00c1VIDA"} onClick={() => sf('status_gestacional', form.status_gestacional === "GR\u00c1VIDA" ? '' : "GR\u00c1VIDA")} />
-              {form.status_gestacional === "GR\u00c1VIDA" && (
-                <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginTop:'0.4rem' }}>
-                  <input style={{ ...inp, width:120 }} type="number" placeholder="Semanas" value={form.semanas_gestacao} onChange={e => sf('semanas_gestacao', e.target.value)} />
-                  <span style={{ fontSize:'0.85rem', color:'#6B7280' }}>{"semanas de gesta\u00e7\u00e3o"}</span>
+
+              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>{"N\u00famero de gesta\u00e7\u00f5es pr\u00e9vias"}</label>
+              <input
+                style={inp}
+                type="number"
+                min="0"
+                max="20"
+                step="1"
+                placeholder="Ex: 2 (digite 0 se nunca engravidou)"
+                value={form.gestacoes_previas}
+                onChange={e => sf('gestacoes_previas', e.target.value)}
+              />
+
+              {form.gestacoes_previas !== '' && parseInt(form.gestacoes_previas) > 0 && (
+                <>
+                  <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Teve abortamentos espont\u00e2neos?"}</label>
+                  <RadioGroup
+                    options={['SIM',"N\u00c3O"]}
+                    value={form.abortamentos_espontaneos === true ? 'SIM' : form.abortamentos_espontaneos === false ? "N\u00c3O" : ''}
+                    onChange={v => sf('abortamentos_espontaneos', v === 'SIM')}
+                  />
+                </>
+              )}
+
+              {idadeNum >= 15 && (
+                <div style={{ marginTop:'0.8rem' }}>
+                  <CheckRow label={"ESTOU GR\u00c1VIDA"} checked={form.status_gestacional === "GR\u00c1VIDA"} onClick={() => sf('status_gestacional', form.status_gestacional === "GR\u00c1VIDA" ? '' : "GR\u00c1VIDA")} />
+                  {form.status_gestacional === "GR\u00c1VIDA" && (
+                    <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginTop:'0.4rem' }}>
+                      <input style={{ ...inp, width:120 }} type="number" placeholder="Semanas" value={form.semanas_gestacao} onChange={e => sf('semanas_gestacao', e.target.value)} />
+                      <span style={{ fontSize:'0.85rem', color:'#6B7280' }}>{"semanas de gesta\u00e7\u00e3o"}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -1181,9 +1216,15 @@ export default function OBAModal({ sexo, cpf, idade, examesRedFairy, dadosRedFai
 
           {erro && <p style={{ color:'#DC2626', fontSize:'0.85rem', marginTop:'0.8rem' }}>{erro}</p>}
 
-          <button style={btnP} onClick={salvarAnamnese} disabled={loading}>
-            {loading ? 'Salvando...' : "Avan\u00e7ar para os Exames \u2192"}
-          </button>
+          <div style={{ display:'flex', justifyContent:'center', marginTop:'1.5rem' }}>
+            <PlayButton
+              onClick={salvarAnamnese}
+              loading={loading}
+              label="AVAN\u00c7AR PARA EXAMES"
+              hint="Voc\u00ea vai precisar dos seus exames mais recentes"
+              ariaLabel="Avan\u00e7ar para os exames"
+            />
+          </div>
           <button style={btnS} onClick={onFechar}>{"\u2190 Voltar"}</button>
         </div>
       </div>

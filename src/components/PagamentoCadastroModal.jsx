@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { gerarPixAnuidade, formatarBRL, VALOR_ANUIDADE_PADRAO } from '../lib/pix'
 import logo from '../assets/logo.png'
+import PlayButton from './PlayButton'
 
 /**
  * PagamentoCadastroModal - exibido apos o paciente completar o perfil.
@@ -104,11 +105,20 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl my-8">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl my-8 overflow-hidden">
 
-        {/* Header */}
+        {/* Header padr\u00e3o (logo-fada + RedFairy) */}
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
+          <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
+            <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+          </h2>
+        </div>
+
+        <div className="p-6">
+
+        {/* T\u00edtulo vinho do modal */}
         <div className="text-center mb-5">
-          <img src={logo} alt="RedFairy" style={{ width: 56, height: 56, margin: '0 auto 8px' }} />
           <h2 className="text-xl font-bold text-red-700">{"Ativar seu cadastro"}</h2>
           <p className="text-xs text-gray-500 mt-1">
             {"Pague R$ "}{formatarBRL(valor)}{" via PIX e tenha acesso \u00e0 plataforma por 1 ano."}
@@ -168,13 +178,16 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           </div>
         )}
 
-        {/* Acoes */}
-        <button
-          onClick={handleJaPaguei}
-          disabled={salvando}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-bold text-sm py-3 rounded-lg transition-colors mb-2">
-          {salvando ? "Registrando..." : "\u2713 J\u00e1 paguei \u2014 ativar meu acesso"}
-        </button>
+        {/* Acoes \u2014 bot\u00e3o PLAY (padr\u00e3o novo) alinhado \u00e0 direita */}
+        <div className="flex flex-col items-end mb-2">
+          <PlayButton
+            onClick={handleJaPaguei}
+            loading={salvando}
+            label="J\u00c1 PAGUEI"
+            hint="Ativar meu acesso"
+            ariaLabel="J\u00e1 paguei \u2014 ativar meu acesso"
+          />
+        </div>
 
         <button
           onClick={handleSairClick}
@@ -189,6 +202,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           </p>
         </div>
 
+        </div>
       </div>
     </div>
   )

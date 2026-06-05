@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
+import PlayButton from './PlayButton'
 import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
 import HistoricoChartModal from './HistoricoChartModal'
@@ -520,6 +521,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       {showOBAModal && profile && (
         <OBAModal
           cpf={profile.cpf}
+          nome={profile.nome}
+          dataNascimento={profile.data_nascimento}
           sexo={profile.sexo}
           idade={profile.data_nascimento ? Math.floor((Date.now() - new Date(profile.data_nascimento)) / 31557600000) : 0}
           dadosRedFairy={{
@@ -617,10 +620,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               <p className="font-bold text-amber-800 text-sm">{"\ud83d\udccb Complete sua anamnese do Projeto OBA"}</p>
               <p className="text-xs text-amber-700 mt-0.5">{"Como paciente bari\u00e1trico, a anamnese OBA libera o acompanhamento din\u00e2mico personalizado."}</p>
             </div>
-            <button onClick={() => setShowOBAModal(true)}
-              className="shrink-0 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors">
-              Preencher
-            </button>
+            <div className="shrink-0">
+              <PlayButton onClick={() => setShowOBAModal(true)} label="ENTRAR" ariaLabel="Entrar na anamnese OBA" />
+            </div>
           </div>
         )}
 
@@ -664,13 +666,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   </div>
                 </label>
 
-                <button
-                  onClick={handleConfirmarBoasVindas}
-                  disabled={salvandoBoasVindas}
-                  className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-2.5 rounded-xl disabled:opacity-50 text-sm"
-                >
-                  {salvandoBoasVindas ? 'Salvando...' : 'Continuar'}
-                </button>
+                <div className="flex justify-center pt-1">
+                  <PlayButton
+                    onClick={handleConfirmarBoasVindas}
+                    loading={salvandoBoasVindas}
+                    label="CONTINUAR"
+                    ariaLabel="Continuar"
+                  />
+                </div>
               </div>
             )}
 

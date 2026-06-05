@@ -858,8 +858,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   }
   const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(false);
   const [showFelicitacoes, setShowFelicitacoes] = useState(false);
-  // Modal de felicitacoes: imagem de fundo revela no hover (modal unico, sem splash de 2 fases).
+  // Modal de felicitacoes: imagem de fundo revela no hover.
   const [bgFelicRevelado, setBgFelicRevelado] = useState(false);
+  // SPLASH de entrada: imagem nitida + saudacao por 2s; depois surgem os botoes (abaixo da imagem).
+  const [splashFelic, setSplashFelic] = useState(true);
+  useEffect(() => {
+    if (showFelicitacoes) {
+      setSplashFelic(true); setBgFelicRevelado(false);
+      const t = setTimeout(() => setSplashFelic(false), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [showFelicitacoes]);
 
   async function decidirPosTriagem() {
     // Caminho convite (medico novo): tudo sincrono → fecha resultado e abre convite no mesmo tick.
@@ -2137,22 +2146,26 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
       {showFelicitacoes && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-4" style={{ position: 'relative' }}
-            onMouseEnter={() => setBgFelicRevelado(true)} onMouseLeave={() => setBgFelicRevelado(false)} onTouchStart={() => setBgFelicRevelado(true)}>
-            {/* Imagem de fundo: revela no hover (igual aos demais modais do padrao novo) */}
-            <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)', backgroundImage: `url(${chatphone2Img})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgFelicRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgFelicRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
-            {/* Header fada \u2014 modal unico (sem splash de 2 fases): header + imagem hover + opcoes juntos */}
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-4" style={{ position: 'relative' }}>
+            {/* Header fada */}
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
               <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
                 <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
               </h2>
             </div>
-            {/* Conteudo: titulo + opcoes (transparente p/ a imagem aparecer no hover) */}
-            <div className="px-5 py-5" style={{ position: 'relative', zIndex: 1 }}>
-              <h2 className="text-center font-extrabold leading-tight mb-1" style={{ color: '#b91c1c', fontSize: '18px' }}>
-                {"Estamos felizes de ter voc\u00ea no RedFairy"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>
-              </h2>
+            {/* HERO: imagem nitida no topo (bloco proprio, sem sobreposicao com o texto).
+                Saudacao branca fica sobre a imagem; os botoes surgem ABAIXO, apos o splash de 2s. */}
+            <div style={{ position: 'relative', width: '100%', height: '240px', overflow: 'hidden', backgroundColor: '#FDF7F7' }}>
+              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: `url(${chatphone2Img})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: '6%', padding: '0 24px', textAlign: 'center' }}>
+                <p style={{ color: '#ffffff', fontSize: '22px', fontWeight: 900, lineHeight: 1.18, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>
+                  {"Estamos felizes de ter voc\u00ea no RedFairy"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>
+                </p>
+              </div>
+            </div>
+            {/* Conteudo: surge apos o splash (2s), ABAIXO da imagem (sem sobreposicao) */}
+            <div className="px-5 py-5" style={{ position: 'relative', zIndex: 1, opacity: splashFelic ? 0 : 1, transform: splashFelic ? 'translateY(8px)' : 'translateY(0)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}>
               <p className="text-red-700 text-xs font-bold tracking-widest uppercase text-center mb-4">{"Agora voc\u00ea pode:"}</p>
               <div className="space-y-2.5">
                 <button
