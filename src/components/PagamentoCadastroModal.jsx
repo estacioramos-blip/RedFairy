@@ -118,17 +118,14 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
         <div className="p-6">
 
         {/* T\u00edtulo vinho do modal */}
-        <div className="text-center mb-5">
+        <div className="text-center mb-4">
           <h2 className="text-xl font-bold text-red-700">{"Ativar seu cadastro"}</h2>
-          <p className="text-xs text-gray-500 mt-1">
-            {"Pague R$ "}{formatarBRL(valor)}{" via PIX e tenha acesso \u00e0 plataforma por 1 ano."}
-          </p>
         </div>
 
         {/* Valor destaque */}
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center mb-4">
           <div className="text-xs font-semibold text-red-700 uppercase tracking-wider mb-1">
-            {"Valor a pagar"}
+            {"Valor a pagar | PIX"}
           </div>
           <div className="text-3xl font-black text-red-700">
             {"R$ "}{formatarBRL(valor)}
@@ -142,7 +139,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
         <div className="flex flex-col items-center bg-white border border-gray-200 rounded-xl p-4 mb-3">
           <QRCodeSVG
             value={pixCode}
-            size={200}
+            size={150}
             level="M"
             includeMargin={false}
           />
@@ -167,7 +164,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
             <button
               onClick={copiarPix}
               className={`px-3 py-2 ${copiado ? 'bg-green-600 hover:bg-green-700' : 'bg-red-700 hover:bg-red-800'} text-white text-xs font-semibold rounded-lg transition-colors whitespace-nowrap`}>
-              {copiado ? "\u2713 Copiado!" : "Copiar"}
+              {copiado ? "Copiado!" : "Copiar"}
             </button>
           </div>
         </div>
@@ -178,29 +175,30 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           </div>
         )}
 
-        {/* Acoes \u2014 bot\u00e3o PLAY (padr\u00e3o novo) alinhado \u00e0 direita */}
-        <div className="flex flex-col items-end mb-2">
+        {/* Acoes \u2014 bot\u00e3o PLAY centralizado (exce\u00e7\u00e3o: j\u00e1 vem piscando ao abrir o modal,
+            alinhado ao centro porque \u00e0 direita destoava do bot\u00e3o Copiar acima). */}
+        <div className="flex flex-col items-center mb-3">
           <PlayButton
             onClick={handleJaPaguei}
             loading={salvando}
-            label="J\u00c1 PAGUEI"
+            label={"J\u00c1 PAGUEI"}
             hint="Ativar meu acesso"
-            ariaLabel="J\u00e1 paguei \u2014 ativar meu acesso"
+            ariaLabel="Ja paguei - ativar meu acesso"
           />
+        </div>
+
+        {/* Aviso */}
+        <div className="pt-3 border-t border-gray-100">
+          <p className="text-[10px] text-gray-400 leading-relaxed text-center">
+            {"O seu acesso \u00e9 ativado imediatamente. Se o recebimento n\u00e3o for confirmado em at\u00e9 48 horas \u2014 o acesso ser\u00e1 suspenso."}
+          </p>
         </div>
 
         <button
           onClick={handleSairClick}
-          className="w-full bg-transparent hover:bg-gray-100 text-gray-500 font-medium text-xs py-2 rounded-lg transition-colors">
+          className="w-full bg-transparent hover:bg-gray-100 text-gray-400 font-medium text-xs py-2 mt-1 rounded-lg transition-colors">
           {"Sair sem pagar"}
         </button>
-
-        {/* Aviso */}
-        <div className="mt-4 pt-3 border-t border-gray-100">
-          <p className="text-[10px] text-gray-400 leading-relaxed text-center">
-            {"Ao confirmar o pagamento, seu acesso \u00e9 ativado imediatamente. O comprovante \u00e9 verificado em at\u00e9 24h \u2014 caso o pagamento n\u00e3o seja localizado, o acesso pode ser suspenso."}
-          </p>
-        </div>
 
         </div>
       </div>

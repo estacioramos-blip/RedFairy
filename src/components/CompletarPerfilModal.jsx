@@ -24,7 +24,7 @@ function formatarCelular(v) {
   return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
 }
 
-export default function CompletarPerfilModal({ profile, onSalvo }) {
+export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const [nome, setNome] = useState(profile?.nome || '')
   const [celular, setCelular] = useState(profile?.celular ? formatarCelular(profile.celular) : '')
   const [email, setEmail] = useState('')
@@ -111,15 +111,16 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-start justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden my-8" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column', position: 'relative' }}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden my-8" style={{ minHeight: 'min(700px, 92vh)', maxHeight: '92vh', display: 'flex', flexDirection: 'column', position: 'relative' }}
         onMouseEnter={() => setBgPerfilRevelado(true)} onMouseLeave={() => setBgPerfilRevelado(false)} onTouchStart={() => setBgPerfilRevelado(true)}>
 
-        {/* Imagem de fundo: faixa de largura cheia, esmaecida; revela no hover (atrás dos inputs) */}
-        <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)', backgroundImage: `url(${elaDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgPerfilRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgPerfilRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+        {/* Imagem de fundo: faixa de largura cheia, esmaecida; revela no hover (atrás dos inputs).
+            top 52% (um pouco mais alta) e altura 430px (corta menos a base da imagem). */}
+        <div aria-hidden="true" style={{ position: 'absolute', top: '52%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)', backgroundImage: `url(${elaDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgPerfilRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgPerfilRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
 
         {/* SPLASH de entrada: imagem nítida (largura cheia, centrada) por 3s, antes dos campos */}
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashPerfil ? 1 : 0, pointerEvents: splashPerfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
-          <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)' }}>
+          <div style={{ position: 'absolute', top: '52%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)' }}>
             <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${elaDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
           </div>
         </div>
@@ -136,7 +137,7 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
           <p style={{ margin: 0, color: '#7B1E1E', fontWeight: 800, fontSize: '15px', letterSpacing: '0.2px' }}>{"Complete o seu Perfil"}</p>
         </div>
 
-        <div className="p-5" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
+        <div className="p-5" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column' }}>
           <div className="space-y-3">
             <div>
               <label className={labelCls}>{"Nome completo"}</label>
@@ -157,7 +158,7 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
                 className={fieldCls('celular')} inputMode="numeric" maxLength={16}
                 placeholder="(00) 00000-0000"
               />
-              <p className="text-xs text-gray-400 mt-1">{"Necessário para receber documentos médicos via WhatsApp."}</p>
+              <p className="text-xs text-gray-900 mt-1">{"Necessário para receber documentos médicos."}</p>
             </div>
 
             <div>
@@ -177,9 +178,13 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
                 <p className="text-xs font-semibold text-red-700">{erro}</p>
               </div>
             )}
+          </div>
 
+          {/* Rodapé: empurrado para baixo (área branca, abaixo da faixa da imagem).
+              Botão PLAY à direita; "← Voltar" discreto e centralizado como única saída. */}
+          <div style={{ marginTop: 'auto' }} className="pt-6 flex flex-col gap-3">
             {tudoOk && (
-              <div className="flex flex-col items-end pt-2">
+              <div className="flex flex-col items-end">
                 <PlayButton
                   ref={confirmarRef}
                   onClick={handleSalvar}
@@ -188,6 +193,12 @@ export default function CompletarPerfilModal({ profile, onSalvo }) {
                   ariaLabel="Confirmar perfil"
                 />
               </div>
+            )}
+            {onVoltar && (
+              <button onClick={onVoltar}
+                className="text-xs text-gray-400 hover:text-gray-600 font-medium text-center transition-colors">
+                {"← Voltar"}
+              </button>
             )}
           </div>
         </div>

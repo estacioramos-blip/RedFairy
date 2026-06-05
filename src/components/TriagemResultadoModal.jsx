@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
+import PlayButton from './PlayButton'
 
 /**
  * TriagemResultadoModal - popup de resultado da triagem.
@@ -676,12 +677,14 @@ export default function TriagemResultadoModal({
               </button>
             </>
           ) : (
-            <button
-              onClick={handleContinuar}
-              disabled={salvando}
-              className="flex-1 py-3 rounded-xl bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold transition-colors text-sm disabled:opacity-50 disabled:cursor-wait">
-              {salvando ? 'Salvando...' : (modoMedico ? 'Continue' : <>{"Salvar e continuar \u2192"}</>)}
-            </button>
+            <div className="flex-1 flex flex-col items-end">
+              <PlayButton
+                onClick={handleContinuar}
+                loading={salvando}
+                label={modoMedico ? 'PROSSEGUIR' : 'SALVAR E PROSSEGUIR'}
+                ariaLabel="Salvar e prosseguir"
+              />
+            </div>
           )}
         </div>
       </div>

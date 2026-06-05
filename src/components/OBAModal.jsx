@@ -1220,8 +1220,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             <PlayButton
               onClick={salvarAnamnese}
               loading={loading}
-              label="AVAN\u00c7AR PARA EXAMES"
-              hint="Voc\u00ea vai precisar dos seus exames mais recentes"
+              label={"AVAN\u00c7AR PARA EXAMES"}
+              hint={"Voc\u00ea vai precisar dos seus exames mais recentes"}
               ariaLabel="Avan\u00e7ar para os exames"
             />
           </div>

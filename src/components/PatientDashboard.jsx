@@ -8,6 +8,7 @@ import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
 import HistoricoChartModal from './HistoricoChartModal'
 import heroImg from '../assets/redfairy-hero.png'
+import telefonista3Img from '../assets/telefonista3.png'
 import logo from '../assets/logo.png'
 
 export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirOBA }) {
@@ -171,8 +172,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       // sem anamnese OBA. Fura o RLS (a triagem órfã tem user_id=null).
       const { data: precisa } = await supabase.rpc('paciente_precisa_oba', { p_cpf: cpf })
       if (precisa === true) {
-        setPrecisaOBA(true)                                   // mantém o banner persistente
-        setTimeout(() => setShowOBAModal(true), 600)
+        // Banner removido: o modal OBA abre direto para o bariátrico que ainda não
+        // preencheu. Sem banner, não há flicker. O modal já tem a própria intro
+        // "O bariátrico é um paciente complexo…".
+        setPrecisaOBA(true)            // bookkeeping p/ onConcluir
+        setShowOBAModal(true)
         return true
       }
       return false
@@ -614,30 +618,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </button>
         </div>
 
-        {precisaOBA && !showOBAModal && (
-          <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="font-bold text-amber-800 text-sm">{"\ud83d\udccb Complete sua anamnese do Projeto OBA"}</p>
-              <p className="text-xs text-amber-700 mt-0.5">{"Como paciente bari\u00e1trico, a anamnese OBA libera o acompanhamento din\u00e2mico personalizado."}</p>
-            </div>
-            <div className="shrink-0">
-              <PlayButton onClick={() => setShowOBAModal(true)} label="ENTRAR" ariaLabel="Entrar na anamnese OBA" />
-            </div>
-          </div>
-        )}
-
         {tela === 'historico' && (
           <div className="space-y-3">
             {showBoasVindas && profile && (
-              <div className="bg-white rounded-2xl p-5 border-2 border-red-200 shadow-sm mb-4">
+              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden" style={{ position: 'relative' }}>
+                {/* Imagem de boas-vindas (telefonista3) — inteira, largura cheia do card, sem corte */}
+                <img src={telefonista3Img} alt="" className="w-full block" style={{ backgroundColor: '#FDF7F7' }} />
+                <div className="p-5" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 1, background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 35%, rgba(255,255,255,0.92) 70%)' }}>
                 <div className="mb-3">
-                  <h2 className="text-xl font-bold text-red-700 mb-1">
+                  <h2 className="text-xl font-bold text-red-700 mb-1" style={{ textShadow: '0 1px 8px rgba(255,255,255,0.95)' }}>
                     {"Ol\u00e1, "}{profile.nome?.split(' ')[0] || ''}{"!"}
                   </h2>
-                  <p className="text-sm text-gray-600">{"Bem-vindo(a) ao RedFairy"}</p>
+                  <p className="text-sm text-gray-700 font-medium" style={{ textShadow: '0 1px 8px rgba(255,255,255,0.95)' }}>{"Bem-vindo(a) ao RedFairy"}</p>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3 w-2/3">
                   <p className="text-sm text-gray-800 mb-1">
                     {"Voc\u00ea agora tem acesso \u00e0 plataforma por "}<strong>1 ano</strong>{"."}
                   </p>
@@ -646,33 +641,36 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   </p>
                 </div>
 
-                <label className="flex items-start gap-3 p-3 border-2 border-amber-300 bg-amber-50 rounded-xl cursor-pointer mb-3">
-                  <input
-                    type="checkbox"
-                    checked={querPedidoGratis}
-                    onChange={(e) => setQuerPedidoGratis(e.target.checked)}
-                    className="mt-1 w-5 h-5 accent-red-700"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-amber-900">
-                      {"Quero o meu primeiro pedido de exames (GRATUITO)"}
-                    </p>
-                    <p className="text-xs text-amber-800 mt-1">
-                      {"Inclui: Hemograma, Ferritina e Satura\u00e7\u00e3o da Transferrina"}
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1 italic">
-                      {"Pedidos futuros: R$ 60,00 cada"}
-                    </p>
+                {/* Card amarelo a ~2/3 + bot\u00e3o PLAY \u00e0 direita (na mesma linha) \u2014 p\u00e1gina fica curta */}
+                <div className="flex items-center gap-3">
+                  <label className="basis-2/3 flex items-start gap-3 p-3 border-2 border-amber-300 bg-amber-50 rounded-xl cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={querPedidoGratis}
+                      onChange={(e) => setQuerPedidoGratis(e.target.checked)}
+                      className="mt-1 w-5 h-5 accent-red-700"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-amber-900">
+                        {"Quero o meu primeiro pedido de exames (GRATUITO)"}
+                      </p>
+                      <p className="text-xs text-amber-800 mt-1">
+                        {"Inclui: Hemograma, Ferritina e Satura\u00e7\u00e3o da Transferrina"}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1 italic">
+                        {"Pedidos futuros: R$ 60,00 cada"}
+                      </p>
+                    </div>
+                  </label>
+                  <div className="flex-1 flex justify-center">
+                    <PlayButton
+                      onClick={handleConfirmarBoasVindas}
+                      loading={salvandoBoasVindas}
+                      label="CONTINUAR"
+                      ariaLabel="Continuar"
+                    />
                   </div>
-                </label>
-
-                <div className="flex justify-center pt-1">
-                  <PlayButton
-                    onClick={handleConfirmarBoasVindas}
-                    loading={salvandoBoasVindas}
-                    label="CONTINUAR"
-                    ariaLabel="Continuar"
-                  />
+                </div>
                 </div>
               </div>
             )}
@@ -906,6 +904,18 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           setShowCompletarPerfil(false)
           setProfile(novoProfile)
           setShowPagamento(true)
+        }}
+        onVoltar={() => {
+          // Única saída: abandona o cadastro incompleto e volta ao início (desloga).
+          setShowCompletarPerfil(false)
+          try {
+            localStorage.removeItem('paciente_id')
+            localStorage.removeItem('paciente_token')
+            localStorage.removeItem('paciente_cpf')
+            localStorage.removeItem('paciente_nome')
+            localStorage.removeItem('paciente_login_at')
+          } catch (e) {}
+          if (onVoltar) onVoltar()
         }}
       />
     )}
