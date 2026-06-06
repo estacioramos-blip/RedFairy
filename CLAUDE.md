@@ -82,15 +82,31 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
 - Detecção de mobile na LandingPage: `window.matchMedia('(hover: none), (pointer: coarse)').matches`.
 - Warnings do Recharts ("width(-1) and height(-1)") são **cosméticos** — o gráfico renderiza. Não é bug.
 - O ambiente Windows converte LF→CRLF nos arquivos (warning benigno do git).
+- **`PlayButton` (`src/components/PlayButton.jsx`) é o botão padrão de confirmar/avançar** do fluxo do paciente: círculo cinza piscante com ▶ vinho, subtexto vinho em caixa alta (`label`) e `hint` laranja opcional. `forwardRef` (dá pra focar). Reaproveita o keyframe `rf-play-wine`. Usado em: CompletarPerfil ("CONFIRMO"), Pagamento PIX ("JÁ PAGUEI"), boas-vindas ("CONTINUAR"), TriagemResultado ("SALVAR E PROSSEGUIR") e OBA ("AVANÇAR PARA EXAMES"). Alinhamento: à direita (`items-end`) na maioria; centralizado só no PIX.
+- **ARMADILHA Unicode/JSX:** o ambiente grava caracteres acentuados como escapes `\uXXXX`. Em **atributo JSX de string** (`label="JÁ PAGUEI"`) isso vira TEXTO LITERAL (mojibake na tela) — o JSX não interpreta `\u` ali. Solução: usar **expressão** `label={"JÁ PAGUEI"}` (string JS, o `\u` é interpretado). Dentro de `{"..."}` tanto o char real quanto o escape funcionam.
+- **Padrão de modal "splash 4DOC"** (visual que o Estácio aprovou): imagem nítida por alguns segundos (splash, zIndex 5) → imagem vira fundo esmaecido com **hover** atrás do conteúdo (`blur 10px/opacity .12` → `blur 0/opacity .5`). Header e título ficam em zIndex 10 (aparecem durante o splash). Referência: modal `showAfiliados` no Calculator.jsx (~l.1399) e `CompletarPerfilModal.jsx`.
 
 ---
 
 ## PENDÊNCIAS ATUAIS
 
-### Em andamento
+### Foco atual: OBA Modal (`src/components/OBAModal.jsx`, ~1230 linhas)
+Objetivo: fechar o ciclo do bariátrico (anamnese → exames → **relatório/avaliação final**) para entrar em operação.
+- **Relatório/avaliação final do OBA NÃO EXISTE ainda** — é o que trava a conclusão da avaliação do bariátrico. É a próxima grande tarefa.
+- **Revisão geral da anamnese** (Estácio quer rever campos/ordem).
+- Fluxo atual: bariátrico que ainda não preencheu → `verificarEAbrirOBA` (PatientDashboard ~l.166) → `setShowOBAModal(true)` (abre direto, sem banner) → etapa `'anamnese'` → `salvarAnamnese` → etapa `'exames'` → (relatório, a fazer).
+- Invocação: `<OBAModal>` em PatientDashboard ~l.520, props: `cpf, nome, dataNascimento, sexo, idade, examesRedFairy, dadosRedFairy, onConcluir, onFechar`.
+- Já feito no OBAModal: ficha do paciente (nome/nascimento/sexo/CPF) no topo da anamnese; `isFem = /^f/i.test(sexo)`; campos gestacionais só para feminino, com "gestações prévias" dentro de **Status Gestacional**; botão final `PlayButton` "AVANÇAR PARA EXAMES" + hint laranja.
+
+### Em andamento (paralelo)
 - **UI do ResultCard para split LAB/IMAGEM**: o engine já separa em `proximosExamesLab`/`proximosExamesImagem`, mas o ResultCard ainda mostra tudo junto numa seção "🧪 Próximos Exames Sugeridos" (~linha 1222, grid 2 colunas usando `resultado.proximosExames`).
   - Decisão do produto: cada exame de IMAGEM gera um pedido SEPARADO (ULTRASSOM e COLONOSCOPIA são feitos em locais diferentes). Botão "Solicitar Pedidos de Imagem" abre tela com todos empilhados, 1 por página. Médico não escolhe — gera todos os sugeridos.
   - Falta decidir e implementar a parte visual + geração de documentos.
+
+### Concluído recentemente (fluxo do paciente — commits até `87ff3e2`)
+- Padrão **`PlayButton`** aplicado em todo o fluxo do paciente (ver ARMADILHAS).
+- `CompletarPerfilModal`, `PagamentoCadastroModal` (PIX), boas-vindas e `OBAModal` no padrão novo.
+- `BoasVindasModal.jsx` **apagado** (era código morto). O "Olá, NOME!" vivo é inline no `PatientDashboard.jsx`.
 
 ### Backlog (adiado)
 - Cadastro oportunista (oferecer registro ao paciente antes de finalizar pedido gratuito).
