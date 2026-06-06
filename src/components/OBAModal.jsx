@@ -11,6 +11,14 @@ import PlayButton from './PlayButton'
 // imagem e atribua aqui — o enquadramento landscape já está nos estilos abaixo.
 const SPLASH_REL_IMG = null
 
+// Imagem landscape do topo do MODAL DE CONCLUSÃO da 1ª avaliação — A DEFINIR.
+// Mesmo esquema do SPLASH_REL_IMG.
+const SPLASH_CONCLUSAO_IMG = null
+
+// Dados do médico responsável (assinatura do resultado/prescrição).
+const MEDICO_RESP = 'E. F. Ramos, M.D. — CRM 6302 BA | RQE 5830 · 5643 · 27847'
+const WHATS_PLATAFORMA = '5571997110804'
+
 // Apresentação visual de cada ESTADO GERAL CLÍNICO (régua do obaEngine).
 // O motor devolve a sigla; aqui mora a cor/rótulo/emoji da tela.
 const ESTADO_UI = {
@@ -198,17 +206,21 @@ function Radio16({ active }) {
   )
 }
 
-function RadioGroup({ options, value, onChange }) {
-  return options.map(op => (
-    <div key={op} onClick={() => onChange(op)} style={{
-      display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem',
-      borderRadius:8, border:`1.5px solid ${value === op ? '#DC2626' : '#E5E7EB'}`,
-      background: value === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem',
-      fontSize:'0.85rem', fontWeight: value === op ? 700 : 500, color: value === op ? '#7B1E1E' : '#374151',
-    }}>
-      <Radio16 active={value === op} />{op}
-    </div>
-  ))
+function RadioGroup({ options, value, onChange, disabledOptions = [] }) {
+  return options.map(op => {
+    const disabled = disabledOptions.includes(op)
+    return (
+      <div key={op} onClick={() => !disabled && onChange(op)} style={{
+        display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem',
+        borderRadius:8, border:`1.5px solid ${value === op ? '#DC2626' : '#E5E7EB'}`,
+        background: disabled ? '#F3F4F6' : value === op ? '#FEF2F2' : '#FAFAFA',
+        cursor: disabled ? 'not-allowed' : 'pointer', marginBottom:'0.4rem', opacity: disabled ? 0.45 : 1,
+        fontSize:'0.85rem', fontWeight: value === op ? 700 : 500, color: disabled ? '#9CA3AF' : value === op ? '#7B1E1E' : '#374151',
+      }}>
+        <Radio16 active={value === op} />{op}
+      </div>
+    )
+  })
 }
 
 function CheckRow({ label, checked, onClick, disabled }) {
@@ -322,6 +334,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // Teleconsulta (CTA quando estado RUIM/CRÍTICO). valorTeleconsulta vem da config.
   const [valorTeleconsulta, setValorTeleconsulta] = useState(null)
   const [querTeleconsulta, setQuerTeleconsulta] = useState(salvo?.querTeleconsulta || false)
+  // Modal de conclusão da 1ª avaliação (etapa 'conclusao').
+  const [splashConcl, setSplashConcl] = useState(false)
+  const [bgConcl, setBgConcl] = useState(false)
+  const [valorPrescricao, setValorPrescricao] = useState(null)  // config.valor_documento_medico
+  const [querPrescricao, setQuerPrescricao] = useState(false)
+  const [querResultado, setQuerResultado] = useState(false)
 
   const [form, setForm] = useState(salvo?.form || {
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
@@ -335,7 +353,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     tipo_cirurgia: '',
     acompanhamento: '', especialistas: [],
     status_gestacional: '', semanas_gestacao: '', temExamesMesmaData: false,
-    status_glicemico: '', status_pressorico: '', status_endoscopico: [], status_neurologico: [],
+    status_glicemico: '', dumping: false, status_pressorico: '', status_endoscopico: [], status_neurologico: [],
     trombose: null, investigou_trombose: false,
     usou_anticoagulante: false, usa_anticoagulante: false,
     varizes: null, varizes_grau: '',
@@ -408,13 +426,28 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     return () => clearTimeout(t)
   }, [etapa])
 
-  // Valor da teleconsulta (config.valor_teleconsulta) — usado no CTA do relatório.
+  // Valores da config: teleconsulta (valor_teleconsulta) e prescrição/documento
+  // médico (valor_documento_medico) — usados nos CTAs do relatório e da conclusão.
   useEffect(() => {
     let ativo = true
-    supabase.from('config').select('valor').eq('chave', 'valor_teleconsulta').maybeSingle()
-      .then(({ data }) => { if (ativo && data?.valor != null) setValorTeleconsulta(data.valor) })
+    supabase.from('config').select('chave, valor').in('chave', ['valor_teleconsulta', 'valor_documento_medico'])
+      .then(({ data }) => {
+        if (!ativo || !data) return
+        const tele = data.find(d => d.chave === 'valor_teleconsulta')
+        const presc = data.find(d => d.chave === 'valor_documento_medico')
+        if (tele?.valor != null) setValorTeleconsulta(tele.valor)
+        if (presc?.valor != null) setValorPrescricao(presc.valor)
+      })
     return () => { ativo = false }
   }, [])
+
+  // Splash 4DOC do modal de conclusão (só se houver imagem definida).
+  useEffect(() => {
+    if (etapa !== 'conclusao' || !SPLASH_CONCLUSAO_IMG) return
+    setSplashConcl(true)
+    const t = setTimeout(() => setSplashConcl(false), 3000)
+    return () => clearTimeout(t)
+  }, [etapa])
 
   // Persiste o progresso a cada mudança (etapa/respostas/exames/relatório).
   useEffect(() => {
@@ -514,6 +547,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       ganhou_peso_apos:   (kgGanhou !== null && kgGanhou > 0) ? true : form.ganhou_peso_apos,
       fez_plasma_argonio: form.fez_plasma_argonio,
       status_glicemico:   form.status_glicemico || null,
+      dumping:            !!form.dumping,
       status_pressorico:  form.status_pressorico || null,
       status_endoscopico: form.status_endoscopico.length > 0 ? form.status_endoscopico : null,
       status_neurologico: form.status_neurologico.length > 0 ? form.status_neurologico : null,
@@ -693,10 +727,21 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     gerarRelatorio({})
   }
 
-  // Botão final do relatório → limpa o progresso salvo e devolve o controle.
+  // Botão "CONCLUIR" do relatório → vai para o modal de conclusão da 1ª avaliação
+  // (NÃO finaliza ainda; o progresso é mantido até o paciente finalizar).
   function concluirRelatorio() {
+    setEtapa('conclusao')
+  }
+
+  // Botão final do modal de conclusão → limpa o progresso e devolve o controle.
+  function finalizar() {
     limparProgresso()
     onConcluir(buildDadosOBA(), buildExamesOBA())
+  }
+
+  // Abre o WhatsApp da plataforma com uma mensagem pré-preenchida.
+  function abrirWhats(msg) {
+    try { window.open(`https://wa.me/${WHATS_PLATAFORMA}?text=${encodeURIComponent(msg)}`, '_blank') } catch (e) {}
   }
 
   const Header = ({ sub }) => (
@@ -709,6 +754,116 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       </div>
     </div>
   )
+
+
+  if (etapa === 'conclusao') {
+    const estado = estadoClinico?.estado
+    const teleRecomendada = estado === 'CRITICO' || estado === 'RUIM' || form.usou_anticoagulante
+    const temHpylori = (form.status_endoscopico || []).includes('H. PYLORI')
+    const BG_BAND = { position:'absolute', top:0, left:0, right:0, height:360, pointerEvents:'none' }
+    const checkBox = { width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#DC2626', flexShrink:0 }
+    const waBtn = { display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none', cursor:'pointer', border:'none', fontFamily:'inherit', marginTop:'0.7rem' }
+    return (
+      <div style={OV} onClick={finalizar}>
+        <div
+          style={{ ...CD, position:'relative', overflow:'hidden' }}
+          onClick={e => e.stopPropagation()}
+          onMouseEnter={() => setBgConcl(true)} onMouseLeave={() => setBgConcl(false)} onTouchStart={() => setBgConcl(true)}
+        >
+          {SPLASH_CONCLUSAO_IMG && (
+            <>
+              <div aria-hidden="true" style={{ ...BG_BAND, backgroundImage:`url(${SPLASH_CONCLUSAO_IMG})`, backgroundSize:'100% auto', backgroundPosition:'center top', backgroundRepeat:'no-repeat', filter: bgConcl ? 'blur(0px)' : 'blur(10px)', opacity: bgConcl ? 0.5 : 0.12, transition:'filter 0.6s ease, opacity 0.6s ease' }} />
+              <div aria-hidden="true" style={{ position:'absolute', inset:0, zIndex:5, background:'#FDF7F7', opacity: splashConcl ? 1 : 0, pointerEvents: splashConcl ? 'auto' : 'none', transition:'opacity 0.5s ease' }}>
+                <div style={{ ...BG_BAND, backgroundImage:`url(${SPLASH_CONCLUSAO_IMG})`, backgroundSize:'100% auto', backgroundPosition:'center top', backgroundRepeat:'no-repeat' }} />
+              </div>
+            </>
+          )}
+
+          <div style={{ position:'relative', zIndex:10 }}>
+            <Header sub={"Conclusão da 1ª avaliação"} />
+          </div>
+
+          <div style={{ position:'relative', zIndex:1, padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
+            {SPLASH_CONCLUSAO_IMG && <div style={{ height:200 }} />}
+
+            <p style={{ fontSize:'1.1rem', fontWeight:900, color:'#7B1E1E', textAlign:'center', margin:'0 0 0.4rem' }}>
+              {"Primeira avaliação concluída!"}
+            </p>
+            <p style={{ fontSize:'0.85rem', color:'#374151', textAlign:'center', lineHeight:1.5, margin:'0 0 1.2rem' }}>
+              {"Com base na sua avaliação, estas são as recomendações e opções para você:"}
+            </p>
+
+            {/* TELECONSULTA — se CRÍTICO/RUIM ou usou anticoagulante */}
+            {teleRecomendada && (
+              <div style={{ background:'#FEF2F2', border:'2px solid #FCA5A5', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
+                <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#991B1B', margin:'0 0 0.4rem' }}>{"RECOMENDAMOS TELECONSULTA MÉDICA"}</p>
+                <p style={{ fontSize:'0.8rem', color:'#7F1D1D', lineHeight:1.5, margin:'0 0 0.7rem' }}>
+                  {(estado === 'CRITICO' || estado === 'RUIM')
+                    ? "Seu estado clínico atual merece avaliação médica próxima."
+                    : "Seu histórico (trombose com anticoagulante já interrompido) recomenda avaliação o quanto antes."}
+                </p>
+                <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                  <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={checkBox} />
+                  <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#991B1B' }}>{"SIM, DESEJO MARCAR UMA TELECONSULTA"}</span>
+                </label>
+                {querTeleconsulta && (
+                  <div style={{ marginTop:'0.8rem', background:'white', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 0.9rem' }}>
+                    <p style={{ fontSize:'0.8rem', color:'#374151', margin:0 }}>
+                      {"Valor da teleconsulta: "}
+                      <strong style={{ color:'#7B1E1E' }}>{valorTeleconsulta != null ? `R$ ${valorTeleconsulta}` : "a confirmar"}</strong>
+                    </p>
+                    <button style={waBtn} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e desejo marcar uma teleconsulta médica.')}>{"Falar no WhatsApp →"}</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* H. PYLORI — prescrição do tratamento */}
+            {temHpylori && (
+              <div style={{ background:'#FFF7ED', border:'2px solid #FED7AA', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
+                <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#9A3412', margin:'0 0 0.4rem' }}>{"H. PYLORI — SOLICITE A RECEITA PARA TRATAMENTO"}</p>
+                <p style={{ fontSize:'0.8rem', color:'#7C2D12', lineHeight:1.5, margin:'0 0 0.7rem' }}>
+                  {"O H. pylori é um agente carcinogênico; tratar a infecção reduz o risco. Podemos emitir a prescrição do tratamento de erradicação."}
+                </p>
+                <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                  <input type="checkbox" checked={querPrescricao} onChange={e => setQuerPrescricao(e.target.checked)} style={checkBox} />
+                  <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#9A3412' }}>{"SOLICITAR A RECEITA DO TRATAMENTO"}</span>
+                </label>
+                <p style={{ fontSize:'0.74rem', color:'#9A3412', margin:'0.5rem 0 0' }}>
+                  {"Você pagará apenas "}
+                  <strong>{valorPrescricao != null ? `R$ ${valorPrescricao}` : "(valor a confirmar)"}</strong>
+                  {" pela prescrição médica com assinatura digital."}
+                </p>
+                {querPrescricao && (
+                  <button style={waBtn} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e desejo solicitar a prescrição do tratamento para H. pylori.')}>{"Solicitar no WhatsApp →"}</button>
+                )}
+              </div>
+            )}
+
+            {/* RESULTADO POR WHATSAPP */}
+            <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:12, padding:'1rem 1.1rem' }}>
+              <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#0369A1', margin:'0 0 0.5rem' }}>{"Receber o resultado da sua avaliação"}</p>
+              <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                <input type="checkbox" checked={querResultado} onChange={e => setQuerResultado(e.target.checked)} style={{ ...checkBox, accentColor:'#0284C7' }} />
+                <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#0369A1' }}>{"QUERO RECEBER O RESULTADO POR WHATSAPP"}</span>
+              </label>
+              <p style={{ fontSize:'0.74rem', color:'#0C4A6E', margin:'0.5rem 0 0', lineHeight:1.5 }}>
+                {"Enviaremos um resumo da sua avaliação (em breve, também em PDF assinado por "}{MEDICO_RESP}{")."}
+              </p>
+              {querResultado && (
+                <button style={{ ...waBtn, background:'#0284C7' }} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e gostaria de receber o resultado da minha avaliação.')}>{"Receber no WhatsApp →"}</button>
+              )}
+            </div>
+
+            <div style={{ display:'flex', justifyContent:'flex-end', marginTop:'1.5rem' }}>
+              <PlayButton onClick={finalizar} label={"FINALIZAR"} hint={"Voltar ao meu painel"} ariaLabel="Finalizar e voltar ao painel" />
+            </div>
+            <button style={btnS} onClick={() => setEtapa('relatorio')}>{"← Ver o relatório novamente"}</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
 
   if (etapa === 'relatorio') {
@@ -886,8 +1041,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <PlayButton
                 onClick={concluirRelatorio}
                 label={"CONCLUIR"}
-                hint={"Voltar ao meu painel"}
-                ariaLabel="Concluir e voltar ao painel"
+                hint={"Ver recomendações e opções"}
+                ariaLabel="Concluir e ver recomendações"
               />
             </div>
           </div>
@@ -1233,7 +1388,20 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           )}
 
           <SectionTitle>{"Status Glic\u00eamico"}</SectionTitle>
-          <RadioGroup options={STATUS_GLICEMICO_OPS} value={form.status_glicemico} onChange={v => sf('status_glicemico', v)} />
+          <RadioGroup
+            options={STATUS_GLICEMICO_OPS.filter(o => !o.includes('DUMPING'))}
+            value={form.status_glicemico}
+            disabledOptions={form.indicacao_cirurgia === 'OBESIDADE + DIABETES' ? [STATUS_GLICEMICO_OPS[0]] : []}
+            onChange={v => sf('status_glicemico', v)}
+          />
+          {/* DUMPING \u00e9 independente do radio acima: pode coexistir com qualquer status. */}
+          <div style={{ marginTop:'0.5rem' }}>
+            <CheckRow
+              label={STATUS_GLICEMICO_OPS.find(o => o.includes('DUMPING'))}
+              checked={form.dumping}
+              onClick={() => sf('dumping', !form.dumping)}
+            />
+          </div>
 
           <SectionTitle>{"Status Press\u00f3rico"}</SectionTitle>
           <RadioGroup options={STATUS_PRESSORICO_OPS} value={form.status_pressorico} onChange={v => sf('status_pressorico', v)} />

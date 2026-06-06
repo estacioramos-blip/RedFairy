@@ -363,8 +363,8 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
     bump(MODERADO)
   }
   if (has('H. PYLORI')) {
-    linhas.push('H. PYLORI: COMPROMETE A ABSORÇÃO DE B12 E FERRO E CAUSA GASTRITE. ERRADICAR E CORRELACIONAR COM OS DÉFICITS; REAVALIAR APÓS O TRATAMENTO.')
-    alertas.push({ nivel: MODERADO, texto: 'H. PYLORI: compromete absorção de B12/ferro — erradicar e reavaliar.' })
+    linhas.push('H. PYLORI: ALÉM DE COMPROMETER A ABSORÇÃO DE B12 E FERRO E CAUSAR GASTRITE, É CLASSIFICADO COMO CARCINÓGENO DO GRUPO 1 (IARC/OMS) — O GENOMA DO MICRORGANISMO TEM POTENCIAL ONCOGÊNICO. PERMANECER INFECTADO REPRESENTA RISCO ALTO E AUMENTA SIGNIFICATIVAMENTE A CHANCE DE CÂNCER GÁSTRICO E DE LINFOMA MALT. A ERRADICAÇÃO É FORTEMENTE RECOMENDADA: SOLICITE A PRESCRIÇÃO DO TRATAMENTO E REAVALIE APÓS A ERRADICAÇÃO.')
+    alertas.push({ nivel: MODERADO, texto: 'H. PYLORI: agente carcinogênico (Grupo 1) — risco alto de câncer gástrico se não tratado. Solicitar prescrição do tratamento de erradicação.' })
     suger.push('PESQUISA DE H. PYLORI (CONTROLE PÓS-TRATAMENTO)')
     bump(MODERADO)
   }
@@ -701,7 +701,9 @@ function buildModGlico(ex, dados, alertas, suger) {
   const alt  = parseFloat(ex.alt)
   const ggt  = parseFloat(ex.gama_gt)
   const stGli = dados.status_glicemico || ''
-  const temDumping = stGli.includes('DUMPING')
+  // DUMPING agora é um campo próprio (checkbox), independente do radio glicêmico.
+  // Mantém compat. com dados antigos onde vinha dentro de status_glicemico.
+  const temDumping = !!dados.dumping || stGli.includes('DUMPING')
   const meds  = dados.medicamentos || []
   const emag  = dados.emagrecedores || {}
 
@@ -799,7 +801,8 @@ function buildModGlico(ex, dados, alertas, suger) {
     linhas.push('EPISÓDIOS DE DUMPING RELATADOS: A SÍNDROME DE DUMPING É FREQUENTE APÓS BYPASS GÁSTRICO E PODE SE APRESENTAR COMO DUMPING PRECOCE (SUDORESE, TAQUICARDIA, NÁUSEAS E DIARREIA LOGO APÓS AS REFEIÇÕES) OU TARDIO (HIPOGLICEMIA REATIVA 1-3 HORAS APÓS COMER). PODE CAUSAR DESNUTRIÇÃO PROGRESSIVA SE NÃO TRATADO.')
     linhas.push('ORIENTAÇÕES PARA CONTROLE: EVITAR AÇÚCARES SIMPLES E ULTRAPROCESSADOS. PREFERIR REFEIÇÕES PEQUENAS E FREQUENTES (5-6/DIA). NÃO BEBER DURANTE AS REFEIÇÕES — AGUARDAR 30 MIN APÓS. PRIORIZAR PROTEÍNAS E GORDURAS BOAS. DEITAR 20-30 MIN APÓS COMER REDUZ OS SINTOMAS DO DUMPING PRECOCE.')
     linhas.push('EM CASOS GRAVES: OCTREOTIDE OU REVISÃO CIRÚRGICA PODEM SER INDICADOS. AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO OU NUTRÓLOGO ESPECIALIZADO É FORTEMENTE RECOMENDADA.')
-    alertas.push({ nivel: MODERADO, texto: 'DUMPING RELATADO: AJUSTAR DIETA E AVALIAR COM ESPECIALISTA.' })
+    linhas.push('A INTERVENÇÃO MÉDICA É NECESSÁRIA PARA REDUZIR ESSE RISCO — NÃO POSTERGUE A AVALIAÇÃO ESPECIALIZADA.')
+    alertas.push({ nivel: MODERADO, texto: 'DUMPING RELATADO: AJUSTAR DIETA E AVALIAR COM ESPECIALISTA — intervenção médica reduz o risco.' })
     suger.push('AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO OU NUTRÓLOGO ESPECIALIZADO')
     suger.push('GLICEMIA PÓS-PRANDIAL 1H E 2H (PESQUISA DE HIPOGLICEMIA REATIVA)')
     suger.push('TESTE DE TOLERÂNCIA À GLICOSE 75G (DUMPING TARDIO)')
@@ -1121,6 +1124,10 @@ function buildModVascular(dados, alertas, suger) {
       suger.push('INR (SE EM USO DE WARFARINA)')
     } else {
       linhas.push('SEM USO ATUAL DE ANTICOAGULANTE: AVALIAR SE HÁ INDICAÇÃO DE PROFILAXIA OU TRATAMENTO ANTICOAGULANTE.')
+    }
+    if (usouAnticoa && !usaAnticoa) {
+      linhas.push('MESMO QUE VOCÊ TENHA INTERROMPIDO O ANTICOAGULANTE COM ORIENTAÇÃO MÉDICA, VOCÊ PODE ESTAR EM RISCO DE NOVA TROMBOSE: RECOMENDO UMA TELECONSULTA O MAIS RÁPIDO POSSÍVEL.')
+      alertas.push({ nivel: MODERADO, texto: 'TROMBOSE PRÉVIA COM ANTICOAGULANTE JÁ INTERROMPIDO — risco de nova trombose; recomenda-se TELECONSULTA o quanto antes.' })
     }
     linhas.push('NA INVESTIGAÇÃO DA TROMBOSE COM HEMATOLOGISTA, O D-DÍMERO PODE AUXILIAR (POR EXEMPLO, NA DEFINIÇÃO DA DURAÇÃO DA ANTICOAGULAÇÃO E NA AVALIAÇÃO DE TROMBOFILIA). HISTÓRICO DE COVID-19 REFORÇA ESSA INVESTIGAÇÃO.')
     suger.push('D-DÍMERO (NA AVALIAÇÃO COM HEMATOLOGISTA)')
