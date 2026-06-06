@@ -169,6 +169,13 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       await supabase.from('profiles').update({ bariatrica: true }).eq('id', prof.id)
       setProfile(p => (p ? { ...p, bariatrica: true } : p))
     }
+    // Reabre o OBA se ele estava aberto antes de uma remontagem (foco da aba/reload):
+    // assim o paciente NÃO perde o que estava preenchendo (o OBAModal restaura o
+    // conteúdo do localStorage). A flag é limpa ao fechar/concluir o modal.
+    try {
+      const obaAberto = localStorage.getItem('oba_aberto')
+      if (obaAberto && obaAberto === (prof.cpf || '').replace(/\D/g, '')) setShowOBAModal(true)
+    } catch (e) {}
     setLoading(false)
   }
 
@@ -186,6 +193,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         // preencheu. Sem banner, não há flicker. O modal já tem a própria intro
         // "O bariátrico é um paciente complexo…".
         setPrecisaOBA(true)            // bookkeeping p/ onConcluir
+        try { localStorage.setItem('oba_aberto', cpf) } catch (e) {}
         setShowOBAModal(true)
         return true
       }
@@ -343,6 +351,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     setTela('resultado')
 
     if (inputs.bariatrica && res.encontrado) {
+      try { localStorage.setItem('oba_aberto', String(profile?.cpf || '').replace(/\D/g, '')) } catch (e) {}
       setShowOBAModal(true)
     }
   }
@@ -560,8 +569,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 ? { ferritina: avaliacoes[0].ferritina, hemoglobina: avaliacoes[0].hemoglobina, vcm: avaliacoes[0].vcm, rdw: avaliacoes[0].rdw, satTransf: avaliacoes[0].sat_transf, dataColeta: avaliacoes[0].data_coleta }
                 : null
           }
-          onFechar={() => setShowOBAModal(false)}
-          onConcluir={() => { setShowOBAModal(false); setPrecisaOBA(false) }}
+          onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false) }}
+          onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setPrecisaOBA(false) }}
         />
       )}
       {showSobre && (

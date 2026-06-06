@@ -296,27 +296,34 @@ const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.
 
 
 export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar }) {
-  //  States: declarados PRIMEIRO, antes de qualquer useEffect que os use 
+  // PERSISTÊNCIA DO PROGRESSO — o paciente NÃO pode perder o que marcou se sair
+  // temporariamente da aba ou recarregar. Snapshot em localStorage por CPF,
+  // restaurado no mount; limpo só ao CONCLUIR (ao fechar mantemos p/ retomar).
+  const STORAGE_KEY = 'oba_progresso_' + String(cpf || 'anon').replace(/\D/g, '')
+  const salvo = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') } catch (e) { return null } })()
+  const limparProgresso = () => { try { localStorage.removeItem(STORAGE_KEY) } catch (e) {} }
+
+  //  States: declarados PRIMEIRO, antes de qualquer useEffect que os use
   // BUG #4 e #5 corrigidos: ordem dos hooks. form, exames, dataExames,
   // aberrantesOBA, alertaPeso agora vem antes dos useEffects que os mexem.
-  const [etapa, setEtapa] = useState('anamnese')
+  const [etapa, setEtapa] = useState(salvo?.etapa || 'anamnese')
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [anamneseSalva, setAnamneseSalva] = useState(null)
   const [alertaPeso, setAlertaPeso] = useState(null)
-  const [dataExames, setDataExames] = useState('')
+  const [dataExames, setDataExames] = useState(salvo?.dataExames || '')
   const [aberrantesOBA, setAberrantesOBA] = useState({})
   // Etapa 'relatorio' (BASELINE): saída do avaliarOBA + estado clínico calculado.
-  const [relatorio, setRelatorio] = useState(null)
-  const [estadoClinico, setEstadoClinico] = useState(null)
+  const [relatorio, setRelatorio] = useState(salvo?.relatorio || null)
+  const [estadoClinico, setEstadoClinico] = useState(salvo?.estadoClinico || null)
   // Splash 4DOC do relatório: imagem nítida por 3s; depois vira fundo (hover).
   const [splashRel, setSplashRel] = useState(false)
   const [bgRel, setBgRel] = useState(false)
   // Teleconsulta (CTA quando estado RUIM/CRÍTICO). valorTeleconsulta vem da config.
   const [valorTeleconsulta, setValorTeleconsulta] = useState(null)
-  const [querTeleconsulta, setQuerTeleconsulta] = useState(false)
+  const [querTeleconsulta, setQuerTeleconsulta] = useState(salvo?.querTeleconsulta || false)
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(salvo?.form || {
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
     altura: '',
@@ -360,7 +367,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const examesExtras = idadeNum >= 40 ? (isFem ? EXAMES_MULHER_40 : EXAMES_HOMEM_40) : []
   const todosExames = [...EXAMES_BASE, ...examesExtras]
 
-  const [exames, setExames] = useState(Object.fromEntries(todosExames.map(e => [e.key, ''])))
+  const [exames, setExames] = useState(salvo?.exames || Object.fromEntries(todosExames.map(e => [e.key, ''])))
 
   //  Effects: depois de TODOS os useState que eles dependem 
   useEffect(() => {
@@ -408,6 +415,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       .then(({ data }) => { if (ativo && data?.valor != null) setValorTeleconsulta(data.valor) })
     return () => { ativo = false }
   }, [])
+
+  // Persiste o progresso a cada mudança (etapa/respostas/exames/relatório).
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ etapa, form, exames, dataExames, relatorio, estadoClinico, querTeleconsulta }))
+    } catch (e) {}
+  }, [etapa, form, exames, dataExames, relatorio, estadoClinico, querTeleconsulta])
 
   //  Handlers 
   const handlePesoAtualBlur = () => {
@@ -679,8 +693,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     gerarRelatorio({})
   }
 
-  // Botão final do relatório → devolve o controle ao dashboard.
+  // Botão final do relatório → limpa o progresso salvo e devolve o controle.
   function concluirRelatorio() {
+    limparProgresso()
     onConcluir(buildDadosOBA(), buildExamesOBA())
   }
 
@@ -1096,7 +1111,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <RadioGroup
             options={['OBESIDADE',"MET\u00c1BOLICA (S\u00cdNDROME METAB\u00d3LICA, DISLIPIDEMIA, HIPERTENS\u00c3O, APNEIA DO SONO)",'OBESIDADE + DIABETES','HEMOCROMATOSE','GASTRECTOMIA POR OUTRAS CAUSAS']}
             value={form.indicacao_cirurgia}
-            onChange={v => sf('indicacao_cirurgia', v)}
+            onChange={v => setForm(p => ({
+              ...p,
+              indicacao_cirurgia: v,
+              // OBESIDADE + DIABETES é incompatível com "não era e não sou diabético":
+              // desmarca essa opção do Status Glicêmico se estiver selecionada.
+              status_glicemico: (v === 'OBESIDADE + DIABETES' && p.status_glicemico === STATUS_GLICEMICO_OPS[0])
+                ? '' : p.status_glicemico,
+            }))}
           />
 
           <SectionTitle>Status Ponderal</SectionTitle>

@@ -42,6 +42,20 @@ function TermosModal({ onFechar }) {
 }
 
 
+// Validação de CPF pelos dígitos verificadores (algoritmo padrão).
+function cpfValido(valor) {
+  const c = String(valor || '').replace(/\D/g, '')
+  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false
+  let s = 0
+  for (let i = 0; i < 9; i++) s += parseInt(c[i], 10) * (10 - i)
+  let d1 = 11 - (s % 11); if (d1 >= 10) d1 = 0
+  if (d1 !== parseInt(c[9], 10)) return false
+  s = 0
+  for (let i = 0; i < 10; i++) s += parseInt(c[i], 10) * (11 - i)
+  let d2 = 11 - (s % 11); if (d2 >= 10) d2 = 0
+  return d2 === parseInt(c[10], 10)
+}
+
 export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etapaInicial = 'cpf', sexoInicial = '', dataNascimentoInicial = '' }) {
   const [etapa, setEtapa] = useState(etapaInicial)
   const [cpf, setCpf] = useState(cpfInicial)
@@ -60,11 +74,17 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
   const [avaliacoesPendentes, setAvaliacoesPendentes] = useState(0)
   const [aceitoTC, setAceitoTC] = useState(false)
   const [showTC, setShowTC] = useState(false)
+  const [tentouCpf, setTentouCpf] = useState(false)
 
   const emailOk = emailConfirm && email === emailConfirm
   const emailErro = emailConfirm && email !== emailConfirm
   const senhaOk = senhaConfirm && senha === senhaConfirm
   const senhaErro = senhaConfirm && senha !== senhaConfirm
+
+  // Validação de CPF (dígitos verificadores). Bloqueia avanço para a senha.
+  const cpfDigits = cpf.replace(/\D/g, '')
+  const cpfOk = cpfValido(cpf)
+  const mostrarErroCpf = !cpfOk && (cpfDigits.length === 11 || tentouCpf)
 
   useEffect(() => {
     function handleKey(e) {
@@ -129,7 +149,8 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
   }
 
   async function handleCPF() {
-    if (!cpf.trim()) { setErro('Informe o CPF.'); return }
+    setTentouCpf(true)
+    if (!cpfOk) { return }   // CPF inválido → não avança para a senha (hint laranja abaixo do campo)
     setLoading(true)
     setErro('')
     const cpfLimpo = cpf.replace(/\D/g, '')
@@ -264,6 +285,11 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
                 placeholder="000.000.000-00" maxLength={14} inputMode="numeric"
                 autoComplete="off"
                 className={inputClass} />
+              {mostrarErroCpf && (
+                <p className="text-xs mt-1" style={{ color: '#F97316' }}>
+                  {cpfDigits.length < 11 ? "Digite os 11 dígitos do CPF" : "CPF inválido"}
+                </p>
+              )}
             </div>
             {erro && <p className="text-red-500 text-sm">{erro}</p>}
             <button onClick={handleCPF} disabled={loading}
