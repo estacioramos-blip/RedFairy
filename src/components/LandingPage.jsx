@@ -904,8 +904,22 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     if (d.length <= 9) return d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6);
     return d.slice(0,3) + '.' + d.slice(3,6) + '.' + d.slice(6,9) + '-' + d.slice(9);
   }
+  // Validação de CPF pelos dígitos verificadores (não só tamanho) — bloqueia
+  // o avanço para a senha quando o CPF é inválido.
+  function cpfDigitosValidos(c) {
+    if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+    let s = 0;
+    for (let i = 0; i < 9; i++) s += parseInt(c[i], 10) * (10 - i);
+    let d1 = 11 - (s % 11); if (d1 >= 10) d1 = 0;
+    if (d1 !== parseInt(c[9], 10)) return false;
+    s = 0;
+    for (let i = 0; i < 10; i++) s += parseInt(c[i], 10) * (11 - i);
+    let d2 = 11 - (s % 11); if (d2 >= 10) d2 = 0;
+    return d2 === parseInt(c[10], 10);
+  }
   const cpfPacDigitos = (cpfPacValor || '').replace(/\D/g, '');
-  const cpfPacValido = cpfPacDigitos.length === 11;
+  const cpfPacValido = cpfDigitosValidos(cpfPacDigitos);
+  const cpfPacInvalido = cpfPacDigitos.length === 11 && !cpfPacValido;
   const cpfPacSenhaValida = (cpfPacSenha || '').length >= 6;
   useEffect(() => {
     if (fluxoEtapa !== 'paciente') return;
@@ -1727,6 +1741,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                         className="rf-cx-input"
                         style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center' }}
                       />
+                      {cpfPacInvalido && (
+                        <p style={{ fontSize:'0.68rem', color:'#F97316', fontWeight:800, letterSpacing:'0.5px', margin:'6px 0 0', textAlign:'center' }}>{"CPF inválido"}</p>
+                      )}
                       <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 10px', textAlign:'center' }}>{"LOGIN DO PACIENTE"}</p>
 
                       <label style={{ display:'flex', alignItems:'center', gap:'8px', justifyContent:'center', margin:'0 0 12px', cursor:'pointer', userSelect:'none' }}>
