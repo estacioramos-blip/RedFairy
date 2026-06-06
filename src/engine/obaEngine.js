@@ -2009,7 +2009,7 @@ function buildModLipidico(ex, dados, sexo, alertas, suger) {
   if (todosVazios) {
     return {
       titulo: '🩸 LIPIDOGRAMA / RISCO CARDIOVASCULAR',
-      nivel: 'aguardando',
+      nivel: NORMAL,
       linhas: [
         'Lipidograma não solicitado/preenchido.',
         'Recomenda-se solicitar: Colesterol Total, LDL-c, HDL-c, Triglicérides, Lp(a), ApoB, ApoA e sdLDL para avaliação completa de risco CV.'
@@ -2077,21 +2077,21 @@ function buildModLipidico(ex, dados, sexo, alertas, suger) {
 
   if (score === 0) {
     categoria = 'NORMAL'
-    nivel = 'normal'
+    nivel = NORMAL
     conduta = 'Manter estilo de vida saudável e controle anual.'
   } else if (lpaCritica || score >= 8) {
     categoria = 'RISCO CRÍTICO'
-    nivel = 'critico'
+    nivel = GRAVE
     conduta = 'Avaliação cardiológica URGENTE. Considerar terapia hipolipemiante intensiva (estatinas, ezetimiba, iPCSK9 se Lp(a) elevada).'
-    alertas.push({ nivel: 'critico', texto: `Risco cardiovascular CRÍTICO (score ${score}${lpaCritica ? ', Lp(a) >50' : ''})` })
+    alertas.push({ nivel: GRAVE, texto: `Risco cardiovascular CRÍTICO (score ${score}${lpaCritica ? ', Lp(a) >50' : ''})` })
   } else if (score >= 4) {
     categoria = 'RISCO ELEVADO'
-    nivel = 'alterado'
+    nivel = MODERADO
     conduta = 'Considerar terapia farmacológica (estatina). Encaminhar à avaliação cardiológica.'
-    alertas.push({ nivel: 'alterado', texto: `Risco cardiovascular elevado (score ${score})` })
+    alertas.push({ nivel: MODERADO, texto: `Risco cardiovascular elevado (score ${score})` })
   } else {
     categoria = 'ALTERAÇÃO LEVE'
-    nivel = 'leve'
+    nivel = LEVE
     conduta = 'Reforçar dieta, atividade física e perda de peso. Reavaliar em 3-6 meses.'
   }
 
@@ -2191,6 +2191,62 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
     titulo: 'Leucócitos e Neutrófilos',
     nivel: nivelGeral,
     linhas,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ESTADO GERAL CLÍNICO — classificação do BASELINE (e dos follow-ups)
+// ─────────────────────────────────────────────────────────────────────────────
+// Régua determinística (rascunho clínico — ajustável). Princípio: o PIOR
+// componente domina (segurança primeiro). Agrega a saída de avaliarOBA:
+//   - alertas[] com nível grave/moderado/leve
+//   - cor do eritron (green/yellow/orange/red) vinda do decisionEngine
+//   - presença de exames laboratoriais (sem exames ⇒ classificação PROVISÓRIA)
+//
+// Escala (do melhor ao pior): OTIMO → BOM → RAZOAVEL → RUIM → CRITICO
+// ─────────────────────────────────────────────────────────────────────────────
+export const ESTADOS_CLINICOS = ['CRITICO', 'RUIM', 'RAZOAVEL', 'BOM', 'OTIMO']
+
+export function classificarEstadoClinico(relatorio, contexto = {}) {
+  if (!relatorio) return null
+
+  const alertas    = relatorio.alertas || []
+  const graves     = alertas.filter(a => a.nivel === GRAVE).length
+  const moderados  = alertas.filter(a => a.nivel === MODERADO).length
+  const leves      = alertas.filter(a => a.nivel === LEVE).length
+  const eritron    = String(contexto.eritronColor || '').toLowerCase()
+  const temExames  = !!contexto.temExames
+
+  let estado
+  let motivo
+  if (graves >= 1 || eritron === 'red') {
+    estado = 'CRITICO'
+    motivo = graves >= 1
+      ? 'Há alerta(s) de gravidade ALTA que exigem conduta imediata.'
+      : 'O eritron está gravemente comprometido (anemia importante).'
+  } else if (eritron === 'orange' || moderados >= 2) {
+    estado = 'RUIM'
+    motivo = eritron === 'orange'
+      ? 'O eritron está comprometido de forma moderada a importante.'
+      : 'Há múltiplos alertas de gravidade moderada a corrigir.'
+  } else if (eritron === 'yellow' || moderados === 1 || leves >= 3) {
+    estado = 'RAZOAVEL'
+    motivo = 'Há alterações que pedem ajuste de suplementação e acompanhamento.'
+  } else if (leves >= 1 || !temExames) {
+    estado = 'BOM'
+    motivo = !temExames
+      ? 'Sem alterações relevantes nos dados disponíveis — falta confirmar com exames.'
+      : 'Quadro estável, com pequenos pontos de atenção.'
+  } else {
+    estado = 'OTIMO'
+    motivo = 'Eritron compensado, sem alertas e com acompanhamento — manter conduta.'
+  }
+
+  return {
+    estado,                       // 'CRITICO' | 'RUIM' | 'RAZOAVEL' | 'BOM' | 'OTIMO'
+    provisorio: !temExames,       // classificado só por anamnese + eritron mínimo
+    motivo,
+    resumo: { graves, moderados, leves },
   }
 }
 

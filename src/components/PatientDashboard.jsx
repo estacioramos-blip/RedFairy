@@ -159,6 +159,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       .eq('user_id', session.user.id)
       .order('data_coleta', { ascending: false })
     setAvaliacoes(avals || [])
+    // Persistência da flag bariátrica: "uma vez bariátrico, sempre bariátrico".
+    // O status era gravado só na linha de avaliacoes, nunca de volta no perfil —
+    // por isso, ao relogar, a nova avaliação vinha SEM o bariátrico marcado e o
+    // fluxo OBA não disparava. Aqui, se alguma avaliação já marcou bariátrica e o
+    // perfil ainda não reflete, gravamos em profiles.bariatrica. O setProfile
+    // reaplica o efeito que pré-marca o checkbox da nova avaliação.
+    if (!prof.bariatrica && (avals || []).some(a => a.bariatrica)) {
+      await supabase.from('profiles').update({ bariatrica: true }).eq('id', prof.id)
+      setProfile(p => (p ? { ...p, bariatrica: true } : p))
+    }
     setLoading(false)
   }
 
@@ -534,6 +544,22 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             semanas_gestacao: inputs.semanas_gestacao ? Number(inputs.semanas_gestacao) : null,
             dum: inputs.dum || null,
           }}
+          // Resultado do eritron p/ o relatório OBA: fresco (pós-avaliação) ou
+          // reconstruído da última linha de avaliacoes (login c/ anamnese pendente).
+          resultadoEritron={
+            resultado
+              ? { label: resultado.label, color: resultado.color, inputs: resultado._inputs }
+              : (avaliacoes && avaliacoes.length)
+                ? { label: avaliacoes[0].diagnostico_label, color: avaliacoes[0].diagnostico_color, inputs: { sexo: profile.sexo } }
+                : null
+          }
+          examesRedFairy={
+            resultado?._inputs
+              ? { ferritina: resultado._inputs.ferritina, hemoglobina: resultado._inputs.hemoglobina, vcm: resultado._inputs.vcm, rdw: resultado._inputs.rdw, satTransf: resultado._inputs.satTransf, dataColeta: inputs.dataColeta || null }
+              : (avaliacoes && avaliacoes.length)
+                ? { ferritina: avaliacoes[0].ferritina, hemoglobina: avaliacoes[0].hemoglobina, vcm: avaliacoes[0].vcm, rdw: avaliacoes[0].rdw, satTransf: avaliacoes[0].sat_transf, dataColeta: avaliacoes[0].data_coleta }
+                : null
+          }
           onFechar={() => setShowOBAModal(false)}
           onConcluir={() => { setShowOBAModal(false); setPrecisaOBA(false) }}
         />
@@ -621,10 +647,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {tela === 'historico' && (
           <div className="space-y-3">
             {showBoasVindas && profile && (
-              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden" style={{ position: 'relative' }}>
-                {/* Imagem de boas-vindas (telefonista3) — inteira, largura cheia do card, sem corte */}
-                <img src={telefonista3Img} alt="" className="w-full block" style={{ backgroundColor: '#FDF7F7' }} />
-                <div className="p-5" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 1, background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 35%, rgba(255,255,255,0.92) 70%)' }}>
+              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden min-h-[500px] sm:min-h-0" style={{ position: 'relative' }}>
+                {/* Imagem de boas-vindas (telefonista3). Mobile: altura fixa + object-cover
+                    (preenche o card, aparece bem mais). Desktop (sm+): inteira, sem corte,
+                    a própria imagem define a altura do card. */}
+                <img src={telefonista3Img} alt="" className="block w-full h-[500px] object-cover object-top sm:h-auto" style={{ backgroundColor: '#FDF7F7' }} />
+                <div className="p-5 pb-8" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 1, background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 35%, rgba(255,255,255,0.92) 70%)' }}>
                 <div className="mb-3">
                   <h2 className="text-xl font-bold text-red-700 mb-1" style={{ textShadow: '0 1px 8px rgba(255,255,255,0.95)' }}>
                     {"Ol\u00e1, "}{profile.nome?.split(' ')[0] || ''}{"!"}

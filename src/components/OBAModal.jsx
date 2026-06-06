@@ -1,8 +1,33 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { classificarValor } from '../engine/obaCutoffs'
+import { avaliarOBA, classificarEstadoClinico, ESTADOS_CLINICOS } from '../engine/obaEngine'
 import logo from '../assets/logo.png'
 import PlayButton from './PlayButton'
+
+// Imagem landscape do splash do relatório OBA — A DEFINIR (será horizontal,
+// ocupando a largura do modal, parcialmente sobreposta pelo conteúdo).
+// Enquanto null, o relatório abre direto (sem splash). Para ativar: importe a
+// imagem e atribua aqui — o enquadramento landscape já está nos estilos abaixo.
+const SPLASH_REL_IMG = null
+
+// Apresentação visual de cada ESTADO GERAL CLÍNICO (régua do obaEngine).
+// O motor devolve a sigla; aqui mora a cor/rótulo/emoji da tela.
+const ESTADO_UI = {
+  CRITICO:  { rotulo: "CRÍTICO",   emoji: "🔴", cor: '#991B1B', fundo: '#FEF2F2', borda: '#FCA5A5' },
+  RUIM:     { rotulo: 'RUIM',       emoji: "🟠", cor: '#9A3412', fundo: '#FFF7ED', borda: '#FED7AA' },
+  RAZOAVEL: { rotulo: "RAZOÁVEL", emoji: "🟡", cor: '#92400E', fundo: '#FEFCE8', borda: '#FDE68A' },
+  BOM:      { rotulo: 'BOM',        emoji: "🟢", cor: '#166534', fundo: '#F0FDF4', borda: '#BBF7D0' },
+  OTIMO:    { rotulo: "ÓTIMO",    emoji: "💎", cor: '#155E75', fundo: '#ECFEFF', borda: '#A5F3FC' },
+}
+
+// Cores das caixas de alerta / títulos de módulo por gravidade (níveis do motor).
+const NIVEL_UI = {
+  grave:    { fundo: '#FEF2F2', borda: '#FCA5A5', texto: '#991B1B', rotulo: 'GRAVE' },
+  moderado: { fundo: '#FFF7ED', borda: '#FED7AA', texto: '#9A3412', rotulo: 'MODERADO' },
+  leve:     { fundo: '#FEFCE8', borda: '#FDE68A', texto: '#92400E', rotulo: "ATENÇÃO" },
+  normal:   { fundo: '#F0FDF4', borda: '#BBF7D0', texto: '#166534', rotulo: 'NORMAL' },
+}
 
 const TIPOS_CIRURGIA = ['Y DE ROUX', 'FOBI-CAPELLA', 'SLEEVE', "BANDA G\u00c1STRICA AJUST\u00c1VEL", "N\u00c3O SEI"]
 
@@ -270,7 +295,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, onConcluir, onFechar }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar }) {
   //  States: declarados PRIMEIRO, antes de qualquer useEffect que os use 
   // BUG #4 e #5 corrigidos: ordem dos hooks. form, exames, dataExames,
   // aberrantesOBA, alertaPeso agora vem antes dos useEffects que os mexem.
@@ -281,6 +306,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [alertaPeso, setAlertaPeso] = useState(null)
   const [dataExames, setDataExames] = useState('')
   const [aberrantesOBA, setAberrantesOBA] = useState({})
+  // Etapa 'relatorio' (BASELINE): saída do avaliarOBA + estado clínico calculado.
+  const [relatorio, setRelatorio] = useState(null)
+  const [estadoClinico, setEstadoClinico] = useState(null)
+  // Splash 4DOC do relatório: imagem nítida por 3s; depois vira fundo (hover).
+  const [splashRel, setSplashRel] = useState(false)
+  const [bgRel, setBgRel] = useState(false)
+  // Teleconsulta (CTA quando estado RUIM/CRÍTICO). valorTeleconsulta vem da config.
+  const [valorTeleconsulta, setValorTeleconsulta] = useState(null)
+  const [querTeleconsulta, setQuerTeleconsulta] = useState(false)
 
   const [form, setForm] = useState({
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
@@ -357,6 +391,23 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       setDataExames(examesRedFairy.dataColeta)
     }
   }, [form.temExamesMesmaData, examesRedFairy])
+
+  // Splash 4DOC ao entrar no relatório: imagem nítida por 3s, depois revela o
+  // conteúdo. Só roda se houver imagem definida (SPLASH_REL_IMG).
+  useEffect(() => {
+    if (etapa !== 'relatorio' || !SPLASH_REL_IMG) return
+    setSplashRel(true)
+    const t = setTimeout(() => setSplashRel(false), 3000)
+    return () => clearTimeout(t)
+  }, [etapa])
+
+  // Valor da teleconsulta (config.valor_teleconsulta) — usado no CTA do relatório.
+  useEffect(() => {
+    let ativo = true
+    supabase.from('config').select('valor').eq('chave', 'valor_teleconsulta').maybeSingle()
+      .then(({ data }) => { if (ativo && data?.valor != null) setValorTeleconsulta(data.valor) })
+    return () => { ativo = false }
+  }, [])
 
   //  Handlers 
   const handlePesoAtualBlur = () => {
@@ -571,6 +622,33 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     setEtapa('exames')
   }
 
+  // Computa o relatório (BASELINE), classifica o estado clínico, persiste e
+  // avança para a etapa 'relatorio'. examesObj pode ser {} (exames pulados).
+  async function gerarRelatorio(examesObj) {
+    const dados = buildDadosOBA()
+    const rel = avaliarOBA(resultadoEritron, dados, examesObj)
+    const temExames = Object.values(examesObj || {}).some(v => v !== null && v !== undefined && v !== '')
+    const est = rel ? classificarEstadoClinico(rel, { eritronColor: resultadoEritron?.color, temExames }) : null
+    setRelatorio(rel)
+    setEstadoClinico(est)
+    setEtapa('relatorio')
+
+    // Persiste o relatório na última linha de oba_anamnese (a mesma que recebeu
+    // a anamnese/exames). Requer as colunas relatorio_oba (jsonb) e
+    // estado_clinico (text) — ver ALTER TABLE entregue ao Estácio.
+    if (cpf && rel) {
+      const cpfLimpo = cpf.replace(/\D/g, '')
+      const { data: rows } = await supabase
+        .from('oba_anamnese').select('id')
+        .eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1)
+      if (rows && rows.length > 0) {
+        await supabase.from('oba_anamnese')
+          .update({ relatorio_oba: rel, estado_clinico: est?.estado || null })
+          .eq('id', rows[0].id)
+      }
+    }
+  }
+
   async function salvarExames() {
     setLoading(true)
     const examesObj = buildExamesOBA()
@@ -593,12 +671,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       }
     }
 
+    await gerarRelatorio(examesObj)
     setLoading(false)
-    onConcluir(buildDadosOBA(), examesObj)
   }
 
   function pularExames() {
-    onConcluir(buildDadosOBA(), {})
+    gerarRelatorio({})
+  }
+
+  // Botão final do relatório → devolve o controle ao dashboard.
+  function concluirRelatorio() {
+    onConcluir(buildDadosOBA(), buildExamesOBA())
   }
 
   const Header = ({ sub }) => (
@@ -611,6 +694,192 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       </div>
     </div>
   )
+
+
+  if (etapa === 'relatorio') {
+    const rel = relatorio
+    const estadoInfo = ESTADO_UI[estadoClinico?.estado] || ESTADO_UI.RAZOAVEL
+    const BG_BAND = { position:'absolute', top:0, left:0, right:0, height:360, pointerEvents:'none' }
+    return (
+      <div style={OV} onClick={concluirRelatorio}>
+        <div
+          style={{ ...CD, position:'relative', overflow:'hidden' }}
+          onClick={e => e.stopPropagation()}
+          onMouseEnter={() => setBgRel(true)} onMouseLeave={() => setBgRel(false)} onTouchStart={() => setBgRel(true)}
+        >
+          {/* Splash 4DOC \u2014 s\u00f3 quando houver imagem landscape definida (SPLASH_REL_IMG).
+              A imagem ocupa a largura do modal (landscape) e fica parcialmente
+              sobreposta pelo conte\u00fado. */}
+          {SPLASH_REL_IMG && (
+            <>
+              {/* Fundo esmaecido (revela no hover), atr\u00e1s do conte\u00fado */}
+              <div aria-hidden="true" style={{ ...BG_BAND, backgroundImage:`url(${SPLASH_REL_IMG})`, backgroundSize:'100% auto', backgroundPosition:'center top', backgroundRepeat:'no-repeat', filter: bgRel ? 'blur(0px)' : 'blur(10px)', opacity: bgRel ? 0.5 : 0.12, transition:'filter 0.6s ease, opacity 0.6s ease' }} />
+
+              {/* SPLASH: imagem n\u00edtida por 3s */}
+              <div aria-hidden="true" style={{ position:'absolute', inset:0, zIndex:5, background:'#FDF7F7', opacity: splashRel ? 1 : 0, pointerEvents: splashRel ? 'auto' : 'none', transition:'opacity 0.5s ease' }}>
+                <div style={{ ...BG_BAND, backgroundImage:`url(${SPLASH_REL_IMG})`, backgroundSize:'100% auto', backgroundPosition:'center top', backgroundRepeat:'no-repeat' }} />
+                <div style={{ position:'absolute', left:0, right:0, top:300, textAlign:'center', padding:'0 1.5rem' }}>
+                  <p style={{ color:'#7B1E1E', fontSize:'1.1rem', fontWeight:800, margin:0 }}>{"Preparando a sua avalia\u00e7\u00e3o\u2026"}</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Header (zIndex 10 p/ aparecer durante o splash) */}
+          <div style={{ position:'relative', zIndex:10 }}>
+            <Header sub={"Sua Avalia\u00e7\u00e3o OBA \u2014 baseline"} />
+          </div>
+
+          {/* Conte\u00fado do relat\u00f3rio */}
+          <div style={{ position:'relative', zIndex:1, padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
+            {SPLASH_REL_IMG && <div style={{ height:200 }} />}
+
+            {!rel ? (
+              <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'1rem' }}>
+                <p style={{ color:'#7B1E1E', fontWeight:700, fontSize:'0.9rem', margin:0 }}>{"N\u00e3o foi poss\u00edvel gerar a avalia\u00e7\u00e3o (eritron indispon\u00edvel). Refa\u00e7a ap\u00f3s uma avalia\u00e7\u00e3o RedFairy."}</p>
+              </div>
+            ) : (
+              <>
+                {/* T\u00edtulo de abertura do baseline */}
+                <p style={{ fontSize:'1.05rem', fontWeight:900, color:'#7B1E1E', textAlign:'center', margin:'0 0 1rem', lineHeight:1.35 }}>
+                  {"AGORA TEMOS UM CONHECIMENTO CL\u00cdNICO SOBRE VOC\u00ca"}
+                </p>
+
+                {/* ESTADO GERAL CL\u00cdNICO \u2014 hero */}
+                <div style={{ background: estadoInfo.fundo, border:`2px solid ${estadoInfo.borda}`, borderRadius:16, padding:'1.2rem 1.4rem', textAlign:'center' }}>
+                  <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1.5px', color:estadoInfo.cor, margin:0, opacity:0.8 }}>{"Estado geral cl\u00ednico"}</p>
+                  <p style={{ fontSize:'2rem', fontWeight:900, color:estadoInfo.cor, margin:'0.2rem 0' }}>{estadoInfo.emoji} {estadoInfo.rotulo}</p>
+                  {estadoClinico?.motivo && <p style={{ fontSize:'0.82rem', color:estadoInfo.cor, margin:0, lineHeight:1.5 }}>{estadoClinico.motivo}</p>}
+                  {estadoClinico?.provisorio && (
+                    <p style={{ fontSize:'0.72rem', color:'#92400E', background:'#FEFCE8', border:'1px solid #FDE68A', borderRadius:8, padding:'0.4rem 0.6rem', marginTop:'0.6rem', display:'inline-block' }}>
+                      {"\u26a0 Classifica\u00e7\u00e3o PROVIS\u00d3RIA \u2014 complete seus exames para um retrato preciso."}
+                    </p>
+                  )}
+                </div>
+
+                {/* Term\u00f4metro do estado */}
+                <div style={{ display:'flex', gap:'0.3rem', marginTop:'0.8rem' }}>
+                  {ESTADOS_CLINICOS.map(e => {
+                    const ui = ESTADO_UI[e]
+                    const ativo = estadoClinico?.estado === e
+                    return (
+                      <div key={e} style={{ flex:1, textAlign:'center', padding:'0.4rem 0.2rem', borderRadius:8, background: ativo ? ui.cor : '#F3F4F6', color: ativo ? 'white' : '#9CA3AF', fontSize:'0.6rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px' }}>
+                        {ui.rotulo}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* CTA TELECONSULTA — só para estado RUIM ou CRÍTICO */}
+                {(estadoClinico?.estado === 'RUIM' || estadoClinico?.estado === 'CRITICO') && (
+                  <div style={{ background:'#FEF2F2', border:'2px solid #FCA5A5', borderRadius:12, padding:'1rem 1.1rem', marginTop:'1rem' }}>
+                    <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#991B1B', margin:'0 0 0.4rem' }}>
+                      {"Recomendamos uma TELECONSULTA MÉDICA"}
+                    </p>
+                    <p style={{ fontSize:'0.8rem', color:'#7F1D1D', lineHeight:1.5, margin:'0 0 0.7rem' }}>
+                      {"Seu estado clínico atual merece atenção próxima. A plataforma oferece teleconsulta médica via WhatsApp para discutir seus resultados e as condutas."}
+                    </p>
+                    <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                      <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={{ width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#DC2626' }} />
+                      <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#991B1B' }}>{"SIM, DESEJO MARCAR UMA TELECONSULTA"}</span>
+                    </label>
+                    {querTeleconsulta && (
+                      <div style={{ marginTop:'0.8rem', background:'white', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 0.9rem' }}>
+                        <p style={{ fontSize:'0.8rem', color:'#374151', margin:'0 0 0.6rem' }}>
+                          {"Valor da teleconsulta: "}
+                          <strong style={{ color:'#7B1E1E' }}>{valorTeleconsulta != null ? `R$ ${valorTeleconsulta}` : "a confirmar"}</strong>
+                        </p>
+                        <a
+                          href={`https://wa.me/5571997110804?text=${encodeURIComponent('Olá! Concluí minha avaliação OBA e desejo marcar uma teleconsulta médica.')}`}
+                          target="_blank" rel="noreferrer"
+                          style={{ display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none' }}
+                        >
+                          {"Falar no WhatsApp →"}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Linha-resumo da cirurgia */}
+                <div style={{ display:'flex', flexWrap:'wrap', gap:'0.5rem', marginTop:'1rem' }}>
+                  {[
+                    ['Cirurgia', rel.tipoCirurgia],
+                    ["P\u00f3s-op", rel.mesesPosCirurgia ? `${rel.mesesPosCirurgia} meses` : "\u2014"],
+                    ["Disabsor\u00e7\u00e3o", `grau ${rel.grauDisabsorcao}`],
+                    ['Data', rel.dataAvaliacao],
+                  ].map(([k, v]) => (
+                    <div key={k} style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.4rem 0.7rem' }}>
+                      <span style={{ fontSize:'0.62rem', color:'#9CA3AF', fontWeight:700, textTransform:'uppercase' }}>{k}: </span>
+                      <span style={{ fontSize:'0.78rem', color:'#374151', fontWeight:700 }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* ALERTAS */}
+                <SectionTitle>{"Pontos de aten\u00e7\u00e3o"}</SectionTitle>
+                {(rel.alertas && rel.alertas.length > 0) ? (
+                  rel.alertas.map((a, i) => {
+                    const ui = NIVEL_UI[a.nivel] || NIVEL_UI.normal
+                    return (
+                      <div key={i} style={{ background:ui.fundo, border:`1px solid ${ui.borda}`, borderRadius:10, padding:'0.7rem 0.9rem', marginBottom:'0.5rem', display:'flex', gap:'0.6rem' }}>
+                        <span style={{ fontSize:'0.6rem', fontWeight:800, color:'white', background:ui.texto, borderRadius:6, padding:'0.15rem 0.4rem', height:'fit-content', whiteSpace:'nowrap' }}>{ui.rotulo}</span>
+                        <span style={{ fontSize:'0.8rem', color:ui.texto, fontWeight:600, lineHeight:1.4 }}>{a.texto}</span>
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:10, padding:'0.7rem 0.9rem' }}>
+                    <p style={{ fontSize:'0.82rem', color:'#166534', fontWeight:700, margin:0 }}>{"\u2713 Nenhum alerta relevante identificado."}</p>
+                  </div>
+                )}
+
+                {/* M\u00d3DULOS */}
+                <SectionTitle>{"An\u00e1lise detalhada"}</SectionTitle>
+                {(rel.modulos || []).map((m, i) => {
+                  const ui = NIVEL_UI[m.nivel] || NIVEL_UI.normal
+                  return (
+                    <div key={i} style={{ border:`1px solid ${ui.borda}`, borderRadius:10, marginBottom:'0.6rem', overflow:'hidden' }}>
+                      <div style={{ background:ui.fundo, padding:'0.6rem 0.9rem', display:'flex', justifyContent:'space-between', alignItems:'center', gap:'0.5rem' }}>
+                        <span style={{ fontSize:'0.78rem', fontWeight:800, color:ui.texto, textTransform:'uppercase', letterSpacing:'0.3px' }}>{m.titulo}</span>
+                        <span style={{ fontSize:'0.58rem', fontWeight:800, color:'white', background:ui.texto, borderRadius:6, padding:'0.15rem 0.4rem', whiteSpace:'nowrap' }}>{ui.rotulo}</span>
+                      </div>
+                      <div style={{ padding:'0.7rem 0.9rem', background:'white' }}>
+                        {(m.linhas || []).map((l, j) => (
+                          <p key={j} style={{ fontSize:'0.78rem', color:'#374151', lineHeight:1.5, marginBottom: j < m.linhas.length - 1 ? '0.5rem' : 0 }}>{l}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {/* EXAMES COMPLEMENTARES SUGERIDOS */}
+                {(rel.examesComplementares && rel.examesComplementares.length > 0) && (
+                  <>
+                    <SectionTitle>{"Exames complementares sugeridos"}</SectionTitle>
+                    <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:10, padding:'0.8rem 1rem' }}>
+                      {rel.examesComplementares.map((ex, i) => (
+                        <p key={i} style={{ fontSize:'0.8rem', color:'#9A3412', fontWeight:600, lineHeight:1.5, marginBottom: i < rel.examesComplementares.length - 1 ? '0.35rem' : 0 }}>{"\u2022 "}{ex}</p>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            <div style={{ display:'flex', justifyContent:'flex-end', marginTop:'1.5rem' }}>
+              <PlayButton
+                onClick={concluirRelatorio}
+                label={"CONCLUIR"}
+                hint={"Voltar ao meu painel"}
+                ariaLabel="Concluir e voltar ao painel"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
 
   if (etapa === 'exames') return (
@@ -666,7 +935,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   style={{ width:'1.1rem', height:'1.1rem', accentColor:'#DB2777' }}
                 />
                 <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#831843' }}>
-                  {"Tenho exames da mesma data do eritron ("}{examesRedFairy.dataColeta.split('-').reverse().join('/')}{")"}
+                  {"Tenho exames da mesma data do hemograma inicial ("}{examesRedFairy.dataColeta.split('-').reverse().join('/')}{")"}
                 </span>
               </label>
             </div>
@@ -878,7 +1147,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
 
           <SectionTitle>{"Acompanhamento M\u00e9dico"}</SectionTitle>
-          <RadioGroup options={ACOMPANHAMENTO_OPS} value={form.acompanhamento} onChange={v => sf('acompanhamento', v)} />
+          <RadioGroup options={ACOMPANHAMENTO_OPS} value={form.acompanhamento} onChange={v => {
+            // "Não acompanha agora" (qualquer opção que não seja a 1ª, "FAÇO ACOMPANHAMENTO
+            // MÉDICO E REPOSIÇÕES") → marca "Não estou sob acompanhamento" nos especialistas.
+            const semAcomp = v !== ACOMPANHAMENTO_OPS[0]
+            setForm(p => ({ ...p, acompanhamento: v, semEspecialista: semAcomp }))
+          }} />
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Especialistas que me acompanham:</label>
           <CheckRow
@@ -1055,7 +1329,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
 
           <SectionTitle>Status Intestinal</SectionTitle>
-          <RadioGroup options={STATUS_INTESTINAL_OPS} value={form.status_intestinal} onChange={v => sf('status_intestinal', form.status_intestinal === v ? '' : v)} />
+          <RadioGroup options={STATUS_INTESTINAL_OPS} value={form.status_intestinal} onChange={v => {
+            const novo = form.status_intestinal === v ? '' : v
+            // Obstipação no intestinal → marca também a obstipação no Status Fibromiálgico.
+            const fibroObst = STATUS_FIBROMIALGIA_OPS.find(o => o.indexOf('OBSTIPA') === 0)
+            setForm(p => {
+              const fibro = new Set(p.status_fibromialgia || [])
+              if (novo && novo.indexOf('OBSTIPA') === 0 && fibroObst) fibro.add(fibroObst)
+              return { ...p, status_intestinal: novo, status_fibromialgia: Array.from(fibro) }
+            })
+          }} />
 
           {(
             (form.status_intestinal && form.status_intestinal !== 'INTESTINO FUNCIONA BEM') ||

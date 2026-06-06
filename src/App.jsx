@@ -22,7 +22,15 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
-    supabase.auth.onAuthStateChange((_event, session) => setSession(session))
+    // IMPORTANTE: o Supabase dispara onAuthStateChange ao voltar o foco da aba
+    // (TOKEN_REFRESHED/SIGNED_IN do MESMO usuário). Se chamarmos setSession com um
+    // objeto novo a cada vez, o App re-renderiza e o PatientDashboard perde o
+    // estado em memória — fechando o OBA Modal e caindo na tela "Olá". Por isso só
+    // atualizamos quando o usuário realmente muda (login/logout); renovação de
+    // token do mesmo usuário mantém a mesma referência e não re-renderiza.
+    supabase.auth.onAuthStateChange((_event, novaSession) => {
+      setSession(prev => (prev?.user?.id === novaSession?.user?.id ? prev : novaSession))
+    })
     setTimeout(() => setVisible(true), 100)
 
     // Le parametro ?modo= da URL para deep link da landing page

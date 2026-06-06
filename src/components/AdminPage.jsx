@@ -640,6 +640,7 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
 function AbaConfig() {
   const [valor, setValor] = useState('');
   const [valorDoc, setValorDoc] = useState('');
+  const [valorTele, setValorTele] = useState('');
   const [pixChave, setPixChave] = useState('');
   const [valorAnuidade, setValorAnuidade] = useState('');
   const [comissaoUsd, setComissaoUsd] = useState('');
@@ -656,6 +657,8 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'valor_solicitacao_medica').single();
       const { data: docConfig } = await supabase
         .from('config').select('valor').eq('chave', 'valor_documento_medico').single();
+      const { data: teleConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'valor_teleconsulta').maybeSingle();
       const { data: pixConfig } = await supabase
         .from('config').select('valor').eq('chave', 'pix_chave').single();
       const { data: anuConfig } = await supabase
@@ -670,6 +673,7 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'telegram_chat_id').maybeSingle();
       setValor(valConfig?.valor || '');
       setValorDoc(docConfig?.valor || '');
+      setValorTele(teleConfig?.valor || '');
       setPixChave(pixConfig?.valor || '');
       setValorAnuidade(anuConfig?.valor || '149.90');
       setComissaoUsd(comConfig?.valor || '10');
@@ -687,6 +691,7 @@ function AbaConfig() {
     const itens = [
       { p_chave: 'valor_solicitacao_medica', p_valor: valor,    p_descricao: "Valor em R$ da solicita\u00e7\u00e3o m\u00e9dica via Pix" },
       { p_chave: 'valor_documento_medico',   p_valor: valorDoc, p_descricao: "Valor em R$ da gera\u00e7\u00e3o de documento m\u00e9dico (prescri\u00e7\u00e3o/pedido de exames)" },
+      { p_chave: 'valor_teleconsulta',       p_valor: valorTele, p_descricao: "Valor em R$ da teleconsulta m\u00e9dica (OBA / bari\u00e1trico)" },
       { p_chave: 'pix_chave',                p_valor: pixChave, p_descricao: "Chave Pix para recebimento de solicita\u00e7\u00f5es m\u00e9dicas" },
       { p_chave: 'valor_anuidade',           p_valor: valorAnuidade, p_descricao: "Valor em R$ da anuidade do paciente (exibido na landing e cobrado no Pix de cadastro)" },
       { p_chave: 'comissao_usd_por_conversao', p_valor: comissaoUsd,  p_descricao: "Valor em DÓLAR pago ao médico por paciente convertido" },
@@ -733,6 +738,13 @@ function AbaConfig() {
             <input type="number" step="0.01" min="0" value={valorDoc}
               onChange={e => setValorDoc(e.target.value)} placeholder="Ex: 29.90" className={inputClass} />
             <p className="text-xs text-gray-400 mt-1">{"Valor cobrado por documento m\u00e9dico gerado via WhatsApp (prescri\u00e7\u00e3o, pedido de exames)."}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor da Teleconsulta (R$)"}</label>
+            <input type="number" step="0.01" min="0" value={valorTele}
+              onChange={e => setValorTele(e.target.value)} placeholder="Ex: 150.00" className={inputClass} />
+            <p className="text-xs text-gray-400 mt-1">{"Valor da teleconsulta m\u00e9dica oferecida no relat\u00f3rio OBA quando o estado cl\u00ednico \u00e9 RUIM ou CR\u00cdTICO."}</p>
           </div>
 
           <div>
