@@ -2,15 +2,14 @@ import { useState, useEffect, useRef } from 'react'
 import logo from '../assets/logo.png'
 import redcell1 from '../assets/redcell1.png'
 import laiseImg from '../assets/LAISE H.png'
-import fairy1 from '../assets/fairy1.png'
-import fairy2 from '../assets/fairy2.png'
-import fairy3frame from '../assets/fairy3.png'
-import fairy4 from '../assets/fairy4.png'
-import fairy5 from '../assets/fairy5.png'
-import fairy6 from '../assets/fairy6.png'
-import fairy7 from '../assets/fairy7.png'
-import fairy8 from '../assets/fairy8.png'
-import fairy9 from '../assets/fairy9.png'
+import wing1 from '../assets/wing1.png'
+import wing2 from '../assets/wing2.png'
+import wing3 from '../assets/wing3.png'
+import wing4 from '../assets/wing4.png'
+import wing5 from '../assets/wing5.png'
+import wing6 from '../assets/wing6.png'
+import wing7 from '../assets/wing7.png'
+import wing8 from '../assets/wing8.png'
 import filosofiaBg from '../../redfairy-filosofia-bg.png'
 import fairy3 from '../../redfairy3.png'
 import OBAModal from './OBAModal'
@@ -185,26 +184,27 @@ const LANDING_CSS = `
   /* Overlay mais largo que o circulo: texto grande pode passar das bordas */
   .rf-hero-overlay { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:150%; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; overflow:visible; transition:opacity 0.6s ease; }
   .rf-hero-medal.reveal-img .rf-hero-overlay { opacity:0; pointer-events:none; }
-  .rf-hero-overlay h1 { font-family:'DM Serif Display', serif; font-weight:400; font-size:3.5rem; line-height:1.1; letter-spacing:-0.015em; color:var(--text); margin:0 0 0.6rem; text-wrap:balance; text-shadow:0 1px 12px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.8); }
+  .rf-hero-overlay h1 { font-family:'DM Serif Display', serif; font-weight:400; font-size:3.5rem; line-height:1.1; letter-spacing:-0.015em; color:var(--text); margin:0 0 0.6rem; text-wrap:balance; text-shadow: 0 0 4px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
   .rf-hero-overlay h1 .red { color:var(--cherry); font-style:normal; text-shadow: 0 0 4px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
-  .rf-hero-sub { font-size:clamp(0.85rem,2vh,1.05rem); color:#1F2937; font-weight:600; line-height:1.45; max-width:340px; margin:0 auto; text-shadow:0 1px 8px rgba(255,255,255,0.9); }
+  .rf-hero-sub { font-size:clamp(0.85rem,2vh,1.05rem); color:#1F2937; font-weight:600; line-height:1.45; max-width:340px; margin:0 auto; text-shadow: 0 0 3px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
   @keyframes heroReveal { from { opacity:0; transform:translateY(18px) scale(0.985); } to { opacity:1; transform:translateY(0) scale(1); } }
-  /* FADA no hero: SEM circulo; 9 frames (fundo transparente) em CROSS-FADE, giro suave em 1 sentido.
-     Cada frame ocupa ~1/9 do ciclo e dissolve no proximo. Total 6.3s; offset = 6.3/9 = 0.7s. */
+  /* FADA no hero: SEM circulo; 8 frames (fundo transparente) em CROSS-FADE = BATER DE ASAS (loop).
+     Cada frame ocupa ~1/8 do ciclo e dissolve no proximo. Total 3.2s; offset = 3.2/8 = 0.4s.
+     O corpo tambem FLUTUA suave (rfFadaFloat) no proprio eixo vertical. */
   .rf-medal-fada { width:clamp(290px, 48vh, 440px); }
-  .rf-medal-fada .rf-hero-stage { border-radius:0; overflow:visible; box-shadow:none; }
+  .rf-medal-fada .rf-hero-stage { border-radius:0; overflow:visible; box-shadow:none; animation: rfFadaFloat 3.4s ease-in-out infinite; }
   .rf-medal-fada .rf-hero-scrim { display:none; }
-  .rf-fada-frame { position:absolute; inset:0; background-size:contain; background-repeat:no-repeat; background-position:center; opacity:0; animation: rfFadaXfade 6.3s linear infinite; will-change:opacity; }
-  .rf-fada-frame.f2 { animation-delay:-0.7s; }
-  .rf-fada-frame.f3 { animation-delay:-1.4s; }
-  .rf-fada-frame.f4 { animation-delay:-2.1s; }
-  .rf-fada-frame.f5 { animation-delay:-2.8s; }
-  .rf-fada-frame.f6 { animation-delay:-3.5s; }
-  .rf-fada-frame.f7 { animation-delay:-4.2s; }
-  .rf-fada-frame.f8 { animation-delay:-4.9s; }
-  .rf-fada-frame.f9 { animation-delay:-5.6s; }
+  .rf-fada-frame { position:absolute; inset:0; background-size:contain; background-repeat:no-repeat; background-position:center; opacity:0; animation: rfFadaXfade 3.2s linear infinite; will-change:opacity; }
+  .rf-fada-frame.f2 { animation-delay:-0.4s; }
+  .rf-fada-frame.f3 { animation-delay:-0.8s; }
+  .rf-fada-frame.f4 { animation-delay:-1.2s; }
+  .rf-fada-frame.f5 { animation-delay:-1.6s; }
+  .rf-fada-frame.f6 { animation-delay:-2.0s; }
+  .rf-fada-frame.f7 { animation-delay:-2.4s; }
+  .rf-fada-frame.f8 { animation-delay:-2.8s; }
   .rf-medal-fada.reveal-img .rf-hero-overlay { opacity:1; }
-  @keyframes rfFadaXfade { 0% { opacity:0; } 4% { opacity:1; } 13% { opacity:1; } 17% { opacity:0; } 100% { opacity:0; } }
+  @keyframes rfFadaXfade { 0% { opacity:0; } 5% { opacity:1; } 12% { opacity:1; } 18% { opacity:0; } 100% { opacity:0; } }
+  @keyframes rfFadaFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-2.5%); } }
   /* Coluna do hero ocupa a 1a tela: imagem (topo) / hemacia (centro) / info (base) */
   .rf-herocol { display:flex; flex-direction:column; align-items:center; width:100%; min-height:calc(100vh - 5.5rem); justify-content:space-between; gap:0.8rem; }
   .rf-hero-bottom { width:100%; display:flex; flex-direction:column; align-items:center; gap:0.3rem; }
@@ -1543,15 +1543,14 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               onTouchStart={onHtbEnter}
             >
               <div className="rf-hero-stage">
-                <div className="rf-fada-frame f1" style={{ backgroundImage: `url(${fairy1})` }} />
-                <div className="rf-fada-frame f2" style={{ backgroundImage: `url(${fairy2})` }} />
-                <div className="rf-fada-frame f3" style={{ backgroundImage: `url(${fairy3frame})` }} />
-                <div className="rf-fada-frame f4" style={{ backgroundImage: `url(${fairy4})` }} />
-                <div className="rf-fada-frame f5" style={{ backgroundImage: `url(${fairy5})` }} />
-                <div className="rf-fada-frame f6" style={{ backgroundImage: `url(${fairy6})` }} />
-                <div className="rf-fada-frame f7" style={{ backgroundImage: `url(${fairy7})` }} />
-                <div className="rf-fada-frame f8" style={{ backgroundImage: `url(${fairy8})` }} />
-                <div className="rf-fada-frame f9" style={{ backgroundImage: `url(${fairy9})` }} />
+                <div className="rf-fada-frame f1" style={{ backgroundImage: `url(${wing1})` }} />
+                <div className="rf-fada-frame f2" style={{ backgroundImage: `url(${wing2})` }} />
+                <div className="rf-fada-frame f3" style={{ backgroundImage: `url(${wing3})` }} />
+                <div className="rf-fada-frame f4" style={{ backgroundImage: `url(${wing4})` }} />
+                <div className="rf-fada-frame f5" style={{ backgroundImage: `url(${wing5})` }} />
+                <div className="rf-fada-frame f6" style={{ backgroundImage: `url(${wing6})` }} />
+                <div className="rf-fada-frame f7" style={{ backgroundImage: `url(${wing7})` }} />
+                <div className="rf-fada-frame f8" style={{ backgroundImage: `url(${wing8})` }} />
                 <div className="rf-hero-scrim" />
               </div>
               <div className="rf-hero-overlay">
