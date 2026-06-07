@@ -2,6 +2,15 @@ import { useState, useEffect, useRef } from 'react'
 import logo from '../assets/logo.png'
 import redcell1 from '../assets/redcell1.png'
 import laiseImg from '../assets/LAISE H.png'
+import fairy1 from '../assets/fairy1.png'
+import fairy2 from '../assets/fairy2.png'
+import fairy3frame from '../assets/fairy3.png'
+import fairy4 from '../assets/fairy4.png'
+import fairy5 from '../assets/fairy5.png'
+import fairy6 from '../assets/fairy6.png'
+import fairy7 from '../assets/fairy7.png'
+import fairy8 from '../assets/fairy8.png'
+import fairy9 from '../assets/fairy9.png'
 import filosofiaBg from '../../redfairy-filosofia-bg.png'
 import fairy3 from '../../redfairy3.png'
 import OBAModal from './OBAModal'
@@ -180,6 +189,22 @@ const LANDING_CSS = `
   .rf-hero-overlay h1 .red { color:var(--cherry); font-style:normal; }
   .rf-hero-sub { font-size:clamp(0.85rem,2vh,1.05rem); color:#1F2937; font-weight:600; line-height:1.45; max-width:340px; margin:0 auto; text-shadow:0 1px 8px rgba(255,255,255,0.9); }
   @keyframes heroReveal { from { opacity:0; transform:translateY(18px) scale(0.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+  /* FADA no hero: SEM circulo; 9 frames (fundo transparente) em CROSS-FADE, giro suave em 1 sentido.
+     Cada frame ocupa ~1/9 do ciclo e dissolve no proximo. Total 6.3s; offset = 6.3/9 = 0.7s. */
+  .rf-medal-fada { width:clamp(290px, 48vh, 440px); }
+  .rf-medal-fada .rf-hero-stage { border-radius:0; overflow:visible; box-shadow:none; }
+  .rf-medal-fada .rf-hero-scrim { display:none; }
+  .rf-fada-frame { position:absolute; inset:0; background-size:contain; background-repeat:no-repeat; background-position:center; opacity:0; animation: rfFadaXfade 6.3s linear infinite; will-change:opacity; }
+  .rf-fada-frame.f2 { animation-delay:-0.7s; }
+  .rf-fada-frame.f3 { animation-delay:-1.4s; }
+  .rf-fada-frame.f4 { animation-delay:-2.1s; }
+  .rf-fada-frame.f5 { animation-delay:-2.8s; }
+  .rf-fada-frame.f6 { animation-delay:-3.5s; }
+  .rf-fada-frame.f7 { animation-delay:-4.2s; }
+  .rf-fada-frame.f8 { animation-delay:-4.9s; }
+  .rf-fada-frame.f9 { animation-delay:-5.6s; }
+  .rf-medal-fada.reveal-img .rf-hero-overlay { opacity:1; }
+  @keyframes rfFadaXfade { 0% { opacity:0; } 4% { opacity:1; } 13% { opacity:1; } 17% { opacity:0; } 100% { opacity:0; } }
   /* Coluna do hero ocupa a 1a tela: imagem (topo) / hemacia (centro) / info (base) */
   .rf-herocol { display:flex; flex-direction:column; align-items:center; width:100%; min-height:calc(100vh - 5.5rem); justify-content:space-between; gap:0.8rem; }
   .rf-hero-bottom { width:100%; display:flex; flex-direction:column; align-items:center; gap:0.3rem; }
@@ -203,6 +228,7 @@ const LANDING_CSS = `
 
   @media (max-width: 768px) {
     .rf-hero-medal { width:clamp(187px, 31vh, 271px); margin:-1rem auto 0; }
+    .rf-medal-fada { width:clamp(250px, 44vh, 360px); }
     .rf-hero-overlay { width:170%; }
     .rf-hero-overlay h1 { font-size:clamp(1.8rem, 7vw, 2.6rem); }
     .rf-hint-circle { width:88px; height:88px; padding:11px; }
@@ -733,7 +759,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [heroVariant, setHeroVariant] = useState(0);
   useEffect(() => {
     const iv = setInterval(() => {
-      setHeroVariant(v => (v === 0 ? 1 : 0));
+      setHeroVariant(v => (v + 1) % 3);
     }, 7000);
     return () => clearInterval(iv);
   }, []);
@@ -1512,12 +1538,20 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             {/* Imagem circular (medalhao) no topo; hover/touch revela a imagem.
                 O texto fica FORA do circulo recortado (irmao), para poder ultrapassar a borda. */}
             <div
-              className={`rf-hero-medal${showHtb ? ' reveal-img' : ''}`}
+              className={`rf-hero-medal rf-medal-fada${showHtb ? ' reveal-img' : ''}`}
               onMouseEnter={onHtbEnter}
               onTouchStart={onHtbEnter}
             >
               <div className="rf-hero-stage">
-                <div className="rf-hero-img" style={{ backgroundImage: `url(${filosofiaBg})` }} />
+                <div className="rf-fada-frame f1" style={{ backgroundImage: `url(${fairy1})` }} />
+                <div className="rf-fada-frame f2" style={{ backgroundImage: `url(${fairy2})` }} />
+                <div className="rf-fada-frame f3" style={{ backgroundImage: `url(${fairy3frame})` }} />
+                <div className="rf-fada-frame f4" style={{ backgroundImage: `url(${fairy4})` }} />
+                <div className="rf-fada-frame f5" style={{ backgroundImage: `url(${fairy5})` }} />
+                <div className="rf-fada-frame f6" style={{ backgroundImage: `url(${fairy6})` }} />
+                <div className="rf-fada-frame f7" style={{ backgroundImage: `url(${fairy7})` }} />
+                <div className="rf-fada-frame f8" style={{ backgroundImage: `url(${fairy8})` }} />
+                <div className="rf-fada-frame f9" style={{ backgroundImage: `url(${fairy9})` }} />
                 <div className="rf-hero-scrim" />
               </div>
               <div className="rf-hero-overlay">
@@ -1529,6 +1563,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                   <div style={{ gridArea:'1 / 1', opacity: heroVariant === 1 ? 1 : 0, visibility: heroVariant === 1 ? 'visible' : 'hidden', transition:'opacity 1.2s ease, visibility 1.2s ease' }}>
                     <h1>{"Um sistema para cuidar do "}<span className="red">ERITRON</span>{" humano."}</h1>
                     <p className="rf-hero-sub">{"Diagn\u00f3sticos e ajustes na"}<br/>{"produ\u00e7\u00e3o de hemoglobina"}<br/>{"e c\u00e9lulas vermelhas"}</p>
+                  </div>
+                  <div style={{ gridArea:'1 / 1', opacity: heroVariant === 2 ? 1 : 0, visibility: heroVariant === 2 ? 'visible' : 'hidden', transition:'opacity 1.2s ease, visibility 1.2s ease' }}>
+                    <h1>{"Um Projeto para otimizar o "}<span className="red">VIVER</span>{" do Bari\u00e1trico"}</h1>
                   </div>
                 </div>
               </div>
