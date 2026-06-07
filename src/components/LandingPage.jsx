@@ -186,7 +186,7 @@ const LANDING_CSS = `
   .rf-hero-overlay { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:150%; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; overflow:visible; transition:opacity 0.6s ease; }
   .rf-hero-medal.reveal-img .rf-hero-overlay { opacity:0; pointer-events:none; }
   .rf-hero-overlay h1 { font-family:'DM Serif Display', serif; font-weight:400; font-size:3.5rem; line-height:1.1; letter-spacing:-0.015em; color:var(--text); margin:0 0 0.6rem; text-wrap:balance; text-shadow:0 1px 12px rgba(255,255,255,0.9), 0 0 4px rgba(255,255,255,0.8); }
-  .rf-hero-overlay h1 .red { color:var(--cherry); font-style:normal; }
+  .rf-hero-overlay h1 .red { color:var(--cherry); font-style:normal; text-shadow: 0 0 4px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
   .rf-hero-sub { font-size:clamp(0.85rem,2vh,1.05rem); color:#1F2937; font-weight:600; line-height:1.45; max-width:340px; margin:0 auto; text-shadow:0 1px 8px rgba(255,255,255,0.9); }
   @keyframes heroReveal { from { opacity:0; transform:translateY(18px) scale(0.985); } to { opacity:1; transform:translateY(0) scale(1); } }
   /* FADA no hero: SEM circulo; 9 frames (fundo transparente) em CROSS-FADE, giro suave em 1 sentido.
@@ -755,12 +755,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     return () => clearInterval(iv);
   }, [fluxoEtapa]);
 
-  // Alternancia do hero textbox a cada 7s
+  // Alternancia do hero textbox a cada 4.5s
   const [heroVariant, setHeroVariant] = useState(0);
   useEffect(() => {
     const iv = setInterval(() => {
       setHeroVariant(v => (v + 1) % 3);
-    }, 7000);
+    }, 4500);
     return () => clearInterval(iv);
   }, []);
 
@@ -1561,11 +1561,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                     <p className="rf-hero-sub">{"Eu uso p\u00f3 de estrelas para"}<br/>{"te entregar o ar."}</p>
                   </div>
                   <div style={{ gridArea:'1 / 1', opacity: heroVariant === 1 ? 1 : 0, visibility: heroVariant === 1 ? 'visible' : 'hidden', transition:'opacity 1.2s ease, visibility 1.2s ease' }}>
-                    <h1>{"Um sistema para cuidar do "}<span className="red">ERITRON</span>{" humano."}</h1>
+                    <h1>{"Um sistema para cuidar"}<br/>{"do "}<span className="red">ERITRON</span>{" humano."}</h1>
                     <p className="rf-hero-sub">{"Diagn\u00f3sticos e ajustes na"}<br/>{"produ\u00e7\u00e3o de hemoglobina"}<br/>{"e c\u00e9lulas vermelhas"}</p>
                   </div>
                   <div style={{ gridArea:'1 / 1', opacity: heroVariant === 2 ? 1 : 0, visibility: heroVariant === 2 ? 'visible' : 'hidden', transition:'opacity 1.2s ease, visibility 1.2s ease' }}>
-                    <h1>{"Um Projeto para otimizar o "}<span className="red">VIVER</span>{" do Bari\u00e1trico"}</h1>
+                    <h1>{"Um Projeto para otimizar"}<br/>{"o "}<span className="red">VIVER</span>{" do Bari\u00e1trico"}</h1>
                   </div>
                 </div>
               </div>
