@@ -478,10 +478,35 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
   }, [inputs.data_coleta, inputs.data_estimada, modoMedico, etapaInicio]);
 
+  // --- Cadeia de foco no MODO PACIENTE (as tr\u00eas acima s\u00e3o exclusivas do m\u00e9dico) ---
+  // Sexo escolhido pelo usu\u00e1rio \u2192 foca Data de Nascimento (ou, se o nascimento j\u00e1
+  // veio do cadastro, pula direto pra Data da Coleta). pacConhSexoOk = veio do perfil.
+  useEffect(() => {
+    if (modoMedico) return;
+    if (!inputs.sexo || pacConhSexoOk) return;
+    const t = setTimeout(() => {
+      if (!pacConhDataNascOk && refDnInput.current) refDnInput.current.focus();
+      else if (refDataColeta.current) refDataColeta.current.focus();
+    }, 120);
+    return () => clearTimeout(t);
+  }, [inputs.sexo, modoMedico, pacConhSexoOk, pacConhDataNascOk]);
+
+  // Data de Nascimento completa (DD/MM/AAAA) \u2192 foca Data da Coleta.
+  useEffect(() => {
+    if (modoMedico || pacConhDataNascOk) return;
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(String(inputs.dataNascimento || ''))) return;
+    const t = setTimeout(() => { if (refDataColeta.current) refDataColeta.current.focus(); }, 150);
+    return () => clearTimeout(t);
+  }, [inputs.dataNascimento, modoMedico, pacConhDataNascOk]);
+
   useEffect(() => {
     if (!inputs.sexo) return;
     // Em modo m\u00e9dico, n\u00e3o forcamos foco em HB antes de o fluxo de cabe\u00e7alho terminar (etapaInicio>=5).
     if (modoMedico && etapaInicio < 5) return;
+    // Em modo paciente, n\u00e3o pular para o Hemograma antes da DATA DA COLETA estar
+    // preenchida \u2014 sen\u00e3o o foco sa\u00eda do Sexo direto pra Hemoglobina, pulando
+    // Nascimento e Data do Hemograma. (S\u00f3 vale para a 1\u00aa caixa, HB.)
+    if (!modoMedico && etapaHemograma === 1 && !/^\d{2}\/\d{2}\/\d{4}$/.test(String(inputs.data_coleta || ''))) return;
     const targets = { 1: refHbHemograma, 2: refVcmHemograma, 3: refRdwHemograma };
     const target = targets[etapaHemograma];
     const t = setTimeout(() => {
@@ -490,7 +515,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       }
     }, 100);
     return () => clearTimeout(t);
-  }, [etapaHemograma, inputs.sexo, inputs.bariatrica, inputs.gestante, etapaInicio, modoMedico]);
+  }, [etapaHemograma, inputs.sexo, inputs.bariatrica, inputs.gestante, inputs.data_coleta, etapaInicio, modoMedico]);
 
   function agendarAvancoHemograma(etapaAtual, valorAtual, maxChars) {
     if (timerHemogramaRef.current) clearTimeout(timerHemogramaRef.current);
@@ -903,6 +928,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                   ref={refDataColeta}
                   type="text"
                   name="data_coleta"
+                  autoComplete="off"
                   value={inputs.data_coleta}
                   onChange={e => {
                     // M\u00e1scara DD/MM/AAAA igual \u00e0 Data de Nascimento
@@ -944,6 +970,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                     type="text"
                     inputMode="decimal"
                     name="hemoglobina"
+                    autoComplete="off"
                     value={inputs.hemoglobina}
                     maxLength={4}
                     disabled={etapaHemograma < 1 || (modoMedico && etapaInicio < 5)}
@@ -969,6 +996,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                     type="text"
                     inputMode="decimal"
                     name="vcm"
+                    autoComplete="off"
                     value={inputs.vcm}
                     maxLength={5}
                     disabled={etapaHemograma < 2 || (modoMedico && etapaInicio < 5)}
@@ -994,6 +1022,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                     type="text"
                     inputMode="decimal"
                     name="rdw"
+                    autoComplete="off"
                     value={inputs.rdw}
                     maxLength={4}
                     disabled={etapaHemograma < 3 || (modoMedico && etapaInicio < 5)}

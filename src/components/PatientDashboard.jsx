@@ -11,6 +11,19 @@ import heroImg from '../assets/redfairy-hero.png'
 import telefonista3Img from '../assets/telefonista3.png'
 import logo from '../assets/logo.png'
 
+// Classes Tailwind por cor dos cards de checkbox (paridade com o CheckboxCard do
+// formulário do médico). Mantido fora do componente p/ não recriar a cada render.
+const CORES_CARD = {
+  green:  'border-green-400 bg-green-50 text-green-700',
+  red:    'border-red-400 bg-red-50 text-red-700',
+  amber:  'border-amber-400 bg-amber-50 text-amber-700',
+  orange: 'border-orange-400 bg-orange-50 text-orange-700',
+  yellow: 'border-yellow-400 bg-yellow-50 text-yellow-700',
+  purple: 'border-purple-400 bg-purple-50 text-purple-700',
+  pink:   'border-pink-400 bg-pink-50 text-pink-700',
+  teal:   'border-teal-400 bg-teal-50 text-teal-700',
+}
+
 export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirOBA }) {
   const [profile, setProfile] = useState(null)
   const [avaliacoes, setAvaliacoes] = useState([])
@@ -30,6 +43,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showSaibaMais, setShowSaibaMais] = useState(false)
   const [fraseGestacaoConcluida, setFraseGestacaoConcluida] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
+  // Hemograma de ENTRADA (triagem ainda não aprofundada): governa o "primeiro
+  // acesso" — esconde a barra Histórico/Nova e traz os dados da triagem travados.
+  const [entradaPendente, setEntradaPendente] = useState(false)
+  const [dadosVieramDaEntrada, setDadosVieramDaEntrada] = useState(false)
 
   // Modal do grafico de evolucao (Hb/VCM/RDW + Ferritina/Sat) reutiliza o
   // HistoricoChartModal usado pelo TriagemModal no modo medico.
@@ -38,23 +55,26 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [historicoMsg, setHistoricoMsg] = useState('')
 
   const [inputs, setInputs] = useState({
-    sexo: '', idade: '',
+    sexo: '', idade: '', peso: '',
     dataColeta: '', ferritina: '', hemoglobina: '',
     vcm: '', rdw: '', satTransf: '',
     bariatrica: false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '',
-    aspirina: false, vitaminaB12: false, ferro_oral: false, ferro_injetavel: false,
+    // Histórico clínico completo (paridade com o formulário do médico)
+    alcoolista: false, transfundido: false, anemiaPrevia: false, sideropenia: false,
+    sobrecargaFerro: false, hbAlta: false, doadorSangue: false, celiaco: false, g6pd: false,
+    // Medicamentos / suplementos completo
+    aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false,
+    ferro_oral: false, ferro_injetavel: false, testosterona: false, tiroxina: false,
+    methotrexato: false, hivTratamento: false, hidroxiureia: false, anticonvulsivante: false,
   })
 
-  useEffect(() => { carregarDados() }, [])
+  useEffect(() => { carregarDados(true) }, [])
 
-  // Paciente que ja fez avaliacoes (recebeu pedido gratis, tem exames em maos)
-  // ja chega ao Modal RedFairy com Ferritina e Sat Transf destravadas.
-  useEffect(() => {
-    if (avaliacoes && avaliacoes.length >= 1) {
-      setMostrarExamesExtras(true)
-    }
-  }, [avaliacoes])
+  // (Removido) Antes, ter >=1 avaliação destravava Ferritina/Saturação direto e
+  // escondia o botão azul "aprofundar". Isso quebrava o primeiro acesso: o paciente
+  // chegava sem o botão e sem os dados da triagem. Agora o formulário sempre começa
+  // com Ferritina/Saturação travadas + botão azul, exatamente como no modo médico.
 
   useEffect(() => {
     function handleDemoKey(e) {
@@ -100,7 +120,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     }))
   }, [profile])
 
-  async function carregarDados() {
+  async function carregarDados(inicial = false) {
     setLoading(true)
     if (demoPerfil) {
       setProfile(demoPerfil)
@@ -168,6 +188,50 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     if (!prof.bariatrica && (avals || []).some(a => a.bariatrica)) {
       await supabase.from('profiles').update({ bariatrica: true }).eq('id', prof.id)
       setProfile(p => (p ? { ...p, bariatrica: true } : p))
+    }
+    // HEMOGRAMA DE ENTRADA (só na carga inicial): a triagem que o paciente fez antes
+    // de pagar fica na tabela `triagens` (com data_coleta). Se essa entrada ainda NÃO
+    // virou uma avaliação completa (não há avaliação com a MESMA data), trazemos
+    // Hb/VCM/RDW + a data para o formulário e deixamos o paciente "aprofundar"
+    // (destravar Ferritina/Saturação no botão azul), igual ao fluxo do médico.
+    // Usa a DATA, não a contagem — robusto a CPFs de teste com avaliações antigas.
+    if (prof.cpf) {
+      const cpfDigits = String(prof.cpf).replace(/\D/g, '')
+      if (cpfDigits.length === 11) {
+        const { data: entrada } = await supabase
+          .from('triagens')
+          .select('data_coleta, hemoglobina, vcm, rdw, gestante, bariatrica, semanas_gestacao')
+          .eq('cpf', cpfDigits)
+          .order('data_coleta', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        // "Aprofundada" = existe avaliação NA MESMA DATA já COM Ferritina. Atenção:
+        // a triagem, se o paciente já estava logado, cria um espelho em `avaliacoes`
+        // com ferritina=null — esse espelho NÃO conta como aprofundado.
+        const pendente = !!entrada &&
+          !(avals || []).some(a => a.data_coleta === entrada.data_coleta && a.ferritina != null)
+        setEntradaPendente(pendente)
+        if (inicial && pendente) {
+          setDadosVieramDaEntrada(true)
+          setInputs(prev => ({
+            ...prev,
+            dataColeta: prev.dataColeta || entrada.data_coleta || '',
+            hemoglobina: prev.hemoglobina || (entrada.hemoglobina != null ? String(entrada.hemoglobina) : ''),
+            vcm: prev.vcm || (entrada.vcm != null ? String(entrada.vcm) : ''),
+            rdw: prev.rdw || (entrada.rdw != null ? String(entrada.rdw) : ''),
+            bariatrica: !!entrada.bariatrica,
+            gestante: !!entrada.gestante,
+            semanas_gestacao: prev.semanas_gestacao || (entrada.semanas_gestacao != null ? String(entrada.semanas_gestacao) : ''),
+          }))
+          // Perfil completo e boas-vindas já vistas (login de retorno) → leva direto
+          // ao formulário. No 1º acesso quem faz isso é o CONTINUAR das boas-vindas.
+          if (prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista === true) {
+            setTela('nova')
+          }
+        }
+      } else {
+        setEntradaPendente(false)
+      }
     }
     // Reabre o OBA se ele estava aberto antes de uma remontagem (foco da aba/reload):
     // assim o paciente NÃO perde o que estava preenchendo (o OBAModal restaura o
@@ -327,6 +391,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       await supabase.from('avaliacoes').insert({
         user_id: session.user.id,
         data_coleta: inputs.dataColeta,
+        peso: inputs.peso !== '' && Number.isFinite(Number(inputs.peso)) ? Number(inputs.peso) : null,
         ferritina: Number(inputs.ferritina),
         hemoglobina: Number(inputs.hemoglobina),
         vcm: Number(inputs.vcm),
@@ -341,6 +406,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         dum: inputs.gestante && inputs.dum ? inputs.dum : null,
         aspirina: inputs.aspirina,
         vitamina_b12: inputs.vitaminaB12,
+        vitb12_sl: inputs.vitB12_SL,
+        vitb12_im: inputs.vitB12_IM,
         ferro_oral: inputs.ferro_oral,
         ferro_injetavel: inputs.ferro_injetavel,
         diagnostico_label: res.label,
@@ -403,10 +470,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       setShowBoasVindas(false)
       setProfile(p => ({ ...p, boas_vindas_vista: true }))
       // Bariátrica tem PRIORIDADE: abre a anamnese OBA e fica no dashboard.
-      // Só vai pra despedida (logout) se NÃO precisar do OBA e tiver pedido gratuito.
+      // Não-bariátrico:
+      //  - pediu o exame grátis → ainda não tem resultados em mãos → despedida (logout).
+      //  - NÃO pediu (já tem os exames) → vai DIRETO ao formulário de avaliação,
+      //    sem parar no Histórico vazio.
       const precisa = await verificarEAbrirOBA(profile)
-      if (!precisa && querPedidoGratis) {
-        setMostrarDespedida(true)
+      if (!precisa) {
+        if (querPedidoGratis) {
+          setMostrarDespedida(true)
+        } else {
+          setTela('nova')
+        }
       }
     }
   }
@@ -633,6 +707,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       )}
 
       <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Barra Hist\u00f3rico / Nova Avalia\u00e7\u00e3o: escondida no primeiro acesso \u2014 durante o
+            "Ol\u00e1!" (showBoasVindas), enquanto o hemograma de entrada ainda n\u00e3o foi
+            aprofundado (entradaPendente) e na tela de resultado (logo ap\u00f3s avaliar,
+            n\u00e3o faz sentido para o paciente novo). S\u00f3 aparece com hist\u00f3rico de fato. */}
+        {avaliacoes.length > 0 && !showBoasVindas && !entradaPendente && tela !== 'resultado' && (
         <div className="flex gap-2 mb-6">
           <button
             onClick={() => {
@@ -652,6 +731,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             {"Nova Avalia\u00e7\u00e3o"}
           </button>
         </div>
+        )}
 
         {tela === 'historico' && (
           <div className="space-y-3">
@@ -752,33 +832,53 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
         {tela === 'nova' && (
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
-            <h2 className="font-semibold text-gray-700">{"Nova Avalia\u00e7\u00e3o"}</h2>
+            <h2 className="font-semibold text-gray-700">
+              {dadosVieramDaEntrada ? "Continuando a sua primeira avalia\u00e7\u00e3o" : "Nova Avalia\u00e7\u00e3o"}
+            </h2>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
-              <p className="text-xs text-gray-500 mb-1">Paciente</p>
+              <p className="text-xs text-gray-500 mb-1">{"Voc\u00ea"}</p>
               <p className="text-sm text-gray-700">
                 <strong>{profile?.nome || ''}</strong>
                 {inputs.sexo && (<>{" \u2022 "}<strong>{inputs.sexo === 'F' ? 'Feminino' : 'Masculino'}</strong></>)}
                 {inputs.idade && (<>{" \u2022 "}<strong>{inputs.idade} anos</strong></>)}
               </p>
               {profile?.data_nascimento && (
-                <p className="text-xs text-gray-400 mt-0.5">Idade calculada a partir da data de nascimento no seu cadastro</p>
+                <p className="text-xs text-gray-400 mt-0.5">{"Idade calculada a partir da data de nascimento no seu cadastro"}</p>
               )}
             </div>
 
-            {/* Bariátrico/a: dado inicial, sempre presente (movido do Histórico Clínico). */}
-            <label className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-sm
-              ${inputs.bariatrica ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
-              <input type="checkbox" name="bariatrica" checked={inputs.bariatrica} onChange={handleChange} className="mt-0.5" />
-              <div>
-                <p className="font-medium">{inputs.sexo === 'F' ? 'Paciente Bariátrica' : 'Paciente Bariátrico'}</p>
-                <p className="text-xs opacity-70">By-pass / Gastrectomia — você receberá a anamnese do Projeto OBA</p>
-              </div>
-            </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">{"Peso (kg)"}</label>
+              <input type="number" step="0.1" name="peso" value={inputs.peso} onChange={handleChange}
+                placeholder="Ex: 72"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+              <p className="text-xs text-gray-400 mt-0.5">{"Opcional \u2014 usado no c\u00e1lculo de dose de ferro endovenoso, se necess\u00e1rio"}</p>
+            </div>
+
+            {/* Bariátrico/a: só faz sentido aparecer se o paciente É bariátrico. Quando os
+                dados vieram da triagem e ele NÃO marcou bariátrica lá, o checkbox nem
+                aparece (evita mostrar "Paciente Bariátrico" para quem não é). Se for
+                bariátrico, mostra travado (já declarado na triagem). Fora do 1º acesso
+                (nova avaliação avulsa) continua editável. */}
+            {(inputs.bariatrica || !dadosVieramDaEntrada) && (
+              <label className={`flex items-start gap-2 p-3 rounded-xl border-2 transition-all text-sm ${dadosVieramDaEntrada ? 'cursor-default' : 'cursor-pointer'}
+                ${inputs.bariatrica ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+                <input type="checkbox" name="bariatrica" checked={inputs.bariatrica} onChange={handleChange} disabled={dadosVieramDaEntrada} className="mt-0.5 disabled:opacity-50" />
+                <div>
+                  <p className="font-medium">{inputs.sexo === 'F' ? 'Paciente Bariátrica' : 'Paciente Bariátrico'}</p>
+                  <p className="text-xs opacity-70">By-pass / Gastrectomia — você receberá a anamnese do Projeto OBA</p>
+                </div>
+              </label>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Data da Coleta</label>
               <input type="date" name="dataColeta" max={new Date().toISOString().split('T')[0]} value={inputs.dataColeta} onChange={handleChange}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                disabled={dadosVieramDaEntrada}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed" />
+              {dadosVieramDaEntrada && (
+                <p className="text-xs text-gray-400 mt-0.5">{"Data do seu hemograma de entrada (registrado na triagem)"}</p>
+              )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
@@ -789,20 +889,35 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 <div key={f.name}>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
                   <input type="number" step="0.1" name={f.name} value={inputs[f.name]} onChange={handleChange}
-                    className="w-full border-2 border-red-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                    disabled={dadosVieramDaEntrada}
+                    className="w-full border-2 border-red-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed" />
                 </div>
               ))}
             </div>
+            {dadosVieramDaEntrada && (
+              <p className="text-xs text-gray-400 -mt-2">{"Hemograma de entrada (registrado na triagem) — para corrigir, faça uma nova triagem"}</p>
+            )}
 
             {!mostrarExamesExtras && (
-              <button
-                type="button"
-                onClick={() => setMostrarExamesExtras(true)}
-                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex flex-col items-center"
-              >
-                <span>{"\ud83d\udccb TENHO A FERRITINA E A SATURA\u00c7\u00c3O DA TRANSFERRINA"}</span>
-                <span className="text-xs font-normal opacity-90 mt-1">{"Aprofundar o diagn\u00f3stico"}</span>
-              </button>
+              <div className="flex items-center gap-3 mt-1 px-1">
+                <style>{`
+                  @keyframes rfPlayBlinkBlue {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.6); }
+                    50%      { box-shadow: 0 0 0 8px rgba(37,99,235,0); }
+                  }
+                  .rf-play-blue { animation: rfPlayBlinkBlue 1s ease-in-out infinite; }
+                `}</style>
+                <p className="text-sm font-semibold text-blue-700 leading-snug flex-1">
+                  {"Para digitar FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA (%) acione o bot\u00e3o"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setMostrarExamesExtras(true)}
+                  aria-label={"Liberar campos de Ferritina e Satura\u00e7\u00e3o da Transferrina"}
+                  className="rf-play-blue flex-shrink-0 w-12 h-12 rounded-full bg-gray-300 hover:bg-gray-400 flex items-center justify-center transition-colors">
+                  <span style={{ color: '#2563eb', fontSize: '1.3rem', lineHeight: 1 }}>{"\u25b6"}</span>
+                </button>
+              </div>
             )}
 
             <div className="grid grid-cols-2 gap-3">
@@ -830,20 +945,24 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               <h3 className="text-sm font-semibold text-gray-700 mb-3">{"Hist\u00f3rico Cl\u00ednico"}</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { name: 'vegetariano', label: 'Vegetariano/Vegano', sub: 'Dieta sem carne', color: 'green' },
-                  { name: 'perda', label: "Perda / Hemorragia", sub: "Inclui doa\u00e7\u00e3o de sangue, sangria, ou sangramento", color: 'red' },
+                  { name: 'vegetariano', label: inputs.sexo === 'F' ? 'Vegetariana/Vegana' : 'Vegetariano/Vegano', sub: 'Dieta sem carne', color: 'green' },
+                  { name: 'perda', label: 'Hemorragia', sub: 'Inclui doa\u00e7\u00e3o de sangue, sangria, ou sangramento', color: 'red' },
+                  { name: 'alcoolista', label: 'Alcoolista', sub: 'Uso cr\u00f4nico de \u00e1lcool', color: 'amber' },
+                  { name: 'transfundido', label: inputs.sexo === 'F' ? 'Transfundida' : 'Transfundido', sub: 'Transfus\u00e3o de hem\u00e1cias', color: 'red' },
+                  { name: 'anemiaPrevia', label: 'Anemia Cr\u00f4nica / Pr\u00e9via', sub: 'Diagn\u00f3stico anterior de anemia', color: 'red' },
+                  { name: 'sideropenia', label: 'Defici\u00eancia de Ferro', sub: 'Hist\u00f3rico de ferritina baixa', color: 'orange' },
+                  { name: 'sobrecargaFerro', label: 'Excesso de Ferro / Hemocromatose', sub: 'Hist\u00f3rico de ferritina alta', color: 'orange' },
+                  { name: 'hbAlta', label: 'Hemoglobina Alta / Policitemia', sub: 'Hist\u00f3rico de Hb elevada ou sangrias', color: 'red' },
+                  { name: 'doadorSangue', label: inputs.sexo === 'F' ? 'Doadora de Sangue' : 'Doador de Sangue', sub: 'Doa\u00e7\u00f5es frequentes', color: 'red' },
+                  { name: 'celiaco', label: inputs.sexo === 'F' ? 'Cel\u00edaca' : 'Cel\u00edaco', sub: 'Doen\u00e7a cel\u00edaca \u2014 m\u00e1 absor\u00e7\u00e3o', color: 'yellow' },
+                  { name: 'g6pd', label: 'Defici\u00eancia de G-6-PD', sub: 'Favismo \u2014 risco de hem\u00f3lise', color: 'purple' },
                   ...(inputs.sexo === 'F' ? [
                     { name: 'hipermenorreia', label: 'Hipermenorreia', sub: 'Fluxo excessivo', color: 'pink' },
                     { name: 'gestante', label: 'Gestante', sub: 'Gravidez atual', color: 'pink' },
                   ] : []),
                 ].map(f => (
                   <label key={f.name} className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-sm
-                    ${inputs[f.name]
-                      ? f.color === 'amber' ? 'border-amber-400 bg-amber-50 text-amber-700'
-                      : f.color === 'green' ? 'border-green-400 bg-green-50 text-green-700'
-                      : f.color === 'red' ? 'border-red-400 bg-red-50 text-red-700'
-                      : 'border-pink-400 bg-pink-50 text-pink-700'
-                      : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+                    ${inputs[f.name] ? (CORES_CARD[f.color] || CORES_CARD.pink) : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
                     <input type="checkbox" name={f.name} checked={inputs[f.name]} onChange={handleChange} className="mt-0.5" />
                     <div>
                       <p className="font-medium">{f.label}</p>
@@ -885,18 +1004,24 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             </div>
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-3">Medicamentos / Suplementos</h3>
+              <p className="text-xs text-gray-400 mb-2">{"Marque os que voc\u00ea usa ou usou recentemente"}</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { name: 'aspirina', label: 'Aspirina', sub: "Uso cont\u00ednuo", color: 'orange' },
-                  { name: 'vitaminaB12', label: 'Vitamina B12', sub: "\u00daltimos 3 meses", color: 'purple' },
-                  { name: 'ferro_oral', label: 'Ferro Oral', sub: "\u00daltimos 2 anos", color: 'orange' },
-                  { name: 'ferro_injetavel', label: "Ferro Injet\u00e1vel", sub: "\u00daltimos 2 anos", color: 'orange' },
+                  { name: 'aspirina', label: 'Aspirina', sub: 'Uso cont\u00ednuo', color: 'orange' },
+                  { name: 'vitaminaB12', label: 'Vitamina B12', sub: '\u00daltimos 3 meses', color: 'purple' },
+                  { name: 'vitB12_SL', label: 'Vit. B12 SL', sub: 'Sublingual \u2014 em uso', color: 'purple' },
+                  { name: 'vitB12_IM', label: 'Vit. B12 IM', sub: 'Intramuscular \u2014 em uso', color: 'purple' },
+                  { name: 'ferro_oral', label: 'Ferro Oral', sub: 'Nos \u00faltimos 2 anos', color: 'orange' },
+                  { name: 'ferro_injetavel', label: 'Ferro Injet\u00e1vel', sub: 'Nos \u00faltimos 2 anos', color: 'orange' },
+                  { name: 'testosterona', label: 'Testosterona / Anabolizante', sub: 'Uso ex\u00f3geno \u2014 causa eritrocitose', color: 'orange' },
+                  { name: 'tiroxina', label: 'Tiroxina / T4', sub: 'Tratamento tireoidiano', color: 'teal' },
+                  { name: 'methotrexato', label: 'Metotrexato', sub: 'Antagonista do folato', color: 'purple' },
+                  { name: 'hivTratamento', label: 'Trat. HIV / ARV', sub: 'Antirretrovirais', color: 'purple' },
+                  { name: 'hidroxiureia', label: 'Hidroxiureia', sub: 'Pode causar macrocitose', color: 'purple' },
+                  { name: 'anticonvulsivante', label: 'Anticonvulsivante', sub: 'Fenito\u00edna, VPA etc.', color: 'purple' },
                 ].map(f => (
                   <label key={f.name} className={`flex items-start gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all text-sm
-                    ${inputs[f.name]
-                      ? f.color === 'purple' ? 'border-purple-400 bg-purple-50 text-purple-700'
-                      : 'border-orange-400 bg-orange-50 text-orange-700'
-                      : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
+                    ${inputs[f.name] ? (CORES_CARD[f.color] || CORES_CARD.orange) : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
                     <input type="checkbox" name={f.name} checked={inputs[f.name]} onChange={handleChange} className="mt-0.5" />
                     <div>
                       <p className="font-medium">{f.label}</p>
@@ -906,16 +1031,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 ))}
               </div>
             </div>
-            <button onClick={handleAvaliar}
-              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
-              Avaliar
-            </button>
+            <div className="flex justify-end pt-1">
+              <PlayButton onClick={handleAvaliar} label={"AVALIAR"} ariaLabel="Avaliar" />
+            </div>
           </div>
         )}
 
         {tela === 'resultado' && resultado && (
           <div>
-            <ResultCard resultado={resultado} onCopiar={() => {
+            <ResultCard resultado={resultado} mostrarPainelMedico={false} onCopiar={() => {
               const texto = formatarParaCopiar(resultado, resultado._inputs || inputs)
               navigator.clipboard.writeText(texto).then(() => {
                 setCopiado(true)

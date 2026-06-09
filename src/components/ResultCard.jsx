@@ -882,7 +882,7 @@ function DocumentoMedicoPanel({ resultado }) {
 }
 
 
-export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, medicoNome, medicoCRM, medicoDados, onVoltar, onNovaAvaliacao }) {
+export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, mostrarPainelMedico = true, medicoNome, medicoCRM, medicoDados, onVoltar, onNovaAvaliacao }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
@@ -1315,14 +1315,15 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
       {oba && <OBASection oba={oba} />}
 
-      {!modoPaciente ? (
+      {!modoPaciente && mostrarPainelMedico && (
         <PainelMedico
           resultado={resultado}
           medicoNome={medicoNome}
           medicoCRM={medicoCRM}
           medicoDados={medicoDados}
         />
-      ) : (
+      )}
+      {modoPaciente && (
         <DocumentoMedicoPanel resultado={resultado} />
       )}
 
