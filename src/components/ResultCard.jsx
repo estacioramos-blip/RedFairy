@@ -882,7 +882,7 @@ function DocumentoMedicoPanel({ resultado }) {
 }
 
 
-export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, mostrarPainelMedico = true, medicoNome, medicoCRM, medicoDados, onVoltar, onNovaAvaliacao }) {
+export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, mostrarPainelMedico = true, medicoNome, medicoCRM, medicoDados, onVoltar, onNovaAvaliacao, mostrarOptInExames = false, optInExamesEnviado = false, onOptInExames }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
@@ -1121,11 +1121,6 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               )
             })()}
           </div>
-          <button onClick={onCopiar}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
-              ${copiado ? 'bg-white text-green-700' : 'bg-white/20 hover:bg-white/30 text-white'}`}>
-            {copiado ? "\u2705 Copiado!" : "\ud83d\udccb Copiar"}
-          </button>
         </div>
 
         <div className="p-6 space-y-5">
@@ -1307,6 +1302,23 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               );
             })()}
           </div>
+
+          {mostrarOptInExames && resultado.proximosExames?.length > 0 && (
+            optInExamesEnviado ? (
+              <div className="rounded-xl border-2 border-green-300 bg-green-50 p-4 text-center">
+                <p className="text-sm font-bold text-green-700">{"✅ Pedido solicitado! Você o receberá via WhatsApp."}</p>
+              </div>
+            ) : (
+              <label className="flex items-start gap-3 rounded-xl border-2 border-blue-300 bg-blue-50 p-4 cursor-pointer">
+                <input type="checkbox" checked={false}
+                  onChange={() => onOptInExames && onOptInExames()}
+                  className="mt-0.5 w-5 h-5 accent-blue-700 flex-shrink-0" />
+                <span className="text-sm font-bold text-blue-700 leading-snug">
+                  {"Sim, quero receber o pedido médico para esses exames."}
+                </span>
+              </label>
+            )
+          )}
 
         </div>
       </div>

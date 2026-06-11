@@ -8,6 +8,7 @@ import TriagemModal from './TriagemModal';
 import TriagemResultadoModal from './TriagemResultadoModal';
 import TermosModalShared from './TermosModal';
 import ResultCard from './ResultCard';
+import PlayButton from './PlayButton';
 import heroImg from '../assets/redfairy-hero.png';
 import fairyChatImg from '../assets/fairy-chat.png';
 import welcomeImg from '../assets/welcome.png';
@@ -529,13 +530,17 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
             </div>
             {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
             {showTC && <TermosModal onFechar={() => setShowTC(false)} />}
-            <style>{`@keyframes rfPlayConfirm { 0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0.55);} 50%{box-shadow:0 0 0 9px rgba(220,38,38,0);} } .rf-play-confirm{ animation: rfPlayConfirm 1.1s ease-in-out infinite; }`}</style>
-            <div className="flex flex-col items-end gap-1 pt-1">
-              <button onClick={handleCadastro} disabled={cadLoading} aria-label="Confirmar cadastro"
-                className="w-14 h-14 rounded-full bg-red-700 hover:bg-red-800 text-white flex items-center justify-center transition-colors shadow-md disabled:opacity-50 rf-play-confirm">
-                <span style={{ fontSize: '1.3rem', lineHeight: 1, marginLeft: 3 }}>{cadLoading ? '\u2026' : "\u25b6"}</span>
-              </button>
-              <span className="text-xs font-bold text-red-800 tracking-wide">{cadLoading ? '...' : 'CONFIRME'}</span>
+            <div className="flex justify-end pt-1">
+              <PlayButton
+                onClick={handleCadastro}
+                loading={cadLoading}
+                label="CONTINUAR"
+                ariaLabel="Confirmar cadastro"
+                circleClass="bg-red-700 hover:bg-red-800"
+                playColor="#2563eb"
+                labelColor="#991b1b"
+                ringColor="rgba(220,38,38,0.55)"
+              />
             </div>
             <button type="button" onClick={() => setShowReversaoAdesao(true)}
               className="w-full text-center text-gray-400 hover:text-gray-600 text-xs font-medium py-1">

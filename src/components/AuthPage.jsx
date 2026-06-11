@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
+import PlayButton from './PlayButton'
 
 
 
@@ -75,11 +76,18 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
   const [aceitoTC, setAceitoTC] = useState(false)
   const [showTC, setShowTC] = useState(false)
   const [tentouCpf, setTentouCpf] = useState(false)
+  const checkboxTCRef = useRef(null)
 
   const emailOk = emailConfirm && email === emailConfirm
   const emailErro = emailConfirm && email !== emailConfirm
   const senhaOk = senhaConfirm && senha === senhaConfirm
   const senhaErro = senhaConfirm && senha !== senhaConfirm
+
+  // Quando a senha confere, leva o foco direto ao checkbox dos Termos:
+  // o paciente só precisa de 1 toque para aceitar e acionar CONTINUAR.
+  useEffect(() => {
+    if (senhaOk) checkboxTCRef.current?.focus()
+  }, [senhaOk])
 
   // Validação de CPF (dígitos verificadores). Bloqueia avanço para a senha.
   const cpfDigits = cpf.replace(/\D/g, '')
@@ -440,17 +448,25 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
 
             {showTC && <TermosModal onFechar={() => setShowTC(false)} />}
             <label className="flex items-start gap-2 cursor-pointer">
-              <input type="checkbox" checked={aceitoTC} onChange={e => setAceitoTC(e.target.checked)} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
+              <input ref={checkboxTCRef} type="checkbox" checked={aceitoTC} onChange={e => setAceitoTC(e.target.checked)} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
               <span className="text-xs text-gray-600">{"Li e aceito os "}
                 <button type="button" onClick={() => setShowTC(true)} className="text-red-700 font-semibold hover:underline">
                   {"Termos e Condi\u00e7\u00f5es de Uso"}
                 </button>
               </span>
             </label>
-            <button onClick={handleCadastro} disabled={loading || !emailOk || !senhaOk || !aceitoTC}
-              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-              {loading ? 'Aguarde...' : 'Criar conta'}
-            </button>
+            <div className="flex justify-end pt-1">
+              <PlayButton
+                onClick={handleCadastro}
+                loading={loading}
+                disabled={!emailOk || !senhaOk || !aceitoTC}
+                label="CONTINUAR"
+                ariaLabel="Continuar"
+                playColor="#2563eb"
+                labelColor="#2563eb"
+                ringColor="rgba(37,99,235,0.55)"
+              />
+            </div>
             <button onClick={() => { setEtapa('cpf'); setErro('') }}
               className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors">
               {"\u2190 Voltar"}

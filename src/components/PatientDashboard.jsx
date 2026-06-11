@@ -36,6 +36,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [mostrarDespedida, setMostrarDespedida] = useState(false)
   const [resultado, setResultado] = useState(null)
   const [copiado, setCopiado] = useState(false)
+  // Pedido grátis: "um por paciente". Governa o card opt-in dos exames sugeridos.
+  const [jaTemPedidoGratis, setJaTemPedidoGratis] = useState(false)
+  const [pedidoExamesEnviado, setPedidoExamesEnviado] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showSobre, setShowSobre] = useState(false)
   const [showOBAModal, setShowOBAModal] = useState(false)
@@ -179,6 +182,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       .eq('user_id', session.user.id)
       .order('data_coleta', { ascending: false })
     setAvaliacoes(avals || [])
+    // Pedido grátis já usado? (primeiro pedido = valor_total 0). Se sim, o card
+    // opt-in de exames sugeridos na tela de resultado não aparece.
+    const { count: pedidosGratisCount } = await supabase
+      .from('pedidos_documento')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', prof.id)
+      .eq('valor_total', 0)
+    setJaTemPedidoGratis((pedidosGratisCount || 0) > 0)
     // Persistência da flag bariátrica: "uma vez bariátrico, sempre bariátrico".
     // O status era gravado só na linha de avaliacoes, nunca de volta no perfil —
     // por isso, ao relogar, a nova avaliação vinha SEM o bariátrico marcado e o
@@ -415,6 +426,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       })
       carregarDados()
     }
+    setPedidoExamesEnviado(false)
     setTela('resultado')
 
     if (inputs.bariatrica && res.encontrado) {
@@ -422,6 +434,48 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       setShowOBAModal(true)
     }
   }
+  // Card opt-in (tela de resultado): paciente pede o pedido GRATUITO para os
+  // exames sugeridos pelo motor. Mesmo padrão do pedido grátis de boas-vindas:
+  // grava em pedidos_documento (valor 0) e abre o WhatsApp do ADM com a lista.
+  async function handlePedirExamesSugeridos() {
+    if (!profile || !resultado) return
+    const exames = resultado.proximosExames || []
+    if (!exames.length) return
+    try {
+      await supabase.from('pedidos_documento').insert({
+        user_id: profile.id,
+        cpf: profile.cpf,
+        nome: profile.nome,
+        data_nascimento: profile.data_nascimento,
+        celular: profile.celular,
+        tipos_documento: exames,
+        texto_documentos: 'Pedido gratuito - exames sugeridos (1a avaliacao)',
+        valor_total: 0,
+        status: 'pendente_envio',
+      })
+      const dataNasc = profile.data_nascimento
+        ? new Date(profile.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR')
+        : '(nao informado)'
+      const celFormatado = (profile.celular || '').replace(/^(\d{2})(\d{4,5})(\d{4})$/, '($1) $2-$3') || '(nao informado)'
+      const mensagem =
+        `*RedFairy - Pedido GRATUITO de exames (sugeridos)*\n\n` +
+        `*Nome:* ${profile.nome}\n` +
+        `*CPF:* ${profile.cpf}\n` +
+        `*Data de nascimento:* ${dataNasc}\n` +
+        `*Celular:* ${celFormatado}\n\n` +
+        `*Exames solicitados:*\n` +
+        exames.map(e => `- ${e}`).join('\n') + `\n\n` +
+        `Solicito a emissao do pedido medico. Obrigado!`
+      const url = `https://wa.me/5571997110804?text=${encodeURIComponent(mensagem)}`
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setPedidoExamesEnviado(true)
+      setJaTemPedidoGratis(true)
+    } catch (err) {
+      console.error('Erro ao pedir exames sugeridos:', err)
+      alert('Erro ao registrar o pedido. Tente novamente.')
+    }
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut()
     onVoltar()
@@ -945,17 +999,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               <h3 className="text-sm font-semibold text-gray-700 mb-3">{"Hist\u00f3rico Cl\u00ednico"}</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { name: 'vegetariano', label: inputs.sexo === 'F' ? 'Vegetariana/Vegana' : 'Vegetariano/Vegano', sub: 'Dieta sem carne', color: 'green' },
+                  { name: 'vegetariano', label: inputs.sexo === 'F' ? 'Vegetariana' : 'Vegetariano', sub: 'Dieta sem carne', color: 'green' },
                   { name: 'perda', label: 'Hemorragia', sub: 'Inclui doa\u00e7\u00e3o de sangue, sangria, ou sangramento', color: 'red' },
                   { name: 'alcoolista', label: 'Alcoolista', sub: 'Uso cr\u00f4nico de \u00e1lcool', color: 'amber' },
                   { name: 'transfundido', label: inputs.sexo === 'F' ? 'Transfundida' : 'Transfundido', sub: 'Transfus\u00e3o de hem\u00e1cias', color: 'red' },
-                  { name: 'anemiaPrevia', label: 'Anemia Cr\u00f4nica / Pr\u00e9via', sub: 'Diagn\u00f3stico anterior de anemia', color: 'red' },
+                  { name: 'anemiaPrevia', label: 'Anemia Cr\u00f4nica', sub: 'Diagn\u00f3stico anterior de anemia', color: 'red' },
                   { name: 'sideropenia', label: 'Defici\u00eancia de Ferro', sub: 'Hist\u00f3rico de ferritina baixa', color: 'orange' },
-                  { name: 'sobrecargaFerro', label: 'Excesso de Ferro / Hemocromatose', sub: 'Hist\u00f3rico de ferritina alta', color: 'orange' },
+                  { name: 'sobrecargaFerro', label: 'Excesso de Ferro\nHemocromatose', sub: 'Hist\u00f3rico de ferritina alta', color: 'orange' },
                   { name: 'hbAlta', label: 'Hemoglobina Alta / Policitemia', sub: 'Hist\u00f3rico de Hb elevada ou sangrias', color: 'red' },
                   { name: 'doadorSangue', label: inputs.sexo === 'F' ? 'Doadora de Sangue' : 'Doador de Sangue', sub: 'Doa\u00e7\u00f5es frequentes', color: 'red' },
                   { name: 'celiaco', label: inputs.sexo === 'F' ? 'Cel\u00edaca' : 'Cel\u00edaco', sub: 'Doen\u00e7a cel\u00edaca \u2014 m\u00e1 absor\u00e7\u00e3o', color: 'yellow' },
-                  { name: 'g6pd', label: 'Defici\u00eancia de G-6-PD', sub: 'Favismo \u2014 risco de hem\u00f3lise', color: 'purple' },
+                  { name: 'g6pd', label: 'Defici\u00eancia de\nG-6-PD', sub: 'Favismo \u2014 risco de hem\u00f3lise', color: 'purple' },
                   ...(inputs.sexo === 'F' ? [
                     { name: 'hipermenorreia', label: 'Hipermenorreia', sub: 'Fluxo excessivo', color: 'pink' },
                     { name: 'gestante', label: 'Gestante', sub: 'Gravidez atual', color: 'pink' },
@@ -965,7 +1019,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     ${inputs[f.name] ? (CORES_CARD[f.color] || CORES_CARD.pink) : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
                     <input type="checkbox" name={f.name} checked={inputs[f.name]} onChange={handleChange} className="mt-0.5" />
                     <div>
-                      <p className="font-medium">{f.label}</p>
+                      <p className="font-medium" style={{ whiteSpace: 'pre-line' }}>{f.label}</p>
                       <p className="text-xs opacity-70">{f.sub}</p>
                     </div>
                   </label>
@@ -1003,7 +1057,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               )}
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">Medicamentos / Suplementos</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">Medicamentos | Suplementos</h3>
               <p className="text-xs text-gray-400 mb-2">{"Marque os que voc\u00ea usa ou usou recentemente"}</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
@@ -1016,7 +1070,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   { name: 'testosterona', label: 'Testosterona / Anabolizante', sub: 'Uso ex\u00f3geno \u2014 causa eritrocitose', color: 'orange' },
                   { name: 'tiroxina', label: 'Tiroxina / T4', sub: 'Tratamento tireoidiano', color: 'teal' },
                   { name: 'methotrexato', label: 'Metotrexato', sub: 'Antagonista do folato', color: 'purple' },
-                  { name: 'hivTratamento', label: 'Trat. HIV / ARV', sub: 'Antirretrovirais', color: 'purple' },
+                  { name: 'hivTratamento', label: 'Tratamento\nHIV', sub: 'Antirretrovirais', color: 'purple' },
                   { name: 'hidroxiureia', label: 'Hidroxiureia', sub: 'Pode causar macrocitose', color: 'purple' },
                   { name: 'anticonvulsivante', label: 'Anticonvulsivante', sub: 'Fenito\u00edna, VPA etc.', color: 'purple' },
                 ].map(f => (
@@ -1024,7 +1078,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     ${inputs[f.name] ? (CORES_CARD[f.color] || CORES_CARD.orange) : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
                     <input type="checkbox" name={f.name} checked={inputs[f.name]} onChange={handleChange} className="mt-0.5" />
                     <div>
-                      <p className="font-medium">{f.label}</p>
+                      <p className="font-medium" style={{ whiteSpace: 'pre-line' }}>{f.label}</p>
                       <p className="text-xs opacity-70">{f.sub}</p>
                     </div>
                   </label>
@@ -1039,7 +1093,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
         {tela === 'resultado' && resultado && (
           <div>
-            <ResultCard resultado={resultado} mostrarPainelMedico={false} onCopiar={() => {
+            <ResultCard resultado={resultado} mostrarPainelMedico={false}
+              mostrarOptInExames={!jaTemPedidoGratis}
+              optInExamesEnviado={pedidoExamesEnviado}
+              onOptInExames={handlePedirExamesSugeridos}
+              onCopiar={() => {
               const texto = formatarParaCopiar(resultado, resultado._inputs || inputs)
               navigator.clipboard.writeText(texto).then(() => {
                 setCopiado(true)
@@ -1049,10 +1107,29 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 alert('Erro ao copiar. Tente novamente.')
               })
             }} copiado={copiado} />
-            <button onClick={() => setTela('historico')}
-              className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-xl transition-colors">
-              {"Ver Hist\u00f3rico"}
-            </button>
+            {avaliacoes.length >= 2 ? (
+              <button onClick={() => setTela('historico')}
+                className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-xl transition-colors">
+                {"Ver Hist\u00f3rico"}
+              </button>
+            ) : (
+              <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center">
+                <p className="text-sm font-medium text-blue-700">
+                  {"Em futuras avalia\u00e7\u00f5es voc\u00ea ver\u00e1 o hist\u00f3rico"}
+                </p>
+              </div>
+            )}
+            <div className="mt-6 flex justify-center">
+              <PlayButton
+                onClick={onVoltar}
+                label={"VOLTAR AO IN\u00cdCIO"}
+                ariaLabel={"Voltar ao in\u00edcio"}
+                circleClass="bg-red-700 hover:bg-red-800"
+                playColor="#ffffff"
+                labelColor="#991b1b"
+                ringColor="rgba(220,38,38,0.55)"
+              />
+            </div>
           </div>
         )}
       </div>
