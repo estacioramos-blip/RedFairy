@@ -1663,7 +1663,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                           autoFocus
                           type="text"
                           value={crmMedicoNum}
-                          onChange={e => setCrmMedicoNum(String(e.target.value || '').replace(/\D/g, '').slice(0, 6))}
+                          onChange={e => setCrmMedicoNum(String(e.target.value || '').replace(/\D/g, '').replace(/^0+/, '').slice(0, 6))}
                           placeholder="Ex: 6302"
                           inputMode="numeric"
                           maxLength={6}
@@ -1686,11 +1686,10 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                         <p style={{ fontSize:'0.7rem', color:'#dc2626', fontWeight:700, margin:'6px 0 0', textAlign:'center' }}>{"UF inv\u00e1lida"}</p>
                       )}
                       <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 12px', textAlign:'center' }}>LOGIN NO SISTEMA</p>
-                      {crmMedicoValido && (
-                        <div style={{ display:'flex', justifyContent:'flex-end' }}>
-                          <PlayButton onClick={caixaAvancarCrm} ariaLabel="Continuar"
-                            circleClass="bg-red-500 hover:bg-red-600" playColor="#fff" ringColor="rgba(239,68,68,0.55)" />
-                        </div>
+                      {/* Sem botao aqui: assim que a UF (2 letras validas) e o numero ficam ok,
+                          o useEffect "seamless" avanca sozinho pra senha. Um botao aqui so piscaria. */}
+                      {caixaBuscando && (
+                        <p style={{ fontSize:'0.7rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:0, textAlign:'center' }}>{"verificando…"}</p>
                       )}
                     </>
                   )}

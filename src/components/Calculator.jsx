@@ -98,7 +98,7 @@ function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
   );
 }
 
-function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadastro', onVoltarParaConvite }) {
+function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login', onVoltarParaConvite }) {
   const [showReversaoAdesao, setShowReversaoAdesao] = useState(false);
   const [modo, setModo] = useState(modoInicial)
   // Lista oficial das 27 UFs (estados + DF). Usada para validar a UF do conselho.
@@ -256,8 +256,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'cadas
   }
 
   // Sanitizadores dos novos campos separados.
+  // CRM nunca comeca com zero -> remove zeros a esquerda (ao contrario do CPF).
   function sanitizarCrmNum(valor) {
-    return String(valor || '').replace(/\D/g, '').slice(0, 6);
+    return String(valor || '').replace(/\D/g, '').replace(/^0+/, '').slice(0, 6);
   }
   function sanitizarCrmUF(valor) {
     return String(valor || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2);
@@ -2100,7 +2101,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed inset-0 z-50" style={{ background: '#111827', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <AuthMedico
             sessaoExpirada={false}
-            modoInicial={typeof showAuthMedicoOverlay === 'string' ? showAuthMedicoOverlay : 'cadastro'}
+            modoInicial={typeof showAuthMedicoOverlay === 'string' ? showAuthMedicoOverlay : 'login'}
             onVoltarParaConvite={() => {
               setShowAuthMedicoOverlay(false);
               setShowConviteAfiliado(true);
