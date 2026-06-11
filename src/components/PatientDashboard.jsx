@@ -7,8 +7,8 @@ import PlayButton from './PlayButton'
 import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
 import HistoricoChartModal from './HistoricoChartModal'
-import heroImg from '../assets/redfairy-hero.png'
-import telefonista3Img from '../assets/telefonista3.png'
+import heroImg from '../assets/redfairy-hero.jpg'
+import telefonista3Img from '../assets/telefonista3.jpg'
 import logo from '../assets/logo.png'
 
 // Classes Tailwind por cor dos cards de checkbox (paridade com o CheckboxCard do

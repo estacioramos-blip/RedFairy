@@ -9,12 +9,12 @@ import TriagemResultadoModal from './TriagemResultadoModal';
 import TermosModalShared from './TermosModal';
 import ResultCard from './ResultCard';
 import PlayButton from './PlayButton';
-import heroImg from '../assets/redfairy-hero.png';
-import fairyChatImg from '../assets/fairy-chat.png';
-import welcomeImg from '../assets/welcome.png';
-import chatphone2Img from '../assets/chatphone2.png';
-import telefonista2Img from '../assets/telefonista2.png';
-import telefonista3Img from '../assets/telefonista3.png';
+import heroImg from '../assets/redfairy-hero.jpg';
+import fairyChatImg from '../assets/fairy-chat.jpg';
+import welcomeImg from '../assets/welcome.jpg';
+import chatphone2Img from '../assets/chatphone2.jpg';
+import telefonista2Img from '../assets/telefonista2.jpg';
+import telefonista3Img from '../assets/telefonista3.jpg';
 import logo from '../assets/logo.png';
 
 const IconPaciente = () => (
