@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import logo from '../assets/logo.png'
+import PlayButton from './PlayButton'
 import redcell1 from '../assets/redcell1.png'
 import laiseImg from '../assets/LAISE H.png'
 import wing1 from '../assets/wing1.png'
@@ -19,6 +20,8 @@ import { formatarBRL, VALOR_ANUIDADE_PADRAO } from '../lib/pix'
 
 const LANDING_CSS = `
   .rf-cx-input::placeholder { color:#9ca3af; opacity:1; font-weight:600; letter-spacing:0.5px; }
+  /* placeholder da SENHA um ponto menor (texto mais longo nao alarga o campo) */
+  .rf-cx-senha::placeholder { font-size:0.85rem; letter-spacing:0.3px; }
   /* Mockup demo: mascaras de Ferritina e Saturacao em azul claro */
   #rf-ferr2::placeholder, #rf-sat2::placeholder { color:#38BDF8; opacity:1; }
 
@@ -805,7 +808,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [caixaModo, setCaixaModo] = useState(null);
   const [caixaBuscando, setCaixaBuscando] = useState(false);
   const [caixaErro, setCaixaErro] = useState('');
-  const [caixaAceitoTC, setCaixaAceitoTC] = useState(false);
+  // Termos JA vem aceito por padrao (o paciente so toca no botao; ler o texto e opcional).
+  const [caixaAceitoTC, setCaixaAceitoTC] = useState(true);
   const refCaixaSenha = useRef(null);
   const caixaSenhaValida = (caixaSenha || '').length >= 6;
   useEffect(() => {
@@ -922,7 +926,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [cpfPacErro, setCpfPacErro] = useState('');
   const [cpfPacTw, setCpfPacTw] = useState('');
   const [cpfPacSemCpf, setCpfPacSemCpf] = useState(false);
-  const [cpfPacAceitoTC, setCpfPacAceitoTC] = useState(false);
+  const [cpfPacAceitoTC, setCpfPacAceitoTC] = useState(true);
   function formatarCPFLand(valor) {
     const d = (valor || '').replace(/\D/g, '').slice(0, 11);
     if (d.length <= 3) return d;
@@ -947,6 +951,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const cpfPacValido = cpfDigitosValidos(cpfPacDigitos);
   const cpfPacInvalido = cpfPacDigitos.length === 11 && !cpfPacValido;
   const cpfPacSenhaValida = (cpfPacSenha || '').length >= 6;
+
   useEffect(() => {
     if (fluxoEtapa !== 'paciente') return;
     const full = cpfPacPasso === 'cpf'
@@ -971,7 +976,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     setCpfPacBuscando(false);
     setCpfPacModo(existe ? 'login' : 'cadastro');
     setCpfPacSenha('');
-    setCpfPacAceitoTC(false);
+    setCpfPacAceitoTC(true); // mantem o consentimento pre-marcado ao chegar na senha
     setCpfPacPasso('senha');
   }
   async function cpfPacConcluir() {
@@ -1681,12 +1686,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                         <p style={{ fontSize:'0.7rem', color:'#dc2626', fontWeight:700, margin:'6px 0 0', textAlign:'center' }}>{"UF inv\u00e1lida"}</p>
                       )}
                       <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 12px', textAlign:'center' }}>LOGIN NO SISTEMA</p>
-                      <button
-                        onClick={caixaAvancarCrm}
-                        disabled={!crmMedicoValido}
-                        style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#ef4444', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: crmMedicoValido ? 'pointer' : 'not-allowed', opacity: crmMedicoValido ? 1 : 0.4 }}>
-                        {"CONTINUAR \u2192"}
-                      </button>
+                      {crmMedicoValido && (
+                        <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                          <PlayButton onClick={caixaAvancarCrm} ariaLabel="Continuar"
+                            circleClass="bg-red-500 hover:bg-red-600" playColor="#fff" ringColor="rgba(239,68,68,0.55)" />
+                        </div>
+                      )}
                     </>
                   )}
 
@@ -1700,8 +1705,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                           value={caixaSenha}
                           onChange={e => setCaixaSenha(e.target.value)}
                           onKeyDown={e => { if (e.key === 'Enter' && caixaSenhaValida) caixaConcluir(); }}
-                          placeholder="SEIS CARACTERES"
-                          className="rf-cx-input"
+                          placeholder={" MÍNIMO SEIS CARACTERES"}
+                          className="rf-cx-input rf-cx-senha"
                           style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 38px 10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center' }}
                         />
                         <button type="button" onClick={() => setCaixaShowSenha(s => !s)}
@@ -1721,7 +1726,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                             type="checkbox"
                             checked={caixaAceitoTC}
                             onChange={e => { setCaixaAceitoTC(e.target.checked); if (e.target.checked) setTimeout(() => refCaixaSenha.current && refCaixaSenha.current.focus(), 0); }}
-                            style={{ width:'14px', height:'14px', cursor:'pointer', accentColor:'#ef4444', marginTop:'2px', flexShrink:0 }} />
+                            style={{ width:'16px', height:'16px', cursor:'pointer', accentColor:'#2563eb', marginTop:'2px', flexShrink:0 }} />
                           <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', letterSpacing:'0.3px', lineHeight:1.3 }}>
                             {"Li e aceito os "}
                             <a href="#" onClick={e => { e.preventDefault(); setTcAberto('medico'); }}
@@ -1742,12 +1747,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                           )}
                         </div>
                       )}
-                      <button
-                        onClick={caixaConcluir}
-                        disabled={!caixaSenhaValida}
-                        style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#ef4444', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: caixaSenhaValida ? 'pointer' : 'not-allowed', opacity: caixaSenhaValida ? 1 : 0.4 }}>
-                        {"CONTINUAR \u2192"}
-                      </button>
+                      {caixaSenhaValida && (
+                        <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                          <PlayButton onClick={caixaConcluir} loading={caixaBuscando} ariaLabel="Continuar"
+                            circleClass="bg-red-500 hover:bg-red-600" playColor="#fff" ringColor="rgba(239,68,68,0.55)" />
+                        </div>
+                      )}
                       <button onClick={() => setCaixaPasso('crm')}
                         style={{ width:'100%', background:'none', border:'none', color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, letterSpacing:'1px', cursor:'pointer', marginTop:'8px' }}>
                         {"\u2190 corrigir CRM"}
@@ -1798,18 +1803,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                       )}
 
                       {cpfPacSemCpf ? (
-                        <button
-                          onClick={cpfPacAlternativo}
-                          style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#1f2937', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor:'pointer' }}>
-                          {"CONTINUAR SEM CPF \u2192"}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={cpfPacAvancar}
-                          disabled={!cpfPacValido || cpfPacBuscando}
-                          style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#1f2937', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: cpfPacValido && !cpfPacBuscando ? 'pointer' : 'not-allowed', opacity: cpfPacValido && !cpfPacBuscando ? 1 : 0.4 }}>
-                          {cpfPacBuscando ? "VERIFICANDO..." : "CONTINUAR \u2192"}
-                        </button>
+                        <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                          <PlayButton onClick={cpfPacAlternativo} ariaLabel="Continuar sem CPF" />
+                        </div>
+                      ) : cpfPacValido && (
+                        <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                          <PlayButton onClick={cpfPacAvancar} loading={cpfPacBuscando} ariaLabel="Continuar" />
+                        </div>
                       )}
                     </>
                   )}
@@ -1823,8 +1823,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                           value={cpfPacSenha}
                           onChange={e => { setCpfPacSenha(e.target.value); setCpfPacErro(''); }}
                           onKeyDown={e => { if (e.key === 'Enter' && cpfPacSenhaValida) cpfPacConcluir(); }}
-                          placeholder="SEIS CARACTERES"
-                          className="rf-cx-input"
+                          placeholder={" MÍNIMO SEIS CARACTERES"}
+                          className="rf-cx-input rf-cx-senha"
                           style={{ width:'100%', border:'2px solid #facc15', background:'#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 38px 10px 12px', fontSize:'0.95rem', outline:'none', textAlign:'center' }}
                         />
                         <button type="button" onClick={() => setCpfPacShowSenha(s => !s)}
@@ -1845,7 +1845,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                             type="checkbox"
                             checked={cpfPacAceitoTC}
                             onChange={e => setCpfPacAceitoTC(e.target.checked)}
-                            style={{ width:'14px', height:'14px', cursor:'pointer', accentColor:'#1f2937', marginTop:'2px', flexShrink:0 }} />
+                            style={{ width:'16px', height:'16px', cursor:'pointer', accentColor:'#2563eb', marginTop:'2px', flexShrink:0 }} />
                           <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', letterSpacing:'0.3px', lineHeight:1.3 }}>
                             {"Li e aceito os "}
                             <a href="#" onClick={e => { e.preventDefault(); setTcAberto('paciente'); }}
@@ -1867,12 +1867,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                           )}
                         </div>
                       )}
-                      <button
-                        onClick={cpfPacConcluir}
-                        disabled={!cpfPacSenhaValida || cpfPacBuscando}
-                        style={{ width:'100%', height:42, borderRadius:'8px', border:'none', background:'#1f2937', color:'#fff', fontWeight:800, letterSpacing:'1px', cursor: cpfPacSenhaValida && !cpfPacBuscando ? 'pointer' : 'not-allowed', opacity: cpfPacSenhaValida && !cpfPacBuscando ? 1 : 0.4 }}>
-                        {cpfPacBuscando ? (cpfPacModo === 'login' ? "ENTRANDO..." : "CRIANDO...") : "CONTINUAR \u2192"}
-                      </button>
+                      {cpfPacSenhaValida && (
+                        <div style={{ display:'flex', justifyContent:'flex-end' }}>
+                          <PlayButton onClick={cpfPacConcluir} loading={cpfPacBuscando} ariaLabel="Continuar" />
+                        </div>
+                      )}
                       <button onClick={cpfPacVoltarCpf}
                         style={{ width:'100%', background:'none', border:'none', color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, letterSpacing:'1px', cursor:'pointer', marginTop:'8px' }}>
                         {"\u2190 corrigir CPF"}

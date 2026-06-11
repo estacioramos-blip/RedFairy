@@ -48,8 +48,8 @@ export default function App() {
     }
   }, [])
 
-  // logoff automatico por inatividade
-  function fazerLogoffMedico() {
+  // Limpa SO as credenciais do medico (localStorage). Nao navega.
+  function limparAuthMedico() {
     try {
       localStorage.removeItem('medico_crm')
       localStorage.removeItem('medico_nome')
@@ -57,10 +57,39 @@ export default function App() {
       localStorage.removeItem('medico_is_admin')
       localStorage.removeItem('medico_token')
     } catch (e) {}
+  }
+
+  // Limpa SO a sessao do paciente (login local via RPC + fallback Supabase). Nao navega.
+  function limparAuthPaciente() {
+    try { localStorage.removeItem('paciente_id') } catch (e) {}
+    try { supabase.auth.signOut() } catch (e) {}
+    setSession(null)
+  }
+
+  // logoff automatico por inatividade
+  function fazerLogoffMedico() {
+    limparAuthMedico()
     setShowInatividade(false)
     setLandingKey(k => k + 1)
     setModo('home')
   }
+
+  // EXCLUSAO MUTUA medico x paciente: ninguem pode estar logado nos dois papeis.
+  // Ao ENTRAR num fluxo de um papel, derruba imediatamente a sessao do outro.
+  // (paciente logado -> Modo Medico desloga o paciente, e vice-versa).
+  useEffect(() => {
+    const fluxoMedico = modo === 'calculadora' || modo === 'admin'
+    const fluxoPaciente = modo === 'paciente' || modo === 'triagem-direta' || modo === 'login'
+    if (fluxoMedico) {
+      let pacLogado = false
+      try { pacLogado = !!localStorage.getItem('paciente_id') } catch (e) {}
+      if (pacLogado || session) limparAuthPaciente()
+    } else if (fluxoPaciente) {
+      let medLogado = false
+      try { medLogado = !!localStorage.getItem('medico_crm') } catch (e) {}
+      if (medLogado) limparAuthMedico()
+    }
+  }, [modo])
 
   useEffect(() => {
     const naLanding = modo === 'home'
