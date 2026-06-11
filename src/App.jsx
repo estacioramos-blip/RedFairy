@@ -49,6 +49,7 @@ export default function App() {
   }, [])
 
   // Limpa SO as credenciais do medico (localStorage). Nao navega.
+  // Inclui rf_crm_prefill: senao o CRM vaza pro fluxo do paciente apos a troca.
   function limparAuthMedico() {
     try {
       localStorage.removeItem('medico_crm')
@@ -56,12 +57,21 @@ export default function App() {
       localStorage.removeItem('medico_login_at')
       localStorage.removeItem('medico_is_admin')
       localStorage.removeItem('medico_token')
+      localStorage.removeItem('rf_crm_prefill')
     } catch (e) {}
   }
 
   // Limpa SO a sessao do paciente (login local via RPC + fallback Supabase). Nao navega.
+  // Apaga TODAS as chaves paciente_* (mesma lista do handleSairDespedida) — senao
+  // sobra estado residual que confunde o fluxo (despedida indevida, dados trocados).
   function limparAuthPaciente() {
-    try { localStorage.removeItem('paciente_id') } catch (e) {}
+    try {
+      localStorage.removeItem('paciente_id')
+      localStorage.removeItem('paciente_token')
+      localStorage.removeItem('paciente_cpf')
+      localStorage.removeItem('paciente_nome')
+      localStorage.removeItem('paciente_login_at')
+    } catch (e) {}
     try { supabase.auth.signOut() } catch (e) {}
     setSession(null)
   }

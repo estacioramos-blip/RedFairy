@@ -559,6 +559,13 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     return idade
   }
 
+  // Pontos REAIS de historico = avaliacoes ja aprofundadas (com ferritina), por data
+  // distinta. O espelho da triagem de entrada (ferritina=null) NAO conta — senao a
+  // 1a avaliacao real apareceria como 2 pontos e mostraria "Ver Historico" cedo demais.
+  const pontosHistorico = new Set(
+    (avaliacoes || []).filter(a => a.ferritina != null).map(a => a.data_coleta)
+  ).size
+
   const colorBadge = {
     green: 'bg-green-100 text-green-800',
     yellow: 'bg-yellow-100 text-yellow-800',
@@ -774,7 +781,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               setTela('historico');
               handleVerGrafico();
             }}
-            className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${avaliacoes.length >= 2 ? 'rf-historico-pulse' : ''} ${tela === 'historico' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
+            className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${pontosHistorico >= 2 ? 'rf-historico-pulse' : ''} ${tela === 'historico' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
             <span className="text-sm font-medium">{"Hist\u00f3rico"}</span>
             <span className="text-[10px] tracking-widest opacity-80 leading-none mt-0.5">
               {"EVOLU\u00c7\u00c3O | GR\u00c1FICO"}
@@ -1107,7 +1114,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 alert('Erro ao copiar. Tente novamente.')
               })
             }} copiado={copiado} />
-            {avaliacoes.length >= 2 ? (
+            {pontosHistorico >= 2 ? (
               <button onClick={() => setTela('historico')}
                 className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-xl transition-colors">
                 {"Ver Hist\u00f3rico"}
