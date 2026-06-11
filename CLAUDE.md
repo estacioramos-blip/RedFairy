@@ -42,7 +42,7 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
 
 ### Engine (decisionEngine.js)
 - `avaliarPaciente(inputs)` é a função central. Cruza os dados com `maleMatrix`/`femaleMatrix`.
-- Retorna objeto com: `diagnostico`, `recomendacao`, `comentarios`, `proximosExames`, `proximosExamesLab`, `proximosExamesImagem`, `fraseData`, `g6pdAlerta`, `achadosParalelos`, etc.
+- Retorna objeto com: `diagnostico`, `recomendacao`, `comentarios`, `proximosExames`, `proximosExamesLab`, `proximosExamesImagem`, `proximosExamesEndoscopia`, `proximosExamesBioimagem`, `fraseData`, `g6pdAlerta`, `achadosParalelos`, etc.
 - `triagemEritron()` = avaliação parcial sem Ferritina/Saturação (pede esses 2 exames).
 - **Regras pós-matching já implementadas:**
   - Sat. Transferrina > 50 **E** Ferritina > 1000 → adiciona "RESSONÂNCIA NUCLEAR MAGNÉTICA DO ABDOME SUPERIOR COM PROTOCOLO DE FERRO"
@@ -57,6 +57,7 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
     5. ENDOSCOPIA DIGESTIVA ALTA
     6. RESSONÂNCIA NUCLEAR MAGNÉTICA COM PROTOCOLO DE FERRO
     7. DENSITOMETRIA ÓSSEA
+  - **Sub-split do grupo IMAGEM** (decisionEngine.js): `proximosExamesImagem` é dividido em `proximosExamesEndoscopia` (`COLONOSCOP|ENDOSCOP`) e `proximosExamesBioimagem` (o resto: US/RESSON/RNM/DENSITOMETR) — porque endoscopia e bioimagem são feitas em serviços diferentes (geram pedidos separados). `proximosExamesImagem` continua sendo a união dos dois (compatibilidade). Por ora **só dados** — a UI/geração de documento ainda junta tudo.
   - `formatarParaCopiar` ainda usa o `proximosExames` original (não quebrar isso).
 
 ### Supabase

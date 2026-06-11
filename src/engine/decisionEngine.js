@@ -417,6 +417,15 @@ export function avaliarPaciente(inputs) {
   const proximosExamesImagem = proximosExames.filter(e => PADROES_IMAGEM.test(String(e)));
   const proximosExamesLab = proximosExames.filter(e => !PADROES_IMAGEM.test(String(e)));
 
+  // ── Sub-split do grupo IMAGEM: ENDOSCOPIA vs BIOIMAGEM ──────────────────
+  // Exames endoscopicos (colonoscopia / endoscopia digestiva alta) sao feitos em
+  // servico de endoscopia; os de bioimagem (ultrassonografias, ressonancia, densito-
+  // metria) num servico de imagem/radiologia. Por isso geram pedidos separados.
+  // proximosExamesImagem fica preservado (uniao dos dois) por compatibilidade.
+  const PADROES_ENDOSCOPIA = /COLONOSCOP|ENDOSCOP/i;
+  const proximosExamesEndoscopia = proximosExamesImagem.filter(e => PADROES_ENDOSCOPIA.test(String(e)));
+  const proximosExamesBioimagem = proximosExamesImagem.filter(e => !PADROES_ENDOSCOPIA.test(String(e)));
+
   return {
     encontrado: true,
     id: resultado.id,
@@ -428,6 +437,8 @@ export function avaliarPaciente(inputs) {
     proximosExames,
     proximosExamesLab,
     proximosExamesImagem,
+    proximosExamesEndoscopia,
+    proximosExamesBioimagem,
     fraseData,
     fraseHipermenorreia: fraseHiper,
     g6pdAlerta,
@@ -532,6 +543,8 @@ export function triagemEritron(inputs) {
       proximosExames: [],
       proximosExamesLab: [],
       proximosExamesImagem: [],
+      proximosExamesEndoscopia: [],
+      proximosExamesBioimagem: [],
       comentarios: [],
       achadosParalelos: [],
       g6pdAlerta: null,
@@ -588,6 +601,8 @@ export function triagemEritron(inputs) {
     proximosExames: ['FERRITINA', 'SATURAÇÃO DA TRANSFERRINA'],
     proximosExamesLab: ['FERRITINA', 'SATURAÇÃO DA TRANSFERRINA'],
     proximosExamesImagem: [],
+    proximosExamesEndoscopia: [],
+    proximosExamesBioimagem: [],
     comentarios: [],
     achadosParalelos: [],
     g6pdAlerta: null,
