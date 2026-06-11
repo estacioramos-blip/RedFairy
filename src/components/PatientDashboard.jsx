@@ -171,7 +171,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         setShowBoasVindas(true)
       }
     }
+    // Captura ANTES de remover: paciente entrou pelo botão "Sou Bariátrico" (hero).
+    const flagBariatricaOBA = (() => { try { return localStorage.getItem('rf_flag') === 'bariatrica' } catch (e) { return false } })()
     localStorage.removeItem('rf_flag')
+
+    // Persiste a marca bariátrica NO PERFIL já na entrada pelo flag — antes do gate
+    // do OBA. Assim o paciente_precisa_oba (e o "uma vez bariátrico, sempre
+    // bariátrico") reconhecem o bariátrico mesmo que a triagem ainda não tenha sido
+    // salva. Antes, o rf_flag era removido aqui sem nunca marcar o paciente, então
+    // o bariátrico novo seguia como paciente comum e o OBA não disparava.
+    if (flagBariatricaOBA && !prof.bariatrica) {
+      try { await supabase.from('profiles').update({ bariatrica: true }).eq('id', prof.id) } catch (e) {}
+      prof.bariatrica = true
+      setProfile(p => (p ? { ...p, bariatrica: true } : p))
+    }
+
     // Bariátrico com perfil completo e boas-vindas já vistas (login de retorno):
     // abre a anamnese OBA direto se ainda não preencheu.
     if (prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista !== false) {
@@ -705,7 +719,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 : null
           }
           onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false) }}
-          onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setPrecisaOBA(false) }}
+          onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setPrecisaOBA(false); if (onVoltar) onVoltar() }}
         />
       )}
       {showSobre && (

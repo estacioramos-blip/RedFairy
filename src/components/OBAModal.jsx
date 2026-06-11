@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { classificarValor } from '../engine/obaCutoffs'
 import { avaliarOBA, classificarEstadoClinico, ESTADOS_CLINICOS } from '../engine/obaEngine'
@@ -30,11 +30,13 @@ const ESTADO_UI = {
 }
 
 // Cores das caixas de alerta / títulos de módulo por gravidade (níveis do motor).
+// Cores por gravidade (acordado com o Estácio):
+//   GRAVE = vermelho · MODERADO = laranja · ATENÇÃO (leve) = VINHO · SAUDÁVEL (normal) = verde
 const NIVEL_UI = {
   grave:    { fundo: '#FEF2F2', borda: '#FCA5A5', texto: '#991B1B', rotulo: 'GRAVE' },
   moderado: { fundo: '#FFF7ED', borda: '#FED7AA', texto: '#9A3412', rotulo: 'MODERADO' },
-  leve:     { fundo: '#FEFCE8', borda: '#FDE68A', texto: '#92400E', rotulo: "ATENÇÃO" },
-  normal:   { fundo: '#F0FDF4', borda: '#BBF7D0', texto: '#166534', rotulo: 'NORMAL' },
+  leve:     { fundo: '#FBEAEA', borda: '#E3B5B5', texto: '#7B1E1E', rotulo: "ATENÇÃO" },
+  normal:   { fundo: '#F0FDF4', borda: '#BBF7D0', texto: '#166534', rotulo: "SAUDÁVEL" },
 }
 
 const TIPOS_CIRURGIA = ['Y DE ROUX', 'FOBI-CAPELLA', 'SLEEVE', "BANDA G\u00c1STRICA AJUST\u00c1VEL", "N\u00c3O SEI"]
@@ -254,6 +256,40 @@ function calcDias(dataStr) {
   return diff >= 0 ? diff : null
 }
 
+// Escolhe o Valor de Referência conforme o sexo. Aceita formatos como
+// "H: 24–300 / F: 25–150", "M ≥40 / F ≥50", "H: <40 / F: <32". Sem separador
+// de gênero ("/"), devolve o ref inteiro. Remove o prefixo H/M/F do lado escolhido.
+function refPorSexo(ref, isFem) {
+  if (!ref) return ''
+  const partes = String(ref).split('/')
+  if (partes.length === 2 && /[HMF]/i.test(partes[0])) {
+    const escolhido = (isFem ? partes[1] : partes[0]).trim()
+    return escolhido.replace(/^[HMF]\s*:?\s*/i, '').trim()
+  }
+  return ref
+}
+
+// Categoriza uma recomendação (string do engine) num dos grupos de RECOMENDAÇÕES.
+// Heurística por palavra-chave; default = laboratório. Ordem importa.
+function categoriaRecomendacao(item) {
+  const s = String(item).toUpperCase()
+  // SIBO + MAPA agora caem juntos em "OUTROS RECURSOS DE INVESTIGAÇÃO DIAGNÓSTICA".
+  if (/PRESS[ÃA]O ARTERIAL|MAPA \||SIBO|GORDURA FECAL|INTOLER[ÂA]NCIA [ÀA] LACTOSE|CALPROTECTINA|INDICAN|ESTEATORREIA|SUPERCRESCIMENTO/.test(s)) return 'outros'
+  if (/COLONOSCOP|ENDOSCOPIA DIGESTIVA/.test(s)) return 'endoscopia'
+  if (/ULTRASSON|ECOGRAFIA|DENSITOMETR|TOMOGRAFIA|RESSON|DOPPLER/.test(s)) return 'bioimagem'
+  if (/^AVALIA[ÇC][ÃA]O|PR[ÉE]-NATAL|POLISSONOGRAFIA/.test(s)) return 'avaliacao'
+  return 'laboratorio'
+}
+
+// Ordem + estilo dos cards de RECOMENDAÇÕES.
+const CATS_RECOMENDACAO = [
+  { key:'laboratorio', titulo:'EXAMES LABORATORIAIS',                          fundo:'#F0F9FF', borda:'#BAE6FD', texto:'#0369A1' },
+  { key:'avaliacao',   titulo:'AVALIAÇÕES MÉDICAS',                            fundo:'#F5F3FF', borda:'#DDD6FE', texto:'#6D28D9' },
+  { key:'bioimagem',   titulo:'EXAMES DE BIOIMAGEM',                           fundo:'#ECFEFF', borda:'#A5F3FC', texto:'#155E75' },
+  { key:'endoscopia',  titulo:'EXAMES ENDOSCÓPICOS',                           fundo:'#FFF7ED', borda:'#FED7AA', texto:'#9A3412' },
+  { key:'outros',      titulo:'OUTROS RECURSOS DE INVESTIGAÇÃO DIAGNÓSTICA',   fundo:'#FEFCE8', borda:'#FDE68A', texto:'#92400E' },
+]
+
 // BUG #3 corrigido: removidas as chaves duplicadas vitamina_d e triglicerides
 // (cada uma aparecia 2x). Mantida apenas uma versao de cada.
 const LIMITES_OBA = {
@@ -300,6 +336,10 @@ const LIMITES_OBA = {
 }
 
 const inp = { width:'100%', border:'1.5px solid #E5E7EB', borderRadius:8, padding:'0.65rem 0.9rem', fontSize:'0.92rem', outline:'none', fontFamily:'inherit', boxSizing:'border-box' }
+// Variante AMARELA (campos do fluxo seamless).
+const inpA = { ...inp, background:'#FEFCE8', border:'1.5px solid #FACC15' }
+// Impede a rodinha do mouse de alterar o valor dos inputs number (perde o foco).
+const noWheel = (e) => { e.currentTarget.blur() }
 const btnP = { width:'100%', background:'#7B1E1E', color:'white', border:'none', borderRadius:10, padding:'0.9rem', fontSize:'1rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit', marginTop:'1.5rem' }
 const btnS = { width:'100%', background:'#F3F4F6', color:'#374151', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginTop:'0.5rem' }
 const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'1.5rem 1rem', boxSizing:'border-box' }
@@ -340,6 +380,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [valorPrescricao, setValorPrescricao] = useState(null)  // config.valor_documento_medico
   const [querPrescricao, setQuerPrescricao] = useState(false)
   const [querResultado, setQuerResultado] = useState(false)
+  // Popup da PESQUISA (tratamento simbiótico p/ obstipação/fibromialgia).
+  const [showPesquisa, setShowPesquisa] = useState(false)
+  const [pesquisaAceita, setPesquisaAceita] = useState(false)
+  const [pesquisaEnviado, setPesquisaEnviado] = useState(false)
 
   const [form, setForm] = useState(salvo?.form || {
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
@@ -499,6 +543,79 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
   const sf = (f, v) => setForm(p => ({ ...p, [f]: v }))
   const tog = (arr, v) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
+
+  // ── SEAMLESS — saltos de foco automáticos, SEM rolar a tela (preventScroll) ──
+  // Cada campo amarelo, ao ganhar foco, agenda o salto pro próximo após 2,5s;
+  // cada tecla reinicia o timer (agendarSalto). agendarSalto(null) só cancela.
+  const refDia = useRef(null), refMes = useRef(null), refAno = useRef(null)
+  const refPesoAntes = useRef(null), refPesoMin = useRef(null), refPesoAtual = useRef(null), refAltura = useRef(null)
+  const refGestacoes = useRef(null)
+  const saltoTimer = useRef(null)
+  const jaSaltouPeso = useRef(false)
+  const focar = (r) => { try { r?.current?.focus({ preventScroll: true }) } catch (e) {} }
+  const agendarSalto = (r, ms = 2500) => {
+    if (saltoTimer.current) clearTimeout(saltoTimer.current)
+    if (!r) return
+    saltoTimer.current = setTimeout(() => focar(r), ms)
+  }
+
+  // Foca o DIA da cirurgia ao montar a anamnese (e limpa o timer ao desmontar).
+  useEffect(() => {
+    let t = null
+    if (etapa === 'anamnese') t = setTimeout(() => focar(refDia), 300)
+    return () => { if (t) clearTimeout(t); if (saltoTimer.current) clearTimeout(saltoTimer.current) }
+  }, [])
+
+  // Marcados TIPO + INDICAÇÃO da cirurgia → salta (uma vez) pro PESO ANTES.
+  useEffect(() => {
+    if (form.tipo_cirurgia && form.indicacao_cirurgia && !jaSaltouPeso.current) {
+      jaSaltouPeso.current = true
+      focar(refPesoAntes)
+    }
+  }, [form.tipo_cirurgia, form.indicacao_cirurgia])
+
+  // ── PESQUISA (obstipação/fibromialgia) — gatilho e envio ──────────────────
+  // Abre quando: OBSTIPAÇÃO CRÔNICA no intestinal, OU "TENHO FIBROMIALGIA
+  // DIAGNOSTICADA", OU ≥5 dos DEMAIS sintomas fibromiálgicos. Oferecida 1x.
+  const pesquisaOferecida = useRef(false)
+  const fibroDemais = (form.status_fibromialgia || []).filter(o => o !== "TENHO FIBROMIALGIA DIAGNOSTICADA").length
+  const gatilhoPesquisa = (
+    (form.status_intestinal || '').indexOf('OBSTIPA') === 0 ||
+    (form.status_fibromialgia || []).includes("TENHO FIBROMIALGIA DIAGNOSTICADA") ||
+    fibroDemais >= 5
+  )
+  useEffect(() => {
+    if (gatilhoPesquisa && !pesquisaOferecida.current) {
+      pesquisaOferecida.current = true
+      setShowPesquisa(true)
+    }
+  }, [gatilhoPesquisa])
+
+  async function enviarPesquisaTelegram() {
+    let celular = ''
+    try {
+      const cpfLimpo = String(cpf || '').replace(/\D/g, '')
+      if (cpfLimpo.length === 11) {
+        const { data } = await supabase.from('profiles').select('celular').eq('cpf', cpfLimpo).maybeSingle()
+        celular = data?.celular || ''
+      }
+    } catch (e) {}
+    const agora = new Date().toLocaleString('pt-BR')
+    const msg = "🔬 Paciente para a PESQUISA (obstipação/fibromialgia):\n" +
+      `Nome: ${nome || '—'}\n` +
+      `Telefone: ${celular || '(não informado)'}\n` +
+      `E-mail: (não informado)\n` +
+      `Data|Hora: ${agora}`
+    try { await supabase.rpc('tg_enviar', { p_msg: msg }) } catch (e) {}
+  }
+
+  function aceitarPesquisa(checked) {
+    setPesquisaAceita(checked)
+    if (checked && !pesquisaEnviado) {
+      enviarPesquisaTelegram()
+      setPesquisaEnviado(true)
+    }
+  }
 
   function calcMesesPos() {
     const ano = parseInt(form.cirurgia_ano)
@@ -744,12 +861,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     try { window.open(`https://wa.me/${WHATS_PLATAFORMA}?text=${encodeURIComponent(msg)}`, '_blank') } catch (e) {}
   }
 
-  const Header = ({ sub }) => (
+  // Subt\u00edtulo padr\u00e3o do paciente (NOME \u00b7 IDADE \u00b7 SEXO) \u2014 usado nos headers de
+  // resultado (relat\u00f3rio e conclus\u00e3o).
+  const subPaciente = [nome, idadeNum ? `${idadeNum} anos` : null, isFem ? 'Feminino' : 'Masculino'].filter(Boolean).join(' \u00b7 ')
+  const TITULO_RESULTADO = "RESULTADO DA SUA ANAMNESE M\u00c9DICA ASSISTIDA POR IA"
+
+  const Header = ({ sub, titulo }) => (
     <div style={HD}>
       <button onClick={onFechar} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:8, color:'white', fontSize:'0.8rem', fontWeight:700, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
       <img src={logo} alt="OBA" style={{ width:40, height:40, objectFit:'contain', filter:'brightness(10)' }} />
       <div>
-        <h2 style={{ color:'white', fontSize:'1.2rem', fontWeight:800, margin:0 }}>{saudacao} ao Projeto OBA!</h2>
+        <h2 style={{ color:'white', fontSize: titulo ? '1.02rem' : '1.2rem', fontWeight:800, margin:0, lineHeight:1.25 }}>{titulo || `${saudacao} ao Projeto OBA!`}</h2>
         <p style={{ color:'rgba(255,255,255,0.75)', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', marginTop:'0.2rem' }}>{sub}</p>
       </div>
     </div>
@@ -780,7 +902,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           )}
 
           <div style={{ position:'relative', zIndex:10 }}>
-            <Header sub={"Conclusão da 1ª avaliação"} />
+            <Header titulo={TITULO_RESULTADO} sub={subPaciente} />
           </div>
 
           <div style={{ position:'relative', zIndex:1, padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
@@ -897,7 +1019,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           {/* Header (zIndex 10 p/ aparecer durante o splash) */}
           <div style={{ position:'relative', zIndex:10 }}>
-            <Header sub={"Sua Avalia\u00e7\u00e3o OBA \u2014 baseline"} />
+            <Header titulo={TITULO_RESULTADO} sub={subPaciente} />
           </div>
 
           {/* Conte\u00fado do relat\u00f3rio */}
@@ -1023,17 +1145,32 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   )
                 })}
 
-                {/* EXAMES COMPLEMENTARES SUGERIDOS */}
-                {(rel.examesComplementares && rel.examesComplementares.length > 0) && (
-                  <>
-                    <SectionTitle>{"Exames complementares sugeridos"}</SectionTitle>
-                    <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:10, padding:'0.8rem 1rem' }}>
-                      {rel.examesComplementares.map((ex, i) => (
-                        <p key={i} style={{ fontSize:'0.8rem', color:'#9A3412', fontWeight:600, lineHeight:1.5, marginBottom: i < rel.examesComplementares.length - 1 ? '0.35rem' : 0 }}>{"\u2022 "}{ex}</p>
-                      ))}
-                    </div>
-                  </>
-                )}
+                {/* RECOMENDA\u00c7\u00d5ES \u2014 cards separados por categoria de exame/conduta */}
+                {(rel.examesComplementares && rel.examesComplementares.length > 0) && (() => {
+                  const grupos = {}
+                  rel.examesComplementares.forEach(ex => {
+                    const c = categoriaRecomendacao(ex)
+                    ;(grupos[c] = grupos[c] || []).push(ex)
+                  })
+                  return (
+                    <>
+                      <SectionTitle>{"Recomenda\u00e7\u00f5es"}</SectionTitle>
+                      {CATS_RECOMENDACAO.filter(c => grupos[c.key]?.length).map(c => {
+                        // n\u00e3o repete itens id\u00eanticos ao t\u00edtulo (caso do MAPA, cujo
+                        // t\u00edtulo j\u00e1 \u00e9 a pr\u00f3pria recomenda\u00e7\u00e3o).
+                        const itens = grupos[c.key].filter(ex => String(ex).trim().toUpperCase() !== c.titulo.trim().toUpperCase())
+                        return (
+                          <div key={c.key} style={{ background:c.fundo, border:`1px solid ${c.borda}`, borderRadius:10, padding:'0.7rem 1rem', marginBottom:'0.6rem' }}>
+                            <p style={{ fontSize:'0.68rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:c.texto, margin: itens.length ? '0 0 0.45rem' : 0 }}>{c.titulo}</p>
+                            {itens.map((ex, i) => (
+                              <p key={i} style={{ fontSize:'0.78rem', color:c.texto, fontWeight:600, lineHeight:1.5, marginBottom: i < itens.length - 1 ? '0.3rem' : 0 }}>{"\u2022 "}{ex}</p>
+                            ))}
+                          </div>
+                        )
+                      })}
+                    </>
+                  )
+                })()}
               </>
             )}
 
@@ -1055,7 +1192,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   if (etapa === 'exames') return (
     <div style={OV} onClick={pularExames}>
       <div style={CD} onClick={e => e.stopPropagation()}>
-        <Header sub={"Exames Complementares \u2014 etapa final"} />
+        <Header sub={subPaciente} />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
           <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
@@ -1121,37 +1258,34 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </div>
           )}
 
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem' }}>
-            {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => (
-              <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : 'white', border: aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #F3F4F6', borderRadius:8, padding:'0.5rem 0.7rem' }}>
-                <span style={{ fontSize:'0.8rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#374151' }}>{ex.label}</span>
-                <span style={{ fontSize:'0.65rem', color:'#9CA3AF' }}>({ex.unit})</span>
-                {ex.ref && <span style={{ fontSize:'0.62rem', color:'#6B7280', fontStyle:'italic' }}>V.R.: {ex.ref}</span>}
-                {ex.hint && <span style={{ fontSize:'0.62rem', color:'#F97316' }}>{ex.hint}</span>}
-                <input
-                  style={{ marginTop:'0.4rem', width:'100%', border:'1.5px solid #E5E7EB', borderRadius:6, padding:'0.35rem 0.5rem', fontSize:'0.9rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : 'white', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
-                  type="number" step="0.01" placeholder={ex.readOnly ? 'auto' : "\u2014"}
-                  readOnly={ex.readOnly}
-                  value={exames[ex.key] || ''}
-                  onChange={e => !ex.readOnly && handleExameChangeOBA(ex.key, e.target.value)} />
-                {aberrantesOBA[ex.key] && <span style={{ fontSize:'0.62rem', fontWeight:700, color:'#CA8A04', marginTop:'0.2rem' }}>{"\u26a0 VALOR ABERRANTE \u2014 CONFIRME"}</span>}
-                {(() => {
-                  const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
-                  if (!cl) return null
-                  const cores = {
-                    normal:    { fundo:'#F0FDF4', borda:'#BBF7D0', texto:'#166534', rotulo:'NORMAL' },
-                    limitrofe: { fundo:'#FEFCE8', borda:'#FDE68A', texto:'#92400E', rotulo:"LIMITROFE" },
-                    alterado:  { fundo:'#FFF1F2', borda:'#FECDD3', texto:'#9F1239', rotulo:'ALTERADO' },
-                  }[cl.nivel]
-                  const seta = cl.direcao === 'alto' ? " \u2191" : cl.direcao === 'baixo' ? " \u2193" : ''
-                  return (
-                    <span style={{ display:'inline-block', marginTop:'0.25rem', fontSize:'0.6rem', fontWeight:700, background:cores.fundo, border:`1px solid ${cores.borda}`, color:cores.texto, padding:'0.1rem 0.4rem', borderRadius:6 }}>
-                      {cores.rotulo}{seta}
-                    </span>
-                  )
-                })()}
-              </div>
-            ))}
+          {/* V.R. (por sexo) + unidade entram como M\u00c1SCARA do campo; classifica\u00e7\u00e3o
+              vira um ponto colorido ap\u00f3s o input (verde=normal, \u00e2mbar=lim\u00edtrofe,
+              vermelho=alterado). 3 colunas, campos amarelos. Sem seamless aqui. */}
+          <style>{`.oba-exame-input::placeholder{font-size:0.5rem;color:#9CA3AF;font-weight:500;}`}</style>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'0.3rem' }}>
+            {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => {
+              const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
+              const dotColor = cl ? (cl.nivel === 'alterado' ? '#DC2626' : cl.nivel === 'limitrofe' ? '#F59E0B' : '#16A34A') : null
+              const mascara = ex.readOnly ? 'auto' : [refPorSexo(ex.ref, isFem), ex.unit].filter(Boolean).join(' ')
+              return (
+                <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : '#FEFCE8', border: aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
+                  <span style={{ fontSize:'0.62rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#374151', lineHeight:1.15 }}>{ex.label}</span>
+                  {ex.hint && <span style={{ fontSize:'0.5rem', color:'#F97316' }}>{ex.hint}</span>}
+                  <div style={{ display:'flex', alignItems:'center', gap:'0.25rem', marginTop:'0.25rem' }}>
+                    <input
+                      className="oba-exame-input"
+                      onWheel={noWheel}
+                      style={{ flex:1, minWidth:0, border:'1.5px solid #FACC15', borderRadius:5, padding:'0.28rem 0.32rem', fontSize:'0.74rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : '#FFFDF5', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
+                      type="number" step="0.01" placeholder={mascara}
+                      readOnly={ex.readOnly}
+                      value={exames[ex.key] || ''}
+                      onChange={e => !ex.readOnly && handleExameChangeOBA(ex.key, e.target.value)} />
+                    {dotColor && <span title={cl.rotulo || ''} style={{ width:9, height:9, borderRadius:'50%', background:dotColor, flexShrink:0, boxShadow:'0 0 0 1.5px rgba(255,255,255,0.7)' }} />}
+                  </div>
+                  {aberrantesOBA[ex.key] && <span style={{ fontSize:'0.5rem', fontWeight:700, color:'#CA8A04', marginTop:'0.15rem' }}>{"\u26a0 ABERRANTE"}</span>}
+                </div>
+              )
+            })}
           </div>
 
           {idadeNum >= 40 && (
@@ -1180,12 +1314,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             )
           })()}
 
-          <button style={btnP} onClick={salvarExames} disabled={loading}>
-            {loading ? 'Salvando...' : "Concluir e ir para a Avalia\u00e7\u00e3o \u2192"}
-          </button>
-          <button style={btnS} onClick={pularExames}>
-            {"Pular exames e ir para a Avalia\u00e7\u00e3o"}
-          </button>
+          {/* Bot\u00e3o \u00fanico (gray piscante, \u25b6 vermelho, subtexto vinho "AVALIA\u00c7\u00c3O").
+              salvarExames j\u00e1 cobre o caso de campos vazios (salva nulls e segue),
+              ent\u00e3o substitui tanto o "concluir" quanto o antigo "pular". */}
+          <div style={{ display:'flex', justifyContent:'center', marginTop:'1.5rem' }}>
+            <PlayButton
+              onClick={salvarExames}
+              loading={loading}
+              label={"AVALIA\u00c7\u00c3O"}
+              playColor="#DC2626"
+              ringColor="rgba(220,38,38,0.5)"
+              ariaLabel="Ir para a avalia\u00e7\u00e3o"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -1193,7 +1334,27 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
 
   return (
-    <div style={OV} onClick={onFechar}>
+    <>
+      {showPesquisa && (
+        <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1.5rem', boxSizing:'border-box' }} onClick={() => setShowPesquisa(false)}>
+          <div style={{ position:'relative', background:'white', borderRadius:16, maxWidth:440, width:'100%', padding:'1.7rem 1.4rem 1.4rem', boxShadow:'0 20px 60px rgba(0,0,0,0.35)' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowPesquisa(false)} aria-label="Fechar" style={{ position:'absolute', top:12, right:12, width:30, height:30, borderRadius:'50%', background:'#7B1E1E', color:'white', border:'none', fontSize:'1.05rem', fontWeight:800, cursor:'pointer', lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center' }}>{"\u00d7"}</button>
+            <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.6rem' }}>{"Pesquisa M\u00e9dica"}</p>
+            <p style={{ fontSize:'0.85rem', color:'#374151', lineHeight:1.55, margin:'0 0 1rem' }}>
+              {"Se voc\u00ea quiser participar da PESQUISA M\u00c9DICA com o tratamento inofensivo e SIMBI\u00d3TICO para obstipa\u00e7\u00e3o e fibromialgia, marque a caixinha abaixo que enviaremos informa\u00e7\u00f5es detalhadas por WhatsApp."}
+            </p>
+            <label style={{ display:'flex', alignItems:'flex-start', gap:'0.6rem', cursor:'pointer', userSelect:'none', background:'#FBEAEA', border:'1px solid #E3B5B5', borderRadius:10, padding:'0.8rem 0.9rem' }}>
+              <input type="checkbox" checked={pesquisaAceita} onChange={e => aceitarPesquisa(e.target.checked)} style={{ width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#7B1E1E', flexShrink:0 }} />
+              <span style={{ fontSize:'0.8rem', fontWeight:700, color:'#7B1E1E', lineHeight:1.4 }}>{"Sim, quero participar e entendo que n\u00e3o h\u00e1 custos envolvidos para participar do estudo."}</span>
+            </label>
+            {pesquisaEnviado && (
+              <p style={{ fontSize:'0.76rem', color:'#166534', fontWeight:700, margin:'0.8rem 0 0', textAlign:'center' }}>{"\u2713 Recebemos o seu interesse! Em breve entraremos em contato."}</p>
+            )}
+            <button onClick={() => setShowPesquisa(false)} style={{ display:'block', width:'100%', background:'none', border:'none', color:'#9CA3AF', fontSize:'0.78rem', fontWeight:600, textDecoration:'underline', cursor:'pointer', marginTop:'1rem' }}>{"N\u00e3o desejo participar da pesquisa"}</button>
+          </div>
+        </div>
+      )}
+      <div style={OV} onClick={onFechar}>
       <div style={CD} onClick={e => e.stopPropagation()}>
         <Header sub={"Otimizar o Bari\u00e1trico"} />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
@@ -1220,7 +1381,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
             <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>{"O bari\u00e1trico \u00e9 um paciente complexo."}</p>
-            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>{"Precisamos de mais informa\u00e7\u00f5es para cuidar de voc\u00ea. Marque as caixinhas e preencha os campos:"}</p>
+            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>{"Precisamos de mais informa\u00e7\u00f5es para cuidar de voc\u00ea. Marque os itens e preencha os campos:"}</p>
+            <p style={{ fontSize:'0.66rem', textTransform:'uppercase', letterSpacing:'0.4px', color:'#9B2C2C', fontWeight:600, marginTop:'0.5rem', lineHeight:1.5 }}>{"Digite r\u00e1pido e com aten\u00e7\u00e3o que o processo ser\u00e1 r\u00e1pido e f\u00e1cil, mas se voc\u00ea errar alguma coisa voc\u00ea sempre pode tocar no campo e editar."}</p>
           </div>
 
           <SectionTitle>Dados da Cirurgia</SectionTitle>
@@ -1232,15 +1394,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem', marginBottom:'0.4rem' }}>
             <div>
               <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>DIA (opcional)</label>
-              <input style={inp} type="number" min="1" max="31" placeholder="DD" value={form.cirurgia_dia} onChange={e => sf('cirurgia_dia', e.target.value)} />
+              <input ref={refDia} style={inpA} onWheel={noWheel} type="number" min="1" max="31" placeholder="DD" value={form.cirurgia_dia} onChange={e => { sf('cirurgia_dia', e.target.value); agendarSalto(refMes) }} onFocus={() => agendarSalto(refMes)} />
             </div>
             <div>
               <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>{"M\u00caS (opcional)"}</label>
-              <input style={inp} type="number" min="1" max="12" placeholder="MM" value={form.cirurgia_mes} onChange={e => sf('cirurgia_mes', e.target.value)} />
+              <input ref={refMes} style={inpA} onWheel={noWheel} type="number" min="1" max="12" placeholder="MM" value={form.cirurgia_mes} onChange={e => { sf('cirurgia_mes', e.target.value); agendarSalto(refAno) }} onFocus={() => agendarSalto(refAno)} />
             </div>
             <div>
               <label style={{ fontSize:'0.7rem', color:'#DC2626', fontWeight:700 }}>{"ANO \u2731"}</label>
-              <input style={{ ...inp, borderColor: form.cirurgia_ano ? '#E5E7EB' : '#FCA5A5' }} type="number" min="2000" max="2030" placeholder="AAAA" value={form.cirurgia_ano} onChange={e => sf('cirurgia_ano', e.target.value)} />
+              <input ref={refAno} style={{ ...inpA, borderColor: form.cirurgia_ano ? '#FACC15' : '#FCA5A5' }} onWheel={noWheel} type="number" min="2000" max="2030" placeholder="AAAA" value={form.cirurgia_ano} onChange={e => { sf('cirurgia_ano', e.target.value); agendarSalto(null) }} onFocus={() => agendarSalto(null)} />
             </div>
           </div>
           {mesesPos !== null ? (
@@ -1278,23 +1440,30 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           <SectionTitle>Status Ponderal</SectionTitle>
 
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>Peso antes da cirurgia (kg)</label>
-          <input style={inp} type="number" placeholder="Ex: 120" value={form.peso_antes} onChange={e => sf('peso_antes', e.target.value)} />
-
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Menor peso ap\u00f3s a cirurgia (kg)"}</label>
-          <input style={inp} type="number" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => sf('peso_minimo_pos', e.target.value)} />
-
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Peso atual (kg)</label>
-          <input style={inp} type="number" placeholder="Ex: 78" value={form.peso_atual} onChange={e => sf('peso_atual', e.target.value)} onBlur={handlePesoAtualBlur} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem 0.8rem' }}>
+            <div>
+              <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso antes (kg)</label>
+              <input ref={refPesoAntes} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 120" value={form.peso_antes} onChange={e => { sf('peso_antes', e.target.value); agendarSalto(refPesoMin) }} onFocus={() => agendarSalto(refPesoMin)} />
+            </div>
+            <div>
+              <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"Menor peso p\u00f3s (kg)"}</label>
+              <input ref={refPesoMin} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => { sf('peso_minimo_pos', e.target.value); agendarSalto(refPesoAtual) }} onFocus={() => agendarSalto(refPesoAtual)} />
+            </div>
+            <div>
+              <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso atual (kg)</label>
+              <input ref={refPesoAtual} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 78" value={form.peso_atual} onChange={e => { sf('peso_atual', e.target.value); agendarSalto(refAltura) }} onFocus={() => agendarSalto(refAltura)} onBlur={handlePesoAtualBlur} />
+            </div>
+            <div>
+              <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Altura (cm)</label>
+              <input ref={refAltura} style={inpA} onWheel={noWheel} type="number" step="1" placeholder="Ex: 165" value={form.altura} onChange={e => { sf('altura', e.target.value); agendarSalto(isFem ? refGestacoes : null) }} onFocus={() => agendarSalto(isFem ? refGestacoes : null)} />
+            </div>
+          </div>
           {alertaPeso && (
-            <p style={{ color: '#d97706', fontSize: '0.75rem', marginTop: '0.25rem', lineHeight: 1.4 }}>
+            <p style={{ color: '#d97706', fontSize: '0.75rem', marginTop: '0.4rem', lineHeight: 1.4 }}>
               {"\u26a0\ufe0f O peso atual informado ("}{alertaPeso.original}{" kg) n\u00e3o pode ser menor que o menor peso p\u00f3s-cirurgia ("}{alertaPeso.ajustado}{" kg). Valor ajustado automaticamente para "}{alertaPeso.ajustado}{" kg."}
             </p>
           )}
-
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Altura (cm)</label>
-          <input style={inp} type="number" step="1" placeholder="Ex: 165" value={form.altura} onChange={e => sf('altura', e.target.value)} />
-          <p style={{ fontSize:'0.65rem', color:'#6B7280', marginTop:'0.25rem' }}>{"O IMC \u00e9 calculado automaticamente a partir do peso e da altura."}</p>
+          <p style={{ fontSize:'0.65rem', color:'#6B7280', marginTop:'0.4rem' }}>{"O IMC \u00e9 calculado automaticamente a partir do peso e da altura."}</p>
           {(imcAntes !== null || imcAtual !== null) && (
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem', marginTop:'0.5rem' }}>
               <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.5rem 0.8rem' }}>
@@ -1350,17 +1519,40 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             <>
               <SectionTitle>Status Gestacional</SectionTitle>
 
-              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>{"N\u00famero de gesta\u00e7\u00f5es pr\u00e9vias"}</label>
-              <input
-                style={inp}
-                type="number"
-                min="0"
-                max="20"
-                step="1"
-                placeholder="Ex: 2 (digite 0 se nunca engravidou)"
-                value={form.gestacoes_previas}
-                onChange={e => sf('gestacoes_previas', e.target.value)}
-              />
+              {/* Dois primeiros campos em 2 colunas: ESTOU GR\u00c1VIDA (+ semanas inline,
+                  j\u00e1 marcado quando veio da triagem) \u00e0 esquerda; N\u00ba de gesta\u00e7\u00f5es \u00e0
+                  direita (amarelo, m\u00e1scara em EXPRESS\u00c3O p/ n\u00e3o dar mojibake). */}
+              <style>{`.oba-gest-input::placeholder{font-size:0.58rem;letter-spacing:0.2px;}`}</style>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem 0.8rem', alignItems:'start' }}>
+                {idadeNum >= 15 && (
+                  <div>
+                    <CheckRow label={"ESTOU GR\u00c1VIDA"} checked={form.status_gestacional === "GR\u00c1VIDA"} onClick={() => sf('status_gestacional', form.status_gestacional === "GR\u00c1VIDA" ? '' : "GR\u00c1VIDA")} />
+                    {form.status_gestacional === "GR\u00c1VIDA" && (
+                      <div style={{ display:'flex', alignItems:'center', gap:'0.4rem', marginTop:'0.4rem' }}>
+                        <input style={{ ...inpA, width:90 }} onWheel={noWheel} type="number" placeholder="Semanas" value={form.semanas_gestacao} onChange={e => sf('semanas_gestacao', e.target.value)} />
+                        <span style={{ fontSize:'0.78rem', color:'#6B7280' }}>{"semanas"}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div>
+                  <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"N\u00ba de gesta\u00e7\u00f5es anteriores"}</label>
+                  <input
+                    ref={refGestacoes}
+                    className="oba-gest-input"
+                    style={inpA}
+                    onWheel={noWheel}
+                    type="number"
+                    min="0"
+                    max="20"
+                    step="1"
+                    placeholder={"DIGITE ZERO [0] SE N\u00c3O HOUVE OUTRA GESTA\u00c7\u00c3O"}
+                    value={form.gestacoes_previas}
+                    onChange={e => sf('gestacoes_previas', e.target.value)}
+                    onFocus={() => agendarSalto(null)}
+                  />
+                </div>
+              </div>
 
               {form.gestacoes_previas !== '' && parseInt(form.gestacoes_previas) > 0 && (
                 <>
@@ -1371,18 +1563,6 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                     onChange={v => sf('abortamentos_espontaneos', v === 'SIM')}
                   />
                 </>
-              )}
-
-              {idadeNum >= 15 && (
-                <div style={{ marginTop:'0.8rem' }}>
-                  <CheckRow label={"ESTOU GR\u00c1VIDA"} checked={form.status_gestacional === "GR\u00c1VIDA"} onClick={() => sf('status_gestacional', form.status_gestacional === "GR\u00c1VIDA" ? '' : "GR\u00c1VIDA")} />
-                  {form.status_gestacional === "GR\u00c1VIDA" && (
-                    <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginTop:'0.4rem' }}>
-                      <input style={{ ...inp, width:120 }} type="number" placeholder="Semanas" value={form.semanas_gestacao} onChange={e => sf('semanas_gestacao', e.target.value)} />
-                      <span style={{ fontSize:'0.85rem', color:'#6B7280' }}>{"semanas de gesta\u00e7\u00e3o"}</span>
-                    </div>
-                  )}
-                </div>
               )}
             </>
           )}
@@ -1483,11 +1663,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           ))}
 
           <SectionTitle>{"Status \u00d3sseo"}</SectionTitle>
-          {["DENSITOMETRIA \u00d3SSEA NORMAL", 'OSTEOPENIA', 'OSTEOPOROSE', "N\u00c3O FIZ DENSITOMETRIA"].map(op => (
-            <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem', borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem', fontSize:'0.85rem', fontWeight: form.status_osseo === op ? 700 : 500, color: form.status_osseo === op ? '#7B1E1E' : '#374151' }}>
-              <Radio16 active={form.status_osseo === op} />{op}
-            </div>
-          ))}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {["DENSITOMETRIA \u00d3SSEA NORMAL", 'OSTEOPENIA', 'OSTEOPOROSE', "N\u00c3O FIZ DENSITOMETRIA"].map(op => (
+              <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.5rem 0.7rem', borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontSize:'0.8rem', fontWeight: form.status_osseo === op ? 700 : 500, color: form.status_osseo === op ? '#7B1E1E' : '#374151' }}>
+                <Radio16 active={form.status_osseo === op} />{op}
+              </div>
+            ))}
+          </div>
 
           <SectionTitle>{"Status Neurol\u00f3gico"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
@@ -1701,6 +1883,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <button style={btnS} onClick={onFechar}>{"\u2190 Voltar"}</button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
