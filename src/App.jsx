@@ -95,9 +95,12 @@ export default function App() {
       try { pacLogado = !!localStorage.getItem('paciente_id') } catch (e) {}
       if (pacLogado || session) limparAuthPaciente()
     } else if (fluxoPaciente) {
-      let medLogado = false
-      try { medLogado = !!localStorage.getItem('medico_crm') } catch (e) {}
-      if (medLogado) limparAuthMedico()
+      // Limpa o resíduo médico ao entrar no fluxo paciente — inclui rf_crm_prefill
+      // (o "continuar como médico" o seta SEM medico_crm; senão o CRM vazava no
+      // resultado da triagem do paciente).
+      let residuoMedico = false
+      try { residuoMedico = !!(localStorage.getItem('medico_crm') || localStorage.getItem('rf_crm_prefill')) } catch (e) {}
+      if (residuoMedico) limparAuthMedico()
     }
   }, [modo])
 

@@ -407,9 +407,10 @@ export default function TriagemResultadoModal({
   }
 
   // ===== TELA RESULTADO =====
-  // Pre-calcula CRM (logado ou prefill da landing)
-  let crmExibir = medicoCRM
-  if (!crmExibir) { try { crmExibir = localStorage.getItem('rf_crm_prefill') || '' } catch(e) { crmExibir = '' } }
+  // Pre-calcula CRM (logado ou prefill da landing). SÓ em modo médico — no fluxo
+  // do paciente nunca exibimos CRM (o prefill pode ser resíduo de uma sessão médica).
+  let crmExibir = modoMedico ? medicoCRM : ''
+  if (!crmExibir && modoMedico) { try { crmExibir = localStorage.getItem('rf_crm_prefill') || '' } catch(e) { crmExibir = '' } }
 
   const dataColetaFmt = fmtDataColeta(inputs?.data_coleta)
   const dataEstimadaFlag = !!inputs?.data_estimada
