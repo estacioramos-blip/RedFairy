@@ -720,6 +720,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', peso: _demo?.peso || '', dataNascimento: '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
     ferritina: _demo?.ferr || '', hemoglobina: _demo?.hb || '', vcm: _demo?.vcm || '', rdw: _demo?.rdw || '', satTransf: _demo?.sat || '',
     antiHp_igg: '', antiHp_igm: '',  // sorologia ANTI-H.PYLORI (qualitativa)
+    b12_valor: '', folato_valor: '',  // valores B12 (pg/mL) e Folato (ng/mL) — investigação da macrocitose
     bariatrica: !!(_demo?.bariatrica),
     bariatrica_medico: !!(_demo?.bariatrica), vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '', alcoolista: false,
@@ -1036,7 +1037,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       return;
     }
     let valorAjustado = (type === 'checkbox') ? checked : value;
-    if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf', 'peso'].includes(name) && typeof valorAjustado === 'string') {
+    if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf', 'peso', 'b12_valor', 'folato_valor'].includes(name) && typeof valorAjustado === 'string') {
       valorAjustado = valorAjustado.replace(',', '.');
     }
     const novoValor = name === 'cpf' ? formatarCPF(valorAjustado) : valorAjustado;
@@ -1159,6 +1160,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       vcm:         Number(sanitizarNumero(inputs.vcm)),
       rdw:         Number(sanitizarNumero(inputs.rdw)),
       satTransf:   Number(sanitizarNumero(inputs.satTransf)),
+      b12_valor:   inputs.b12_valor !== '' ? Number(sanitizarNumero(inputs.b12_valor)) : null,
+      folato_valor: inputs.folato_valor !== '' ? Number(sanitizarNumero(inputs.folato_valor)) : null,
     };
 
     const res = mostrarExamesExtras ? avaliarPaciente(inputsNumericos) : triagemEritron(inputsNumericos);
@@ -1893,6 +1896,34 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 borderColor="blue"
               />
             </div>
+
+            {/* MACROCITOSE (VCM>100): liberar também B12 e Folato pelo botão azul. */}
+            {Number(String(inputs.vcm).replace(',', '.')) > 100 && (
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <LabInput
+                  label="Vitamina B12"
+                  unit="pg/mL"
+                  name="b12_valor"
+                  reference="200–900"
+                  value={inputs.b12_valor}
+                  onChange={handleChange}
+                  hint={mostrarExamesExtras ? "Macrocitose → investigar B12" : "Clique no botão azul para liberar"}
+                  disabled={!mostrarExamesExtras}
+                  borderColor="blue"
+                />
+                <LabInput
+                  label="Folato (ác. fólico)"
+                  unit="ng/mL"
+                  name="folato_valor"
+                  reference="> 4"
+                  value={inputs.folato_valor}
+                  onChange={handleChange}
+                  hint={mostrarExamesExtras ? "Macrocitose → investigar folato" : "Clique no botão azul para liberar"}
+                  disabled={!mostrarExamesExtras}
+                  borderColor="blue"
+                />
+              </div>
+            )}
 
             {/* ANTI-H.PYLORI IgG/IgM (sorologia qualitativa). IgM reagente → indica
                 a prescrição do tratamento de erradicação. */}

@@ -75,6 +75,41 @@ function matchesConditions(item, inputs) {
   return true;
 }
 
+// ── INVESTIGAÇÃO DA MACROCITOSE (VCM > 100) ───────────────────────────────────
+// Interpretação simplificada (cortes confirmados pelo Dr. Ramos): B12 < 200 =
+// deficiência; 200–300 = limítrofe; Folato < 4 = deficiência. Sem os valores,
+// recomenda dosá-los. Ambos normais + macrocitose → outras causas (hematologista).
+// Retorna { linhas:[], exames:[] } ou null.
+function interpretarMacrocitose(inputs) {
+  const vcm = Number(inputs.vcm)
+  if (!Number.isFinite(vcm) || vcm <= 100) return null
+  const b12 = Number(inputs.b12_valor)
+  const folato = Number(inputs.folato_valor)
+  const temB12 = Number.isFinite(b12) && b12 > 0
+  const temFolato = Number.isFinite(folato) && folato > 0
+  const bari = !!inputs.bariatrica
+  const linhas = []
+  const exames = []
+
+  if (!temB12 && !temFolato) {
+    linhas.push('MACROCITOSE (VCM > 100): dosar VITAMINA B12 e FOLATOS (ÁCIDO FÓLICO) para investigar a causa.')
+    exames.push('VITAMINA B12', 'ÁCIDO FÓLICO (FOLATOS)')
+    return { linhas, exames }
+  }
+  if (temB12) {
+    if (b12 < 200) linhas.push('VITAMINA B12 BAIXA (< 200 pg/mL): deficiência de B12 — repor' + (bari ? ' (no bariátrico, preferir via IM/parenteral).' : '.'))
+    else if (b12 <= 300) linhas.push('VITAMINA B12 LIMÍTROFE (200–300 pg/mL): possível deficiência' + (bari ? ', sobretudo no bariátrico' : '') + ' — considerar homocisteína / ácido metilmalônico ou tratar empiricamente.')
+  }
+  if (temFolato && folato < 4) linhas.push('FOLATO BAIXO (< 4 ng/mL): deficiência de folato — repor ácido fólico.')
+  const b12Normal = temB12 && b12 > 300
+  const folatoNormal = temFolato && folato >= 4
+  if (b12Normal && folatoNormal) {
+    linhas.push('B12 e Folato normais com macrocitose: investigar outras causas (álcool, hipotireoidismo, hepatopatia, mielodisplasia) — avaliação com hematologista.')
+    exames.push('AVALIAÇÃO COM HEMATOLOGISTA')
+  }
+  return linhas.length ? { linhas, exames } : null
+}
+
 export function avaliarPaciente(inputs) {
   // CORREÇÃO: ajuste gestante simplificado — sem alteração artificial de Hb
   // A OMS define anemia na gestação como Hb < 11.0 g/dL
@@ -407,6 +442,16 @@ export function avaliarPaciente(inputs) {
     if (!proximosExames.some(e => /DENSITOMETR/i.test(String(e)))) {
       proximosExames.push(den);
     }
+  }
+
+  // Regra 3: MACROCITOSE (VCM > 100) — interpreta B12/Folato (ou recomenda dosá-los)
+  // e adiciona o comentário + exames à lista. Cortes confirmados pelo Dr. Ramos.
+  const macro = interpretarMacrocitose(inputs);
+  if (macro) {
+    comentarios.push({ titulo: 'MACROCITOSE — INVESTIGAÇÃO', texto: macro.linhas.join(' ') });
+    macro.exames.forEach(ex => {
+      if (!proximosExames.some(e => String(e).toUpperCase() === ex.toUpperCase())) proximosExames.push(ex);
+    });
   }
 
   // ── Separacao LAB vs IMAGEM ────────────────────────────────────────────
