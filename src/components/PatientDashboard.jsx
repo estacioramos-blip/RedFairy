@@ -61,6 +61,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     sexo: '', idade: '', peso: '',
     dataColeta: '', ferritina: '', hemoglobina: '',
     vcm: '', rdw: '', satTransf: '',
+    b12_valor: '', folato_valor: '',  // investigação da macrocitose (VCM>100)
     bariatrica: false, vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '',
     // Histórico clínico completo (paridade com o formulário do médico)
@@ -366,7 +367,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   function handleChange(e) {
     const { name, value, type, checked } = e.target
     let v = type === 'checkbox' ? checked : value
-    if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf'].includes(name) && typeof v === 'string') {
+    if (['hemoglobina', 'vcm', 'rdw', 'ferritina', 'satTransf', 'b12_valor', 'folato_valor'].includes(name) && typeof v === 'string') {
       v = v.replace(',', '.')
     }
     setInputs(prev => ({ ...prev, [name]: v }))
@@ -1019,6 +1020,31 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 </div>
               ))}
             </div>
+
+            {/* MACROCITOSE (VCM>100): o bot\u00e3o azul libera tamb\u00e9m B12 e Folato. */}
+            {Number(String(inputs.vcm).replace(',', '.')) > 100 && (
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                {[
+                  { label: 'Vitamina B12 (pg/mL)', name: 'b12_valor' },
+                  { label: 'Folato / \u00e1c. f\u00f3lico (ng/mL)', name: 'folato_valor' },
+                ].map(f => (
+                  <div key={f.name}>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name={f.name}
+                      value={inputs[f.name] || ''}
+                      onChange={handleChange}
+                      disabled={!mostrarExamesExtras}
+                      placeholder={!mostrarExamesExtras ? "Clique no bot\u00e3o azul para liberar" : ''}
+                      className="w-full border-2 border-blue-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-3">{"Hist\u00f3rico Cl\u00ednico"}</h3>
               <div className="grid grid-cols-2 gap-2">

@@ -30,7 +30,8 @@ export default function TriagemResultadoModal({
   const [tela, setTela] = useState('resultado')
   // Macrocitose (VCM > 100): além de Ferritina/Saturação, recomenda-se também B12 e
   // Folatos (investigação da macrocitose). Sufixo reaproveitado nos 3 cards.
-  const macro = resultado?.classificacaoVCM === 'MACROCÍTICA'
+  // Check pelo VCM direto (robusto a normalização Unicode do rótulo classificacaoVCM).
+  const macro = Number(resultado?._inputs?.vcm ?? inputs?.vcm) > 100
   const sufB12 = macro ? <>{", "}<strong>{"VITAMINA B12 e FOLATOS (ÁCIDO FÓLICO)"}</strong></> : null
   const [salvando, setSalvando] = useState(false)
   const [erroSalvamento, setErroSalvamento] = useState(null)
