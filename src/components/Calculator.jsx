@@ -719,6 +719,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [inputs, setInputs] = useState({
     cpf: '', sexo: _demo?.sexo || 'M', idade: _demo?.idade || '', peso: _demo?.peso || '', dataNascimento: '', dataColeta: _demo ? new Date().toISOString().split('T')[0] : '',
     ferritina: _demo?.ferr || '', hemoglobina: _demo?.hb || '', vcm: _demo?.vcm || '', rdw: _demo?.rdw || '', satTransf: _demo?.sat || '',
+    antiHp_igg: '', antiHp_igm: '',  // sorologia ANTI-H.PYLORI (qualitativa)
     bariatrica: !!(_demo?.bariatrica),
     bariatrica_medico: !!(_demo?.bariatrica), vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '', alcoolista: false,
@@ -1891,6 +1892,28 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 disabled={!mostrarExamesExtras}
                 borderColor="blue"
               />
+            </div>
+
+            {/* ANTI-H.PYLORI IgG/IgM (sorologia qualitativa). IgM reagente → indica
+                a prescrição do tratamento de erradicação. */}
+            <div className="mt-3 bg-orange-50 border border-orange-200 rounded-xl p-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-orange-800 mb-2">{"Anti-H. pylori (sorologia)"}</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[['IgG', 'antiHp_igg'], ['IgM', 'antiHp_igm']].map(([rotulo, campo]) => (
+                  <div key={campo}>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{rotulo}</label>
+                    <select value={inputs[campo]} onChange={e => setInputs(p => ({ ...p, [campo]: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-300">
+                      <option value="">Selecione</option>
+                      <option value="NÃO REAGENTE">Não reagente</option>
+                      <option value="REAGENTE">Reagente</option>
+                    </select>
+                  </div>
+                ))}
+              </div>
+              {inputs.antiHp_igm === 'REAGENTE' && (
+                <p className="text-xs font-semibold text-orange-800 mt-2">{"⚠ IgM reagente sugere infecção ativa por H. pylori — indicada a prescrição do tratamento de erradicação."}</p>
+              )}
             </div>
           </section>
 

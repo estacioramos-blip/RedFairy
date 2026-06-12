@@ -416,6 +416,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [bgConcl, setBgConcl] = useState(false)
   const [valorPrescricao, setValorPrescricao] = useState(null)  // config.valor_documento_medico
   const [querPrescricao, setQuerPrescricao] = useState(false)
+  const [querPrescricaoB12, setQuerPrescricaoB12] = useState(false)  // protocolo B12/folato (macrocitose)
   const [querResultado, setQuerResultado] = useState(false)
   // Protocolo de reposição de FERRO ENDOVENOSO (Ganzoni) — modal compartilhado.
   const [showFerroEV, setShowFerroEV] = useState(false)
@@ -431,6 +432,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
     status_intestinal: '', status_fibromialgia: [], calprotectina: '', indican: '',
+    // Sorologia ANTI-H.PYLORI (qualitativo): '' | 'REAGENTE' | 'NÃO REAGENTE'
+    antiHp_igg: '', antiHp_igm: '',
     gestacoes_previas: '', abortamentos_espontaneos: null,
     indicacao_cirurgia: '',
     tipo_cirurgia: '',
@@ -773,6 +776,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       status_fibromialgia: form.status_fibromialgia,
       calprotectina: form.calprotectina === '' ? null : Number(form.calprotectina),
       indican: form.indican || null,
+      anti_hp_igg: form.antiHp_igg || null,
+      anti_hp_igm: form.antiHp_igm || null,
       metformina:         form.metformina,
       ibp:                form.ibp,
       tiroxina:           form.tiroxina,
@@ -961,7 +966,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   if (etapa === 'conclusao') {
     const estado = estadoClinico?.estado
     const teleRecomendada = estado === 'CRITICO' || estado === 'RUIM' || form.usou_anticoagulante
-    const temHpylori = (form.status_endoscopico || []).includes('H. PYLORI')
+    // H. pylori: achado endoscópico OU sorologia IgM reagente (infecção ativa).
+    const temHpylori = (form.status_endoscopico || []).includes('H. PYLORI') || form.antiHp_igm === 'REAGENTE'
+    // Protocolo de reposição de B12 + folato (macrocitose): bariátrico (sempre, no OBA)
+    // com VCM > 105 e/ou Hb ≤ 9 — sinal de deficiência de B12 comprometendo o eritron.
+    const vcmB12 = Number(examesRedFairy?.vcm ?? resultadoEritron?.inputs?.vcm ?? 0)
+    const hbB12 = Number(examesRedFairy?.hemoglobina ?? resultadoEritron?.inputs?.hemoglobina ?? 0)
+    const precisaB12Protocolo = (vcmB12 > 105) || (hbB12 > 0 && hbB12 <= 9)
     const BG_BAND = { position:'absolute', top:0, left:0, right:0, height:360, pointerEvents:'none' }
     const checkBox = { width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#DC2626', flexShrink:0 }
     const waBtn = { display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none', cursor:'pointer', border:'none', fontFamily:'inherit', marginTop:'0.7rem' }
@@ -1038,6 +1049,35 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 </p>
                 {querPrescricao && (
                   <button style={waBtn} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e desejo solicitar a prescrição do tratamento para H. pylori.')}>{"Solicitar no WhatsApp →"}</button>
+                )}
+              </div>
+            )}
+
+            {/* MACROCITOSE / B12 — protocolo de reposição + oferta de prescrição digital */}
+            {precisaB12Protocolo && (
+              <div style={{ background:'#EEF2FF', border:'2px solid #C7D2FE', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
+                <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#3730A3', margin:'0 0 0.4rem' }}>{"REPOSIÇÃO DE VITAMINA B12 + ÁCIDO FÓLICO"}</p>
+                <p style={{ fontSize:'0.8rem', color:'#3730A3', lineHeight:1.5, margin:'0 0 0.6rem' }}>
+                  {"Seu hemograma indica macrocitose importante e/ou hemoglobina baixa — no bariátrico, sinal de deficiência de Vitamina B12, que compromete a produção de hemácias. Recomendamos iniciar a reposição:"}
+                </p>
+                <div style={{ background:'white', border:'1px solid #C7D2FE', borderRadius:8, padding:'0.6rem 0.8rem', marginBottom:'0.7rem' }}>
+                  <p style={{ fontSize:'0.76rem', color:'#374151', lineHeight:1.6, margin:0 }}>
+                    {"• Cianocobalamina "}<strong>{"IM"}</strong>{": 3 doses, a cada 15 dias;"}<br/>
+                    {"• Metilcobalamina "}<strong>{"sublingual 1.000 mcg/dia"}</strong>{" por 90 dias, depois 3×/semana;"}<br/>
+                    {"• Ácido fólico "}<strong>{"5 mg via oral/dia"}</strong>{" por pelo menos 90 dias."}
+                  </p>
+                </div>
+                <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                  <input type="checkbox" checked={querPrescricaoB12} onChange={e => setQuerPrescricaoB12(e.target.checked)} style={{ ...checkBox, accentColor:'#4F46E5' }} />
+                  <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#3730A3' }}>{"SOLICITAR A PRESCRIÇÃO MÉDICA DIGITAL"}</span>
+                </label>
+                <p style={{ fontSize:'0.74rem', color:'#4338CA', margin:'0.5rem 0 0' }}>
+                  {"Você pagará apenas "}
+                  <strong>{valorPrescricao != null ? `R$ ${valorPrescricao}` : "(valor a confirmar)"}</strong>
+                  {" pela prescrição com assinatura digital."}
+                </p>
+                {querPrescricaoB12 && (
+                  <button style={waBtn} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e desejo solicitar a prescrição da reposição de Vitamina B12 e Ácido Fólico (macrocitose/anemia).')}>{"Solicitar no WhatsApp →"}</button>
                 )}
               </div>
             )}
@@ -1413,6 +1453,30 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               </p>
             </div>
           )}
+
+          {/* ANTI-H.PYLORI IgG/IgM (sorologia qualitativa). IgM reagente sugere
+              infecção ativa → oferta de prescrição do tratamento na conclusão. */}
+          <div style={{ background:'#FFF7ED', border:'1px solid #FED7AA', borderRadius:8, padding:'0.6rem 0.8rem', margin:'0.6rem 0' }}>
+            <p style={{ fontSize:'0.72rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:'#9A3412', marginBottom:'0.5rem' }}>{"Anti-H. pylori (sorologia)"}</p>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem' }}>
+              {[['IgG', 'antiHp_igg'], ['IgM', 'antiHp_igm']].map(([rotulo, campo]) => (
+                <div key={campo} style={{ display:'flex', flexDirection:'column' }}>
+                  <label style={{ fontSize:'0.72rem', fontWeight:600, color:'#374151', marginBottom:'0.2rem' }}>{rotulo}</label>
+                  <select value={form[campo]} onChange={e => sf(campo, e.target.value)}
+                    style={{ padding:'0.4rem 0.6rem', border:'1px solid #D1D5DB', borderRadius:6, fontSize:'0.85rem', background:'white', fontFamily:'inherit' }}>
+                    <option value="">Selecione</option>
+                    <option value="NÃO REAGENTE">Não reagente</option>
+                    <option value="REAGENTE">Reagente</option>
+                  </select>
+                </div>
+              ))}
+            </div>
+            {form.antiHp_igm === 'REAGENTE' && (
+              <p style={{ fontSize:'0.72rem', color:'#9A3412', fontWeight:700, marginTop:'0.5rem' }}>
+                {"⚠ IgM reagente sugere infecção ativa — a prescrição do tratamento será oferecida na conclusão."}
+              </p>
+            )}
+          </div>
 
           {(() => {
             const temAlterado = todosExames.some(ex => {

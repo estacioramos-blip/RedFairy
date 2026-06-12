@@ -28,6 +28,10 @@ export default function TriagemResultadoModal({
   onCadastrar
 }) {
   const [tela, setTela] = useState('resultado')
+  // Macrocitose (VCM > 100): além de Ferritina/Saturação, recomenda-se também B12 e
+  // Folatos (investigação da macrocitose). Sufixo reaproveitado nos 3 cards.
+  const macro = resultado?.classificacaoVCM === 'MACROCÍTICA'
+  const sufB12 = macro ? <>{", "}<strong>{"VITAMINA B12 e FOLATOS (ÁCIDO FÓLICO)"}</strong></> : null
   const [salvando, setSalvando] = useState(false)
   const [erroSalvamento, setErroSalvamento] = useState(null)
   const [pedNome, setPedNome] = useState('')
@@ -546,7 +550,7 @@ export default function TriagemResultadoModal({
                   {"\ud83e\ude7a IMPORTANTE"}
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed">
-                  {"Para entender melhor o eritron, precisamos da "}<strong>FERRITINA</strong>{" e da "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA [%]"}</strong>{". Solicite esses exames e lance aqui os resultados, ou encaminhe o/a paciente para que se cadastre na plataforma, nos solicite o pedido desses exames, e lance os resultados. N\u00f3s faremos a an\u00e1lise e retornaremos a voc\u00ea com a conclus\u00e3o."}
+                  {"Para entender melhor o eritron, precisamos da "}<strong>FERRITINA</strong>{" e da "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA [%]"}</strong>{sufB12}{". Solicite esses exames e lance aqui os resultados, ou encaminhe o/a paciente para que se cadastre na plataforma, nos solicite o pedido desses exames, e lance os resultados. N\u00f3s faremos a an\u00e1lise e retornaremos a voc\u00ea com a conclus\u00e3o."}
                 </p>
               </div>
             ) : isDemo ? (
@@ -556,7 +560,7 @@ export default function TriagemResultadoModal({
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed mb-2">
                   {"Para um diagn\u00f3stico mais preciso, voc\u00ea precisa NO M\u00cdNIMO de "}
-                  <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{". S\u00e3o de baixo custo, resultados r\u00e1pidos, normalmente cobertos por planos de sa\u00fade."}
+                  <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{sufB12}{". S\u00e3o de baixo custo, resultados r\u00e1pidos, normalmente cobertos por planos de sa\u00fade."}
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed">
                   {"Ao se cadastrar aqui voc\u00ea ter\u00e1 "}<strong>acompanhamento por 1 ano</strong>{", e esse "}<strong>{"primeiro pedido de exames ser\u00e1 gratuito"}</strong>{"."}
@@ -569,7 +573,7 @@ export default function TriagemResultadoModal({
                 </p>
                 <p className="text-sm text-blue-900 leading-relaxed">
                   {"Para um diagn\u00f3stico mais preciso, \u00e9 necess\u00e1rio fazer "}
-                  <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{". S\u00e3o de baixo custo, resultados r\u00e1pidos, normalmente cobertos por planos de sa\u00fade. Solicite esses exames e traga os resultados aqui para uma avalia\u00e7\u00e3o completa."}
+                  <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{sufB12}{". S\u00e3o de baixo custo, resultados r\u00e1pidos, normalmente cobertos por planos de sa\u00fade. Solicite esses exames e traga os resultados aqui para uma avalia\u00e7\u00e3o completa."}
                 </p>
               </div>
             )}
