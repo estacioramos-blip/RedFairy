@@ -20,6 +20,14 @@ export const HB_ALVO_GESTANTE = 11.5;        // g/dL, sobrepõe a Hb alvo femini
 export const FERRO_RESERVA_MG = 500;         // mg, adultos
 export const CONSTANTE_GANZONI = 2.4;        // fixa
 
+// Custo de ferro da GESTAÇÃO (mg) que o conceptus consome das reservas maternas
+// ao longo da gravidez. Literatura (AJCN 2023; total ≈ 1000 mg): feto+placenta
+// ~360 mg, expansão da massa eritrocitária materna ~450 mg, perdas basais ~240 mg,
+// perda no parto ~150 mg. A maior parte acumula no 3º TRIMESTRE — por isso o
+// acréscimo é escalado pelas semanas com peso QUADRÁTICO (carga exponencial tardia).
+// Valor TUNÁVEL pelo médico (Dr. Ramos).
+export const FERRO_GESTACAO_TERMO_MG = 1000;
+
 /**
  * Calcula o déficit total de ferro (mg) pela Fórmula de Ganzoni.
  *
@@ -33,7 +41,7 @@ export const CONSTANTE_GANZONI = 2.4;        // fixa
  *   hbAlvo: number, hbAtual: number, peso: number, formula: string
  * }}  null quando faltam dados válidos (peso/Hb/sexo).
  */
-export function calcularDeficitFerroGanzoni({ sexo, peso, hb, gestante = false }) {
+export function calcularDeficitFerroGanzoni({ sexo, peso, hb, gestante = false, semanasGestacao = null }) {
   const p = Number(peso);
   const h = Number(hb);
   const alvo = (sexo === 'F' && gestante) ? HB_ALVO_GESTANTE : HB_ALVO[sexo];
@@ -45,16 +53,27 @@ export function calcularDeficitFerroGanzoni({ sexo, peso, hb, gestante = false }
 
   // Parcela da Hb: nunca negativa (Hb já acima do alvo → 0; repõe só a reserva).
   const termoHb = Math.max(0, alvo - h) * p * CONSTANTE_GANZONI;
-  const total = Math.round(termoHb + FERRO_RESERVA_MG);
+
+  // Acréscimo GESTACIONAL (só F + gestante): ferro que o conceptus consome das
+  // reservas maternas, escalado pelas SEMANAS com peso quadrático — reflete o
+  // consumo exponencial concentrado no 3º trimestre. Sem semanas válidas → 0.
+  const sem = Number(semanasGestacao);
+  const temSemanas = (sexo === 'F' && gestante) && Number.isFinite(sem) && sem > 0;
+  const fracGestacao = temSemanas ? Math.min(1, (Math.min(sem, 42) / 40) ** 2) : 0;
+  const ferroGestacaoMg = Math.round(FERRO_GESTACAO_TERMO_MG * fracGestacao);
+
+  const total = Math.round(termoHb + FERRO_RESERVA_MG + ferroGestacaoMg);
 
   return {
     deficitMg: total,
     termoHbMg: Math.round(termoHb),
     reservaMg: FERRO_RESERVA_MG,
+    ferroGestacaoMg,
+    semanasGestacao: temSemanas ? sem : null,
     hbAlvo: alvo,
     hbAtual: h,
     peso: p,
-    formula: `${p} × (${alvo} − ${h}) × ${CONSTANTE_GANZONI} + ${FERRO_RESERVA_MG} = ${total} mg`,
+    formula: `${p} × (${alvo} − ${h}) × ${CONSTANTE_GANZONI} + ${FERRO_RESERVA_MG}${ferroGestacaoMg > 0 ? ` + ${ferroGestacaoMg} (gestação)` : ''} = ${total} mg`,
   };
 }
 

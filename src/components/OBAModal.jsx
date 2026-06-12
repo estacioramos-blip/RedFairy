@@ -4,6 +4,7 @@ import { classificarValor } from '../engine/obaCutoffs'
 import { avaliarOBA, classificarEstadoClinico, ESTADOS_CLINICOS } from '../engine/obaEngine'
 import logo from '../assets/logo.png'
 import PlayButton from './PlayButton'
+import ModalFerroEV from './ModalFerroEV'
 
 // Imagem landscape do splash do relatório OBA — A DEFINIR (será horizontal,
 // ocupando a largura do modal, parcialmente sobreposta pelo conteúdo).
@@ -416,6 +417,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [valorPrescricao, setValorPrescricao] = useState(null)  // config.valor_documento_medico
   const [querPrescricao, setQuerPrescricao] = useState(false)
   const [querResultado, setQuerResultado] = useState(false)
+  // Protocolo de reposição de FERRO ENDOVENOSO (Ganzoni) — modal compartilhado.
+  const [showFerroEV, setShowFerroEV] = useState(false)
   // Popup da PESQUISA (tratamento simbiótico p/ obstipação/fibromialgia).
   const [showPesquisa, setShowPesquisa] = useState(false)
   const [pesquisaAceita, setPesquisaAceita] = useState(false)
@@ -1069,7 +1072,35 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const rel = relatorio
     const estadoInfo = ESTADO_UI[estadoClinico?.estado] || ESTADO_UI.RAZOAVEL
     const BG_BAND = { position:'absolute', top:0, left:0, right:0, height:360, pointerEvents:'none' }
+
+    // Gatilho do PROTOCOLO DE FERRO ENDOVENOSO: Hb abaixo do alvo (por sexo/gestante),
+    // contexto ferropênico no eritron e sem sobrecarga (color verde). O bariátrico
+    // absorve mal ferro oral, então o ferro EV é a via de escolha quando indicado.
+    const hbFerroEV = Number(examesRedFairy?.hemoglobina ?? resultadoEritron?.inputs?.hemoglobina ?? 0)
+    const gestanteOBA = form.status_gestacional === "GRÁVIDA"
+    const hbAlvoFerroEV = isFem ? (gestanteOBA ? 11.5 : 12.0) : 13.5
+    const textoEritron = ((resultadoEritron?.diagnostico || '') + ' ' + (resultadoEritron?.recomendacao || '')).toUpperCase()
+    // Sinal específico do motor do OBA (ele sugere ferro EV ao bariátrico que absorve
+    // mal o ferro oral) — alertas/exames complementares do relatório.
+    const obaSugereFerroEV = (rel?.examesComplementares || []).some(e => /FERRO ENDOVENOSO/i.test(e))
+      || (rel?.alertas || []).some(a => /FERRO ENDOVENOSO/i.test(a?.texto || ''))
+    const precisaFerroEV = hbFerroEV > 0 && (hbAlvoFerroEV - hbFerroEV) > 0
+      && resultadoEritron?.color !== 'green'
+      && (/FERRO|SIDEROP/.test(textoEritron) || obaSugereFerroEV)
     return (
+      <>
+      {showFerroEV && (
+        <div style={{ position:'relative', zIndex:2000 }}>
+          <ModalFerroEV
+            onClose={() => setShowFerroEV(false)}
+            hbAtual={hbFerroEV}
+            sexo={isFem ? 'F' : 'M'}
+            gestante={gestanteOBA}
+            semanasGestacao={form.semanas_gestacao}
+            pesoInicial={pesoAtual || form.peso_atual}
+          />
+        </div>
+      )}
       <div style={OV} onClick={concluirRelatorio}>
         <div
           style={{ ...CD, position:'relative', overflow:'hidden' }}
@@ -1248,6 +1279,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                     </>
                   )
                 })()}
+
+                {/* PROTOCOLO DE FERRO ENDOVENOSO — só quando indicado (Hb baixa +
+                    contexto ferropênico). O bariátrico absorve mal ferro oral. */}
+                {precisaFerroEV && (
+                  <button onClick={() => setShowFerroEV(true)}
+                    style={{ width:'100%', marginTop:'1rem', background:'#FEF2F2', border:'2px solid #FCA5A5', color:'#991B1B', fontWeight:800, fontSize:'0.85rem', padding:'0.8rem', borderRadius:12, cursor:'pointer', fontFamily:'inherit' }}>
+                    {"💉 Como repor o Ferro Endovenoso"}
+                  </button>
+                )}
               </>
             )}
 
@@ -1262,6 +1302,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
         </div>
       </div>
+      </>
     )
   }
 
