@@ -5,6 +5,7 @@ import { avaliarOBA, classificarEstadoClinico, ESTADOS_CLINICOS } from '../engin
 import logo from '../assets/logo.png'
 import PlayButton from './PlayButton'
 import ModalFerroEV from './ModalFerroEV'
+import { calcularDeficitFerroGanzoni } from '../engine/ferroProtocol'
 
 // Imagem landscape do splash do relatório OBA — A DEFINIR (será horizontal,
 // ocupando a largura do modal, parcialmente sobreposta pelo conteúdo).
@@ -52,7 +53,7 @@ const ACOMPANHAMENTO_OPS = [
 const ESPECIALISTAS = [
   "CIRURGI\u00c3O", "CL\u00cdNICO", "HEMATOLOGISTA", "GASTROENTEROLOGISTA", "NUTR\u00d3LOGO",
   "ENDOCRINOLOGISTA", "CARDIOLOGISTA", "NEUROLOGISTA", "PSIQUIATRA", "REUMATOLOGISTA",
-  "ORTOPEDISTA", "GINECOLOGISTA", "PNEUMOLOGISTA", "NEFROLOGISTA", "UROLOGISTA",
+  "ORTOPEDISTA", "GINECOLOGISTA", "OBSTETRA", "PNEUMOLOGISTA", "NEFROLOGISTA", "UROLOGISTA",
   "DERMATOLOGISTA", "OUTRO"
 ]
 
@@ -242,7 +243,16 @@ function Radio16({ active }) {
   )
 }
 
-function RadioGroup({ options, value, onChange, disabledOptions = [], cols = 1 }) {
+// Gêneriza só o TEXTO exibido (o valor armazenado/lido pelo motor fica masculino).
+function gz(texto, isFem) {
+  if (!isFem || !texto) return texto
+  return String(texto)
+    .replace(/HIPERTENSO/g, 'HIPERTENSA').replace(/CONTROLADO/g, 'CONTROLADA')
+    .replace(/DIABÉTICO/g, 'DIABÉTICA').replace(/CURADO/g, 'CURADA')
+    .replace(/SEDENTÁRIO/g, 'SEDENTÁRIA')
+}
+
+function RadioGroup({ options, value, onChange, disabledOptions = [], cols = 1, mapLabel = null }) {
   const items = options.map(op => {
     const disabled = disabledOptions.includes(op)
     return (
@@ -253,7 +263,7 @@ function RadioGroup({ options, value, onChange, disabledOptions = [], cols = 1 }
         cursor: disabled ? 'not-allowed' : 'pointer', marginBottom: cols > 1 ? 0 : '0.4rem', opacity: disabled ? 0.45 : 1,
         fontSize:'0.85rem', fontWeight: value === op ? 700 : 500, color: disabled ? '#9CA3AF' : value === op ? '#7B1E1E' : '#374151',
       }}>
-        <Radio16 active={value === op} />{op}
+        <Radio16 active={value === op} />{mapLabel ? mapLabel(op) : op}
       </div>
     )
   })
@@ -418,6 +428,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [querPrescricao, setQuerPrescricao] = useState(false)
   const [querPrescricaoB12, setQuerPrescricaoB12] = useState(false)  // protocolo B12/folato (macrocitose)
   const [querResultado, setQuerResultado] = useState(false)
+  const [querFerroEV, setQuerFerroEV] = useState(false)  // 2ª oferta do ferro EV na conclusão
   // Protocolo de reposição de FERRO ENDOVENOSO (Ganzoni) — modal compartilhado.
   const [showFerroEV, setShowFerroEV] = useState(false)
   // Popup da PESQUISA (tratamento simbiótico p/ obstipação/fibromialgia).
@@ -963,6 +974,78 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   )
 
 
+  // Gatilho/dados do PROTOCOLO DE FERRO ENDOVENOSO — fonte única usada no relatório
+  // (botão abaixo do módulo ERITRON) e na conclusão (2ª oferta + prescrição).
+  // resultadoEritron só traz { label, color, inputs }, então o contexto ferropênico
+  // vem de: ferritina < 30, label microcítico, ou o motor do OBA sugerindo ferro EV.
+  const ferroEV = (() => {
+    const hb = Number(examesRedFairy?.hemoglobina ?? resultadoEritron?.inputs?.hemoglobina ?? 0)
+    const ferritina = Number(examesRedFairy?.ferritina ?? resultadoEritron?.inputs?.ferritina ?? 0)
+    const gestante = form.status_gestacional === "GRÁVIDA"
+    const hbAlvo = isFem ? (gestante ? 11.5 : 12.0) : 13.5
+    const label = String(resultadoEritron?.label || '').toUpperCase()
+    const obaSugere = (relatorio?.examesComplementares || []).some(e => /FERRO ENDOVENOSO/i.test(e))
+      || (relatorio?.alertas || []).some(a => /FERRO ENDOVENOSO/i.test(a?.texto || ''))
+    const contexto = (ferritina > 0 && ferritina < 30) || /MICROCIT|FERRO|SIDEROP/.test(label) || obaSugere
+    const precisa = hb > 0 && (hbAlvo - hb) > 0 && resultadoEritron?.color !== 'green' && contexto
+    return { precisa, hb, gestante }
+  })()
+
+  // Texto do protocolo de ferro EV p/ compartilhar no WhatsApp do paciente.
+  const protocoloFerroTexto = [
+    '*Protocolo de Reposição de Ferro Endovenoso (Fórmula de Ganzoni)*',
+    `Paciente: ${nome || '—'}`,
+    'Dose total (mg) = Peso × (Hb alvo − Hb atual) × 2,4 + 500' + (ferroEV.gestante ? ' + aporte gestacional' : ''),
+    'Antes da 1ª dose: 10.000 UI de vitamina D (prevenção de hipofosfatemia).',
+    'Precauções: adrenalina/anti-histamínico disponíveis; observar 30 min após a infusão.',
+    'Monitoramento: hemograma em 4 semanas; ferritina e saturação em 8 semanas.',
+    '— RedFairy | OBA',
+  ].join('\n')
+
+  // Gera o PDF do protocolo de ferro EV (jsPDF carregado sob demanda p/ não pesar
+  // o bundle inicial). Calcula a dose real pela fórmula de Ganzoni p/ o paciente.
+  async function baixarPdfFerro() {
+    try {
+      const { jsPDF } = await import('jspdf')
+      const calc = calcularDeficitFerroGanzoni({
+        sexo: isFem ? 'F' : 'M',
+        peso: pesoAtual || parseFloat(form.peso_atual),
+        hb: ferroEV.hb,
+        gestante: ferroEV.gestante,
+        semanasGestacao: form.semanas_gestacao,
+      })
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+      const M = 18
+      let y = 22
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(123, 30, 30)
+      doc.text('Protocolo de Reposição de Ferro Endovenoso', M, y); y += 7
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(110, 110, 110)
+      doc.text('RedFairy — OBA (paciente bariátrico) · Fórmula de Ganzoni', M, y); y += 11
+      doc.setTextColor(30, 30, 30); doc.setFontSize(11)
+      doc.text('Paciente: ' + (nome || '—'), M, y); y += 9
+      if (calc) {
+        doc.setFont('helvetica', 'bold'); doc.text('Dose total a repor:', M, y); y += 6
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(13); doc.setTextColor(123, 30, 30)
+        doc.text(calc.deficitMg + ' mg de ferro elementar', M + 3, y); y += 8
+        doc.setFontSize(9); doc.setTextColor(110, 110, 110)
+        doc.text('Cálculo: ' + calc.formula, M + 3, y); y += 9
+        doc.setFontSize(11); doc.setTextColor(30, 30, 30)
+      }
+      const linhas = [
+        'Antes da 1ª dose: 10.000 UI de vitamina D (prevenção de hipofosfatemia).',
+        'Precauções: adrenalina e anti-histamínico disponíveis; observar o paciente',
+        '   por 30 minutos após a infusão.',
+        'Monitoramento: hemograma em 4 semanas; ferritina e saturação em 8 semanas.',
+        '',
+        'No paciente bariátrico, o ferro oral é mal absorvido — a via endovenosa é a',
+        'de escolha. Este protocolo é uma sugestão e deve ser validado pelo médico',
+        'assistente antes da aplicação.',
+      ]
+      linhas.forEach(l => { doc.text(l, M, y); y += 6 })
+      doc.save('protocolo-ferro-ev.pdf')
+    } catch (e) { /* falha silenciosa — botões de WhatsApp/prescrição seguem disponíveis */ }
+  }
+
   if (etapa === 'conclusao') {
     const estado = estadoClinico?.estado
     const teleRecomendada = estado === 'CRITICO' || estado === 'RUIM' || form.usou_anticoagulante
@@ -977,6 +1060,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const checkBox = { width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#DC2626', flexShrink:0 }
     const waBtn = { display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none', cursor:'pointer', border:'none', fontFamily:'inherit', marginTop:'0.7rem' }
     return (
+      <>
+      {showFerroEV && (
+        <div style={{ position:'relative', zIndex:2000 }}>
+          <ModalFerroEV
+            onClose={() => setShowFerroEV(false)}
+            hbAtual={ferroEV.hb}
+            sexo={isFem ? 'F' : 'M'}
+            gestante={ferroEV.gestante}
+            semanasGestacao={form.semanas_gestacao}
+            pesoInicial={pesoAtual || form.peso_atual}
+          />
+        </div>
+      )}
       <div style={OV} onClick={finalizar}>
         <div
           style={{ ...CD, position:'relative', overflow:'hidden' }}
@@ -1082,6 +1178,45 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               </div>
             )}
 
+            {/* FERRO ENDOVENOSO — 2ª oferta (reabrir protocolo + prescrição + copiar p/ WhatsApp do paciente) */}
+            {ferroEV.precisa && (
+              <div style={{ background:'#FFF1F2', border:'2px solid #FDA4AF', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
+                <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#9F1239', margin:'0 0 0.4rem' }}>{"PROTOCOLO DE REPOSIÇÃO DE FERRO ENDOVENOSO"}</p>
+                <p style={{ fontSize:'0.8rem', color:'#9F1239', lineHeight:1.5, margin:'0 0 0.7rem' }}>
+                  {"No bariátrico, o ferro oral é mal absorvido — a reposição por via endovenosa é a indicada. Você pode rever o protocolo completo, solicitar a prescrição médica ou levar o resumo para o seu WhatsApp."}
+                </p>
+                <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                  <input type="checkbox" checked={querFerroEV} onChange={e => setQuerFerroEV(e.target.checked)} style={{ ...checkBox, accentColor:'#E11D48' }} />
+                  <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#9F1239' }}>{"COPIAR O PROTOCOLO DE REPOSIÇÃO DE FERRO ENDOVENOSO"}</span>
+                </label>
+                {querFerroEV && (
+                  <div style={{ marginTop:'0.8rem', display:'flex', flexDirection:'column', gap:'0.5rem' }}>
+                    <button
+                      style={{ ...waBtn, background:'#9F1239', marginTop:0 }}
+                      onClick={() => setShowFerroEV(true)}
+                    >{"Ver o protocolo completo (cálculo da dose) →"}</button>
+                    <button
+                      style={{ ...waBtn, marginTop:0 }}
+                      onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e desejo solicitar a prescrição médica do protocolo de reposição de Ferro Endovenoso.')}
+                    >{"Solicitar a prescrição médica digital →"}</button>
+                    <button
+                      style={{ ...waBtn, background:'#25D366', marginTop:0 }}
+                      onClick={() => { try { window.open('https://wa.me/?text=' + encodeURIComponent(protocoloFerroTexto), '_blank') } catch (e) {} }}
+                    >{"Copiar para o meu WhatsApp →"}</button>
+                    <button
+                      style={{ ...waBtn, background:'#475569', marginTop:0 }}
+                      onClick={baixarPdfFerro}
+                    >{"Baixar o protocolo em PDF ⬇"}</button>
+                    <p style={{ fontSize:'0.72rem', color:'#9F1239', margin:'0.2rem 0 0', lineHeight:1.5 }}>
+                      {"A prescrição com assinatura digital sai por "}
+                      <strong>{valorPrescricao != null ? `R$ ${valorPrescricao}` : "(valor a confirmar)"}</strong>
+                      {"."}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* RESULTADO POR WHATSAPP */}
             <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:12, padding:'1rem 1.1rem' }}>
               <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#0369A1', margin:'0 0 0.5rem' }}>{"Receber o resultado da sua avaliação"}</p>
@@ -1104,6 +1239,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
         </div>
       </div>
+      </>
     )
   }
 
@@ -1113,29 +1249,23 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const estadoInfo = ESTADO_UI[estadoClinico?.estado] || ESTADO_UI.RAZOAVEL
     const BG_BAND = { position:'absolute', top:0, left:0, right:0, height:360, pointerEvents:'none' }
 
-    // Gatilho do PROTOCOLO DE FERRO ENDOVENOSO: Hb abaixo do alvo (por sexo/gestante),
-    // contexto ferropênico no eritron e sem sobrecarga (color verde). O bariátrico
-    // absorve mal ferro oral, então o ferro EV é a via de escolha quando indicado.
-    const hbFerroEV = Number(examesRedFairy?.hemoglobina ?? resultadoEritron?.inputs?.hemoglobina ?? 0)
-    const gestanteOBA = form.status_gestacional === "GRÁVIDA"
-    const hbAlvoFerroEV = isFem ? (gestanteOBA ? 11.5 : 12.0) : 13.5
-    const textoEritron = ((resultadoEritron?.diagnostico || '') + ' ' + (resultadoEritron?.recomendacao || '')).toUpperCase()
-    // Sinal específico do motor do OBA (ele sugere ferro EV ao bariátrico que absorve
-    // mal o ferro oral) — alertas/exames complementares do relatório.
-    const obaSugereFerroEV = (rel?.examesComplementares || []).some(e => /FERRO ENDOVENOSO/i.test(e))
-      || (rel?.alertas || []).some(a => /FERRO ENDOVENOSO/i.test(a?.texto || ''))
-    const precisaFerroEV = hbFerroEV > 0 && (hbAlvoFerroEV - hbFerroEV) > 0
-      && resultadoEritron?.color !== 'green'
-      && (/FERRO|SIDEROP/.test(textoEritron) || obaSugereFerroEV)
+    // Gatilho do PROTOCOLO DE FERRO ENDOVENOSO. ATENÇÃO: resultadoEritron carrega só
+    // { label, color, inputs } (sem diagnostico/recomendacao), por isso o contexto
+    // ferropênico é detectado por: FERRITINA BAIXA (< 30), label MICROCÍTICO (marca
+    // da ferropenia) ou o motor do OBA sugerindo ferro EV. Gate: Hb abaixo do alvo
+    // (por sexo/gestante) e sem sobrecarga (color verde). O bariátrico absorve mal o
+    // ferro oral → ferro EV é a via de escolha.
+    // Gatilho/dados vêm de `ferroEV` (fonte única definida acima — vale p/ relatório e conclusão).
+    const precisaFerroEV = ferroEV.precisa
     return (
       <>
       {showFerroEV && (
         <div style={{ position:'relative', zIndex:2000 }}>
           <ModalFerroEV
             onClose={() => setShowFerroEV(false)}
-            hbAtual={hbFerroEV}
+            hbAtual={ferroEV.hb}
             sexo={isFem ? 'F' : 'M'}
-            gestante={gestanteOBA}
+            gestante={ferroEV.gestante}
             semanasGestacao={form.semanas_gestacao}
             pesoInicial={pesoAtual || form.peso_atual}
           />
@@ -1279,16 +1409,25 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 {(rel.modulos || []).map((m, i) => {
                   const ui = NIVEL_UI[m.nivel] || NIVEL_UI.normal
                   return (
-                    <div key={i} style={{ border:`1px solid ${ui.borda}`, borderRadius:10, marginBottom:'0.6rem', overflow:'hidden' }}>
-                      <div style={{ background:ui.fundo, padding:'0.6rem 0.9rem', display:'flex', justifyContent:'space-between', alignItems:'center', gap:'0.5rem' }}>
-                        <span style={{ fontSize:'0.78rem', fontWeight:800, color:ui.texto, textTransform:'uppercase', letterSpacing:'0.3px' }}>{m.titulo}</span>
-                        <span style={{ fontSize:'0.58rem', fontWeight:800, color:'white', background:ui.texto, borderRadius:6, padding:'0.15rem 0.4rem', whiteSpace:'nowrap' }}>{ui.rotulo}</span>
+                    <div key={i}>
+                      <div style={{ border:`1px solid ${ui.borda}`, borderRadius:10, marginBottom:'0.6rem', overflow:'hidden' }}>
+                        <div style={{ background:ui.fundo, padding:'0.6rem 0.9rem', display:'flex', justifyContent:'space-between', alignItems:'center', gap:'0.5rem' }}>
+                          <span style={{ fontSize:'0.78rem', fontWeight:800, color:ui.texto, textTransform:'uppercase', letterSpacing:'0.3px' }}>{m.titulo}</span>
+                          <span style={{ fontSize:'0.58rem', fontWeight:800, color:'white', background:ui.texto, borderRadius:6, padding:'0.15rem 0.4rem', whiteSpace:'nowrap' }}>{ui.rotulo}</span>
+                        </div>
+                        <div style={{ padding:'0.7rem 0.9rem', background:'white' }}>
+                          {(m.linhas || []).map((l, j) => (
+                            <p key={j} style={{ fontSize:'0.78rem', color:'#374151', lineHeight:1.5, marginBottom: j < m.linhas.length - 1 ? '0.5rem' : 0 }}>{l}</p>
+                          ))}
+                        </div>
                       </div>
-                      <div style={{ padding:'0.7rem 0.9rem', background:'white' }}>
-                        {(m.linhas || []).map((l, j) => (
-                          <p key={j} style={{ fontSize:'0.78rem', color:'#374151', lineHeight:1.5, marginBottom: j < m.linhas.length - 1 ? '0.5rem' : 0 }}>{l}</p>
-                        ))}
-                      </div>
+                      {/* PROTOCOLO DE FERRO ENDOVENOSO logo abaixo do módulo ERITRON */}
+                      {/ERITRON/i.test(m.titulo || '') && precisaFerroEV && (
+                        <button onClick={() => setShowFerroEV(true)}
+                          style={{ width:'100%', marginBottom:'0.8rem', background:'#FEF2F2', border:'2px solid #FCA5A5', color:'#991B1B', fontWeight:800, fontSize:'0.85rem', padding:'0.8rem', borderRadius:12, cursor:'pointer', fontFamily:'inherit' }}>
+                          {"💉 Como repor o Ferro Endovenoso"}
+                        </button>
+                      )}
                     </div>
                   )
                 })}
@@ -1320,14 +1459,6 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   )
                 })()}
 
-                {/* PROTOCOLO DE FERRO ENDOVENOSO — só quando indicado (Hb baixa +
-                    contexto ferropênico). O bariátrico absorve mal ferro oral. */}
-                {precisaFerroEV && (
-                  <button onClick={() => setShowFerroEV(true)}
-                    style={{ width:'100%', marginTop:'1rem', background:'#FEF2F2', border:'2px solid #FCA5A5', color:'#991B1B', fontWeight:800, fontSize:'0.85rem', padding:'0.8rem', borderRadius:12, cursor:'pointer', fontFamily:'inherit' }}>
-                    {"💉 Como repor o Ferro Endovenoso"}
-                  </button>
-                )}
               </>
             )}
 
@@ -1562,7 +1693,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
 
           <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
-            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>{"O bari\u00e1trico \u00e9 um paciente complexo."}</p>
+            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>{isFem ? "A bari\u00e1trica \u00e9 uma paciente complexa." : "O bari\u00e1trico \u00e9 um paciente complexo."}</p>
             <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>{"Precisamos de mais informa\u00e7\u00f5es para cuidar de voc\u00ea. Marque os itens e preencha os campos:"}</p>
             <p style={{ fontSize:'0.66rem', textTransform:'uppercase', letterSpacing:'0.4px', color:'#9B2C2C', fontWeight:600, marginTop:'0.5rem', lineHeight:1.5 }}>{"Digite r\u00e1pido e com aten\u00e7\u00e3o que o processo ser\u00e1 r\u00e1pido e f\u00e1cil, mas se voc\u00ea errar alguma coisa voc\u00ea sempre pode tocar no campo e editar."}</p>
           </div>
@@ -1701,20 +1832,20 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             <>
               <SectionTitle>Status Gestacional</SectionTitle>
 
-              {/* Dois primeiros campos em 2 colunas: ESTOU GR\u00c1VIDA (+ semanas inline,
-                  j\u00e1 marcado quando veio da triagem) \u00e0 esquerda; N\u00ba de gesta\u00e7\u00f5es \u00e0
-                  direita (amarelo, m\u00e1scara em EXPRESS\u00c3O p/ n\u00e3o dar mojibake). */}
+              {/* ESTOU GR\u00c1VIDA em linha pr\u00f3pria (j\u00e1 marcado quando veio da triagem);
+                  abaixo, Semanas de gesta\u00e7\u00e3o e N\u00ba de gesta\u00e7\u00f5es anteriores LADO A LADO
+                  (semanas s\u00f3 aparece quando gr\u00e1vida). Evita o desalinhamento do modal. */}
               <style>{`.oba-gest-input::placeholder{font-size:0.58rem;letter-spacing:0.2px;}`}</style>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem 0.8rem', alignItems:'start' }}>
-                {idadeNum >= 15 && (
+              {idadeNum >= 15 && (
+                <div style={{ marginBottom:'0.5rem' }}>
+                  <CheckRow label={"ESTOU GR\u00c1VIDA"} checked={form.status_gestacional === "GR\u00c1VIDA"} onClick={() => sf('status_gestacional', form.status_gestacional === "GR\u00c1VIDA" ? '' : "GR\u00c1VIDA")} />
+                </div>
+              )}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem 0.8rem', alignItems:'end' }}>
+                {form.status_gestacional === "GR\u00c1VIDA" && (
                   <div>
-                    <CheckRow label={"ESTOU GR\u00c1VIDA"} checked={form.status_gestacional === "GR\u00c1VIDA"} onClick={() => sf('status_gestacional', form.status_gestacional === "GR\u00c1VIDA" ? '' : "GR\u00c1VIDA")} />
-                    {form.status_gestacional === "GR\u00c1VIDA" && (
-                      <div style={{ display:'flex', alignItems:'center', gap:'0.4rem', marginTop:'0.4rem' }}>
-                        <input style={{ ...inpA, width:90 }} onWheel={noWheel} type="number" placeholder="Semanas" value={form.semanas_gestacao} onChange={e => sf('semanas_gestacao', e.target.value)} />
-                        <span style={{ fontSize:'0.78rem', color:'#6B7280' }}>{"semanas"}</span>
-                      </div>
-                    )}
+                    <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"Semanas de gesta\u00e7\u00e3o"}</label>
+                    <input style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 28" value={form.semanas_gestacao} onChange={e => sf('semanas_gestacao', e.target.value)} />
                   </div>
                 )}
                 <div>
@@ -1757,6 +1888,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             value={form.status_glicemico}
             disabledOptions={form.indicacao_cirurgia === 'OBESIDADE + DIABETES' ? [STATUS_GLICEMICO_OPS[0]] : []}
             onChange={v => sf('status_glicemico', v)}
+            mapLabel={o => gz(o, isFem)}
           />
           {/* DUMPING \u00e9 independente do radio acima: pode coexistir com qualquer status. */}
           <div style={{ marginTop:'0.5rem' }}>
@@ -1781,7 +1913,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
 
           <SectionTitle>{"Status Press\u00f3rico"}</SectionTitle>
-          <RadioGroup options={STATUS_PRESSORICO_OPS} value={form.status_pressorico} onChange={v => sf('status_pressorico', v)} />
+          <RadioGroup options={STATUS_PRESSORICO_OPS} value={form.status_pressorico} onChange={v => sf('status_pressorico', v)} mapLabel={o => gz(o, isFem)} />
 
           <SectionTitle>{"Status Endosc\u00f3pico"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
@@ -1820,14 +1952,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <SectionTitle>Status Vascular</SectionTitle>
 
           <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.2rem 0 0.5rem' }}>{"Venoso"}</p>
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>Trombose</label>
-          <div style={{ display:'flex', gap:'0.8rem', marginBottom:'0.6rem' }}>
-            {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
-              <div key={l} onClick={() => sf('trombose', v)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.trombose === v ? '#DC2626' : '#E5E7EB'}`, background: form.trombose === v ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.trombose === v ? 700 : 500, color: form.trombose === v ? '#7B1E1E' : '#374151', fontSize:'0.85rem' }}>
-                <Radio16 active={form.trombose === v} />{l}
-              </div>
-            ))}
-          </div>
+          <CheckRow label={"TENHO / TIVE TROMBOSE"} checked={!!form.trombose} onClick={() => sf('trombose', !form.trombose)} />
           {form.trombose && (
             <>
               <CheckRow label="INVESTIGUEI AS CAUSAS DA TROMBOSE" checked={form.investigou_trombose} onClick={() => sf('investigou_trombose', !form.investigou_trombose)} />
@@ -1836,13 +1961,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </>
           )}
 
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Varizes nas pernas"}</label>
-          <div style={{ display:'flex', gap:'0.8rem', marginBottom:'0.6rem' }}>
-            {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
-              <div key={l} onClick={() => sf('varizes', v)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.varizes === v ? '#DC2626' : '#E5E7EB'}`, background: form.varizes === v ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.varizes === v ? 700 : 500, color: form.varizes === v ? '#7B1E1E' : '#374151', fontSize:'0.85rem' }}>
-                <Radio16 active={form.varizes === v} />{l}
-              </div>
-            ))}
+          <div style={{ marginTop:'0.8rem' }}>
+            <CheckRow label={"TENHO VARIZES NAS PERNAS"} checked={!!form.varizes} onClick={() => sf('varizes', !form.varizes)} />
           </div>
           {form.varizes && (
             <div style={{ display:'flex', gap:'0.3rem', marginBottom:'0.6rem' }}>
@@ -1865,13 +1985,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <span style={{ fontSize:'0.8rem', color:'#6B7280' }}>{"% \u2014 grau m\u00e1ximo de estenose"}</span>
             </div>
           )}
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Doen\u00e7a arterial perif\u00e9rica"}</label>
-          <div style={{ display:'flex', gap:'0.8rem' }}>
-            {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
-              <div key={l} onClick={() => sf('doenca_arterial_periferica', v)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.doenca_arterial_periferica === v ? '#DC2626' : '#E5E7EB'}`, background: form.doenca_arterial_periferica === v ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.doenca_arterial_periferica === v ? 700 : 500, color: form.doenca_arterial_periferica === v ? '#7B1E1E' : '#374151', fontSize:'0.85rem' }}>
-                <Radio16 active={form.doenca_arterial_periferica === v} />{l}
-              </div>
-            ))}
+          <div style={{ marginTop:'0.8rem' }}>
+            <CheckRow label={"DOEN\u00c7A ARTERIAL PERIF\u00c9RICA"} checked={!!form.doenca_arterial_periferica} onClick={() => sf('doenca_arterial_periferica', !form.doenca_arterial_periferica)} />
           </div>
 
           <SectionTitle>{"Status Cardiovascular"}</SectionTitle>
@@ -2105,18 +2220,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             {ATIVIDADES.map(at => {
               const sedMarcado = form.atividade_fisica.includes("SEDENT\u00c1RIO")
               const disabled = at !== "SEDENT\u00c1RIO" && sedMarcado
-              return <CheckRow key={at} label={at} checked={form.atividade_fisica.includes(at)} disabled={disabled} onClick={() => toggleAtividade(at)} />
+              return <CheckRow key={at} label={gz(at, isFem)} checked={form.atividade_fisica.includes(at)} disabled={disabled} onClick={() => toggleAtividade(at)} />
             })}
           </div>
 
           <SectionTitle>{"Cirurgia Pl\u00e1stica P\u00f3s-Bari\u00e1trica"}</SectionTitle>
-          <div style={{ display:'flex', gap:'0.8rem' }}>
-            {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
-              <div key={l} onClick={() => sf('cirurgia_plastica', v)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.cirurgia_plastica === v ? '#DC2626' : '#E5E7EB'}`, background: form.cirurgia_plastica === v ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.cirurgia_plastica === v ? 700 : 500, color: form.cirurgia_plastica === v ? '#7B1E1E' : '#374151', fontSize:'0.85rem' }}>
-                <Radio16 active={form.cirurgia_plastica === v} />{l}
-              </div>
-            ))}
-          </div>
+          <CheckRow label={"FIZ CIRURGIA PL\u00c1STICA P\u00d3S-BARI\u00c1TRICA"} checked={!!form.cirurgia_plastica} onClick={() => sf('cirurgia_plastica', !form.cirurgia_plastica)} />
 
           <SectionTitle>Projeto de Vida</SectionTitle>
           <div style={{ display:'flex', gap:'0.4rem', marginBottom:'0.6rem', flexWrap:'wrap' }}>
