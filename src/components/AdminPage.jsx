@@ -1010,6 +1010,8 @@ const CATEGORIAS_SUPL = [
   { id: 'b12_sublingual', titulo: "\ud83d\udc45 B12 sublingual", sub: "mecobalamina \u2014 absor\u00e7\u00e3o pela mucosa" },
   { id: 'b12_oral',       titulo: "\ud83d\udc8a B12 oral",       sub: "cianocobalamina \u2014 reposi\u00e7\u00e3o diet\u00e9tica" },
   { id: 'ferro_oral',     titulo: "\ud83e\ude78 Ferro oral",     sub: "sais de ferro \u2014 uma linha por marca" },
+  { id: 'hpylori_1a_linha', titulo: "\ud83e\udda0 H. pylori \u2014 1\u00aa linha", sub: "pack de erradica\u00e7\u00e3o (esquema triplo) \u2014 ex.: Pyloripac" },
+  { id: 'hpylori_retrat',   titulo: "\ud83e\udda0 H. pylori \u2014 retratamento", sub: "ap\u00f3s falha de 1\u00aa linha / reinfec\u00e7\u00e3o \u2014 ex.: Pyloripac Retrat" },
 ];
 const CAMPOS_SUPL = [
   { key: 'fabricante',      label: 'Fabricante' },
