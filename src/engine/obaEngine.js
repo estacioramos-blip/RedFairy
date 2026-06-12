@@ -379,7 +379,7 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
     suger.push('SANGUE OCULTO NAS FEZES')
     bump(LEVE)
   }
-  if (has('ESOFAGITE') || has('DRGE')) {
+  if (has('ESOFAGITE') || has('DRGE') || has('REFLUXO GASTRO ESOFÁGICO')) {
     linhas.push('ESOFAGITE / DRGE: REFLUXO COMUM NO PÓS-BARIÁTRICO; PODE SANGRAR. MANEJO COM GASTROENTEROLOGISTA. ATENÇÃO: O USO CRÔNICO DE IBP PARA O REFLUXO AGRAVA O DÉFICIT DE B12 E FERRO.')
     bump(LEVE)
   }
@@ -1138,17 +1138,22 @@ function buildModVascular(dados, alertas, suger) {
     temAlgo = true
     if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     linhas.push(`VARIZES DE MEMBROS INFERIORES${variGrau ? ' — GRAU: ' + variGrau : ''}. NO BARIÁTRICO, VARIZES PODEM INDICAR INSUFICIÊNCIA VENOSA CRÔNICA AGRAVADA PELO EXCESSO DE PESO PREGRESSO.`)
-    if (variEsof) {
-      nivelGeral = GRAVE
-      linhas.push('VARIZES DE ESÔFAGO: INDICAM HIPERTENSÃO PORTAL, FREQUENTEMENTE ASSOCIADA A CIRROSE HEPÁTICA OU OUTRAS HEPATOPATIAS. AVALIAÇÃO GASTROENTEROLÓGICA E HEPATOLÓGICA URGENTE.')
-      alertas.push({ nivel: GRAVE, texto: 'VARIZES DE ESÔFAGO — INVESTIGAR HIPERTENSÃO PORTAL E HEPATOPATIA.' })
-      suger.push('ENDOSCOPIA DIGESTIVA ALTA')
-      suger.push('ECOGRAFIA ABDOMINAL COM DOPPLER PORTAL')
-      suger.push('AVALIAÇÃO COM HEPATOLOGISTA')
-      if (opeVarizes) {
-        linhas.push('JÁ OPEROU VARIZES DE ESÔFAGO: SEGUIMENTO ENDOSCÓPICO PERIÓDICO OBRIGATÓRIO.')
-        suger.push('ENDOSCOPIA DIGESTIVA ALTA (CONTROLE)')
-      }
+  }
+
+  // VARIZES DE ESÔFAGO agora é independente das varizes de membros (migrou para o
+  // STATUS ENDOSCÓPICO no round 3) → bloco próprio.
+  if (variEsof) {
+    temAlgo = true
+    nivelGeral = GRAVE
+    linhas.push('VARIZES DE ESÔFAGO: INDICAM HIPERTENSÃO PORTAL, FREQUENTEMENTE ASSOCIADA A CIRROSE HEPÁTICA OU OUTRAS HEPATOPATIAS. NO BRASIL, A ESQUISTOSSOMOSE (S. MANSONI) É CAUSA IMPORTANTE DE HIPERTENSÃO PORTAL. AVALIAÇÃO GASTROENTEROLÓGICA E HEPATOLÓGICA URGENTE.')
+    alertas.push({ nivel: GRAVE, texto: 'VARIZES DE ESÔFAGO — INVESTIGAR HIPERTENSÃO PORTAL E HEPATOPATIA (INCL. ESQUISTOSSOMOSE).' })
+    suger.push('ENDOSCOPIA DIGESTIVA ALTA')
+    suger.push('ECOGRAFIA ABDOMINAL COM DOPPLER PORTAL')
+    suger.push('AVALIAÇÃO COM HEPATOLOGISTA')
+    suger.push('IMUNOFLUORESCÊNCIA PARA S. MANSONI')
+    if (opeVarizes) {
+      linhas.push('JÁ OPEROU VARIZES DE ESÔFAGO: SEGUIMENTO ENDOSCÓPICO PERIÓDICO OBRIGATÓRIO.')
+      suger.push('ENDOSCOPIA DIGESTIVA ALTA (CONTROLE)')
     }
   }
 

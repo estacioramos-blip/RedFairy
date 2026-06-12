@@ -16,6 +16,19 @@ import PlayButton from './PlayButton'
  *
  * Props: profile (id, cpf, ...), onSalvo(novoProfile).
  */
+// DDDs válidos do Brasil (lista oficial da Anatel). Usados para validar o celular.
+const DDDS_VALIDOS = new Set([
+  '11','12','13','14','15','16','17','18','19',
+  '21','22','24','27','28',
+  '31','32','33','34','35','37','38',
+  '41','42','43','44','45','46','47','48','49',
+  '51','53','54','55',
+  '61','62','63','64','65','66','67','68','69',
+  '71','73','74','75','77','79',
+  '81','82','83','84','85','86','87','88','89',
+  '91','92','93','94','95','96','97','98','99',
+])
+
 function formatarCelular(v) {
   const d = (v || '').replace(/\D/g, '').slice(0, 11)
   if (d.length === 0) return ''
@@ -60,8 +73,10 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const fotoDigita = isMasc ? eleDigita : elaDigita
 
   const celDigits = (celular || '').replace(/\D/g, '')
+  const dddOk = celDigits.length >= 2 && DDDS_VALIDOS.has(celDigits.slice(0, 2))
+  const dddInvalido = celDigits.length >= 2 && !dddOk
   const nomeOk = (nome || '').trim().length >= 5
-  const celOk = celDigits.length >= 10
+  const celOk = celDigits.length >= 10 && dddOk
   const emailOk = /\S+@\S+\.\S+/.test((email || '').trim())
   const tudoOk = nomeOk && celOk && emailOk
 
@@ -92,6 +107,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     const nomeT = (nome || '').trim()
     if (nomeT.length < 5) { setErro('Informe seu nome completo.'); return }
     if (celDigits.length < 10) { setErro('Celular inválido (com DDD).'); return }
+    if (!dddOk) { setErro('DDD inválido. Verifique o código da sua região.'); return }
     const emailT = (email || '').trim().toLowerCase()
     if (!emailOk) { setErro('Informe um e-mail válido.'); return }
 
@@ -164,6 +180,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
                 className={fieldCls('celular')} inputMode="numeric" maxLength={16}
                 placeholder="(00) 00000-0000"
               />
+              {dddInvalido && <p className="text-xs mt-1" style={{ color: '#F97316' }}>{"DDD inválido — verifique o código da sua região."}</p>}
               <p className="text-xs text-gray-900 mt-1">{"Necessário para receber documentos médicos."}</p>
             </div>
 

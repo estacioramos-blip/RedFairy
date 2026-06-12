@@ -189,7 +189,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // Bariátrico com perfil completo e boas-vindas já vistas (login de retorno):
     // abre a anamnese OBA direto se ainda não preencheu.
     if (prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista !== false) {
-      verificarEAbrirOBA(prof)
+      // await: garante que o OBA já abra (overlay) ANTES de loading=false renderizar
+      // o dashboard "Olá" vazio por baixo. Sem isso, a tela vazia piscava antes do OBA.
+      await verificarEAbrirOBA(prof)
     }
     const { data: avals } = await supabase
       .from('avaliacoes').select('*')
@@ -535,14 +537,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       console.error('Erro ao salvar boas-vindas:', err)
     } finally {
       setSalvandoBoasVindas(false)
-      setShowBoasVindas(false)
       setProfile(p => ({ ...p, boas_vindas_vista: true }))
       // Bariátrica tem PRIORIDADE: abre a anamnese OBA e fica no dashboard.
       // Não-bariátrico:
       //  - pediu o exame grátis → ainda não tem resultados em mãos → despedida (logout).
-      //  - NÃO pediu (já tem os exames) → vai DIRETO ao formulário de avaliação,
-      //    sem parar no Histórico vazio.
+      //  - NÃO pediu (já tem os exames) → vai DIRETO ao formulário de avaliação.
+      // IMPORTANTE: abre o OBA (overlay) ANTES de fechar as boas-vindas — senão o
+      // dashboard "Olá" vazio piscava entre o fim das boas-vindas e a abertura do OBA.
       const precisa = await verificarEAbrirOBA(profile)
+      setShowBoasVindas(false)
       if (!precisa) {
         if (querPedidoGratis) {
           setMostrarDespedida(true)

@@ -74,10 +74,42 @@ const STATUS_ENDOSCOPICO_OPS = [
   'GASTRITE',
   'ESOFAGITE',
   'BARRETT',
-  'DRGE',
+  'REFLUXO GASTRO ESOFÁGICO',
   'H. PYLORI',
   'DIVERTÍCULOS',
+  'VARIZES DE ESÔFAGO',
 ]
+
+const STATUS_CARDIOVASCULAR_OPS = [
+  'ESTOU BEM',
+  'TENHO ANGINA',
+  'FIZ CATETERISMO + ANGIOPLASTIA',
+  'FIZ CIRURGIA | REVASCULARIZAÇÃO',
+]
+
+const STATUS_HORMONAL_OPS = [
+  'HIPOTIREOIDISMO',
+  'TIREOIDITE (HASHIMOTO)',
+  'HIPERTIREOIDISMO',
+]
+
+const STATUS_RESPIRATORIO_OPS = [
+  'NORMAL',
+  'RINITE | SINUSITE',
+  'TABAGISTA | DPOC',
+  'ASMA | BRONCOESPASMOS',
+]
+
+const STATUS_ALERGICO_OPS = [
+  'RESPIRATÓRIA',
+  'DERMATITE',
+  'ALIMENTAR',
+  'MEDICAMENTOSA',
+]
+
+const ALERGIA_MEDICAMENTOSA_OPS = ['ASPIRINA', 'DIPIRONA', 'ANTI-INFLAMATÓRIOS', 'OUTRA']
+
+const STATUS_ARTICULAR_OPS = ['ARTRITE', 'ARTROSE', 'TENDINITE', 'PROBLEMAS DE COLUNA']
 
 const STATUS_NEUROLOGICO_OPS = [
   "SEM QUEIXAS",
@@ -118,6 +150,7 @@ const MEDICAMENTOS = [
   "ANTICOAGULANTE",
   "ANTIDEPRESSIVO", "REM\u00c9DIO PARA DORMIR", "LAXANTES", "REM\u00c9DIO PARA PRESS\u00c3O",
   "REM\u00c9DIO PARA DORES", "REM\u00c9DIO PARA BAIXAR A GLICEMIA", "REM\u00c9DIO PARA COLESTEROL", "REM\u00c9DIO PARA TRIGLIC\u00c9RIDES",
+  "REM\u00c9DIO PARA TIRE\u00d3IDE",
   "TOPIRAMATO", "FENTERMINA", "NALTREXONA", "BUPROPIONA", "ORLISTAT (XENICAL)",
   "DOMPERIDONA (MOTILIUM)", "BROMOPRIDA",
 ]
@@ -208,21 +241,23 @@ function Radio16({ active }) {
   )
 }
 
-function RadioGroup({ options, value, onChange, disabledOptions = [] }) {
-  return options.map(op => {
+function RadioGroup({ options, value, onChange, disabledOptions = [], cols = 1 }) {
+  const items = options.map(op => {
     const disabled = disabledOptions.includes(op)
     return (
       <div key={op} onClick={() => !disabled && onChange(op)} style={{
         display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem',
         borderRadius:8, border:`1.5px solid ${value === op ? '#DC2626' : '#E5E7EB'}`,
         background: disabled ? '#F3F4F6' : value === op ? '#FEF2F2' : '#FAFAFA',
-        cursor: disabled ? 'not-allowed' : 'pointer', marginBottom:'0.4rem', opacity: disabled ? 0.45 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer', marginBottom: cols > 1 ? 0 : '0.4rem', opacity: disabled ? 0.45 : 1,
         fontSize:'0.85rem', fontWeight: value === op ? 700 : 500, color: disabled ? '#9CA3AF' : value === op ? '#7B1E1E' : '#374151',
       }}>
         <Radio16 active={value === op} />{op}
       </div>
     )
   })
+  if (cols > 1) return <div style={{ display:'grid', gridTemplateColumns:`repeat(${cols}, 1fr)`, gap:'0.4rem' }}>{items}</div>
+  return items
 }
 
 function CheckRow({ label, checked, onClick, disabled }) {
@@ -338,8 +373,9 @@ const LIMITES_OBA = {
 const inp = { width:'100%', border:'1.5px solid #E5E7EB', borderRadius:8, padding:'0.65rem 0.9rem', fontSize:'0.92rem', outline:'none', fontFamily:'inherit', boxSizing:'border-box' }
 // Variante AMARELA (campos do fluxo seamless).
 const inpA = { ...inp, background:'#FEFCE8', border:'1.5px solid #FACC15' }
-// Impede a rodinha do mouse de alterar o valor dos inputs number (perde o foco).
-const noWheel = (e) => { e.currentTarget.blur() }
+// no-op: o bloqueio do wheel-valor é feito por um listener global (useEffect),
+// que SÓ atua sobre o campo number focado — sem travar a rolagem da página.
+const noWheel = () => {}
 const btnP = { width:'100%', background:'#7B1E1E', color:'white', border:'none', borderRadius:10, padding:'0.9rem', fontSize:'1rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit', marginTop:'1.5rem' }
 const btnS = { width:'100%', background:'#F3F4F6', color:'#374151', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginTop:'0.5rem' }
 const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'1.5rem 1rem', boxSizing:'border-box' }
@@ -397,12 +433,18 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     tipo_cirurgia: '',
     acompanhamento: '', especialistas: [],
     status_gestacional: '', semanas_gestacao: '', temExamesMesmaData: false,
-    status_glicemico: '', dumping: false, status_pressorico: '', status_endoscopico: [], status_neurologico: [],
+    status_glicemico: '', dumping: false, status_hormonal: [], status_pressorico: '', status_endoscopico: [], status_neurologico: [],
+    status_respiratorio: [], status_alergico: [], alergia_medicamentosa: [], alergia_outra_texto: '',
     trombose: null, investigou_trombose: false,
     usou_anticoagulante: false, usa_anticoagulante: false,
     varizes: null, varizes_grau: '',
     varizes_esofago: false, operou_varizes_esofago: false,
-    status_dental: '', status_osseo: '',
+    // Status Vascular ARTERIAL (round 3)
+    doppler_carotidas: '', estenose_maxima: '', doenca_arterial_periferica: null,
+    // Status Cardiovascular (round 3)
+    status_cardiovascular: [], ecg: '', ecg_marcapasso: false,
+    ecocardiograma: '', fracao_ejecao: '', angiotomografia_coronariana: false, score_calcio: '',
+    status_dental: '', status_osseo: '', status_articular: [],
     teve_covid: false, vacina_covid: [],
     atividade_fisica: [], cirurgia_plastica: null,
     meta_peso: '', meta_kg: '', projetos_vida: [],
@@ -566,6 +608,23 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     return () => { if (t) clearTimeout(t); if (saltoTimer.current) clearTimeout(saltoTimer.current) }
   }, [])
 
+  // Impede a rodinha do mouse de ALTERAR o valor de qualquer input number focado.
+  // (listener no document com passive:false → o preventDefault funciona; mais
+  // robusto que o onWheel+blur por campo, que ainda deixava o 1º tick passar.)
+  useEffect(() => {
+    const handler = (e) => {
+      const t = e.target
+      // Bloqueia o wheel APENAS quando o cursor está sobre o input number que está
+      // focado (impede mudar o valor). Em qualquer outro ponto, a rolagem da
+      // página/modal funciona normalmente — o bug anterior travava a tela toda.
+      if (t && t.tagName === 'INPUT' && t.type === 'number' && t === document.activeElement) {
+        e.preventDefault()
+      }
+    }
+    document.addEventListener('wheel', handler, { passive: false })
+    return () => document.removeEventListener('wheel', handler)
+  }, [])
+
   // Marcados TIPO + INDICAÇÃO da cirurgia → salta (uma vez) pro PESO ANTES.
   useEffect(() => {
     if (form.tipo_cirurgia && form.indicacao_cirurgia && !jaSaltouPeso.current) {
@@ -669,6 +728,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       status_endoscopico: form.status_endoscopico.length > 0 ? form.status_endoscopico : null,
       status_neurologico: form.status_neurologico.length > 0 ? form.status_neurologico : null,
       status_osseo:       form.status_osseo || null,
+      status_articular:   form.status_articular,
       status_dental:      form.status_dental || null,
       status_gestacional: form.status_gestacional || null,
       semanas_gestacao:   form.semanas_gestacao ? parseFloat(form.semanas_gestacao) : null,
@@ -684,8 +744,25 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       usou_anticoagulante: form.usou_anticoagulante,
       varizes:            form.varizes,
       varizes_grau:       form.varizes_grau || null,
-      varizes_esofago:    form.varizes_esofago,
+      varizes_esofago:    form.varizes_esofago || form.status_endoscopico.includes("VARIZES DE ESÔFAGO"),
       operou_varizes_esofago: form.operou_varizes_esofago,
+      // Status Vascular ARTERIAL + Cardiovascular (round 3) — capturados p/ uso futuro do engine.
+      doppler_carotidas:  form.doppler_carotidas || null,
+      estenose_maxima:    form.estenose_maxima ? parseFloat(form.estenose_maxima) : null,
+      doenca_arterial_periferica: form.doenca_arterial_periferica,
+      status_cardiovascular: form.status_cardiovascular,
+      ecg:                form.ecg || null,
+      ecg_marcapasso:     form.ecg_marcapasso,
+      ecocardiograma:     form.ecocardiograma || null,
+      fracao_ejecao:      form.fracao_ejecao ? parseFloat(form.fracao_ejecao) : null,
+      angiotomografia_coronariana: form.angiotomografia_coronariana,
+      score_calcio:       form.score_calcio ? parseFloat(form.score_calcio) : null,
+      // Endócrino hormonal + Respiratório + Alérgico (round 3) — capturados p/ uso futuro.
+      status_hormonal:    form.status_hormonal,
+      status_respiratorio: form.status_respiratorio.length > 0 ? form.status_respiratorio : null,
+      status_alergico:    form.status_alergico,
+      alergia_medicamentosa: form.alergia_medicamentosa,
+      alergia_outra_texto: form.alergia_outra_texto || null,
       meta_peso:          form.meta_peso || null,
       meta_kg:            form.meta_kg ? parseFloat(form.meta_kg) : null,
       projetos_vida:      form.projetos_vida,
@@ -978,7 +1055,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </div>
 
             <div style={{ display:'flex', justifyContent:'flex-end', marginTop:'1.5rem' }}>
-              <PlayButton onClick={finalizar} label={"FINALIZAR"} hint={"Voltar ao meu painel"} ariaLabel="Finalizar e voltar ao painel" />
+              <PlayButton onClick={finalizar} ariaLabel="Finalizar" />
             </div>
             <button style={btnS} onClick={() => setEtapa('relatorio')}>{"← Ver o relatório novamente"}</button>
           </div>
@@ -1422,7 +1499,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           ) : null}
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Tipo de cirurgia</label>
-          <RadioGroup options={TIPOS_CIRURGIA} value={form.tipo_cirurgia} onChange={v => sf('tipo_cirurgia', v)} />
+          <RadioGroup options={TIPOS_CIRURGIA} value={form.tipo_cirurgia} onChange={v => sf('tipo_cirurgia', v)} cols={2} />
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Indica\u00e7\u00e3o da cirurgia"}</label>
           <RadioGroup
@@ -1536,7 +1613,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   </div>
                 )}
                 <div>
-                  <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"N\u00ba de gesta\u00e7\u00f5es anteriores"}</label>
+                  <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"N\u00famero de gesta\u00e7\u00f5es anteriores"}</label>
                   <input
                     ref={refGestacoes}
                     className="oba-gest-input"
@@ -1546,7 +1623,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                     min="0"
                     max="20"
                     step="1"
-                    placeholder={"DIGITE ZERO [0] SE N\u00c3O HOUVE OUTRA GESTA\u00c7\u00c3O"}
+                    placeholder={"0, 1, 2, 3..."}
                     value={form.gestacoes_previas}
                     onChange={e => sf('gestacoes_previas', e.target.value)}
                     onFocus={() => agendarSalto(null)}
@@ -1567,7 +1644,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </>
           )}
 
-          <SectionTitle>{"Status Glic\u00eamico"}</SectionTitle>
+          <SectionTitle>{"Status End\u00f3crino"}</SectionTitle>
+
+          <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.2rem 0 0.5rem' }}>{"Glic\u00eamico"}</p>
           <RadioGroup
             options={STATUS_GLICEMICO_OPS.filter(o => !o.includes('DUMPING'))}
             value={form.status_glicemico}
@@ -1581,6 +1660,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               checked={form.dumping}
               onClick={() => sf('dumping', !form.dumping)}
             />
+          </div>
+
+          <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'1rem 0 0.5rem' }}>{"Hormonal"}</p>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_HORMONAL_OPS.map(op => (
+              <CheckRow key={op} label={op} checked={form.status_hormonal.includes(op)} onClick={() => sf('status_hormonal', tog(form.status_hormonal, op))} />
+            ))}
+            {isFem && idadeNum >= 45 && ['MENOPAUSA', 'REPOSI\u00c7\u00c3O HORMONAL'].map(op => (
+              <CheckRow key={op} label={op} checked={form.status_hormonal.includes(op)} onClick={() => sf('status_hormonal', tog(form.status_hormonal, op))} />
+            ))}
+            {!isFem && (
+              <CheckRow label={"REPOSI\u00c7\u00c3O DE TESTOSTERONA"} checked={form.status_hormonal.includes("REPOSI\u00c7\u00c3O DE TESTOSTERONA")} onClick={() => sf('status_hormonal', tog(form.status_hormonal, "REPOSI\u00c7\u00c3O DE TESTOSTERONA"))} />
+            )}
           </div>
 
           <SectionTitle>{"Status Press\u00f3rico"}</SectionTitle>
@@ -1614,9 +1706,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               )
             })}
           </div>
+          {form.status_endoscopico.includes("VARIZES DE ESÔFAGO") && (
+            <div style={{ marginTop:'0.4rem' }}>
+              <CheckRow label={"OPEREI VARIZES DE ESÔFAGO"} checked={form.operou_varizes_esofago} onClick={() => sf('operou_varizes_esofago', !form.operou_varizes_esofago)} />
+            </div>
+          )}
 
           <SectionTitle>Status Vascular</SectionTitle>
 
+          <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.2rem 0 0.5rem' }}>{"Venoso"}</p>
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>Trombose</label>
           <div style={{ display:'flex', gap:'0.8rem', marginBottom:'0.6rem' }}>
             {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
@@ -1633,7 +1731,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </>
           )}
 
-          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>Varizes</label>
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Varizes nas pernas"}</label>
           <div style={{ display:'flex', gap:'0.8rem', marginBottom:'0.6rem' }}>
             {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
               <div key={l} onClick={() => sf('varizes', v)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.varizes === v ? '#DC2626' : '#E5E7EB'}`, background: form.varizes === v ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.varizes === v ? 700 : 500, color: form.varizes === v ? '#7B1E1E' : '#374151', fontSize:'0.85rem' }}>
@@ -1650,9 +1748,110 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               ))}
             </div>
           )}
-          <CheckRow label={"TENHO VARIZES DE ES\u00d4FAGO"} checked={form.varizes_esofago} onClick={() => sf('varizes_esofago', !form.varizes_esofago)} />
-          {form.varizes_esofago && (
-            <CheckRow label={"OPEREI VARIZES DE ES\u00d4FAGO"} checked={form.operou_varizes_esofago} onClick={() => sf('operou_varizes_esofago', !form.operou_varizes_esofago)} />
+          {/* VARIZES DE ES\u00d4FAGO migrou para o STATUS ENDOSC\u00d3PICO (round 3). */}
+
+          {/* \u2500\u2500 ARTERIAL \u2500\u2500 */}
+          <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'1rem 0 0.5rem' }}>{"Arterial"}</p>
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>{"Doppler de car\u00f3tidas e vertebrais"}</label>
+          <RadioGroup options={['NORMAL', 'ANORMAL']} value={form.doppler_carotidas} onChange={v => sf('doppler_carotidas', v)} cols={2} />
+          {form.doppler_carotidas === 'ANORMAL' && (
+            <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginTop:'0.5rem' }}>
+              <input style={{ ...inpA, width:130 }} onWheel={noWheel} type="number" min="0" max="100" placeholder="Ex: 70" value={form.estenose_maxima} onChange={e => sf('estenose_maxima', e.target.value)} />
+              <span style={{ fontSize:'0.8rem', color:'#6B7280' }}>{"% \u2014 grau m\u00e1ximo de estenose"}</span>
+            </div>
+          )}
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Doen\u00e7a arterial perif\u00e9rica"}</label>
+          <div style={{ display:'flex', gap:'0.8rem' }}>
+            {[['Sim', true], ["N\u00e3o", false]].map(([l, v]) => (
+              <div key={l} onClick={() => sf('doenca_arterial_periferica', v)} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', gap:'0.5rem', padding:'0.5rem', borderRadius:8, border:`1.5px solid ${form.doenca_arterial_periferica === v ? '#DC2626' : '#E5E7EB'}`, background: form.doenca_arterial_periferica === v ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontWeight: form.doenca_arterial_periferica === v ? 700 : 500, color: form.doenca_arterial_periferica === v ? '#7B1E1E' : '#374151', fontSize:'0.85rem' }}>
+                <Radio16 active={form.doenca_arterial_periferica === v} />{l}
+              </div>
+            ))}
+          </div>
+
+          <SectionTitle>{"Status Cardiovascular"}</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_CARDIOVASCULAR_OPS.map(opt => {
+              const ehBem = opt === 'ESTOU BEM'
+              const bemMarcado = form.status_cardiovascular.includes('ESTOU BEM')
+              const marcada = form.status_cardiovascular.includes(opt)
+              return (
+                <CheckRow key={opt} label={opt} checked={marcada} disabled={!ehBem && bemMarcado}
+                  onClick={() => {
+                    if (ehBem) {
+                      sf('status_cardiovascular', marcada ? [] : ['ESTOU BEM'])
+                    } else {
+                      const sem = form.status_cardiovascular.filter(x => x !== opt && x !== 'ESTOU BEM')
+                      sf('status_cardiovascular', marcada ? sem : [...sem, opt])
+                    }
+                  }} />
+              )
+            })}
+          </div>
+
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"ECG"}</label>
+          <RadioGroup options={["NORMAL | RITMO SINUSAL", 'ALTERADO']} value={form.ecg} onChange={v => sf('ecg', v)} cols={2} />
+          <div style={{ marginTop:'0.4rem' }}>
+            <CheckRow label={"USO MARCAPASSO"} checked={form.ecg_marcapasso} onClick={() => sf('ecg_marcapasso', !form.ecg_marcapasso)} />
+          </div>
+
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Ecocardiograma"}</label>
+          <RadioGroup options={['NORMAL', 'ANORMAL']} value={form.ecocardiograma} onChange={v => sf('ecocardiograma', v)} cols={2} />
+          {form.ecocardiograma === 'ANORMAL' && (
+            <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginTop:'0.5rem' }}>
+              <input style={{ ...inpA, width:120 }} onWheel={noWheel} type="number" placeholder="Ex: 55" value={form.fracao_ejecao} onChange={e => sf('fracao_ejecao', e.target.value)} />
+              <span style={{ fontSize:'0.8rem', color:'#6B7280' }}>{"% — fração de ejeção (Teichholz)"}</span>
+            </div>
+          )}
+
+          <div style={{ marginTop:'0.8rem' }}>
+            <CheckRow label={"FIZ ANGIOTOMOGRAFIA CORONARIANA"} checked={form.angiotomografia_coronariana} onClick={() => sf('angiotomografia_coronariana', !form.angiotomografia_coronariana)} />
+          </div>
+          {form.angiotomografia_coronariana && (
+            <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', marginTop:'0.4rem' }}>
+              <input style={{ ...inpA, width:120 }} onWheel={noWheel} type="number" placeholder="Ex: 120" value={form.score_calcio} onChange={e => sf('score_calcio', e.target.value)} />
+              <span style={{ fontSize:'0.8rem', color:'#6B7280' }}>{"score de cálcio"}</span>
+            </div>
+          )}
+
+          <SectionTitle>{"Status Respiratório"}</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_RESPIRATORIO_OPS.map(opt => {
+              const ehNormal = opt === 'NORMAL'
+              const normalMarcado = form.status_respiratorio.includes('NORMAL')
+              const marcada = form.status_respiratorio.includes(opt)
+              return (
+                <CheckRow key={opt} label={opt} checked={marcada} disabled={!ehNormal && normalMarcado}
+                  onClick={() => {
+                    if (ehNormal) {
+                      sf('status_respiratorio', marcada ? [] : ['NORMAL'])
+                    } else {
+                      const sem = form.status_respiratorio.filter(x => x !== opt && x !== 'NORMAL')
+                      sf('status_respiratorio', marcada ? sem : [...sem, opt])
+                    }
+                  }} />
+              )
+            })}
+          </div>
+
+          <SectionTitle>{"Status Alérgico"}</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_ALERGICO_OPS.map(op => (
+              <CheckRow key={op} label={op} checked={form.status_alergico.includes(op)} onClick={() => sf('status_alergico', tog(form.status_alergico, op))} />
+            ))}
+          </div>
+          {form.status_alergico.includes('MEDICAMENTOSA') && (
+            <div style={{ marginTop:'0.5rem', padding:'0.6rem', background:'#FEF3C7', borderRadius:8, border:'1px solid #FDE68A' }}>
+              <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#92400E', marginBottom:'0.5rem' }}>{"Alergia medicamentosa — marque quais:"}</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+                {ALERGIA_MEDICAMENTOSA_OPS.map(op => (
+                  <CheckRow key={op} label={op} checked={form.alergia_medicamentosa.includes(op)} onClick={() => sf('alergia_medicamentosa', tog(form.alergia_medicamentosa, op))} />
+                ))}
+              </div>
+              {form.alergia_medicamentosa.includes('OUTRA') && (
+                <input style={{ ...inp, marginTop:'0.5rem' }} type="text" placeholder="Especifique o medicamento" value={form.alergia_outra_texto} onChange={e => sf('alergia_outra_texto', e.target.value)} />
+              )}
+            </div>
           )}
 
           <SectionTitle>Status Dental</SectionTitle>
@@ -1662,12 +1861,18 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </div>
           ))}
 
-          <SectionTitle>{"Status \u00d3sseo"}</SectionTitle>
+          <SectionTitle>{"Status \u00d3sseo | Articular"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {["DENSITOMETRIA \u00d3SSEA NORMAL", 'OSTEOPENIA', 'OSTEOPOROSE', "N\u00c3O FIZ DENSITOMETRIA"].map(op => (
               <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.5rem 0.7rem', borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontSize:'0.8rem', fontWeight: form.status_osseo === op ? 700 : 500, color: form.status_osseo === op ? '#7B1E1E' : '#374151' }}>
                 <Radio16 active={form.status_osseo === op} />{op}
               </div>
+            ))}
+          </div>
+          <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.8rem 0 0.5rem' }}>{"Articular"}</p>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_ARTICULAR_OPS.map(op => (
+              <CheckRow key={op} label={op} checked={form.status_articular.includes(op)} onClick={() => sf('status_articular', tog(form.status_articular, op))} />
             ))}
           </div>
 
@@ -1833,7 +2038,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           <SectionTitle>Medicamentos em Uso</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
-            {MEDICAMENTOS.map(m => <CheckRow key={m} label={m} checked={form.medicamentos.includes(m)} disabled={m === "REM\u00c9DIO PARA PRESS\u00c3O" && form.status_pressorico === "N\u00c3O SOU HIPERTENSO"} onClick={() => sf('medicamentos', tog(form.medicamentos, m))} />)}
+            {MEDICAMENTOS.map(m => <CheckRow key={m} label={m} checked={form.medicamentos.includes(m)} disabled={m === "REM\u00c9DIO PARA PRESS\u00c3O" && form.status_pressorico === "N\u00c3O SOU HIPERTENSO"} onClick={() => {
+              const novoMeds = tog(form.medicamentos, m)
+              setForm(p => ({
+                ...p,
+                medicamentos: novoMeds,
+                // Rem\u00e9dio para tire\u00f3ide marcado \u2192 marca automaticamente TIROXINA nos
+                // "medicamentos que afetam o eritron".
+                tiroxina: (m === "REM\u00c9DIO PARA TIRE\u00d3IDE" && novoMeds.includes("REM\u00c9DIO PARA TIRE\u00d3IDE")) ? true : p.tiroxina,
+              }))
+            }} />)}
           </div>
 
           <SectionTitle>Medicamentos que Afetam o Eritron</SectionTitle>
