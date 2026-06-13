@@ -194,6 +194,29 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modEndo = buildModEndoscopico(dadosOBA, alertas, examesSuger)
   if (modEndo) modulos.push(modEndo)
 
+  // ── 20. PROTEÍNAS (idade ≥ 45): inversão albumina/globulina ──────────────
+  // Globulina ≥ Albumina (relação A/G ≤ 1) sugere processo inflamatório crônico ou
+  // gamopatia (ex.: mieloma) → ÊNFASE em avaliação com HEMATOLOGISTA + eletroforese.
+  const ptAG = parseFloat(examesOBA.proteina_total)
+  const albAG = parseFloat(examesOBA.albumina)
+  if (Number.isFinite(ptAG) && Number.isFinite(albAG) && ptAG > 0 && albAG > 0) {
+    const globAG = Math.round((ptAG - albAG) * 10) / 10
+    if (globAG >= albAG) {
+      alertas.push({ nivel: GRAVE, texto: `INVERSÃO ALBUMINA/GLOBULINA (globulina ${globAG} ≥ albumina ${albAG} g/dL) — É IMPORTANTE A AVALIAÇÃO COM HEMATOLOGISTA.` })
+      examesSuger.push('AVALIAÇÃO COM HEMATOLOGISTA (inversão albumina/globulina)')
+      examesSuger.push('ELETROFORESE DE PROTEÍNAS SÉRICAS')
+      modulos.push({
+        id: 'proteinas',
+        titulo: 'PROTEÍNAS — RELAÇÃO ALBUMINA/GLOBULINA',
+        nivel: GRAVE,
+        linhas: [
+          `PROTEÍNA TOTAL ${ptAG} g/dL · ALBUMINA ${albAG} g/dL · GLOBULINA ${globAG} g/dL.`,
+          'A GLOBULINA ESTÁ MAIOR OU IGUAL À ALBUMINA (RELAÇÃO A/G ≤ 1). ISSO PODE REFLETIR PROCESSO INFLAMATÓRIO CRÔNICO OU UMA GAMOPATIA (PRODUÇÃO ANORMAL DE ANTICORPOS). É IMPORTANTE A AVALIAÇÃO COM HEMATOLOGISTA, COM ELETROFORESE DE PROTEÍNAS SÉRICAS.',
+        ],
+      })
+    }
+  }
+
   // ── Ordenar alertas por prioridade ──────────────────────────────────────
   const prioridade = { [GRAVE]: 0, [MODERADO]: 1, [LEVE]: 2 }
   alertas.sort((a, b) => prioridade[a.nivel] - prioridade[b.nivel])

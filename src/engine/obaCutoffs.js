@@ -14,7 +14,7 @@ export const OBA_CUTOFFS = {
 
   // Ferro/vitaminas criticos em bariatrica
   ferritina_oba:  { min: 25,    max: 300   },  // permissivo (H ate 300)
-  vitamina_b12:   { min: 300,   max: 900   },
+  vitamina_b12:   { min: 200,   max: 900   },  // 200 ja e normal (Dr. Ramos)
   vitamina_d:     { min: 30,    max: 100   },
 
   // Tireoide
@@ -61,6 +61,14 @@ export const OBA_CUTOFFS = {
   calcio_ionico:  { min: 1.15,  max: 1.32  },  // mmol/L
   magnesio:       { min: 1.7,   max: 2.4   },  // mg/dL
 
+  // Renal (ureia)
+  ureia:          { min: 15,    max: 40    },  // mg/dL
+
+  // Proteinas (idade >= 45) — globulina = proteina_total - albumina (calculada)
+  proteina_total: { min: 6.0,   max: 8.0   },  // g/dL
+  albumina:       { min: 3.5,   max: 5.2   },  // g/dL
+  globulina:      { min: 2.0,   max: 3.5   },  // g/dL
+
   // Outros
   estradiol:      { min: 5,     max: 400   },  // permissivo (nao-gestante)
 }
@@ -68,7 +76,7 @@ export const OBA_CUTOFFS = {
 // Cutoffs especiais para pacientes bariatricas
 // Bariatrica precisa de alvo mais rigoroso em B12 e Vit D
 const CUTOFFS_BARIATRICA = {
-  vitamina_b12:   { min: 300,   max: 2000  },  // alvo pos-bariatrica
+  vitamina_b12:   { min: 200,   max: 2000  },  // 200 ja e normal (Dr. Ramos)
   vitamina_d:     { min: 30,    max: 200   },  // alvo pos-bariatrica
 }
 

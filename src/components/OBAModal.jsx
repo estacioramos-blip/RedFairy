@@ -194,7 +194,7 @@ const EXAMES_BASE = [
   { key: 'neutrofilos_ul', label: "Neutr\u00f3filos (calculado)",  unit: '/uL',    ref: "1.800\u20137.700", readOnly: true },
   { key: 'plaquetas',      label: 'Plaquetas',                unit: "x1000/\u00b5L", ref: "150\u2013400", hint: 'Ex: 250 = 250.000/\u00b5L' },
   { key: 'ferritina_oba',  label: 'Ferritina',                unit: 'ng/mL',  ref: "H: 24\u2013300 / F: 25\u2013150" },
-  { key: 'vitamina_b12',   label: 'Vitamina B12',             unit: 'pg/mL',  ref: "300\u2013900 (bari: >300)" },
+  { key: 'vitamina_b12',   label: 'Vitamina B12',             unit: 'pg/mL',  ref: "200\u2013900" },
   { key: 'vitamina_d',     label: 'Vitamina D 25-OH',         unit: 'ng/mL',  ref: "30\u2013100 (bari: >30)" },
   { key: 'tsh',            label: 'TSH',                      unit: 'mUI/L',  ref: "0,4\u20134,5" },
   { key: 'hb_glicada',     label: 'Hb Glicada',               unit: '%',      ref: '<5,7%' },
@@ -227,6 +227,13 @@ const EXAMES_BASE = [
   { key: 'vitamina_k',     label: 'Vitamina K',                unit: 'ng/mL',  ref: "0,2\u20133,2" },
   { key: 'niacina',        label: 'Niacina (B3)',              unit: "\u00b5g/mL",  ref: "0,5\u20138,9" },
   { key: 'testosterona',   label: 'Testosterona Total',        unit: 'ng/dL',  ref: "H: 300\u20131.000 / F: 15\u201370" },
+]
+
+// Idade >= 45 (ambos os sexos): proteínas + globulina calculada (A/G).
+const EXAMES_45 = [
+  { key: 'proteina_total', label: "Proteína Total", unit: 'g/dL', ref: "6,0–8,0" },
+  { key: 'albumina',       label: 'Albumina',          unit: 'g/dL', ref: "3,5–5,2" },
+  { key: 'globulina',      label: 'Globulina (calc)',  unit: 'g/dL', ref: "2,0–3,5", readOnly: true },
 ]
 
 const EXAMES_HOMEM_40 = [
@@ -532,7 +539,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   })()
 
   const examesExtras = idadeNum >= 40 ? (isFem ? EXAMES_MULHER_40 : EXAMES_HOMEM_40) : []
-  const todosExames = [...EXAMES_BASE, ...examesExtras]
+  const exames45 = idadeNum >= 45 ? EXAMES_45 : []  // proteína/albumina/globulina (ambos os sexos)
+  const todosExames = [...EXAMES_BASE, ...exames45, ...examesExtras]
 
   const [exames, setExames] = useState(salvo?.exames || Object.fromEntries(todosExames.map(e => [e.key, ''])))
 
@@ -610,25 +618,51 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     } catch (e) {}
   }, [etapa, form, exames, dataExames, relatorio, estadoClinico, querTeleconsulta])
 
-  //  Handlers 
+  //  Handlers
+  const PESO_ANTES_MAX = 220  // (a) teto do peso antes da cirurgia
   const handlePesoAtualBlur = () => {
     const atual = parseFloat(form.peso_atual)
     const minimo = parseFloat(form.peso_minimo_pos)
     if (!isNaN(atual) && !isNaN(minimo) && atual < minimo) {
       setForm(prev => ({ ...prev, peso_atual: String(minimo) }))
-      setAlertaPeso({ original: atual, ajustado: minimo })
+      setAlertaPeso(`O peso atual (${atual} kg) não pode ser menor que o menor peso pós (${minimo} kg). Ajustado para ${minimo} kg.`)
     } else {
       setAlertaPeso(null)
     }
   }
+  // (a) Peso antes: teto de 220 kg.
+  const handlePesoAntesBlur = () => {
+    const v = parseFloat(form.peso_antes)
+    if (!isNaN(v) && v > PESO_ANTES_MAX) {
+      setForm(prev => ({ ...prev, peso_antes: String(PESO_ANTES_MAX) }))
+      setAlertaPeso(`O peso antes da cirurgia foi limitado a ${PESO_ANTES_MAX} kg.`)
+    }
+  }
+  // (a) Menor peso pós não pode ser maior que o peso antes da cirurgia.
+  const handlePesoMinBlur = () => {
+    const minimo = parseFloat(form.peso_minimo_pos)
+    const antes = parseFloat(form.peso_antes)
+    if (!isNaN(minimo) && !isNaN(antes) && minimo > antes) {
+      setForm(prev => ({ ...prev, peso_minimo_pos: String(antes) }))
+      setAlertaPeso(`O menor peso pós (${minimo} kg) não pode ser maior que o peso antes da cirurgia (${antes} kg). Ajustado para ${antes} kg.`)
+    }
+  }
 
   function handleExameChange(key, value) {
+    // (b) Qualquer vírgula vira ponto (aceita "12,5" como 12.5).
+    const v = typeof value === 'string' ? value.replace(',', '.') : value
     setExames(prev => {
-      const novo = { ...prev, [key]: value }
-      const leuco = parseFloat(key === 'leucocitos' ? value : prev.leucocitos)
-      const neutPct = parseFloat(key === 'neutrofilos' ? value : prev.neutrofilos)
+      const novo = { ...prev, [key]: v }
+      const leuco = parseFloat(key === 'leucocitos' ? v : prev.leucocitos)
+      const neutPct = parseFloat(key === 'neutrofilos' ? v : prev.neutrofilos)
       if (!isNaN(leuco) && !isNaN(neutPct) && leuco > 0 && neutPct > 0) {
         novo.neutrofilos_ul = Math.round(leuco * neutPct / 100).toString()
+      }
+      // (d) Globulina = Proteína total − Albumina (idade ≥ 45).
+      const pt = parseFloat(key === 'proteina_total' ? v : prev.proteina_total)
+      const alb = parseFloat(key === 'albumina' ? v : prev.albumina)
+      if (!isNaN(pt) && !isNaN(alb) && pt > 0 && alb > 0) {
+        novo.globulina = (pt - alb).toFixed(1)
       }
       return novo
     })
@@ -637,6 +671,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // BUG #1 corrigido: removida a duplicacao da funcao handleExameChangeOBA
   // (antes existia 2x identicas seguidas).
   function handleExameChangeOBA(key, value) {
+    // (b) Normaliza vírgula → ponto na entrada dos exames.
+    value = typeof value === 'string' ? value.replace(',', '.') : value
     handleExameChange(key, value)
     if (value !== '') {
       const num = parseFloat(value)
@@ -2061,12 +2097,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             {!modoFollowUp && (
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso antes da cirurgia (kg)</label>
-              <input ref={refPesoAntes} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 120" value={form.peso_antes} onChange={e => { sf('peso_antes', e.target.value); saltoPorDigitos(e.target.value, refPesoMin, 3, true) }} onFocus={() => agendarSalto(null)} />
+              <input ref={refPesoAntes} style={inpA} onWheel={noWheel} type="number" min="0" max="220" placeholder="Ex: 120" value={form.peso_antes} onChange={e => { sf('peso_antes', e.target.value); saltoPorDigitos(e.target.value, refPesoMin, 3, true) }} onFocus={() => agendarSalto(null)} onBlur={handlePesoAntesBlur} />
             </div>
             )}
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"Menor peso p\u00f3s (kg)"}</label>
-              <input ref={refPesoMin} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => { sf('peso_minimo_pos', e.target.value); saltoPorDigitos(e.target.value, refPesoAtual, 3, true) }} onFocus={() => agendarSalto(null)} />
+              <input ref={refPesoMin} style={inpA} onWheel={noWheel} type="number" min="0" max="220" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => { sf('peso_minimo_pos', e.target.value); saltoPorDigitos(e.target.value, refPesoAtual, 3, true) }} onFocus={() => agendarSalto(null)} onBlur={handlePesoMinBlur} />
             </div>
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso atual (kg)</label>
@@ -2079,7 +2115,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
           {alertaPeso && (
             <p style={{ color: '#d97706', fontSize: '0.75rem', marginTop: '0.4rem', lineHeight: 1.4 }}>
-              {"\u26a0\ufe0f O peso atual informado ("}{alertaPeso.original}{" kg) n\u00e3o pode ser menor que o menor peso p\u00f3s-cirurgia ("}{alertaPeso.ajustado}{" kg). Valor ajustado automaticamente para "}{alertaPeso.ajustado}{" kg."}
+              {"\u26a0\ufe0f "}{alertaPeso}
             </p>
           )}
           <p style={{ fontSize:'0.65rem', color:'#6B7280', marginTop:'0.4rem' }}>{"O IMC \u00e9 calculado automaticamente a partir do peso e da altura."}</p>
