@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { supabase } from '../lib/supabase';
 import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
 
-// Classes de receita exibidas (cada uma puxa a marca configurada no Admin → Medicamentos).
+// Classes de receita exibidas (cada uma puxa a marca ATIVA configurada no Admin →
+// Medicamentos). `ampola` = conteúdo de ferro por ampola (subtexto sob o nome).
 const CLASSES_RECEITA = [
-  { id: 'alta_dose',       rotulo: 'Alta dose',       acesso: 'plano de saúde · centro de infusão · compra' },
-  { id: 'dose_fracionada', rotulo: 'Dose fracionada', acesso: 'sacarato · disponível no SUS' },
+  { id: 'alta_dose',       rotulo: 'Alta dose',  acesso: 'plano de saúde · centro de infusão · compra', ampola: 'CADA AMPOLA CONTÉM 500 mg' },
+  { id: 'dose_fracionada', rotulo: 'Baixa dose', acesso: 'sacarato · disponível no SUS',                ampola: 'CADA AMPOLA CONTÉM 100 mg' },
 ];
 
 /**
@@ -36,6 +37,7 @@ export default function ModalFerroEV({ onClose, hbAtual, sexo, gestante, semanas
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onClose}>
+      <style>{`@keyframes rfFerroOu { 0%,100%{opacity:1;} 50%{opacity:0.25;} } .rf-ferro-ou{ animation: rfFerroOu 1s ease-in-out infinite; }`}</style>
       <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-y-auto"
         style={{ maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
         <div className="bg-red-700 text-white px-6 py-4 rounded-t-2xl">
@@ -87,29 +89,44 @@ export default function ModalFerroEV({ onClose, hbAtual, sexo, gestante, semanas
             <p className="text-xs text-gray-500" style={{ marginTop: '-4px' }}>{"A plataforma emite duas receitas — o paciente aplica conforme o acesso dele."}</p>
             {meds === null ? (
               <p className="text-sm text-gray-400">{"Carregando medicamentos..."}</p>
-            ) : CLASSES_RECEITA.map(cl => {
+            ) : CLASSES_RECEITA.map((cl, idx) => {
               const med = meds.find(m => m.classe === cl.id);
-              if (!med) return (
-                <div key={cl.id} className="bg-gray-50 rounded-xl p-4 text-sm text-gray-500">
-                  <p className="font-semibold text-gray-700">{cl.rotulo}</p>
-                  <p className="text-xs mt-1">{"Nenhuma marca configurada nesta classe (defina no painel admin → 💊 Medicamentos)."}</p>
+              // (d) "Ou ..." piscando em vermelho ENTRE as duas prescrições.
+              const sep = idx > 0 ? (
+                <div style={{ textAlign: 'center', margin: '0.1rem 0' }}>
+                  <span className="rf-ferro-ou" style={{ fontWeight: 800, color: '#DC2626', fontSize: '1.05rem' }}>{"Ou ..."}</span>
                 </div>
+              ) : null;
+              if (!med) return (
+                <Fragment key={cl.id}>
+                  {sep}
+                  <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-500">
+                    <p className="font-semibold text-gray-700">{cl.rotulo}</p>
+                    <p className="text-xs mt-1">{"Nenhuma marca configurada nesta classe (defina no painel admin → 💊 Medicamentos)."}</p>
+                  </div>
+                </Fragment>
               );
               const r = calcReceita(doseTotal, med);
               return (
-                <div key={cl.id} className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-1">
-                  <p className="text-xs font-bold text-red-700 uppercase tracking-wide">{cl.rotulo}</p>
-                  <p className="text-xs text-gray-400">{cl.acesso}</p>
-                  <p className="font-semibold text-gray-800 pt-1">{med.nome_comercial}
-                    <span className="font-normal text-gray-500 text-xs">{" · "}{med.principio_ativo}</span></p>
-                  {med.fabricante && <p className="text-xs text-gray-400">{"Fabricante: "}{med.fabricante}</p>}
-                  <p>{"• Dose total: "}<strong>{doseTotal} mg</strong></p>
-                  <p>{"• Frascos: "}<strong>{r.frascos}{" de "}{r.frasco} mg</strong></p>
-                  <p>{"• Sessões: "}<strong>{r.sessoes}{" de até "}{r.maxSessao} mg</strong></p>
-                  {med.diluicao && <p>{"• Diluir em "}<strong>{med.diluicao}</strong>{med.tempo_infusao ? <>{", infundir em "}<strong>{med.tempo_infusao}</strong></> : null}</p>}
-                  {med.intervalo_sessoes && med.intervalo_sessoes !== '—' && <p>{"• Intervalo entre sessões: "}<strong>{med.intervalo_sessoes}</strong></p>}
-                  {med.observacoes && <p className="text-xs text-gray-500 italic pt-1">{med.observacoes}</p>}
-                </div>
+                <Fragment key={cl.id}>
+                  {sep}
+                  <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-1">
+                    <p className="text-xs font-bold text-red-700 uppercase tracking-wide">{cl.rotulo}</p>
+                    <p className="text-xs text-gray-400">{cl.acesso}</p>
+                    <p className="font-semibold text-gray-800 pt-1">{med.nome_comercial}
+                      <span className="font-normal text-gray-500 text-xs">{" · "}{med.principio_ativo}</span></p>
+                    {/* (a) subtexto sob o nome: conteúdo de ferro por ampola */}
+                    <p className="text-xs font-bold text-red-700">{cl.ampola}</p>
+                    {med.fabricante && <p className="text-xs text-gray-400">{"Fabricante: "}{med.fabricante}</p>}
+                    <p>{"• Dose total: "}<strong>{doseTotal} mg</strong></p>
+                    {/* (c) Frasco → Ampola */}
+                    <p>{"• Ampolas: "}<strong>{r.frascos}{" de "}{r.frasco} mg</strong></p>
+                    <p>{"• Sessões: "}<strong>{r.sessoes}{" de até "}{r.maxSessao} mg</strong></p>
+                    {med.diluicao && <p>{"• Diluir em "}<strong>{med.diluicao}</strong>{med.tempo_infusao ? <>{", infundir em "}<strong>{med.tempo_infusao}</strong></> : null}</p>}
+                    {med.intervalo_sessoes && med.intervalo_sessoes !== '—' && <p>{"• Intervalo entre sessões: "}<strong>{med.intervalo_sessoes}</strong></p>}
+                    {med.observacoes && <p className="text-xs text-gray-500 italic pt-1">{med.observacoes}</p>}
+                  </div>
+                </Fragment>
               );
             })}
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 space-y-2">
