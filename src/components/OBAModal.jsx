@@ -6,6 +6,7 @@ import logo from '../assets/logo.png'
 import PlayButton from './PlayButton'
 import ModalFerroEV from './ModalFerroEV'
 import { calcularDeficitFerroGanzoni } from '../engine/ferroProtocol'
+import { avaliarPaciente, triagemEritron } from '../engine/decisionEngine'
 
 // Imagem landscape do splash do relatório OBA — A DEFINIR (será horizontal,
 // ocupando a largura do modal, parcialmente sobreposta pelo conteúdo).
@@ -34,11 +35,14 @@ const ESTADO_UI = {
 // Cores das caixas de alerta / títulos de módulo por gravidade (níveis do motor).
 // Cores por gravidade (acordado com o Estácio):
 //   GRAVE = vermelho · MODERADO = laranja · ATENÇÃO (leve) = VINHO · SAUDÁVEL (normal) = verde
+// fundo/borda = cor do CARD; botao = cor do BADGE; texto = cor do texto dentro do card.
+// CARD:   GRAVE=pink+vermelho · MODERADO=amarelo+laranja · ATENÇÃO=cinza+vinho · SAUDÁVEL=verde
+// BADGE:  GRAVE=vermelho · MODERADO=laranja · ATENÇÃO=vinho · SAUDÁVEL=verde
 const NIVEL_UI = {
-  grave:    { fundo: '#FEF2F2', borda: '#FCA5A5', texto: '#991B1B', rotulo: 'GRAVE' },
-  moderado: { fundo: '#FFF7ED', borda: '#FED7AA', texto: '#9A3412', rotulo: 'MODERADO' },
-  leve:     { fundo: '#FBEAEA', borda: '#E3B5B5', texto: '#7B1E1E', rotulo: "ATENÇÃO" },
-  normal:   { fundo: '#F0FDF4', borda: '#BBF7D0', texto: '#166534', rotulo: "SAUDÁVEL" },
+  grave:    { fundo: '#FCE7F3', borda: '#DC2626', texto: '#991B1B', botao: '#DC2626', rotulo: 'GRAVE' },
+  moderado: { fundo: '#FEF9C3', borda: '#F97316', texto: '#9A3412', botao: '#F97316', rotulo: 'MODERADO' },
+  leve:     { fundo: '#F3F4F6', borda: '#7B1E1E', texto: '#7B1E1E', botao: '#7B1E1E', rotulo: "ATENÇÃO" },
+  normal:   { fundo: '#F0FDF4', borda: '#16A34A', texto: '#166534', botao: '#16A34A', rotulo: "SAUDÁVEL" },
 }
 
 const TIPOS_CIRURGIA = ['Y DE ROUX', 'FOBI-CAPELLA', 'SLEEVE', "BANDA G\u00c1STRICA AJUST\u00c1VEL", "N\u00c3O SEI"]
@@ -199,6 +203,7 @@ const EXAMES_BASE = [
   { key: 'ast',            label: 'AST (TGO)',                 unit: 'U/L',    ref: 'H: <40 / F: <32' },
   { key: 'alt',            label: 'ALT (TGP)',                 unit: 'U/L',    ref: 'H: <56 / F: <35' },
   { key: 'gama_gt',        label: 'Gama-GT',                  unit: 'U/L',    ref: 'H: <61 / F: <36' },
+  { key: 'ureia',          label: "Ur\u00e9ia",                     unit: 'mg/dL',  ref: "15\u201340" },
   { key: 'creatinina',     label: 'Creatinina',               unit: 'mg/dL',  ref: "H: 0,7\u20131,2 / F: 0,5\u20131,0" },
   { key: 'acido_urico',    label: "\u00c1cido \u00darico",              unit: 'mg/dL',  ref: "H: 3,4\u20137,0 / F: 2,4\u20136,0" },
   { key: 'folatos',        label: "Folatos s\u00e9ricos",           unit: 'ng/mL',  ref: "4,0\u201320,0" },
@@ -261,7 +266,7 @@ function RadioGroup({ options, value, onChange, disabledOptions = [], cols = 1, 
         borderRadius:8, border:`1.5px solid ${value === op ? '#DC2626' : '#E5E7EB'}`,
         background: disabled ? '#F3F4F6' : value === op ? '#FEF2F2' : '#FAFAFA',
         cursor: disabled ? 'not-allowed' : 'pointer', marginBottom: cols > 1 ? 0 : '0.4rem', opacity: disabled ? 0.45 : 1,
-        fontSize:'0.85rem', fontWeight: value === op ? 700 : 500, color: disabled ? '#9CA3AF' : value === op ? '#7B1E1E' : '#374151',
+        fontSize:'0.72rem', fontWeight: value === op ? 700 : 500, color: disabled ? '#9CA3AF' : value === op ? '#7B1E1E' : '#374151',
       }}>
         <Radio16 active={value === op} />{mapLabel ? mapLabel(op) : op}
       </div>
@@ -278,7 +283,7 @@ function CheckRow({ label, checked, onClick, disabled }) {
       borderRadius:8, border:`1.5px solid ${checked ? '#DC2626' : '#E5E7EB'}`,
       background: disabled ? '#F9FAFB' : checked ? '#FEF2F2' : '#FAFAFA',
       cursor: disabled ? 'not-allowed' : 'pointer', marginBottom:'0.4rem',
-      fontSize:'0.85rem', fontWeight: checked ? 700 : 500,
+      fontSize:'0.72rem', fontWeight: checked ? 700 : 500,
       color: disabled ? '#9CA3AF' : checked ? '#7B1E1E' : '#374151',
       opacity: disabled ? 0.5 : 1,
     }}>
@@ -319,7 +324,7 @@ function refPorSexo(ref, isFem) {
 // Heurística por palavra-chave; default = laboratório. Ordem importa.
 function categoriaRecomendacao(item) {
   const s = String(item).toUpperCase()
-  // SIBO + MAPA agora caem juntos em "OUTROS RECURSOS DE INVESTIGAÇÃO DIAGNÓSTICA".
+  // SIBO + MAPA agora caem juntos em "OUTROS RECURSOS DIAGNÓSTICOS".
   if (/PRESS[ÃA]O ARTERIAL|MAPA \||SIBO|GORDURA FECAL|INTOLER[ÂA]NCIA [ÀA] LACTOSE|CALPROTECTINA|INDICAN|ESTEATORREIA|SUPERCRESCIMENTO/.test(s)) return 'outros'
   if (/COLONOSCOP|ENDOSCOPIA DIGESTIVA/.test(s)) return 'endoscopia'
   if (/ULTRASSON|ECOGRAFIA|DENSITOMETR|TOMOGRAFIA|RESSON|DOPPLER/.test(s)) return 'bioimagem'
@@ -333,7 +338,7 @@ const CATS_RECOMENDACAO = [
   { key:'avaliacao',   titulo:'AVALIAÇÕES MÉDICAS',                            fundo:'#F5F3FF', borda:'#DDD6FE', texto:'#6D28D9' },
   { key:'bioimagem',   titulo:'EXAMES DE BIOIMAGEM',                           fundo:'#ECFEFF', borda:'#A5F3FC', texto:'#155E75' },
   { key:'endoscopia',  titulo:'EXAMES ENDOSCÓPICOS',                           fundo:'#FFF7ED', borda:'#FED7AA', texto:'#9A3412' },
-  { key:'outros',      titulo:'OUTROS RECURSOS DE INVESTIGAÇÃO DIAGNÓSTICA',   fundo:'#FEFCE8', borda:'#FDE68A', texto:'#92400E' },
+  { key:'outros',      titulo:'OUTROS RECURSOS DIAGNÓSTICOS',                  fundo:'#FEFCE8', borda:'#FDE68A', texto:'#92400E' },
 ]
 
 // BUG #3 corrigido: removidas as chaves duplicadas vitamina_d e triglicerides
@@ -411,6 +416,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [anamneseSalva, setAnamneseSalva] = useState(null)
   const [alertaPeso, setAlertaPeso] = useState(null)
   const [dataExames, setDataExames] = useState(salvo?.dataExames || '')
+  // Data dos exames em 3 caixas dd/mm/aaaa (substitui o <input type=date> com calendário).
+  // dataExames (ISO) continua sendo a fonte usada por diasExames/save; é composta destas 3.
+  const _edSalvo = String(salvo?.dataExames || '').split('-')  // [aaaa, mm, dd]
+  const [exDia, setExDia] = useState(_edSalvo[2] || '')
+  const [exMes, setExMes] = useState(_edSalvo[1] || '')
+  const [exAno, setExAno] = useState(_edSalvo[0] || '')
   const [aberrantesOBA, setAberrantesOBA] = useState({})
   // Etapa 'relatorio' (BASELINE): saída do avaliarOBA + estado clínico calculado.
   const [relatorio, setRelatorio] = useState(salvo?.relatorio || null)
@@ -462,6 +473,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     status_cardiovascular: [], ecg: '', ecg_marcapasso: false,
     ecocardiograma: '', fracao_ejecao: '', angiotomografia_coronariana: false, score_calcio: '',
     status_dental: '', status_osseo: '', status_articular: [],
+    // FAN (Fator Antinuclear / anticorpo anti-célula): '' | 'REAGENTE' | 'NÃO REAGENTE';
+    // se REAGENTE, fan_titulo guarda o título ('1/80'…'1/640+'). Crítica no engine: depois.
+    fan: '', fan_titulo: '',
     teve_covid: false, vacina_covid: [],
     atividade_fisica: [], cirurgia_plastica: null,
     meta_peso: '', meta_kg: '', projetos_vida: [],
@@ -514,11 +528,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     }
   }, [dadosRedFairy])
 
+  // Compõe a data ISO (dataExames) a partir das 3 caixas. Só vira data válida com
+  // ano de 4 dígitos + mês + dia; senão fica vazia (diasExames trata o vazio).
   useEffect(() => {
-    if (form.temExamesMesmaData && examesRedFairy?.dataColeta && !dataExames) {
-      setDataExames(examesRedFairy.dataColeta)
+    const a = String(exAno || ''), m = String(exMes || ''), d = String(exDia || '')
+    if (a.length === 4 && m && d) {
+      setDataExames(`${a}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`)
+    } else {
+      setDataExames('')
     }
-  }, [form.temExamesMesmaData, examesRedFairy])
+  }, [exDia, exMes, exAno])
 
   // Splash 4DOC ao entrar no relatório: imagem nítida por 3s, depois revela o
   // conteúdo. Só roda se houver imagem definida (SPLASH_REL_IMG).
@@ -609,6 +628,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const refDia = useRef(null), refMes = useRef(null), refAno = useRef(null)
   const refPesoAntes = useRef(null), refPesoMin = useRef(null), refPesoAtual = useRef(null), refAltura = useRef(null)
   const refGestacoes = useRef(null)
+  const refExDia = useRef(null), refExMes = useRef(null), refExAno = useRef(null), refPrimeiroExame = useRef(null)
   const saltoTimer = useRef(null)
   const jaSaltouPeso = useRef(false)
   const focar = (r) => { try { r?.current?.focus({ preventScroll: true }) } catch (e) {} }
@@ -616,6 +636,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     if (saltoTimer.current) clearTimeout(saltoTimer.current)
     if (!r) return
     saltoTimer.current = setTimeout(() => focar(r), ms)
+  }
+  // Salto por nº de DÍGITOS: salta na hora ao atingir `digitos`; se `comTimer`,
+  // com `digitos-1` dígitos agenda o salto após `ms`. Sempre cancela o timer
+  // anterior. Datas (DD/MM): saltam com 2 dígitos. Pesos: 3 dígitos OU 2 + 2,5s.
+  const saltoPorDigitos = (valor, ref, digitos, comTimer = false, ms = 2500) => {
+    if (saltoTimer.current) clearTimeout(saltoTimer.current)
+    if (!ref) return
+    const n = String(valor ?? '').replace(/\D/g, '').length
+    if (n >= digitos) { focar(ref); return }
+    if (comTimer && n === digitos - 1) saltoTimer.current = setTimeout(() => focar(ref), ms)
   }
 
   // Foca o DIA da cirurgia ao montar a anamnese (e limpa o timer ao desmontar).
@@ -642,13 +672,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     return () => document.removeEventListener('wheel', handler)
   }, [])
 
-  // Marcados TIPO + INDICAÇÃO da cirurgia → salta (uma vez) pro PESO ANTES.
+  // Marcada a INDICAÇÃO da cirurgia → salta (uma vez) pro PESO ANTES.
   useEffect(() => {
-    if (form.tipo_cirurgia && form.indicacao_cirurgia && !jaSaltouPeso.current) {
+    if (form.indicacao_cirurgia && !jaSaltouPeso.current) {
       jaSaltouPeso.current = true
       focar(refPesoAntes)
     }
-  }, [form.tipo_cirurgia, form.indicacao_cirurgia])
+  }, [form.indicacao_cirurgia])
 
   // ── PESQUISA (obstipação/fibromialgia) — gatilho e envio ──────────────────
   // Abre quando: OBSTIPAÇÃO CRÔNICA no intestinal, OU "TENHO FIBROMIALGIA
@@ -746,6 +776,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       status_neurologico: form.status_neurologico.length > 0 ? form.status_neurologico : null,
       status_osseo:       form.status_osseo || null,
       status_articular:   form.status_articular,
+      fan:                form.fan || null,
+      fan_titulo:         form.fan === 'REAGENTE' ? (form.fan_titulo || null) : null,
       status_dental:      form.status_dental || null,
       status_gestacional: form.status_gestacional || null,
       semanas_gestacao:   form.semanas_gestacao ? parseFloat(form.semanas_gestacao) : null,
@@ -808,9 +840,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   }
 
   function buildExamesOBA() {
-    return Object.fromEntries(
+    const base = Object.fromEntries(
       todosExames.map(e => [e.key, exames[e.key] ? parseFloat(exames[e.key]) : null])
     )
+    // Eritron de nova data (HB/VCM/RDW/Ferritina/Sat relançados) — guarda se preenchidos.
+    ;['hb_novo', 'vcm_novo', 'rdw_novo', 'ferritina_novo', 'sat_novo'].forEach(k => {
+      if (exames[k]) base[k] = parseFloat(exames[k])
+    })
+    return base
   }
 
   async function salvarAnamnese() {
@@ -883,13 +920,41 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     setEtapa('exames')
   }
 
+  // (b) Eritron EFETIVO: se o paciente lançou novos valores (HB/VCM/RDW/Ferritina/Sat),
+  // recomputa o eritron com esses valores sobre os inputs originais da triagem e usa no
+  // relatório/estado clínico. Senão, mantém o resultado da triagem (resultadoEritron).
+  // Só recomputa se houve mudança E há o mínimo (HB/VCM/RDW), p/ evitar resultado lixo.
+  function eritronEfetivo(examesObj) {
+    const mudou = ['hb_novo', 'vcm_novo', 'rdw_novo', 'ferritina_novo', 'sat_novo'].some(k => examesObj?.[k] != null)
+    if (!mudou) return resultadoEritron
+    const merged = { ...(resultadoEritron?.inputs || {}) }
+    if (examesObj.hb_novo != null) merged.hemoglobina = Number(examesObj.hb_novo)
+    if (examesObj.vcm_novo != null) merged.vcm = Number(examesObj.vcm_novo)
+    if (examesObj.rdw_novo != null) merged.rdw = Number(examesObj.rdw_novo)
+    if (examesObj.ferritina_novo != null) merged.ferritina = Number(examesObj.ferritina_novo)
+    if (examesObj.sat_novo != null) merged.satTransf = Number(examesObj.sat_novo)
+    merged.sexo = merged.sexo || (isFem ? 'F' : 'M')
+    merged.idade = merged.idade || idadeNum
+    const temMinimo = merged.hemoglobina > 0 && merged.vcm > 0 && merged.rdw > 0
+    if (!temMinimo) return resultadoEritron
+    try {
+      const temFerSat = merged.ferritina > 0 && merged.satTransf > 0
+      const r = temFerSat ? avaliarPaciente(merged) : triagemEritron(merged)
+      if (!r) return resultadoEritron
+      return { label: r.label, color: r.color, inputs: merged, _recomputado: true }
+    } catch (e) {
+      return resultadoEritron
+    }
+  }
+
   // Computa o relatório (BASELINE), classifica o estado clínico, persiste e
   // avança para a etapa 'relatorio'. examesObj pode ser {} (exames pulados).
   async function gerarRelatorio(examesObj) {
     const dados = buildDadosOBA()
-    const rel = avaliarOBA(resultadoEritron, dados, examesObj)
+    const eritron = eritronEfetivo(examesObj)
+    const rel = avaliarOBA(eritron, dados, examesObj)
     const temExames = Object.values(examesObj || {}).some(v => v !== null && v !== undefined && v !== '')
-    const est = rel ? classificarEstadoClinico(rel, { eritronColor: resultadoEritron?.color, temExames }) : null
+    const est = rel ? classificarEstadoClinico(rel, { eritronColor: eritron?.color, temExames }) : null
     setRelatorio(rel)
     setEstadoClinico(est)
     setEtapa('relatorio')
@@ -903,8 +968,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
         .from('oba_anamnese').select('id')
         .eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1)
       if (rows && rows.length > 0) {
+        // Eritron recomputado (nova data) vai dentro do relatorio_oba (jsonb) — sem
+        // precisar de colunas novas. data_eritron_atualizado = a data dos exames.
+        const relSalvar = eritron?._recomputado
+          ? { ...rel, eritron_atualizado: {
+              hemoglobina: eritron.inputs.hemoglobina, vcm: eritron.inputs.vcm, rdw: eritron.inputs.rdw,
+              ferritina: eritron.inputs.ferritina, satTransf: eritron.inputs.satTransf,
+              label: eritron.label, color: eritron.color, data: dataExames || null,
+            } }
+          : rel
         await supabase.from('oba_anamnese')
-          .update({ relatorio_oba: rel, estado_clinico: est?.estado || null })
+          .update({ relatorio_oba: relSalvar, estado_clinico: est?.estado || null })
           .eq('id', rows[0].id)
       }
     }
@@ -979,8 +1053,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // resultadoEritron só traz { label, color, inputs }, então o contexto ferropênico
   // vem de: ferritina < 30, label microcítico, ou o motor do OBA sugerindo ferro EV.
   const ferroEV = (() => {
-    const hb = Number(examesRedFairy?.hemoglobina ?? resultadoEritron?.inputs?.hemoglobina ?? 0)
-    const ferritina = Number(examesRedFairy?.ferritina ?? resultadoEritron?.inputs?.ferritina ?? 0)
+    // (b) Prefere os valores RELANÇADOS (nova data) sobre os da triagem.
+    const hb = Number(exames.hb_novo || examesRedFairy?.hemoglobina || resultadoEritron?.inputs?.hemoglobina || 0)
+    const ferritina = Number(exames.ferritina_novo || examesRedFairy?.ferritina || resultadoEritron?.inputs?.ferritina || 0)
     const gestante = form.status_gestacional === "GRÁVIDA"
     const hbAlvo = isFem ? (gestante ? 11.5 : 12.0) : 13.5
     const label = String(resultadoEritron?.label || '').toUpperCase()
@@ -1104,19 +1179,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
             {/* TELECONSULTA — se CRÍTICO/RUIM ou usou anticoagulante */}
             {teleRecomendada && (
-              <div style={{ background:'#FEF2F2', border:'2px solid #FCA5A5', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
-                <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#991B1B', margin:'0 0 0.4rem' }}>{"RECOMENDAMOS TELECONSULTA MÉDICA"}</p>
-                <p style={{ fontSize:'0.8rem', color:'#7F1D1D', lineHeight:1.5, margin:'0 0 0.7rem' }}>
+              <div style={{ background:'#EFF6FF', border:'2px solid #93C5FD', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
+                <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#1E40AF', margin:'0 0 0.4rem' }}>{"RECOMENDAMOS TELECONSULTA MÉDICA"}</p>
+                <p style={{ fontSize:'0.8rem', color:'#1D4ED8', lineHeight:1.5, margin:'0 0 0.7rem' }}>
                   {(estado === 'CRITICO' || estado === 'RUIM')
                     ? "Seu estado clínico atual merece avaliação médica próxima."
                     : "Seu histórico (trombose com anticoagulante já interrompido) recomenda avaliação o quanto antes."}
                 </p>
                 <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
-                  <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={checkBox} />
-                  <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#991B1B' }}>{"SIM, DESEJO MARCAR UMA TELECONSULTA"}</span>
+                  <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={{ ...checkBox, accentColor:'#2563EB' }} />
+                  <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#1E40AF' }}>{"SIM, DESEJO MARCAR UMA TELECONSULTA"}</span>
                 </label>
                 {querTeleconsulta && (
-                  <div style={{ marginTop:'0.8rem', background:'white', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 0.9rem' }}>
+                  <div style={{ marginTop:'0.8rem', background:'white', border:'1px solid #BFDBFE', borderRadius:10, padding:'0.8rem 0.9rem' }}>
                     <p style={{ fontSize:'0.8rem', color:'#374151', margin:0 }}>
                       {"Valor da teleconsulta: "}
                       <strong style={{ color:'#7B1E1E' }}>{valorTeleconsulta != null ? `R$ ${valorTeleconsulta}` : "a confirmar"}</strong>
@@ -1218,17 +1293,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             )}
 
             {/* RESULTADO POR WHATSAPP */}
-            <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:12, padding:'1rem 1.1rem' }}>
-              <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#0369A1', margin:'0 0 0.5rem' }}>{"Receber o resultado da sua avaliação"}</p>
+            <div style={{ background:'#F0FDF4', border:'1px solid #86EFAC', borderRadius:12, padding:'1rem 1.1rem' }}>
+              <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#166534', margin:'0 0 0.5rem' }}>{"Receber o resultado da sua avaliação"}</p>
               <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
-                <input type="checkbox" checked={querResultado} onChange={e => setQuerResultado(e.target.checked)} style={{ ...checkBox, accentColor:'#0284C7' }} />
-                <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#0369A1' }}>{"QUERO RECEBER O RESULTADO POR WHATSAPP"}</span>
+                <input type="checkbox" checked={querResultado} onChange={e => setQuerResultado(e.target.checked)} style={{ ...checkBox, accentColor:'#16A34A' }} />
+                <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#166534' }}>{"QUERO RECEBER O RESULTADO POR WHATSAPP"}</span>
               </label>
-              <p style={{ fontSize:'0.74rem', color:'#0C4A6E', margin:'0.5rem 0 0', lineHeight:1.5 }}>
+              <p style={{ fontSize:'0.74rem', color:'#15803D', margin:'0.5rem 0 0', lineHeight:1.5 }}>
                 {"Enviaremos um resumo da sua avaliação (em breve, também em PDF assinado por "}{MEDICO_RESP}{")."}
               </p>
               {querResultado && (
-                <button style={{ ...waBtn, background:'#0284C7' }} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e gostaria de receber o resultado da minha avaliação.')}>{"Receber no WhatsApp →"}</button>
+                <button style={waBtn} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e gostaria de receber o resultado da minha avaliação.')}>{"Receber no WhatsApp →"}</button>
               )}
             </div>
 
@@ -1392,9 +1467,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   rel.alertas.map((a, i) => {
                     const ui = NIVEL_UI[a.nivel] || NIVEL_UI.normal
                     return (
-                      <div key={i} style={{ background:ui.fundo, border:`1px solid ${ui.borda}`, borderRadius:10, padding:'0.7rem 0.9rem', marginBottom:'0.5rem', display:'flex', gap:'0.6rem' }}>
-                        <span style={{ fontSize:'0.6rem', fontWeight:800, color:'white', background:ui.texto, borderRadius:6, padding:'0.15rem 0.4rem', height:'fit-content', whiteSpace:'nowrap' }}>{ui.rotulo}</span>
-                        <span style={{ fontSize:'0.8rem', color:ui.texto, fontWeight:600, lineHeight:1.4 }}>{a.texto}</span>
+                      <div key={i} style={{ background:ui.fundo, border:`1.5px solid ${ui.borda}`, borderRadius:10, padding:'0.7rem 0.9rem', marginBottom:'0.5rem', display:'flex', gap:'0.6rem' }}>
+                        <span style={{ fontSize:'0.6rem', fontWeight:800, color:'white', background:ui.botao, borderRadius:6, padding:'0.2rem 0.4rem', height:'fit-content', minWidth:'4.5rem', textAlign:'center', boxSizing:'border-box', whiteSpace:'nowrap' }}>{ui.rotulo}</span>
+                        <span style={{ fontSize:'0.74rem', color:ui.texto, fontWeight:600, lineHeight:1.4 }}>{a.texto}</span>
                       </div>
                     )
                   })
@@ -1410,14 +1485,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   const ui = NIVEL_UI[m.nivel] || NIVEL_UI.normal
                   return (
                     <div key={i}>
-                      <div style={{ border:`1px solid ${ui.borda}`, borderRadius:10, marginBottom:'0.6rem', overflow:'hidden' }}>
+                      <div style={{ border:`1.5px solid ${ui.borda}`, borderRadius:10, marginBottom:'0.6rem', overflow:'hidden' }}>
                         <div style={{ background:ui.fundo, padding:'0.6rem 0.9rem', display:'flex', justifyContent:'space-between', alignItems:'center', gap:'0.5rem' }}>
                           <span style={{ fontSize:'0.78rem', fontWeight:800, color:ui.texto, textTransform:'uppercase', letterSpacing:'0.3px' }}>{m.titulo}</span>
-                          <span style={{ fontSize:'0.58rem', fontWeight:800, color:'white', background:ui.texto, borderRadius:6, padding:'0.15rem 0.4rem', whiteSpace:'nowrap' }}>{ui.rotulo}</span>
+                          <span style={{ fontSize:'0.58rem', fontWeight:800, color:'white', background:ui.botao, borderRadius:6, padding:'0.2rem 0.4rem', minWidth:'4.4rem', textAlign:'center', boxSizing:'border-box', whiteSpace:'nowrap' }}>{ui.rotulo}</span>
                         </div>
                         <div style={{ padding:'0.7rem 0.9rem', background:'white' }}>
                           {(m.linhas || []).map((l, j) => (
-                            <p key={j} style={{ fontSize:'0.78rem', color:'#374151', lineHeight:1.5, marginBottom: j < m.linhas.length - 1 ? '0.5rem' : 0 }}>{l}</p>
+                            <p key={j} style={{ fontSize:'0.72rem', color:'#374151', lineHeight:1.5, marginBottom: j < m.linhas.length - 1 ? '0.5rem' : 0 }}>{l}</p>
                           ))}
                         </div>
                       </div>
@@ -1447,11 +1522,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                         // t\u00edtulo j\u00e1 \u00e9 a pr\u00f3pria recomenda\u00e7\u00e3o).
                         const itens = grupos[c.key].filter(ex => String(ex).trim().toUpperCase() !== c.titulo.trim().toUpperCase())
                         return (
-                          <div key={c.key} style={{ background:c.fundo, border:`1px solid ${c.borda}`, borderRadius:10, padding:'0.7rem 1rem', marginBottom:'0.6rem' }}>
-                            <p style={{ fontSize:'0.68rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:c.texto, margin: itens.length ? '0 0 0.45rem' : 0 }}>{c.titulo}</p>
-                            {itens.map((ex, i) => (
-                              <p key={i} style={{ fontSize:'0.78rem', color:c.texto, fontWeight:600, lineHeight:1.5, marginBottom: i < itens.length - 1 ? '0.3rem' : 0 }}>{"\u2022 "}{ex}</p>
-                            ))}
+                          <div key={c.key} style={{ marginBottom:'0.7rem' }}>
+                            {/* (d) t\u00edtulo FORA do card */}
+                            <p style={{ fontSize:'0.68rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:c.texto, margin:'0 0 0.3rem' }}>{c.titulo}</p>
+                            {itens.length > 0 && (
+                              <div style={{ background:c.fundo, border:`1px solid ${c.borda}`, borderRadius:10, padding:'0.7rem 1rem' }}>
+                                {itens.map((ex, i) => (
+                                  // bullet em coluna pr\u00f3pria \u2192 o texto que quebra alinha abaixo, ap\u00f3s o ponto (indenta\u00e7\u00e3o pendente).
+                                  <p key={i} style={{ display:'flex', gap:'0.35rem', fontSize:'0.68rem', color:c.texto, fontWeight:600, lineHeight:1.5, margin: i < itens.length - 1 ? '0 0 0.3rem' : 0 }}>
+                                    <span aria-hidden="true">{"\u2022"}</span><span style={{ flex:1 }}>{ex}</span>
+                                  </p>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )
                       })}
@@ -1477,6 +1560,30 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     )
   }
 
+
+  // (d) Eritron de NOVA data: se a data dos exames for diferente da data do hemograma
+  // da triagem, abrimos campos no topo p/ relançar HB/VCM/RDW/Ferritina/Sat. E
+  // Ferritina/Sat. também aparecem (sozinhas) se a triagem não as tiver trazido.
+  const _temRF = !!(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina))
+  const _dataExCompleta = String(exAno).length === 4 && !!exMes && !!exDia
+  const novaDataExames = !!(_dataExCompleta && examesRedFairy?.dataColeta && dataExames && dataExames !== examesRedFairy.dataColeta)
+  const ERITRON_NOVO_TODOS = [
+    { key:'hb_novo', label:'Hemoglobina', unit:'g/dL' },
+    { key:'vcm_novo', label:'VCM', unit:'fL' },
+    { key:'rdw_novo', label:'RDW', unit:'%' },
+    { key:'ferritina_novo', label:'Ferritina', unit:'ng/mL' },
+    { key:'sat_novo', label:"Sat. Transferrina", unit:'%' },
+  ]
+  let eritronNovoFields = []
+  if (novaDataExames) {
+    eritronNovoFields = ERITRON_NOVO_TODOS
+  } else if (_temRF) {
+    if (!examesRedFairy.ferritina) eritronNovoFields.push(ERITRON_NOVO_TODOS[3])
+    if (!examesRedFairy.satTransf) eritronNovoFields.push(ERITRON_NOVO_TODOS[4])
+  }
+  // Onde fica o "primeiro campo dos exames" (alvo do salto após o ANO): o 1º campo do
+  // bloco eritron-novo se ele existir, senão o 1º campo da grade (Leucócitos).
+  const primeiroExameGridKey = eritronNovoFields.length ? null : 'leucocitos'
 
   if (etapa === 'exames') return (
     <div style={OV} onClick={pularExames}>
@@ -1527,18 +1634,44 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 <input
                   type="checkbox"
                   checked={form.temExamesMesmaData}
-                  onChange={e => sf('temExamesMesmaData', e.target.checked)}
+                  onChange={e => {
+                    const checked = e.target.checked
+                    sf('temExamesMesmaData', checked)
+                    if (checked && examesRedFairy?.dataColeta) {
+                      const [a, m, d] = examesRedFairy.dataColeta.split('-')
+                      setExAno(a || ''); setExMes(m || ''); setExDia(d || '')
+                    }
+                  }}
                   style={{ width:'1.1rem', height:'1.1rem', accentColor:'#DB2777' }}
                 />
                 <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#831843' }}>
-                  {"Tenho exames da mesma data do hemograma inicial ("}{examesRedFairy.dataColeta.split('-').reverse().join('/')}{")"}
+                  {"OS EXAMES QUE VOU DIGITAR SÃO DA MESMA DATA DO HEMOGRAMA ACIMA"}
                 </span>
               </label>
+              <p style={{ fontSize:'0.74rem', color:'#9D174D', margin:'0.45rem 0 0', lineHeight:1.4 }}>
+                {"Se são exames mais recentes, digite a nova data no campo abaixo."}
+              </p>
             </div>
           )}
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#374151', marginBottom:'0.5rem' }}>Data dos exames</label>
-          <input style={inp} type="date" max={new Date().toISOString().split('T')[0]} value={dataExames} onChange={e => setDataExames(e.target.value)} />
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem', maxWidth:320 }}>
+            <div>
+              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>DIA</label>
+              <input ref={refExDia} style={inpA} onWheel={noWheel} type="number" min="1" max="31" placeholder="DD" value={exDia}
+                onChange={e => { setExDia(e.target.value); saltoPorDigitos(e.target.value, refExMes, 2) }} onFocus={() => agendarSalto(null)} />
+            </div>
+            <div>
+              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>{"MÊS"}</label>
+              <input ref={refExMes} style={inpA} onWheel={noWheel} type="number" min="1" max="12" placeholder="MM" value={exMes}
+                onChange={e => { setExMes(e.target.value); saltoPorDigitos(e.target.value, refExAno, 2) }} onFocus={() => agendarSalto(null)} />
+            </div>
+            <div>
+              <label style={{ fontSize:'0.7rem', color:'#374151', fontWeight:700 }}>{"ANO"}</label>
+              <input ref={refExAno} style={inpA} onWheel={noWheel} type="number" min="2000" max="2030" placeholder="AAAA" value={exAno}
+                onChange={e => { setExAno(e.target.value); saltoPorDigitos(e.target.value, refPrimeiroExame, 4) }} onFocus={() => agendarSalto(null)} />
+            </div>
+          </div>
           {diasExames !== null && (
             <div style={{ background:'#F0F9FF', border:'1px solid #BAE6FD', borderRadius:8, padding:'0.5rem 0.9rem', marginTop:'0.4rem', marginBottom:'0.8rem' }}>
               <p style={{ color:'#0369A1', fontSize:'0.85rem', fontWeight:700 }}>
@@ -1547,11 +1680,43 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </div>
           )}
 
+          {/* (d) Eritron de NOVA data / faltante na triagem \u2014 campos no TOPO dos exames. */}
+          {eritronNovoFields.length > 0 && (
+            <div style={{ background:'#FEF2F2', border:'1.5px solid #FCA5A5', borderRadius:10, padding:'0.7rem 0.9rem', margin:'0.2rem 0 0.9rem' }}>
+              <p style={{ fontSize:'0.72rem', fontWeight:800, color:'#9F1239', margin:'0 0 0.5rem', lineHeight:1.35 }}>
+                {novaDataExames
+                  ? "Como esta \u00e9 uma NOVA data, lance os valores atualizados do eritron:"
+                  : "Inclua tamb\u00e9m estes (n\u00e3o vieram na triagem):"}
+              </p>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:'0.3rem' }}>
+                {eritronNovoFields.map((ex, i) => (
+                  <div key={ex.key} style={{ display:'flex', flexDirection:'column', background:'#FFFDF5', border:'1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
+                    <span style={{ fontSize:'0.62rem', fontWeight:600, color:'#374151', lineHeight:1.15 }}>{ex.label}</span>
+                    <span style={{ fontSize:'0.5rem', color:'#F97316', minHeight:'0.6rem', lineHeight:1.1 }}>{ex.unit}</span>
+                    <input
+                      ref={i === 0 ? refPrimeiroExame : null}
+                      className="oba-exame-input"
+                      onWheel={noWheel}
+                      style={{ width:'100%', border:'1.5px solid #FACC15', borderRadius:5, padding:'0.28rem 0.32rem', fontSize:'0.74rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background:'#FFFDF5', color:'#111827', boxSizing:'border-box' }}
+                      type="number" step="0.01"
+                      value={exames[ex.key] || ''}
+                      onChange={e => handleExameChangeOBA(ex.key, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* V.R. (por sexo) + unidade entram como M\u00c1SCARA do campo; classifica\u00e7\u00e3o
               vira um ponto colorido ap\u00f3s o input (verde=normal, \u00e2mbar=lim\u00edtrofe,
               vermelho=alterado). 3 colunas, campos amarelos. Sem seamless aqui. */}
-          <style>{`.oba-exame-input::placeholder{font-size:0.5rem;color:#9CA3AF;font-weight:500;}`}</style>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'0.3rem' }}>
+          <style>{`
+            .oba-exame-input::placeholder{font-size:0.5rem;color:#9CA3AF;font-weight:500;}
+            .oba-exame-input::-webkit-outer-spin-button,
+            .oba-exame-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
+            .oba-exame-input{ -moz-appearance:textfield; appearance:textfield; }
+          `}</style>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:'0.3rem' }}>
             {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => {
               const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
               const dotColor = cl ? (cl.nivel === 'alterado' ? '#DC2626' : cl.nivel === 'limitrofe' ? '#F59E0B' : '#16A34A') : null
@@ -1559,9 +1724,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               return (
                 <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : '#FEFCE8', border: aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
                   <span style={{ fontSize:'0.62rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#374151', lineHeight:1.15 }}>{ex.label}</span>
-                  {ex.hint && <span style={{ fontSize:'0.5rem', color:'#F97316' }}>{ex.hint}</span>}
-                  <div style={{ display:'flex', alignItems:'center', gap:'0.25rem', marginTop:'0.25rem' }}>
+                  {/* Sempre reserva a linha do subtexto (nbsp quando não há) p/ manter
+                      os inputs alinhados horizontalmente com os campos que têm hint laranja. */}
+                  <span style={{ fontSize:'0.5rem', color:'#F97316', minHeight:'0.6rem', lineHeight:1.1 }}>{ex.hint || ' '}</span>
+                  <div style={{ display:'flex', alignItems:'center', gap:'0.25rem', marginTop:'auto', paddingTop:'0.25rem' }}>
                     <input
+                      ref={ex.key === primeiroExameGridKey ? refPrimeiroExame : null}
                       className="oba-exame-input"
                       onWheel={noWheel}
                       style={{ flex:1, minWidth:0, border:'1.5px solid #FACC15', borderRadius:5, padding:'0.28rem 0.32rem', fontSize:'0.74rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : '#FFFDF5', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
@@ -1707,15 +1875,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem', marginBottom:'0.4rem' }}>
             <div>
               <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>DIA (opcional)</label>
-              <input ref={refDia} style={inpA} onWheel={noWheel} type="number" min="1" max="31" placeholder="DD" value={form.cirurgia_dia} onChange={e => { sf('cirurgia_dia', e.target.value); agendarSalto(refMes) }} onFocus={() => agendarSalto(refMes)} />
+              <input ref={refDia} style={inpA} onWheel={noWheel} type="number" min="1" max="31" placeholder="DD" value={form.cirurgia_dia} onChange={e => { sf('cirurgia_dia', e.target.value); saltoPorDigitos(e.target.value, refMes, 2) }} onFocus={() => agendarSalto(null)} />
             </div>
             <div>
               <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>{"M\u00caS (opcional)"}</label>
-              <input ref={refMes} style={inpA} onWheel={noWheel} type="number" min="1" max="12" placeholder="MM" value={form.cirurgia_mes} onChange={e => { sf('cirurgia_mes', e.target.value); agendarSalto(refAno) }} onFocus={() => agendarSalto(refAno)} />
+              <input ref={refMes} style={inpA} onWheel={noWheel} type="number" min="1" max="12" placeholder="MM" value={form.cirurgia_mes} onChange={e => { sf('cirurgia_mes', e.target.value); saltoPorDigitos(e.target.value, refAno, 2) }} onFocus={() => agendarSalto(null)} />
             </div>
             <div>
               <label style={{ fontSize:'0.7rem', color:'#DC2626', fontWeight:700 }}>{"ANO \u2731"}</label>
               <input ref={refAno} style={{ ...inpA, borderColor: form.cirurgia_ano ? '#FACC15' : '#FCA5A5' }} onWheel={noWheel} type="number" min="2000" max="2030" placeholder="AAAA" value={form.cirurgia_ano} onChange={e => { sf('cirurgia_ano', e.target.value); agendarSalto(null) }} onFocus={() => agendarSalto(null)} />
+              {/* ANO: após 4 dígitos o cursor NÃO salta (campos seguintes vêm por marcação). */}
             </div>
           </div>
           {mesesPos !== null ? (
@@ -1755,20 +1924,20 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem 0.8rem' }}>
             <div>
-              <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso antes (kg)</label>
-              <input ref={refPesoAntes} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 120" value={form.peso_antes} onChange={e => { sf('peso_antes', e.target.value); agendarSalto(refPesoMin) }} onFocus={() => agendarSalto(refPesoMin)} />
+              <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso antes da cirurgia (kg)</label>
+              <input ref={refPesoAntes} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 120" value={form.peso_antes} onChange={e => { sf('peso_antes', e.target.value); saltoPorDigitos(e.target.value, refPesoMin, 3, true) }} onFocus={() => agendarSalto(null)} />
             </div>
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"Menor peso p\u00f3s (kg)"}</label>
-              <input ref={refPesoMin} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => { sf('peso_minimo_pos', e.target.value); agendarSalto(refPesoAtual) }} onFocus={() => agendarSalto(refPesoAtual)} />
+              <input ref={refPesoMin} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => { sf('peso_minimo_pos', e.target.value); saltoPorDigitos(e.target.value, refPesoAtual, 3, true) }} onFocus={() => agendarSalto(null)} />
             </div>
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso atual (kg)</label>
-              <input ref={refPesoAtual} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 78" value={form.peso_atual} onChange={e => { sf('peso_atual', e.target.value); agendarSalto(refAltura) }} onFocus={() => agendarSalto(refAltura)} onBlur={handlePesoAtualBlur} />
+              <input ref={refPesoAtual} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 78" value={form.peso_atual} onChange={e => { sf('peso_atual', e.target.value); saltoPorDigitos(e.target.value, refAltura, 3, true) }} onFocus={() => agendarSalto(null)} onBlur={handlePesoAtualBlur} />
             </div>
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Altura (cm)</label>
-              <input ref={refAltura} style={inpA} onWheel={noWheel} type="number" step="1" placeholder="Ex: 165" value={form.altura} onChange={e => { sf('altura', e.target.value); agendarSalto(isFem ? refGestacoes : null) }} onFocus={() => agendarSalto(isFem ? refGestacoes : null)} />
+              <input ref={refAltura} style={inpA} onWheel={noWheel} type="number" step="1" placeholder="Ex: 165" value={form.altura} onChange={e => { sf('altura', e.target.value) }} onFocus={() => agendarSalto(null)} />
             </div>
           </div>
           {alertaPeso && (
@@ -2076,28 +2245,46 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           <SectionTitle>Status Dental</SectionTitle>
           {["BOA SA\u00daDE ORAL, DENTI\u00c7\u00c3O OK.", 'PRECISO TRATAMENTO ODONTOL\u00d3GICO', 'PERDI MAIS DE UM DENTE AP\u00d3S A CIRURGIA'].map(op => (
-            <div key={op} onClick={() => sf('status_dental', form.status_dental === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem', borderRadius:8, border:`1.5px solid ${form.status_dental === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_dental === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem', fontSize:'0.85rem', fontWeight: form.status_dental === op ? 700 : 500, color: form.status_dental === op ? '#7B1E1E' : '#374151' }}>
+            <div key={op} onClick={() => sf('status_dental', form.status_dental === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem', borderRadius:8, border:`1.5px solid ${form.status_dental === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_dental === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem', fontSize:'0.72rem', fontWeight: form.status_dental === op ? 700 : 500, color: form.status_dental === op ? '#7B1E1E' : '#374151' }}>
               <Radio16 active={form.status_dental === op} />{op}
             </div>
           ))}
 
           <SectionTitle>{"Status \u00d3sseo | Articular"}</SectionTitle>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:'0.4rem' }}>
             {["DENSITOMETRIA \u00d3SSEA NORMAL", 'OSTEOPENIA', 'OSTEOPOROSE', "N\u00c3O FIZ DENSITOMETRIA"].map(op => (
-              <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.5rem 0.7rem', borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontSize:'0.8rem', fontWeight: form.status_osseo === op ? 700 : 500, color: form.status_osseo === op ? '#7B1E1E' : '#374151' }}>
+              <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.5rem 0.7rem', borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontSize:'0.72rem', fontWeight: form.status_osseo === op ? 700 : 500, color: form.status_osseo === op ? '#7B1E1E' : '#374151' }}>
                 <Radio16 active={form.status_osseo === op} />{op}
               </div>
             ))}
           </div>
           <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.8rem 0 0.5rem' }}>{"Articular"}</p>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:'0.4rem' }}>
             {STATUS_ARTICULAR_OPS.map(op => (
               <CheckRow key={op} label={op} checked={form.status_articular.includes(op)} onClick={() => sf('status_articular', tog(form.status_articular, op))} />
             ))}
           </div>
+          <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.8rem 0 0.5rem' }}>{"FAN (Anticorpo Anti-C\u00e9lula)"}</p>
+          <RadioGroup
+            options={['REAGENTE', "N\u00c3O REAGENTE"]}
+            value={form.fan}
+            cols={2}
+            onChange={v => setForm(p => ({ ...p, fan: p.fan === v ? '' : v, fan_titulo: v === 'REAGENTE' ? p.fan_titulo : '' }))}
+          />
+          {form.fan === 'REAGENTE' && (
+            <div style={{ marginTop:'0.5rem' }}>
+              <p style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', margin:'0 0 0.35rem' }}>{"T\u00edtulo"}</p>
+              <RadioGroup
+                options={['1/80', '1/160', '1/320', '1/640+']}
+                value={form.fan_titulo}
+                cols={4}
+                onChange={v => sf('fan_titulo', form.fan_titulo === v ? '' : v)}
+              />
+            </div>
+          )}
 
           <SectionTitle>{"Status Neurol\u00f3gico"}</SectionTitle>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:'0.4rem' }}>
             {STATUS_NEUROLOGICO_OPS.map(opt => {
               const ehSemQueixas = opt === 'SEM QUEIXAS'
               const semQueixasMarcado = form.status_neurologico.includes('SEM QUEIXAS')
@@ -2128,12 +2315,30 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <SectionTitle>Status Intestinal</SectionTitle>
           <RadioGroup options={STATUS_INTESTINAL_OPS} value={form.status_intestinal} onChange={v => {
             const novo = form.status_intestinal === v ? '' : v
-            // Obstipação no intestinal → marca também a obstipação no Status Fibromiálgico.
             const fibroObst = STATUS_FIBROMIALGIA_OPS.find(o => o.indexOf('OBSTIPA') === 0)
+            const eraObst = (form.status_intestinal || '').indexOf('OBSTIPA') === 0
+            const ehObst = !!novo && novo.indexOf('OBSTIPA') === 0
             setForm(p => {
               const fibro = new Set(p.status_fibromialgia || [])
-              if (novo && novo.indexOf('OBSTIPA') === 0 && fibroObst) fibro.add(fibroObst)
-              return { ...p, status_intestinal: novo, status_fibromialgia: Array.from(fibro) }
+              // Obstipação no intestinal → marca também a obstipação no fibromiálgico.
+              if (ehObst && fibroObst) fibro.add(fibroObst)
+              // Saiu da obstipação → desfaz a auto-marcação (senão os exames de
+              // calprotectina/indican ficavam visíveis mesmo em "INTESTINO FUNCIONA BEM").
+              else if (eraObst && !ehObst && fibroObst) fibro.delete(fibroObst)
+              const fibroArr = Array.from(fibro)
+              // Os exames complementares só aparecem se houver alteração intestinal,
+              // fibromialgia diagnosticada ou obstipação no fibromiálgico. Quando somem,
+              // zera os valores digitados (evita reaproveitar dado de marcação errada).
+              const mostra = (novo && novo !== 'INTESTINO FUNCIONA BEM')
+                || fibroArr.includes("TENHO FIBROMIALGIA DIAGNOSTICADA")
+                || (fibroObst && fibroArr.includes(fibroObst))
+              return {
+                ...p,
+                status_intestinal: novo,
+                status_fibromialgia: fibroArr,
+                calprotectina: mostra ? p.calprotectina : '',
+                indican: mostra ? p.indican : '',
+              }
             })
           }} />
 
@@ -2146,7 +2351,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <p style={{ fontSize:'0.72rem', color:'#92400E', fontWeight:600, marginBottom:'0.5rem' }}>
                 {"\ud83d\udd2c Exames Intestinais Complementares (sugeridos)"}
               </p>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.6rem' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:'0.6rem' }}>
 
                 <div style={{ display:'flex', flexDirection:'column' }}>
                   <label style={{ fontSize:'0.72rem', fontWeight:600, color:'#374151', marginBottom:'0.2rem' }}>
@@ -2159,6 +2364,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                     value={form.calprotectina}
                     onChange={e => sf('calprotectina', e.target.value)}
                     style={{
+                      width:'100%',
+                      boxSizing:'border-box',
                       padding:'0.4rem 0.6rem',
                       border:'1px solid #D1D5DB',
                       borderRadius:'6px',
@@ -2176,6 +2383,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                     value={form.indican}
                     onChange={e => sf('indican', e.target.value)}
                     style={{
+                      width:'100%',
+                      boxSizing:'border-box',
                       padding:'0.4rem 0.6rem',
                       border:'1px solid #D1D5DB',
                       borderRadius:'6px',
