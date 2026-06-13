@@ -218,7 +218,7 @@ export default function TriagemResultadoModal({
           </div>
           <div className="p-6 space-y-4">
             <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-              <p className="text-sm text-blue-900 leading-relaxed">
+              <p className="text-sm text-blue-900 leading-snug">
                 {"Este \u00e9 o seu "}<strong>primeiro pedido gratuito</strong>{" de "}
                 <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{"."}
                 {" Preencha os dados abaixo e envie pelo WhatsApp."}
@@ -520,12 +520,12 @@ export default function TriagemResultadoModal({
                   <p className="text-sm font-bold text-blue-900">
                     {"\u2728 Aparentemente os exames do seu paciente est\u00e3o bem"}
                   </p>
-                  <p className="text-sm text-blue-900 leading-relaxed">
+                  <p className="text-sm text-blue-900 leading-snug">
                     {"Mas ainda assim eles n\u00e3o revelariam uma "}<strong>baixa reserva</strong>{" ou "}
                     <strong>excesso de ferro</strong>{". Recomende ao paciente que traga a "}
                     <strong>FERRITINA</strong>{" e a "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{"."}
                   </p>
-                  <p className="text-sm text-blue-900 leading-relaxed">
+                  <p className="text-sm text-blue-900 leading-snug">
                     {"Se "}{inputs?.sexo === 'F' ? 'ela' : 'ele'}{" n\u00e3o fez nenhum tratamento recente, "}
                     <strong>{"PARAB\u00c9NS!"}</strong>{" Vida que segue muito bem para "}{inputs?.sexo === 'F' ? 'ela' : 'ele'}{". Caso contr\u00e1rio, se "}{inputs?.sexo === 'F' ? 'ela' : 'ele'}{" fez ou est\u00e1 em tratamento, podemos cuidar "}{inputs?.sexo === 'F' ? 'dela' : 'dele'}{"."}
                   </p>
@@ -535,12 +535,12 @@ export default function TriagemResultadoModal({
                   <p className="text-sm font-bold text-blue-900">
                     {"\u2728 Aparentemente seus exames est\u00e3o bem"}
                   </p>
-                  <p className="text-sm text-blue-900 leading-relaxed">
+                  <p className="text-sm text-blue-900 leading-snug">
                     {"Mas ainda assim eles n\u00e3o revelariam uma "}<strong>baixa reserva</strong>{" ou "}
                     <strong>excesso de ferro</strong>{". Recomendamos que voc\u00ea traga a "}
                     <strong>FERRITINA</strong>{" e a "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{"."}
                   </p>
-                  <p className="text-sm text-blue-900 leading-relaxed">
+                  <p className="text-sm text-blue-900 leading-snug">
                     {"Se voc\u00ea n\u00e3o fez nenhum tratamento recente, "}
                     <strong>{"PARAB\u00c9NS!"}</strong>{" Vida que segue muito bem para voc\u00ea. Caso contr\u00e1rio, se voc\u00ea fez ou est\u00e1 em tratamento, cuidaremos de voc\u00ea."}
                   </p>
@@ -551,7 +551,7 @@ export default function TriagemResultadoModal({
                 <p className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-2">
                   {"\ud83e\ude7a IMPORTANTE"}
                 </p>
-                <p className="text-sm text-blue-900 leading-relaxed">
+                <p className="text-sm text-blue-900 leading-snug">
                   {"Para entender melhor o eritron, precisamos da "}<strong>FERRITINA</strong>{" e da "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA [%]"}</strong>{sufB12}{". Solicite esses exames e lance aqui os resultados, ou encaminhe o/a paciente para que se cadastre na plataforma, nos solicite o pedido desses exames, e lance os resultados. N\u00f3s faremos a an\u00e1lise e retornaremos a voc\u00ea com a conclus\u00e3o."}
                 </p>
               </div>
@@ -560,11 +560,11 @@ export default function TriagemResultadoModal({
                 <p className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-2">
                   {"\u2728 Aprofundar Diagn\u00f3stico"}
                 </p>
-                <p className="text-sm text-blue-900 leading-relaxed mb-2">
+                <p className="text-sm text-blue-900 leading-snug mb-2">
                   {"Para um diagn\u00f3stico mais preciso, voc\u00ea precisa NO M\u00cdNIMO de "}
                   <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{sufB12}{". S\u00e3o de baixo custo, resultados r\u00e1pidos, normalmente cobertos por planos de sa\u00fade."}
                 </p>
-                <p className="text-sm text-blue-900 leading-relaxed">
+                <p className="text-sm text-blue-900 leading-snug">
                   {"Ao se cadastrar aqui voc\u00ea ter\u00e1 "}<strong>acompanhamento por 1 ano</strong>{", e esse "}<strong>{"primeiro pedido de exames ser\u00e1 gratuito"}</strong>{"."}
                 </p>
               </div>
@@ -573,7 +573,7 @@ export default function TriagemResultadoModal({
                 <p className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-2">
                   {"\u2728 Aprofundar Diagn\u00f3stico"}
                 </p>
-                <p className="text-sm text-blue-900 leading-relaxed">
+                <p className="text-sm text-blue-900 leading-snug">
                   {"Para um diagn\u00f3stico mais preciso, \u00e9 necess\u00e1rio fazer "}
                   <strong>FERRITINA</strong>{" e "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{sufB12}{". S\u00e3o de baixo custo, resultados r\u00e1pidos, normalmente cobertos por planos de sa\u00fade. Solicite esses exames e traga os resultados aqui para uma avalia\u00e7\u00e3o completa."}
                 </p>
