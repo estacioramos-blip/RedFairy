@@ -154,6 +154,7 @@ export default function AdminPage({ onVoltar }) {
         <div className="max-w-3xl mx-auto flex gap-2 mt-3">
           {[
             { id: 'pacientes',    label: "\ud83d\udc65 Pacientes" },
+            { id: 'lembretes',    label: "\u23f0 Lembretes" },
             { id: 'medicamentos', label: "\ud83e\ude78 Ferro EV" },
             { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
             { id: 'medicos',      label: "\ud83e\ude7a M\u00e9dicos" },
@@ -174,6 +175,7 @@ export default function AdminPage({ onVoltar }) {
 
       <div className="max-w-3xl mx-auto px-4 py-6">
         {aba === 'pacientes'    && <AbaPacientes />}
+        {aba === 'lembretes'    && <AbaLembretes />}
         {aba === 'medicamentos' && <AbaMedicamentos />}
         {aba === 'suplementos'  && <AbaSuplementos />}
         {aba === 'medicos'      && <AbaMedicos />}
@@ -182,6 +184,90 @@ export default function AdminPage({ onVoltar }) {
         {aba === 'extratos'     && <AbaExtratos />}
         {aba === 'config'       && <AbaConfig />}
       </div>
+    </div>
+  );
+}
+
+// Lembretes de anuidade: assinaturas ativas vencendo em ≤15 dias (ou vencidas há
+// ≤30 dias). A ADM dispara o WhatsApp manualmente (entrega in-app + painel ADM).
+function AbaLembretes() {
+  const [linhas, setLinhas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const limite = new Date(Date.now() + 15 * 86400000).toISOString();
+      const { data: assins } = await supabase
+        .from('assinaturas')
+        .select('user_id, data_fim')
+        .eq('status', 'ativa')
+        .lte('data_fim', limite)
+        .order('data_fim', { ascending: true });
+      const ids = [...new Set((assins || []).map(a => a.user_id))];
+      const perfis = {};
+      if (ids.length) {
+        const { data: profs } = await supabase.from('profiles').select('id, nome, cpf, celular').in('id', ids);
+        (profs || []).forEach(p => { perfis[p.id] = p; });
+      }
+      // Renovações empilham linhas → mantém a de data_fim mais distante por usuário.
+      const porUser = {};
+      (assins || []).forEach(a => {
+        if (!porUser[a.user_id] || new Date(a.data_fim) > new Date(porUser[a.user_id].data_fim)) porUser[a.user_id] = a;
+      });
+      const lista = Object.values(porUser)
+        .map(a => ({ ...a, dias: Math.ceil((new Date(a.data_fim).getTime() - Date.now()) / 86400000), perfil: perfis[a.user_id] || {} }))
+        .filter(l => l.dias <= 15 && l.dias >= -30)
+        .sort((x, y) => x.dias - y.dias);
+      setLinhas(lista);
+      setLoading(false);
+    })();
+  }, []);
+
+  function abrirWhats(l) {
+    const tel = String(l.perfil.celular || '').replace(/\D/g, '');
+    const nome = (l.perfil.nome || '').split(' ')[0] || 'paciente';
+    const quando = l.dias < 0 ? `venceu há ${Math.abs(l.dias)} dia(s)` : l.dias === 0 ? 'vence hoje' : `vence em ${l.dias} dia(s)`;
+    const msg = `Olá, ${nome}! Sua anuidade da RedFairy ${quando}. Podemos renovar para você manter o acesso ao histórico, gráficos e novas avaliações?`;
+    const base = tel ? `https://wa.me/55${tel}` : 'https://wa.me/';
+    window.open(`${base}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
+
+  if (loading) return <p className="text-gray-500 text-sm">Carregando...</p>;
+  if (!linhas.length) return (
+    <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
+      <p className="text-sm text-gray-600">{"✓ Nenhuma anuidade vencendo nos próximos 15 dias."}</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-gray-500 mb-2">{"Anuidades vencendo (≤15 dias) ou vencidas recentemente. Clique para avisar pelo WhatsApp."}</p>
+      {linhas.map((l, i) => {
+        const urgente = l.dias <= 5;
+        return (
+          <div key={i} className="bg-white rounded-xl border-2 p-3 flex items-center justify-between gap-3"
+            style={{ borderColor: urgente ? '#FCA5A5' : '#FDE68A' }}>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-gray-800 truncate">{l.perfil.nome || '(sem nome)'}</p>
+              <p className="text-xs text-gray-500">
+                {l.perfil.cpf ? `CPF ${l.perfil.cpf} · ` : ''}
+                {l.perfil.celular || 'sem celular'}
+              </p>
+            </div>
+            <div className="text-right flex-shrink-0">
+              <p className="text-xs font-bold" style={{ color: urgente ? '#991B1B' : '#92400E' }}>
+                {l.dias < 0 ? `venceu há ${Math.abs(l.dias)}d` : l.dias === 0 ? 'vence hoje' : `${l.dias} dias`}
+              </p>
+              <button onClick={() => abrirWhats(l)}
+                className="mt-1 text-white font-bold text-xs rounded-lg px-3 py-1.5"
+                style={{ background: '#16a34a', border: 'none', cursor: 'pointer' }}>
+                {"WhatsApp →"}
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

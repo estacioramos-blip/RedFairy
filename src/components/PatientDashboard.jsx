@@ -43,6 +43,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showSobre, setShowSobre] = useState(false)
   const [showOBAModal, setShowOBAModal] = useState(false)
   const [precisaOBA, setPrecisaOBA] = useState(false)  // bariátrico sem anamnese OBA → banner persistente
+  // Vencimento da anuidade (assinaturas.data_fim da assinatura ativa) p/ alerta 15/5 dias.
+  const [vencimentoAnuidade, setVencimentoAnuidade] = useState(null)
+  const [alertaAnuidadeFechado, setAlertaAnuidadeFechado] = useState(false)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
   const [fraseGestacaoConcluida, setFraseGestacaoConcluida] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
@@ -156,6 +159,19 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       return
     }
     setProfile(prof)
+    // Vencimento da anuidade: pega a assinatura ativa com a data_fim mais distante
+    // (renovações empilham linhas). Usado no alerta 15/5 dias.
+    try {
+      const { data: assinAtiva } = await supabase
+        .from('assinaturas')
+        .select('data_fim')
+        .eq('user_id', prof.id)
+        .eq('status', 'ativa')
+        .order('data_fim', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      setVencimentoAnuidade(assinAtiva?.data_fim || null)
+    } catch (e) { /* sem assinatura → sem alerta */ }
     // Perfil incompleto (paciente recem-cadastrado): pede dados pessoais antes de tudo
     if (prof && (!prof.nome || String(prof.nome).trim().length < 3)) {
       setShowCompletarPerfil(true)
@@ -626,6 +642,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     </div>
   )
 
+  // Dias até o vencimento da anuidade (assinatura ativa). null = sem assinatura.
+  const diasParaVencer = (() => {
+    if (!vencimentoAnuidade) return null
+    const fim = new Date(vencimentoAnuidade)
+    if (isNaN(fim.getTime())) return null
+    return Math.ceil((fim.getTime() - Date.now()) / 86400000)
+  })()
+  // Alerta quando faltam ≤15 dias (ou já venceu); urgência sobe em ≤5 dias / vencido.
+  const mostrarAlertaAnuidade = diasParaVencer !== null && diasParaVencer <= 15 && !alertaAnuidadeFechado
+  const anuidadeUrgente = diasParaVencer !== null && diasParaVencer <= 5
+  const textoAnuidade = diasParaVencer === null ? '' :
+    diasParaVencer < 0 ? `Sua anuidade venceu há ${Math.abs(diasParaVencer)} dia${Math.abs(diasParaVencer) > 1 ? 's' : ''}.` :
+    diasParaVencer === 0 ? 'Sua anuidade vence hoje.' :
+    `Sua anuidade vence em ${diasParaVencer} dia${diasParaVencer > 1 ? 's' : ''}.`
+
   return (
     <>
     <style>{`
@@ -672,6 +703,39 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </div>
         </div>
       </header>
+
+      {mostrarAlertaAnuidade && (
+        <div className="max-w-3xl mx-auto px-4 mt-4">
+          <div className="rounded-xl border-2 p-4 flex items-start gap-3" style={{
+            background: anuidadeUrgente ? '#FEF2F2' : '#FFFBEB',
+            borderColor: anuidadeUrgente ? '#FCA5A5' : '#FDE68A',
+          }}>
+            <div className="text-2xl">{anuidadeUrgente ? "⚠️" : "⏰"}</div>
+            <div className="flex-1">
+              <p className="text-sm font-bold" style={{ color: anuidadeUrgente ? '#991B1B' : '#92400E', margin: 0 }}>
+                {textoAnuidade}
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: anuidadeUrgente ? '#7F1D1D' : '#78350F', margin: '0.3rem 0 0' }}>
+                {"Renove para manter seu acesso ao histórico, gráficos e novas avaliações."}
+              </p>
+              <button
+                onClick={() => {
+                  const msg = `Olá! Sou ${profile?.nome || 'paciente'} (CPF ${profile?.cpf || ''}). Quero renovar a minha anuidade da RedFairy.`
+                  window.open(`https://wa.me/5571997110804?text=${encodeURIComponent(msg)}`, '_blank')
+                }}
+                className="mt-3 inline-block text-white font-bold text-xs rounded-lg px-4 py-2"
+                style={{ background: '#16a34a', border: 'none', cursor: 'pointer' }}>
+                {"Renovar pelo WhatsApp →"}
+              </button>
+            </div>
+            <button onClick={() => setAlertaAnuidadeFechado(true)} aria-label="Fechar"
+              className="text-gray-400 hover:text-gray-600 font-bold text-lg leading-none"
+              style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+              {"×"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {fraseGestacaoConcluida && (
         <div className="max-w-3xl mx-auto px-4 mt-4">
