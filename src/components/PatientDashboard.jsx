@@ -43,9 +43,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showSobre, setShowSobre] = useState(false)
   const [showOBAModal, setShowOBAModal] = useState(false)
   const [precisaOBA, setPrecisaOBA] = useState(false)  // bariátrico sem anamnese OBA → banner persistente
+  const [anamneseAnterior, setAnamneseAnterior] = useState(null)  // última oba_anamnese → OBA em modo follow-up
+  const [eritronAnterior, setEritronAnterior] = useState(null)    // avaliação eritron anterior → comparação no resultado
   // Vencimento da anuidade (assinaturas.data_fim da assinatura ativa) p/ alerta 15/5 dias.
   const [vencimentoAnuidade, setVencimentoAnuidade] = useState(null)
   const [alertaAnuidadeFechado, setAlertaAnuidadeFechado] = useState(false)
+  const [alertaHpyloriFechado, setAlertaHpyloriFechado] = useState(false)  // lembrete de repetir h.pylori (6 meses)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
   const [fraseGestacaoConcluida, setFraseGestacaoConcluida] = useState(false)
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false)
@@ -232,6 +235,18 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     if (!prof.bariatrica && (avals || []).some(a => a.bariatrica)) {
       await supabase.from('profiles').update({ bariatrica: true }).eq('id', prof.id)
       setProfile(p => (p ? { ...p, bariatrica: true } : p))
+    }
+    // FOLLOW-UP (frente 2): se o bariátrico JÁ fez o baseline (existe linha em
+    // oba_anamnese), carregamos a última p/ o OBA abrir em modo follow-up (esconde
+    // imutáveis). Se não houver baseline, fica null → OBA abre normal (1ª vez).
+    if (prof.cpf && (prof.bariatrica || (avals || []).some(a => a.bariatrica))) {
+      try {
+        const cpfLimpo = String(prof.cpf).replace(/\D/g, '')
+        const { data: obaRows } = await supabase
+          .from('oba_anamnese').select('*')
+          .eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1)
+        setAnamneseAnterior(obaRows && obaRows.length ? obaRows[0] : null)
+      } catch (e) { setAnamneseAnterior(null) }
     }
     // HEMOGRAMA DE ENTRADA (só na carga inicial): a triagem que o paciente fez antes
     // de pagar fica na tabela `triagens` (com data_coleta). Se essa entrada ainda NÃO
@@ -430,6 +445,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       ? avaliarPaciente(inputsNumericos)
       : triagemEritron(inputsNumericos)
     setResultado({ ...res, _inputs: inputsNumericos })
+    // Captura a avaliação ANTERIOR (antes do insert/reload) p/ comparar no resultado.
+    setEritronAnterior((avaliacoes || []).find(a => a.hemoglobina != null) || null)
 
     if (res.encontrado && session?.user) {
       await supabase.from('avaliacoes').insert({
@@ -657,6 +674,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     diasParaVencer === 0 ? 'Sua anuidade vence hoje.' :
     `Sua anuidade vence em ${diasParaVencer} dia${diasParaVencer > 1 ? 's' : ''}.`
 
+  // Lembrete de repetir o H. pylori 6 meses após a detecção (achado/IgM reagente).
+  // Lê o carimbo na última oba_anamnese (relatorio_oba.hpylori). Anticorpos não
+  // protegem → reinfecção possível. Mostra ao chegar perto/passar dos 6 meses.
+  const hpyloriInfo = anamneseAnterior?.relatorio_oba?.hpylori
+  const hpyloriData = (hpyloriInfo && hpyloriInfo.detectado)
+    ? (hpyloriInfo.data || anamneseAnterior.data_exames || anamneseAnterior.created_at || null) : null
+  const diasHpylori = (() => {
+    if (!hpyloriData) return null
+    const d = new Date(hpyloriData)
+    if (isNaN(d.getTime())) return null
+    d.setMonth(d.getMonth() + 6)  // vencimento = data + 6 meses
+    return Math.ceil((d.getTime() - Date.now()) / 86400000)
+  })()
+  const mostrarAlertaHpylori = diasHpylori !== null && diasHpylori <= 15 && !alertaHpyloriFechado
+
   return (
     <>
     <style>{`
@@ -737,6 +769,36 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         </div>
       )}
 
+      {mostrarAlertaHpylori && (
+        <div className="max-w-3xl mx-auto px-4 mt-4">
+          <div className="rounded-xl border-2 p-4 flex items-start gap-3" style={{ background:'#FFF7ED', borderColor:'#FDBA74' }}>
+            <div className="text-2xl">{"🦠"}</div>
+            <div className="flex-1">
+              <p className="text-sm font-bold" style={{ color:'#9A3412', margin:0 }}>
+                {diasHpylori < 0 ? "Está na hora de repetir o exame de H. pylori." : "Em breve, hora de repetir o H. pylori."}
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color:'#7C2D12', margin:'0.3rem 0 0' }}>
+                {"Os anticorpos contra o H. pylori não são protetores — quem já teve a infecção pode se infectar de novo. Recomendamos repetir o exame ~6 meses após a detecção."}
+              </p>
+              <button
+                onClick={() => {
+                  const msg = `Olá! Sou ${profile?.nome || 'paciente'} (CPF ${profile?.cpf || ''}). Quero solicitar o pedido para repetir o exame de H. pylori (6 meses).`
+                  window.open(`https://wa.me/5571997110804?text=${encodeURIComponent(msg)}`, '_blank')
+                }}
+                className="mt-3 inline-block text-white font-bold text-xs rounded-lg px-4 py-2"
+                style={{ background:'#16a34a', border:'none', cursor:'pointer' }}>
+                {"Solicitar o pedido pelo WhatsApp →"}
+              </button>
+            </div>
+            <button onClick={() => setAlertaHpyloriFechado(true)} aria-label="Fechar"
+              className="text-gray-400 hover:text-gray-600 font-bold text-lg leading-none"
+              style={{ background:'none', border:'none', cursor:'pointer' }}>
+              {"×"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {fraseGestacaoConcluida && (
         <div className="max-w-3xl mx-auto px-4 mt-4">
           <div className="rounded-xl border border-pink-200 bg-pink-50 p-4 flex items-start gap-3">
@@ -786,6 +848,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 ? { ferritina: avaliacoes[0].ferritina, hemoglobina: avaliacoes[0].hemoglobina, vcm: avaliacoes[0].vcm, rdw: avaliacoes[0].rdw, satTransf: avaliacoes[0].sat_transf, dataColeta: avaliacoes[0].data_coleta }
                 : null
           }
+          anamneseAnterior={anamneseAnterior}
           onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false) }}
           onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setPrecisaOBA(false); if (onVoltar) onVoltar() }}
         />
@@ -976,7 +1039,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {tela === 'nova' && (
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
             <h2 className="font-semibold text-gray-700">
-              {dadosVieramDaEntrada ? "Continuando a sua primeira avalia\u00e7\u00e3o" : "Nova Avalia\u00e7\u00e3o"}
+              {dadosVieramDaEntrada
+                ? "Continuando a sua primeira avalia\u00e7\u00e3o"
+                : (inputs.bariatrica || profile?.bariatrica)
+                  ? "Ol\u00e1, vamos a uma nova avalia\u00e7\u00e3o da sua sa\u00fade!"
+                  : "Ol\u00e1, vamos a uma nova avalia\u00e7\u00e3o do seu eritron!"}
             </h2>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-xs text-gray-500 mb-1">{"Voc\u00ea"}</p>
@@ -1207,6 +1274,37 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
         {tela === 'resultado' && resultado && (
           <div>
+            {/* (passo 2) Evolução do eritron vs. a avaliação anterior */}
+            {eritronAnterior && (
+              <div className="mb-4 rounded-xl border-2 border-indigo-200 bg-indigo-50 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-indigo-700 mb-1">{"Evolução desde a última avaliação"}</p>
+                {eritronAnterior.data_coleta && (
+                  <p className="text-xs text-indigo-600 mb-2">{"Comparado com "}{String(eritronAnterior.data_coleta).split('-').reverse().join('/')}{":"}</p>
+                )}
+                <p className="text-sm text-gray-700 mb-2">
+                  <span className="font-semibold">{"Diagnóstico: "}</span>
+                  {eritronAnterior.diagnostico_label || '—'} <span className="text-gray-400">{"→"}</span> <strong>{resultado.label || '—'}</strong>
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    ['Hb', eritronAnterior.hemoglobina, resultado._inputs?.hemoglobina, 'g/dL'],
+                    ['VCM', eritronAnterior.vcm, resultado._inputs?.vcm, 'fL'],
+                    ['RDW', eritronAnterior.rdw, resultado._inputs?.rdw, '%'],
+                    ['Ferritina', eritronAnterior.ferritina, resultado._inputs?.ferritina, 'ng/mL'],
+                    ['Sat', eritronAnterior.sat_transf, resultado._inputs?.satTransf, '%'],
+                  ].filter(([, prev, cur]) => Number(prev) > 0 && Number(cur) > 0).map(([lbl, prev, cur]) => {
+                    const p = Number(prev), c = Number(cur)
+                    const seta = c > p ? '↑' : c < p ? '↓' : '→'
+                    return (
+                      <div key={lbl} className="bg-white rounded-lg border border-indigo-100 px-2 py-1.5">
+                        <p className="text-[10px] uppercase font-bold text-gray-400">{lbl}</p>
+                        <p className="text-xs font-bold text-gray-700">{prev} <span className="text-gray-400">{seta}</span> {cur}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             <ResultCard resultado={resultado} mostrarPainelMedico={false}
               mostrarOptInExames={!jaTemPedidoGratis}
               optInExamesEnviado={pedidoExamesEnviado}

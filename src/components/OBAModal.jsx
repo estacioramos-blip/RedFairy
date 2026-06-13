@@ -399,7 +399,12 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null }) {
+  // FOLLOW-UP: avaliação de RETORNO de um bariátrico que já fez o baseline.
+  // anamneseAnterior = última linha de oba_anamnese. Nesse modo, os campos
+  // IMUTÁVEIS (data/tipo/indicação da cirurgia, peso antes, altura) são
+  // pré-preenchidos e ESCONDIDOS — o paciente só entra o que muda.
+  const modoFollowUp = !!anamneseAnterior
   // PERSISTÊNCIA DO PROGRESSO — o paciente NÃO pode perder o que marcou se sair
   // temporariamente da aba ou recarregar. Snapshot em localStorage por CPF,
   // restaurado no mount; limpo só ao CONCLUIR (ao fechar mantemos p/ retomar).
@@ -447,7 +452,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [pesquisaAceita, setPesquisaAceita] = useState(false)
   const [pesquisaEnviado, setPesquisaEnviado] = useState(false)
 
-  const [form, setForm] = useState(salvo?.form || {
+  const [form, setForm] = useState(() => {
+   const def = {
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
     altura: '',
@@ -480,6 +486,32 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     atividade_fisica: [], cirurgia_plastica: null,
     meta_peso: '', meta_kg: '', projetos_vida: [],
     compulsoes: [], medicamentos: [], emagrecedores: {},
+   }
+   // Retomada de progresso (localStorage) tem prioridade.
+   if (salvo?.form) return { ...def, ...salvo.form }
+   // Follow-up: pré-preenche da avaliação anterior.
+   if (anamneseAnterior) {
+     const A = anamneseAnterior
+     // Imutáveis: sempre das colunas do banco (fonte canônica).
+     const imutaveis = {
+       cirurgia_dia: A.cirurgia_dia != null ? String(A.cirurgia_dia) : '',
+       cirurgia_mes: A.cirurgia_mes != null ? String(A.cirurgia_mes) : '',
+       cirurgia_ano: A.cirurgia_ano != null ? String(A.cirurgia_ano) : '',
+       tipo_cirurgia: A.tipo_cirurgia || '',
+       indicacao_cirurgia: A.indicacao_cirurgia || '',
+       peso_antes: A.peso_antes != null ? String(A.peso_antes) : '',
+       altura: A.altura != null ? String(A.altura) : '',
+     }
+     // Se a avaliação anterior salvou o snapshot do form, carregamos TUDO como
+     // rascunho editável (status, condições, medicamentos…) e só zeramos o PESO
+     // ATUAL (medição nova). Sem snapshot (baselines antigos): só os imutáveis.
+     const snap = A.relatorio_oba?.form_snapshot
+     if (snap && typeof snap === 'object') {
+       return { ...def, ...snap, ...imutaveis, peso_atual: '' }
+     }
+     return { ...def, ...imutaveis }
+   }
+   return def
   })
 
   // Detecção robusta de sexo feminino: aceita 'F', 'f', 'FEMININO', 'feminino'.
@@ -970,13 +1002,27 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       if (rows && rows.length > 0) {
         // Eritron recomputado (nova data) vai dentro do relatorio_oba (jsonb) — sem
         // precisar de colunas novas. data_eritron_atualizado = a data dos exames.
-        const relSalvar = eritron?._recomputado
-          ? { ...rel, eritron_atualizado: {
+        // form_snapshot: guarda o formulário inteiro p/ o próximo follow-up restaurar
+        // os status anteriores como rascunho (robusto p/ TODOS os campos, não só os
+        // que viram coluna). eritron_atualizado: eritron recomputado de nova data.
+        // H. pylori detectado (achado endoscópico OU IgM reagente) → carimba a data
+        // p/ o lembrete de repetir em 6 meses (banner in-app + painel ADM).
+        const temHpyloriSave = (form.status_endoscopico || []).includes('H. PYLORI') || form.antiHp_igm === 'REAGENTE'
+        const relSalvar = {
+          ...rel,
+          form_snapshot: form,
+          ...(temHpyloriSave ? { hpylori: {
+              detectado: true,
+              igm_reagente: form.antiHp_igm === 'REAGENTE',
+              endoscopico: (form.status_endoscopico || []).includes('H. PYLORI'),
+              data: dataExames || null,
+            } } : {}),
+          ...(eritron?._recomputado ? { eritron_atualizado: {
               hemoglobina: eritron.inputs.hemoglobina, vcm: eritron.inputs.vcm, rdw: eritron.inputs.rdw,
               ferritina: eritron.inputs.ferritina, satTransf: eritron.inputs.satTransf,
               label: eritron.label, color: eritron.color, data: dataExames || null,
-            } }
-          : rel
+            } } : {}),
+        }
         await supabase.from('oba_anamnese')
           .update({ relatorio_oba: relSalvar, estado_clinico: est?.estado || null })
           .eq('id', rows[0].id)
@@ -1209,6 +1255,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 <p style={{ fontSize:'0.8rem', color:'#7C2D12', lineHeight:1.5, margin:'0 0 0.7rem' }}>
                   {"O H. pylori é um agente carcinogênico; tratar a infecção reduz o risco. Podemos emitir a prescrição do tratamento de erradicação."}
                 </p>
+                <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:8, padding:'0.6rem 0.8rem', margin:'0 0 0.7rem' }}>
+                  <p style={{ fontSize:'0.76rem', color:'#92400E', lineHeight:1.5, margin:0 }}>
+                    {"⚠ Os anticorpos contra o H. pylori NÃO são protetores — quem já teve a infecção pode se infectar de novo. "}
+                    <strong>{"Repita o exame após 6 meses."}</strong>{" Vamos te lembrar na época."}
+                  </p>
+                </div>
                 <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
                   <input type="checkbox" checked={querPrescricao} onChange={e => setQuerPrescricao(e.target.checked)} style={checkBox} />
                   <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#9A3412' }}>{"SOLICITAR A RECEITA DO TRATAMENTO"}</span>
@@ -1332,6 +1384,31 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // ferro oral → ferro EV é a via de escolha.
     // Gatilho/dados vêm de `ferroEV` (fonte única definida acima — vale p/ relatório e conclusão).
     const precisaFerroEV = ferroEV.precisa
+
+    // (passo 2) COMPARAÇÃO com a avaliação anterior (follow-up): estado clínico,
+    // peso e nível do eritron. Ordens p/ decidir melhora (+1) / piora (-1) / igual (0).
+    const cmp = (() => {
+      if (!modoFollowUp || !anamneseAnterior) return null
+      const ordemEstado = ['CRITICO', 'RUIM', 'RAZOAVEL', 'BOM', 'OTIMO']      // pior → melhor
+      const ordemNivel  = ['grave', 'moderado', 'leve', 'normal']             // pior → melhor
+      const estAnt = anamneseAnterior.estado_clinico || null
+      const estAtu = estadoClinico?.estado || null
+      const ie1 = ordemEstado.indexOf(estAnt), ie2 = ordemEstado.indexOf(estAtu)
+      const estadoDelta = (ie1 >= 0 && ie2 >= 0) ? Math.sign(ie2 - ie1) : null
+      const pesoAnt = anamneseAnterior.peso_atual != null ? Number(anamneseAnterior.peso_atual) : null
+      const pesoDelta = (pesoAnt != null && pesoAtual) ? +(pesoAtual - pesoAnt).toFixed(1) : null
+      const nivAnt = (anamneseAnterior.relatorio_oba?.modulos || []).find(m => /ERITRON/i.test(m?.titulo || ''))?.nivel || null
+      const nivAtu = (rel?.modulos || []).find(m => /ERITRON/i.test(m?.titulo || ''))?.nivel || null
+      const in1 = ordemNivel.indexOf(nivAnt), in2 = ordemNivel.indexOf(nivAtu)
+      const eritronDelta = (in1 >= 0 && in2 >= 0) ? Math.sign(in2 - in1) : null
+      const dataAnt = anamneseAnterior.data_exames || (anamneseAnterior.created_at ? String(anamneseAnterior.created_at).slice(0, 10) : null)
+      const dataAntFmt = dataAnt ? String(dataAnt).split('-').reverse().join('/') : null
+      const temAlgo = estAnt || pesoAnt != null || nivAnt
+      return temAlgo ? { estAnt, estAtu, estadoDelta, pesoAnt, pesoDelta, nivAnt, nivAtu, eritronDelta, dataAntFmt } : null
+    })()
+    // Cor/seta por delta: +1 melhora (verde ↑), -1 piora (vermelho ↓), 0 igual (cinza →).
+    const setaCmp = (d) => d == null ? { txt: '—', cor: '#6B7280' } : d > 0 ? { txt: '↑ melhorou', cor: '#16A34A' } : d < 0 ? { txt: '↓ piorou', cor: '#DC2626' } : { txt: '→ estável', cor: '#6B7280' }
+
     return (
       <>
       {showFerroEV && (
@@ -1460,6 +1537,40 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                     </div>
                   ))}
                 </div>
+
+                {/* (passo 2) EVOLU\u00c7\u00c3O desde a \u00faltima avalia\u00e7\u00e3o (s\u00f3 no follow-up) */}
+                {cmp && (
+                  <>
+                    <SectionTitle>{"Evolu\u00e7\u00e3o desde a \u00faltima avalia\u00e7\u00e3o"}</SectionTitle>
+                    {cmp.dataAntFmt && (
+                      <p style={{ fontSize:'0.72rem', color:'#6B7280', margin:'0 0 0.5rem' }}>{"Comparado com "}{cmp.dataAntFmt}{":"}</p>
+                    )}
+                    <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap:'0.4rem' }}>
+                      {/* Estado cl\u00ednico */}
+                      <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.5rem 0.6rem' }}>
+                        <p style={{ fontSize:'0.6rem', color:'#9CA3AF', fontWeight:700, textTransform:'uppercase', margin:'0 0 0.2rem' }}>{"Estado cl\u00ednico"}</p>
+                        <p style={{ fontSize:'0.74rem', color:'#374151', fontWeight:700, margin:0 }}>{cmp.estAnt || '\u2014'}{" \u2192 "}{cmp.estAtu || '\u2014'}</p>
+                        <p style={{ fontSize:'0.66rem', fontWeight:800, color:setaCmp(cmp.estadoDelta).cor, margin:'0.15rem 0 0' }}>{setaCmp(cmp.estadoDelta).txt}</p>
+                      </div>
+                      {/* Peso atual */}
+                      <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.5rem 0.6rem' }}>
+                        <p style={{ fontSize:'0.6rem', color:'#9CA3AF', fontWeight:700, textTransform:'uppercase', margin:'0 0 0.2rem' }}>{"Peso atual"}</p>
+                        <p style={{ fontSize:'0.74rem', color:'#374151', fontWeight:700, margin:0 }}>
+                          {cmp.pesoAnt != null ? `${cmp.pesoAnt} \u2192 ` : ''}{pesoAtual ? `${pesoAtual} kg` : '\u2014'}
+                        </p>
+                        <p style={{ fontSize:'0.66rem', fontWeight:800, color: cmp.pesoDelta == null ? '#6B7280' : cmp.pesoDelta < 0 ? '#16A34A' : cmp.pesoDelta > 0 ? '#DC2626' : '#6B7280', margin:'0.15rem 0 0' }}>
+                          {cmp.pesoDelta == null ? '\u2014' : cmp.pesoDelta === 0 ? '\u2192 est\u00e1vel' : `${cmp.pesoDelta > 0 ? '\u2191 +' : '\u2193 '}${Math.abs(cmp.pesoDelta)} kg`}
+                        </p>
+                      </div>
+                      {/* Eritron */}
+                      <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.5rem 0.6rem' }}>
+                        <p style={{ fontSize:'0.6rem', color:'#9CA3AF', fontWeight:700, textTransform:'uppercase', margin:'0 0 0.2rem' }}>{"Eritron"}</p>
+                        <p style={{ fontSize:'0.74rem', color:'#374151', fontWeight:700, margin:0 }}>{(cmp.nivAnt || '\u2014')}{" \u2192 "}{(cmp.nivAtu || '\u2014')}</p>
+                        <p style={{ fontSize:'0.66rem', fontWeight:800, color:setaCmp(cmp.eritronDelta).cor, margin:'0.15rem 0 0' }}>{setaCmp(cmp.eritronDelta).txt}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {/* ALERTAS */}
                 <SectionTitle>{"Pontos de aten\u00e7\u00e3o"}</SectionTitle>
@@ -1861,11 +1972,34 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
 
           <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
-            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>{isFem ? "A bari\u00e1trica \u00e9 uma paciente complexa." : "O bari\u00e1trico \u00e9 um paciente complexo."}</p>
-            <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>{"Precisamos de mais informa\u00e7\u00f5es para cuidar de voc\u00ea. Marque os itens e preencha os campos:"}</p>
-            <p style={{ fontSize:'0.66rem', textTransform:'uppercase', letterSpacing:'0.4px', color:'#9B2C2C', fontWeight:600, marginTop:'0.5rem', lineHeight:1.5 }}>{"Digite r\u00e1pido e com aten\u00e7\u00e3o que o processo ser\u00e1 r\u00e1pido e f\u00e1cil, mas se voc\u00ea errar alguma coisa voc\u00ea sempre pode tocar no campo e editar."}</p>
+            {modoFollowUp ? (
+              <>
+                <p style={{ fontSize:'0.95rem', color:'#7B1E1E', fontWeight:800, margin:'0 0 0.3rem' }}>{"Ol\u00e1, vamos a uma nova avalia\u00e7\u00e3o da sua sa\u00fade!"}</p>
+                <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.4px', color:'#9B2C2C', fontWeight:600, lineHeight:1.5 }}>{"Os dados da sua cirurgia j\u00e1 est\u00e3o registrados. Preencha apenas o que mudou desde a \u00faltima vez."}</p>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>{isFem ? "A bari\u00e1trica \u00e9 uma paciente complexa." : "O bari\u00e1trico \u00e9 um paciente complexo."}</p>
+                <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>{"Precisamos de mais informa\u00e7\u00f5es para cuidar de voc\u00ea. Marque os itens e preencha os campos:"}</p>
+                <p style={{ fontSize:'0.66rem', textTransform:'uppercase', letterSpacing:'0.4px', color:'#9B2C2C', fontWeight:600, marginTop:'0.5rem', lineHeight:1.5 }}>{"Digite r\u00e1pido e com aten\u00e7\u00e3o que o processo ser\u00e1 r\u00e1pido e f\u00e1cil, mas se voc\u00ea errar alguma coisa voc\u00ea sempre pode tocar no campo e editar."}</p>
+              </>
+            )}
           </div>
 
+          {/* FOLLOW-UP: resumo read-only da cirurgia (campos imutáveis ficam escondidos). */}
+          {modoFollowUp && (
+            <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:10, padding:'0.7rem 1rem', marginBottom:'1rem' }}>
+              <p style={{ fontSize:'0.62rem', textTransform:'uppercase', letterSpacing:'1px', color:'#9CA3AF', fontWeight:700, margin:'0 0 0.3rem' }}>{"Sua cirurgia (registrado)"}</p>
+              <p style={{ fontSize:'0.82rem', color:'#374151', fontWeight:700, margin:0 }}>
+                {[form.tipo_cirurgia, form.indicacao_cirurgia,
+                  (form.cirurgia_ano ? `${form.cirurgia_mes ? String(form.cirurgia_mes).padStart(2,'0') + '/' : ''}${form.cirurgia_ano}` : null),
+                  (form.peso_antes ? `peso antes ${form.peso_antes} kg` : null),
+                ].filter(Boolean).join(' · ') || "—"}
+              </p>
+            </div>
+          )}
+
+          {!modoFollowUp && (<>
           <SectionTitle>Dados da Cirurgia</SectionTitle>
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>
@@ -1919,14 +2053,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 ? '' : p.status_glicemico,
             }))}
           />
+          </>)}
 
           <SectionTitle>Status Ponderal</SectionTitle>
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem 0.8rem' }}>
+            {!modoFollowUp && (
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso antes da cirurgia (kg)</label>
               <input ref={refPesoAntes} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 120" value={form.peso_antes} onChange={e => { sf('peso_antes', e.target.value); saltoPorDigitos(e.target.value, refPesoMin, 3, true) }} onFocus={() => agendarSalto(null)} />
             </div>
+            )}
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"Menor peso p\u00f3s (kg)"}</label>
               <input ref={refPesoMin} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => { sf('peso_minimo_pos', e.target.value); saltoPorDigitos(e.target.value, refPesoAtual, 3, true) }} onFocus={() => agendarSalto(null)} />

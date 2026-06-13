@@ -188,86 +188,125 @@ export default function AdminPage({ onVoltar }) {
   );
 }
 
-// Lembretes de anuidade: assinaturas ativas vencendo em ≤15 dias (ou vencidas há
-// ≤30 dias). A ADM dispara o WhatsApp manualmente (entrega in-app + painel ADM).
+// Lembretes (entrega in-app + painel ADM manual): (1) anuidades vencendo ≤15 dias
+// (ou vencidas ≤30) e (2) H. pylori a repetir ~6 meses após a detecção. A ADM dispara
+// o WhatsApp manualmente. cpf de oba_anamnese é só dígitos → casa por cpf normalizado.
 function AbaLembretes() {
-  const [linhas, setLinhas] = useState([]);
+  const [anuidades, setAnuidades] = useState([]);
+  const [hpylori, setHpylori] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
+      // Perfis (mapas por id e por cpf normalizado).
+      const { data: profs } = await supabase.from('profiles').select('id, nome, cpf, celular');
+      const perfilPorId = {}, perfilPorCpf = {};
+      (profs || []).forEach(p => {
+        perfilPorId[p.id] = p;
+        perfilPorCpf[String(p.cpf || '').replace(/\D/g, '')] = p;
+      });
+
+      // (1) ANUIDADES — assinaturas ativas vencendo ≤15 dias (ou vencidas ≤30).
       const limite = new Date(Date.now() + 15 * 86400000).toISOString();
       const { data: assins } = await supabase
-        .from('assinaturas')
-        .select('user_id, data_fim')
-        .eq('status', 'ativa')
-        .lte('data_fim', limite)
-        .order('data_fim', { ascending: true });
-      const ids = [...new Set((assins || []).map(a => a.user_id))];
-      const perfis = {};
-      if (ids.length) {
-        const { data: profs } = await supabase.from('profiles').select('id, nome, cpf, celular').in('id', ids);
-        (profs || []).forEach(p => { perfis[p.id] = p; });
-      }
-      // Renovações empilham linhas → mantém a de data_fim mais distante por usuário.
+        .from('assinaturas').select('user_id, data_fim')
+        .eq('status', 'ativa').lte('data_fim', limite).order('data_fim', { ascending: true });
       const porUser = {};
       (assins || []).forEach(a => {
         if (!porUser[a.user_id] || new Date(a.data_fim) > new Date(porUser[a.user_id].data_fim)) porUser[a.user_id] = a;
       });
-      const lista = Object.values(porUser)
-        .map(a => ({ ...a, dias: Math.ceil((new Date(a.data_fim).getTime() - Date.now()) / 86400000), perfil: perfis[a.user_id] || {} }))
+      setAnuidades(Object.values(porUser)
+        .map(a => ({ dias: Math.ceil((new Date(a.data_fim).getTime() - Date.now()) / 86400000), perfil: perfilPorId[a.user_id] || {} }))
         .filter(l => l.dias <= 15 && l.dias >= -30)
-        .sort((x, y) => x.dias - y.dias);
-      setLinhas(lista);
+        .sort((x, y) => x.dias - y.dias));
+
+      // (2) H. PYLORI — última oba_anamnese por cpf com relatorio_oba.hpylori.detectado;
+      // vencimento = data da detecção + 6 meses. Janela: ≤15 dias p/ vencer ou vencidos ≤60.
+      const { data: obaRows } = await supabase
+        .from('oba_anamnese').select('cpf, data_exames, created_at, relatorio_oba')
+        .order('created_at', { ascending: false }).limit(400);
+      const ultimaPorCpf = {};
+      (obaRows || []).forEach(r => { if (!ultimaPorCpf[r.cpf]) ultimaPorCpf[r.cpf] = r; });  // 1ª = mais recente
+      setHpylori(Object.values(ultimaPorCpf)
+        .map(r => {
+          const hp = r.relatorio_oba && r.relatorio_oba.hpylori;
+          if (!hp || !hp.detectado) return null;
+          const base = hp.data || r.data_exames || r.created_at;
+          if (!base) return null;
+          const due = new Date(base);
+          if (isNaN(due.getTime())) return null;
+          due.setMonth(due.getMonth() + 6);
+          const dias = Math.ceil((due.getTime() - Date.now()) / 86400000);
+          return { dias, perfil: perfilPorCpf[String(r.cpf || '').replace(/\D/g, '')] || { cpf: r.cpf } };
+        })
+        .filter(Boolean)
+        .filter(x => x.dias <= 15 && x.dias >= -60)
+        .sort((a, b) => a.dias - b.dias));
+
       setLoading(false);
     })();
   }, []);
 
-  function abrirWhats(l) {
-    const tel = String(l.perfil.celular || '').replace(/\D/g, '');
-    const nome = (l.perfil.nome || '').split(' ')[0] || 'paciente';
-    const quando = l.dias < 0 ? `venceu há ${Math.abs(l.dias)} dia(s)` : l.dias === 0 ? 'vence hoje' : `vence em ${l.dias} dia(s)`;
-    const msg = `Olá, ${nome}! Sua anuidade da RedFairy ${quando}. Podemos renovar para você manter o acesso ao histórico, gráficos e novas avaliações?`;
+  function whats(perfil, msg) {
+    const tel = String(perfil.celular || '').replace(/\D/g, '');
     const base = tel ? `https://wa.me/55${tel}` : 'https://wa.me/';
     window.open(`${base}?text=${encodeURIComponent(msg)}`, '_blank');
   }
+  function avisarAnuidade(l) {
+    const nome = (l.perfil.nome || '').split(' ')[0] || 'paciente';
+    const quando = l.dias < 0 ? `venceu há ${Math.abs(l.dias)} dia(s)` : l.dias === 0 ? 'vence hoje' : `vence em ${l.dias} dia(s)`;
+    whats(l.perfil, `Olá, ${nome}! Sua anuidade da RedFairy ${quando}. Podemos renovar para você manter o acesso ao histórico, gráficos e novas avaliações?`);
+  }
+  function avisarHpylori(l) {
+    const nome = (l.perfil.nome || '').split(' ')[0] || 'paciente';
+    whats(l.perfil, `Olá, ${nome}! Já fazem ~6 meses da sua infecção por H. pylori. Os anticorpos não protegem, então a reinfecção é possível — recomendamos repetir o exame. Podemos emitir o pedido para você?`);
+  }
+
+  function Linha({ l, urgente, dirLabel, onWhats }) {
+    return (
+      <div className="bg-white rounded-xl border-2 p-3 flex items-center justify-between gap-3" style={{ borderColor: urgente ? '#FCA5A5' : '#FDE68A' }}>
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-gray-800 truncate">{l.perfil.nome || '(sem nome)'}</p>
+          <p className="text-xs text-gray-500">{l.perfil.cpf ? `CPF ${l.perfil.cpf} · ` : ''}{l.perfil.celular || 'sem celular'}</p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-xs font-bold" style={{ color: urgente ? '#991B1B' : '#92400E' }}>{dirLabel}</p>
+          <button onClick={onWhats} className="mt-1 text-white font-bold text-xs rounded-lg px-3 py-1.5" style={{ background: '#16a34a', border: 'none', cursor: 'pointer' }}>{"WhatsApp →"}</button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) return <p className="text-gray-500 text-sm">Carregando...</p>;
-  if (!linhas.length) return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
-      <p className="text-sm text-gray-600">{"✓ Nenhuma anuidade vencendo nos próximos 15 dias."}</p>
-    </div>
-  );
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs text-gray-500 mb-2">{"Anuidades vencendo (≤15 dias) ou vencidas recentemente. Clique para avisar pelo WhatsApp."}</p>
-      {linhas.map((l, i) => {
-        const urgente = l.dias <= 5;
-        return (
-          <div key={i} className="bg-white rounded-xl border-2 p-3 flex items-center justify-between gap-3"
-            style={{ borderColor: urgente ? '#FCA5A5' : '#FDE68A' }}>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-gray-800 truncate">{l.perfil.nome || '(sem nome)'}</p>
-              <p className="text-xs text-gray-500">
-                {l.perfil.cpf ? `CPF ${l.perfil.cpf} · ` : ''}
-                {l.perfil.celular || 'sem celular'}
-              </p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-xs font-bold" style={{ color: urgente ? '#991B1B' : '#92400E' }}>
-                {l.dias < 0 ? `venceu há ${Math.abs(l.dias)}d` : l.dias === 0 ? 'vence hoje' : `${l.dias} dias`}
-              </p>
-              <button onClick={() => abrirWhats(l)}
-                className="mt-1 text-white font-bold text-xs rounded-lg px-3 py-1.5"
-                style={{ background: '#16a34a', border: 'none', cursor: 'pointer' }}>
-                {"WhatsApp →"}
-              </button>
-            </div>
+    <div className="space-y-5">
+      <div>
+        <p className="text-sm font-bold text-gray-700 mb-1">{"⏰ Anuidades"}</p>
+        <p className="text-xs text-gray-500 mb-2">{"Vencendo (≤15 dias) ou vencidas recentemente. Clique para avisar pelo WhatsApp."}</p>
+        {anuidades.length ? (
+          <div className="space-y-2">
+            {anuidades.map((l, i) => (
+              <Linha key={i} l={l} urgente={l.dias <= 5} onWhats={() => avisarAnuidade(l)}
+                dirLabel={l.dias < 0 ? `venceu há ${Math.abs(l.dias)}d` : l.dias === 0 ? 'vence hoje' : `${l.dias} dias`} />
+            ))}
           </div>
-        );
-      })}
+        ) : <p className="text-sm text-gray-500 bg-white rounded-xl border border-gray-200 p-4">{"✓ Nada vencendo nos próximos 15 dias."}</p>}
+      </div>
+
+      <div>
+        <p className="text-sm font-bold text-gray-700 mb-1">{"🦠 H. pylori — repetir (6 meses)"}</p>
+        <p className="text-xs text-gray-500 mb-2">{"Pacientes com H. pylori detectado há ~6 meses. Ofereça o pedido do novo exame."}</p>
+        {hpylori.length ? (
+          <div className="space-y-2">
+            {hpylori.map((l, i) => (
+              <Linha key={i} l={l} urgente={l.dias <= 0} onWhats={() => avisarHpylori(l)}
+                dirLabel={l.dias < 0 ? `vencido há ${Math.abs(l.dias)}d` : l.dias === 0 ? 'hoje' : `em ${l.dias}d`} />
+            ))}
+          </div>
+        ) : <p className="text-sm text-gray-500 bg-white rounded-xl border border-gray-200 p-4">{"✓ Nenhum H. pylori a repetir agora."}</p>}
+      </div>
     </div>
   );
 }
