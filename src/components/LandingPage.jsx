@@ -187,14 +187,14 @@ const LANDING_CSS = `
   /* Overlay mais largo que o circulo: texto grande pode passar das bordas */
   .rf-hero-overlay { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:150%; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; overflow:visible; transition:opacity 0.6s ease; }
   .rf-hero-medal.reveal-img .rf-hero-overlay { opacity:0; pointer-events:none; }
-  .rf-hero-overlay h1 { font-family:'DM Serif Display', serif; font-weight:400; font-size:3.5rem; line-height:1.1; letter-spacing:-0.015em; color:var(--text); margin:0 0 0.6rem; text-wrap:balance; text-shadow: 0 0 4px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
+  .rf-hero-overlay h1 { font-family:'DM Serif Display', serif; font-weight:400; font-size:2.52rem; line-height:1.1; letter-spacing:-0.015em; color:var(--text); margin:0 0 0.6rem; text-wrap:balance; text-shadow: 0 0 4px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
   .rf-hero-overlay h1 .red { color:var(--cherry); font-style:normal; text-shadow: 0 0 4px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
   .rf-hero-sub { font-size:clamp(0.85rem,2vh,1.05rem); color:#1F2937; font-weight:600; line-height:1.45; max-width:340px; margin:0 auto; text-shadow: 0 0 3px #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff; }
   @keyframes heroReveal { from { opacity:0; transform:translateY(18px) scale(0.985); } to { opacity:1; transform:translateY(0) scale(1); } }
   /* FADA no hero: SEM circulo; 8 frames (fundo transparente) em CROSS-FADE = BATER DE ASAS (loop).
      Cada frame ocupa ~1/8 do ciclo e dissolve no proximo. Total 3.2s; offset = 3.2/8 = 0.4s.
      O corpo tambem FLUTUA suave (rfFadaFloat) no proprio eixo vertical. */
-  .rf-medal-fada { width:clamp(290px, 48vh, 440px); }
+  .rf-medal-fada { width:clamp(232px, 38.4vh, 352px); }  /* -20% */
   .rf-medal-fada .rf-hero-stage { border-radius:0; overflow:visible; box-shadow:none; animation: rfFadaFloat 3.4s ease-in-out infinite; }
   .rf-medal-fada .rf-hero-scrim { display:none; }
   .rf-fada-frame { position:absolute; inset:0; background-size:contain; background-repeat:no-repeat; background-position:center; opacity:0; animation: rfFadaXfade 3.2s linear infinite; will-change:opacity; }
@@ -231,9 +231,9 @@ const LANDING_CSS = `
 
   @media (max-width: 768px) {
     .rf-hero-medal { width:clamp(187px, 31vh, 271px); margin:-1rem auto 0; }
-    .rf-medal-fada { width:clamp(250px, 44vh, 360px); }
+    .rf-medal-fada { width:clamp(200px, 35.2vh, 288px); }  /* -20% (mobile) */
     .rf-hero-overlay { width:170%; }
-    .rf-hero-overlay h1 { font-size:clamp(1.8rem, 7vw, 2.6rem); }
+    .rf-hero-overlay h1 { font-size:clamp(1.3rem, 5vw, 1.87rem); }
     .rf-hint-circle { width:88px; height:88px; padding:11px; }
     .rf-hint-circle span { font-size:0.54rem; }
     .rf-dots { width:30px; margin:0 4px; }
@@ -551,6 +551,50 @@ const RF_INDICACOES = [
 ];
 
 
+// Contagem regressiva até o lançamento do RedFairy | OBA (21/06/2026), à direita do
+// botão hemácia. Quadradinhos pequenos: contorno azul escuro, fundo azul claro,
+// números vermelhos. Atualiza a cada 1s.
+function ContagemRegressiva() {
+  const ALVO = new Date('2026-06-21T00:00:00').getTime()
+  const calc = () => {
+    const diff = Math.max(0, ALVO - Date.now())
+    return {
+      dias:  Math.floor(diff / 86400000),
+      horas: Math.floor((diff % 86400000) / 3600000),
+      min:   Math.floor((diff % 3600000) / 60000),
+      seg:   Math.floor((diff % 60000) / 1000),
+    }
+  }
+  const [t, setT] = useState(calc)
+  useEffect(() => {
+    const id = setInterval(() => setT(calc()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  const quad = [
+    { n: t.dias, l: 'DIAS' },
+    { n: t.horas, l: 'HORAS' },
+    { n: t.min, l: 'MIN' },
+    { n: t.seg, l: 'SEG' },
+  ]
+  const txtVinho = { fontSize: '0.72rem', fontWeight: 800, color: 'var(--wine)', letterSpacing: '0.3px', margin: 0 }
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '0.3rem', margin: '0.2rem auto 0.4rem' }}>
+      <p style={txtVinho}>{"Faltam apenas ..."}</p>
+      <div style={{ display: 'flex', gap: '0.3rem', justifyContent: 'center' }}>
+        {quad.map((q, i) => (
+          <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ width: '1.8rem', height: '1.8rem', boxSizing: 'border-box', border: '2px solid #1e3a8a', background: '#dbeafe', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626', fontWeight: 900, fontSize: '0.85rem', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{String(q.n).padStart(2, '0')}</div>
+            <span style={{ fontSize: '0.46rem', fontWeight: 700, color: '#1e3a8a', letterSpacing: '0.5px', marginTop: '1px' }}>{q.l}</span>
+          </div>
+        ))}
+      </div>
+      <p style={txtVinho}>
+        {"... para o início do RedFairy | OBA"}<sup style={{ fontSize: '0.7em', verticalAlign: 'super' }}>{"®"}</sup>
+      </p>
+    </div>
+  )
+}
+
 export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, onIrDashboardPaciente, onModoAdmin }) {
   const [medicoLogado, setMedicoLogado] = useState(() => {
     try { return localStorage.getItem('medico_nome') || ''; } catch(e) { return ''; }
@@ -765,6 +809,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       setHeroVariant(v => (v + 1) % 3);
     }, 4500);
     return () => clearInterval(iv);
+  }, []);
+  // Ao ENTRAR na landing, a animação fica 3s SEM texto sobre ela; depois o texto surge.
+  const [mostrarTextoHero, setMostrarTextoHero] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMostrarTextoHero(true), 3000);
+    return () => clearTimeout(t);
   }, []);
 
   function irPara(etapa) {
@@ -1559,7 +1609,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <div className="rf-hero-scrim" />
               </div>
               <div className="rf-hero-overlay">
-                <div style={{ display:'grid' }}>
+                <div style={{ display:'grid', opacity: mostrarTextoHero ? 1 : 0, transition:'opacity 0.9s ease' }}>
                   <div style={{ gridArea:'1 / 1', opacity: heroVariant === 0 ? 1 : 0, visibility: heroVariant === 0 ? 'visible' : 'hidden', transition:'opacity 1.2s ease, visibility 1.2s ease' }}>
                     <h1>{"Eu sou a "}<span className="red">HEMOGLOBINA</span><br/>{"\u2013 a VIDA."}</h1>
                     <p className="rf-hero-sub">{"Eu uso p\u00f3 de estrelas para"}<br/>{"te entregar o ar."}</p>
@@ -1575,12 +1625,14 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               </div>
             </div>
 
+            {/* Contagem regressiva abaixo da fada, centralizada (lançamento 21/06/2026). */}
+            <ContagemRegressiva />
 
             <div className={`rf-fadewrap ${fluxoFade ? 'out' : 'in'}`} style={{ width:'100%', maxWidth:480, margin:'0 auto 0.5rem', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:'0.7rem' }}>
 
               {fluxoEtapa === 'inicio' && (
                 <>
-                  <p style={{ fontSize:'1rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0 0 0.5rem', minHeight:'1.3rem', cursor:'default' }}>
+                  <p style={{ fontSize:'1.1rem', fontWeight:800, color:'#ef4444', letterSpacing:'1px', margin:'0 0 0.5rem', minHeight:'1.3rem', cursor:'default' }}>
                     {twTexto}
                   </p>
                   <div className="rf-flowrow">
