@@ -67,6 +67,8 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
 
   // Etapa do hemograma: 1=Hb ativo, 2=VCM ativo, 3=RDW ativo, 4=todos confirmados
   const [etapaHemograma, setEtapaHemograma] = useState(1);
+  // Ilustração: foto de exemplo de hemograma com DATA/HB/VCM/RDW circulados (só paciente).
+  const [mostrarExemploHemograma, setMostrarExemploHemograma] = useState(false);
   const timerHemogramaRef = useRef(null);
   const refHbHemograma = useRef(null);
   const refVcmHemograma = useRef(null);
@@ -960,7 +962,29 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             </div>
 
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-600 mb-2">{"\ud83d\udcca Hemograma"}</p>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-600">{"\ud83d\udcca Hemograma"}</p>
+                {/* (PWA fase 5) Ilustra\u00e7\u00e3o: onde achar DATA/HB/VCM/RDW no exame. S\u00f3 paciente. */}
+                {!modoMedico && (
+                  <button type="button" onClick={() => setMostrarExemploHemograma(v => !v)}
+                    className="text-[0.68rem] font-semibold text-red-700 underline whitespace-nowrap">
+                    {mostrarExemploHemograma ? 'ocultar exemplo' : 'onde acho isso no meu exame?'}
+                  </button>
+                )}
+              </div>
+              {!modoMedico && mostrarExemploHemograma && (
+                <div className="mb-3 rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
+                  <img
+                    src="/hemograma-exemplo.jpg"
+                    alt="Exemplo: DATA, HEMOGLOBINA, VCM e RDW circulados em vermelho no hemograma"
+                    className="w-full h-auto block"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                  <p className="text-[0.66rem] text-gray-500 px-2 py-1.5 text-center leading-snug">
+                    {"Copie a DATA, a HEMOGLOBINA, o VCM e o RDW (itens circulados em vermelho) do seu hemograma."}
+                  </p>
+                </div>
+              )}
               {/* Grid 5 colunas: Hb (col-span-2), VCM (1), RDW (1), PLAY (1). PLAY substitui o bot\u00e3o CONFIRMO redondo. */}
               <div className="grid grid-cols-5 gap-3">
                 <div className="col-span-2">

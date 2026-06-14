@@ -2,7 +2,7 @@
   "name": "RedFairy",
   "short_name": "RedFairy",
   "description": "RedFairy — triagem e acompanhamento do eritron (hemograma).",
-  "start_url": "/",
+  "start_url": "/?fada=1",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

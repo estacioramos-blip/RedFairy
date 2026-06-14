@@ -21,6 +21,17 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
+      // Captura o evento de "instalável" cedo (pode disparar antes do React montar).
+      // O banner "Instalar a fadinha" lê window.__rfInstall depois.
+      window.__rfInstall = null;
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.__rfInstall = e;
+        try { window.dispatchEvent(new Event('rf-installable')); } catch (err) {}
+      });
+      window.addEventListener('appinstalled', function () { window.__rfInstall = null; });
+    </script>
+    <script>
       // Registra o Service Worker (necessário pra o app ser instalável).
       // NÃO registra em dev (localhost / IP de LAN) pra não atrapalhar o HMR com
       // cache — só em produção (HTTPS). PWA exige contexto seguro de qualquer forma.

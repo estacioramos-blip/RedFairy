@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
+import InstalarFadaBanner from './InstalarFadaBanner'
 import PlayButton from './PlayButton'
 import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
@@ -80,6 +81,20 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   })
 
   useEffect(() => { carregarDados(true) }, [])
+
+  // (PWA fase 4) Atalho da fada → abre direto o "novo hemograma". A flag
+  // rf_abrir_nova é setada pelo App no lançamento como app. Consome após o perfil
+  // carregar (vence a tela default do dashboard) e limpa a flag.
+  useEffect(() => {
+    if (!profile) return
+    try {
+      if (localStorage.getItem('rf_abrir_nova') === '1') {
+        localStorage.removeItem('rf_abrir_nova')
+        setResultado(null)
+        setTela('nova')
+      }
+    } catch (e) {}
+  }, [profile])
 
   // (Removido) Antes, ter >=1 avaliação destravava Ferritina/Saturação direto e
   // escondia o botão azul "aprofundar". Isso quebrava o primeiro acesso: o paciente
@@ -768,6 +783,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </div>
         </div>
       )}
+
+      <InstalarFadaBanner />
 
       {mostrarAlertaHpylori && (
         <div className="max-w-3xl mx-auto px-4 mt-4">

@@ -48,8 +48,46 @@ export default function App() {
     if (refParam) {
       try { localStorage.setItem('rf_ref_encaminhador', decodeURIComponent(refParam).toUpperCase().trim()) } catch (e) {}
     }
-    // Limpa os parametros da URL sem reload
-    if (modoParam || refParam) {
+    // (PWA fase 4b) Atalho da fada no iPhone: o link carrega o token de sessão
+    // (?p=TOKEN&c=CPF) porque o app standalone tem storage separado do Safari.
+    // Loga por token (sem senha) e abre o "novo hemograma".
+    const pToken = params.get('p')
+    const pCpf = params.get('c')
+    if (pToken && pCpf) {
+      try { localStorage.setItem('rf_abrir_nova', '1') } catch (e) {}
+      ;(async () => {
+        try {
+          const { data } = await supabase.rpc('login_paciente_token', { p_cpf: pCpf, p_token: pToken })
+          if (data && data.ok && data.id) {
+            try {
+              localStorage.setItem('paciente_id', data.id)
+              localStorage.setItem('paciente_cpf', String(pCpf).replace(/\D/g, ''))
+              localStorage.setItem('paciente_nome', data.nome || '')
+              localStorage.setItem('paciente_token', pToken)
+              localStorage.setItem('paciente_login_at', Date.now().toString())
+            } catch (e) {}
+            setModo('paciente')
+          }
+        } catch (e) {}
+      })()
+    }
+
+    // (PWA fase 4) Atalho da fada: lançamento como APP instalado (?fada=1 do
+    // start_url, ou display-mode standalone). Se já há sessão de paciente, vai
+    // direto pro "novo hemograma" (passwordless). A flag rf_abrir_nova é consumida
+    // pelo PatientDashboard. Se não há sessão (1ª vez no iPhone), cai na landing
+    // p/ logar 1×, e a flag faz abrir o "novo hemograma" logo após.
+    let ehStandalone = false
+    try { ehStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
+    const fadaLaunch = params.get('fada') === '1' || ehStandalone
+    if (fadaLaunch && !(pToken && pCpf)) {
+      try { localStorage.setItem('rf_abrir_nova', '1') } catch (e) {}
+      let temPaciente = false
+      try { temPaciente = !!localStorage.getItem('paciente_id') } catch (e) {}
+      if (temPaciente) setModo('paciente')
+    }
+    // Limpa os parametros da URL sem reload (inclui o token, p/ não ficar visível)
+    if (modoParam || refParam || params.get('fada') || pToken) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
