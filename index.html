@@ -1,13 +1,38 @@
 <!doctype html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>redfairy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <!-- PWA: instalável (ícone da fada na tela inicial) -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#7B1E1E" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- iOS: "Adicionar à Tela de Início" -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="RedFairy" />
+    <link rel="apple-touch-icon" href="/fada-icon.png" />
+
+    <title>RedFairy</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Registra o Service Worker (necessário pra o app ser instalável).
+      // NÃO registra em dev (localhost / IP de LAN) pra não atrapalhar o HMR com
+      // cache — só em produção (HTTPS). PWA exige contexto seguro de qualquer forma.
+      (function () {
+        var h = location.hostname;
+        var ehDev = /^(localhost|127\.|0\.0\.0\.0|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h);
+        if ('serviceWorker' in navigator && !ehDev) {
+          window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js').catch(function () {});
+          });
+        }
+      })();
+    </script>
   </body>
 </html>
