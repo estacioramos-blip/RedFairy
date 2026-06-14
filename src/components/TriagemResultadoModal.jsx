@@ -120,6 +120,7 @@ export default function TriagemResultadoModal({
               cpf: cpfDigits,
               data_coleta: inputs.data_coleta,
               data_nascimento: inputs.data_nascimento || null,
+              medico_crm: medicoCRM || null,  // (4DOC) médico encaminhador (auto-encaminhamento)
               hemoglobina: Number(inputs.hemoglobina) || null,
               vcm: Number(inputs.vcm) || null,
               rdw: Number(inputs.rdw) || null,

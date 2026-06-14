@@ -551,6 +551,8 @@ const RF_INDICACOES = [
 ];
 
 
+const UFS_VALIDAS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO']
+
 // Contagem regressiva até o lançamento do RedFairy | OBA (21/06/2026), à direita do
 // botão hemácia. Quadradinhos pequenos: contorno azul escuro, fundo azul claro,
 // números vermelhos. Atualiza a cada 1s.
@@ -967,11 +969,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   }
 
   // -- Caixa CPF + SENHA do PACIENTE (espelha caixa CRM/UF do medico) --
-  const [cpfPacPasso, setCpfPacPasso] = useState('cpf'); // 'cpf' | 'senha'
+  const [cpfPacPasso, setCpfPacPasso] = useState('cpf'); // 'cpf' | 'senha' | 'encaminhador'
   const [cpfPacValor, setCpfPacValor] = useState('');
   const [cpfPacSenha, setCpfPacSenha] = useState('');
   const [cpfPacShowSenha, setCpfPacShowSenha] = useState(false);
   const [cpfPacModo, setCpfPacModo] = useState(null); // 'login' | 'cadastro'
+  // Médico ENCAMINHADOR (4DOC): CRM + UF informados pelo paciente no cadastro.
+  // Pré-preenchidos se o paciente chegou pelo QR do médico (?ref=CRM/UF → rf_ref_encaminhador).
+  const _refEnc = (() => { try { const m = (localStorage.getItem('rf_ref_encaminhador') || '').match(/^(\d+)\s*\/\s*([A-Z]{2})$/); return m ? { num: m[1], uf: m[2] } : { num: '', uf: '' } } catch (e) { return { num: '', uf: '' } } })();
+  const [pacEncNum, setPacEncNum] = useState(_refEnc.num);
+  const [pacEncUF, setPacEncUF] = useState(_refEnc.uf);
+  const [pacSemEnc, setPacSemEnc] = useState(false);
   const [cpfPacBuscando, setCpfPacBuscando] = useState(false);
   const [cpfPacErro, setCpfPacErro] = useState('');
   const [cpfPacTw, setCpfPacTw] = useState('');
@@ -1006,7 +1014,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     if (fluxoEtapa !== 'paciente') return;
     const full = cpfPacPasso === 'cpf'
       ? "DIGITE O SEU CPF"
-      : (cpfPacModo === 'cadastro' ? "CRIE AGORA A SUA SENHA" : "DIGITE A SUA SENHA");
+      : cpfPacPasso === 'encaminhador'
+        ? "QUEM TE ENCAMINHOU?"
+        : (cpfPacModo === 'cadastro' ? "CRIE AGORA A SUA SENHA" : "DIGITE A SUA SENHA");
     let i = 0; setCpfPacTw('');
     const iv = setInterval(() => {
       i += 3; setCpfPacTw(full.slice(0, i));
@@ -1035,6 +1045,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     if (cpfPacModo === 'cadastro' && !cpfPacAceitoTC) {
       setCpfPacErro("ACEITE OS TERMOS DE USO PARA CONTINUAR");
       return;
+    }
+    // Médico ENCAMINHADOR (4DOC): guardado p/ a atribuição (Fase 1 — entra no
+    // medico_crm da avaliação/triagem do paciente). Só no cadastro.
+    if (cpfPacModo === 'cadastro') {
+      const enc = pacSemEnc ? '' : ((pacEncNum.trim() && pacEncUF.trim()) ? `${pacEncNum.trim()}/${pacEncUF.trim().toUpperCase()}` : '');
+      try { localStorage.setItem('rf_medico_encaminhador', enc); } catch (e) {}
     }
     setCpfPacBuscando(true);
     const rpcName = cpfPacModo === 'login' ? 'login_paciente' : 'register_paciente';
@@ -1918,14 +1934,57 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                           )}
                         </div>
                       )}
-                      {cpfPacSenhaValida && (
+                      {cpfPacSenhaValida && (cpfPacModo !== 'cadastro' || cpfPacAceitoTC) && (
                         <div style={{ display:'flex', justifyContent:'flex-end' }}>
-                          <PlayButton onClick={cpfPacConcluir} loading={cpfPacBuscando} ariaLabel="Continuar" />
+                          <PlayButton
+                            onClick={() => { if (cpfPacModo === 'cadastro') { setCpfPacErro(''); setCpfPacPasso('encaminhador'); } else { cpfPacConcluir(); } }}
+                            loading={cpfPacBuscando} ariaLabel="Continuar" />
                         </div>
                       )}
                       <button onClick={cpfPacVoltarCpf}
                         style={{ width:'100%', background:'none', border:'none', color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, letterSpacing:'1px', cursor:'pointer', marginTop:'8px' }}>
                         {"\u2190 corrigir CPF"}
+                      </button>
+                    </>
+                  )}
+
+                  {cpfPacPasso === 'encaminhador' && (
+                    <>
+                      <p style={{ fontSize:'0.78rem', fontWeight:700, color:'#374151', textAlign:'center', margin:'0 0 12px', lineHeight:1.4 }}>
+                        {"Digite o CRM e a UF (Estado) do m\u00e9dico que te encaminhou"}
+                      </p>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
+                        <input
+                          autoFocus type="text" inputMode="numeric" value={pacEncNum} disabled={pacSemEnc}
+                          onChange={e => { setPacEncNum(e.target.value.replace(/\D/g, '')); setCpfPacErro(''); }}
+                          placeholder="CRM (ex: 6302)"
+                          style={{ width:'100%', boxSizing:'border-box', border:'2px solid #facc15', background: pacSemEnc ? '#f3f4f6' : '#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.9rem', outline:'none', textAlign:'center', opacity: pacSemEnc ? 0.5 : 1 }} />
+                        <input
+                          type="text" value={pacEncUF} disabled={pacSemEnc} maxLength={2}
+                          onChange={e => { setPacEncUF(e.target.value.replace(/[^A-Za-z]/g, '').toUpperCase()); setCpfPacErro(''); }}
+                          placeholder="UF (ex: BA)"
+                          style={{ width:'100%', boxSizing:'border-box', border:'2px solid #facc15', background: pacSemEnc ? '#f3f4f6' : '#fefce8', color:'#1e3a8a', fontWeight:700, borderRadius:'8px', padding:'10px 12px', fontSize:'0.9rem', outline:'none', textAlign:'center', textTransform:'uppercase', opacity: pacSemEnc ? 0.5 : 1 }} />
+                      </div>
+
+                      <label style={{ display:'flex', alignItems:'center', gap:'8px', justifyContent:'center', margin:'12px 0 4px', cursor:'pointer', userSelect:'none' }}>
+                        <input type="checkbox" checked={pacSemEnc}
+                          onChange={e => { setPacSemEnc(e.target.checked); if (e.target.checked) { setPacEncNum(''); setPacEncUF(''); } setCpfPacErro(''); }}
+                          style={{ width:'16px', height:'16px', cursor:'pointer', accentColor:'#2563eb', flexShrink:0 }} />
+                        <span style={{ fontSize:'0.7rem', fontWeight:800, color:'#374151', letterSpacing:'0.3px' }}>{"VENHO SEM ENCAMINHAMENTO M\u00c9DICO"}</span>
+                      </label>
+
+                      {cpfPacErro && (
+                        <p style={{ color:'#dc2626', fontSize:'0.72rem', fontWeight:800, letterSpacing:'0.5px', textAlign:'center', margin:'8px 0 2px' }}>{cpfPacErro}</p>
+                      )}
+
+                      {(pacSemEnc || (pacEncNum.trim() && UFS_VALIDAS.includes(pacEncUF.trim().toUpperCase()))) && (
+                        <div style={{ display:'flex', justifyContent:'flex-end', marginTop:'10px' }}>
+                          <PlayButton onClick={cpfPacConcluir} loading={cpfPacBuscando} ariaLabel="Prosseguir" />
+                        </div>
+                      )}
+                      <button onClick={() => { setCpfPacPasso('senha'); setCpfPacErro(''); }}
+                        style={{ width:'100%', background:'none', border:'none', color:'#9CA3AF', fontSize:'0.65rem', fontWeight:700, letterSpacing:'1px', cursor:'pointer', marginTop:'8px' }}>
+                        {"\u2190 voltar"}
                       </button>
                     </>
                   )}

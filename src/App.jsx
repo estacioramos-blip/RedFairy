@@ -42,8 +42,14 @@ export default function App() {
     } else if (modoParam === 'paciente') {
       setModo('paciente')
     }
-    // Limpa o parametro da URL sem reload
-    if (modoParam) {
+    // (4DOC) ?ref=CRM/UF — paciente chegou pelo QR de encaminhamento do médico.
+    // Guarda o CRM p/ pré-preencher o card do encaminhador no cadastro.
+    const refParam = params.get('ref')
+    if (refParam) {
+      try { localStorage.setItem('rf_ref_encaminhador', decodeURIComponent(refParam).toUpperCase().trim()) } catch (e) {}
+    }
+    // Limpa os parametros da URL sem reload
+    if (modoParam || refParam) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])

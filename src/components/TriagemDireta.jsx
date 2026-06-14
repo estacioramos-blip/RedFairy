@@ -24,6 +24,16 @@ export default function TriagemDireta({ onVoltar, onCadastrar, onIrDashboard }) 
   const [triagemResultado, setTriagemResultado] = useState(null)
   const [triagemInputs, setTriagemInputs] = useState(null)
 
+  // (4DOC) Médico ENCAMINHADOR informado pelo paciente no cadastro. Lido UMA vez e
+  // limpo do localStorage p/ não vazar pra um próximo paciente no mesmo dispositivo.
+  const [medicoEncaminhador] = useState(() => {
+    try {
+      const v = localStorage.getItem('rf_medico_encaminhador') || ''
+      localStorage.removeItem('rf_medico_encaminhador')
+      return v
+    } catch (e) { return '' }
+  })
+
   // CPF do paciente logado (se houver, vem prefilled e bloqueado)
   let pacienteCpf = ''
   let pacienteId = ''
@@ -78,7 +88,7 @@ export default function TriagemDireta({ onVoltar, onCadastrar, onIrDashboard }) 
           inputs={triagemInputs}
           modoMedico={false}
           isDemo={!pacienteLogado}
-          medicoCRM={null}
+          medicoCRM={medicoEncaminhador || null}
           userId={pacienteId || null}
           onVoltarInicio={() => {
             setTriagemResultado(null)

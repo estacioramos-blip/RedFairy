@@ -8,6 +8,7 @@ import TriagemModal from './TriagemModal';
 import TriagemResultadoModal from './TriagemResultadoModal';
 import TermosModalShared from './TermosModal';
 import ResultCard from './ResultCard';
+import QRMedicoModal from './QRMedicoModal';
 import PlayButton from './PlayButton';
 import heroImg from '../assets/redfairy-hero.jpg';
 import fairyChatImg from '../assets/fairy-chat.jpg';
@@ -738,6 +739,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [triagemInputs, setTriagemInputs] = useState(null);
   const [showAfiliados, setShowAfiliados] = useState(false);
   const [showAfiliadosBanner, setShowAfiliadosBanner] = useState(false);
+  const [showQRMedico, setShowQRMedico] = useState(false);  // QR de encaminhamento (4DOC)
   // Marca que o 4DOC ja foi oferecido (modal cheio) nesta sessao: evita o modal reaparecer
   // depois que o medico ja declinou ("Preencher depois"). Apos isso, no maximo o banner.
   const jaOfereceu4DOCRef = React.useRef(false);
@@ -2073,6 +2075,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               onVoltar={medicoCRM ? onVoltar : undefined}
               onNovaAvaliacao={() => { setResultado(null); setCopiado(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             />
+            {/* (4DOC) Médico logado + avaliação completa SALVA (com CPF) → botão da fada
+                que abre o QR de encaminhamento. Como exige a avaliação completa salva, a
+                régua de elegibilidade do crédito (≥1 avaliação completa) já está garantida. */}
+            {medicoCRM && resultado?.encontrado && inputs.cpf && inputs.cpf.trim() && (
+              <div className="mt-4 flex justify-center">
+                <button onClick={() => setShowQRMedico(true)}
+                  className="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-md transition-colors">
+                  <span style={{ fontSize: '1.1rem' }}>{"🧚"}</span>
+                  <span>{"Gerar QR de encaminhamento (4DOC)"}</span>
+                </button>
+              </div>
+            )}
             {!medicoCRM && (
               <div className="mt-8 mb-12 text-center">
                 <p className="text-red-700 font-black text-xl tracking-wide">{"AN\u00c1LISE CONCLU\u00cdDA"}</p>
@@ -2085,6 +2099,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             )}
           </div>
         )}
+
+      {showQRMedico && medicoCRM && (
+        <QRMedicoModal crm={medicoCRM} onClose={() => setShowQRMedico(false)} />
+      )}
 
       {showConviteAfiliado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>

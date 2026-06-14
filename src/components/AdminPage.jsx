@@ -1565,7 +1565,7 @@ function AbaMedicos() {
               {m.afiliado ? 'Afiliado 4DOC' : 'Perfil incompleto'}
             </span>
           </div>
-          <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="grid grid-cols-4 gap-2 mt-3">
             <div className="bg-gray-50 rounded-xl px-3 py-2 text-center">
               <p className="text-2xl font-extrabold text-gray-700">{m.n_triados}</p>
               <p className="text-xs text-gray-500">triados</p>
@@ -1577,6 +1577,11 @@ function AbaMedicos() {
             <div className="bg-amber-50 rounded-xl px-3 py-2 text-center">
               <p className="text-2xl font-extrabold text-amber-700">{pend}</p>
               <p className="text-xs text-amber-600">a pagar</p>
+            </div>
+            <div className="bg-slate-100 rounded-xl px-3 py-2 text-center"
+              title="Conversões aguardando o médico fazer a 1ª avaliação completa para liberar o crédito">
+              <p className="text-2xl font-extrabold text-slate-600">{m.creditos_aguardando || 0}</p>
+              <p className="text-xs text-slate-500">aguardando</p>
             </div>
           </div>
 
