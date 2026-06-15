@@ -4,6 +4,7 @@ import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/d
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import InstalarFadaBanner from './InstalarFadaBanner'
+import { ehDominioBariatrico } from '../lib/dominio'
 import PlayButton from './PlayButton'
 import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
@@ -725,7 +726,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
               style={{ filter: 'brightness(10)' }} />
             <div>
-              <h1 className="text-xl font-bold">RedFairy</h1>
+              <h1 className="text-xl font-bold">{"RedFairy | Projeto OBA"}</h1>
               <p className="text-red-200 text-xs">{"Ol\u00e1, "}{profile?.nome?.split(' ')[0]}{"!"}</p>
             </div>
           </div>
@@ -1090,7 +1091,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             {(inputs.bariatrica || !dadosVieramDaEntrada) && (
               <label className={`flex items-start gap-2 p-3 rounded-xl border-2 transition-all text-sm ${dadosVieramDaEntrada ? 'cursor-default' : 'cursor-pointer'}
                 ${inputs.bariatrica ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
-                <input type="checkbox" name="bariatrica" checked={inputs.bariatrica} onChange={handleChange} disabled={dadosVieramDaEntrada} className="mt-0.5 disabled:opacity-50" />
+                <input type="checkbox" name="bariatrica" checked={inputs.bariatrica} onChange={handleChange} disabled={dadosVieramDaEntrada || ehDominioBariatrico()} className="mt-0.5 disabled:opacity-50" />
                 <div>
                   <p className="font-medium">{inputs.sexo === 'F' ? 'Paciente Bariátrica' : 'Paciente Bariátrico'}</p>
                   <p className="text-xs opacity-70">By-pass / Gastrectomia — você receberá a anamnese do Projeto OBA</p>

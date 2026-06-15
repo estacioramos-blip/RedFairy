@@ -17,6 +17,7 @@ import chatphone2Img from '../assets/chatphone2.jpg';
 import telefonista2Img from '../assets/telefonista2.jpg';
 import telefonista3Img from '../assets/telefonista3.jpg';
 import logo from '../assets/logo.png';
+import { ehDominioBariatrico } from '../lib/dominio';
 
 const IconPaciente = () => (
   <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
@@ -722,8 +723,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     ferritina: _demo?.ferr || '', hemoglobina: _demo?.hb || '', vcm: _demo?.vcm || '', rdw: _demo?.rdw || '', satTransf: _demo?.sat || '',
     antiHp_igg: '', antiHp_igm: '',  // sorologia ANTI-H.PYLORI (qualitativa)
     b12_valor: '', folato_valor: '',  // valores B12 (pg/mL) e Folato (ng/mL) — investigação da macrocitose
-    bariatrica: !!(_demo?.bariatrica),
-    bariatrica_medico: !!(_demo?.bariatrica), vegetariano: false, perda: false,
+    bariatrica: !!(_demo?.bariatrica) || ehDominioBariatrico(),
+    bariatrica_medico: !!(_demo?.bariatrica) || ehDominioBariatrico(), vegetariano: false, perda: false,
     hipermenorreia: false, gestante: false, semanas_gestacao: '', dum: '', alcoolista: false,
     transfundido: false, aspirina: false, vitaminaB12: false, vitB12_SL: false, vitB12_IM: false, ferro_oral: false, ferro_injetavel: false,
     tiroxina: false, hidroxiureia: false, anticonvulsivante: false, testosterona: false,
@@ -1623,7 +1624,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               style={{ filter: 'brightness(10)', cursor: 'pointer' }}
               onClick={handleLogoTripleClick} />
             <div>
-              <h1 className="text-xl font-bold tracking-wide leading-tight">RedFairy</h1>
+              <h1 className="text-xl font-bold tracking-wide leading-tight">{"RedFairy | Projeto OBA"}</h1>
               <p className="text-red-200 text-xs">{"Calculadora Cl\u00ednica | Eritron"}</p>
             </div>
           </div>
@@ -1769,7 +1770,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               </div>
               <div className="col-span-2">
                 <label className={`flex items-start gap-2 p-3 rounded-xl border-2 transition-all ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'cursor-default' : 'cursor-pointer'} ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
-                  <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0 disabled:opacity-50" />
+                  <input type="checkbox" name="bariatrica_medico" checked={inputs.bariatrica_medico} onChange={handleChange} disabled={(dadosVieramDaTriagem && !editandoDadosPaciente) || ehDominioBariatrico()} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0 disabled:opacity-50" />
                   <div className="min-w-0">
                     <p className="font-medium text-sm leading-tight">
                       {inputs.sexo === 'F' ? "Paciente Bari\u00e1trica" : "Paciente Bari\u00e1trico"}

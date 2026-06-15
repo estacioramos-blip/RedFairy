@@ -7,6 +7,7 @@ import AdminPage from './components/AdminPage'
 import logo from './assets/logo.png'
 import LandingPage from './components/LandingPage'
 import TriagemDireta from './components/TriagemDireta'
+import { ehDominioBariatrico } from './lib/dominio'
 export default function App() {
   const [modo, setModo] = useState('home')
   const [session, setSession] = useState(null)
@@ -86,8 +87,15 @@ export default function App() {
       try { temPaciente = !!localStorage.getItem('paciente_id') } catch (e) {}
       if (temPaciente) setModo('paciente')
     }
+    // (bariatrico.net) MODO BARIÁTRICO: o domínio bariátrico liga o flag p/ o paciente
+    // já entrar bariátrico (→ OBA). Em dev, ?bari=1/0 liga/desliga (persiste).
+    const bariParam = params.get('bari')
+    if (bariParam === '1') { try { localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }
+    if (bariParam === '0') { try { localStorage.removeItem('rf_dom_bari') } catch (e) {} }
+    if (ehDominioBariatrico()) { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {} }
+
     // Limpa os parametros da URL sem reload (inclui o token, p/ não ficar visível)
-    if (modoParam || refParam || params.get('fada') || pToken) {
+    if (modoParam || refParam || params.get('fada') || pToken || bariParam) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])

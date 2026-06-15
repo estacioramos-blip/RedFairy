@@ -292,7 +292,7 @@ export default function TriagemResultadoModal({
         <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
           <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
             <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
-            <h2 className="text-2xl font-bold text-red-700 leading-tight">RedFairy</h2>
+            <h2 className="text-2xl font-bold text-red-700 leading-tight">{"RedFairy | Projeto OBA"}</h2>
             <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">Limite gratuito</p>
           </div>
           <div className="p-6 space-y-5">

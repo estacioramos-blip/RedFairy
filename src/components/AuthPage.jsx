@@ -272,7 +272,7 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
           <img src={logo} alt="RedFairy"
             className="w-16 h-16 object-contain mx-auto mb-2"
             style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }} />
-          <h2 className="text-2xl font-bold text-red-700">RedFairy</h2>
+          <h2 className="text-2xl font-bold text-red-700">{"RedFairy | Projeto OBA"}</h2>
           <p className="text-gray-500 text-sm">Modo Paciente</p>
         </div>
 
