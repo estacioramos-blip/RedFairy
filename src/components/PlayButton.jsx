@@ -28,6 +28,7 @@ const PlayButton = forwardRef(function PlayButton(
     playColor = '#7B1E1E',
     labelColor = '#7B1E1E',
     ringColor = 'rgba(123,30,30,0.55)',
+    labelShadow,
   },
   ref
 ) {
@@ -43,7 +44,7 @@ const PlayButton = forwardRef(function PlayButton(
         className={`rf-pb w-14 h-14 rounded-full ${circleClass} flex items-center justify-center transition-colors shadow-md disabled:opacity-50`}>
         <span style={{ color: playColor, fontSize: '1.4rem', lineHeight: 1, marginLeft: 3 }}>{loading ? '…' : '▶'}</span>
       </button>
-      {label && <span className="text-xs font-bold tracking-wide text-center" style={{ color: labelColor }}>{loading ? '...' : label}</span>}
+      {label && <span className="text-xs font-bold tracking-wide text-center" style={{ color: labelColor, textShadow: labelShadow }}>{loading ? '...' : label}</span>}
       {hint && <span className="text-[10px] font-medium text-center leading-tight" style={{ color: '#ea580c' }}>{hint}</span>}
     </div>
   )

@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
-import InstalarFadaBanner from './InstalarFadaBanner'
+import { useInstalarFada } from '../lib/useInstalarFada'
 import { ehDominioBariatrico } from '../lib/dominio'
 import PlayButton from './PlayButton'
 import CompletarPerfilModal from './CompletarPerfilModal'
@@ -35,6 +35,26 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showPagamento, setShowPagamento] = useState(false)
   const [querPedidoGratis, setQuerPedidoGratis] = useState(false)
   const [salvandoBoasVindas, setSalvandoBoasVindas] = useState(false)
+  // "Instale a fadinha" (PWA) — checkbox dentro do card de boas-vindas.
+  const { instalar: instalarFada, ios: fadaIOS } = useInstalarFada()
+  const [fadaMarcada, setFadaMarcada] = useState(false)
+  const [fadaInstrIOS, setFadaInstrIOS] = useState(false)
+  async function aoMarcarFada(e) {
+    const marcado = e.target.checked
+    setFadaMarcada(marcado)
+    if (!marcado) { setFadaInstrIOS(false); return }
+    const r = await instalarFada()
+    if (r === 'ios') setFadaInstrIOS(true)        // iPhone: mostra instrução manual
+    else if (r === 'instalado') setFadaInstrIOS(false)
+  }
+  // No mobile a imagem fica atrás dos cards; deixa a foto + saudação aparecerem
+  // sozinhas por 2,5s antes de revelar os cards (paciente vê a imagem primeiro).
+  const [cardsBV, setCardsBV] = useState(false)
+  useEffect(() => {
+    if (!showBoasVindas) { setCardsBV(false); return }
+    const t = setTimeout(() => setCardsBV(true), 2500)
+    return () => clearTimeout(t)
+  }, [showBoasVindas])
   const [mostrarDespedida, setMostrarDespedida] = useState(false)
   const [resultado, setResultado] = useState(null)
   const [copiado, setCopiado] = useState(false)
@@ -726,8 +746,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
               style={{ filter: 'brightness(10)' }} />
             <div>
-              <h1 className="text-xl font-bold">{"RedFairy | Projeto OBA"}</h1>
-              <p className="text-red-200 text-xs">{"Ol\u00e1, "}{profile?.nome?.split(' ')[0]}{"!"}</p>
+              <h1 className="text-xl font-bold">{"RedFairy | Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"\u00ae"}</sup></h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -784,8 +803,6 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </div>
         </div>
       )}
-
-      <InstalarFadaBanner />
 
       {mostrarAlertaHpylori && (
         <div className="max-w-3xl mx-auto px-4 mt-4">
@@ -960,31 +977,53 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {tela === 'historico' && (
           <div className="space-y-3">
             {showBoasVindas && profile && (
-              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden min-h-[500px] sm:min-h-0" style={{ position: 'relative' }}>
+              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden min-h-[545px] sm:min-h-0" style={{ position: 'relative' }}>
                 {/* Imagem de boas-vindas (telefonista3). Mobile: altura fixa + object-cover
-                    (preenche o card, aparece bem mais). Desktop (sm+): inteira, sem corte,
-                    a própria imagem define a altura do card. */}
-                <img src={telefonista3Img} alt="" className="block w-full h-[500px] object-cover object-top sm:h-auto" style={{ backgroundColor: '#FDF7F7' }} />
-                <div className="p-5 pb-8" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 1, background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 35%, rgba(255,255,255,0.92) 70%)' }}>
-                <div className="mb-3">
-                  <h2 className="text-xl font-bold text-red-700 mb-1" style={{ textShadow: '0 1px 8px rgba(255,255,255,0.95)' }}>
-                    {"Ol\u00e1, "}{profile.nome?.split(' ')[0] || ''}{"!"}
+                    (preenche o card; a altura do card acompanha a da imagem — sem faixa
+                    branca embaixo). object-top mantém a imagem elevada (sujeito no topo);
+                    a altura maior devolve o pedaço que o object-cover cortava e abre espaço
+                    p/ os cards caberem dentro da foto. Desktop (sm+): inteira, sem corte. */}
+                <img src={telefonista3Img} alt="" className="block w-full h-[545px] object-cover object-top sm:h-auto" style={{ backgroundColor: '#FDF7F7' }} />
+                <div className="p-5 pb-4" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 1 }}>
+                <div className="mb-6 text-center">
+                  <style>{`@keyframes rfBvFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}`}</style>
+                  <h2 className="text-base font-bold mb-1 text-center" style={{ color: '#ffffff', animation: 'rfBvFade 0.6s ease both' }}>
+                    {(profile.sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo')}{", "}{profile.nome?.split(' ')[0] || ''}{", ao RedFairy | OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{"!"}
                   </h2>
-                  <p className="text-sm text-gray-700 font-medium" style={{ textShadow: '0 1px 8px rgba(255,255,255,0.95)' }}>{"Bem-vindo(a) ao RedFairy"}</p>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3 w-2/3">
-                  <p className="text-sm text-gray-800 mb-1">
-                    {"Voc\u00ea agora tem acesso \u00e0 plataforma por "}<strong>1 ano</strong>{"."}
+                {/* Os cards só aparecem após 2,5s — tempo do paciente ver a foto + saudação. */}
+                <div style={{ opacity: cardsBV ? 1 : 0, transition: 'opacity 0.6s ease', pointerEvents: cardsBV ? 'auto' : 'none' }}>
+                <div className={`w-[75%] rounded-xl p-3 mb-3 ${(inputs.bariatrica || profile?.bariatrica) ? 'border-2 border-red-400' : 'border border-blue-200'}`}
+                  style={{ background: (inputs.bariatrica || profile?.bariatrica) ? 'rgba(253,242,248,0.55)' : 'rgba(239,246,255,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
+                  <p className="text-sm text-gray-800 mb-2">
+                    {"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<strong>um ano</strong>{"."}
                   </p>
-                  <p className="text-xs text-gray-700 leading-relaxed">
-                    {"Traga todos os seus futuros hemogramas. N\u00f3s vamos avaliar, p\u00f4r a sua evolu\u00e7\u00e3o em um gr\u00e1fico, e medicar se for necess\u00e1rio."}
+                  <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
+                    {(inputs.bariatrica || profile?.bariatrica)
+                      ? "A qualquer momento voc\u00ea pode fazer uma nova avalia\u00e7\u00e3o, e incluir novos exames. Eles ser\u00e3o comparados com os anteriores e interpretados, e voc\u00ea receber\u00e1 recomenda\u00e7\u00f5es, e poder\u00e1 solicitar receitas ou novos pedidos de exames."
+                      : "Traga os resultados de cada novo HEMOGRAMA \u2014 e se tiver, traga a FERRITINA e a SATURA\u00c7\u00c3O DA TRANSFERRINA. N\u00f3s vamos avaliar e p\u00f4r a sua evolu\u00e7\u00e3o em gr\u00e1fico, e medicar voc\u00ea se necess\u00e1rio."}
                   </p>
+                  <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
+                    {(inputs.bariatrica || profile?.bariatrica)
+                      ? "Marque a caixinha abaixo e n\u00f3s vamos instalar uma FADINHA na sua tela inicial. Ela vai conter o seu LOGIN, e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto."
+                      : "Marque a caixinha abaixo e n\u00f3s vamos instalar uma fadinha na sua tela inicial. Ela j\u00e1 vai conter o seu LOGIN e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto para voc\u00ea entrar os exames \u2014 \u00e9 muito simples."}
+                  </p>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={fadaMarcada} onChange={aoMarcarFada} className="w-5 h-5 accent-red-700" />
+                    <span className="text-sm font-bold" style={{ color: (inputs.bariatrica || profile?.bariatrica) ? '#9D174D' : '#1d4ed8' }}>{"Ok. Instale a fadinha."}</span>
+                  </label>
+                  {fadaInstrIOS && (
+                    <p className="text-xs mt-2 leading-snug" style={{ color: (inputs.bariatrica || profile?.bariatrica) ? '#9D174D' : '#1d4ed8' }}>
+                      {"No iPhone: toque em "}<strong>{"Compartilhar"}</strong>{" (\u2191) e depois em "}<strong>{"\"Adicionar \u00e0 Tela de In\u00edcio\""}</strong>{"."}
+                    </p>
+                  )}
                 </div>
 
-                {/* Card amarelo a ~2/3 + bot\u00e3o PLAY \u00e0 direita (na mesma linha) \u2014 p\u00e1gina fica curta */}
-                <div className="flex items-center gap-3">
-                  <label className="basis-2/3 flex items-start gap-3 p-3 border-2 border-amber-300 bg-amber-50 rounded-xl cursor-pointer">
+                {/* Pedido gr\u00e1tis (~75%) + PLAY ao lado, no espa\u00e7o livre \u00e0 direita. */}
+                <div className="flex items-center gap-2">
+                  <label className="w-[75%] flex items-start gap-3 p-3 border-2 border-amber-300 rounded-xl cursor-pointer"
+                    style={{ background: 'rgba(255,251,235,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
                     <input
                       type="checkbox"
                       checked={querPedidoGratis}
@@ -995,10 +1034,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                       <p className="text-sm font-semibold text-amber-900">
                         {"Quero o meu primeiro pedido de exames (GRATUITO)"}
                       </p>
-                      <p className="text-xs text-amber-800 mt-1">
+                      <p className="text-xs font-bold mt-1" style={{ color: '#7B1E1E' }}>
                         {"Inclui: Hemograma, Ferritina e Satura\u00e7\u00e3o da Transferrina"}
                       </p>
-                      <p className="text-xs text-gray-600 mt-1 italic">
+                      <p className="text-xs font-bold mt-1 text-black">
                         {"Pedidos futuros: R$ 60,00 cada"}
                       </p>
                     </div>
@@ -1009,8 +1048,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                       loading={salvandoBoasVindas}
                       label="CONTINUAR"
                       ariaLabel="Continuar"
+                      labelColor="#ffffff"
                     />
                   </div>
+                </div>
                 </div>
                 </div>
               </div>
