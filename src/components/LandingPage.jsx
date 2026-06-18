@@ -723,7 +723,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     onModoMedico();
   }
 
-  // Timer 1300ms: numero -> UF. Tambem avanca imediato com 6 digitos.
+  // Timer 1800ms: numero -> UF. Tambem avanca imediato com 6 digitos.
   useEffect(() => {
     if (!crmMedicoNum) return;
     if (crmMedicoNum.length === 6) {
@@ -734,7 +734,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       if (refCrmUfLP.current && document.activeElement === refCrmNumLP.current) {
         refCrmUfLP.current.focus();
       }
-    }, 1300);
+    }, 1800);
     return () => clearTimeout(t);
   }, [crmMedicoNum]);
 

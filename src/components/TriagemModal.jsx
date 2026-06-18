@@ -526,11 +526,11 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       setEtapaHemograma(prev => Math.max(prev, etapaAtual + 1));
       return;
     }
-    // 1300ms (era 1000) \u2014 d\u00e1 conforto extra no mobile, especialmente quando o usu\u00e1rio digita
+    // 2100ms (era 1300) \u2014 d\u00e1 conforto extra no mobile, especialmente quando o usu\u00e1rio digita
     // um decimal e demora pra encontrar o ponto/v\u00edrgula no teclado num\u00e9rico.
     timerHemogramaRef.current = setTimeout(() => {
       setEtapaHemograma(prev => Math.max(prev, etapaAtual + 1));
-    }, 1300);
+    }, 2100);
   }
 
   function revalidaGestante(pc) {

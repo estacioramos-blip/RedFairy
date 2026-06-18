@@ -175,7 +175,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
   const [bgRevelado, setBgRevelado] = useState(false);
   const [splashAtivo, setSplashAtivo] = useState(true);
 
-  // Timer 1300ms apos digitar no NUMERO do CRM (login): se >= 1 digito, espera 1300ms
+  // Timer 1800ms apos digitar no NUMERO do CRM (login): se >= 1 digito, espera 1800ms
   // ocioso e move o foco para o campo UF. Se atingir 6 digitos antes, avanca imediato.
   useEffect(() => {
     if (modo !== 'login') return;
@@ -188,7 +188,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
       if (refCrmUfLogin.current && document.activeElement === refCrmNumLogin.current) {
         refCrmUfLogin.current.focus();
       }
-    }, 1300);
+    }, 1800);
     return () => clearTimeout(t);
   }, [loginCrmNum, modo]);
 
@@ -214,7 +214,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
       if (refCrmUf.current && document.activeElement === refCrmNum.current) {
         refCrmUf.current.focus();
       }
-    }, 1300);
+    }, 1800);
     return () => clearTimeout(t);
   }, [crmNum, modo]);
 
@@ -234,12 +234,12 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     }, 4000);
     return () => clearTimeout(t);
   }, []);
-  // NOME -> CELULAR apos 2,5s ocioso (se o cursor ainda estiver no nome).
+  // NOME -> CELULAR apos 3s ocioso (se o cursor ainda estiver no nome).
   useEffect(() => {
     if (modo !== 'cadastro' || !nome.trim()) return;
     const t = setTimeout(() => {
       if (refCelular.current && document.activeElement === refNomeCad.current) refCelular.current.focus();
-    }, 2500);
+    }, 3000);
     return () => clearTimeout(t);
   }, [nome, modo]);
   // CELULAR completo (11 digitos) -> EMAIL.
@@ -814,7 +814,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const refHbForm = useRef(null);
   const refVcmForm = useRef(null);
   const refRdwForm = useRef(null);
-  // Seamless: o cursor salta Hb -> VCM -> RDW (ao atingir o tamanho, ou apos 1.3s de pausa). Sem travar campos.
+  // Seamless: o cursor salta Hb -> VCM -> RDW (ao atingir o tamanho, ou apos 2.1s de pausa). Sem travar campos.
   const timerHemoRef = useRef(null);
   function avancarSeamless(e, maxChars, nextRef) {
     handleChange(e);
@@ -822,7 +822,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (timerHemoRef.current) clearTimeout(timerHemoRef.current);
     if (v.length < 1) return;
     if (v.length >= maxChars) { if (nextRef && nextRef.current) nextRef.current.focus(); return; }
-    timerHemoRef.current = setTimeout(() => { if (nextRef && nextRef.current) nextRef.current.focus(); }, 1300);
+    timerHemoRef.current = setTimeout(() => { if (nextRef && nextRef.current) nextRef.current.focus(); }, 2100);
   }
   // Data futura/invalida em campo de mascara: AVISA, LIMPA o campo e refoca o cursor no inicio.
   function checarDataFutura(name, el, msgFutura) {

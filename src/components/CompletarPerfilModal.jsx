@@ -54,11 +54,13 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const celRef = useRef(null)
   const emailRef = useRef(null)
   const nomeTimer = useRef(null)
+  const celTimer = useRef(null)
   const emailTimer = useRef(null)
   const confirmarRef = useRef(null)
 
   useEffect(() => () => {
     if (nomeTimer.current) clearTimeout(nomeTimer.current)
+    if (celTimer.current) clearTimeout(celTimer.current)
     if (emailTimer.current) clearTimeout(emailTimer.current)
   }, [])
 
@@ -84,22 +86,32 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     setNome(v.toUpperCase()); setErro('')
     if (nomeTimer.current) clearTimeout(nomeTimer.current)
     nomeTimer.current = setTimeout(() => {
-      if ((v || '').trim().length >= 5) celRef.current?.focus()  // 3s parado → salta p/ celular
-    }, 3000)
+      if ((v || '').trim().length >= 5) celRef.current?.focus()  // 3,5s parado → salta p/ celular
+    }, 3500)
   }
 
   function onCelChange(v) {
     const f = formatarCelular(v); setCelular(f); setErro('')
-    if (f.replace(/\D/g, '').length === 11) emailRef.current?.focus()  // dígitos completos → foca e-mail
+    const dig = f.replace(/\D/g, '')
+    if (celTimer.current) clearTimeout(celTimer.current)
+    if (dig.length === 11) {
+      emailRef.current?.focus()  // celular completo (11 dígitos) → foca e-mail na hora
+    } else if (dig.length === 10 && DDDS_VALIDOS.has(dig.slice(0, 2))) {
+      // 10 dígitos com DDD válido (fixo ou celular antigo): pode já estar completo.
+      // Se o paciente parar 3,5s, salta p/ e-mail — antes só 11 dígitos avançavam.
+      celTimer.current = setTimeout(() => {
+        if (document.activeElement === celRef.current) emailRef.current?.focus()
+      }, 3500)
+    }
   }
 
   function onEmailChange(v) {
     setEmail(v.toLowerCase()); setErro('')
     if (emailTimer.current) clearTimeout(emailTimer.current)
     emailTimer.current = setTimeout(() => {
-      // 2,5s parado com e-mail válido → salta o foco para o botão PLAY (CONFIRMO)
+      // 3s parado com e-mail válido → salta o foco para o botão PLAY (CONFIRMO)
       if (/\S+@\S+\.\S+/.test((v || '').trim())) confirmarRef.current?.focus()
-    }, 2500)
+    }, 3000)
   }
 
   async function handleSalvar() {

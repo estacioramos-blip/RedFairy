@@ -700,15 +700,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const saltoTimer = useRef(null)
   const jaSaltouPeso = useRef(false)
   const focar = (r) => { try { r?.current?.focus({ preventScroll: true }) } catch (e) {} }
-  const agendarSalto = (r, ms = 2500) => {
+  const agendarSalto = (r, ms = 3000) => {
     if (saltoTimer.current) clearTimeout(saltoTimer.current)
     if (!r) return
     saltoTimer.current = setTimeout(() => focar(r), ms)
   }
   // Salto por nº de DÍGITOS: salta na hora ao atingir `digitos`; se `comTimer`,
   // com `digitos-1` dígitos agenda o salto após `ms`. Sempre cancela o timer
-  // anterior. Datas (DD/MM): saltam com 2 dígitos. Pesos: 3 dígitos OU 2 + 2,5s.
-  const saltoPorDigitos = (valor, ref, digitos, comTimer = false, ms = 2500) => {
+  // anterior. Datas (DD/MM): saltam com 2 dígitos. Pesos: 3 dígitos OU 2 + 3s.
+  const saltoPorDigitos = (valor, ref, digitos, comTimer = false, ms = 3000) => {
     if (saltoTimer.current) clearTimeout(saltoTimer.current)
     if (!ref) return
     const n = String(valor ?? '').replace(/\D/g, '').length

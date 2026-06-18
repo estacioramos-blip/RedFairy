@@ -57,11 +57,49 @@ export default function HistoricoChartModal({ cpf, serie, sexo, gestante, onFech
       sat: p.sat,
     }));
 
-  // ---------- STATUS (placeholder) ----------
-  // Regra acordada: ESTAVEL / MELHORANDO / AGRAVADO
-  // Implementacao real fica para passo posterior.
-  function calcularStatus(/* dados, tipo */) {
-    return { rotulo: 'ESTAVEL', cor: '#6B7280' }; // placeholder neutro
+  // ---------- STATUS da evolucao ----------
+  // Regra acordada: ESTAVEL / MELHORANDO / AGRAVADO.
+  // Baseado no MOVIMENTO do analito principal de cada tela EM RELACAO A FAIXA NORMAL,
+  // comparando as DUAS medicoes mais recentes. Assim vale tanto p/ anemia (Hb/ferritina
+  // subindo rumo a faixa = melhora) quanto p/ sobrecarga (ferritina acima da faixa
+  // caindo = melhora). Antes era um placeholder fixo "ESTAVEL" cinza, e por isso uma
+  // queda GRAVE de Hb (ex.: 12,5 -> 6,7) aparecia como estavel.
+  // Cortes (a validar pelo medico): Hb = 0,5 g/dL; Ferritina = 20% relativo.
+  const ESTAVEL    = { rotulo: 'ESTÁVEL',    cor: '#6B7280' }; // cinza
+  const MELHORANDO = { rotulo: 'MELHORANDO', cor: '#15803D' }; // verde
+  const AGRAVADO   = { rotulo: 'AGRAVADO',   cor: '#B91C1C' }; // vermelho
+
+  // Distancia do valor ate a faixa normal (0 se dentro dela).
+  function distForaDaFaixa(v, lo, hi) {
+    if (v < lo) return lo - v;
+    if (v > hi) return v - hi;
+    return 0;
+  }
+
+  function calcularStatus(dados, tipo) {
+    // Analito principal de cada tela: G1 = Hemoglobina; G2 = Ferritina.
+    const cfg = tipo === 'g1'
+      ? { chave: 'hemoglobina', faixa: faixaHb,        ruido: 0.5,  rel: false }
+      : { chave: 'ferritina',   faixa: faixaFerritina, ruido: 0.20, rel: true  };
+    const vals = (dados || [])
+      .map((d) => d[cfg.chave])
+      .filter((v) => v !== null && v !== undefined && !isNaN(v));
+    if (vals.length < 2) return ESTAVEL; // sem 2 medicoes nao ha variacao
+
+    const anterior = vals[vals.length - 2];
+    const atual    = vals[vals.length - 1];
+    const [lo, hi] = cfg.faixa;
+    const dAnt = distForaDaFaixa(anterior, lo, hi);
+    const dAtu = distForaDaFaixa(atual, lo, hi);
+
+    // Ambas as medicoes dentro da faixa normal -> estavel (variacao fisiologica).
+    if (dAnt === 0 && dAtu === 0) return ESTAVEL;
+
+    const aproximou = dAnt - dAtu; // > 0 = aproximou-se da faixa (melhora)
+    const limiar = cfg.rel ? cfg.ruido * Math.max(anterior, 1) : cfg.ruido;
+    if (aproximou >= limiar)  return MELHORANDO;
+    if (aproximou <= -limiar) return AGRAVADO;
+    return ESTAVEL;
   }
   const statusG1 = calcularStatus(dadosG1, 'g1');
   const statusG2 = calcularStatus(dadosG2, 'g2');

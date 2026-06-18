@@ -396,7 +396,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     const [tRes, aRes] = await Promise.all([
       supabase
         .from('triagens')
-        .select('created_at, hemoglobina, vcm, rdw')
+        .select('created_at, data_coleta, hemoglobina, vcm, rdw')
         .eq('cpf', cpfDigits)
         .order('created_at', { ascending: true }),
       supabase
@@ -419,35 +419,38 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       return (v === null || v === undefined || v === '' || isNaN(n)) ? null : n
     }
 
-    const serie = []
+    // Cada exame e UM ponto, identificado pela DATA DA COLETA (nao pelo created_at).
+    // A triagem de entrada e a 1a avaliacao sao o MESMO hemograma (mesma data_coleta):
+    // antes a triagem entrava com a data de HOJE (created_at) e a avaliacao com a data
+    // real, gerando 2 pontos iguais (reta horizontal falsa). Agrupando por data_coleta,
+    // o mesmo exame colapsa em 1 ponto; a avaliacao (mais completa) tem prioridade.
+    const dia = (d) => (d ? String(d).slice(0, 10) : null)
+    const porData = new Map()
     ;(tRes.data || []).forEach((r) => {
-      serie.push({
-        data: r.created_at,
-        hb: norm(r.hemoglobina),
-        vcm: norm(r.vcm),
-        rdw: norm(r.rdw),
-        ferritina: null,
-        sat: null,
-        origem: 'triagem',
+      const data = r.data_coleta || dia(r.created_at)
+      const key = dia(data)
+      if (!key || porData.has(key)) return
+      porData.set(key, {
+        data,
+        hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw),
+        ferritina: null, sat: null, origem: 'triagem',
       })
     })
     ;(aRes.data || []).forEach((r) => {
-      serie.push({
+      const key = dia(r.data_coleta)
+      if (!key) return
+      porData.set(key, {  // sobrepoe a triagem da mesma data (avaliacao e mais rica)
         data: r.data_coleta,
-        hb: norm(r.hemoglobina),
-        vcm: norm(r.vcm),
-        rdw: norm(r.rdw),
-        ferritina: norm(r.ferritina),
-        sat: norm(r.sat_transf),
-        origem: 'avaliacao',
+        hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw),
+        ferritina: norm(r.ferritina), sat: norm(r.sat_transf), origem: 'avaliacao',
       })
     })
-    serie.sort((a, b) => new Date(a.data) - new Date(b.data))
+    const serie = Array.from(porData.values()).sort((a, b) => new Date(a.data) - new Date(b.data))
 
     const pontosG1 = serie.filter((p) => p.hb !== null || p.vcm !== null || p.rdw !== null)
     if (pontosG1.length < 2) {
       // Sem 2 pontos n\u00e3o h\u00e1 gr\u00e1fico \u2014 mostra aviso persistente (limpa no pr\u00f3ximo clique).
-      setHistoricoMsg('AINDA N\u00c3O H\u00c1 HIST\u00d3RICO')
+      setHistoricoMsg('AINDA N\u00c3O H\u00c1 DADOS PARA HIST\u00d3RICO | GR\u00c1FICOS')
       return
     }
 
@@ -614,12 +617,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const refFerr = useRef(null), refSat = useRef(null)
   const timerFocoRef = useRef(null), timerFerrRef = useRef(null)
 
-  // Foca o próximo campo: na hora se atingiu maxChars, ou 1,3s após parar de digitar.
+  // Foca o próximo campo: na hora se atingiu maxChars, ou 2,1s após parar de digitar.
   function avancaFoco(valor, maxChars, refProx) {
     if (timerFocoRef.current) clearTimeout(timerFocoRef.current)
     if (!valor || !refProx) return
     if (String(valor).length >= maxChars) { setTimeout(() => refProx.current?.focus(), 50); return }
-    timerFocoRef.current = setTimeout(() => refProx.current?.focus(), 1300)
+    timerFocoRef.current = setTimeout(() => refProx.current?.focus(), 2100)
   }
 
   // Hb/VCM/RDW: aceita só número/decimal, limita a maxChars e agenda o salto.
@@ -639,12 +642,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     if (d.length === 8) setTimeout(() => refHb.current?.focus(), 80)
   }
 
-  // Ferritina: 2,5s após parar de digitar, foca a Sat. da Transferrina.
+  // Ferritina: 3s após parar de digitar, foca a Sat. da Transferrina.
   function handleFerrGuiado(raw) {
     const v = String(raw).replace(/[^0-9.,]/g, '').replace(',', '.')
     setInputs(prev => ({ ...prev, ferritina: v }))
     if (timerFerrRef.current) clearTimeout(timerFerrRef.current)
-    if (v) timerFerrRef.current = setTimeout(() => refSat.current?.focus(), 2500)
+    if (v) timerFerrRef.current = setTimeout(() => refSat.current?.focus(), 3000)
   }
   // Card opt-in (tela de resultado): paciente pede o pedido GRATUITO para os
   // exames sugeridos pelo motor. Mesmo padrão do pedido grátis de boas-vindas:
@@ -1098,7 +1101,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {tela === 'historico' && (
           <div className="space-y-3">
             {showBoasVindas && profile && (
-              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden min-h-[480px] sm:min-h-0" style={{ position: 'relative' }}>
+              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden min-h-[480px] sm:min-h-0 sm:max-w-sm sm:mx-auto" style={{ position: 'relative' }}>
                 {/* Imagem de boas-vindas (telefonista3, horizontal). A ALTURA é o zoom:
                     menor = menos zoom = corta MENOS as laterais (mas mostra menos altura).
                     Ajuste o h-[...] pra afinar. object-top mantém o topo. */}
@@ -1460,10 +1463,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             }} copiado={copiado} />
             {/* "Ver o hist\u00f3rico..." sempre dispon\u00edvel. Se ainda n\u00e3o houver 2 pontos,
                 handleVerGrafico mostra "AINDA N\u00c3O H\u00c1 HIST\u00d3RICO" (sem gr\u00e1fico). */}
-            <button onClick={() => { setTela('historico'); handleVerGrafico(); }}
+            <button onClick={() => { handleVerGrafico(); }}
               className="mt-4 w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 rounded-xl border border-blue-200 transition-colors">
               {"Ver o hist\u00f3rico..."}
             </button>
+            {/* Aviso "sem 2 pontos" tamb\u00e9m aqui: antes s\u00f3 aparecia na tela 'historico',
+                e por isso o bot\u00e3o trocava de tela \u2014 o que fazia o paciente
+                n\u00e3o voltar ao diagn\u00f3stico ao fechar o gr\u00e1fico. */}
+            {historicoMsg && (
+              <p className="text-xs text-center mt-2 font-medium text-red-700">{historicoMsg}</p>
+            )}
             <div className="mt-6 flex justify-center">
               <PlayButton
                 onClick={handleSairDespedida}

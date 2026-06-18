@@ -1206,10 +1206,13 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
             )
           })()}
 
-          {precisaFerroEV && !ferroEVForte && (
-            <p className="text-sm leading-relaxed bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-900">
-              {"Provavelmente voc\u00ea precisa apenas de ferro por via oral, mas se houver necessidade de uma recupera\u00e7\u00e3o mais r\u00e1pida, voc\u00ea pode ser tratado com ferro endovenoso, sob prescri\u00e7\u00e3o m\u00e9dica, de acordo com o protocolo a seguir."}
-            </p>
+          {precisaFerroEV && !resultado._inputs?.bariatrica && !resultado._inputs?.perda && !resultado._inputs?.celiaco && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <p className="text-sm font-bold text-amber-900 mb-1">{"\u26a0\ufe0f Observa\u00e7\u00e3o importante"}</p>
+              <p className="text-sm leading-relaxed text-amber-900">
+                {"Considerado o grau de anemia, a crit\u00e9rio cl\u00ednico voc\u00ea poder\u00e1 ser tratado com ferro endovenoso. Mas o tratamento com ferro por via oral n\u00e3o est\u00e1 descartado."}
+              </p>
+            </div>
           )}
           {precisaFerroEV && (
             <button onClick={() => setShowFerroEV(true)}

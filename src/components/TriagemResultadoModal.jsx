@@ -235,8 +235,8 @@ export default function TriagemResultadoModal({
                   setPedNome(val)
                   if (pedNomeTimer.current) clearTimeout(pedNomeTimer.current)
                   pedNomeTimer.current = setTimeout(() => {
-                    if (val.trim().length > 2) pedCelRef.current?.focus()  // 2,5s parado \u2192 salta p/ celular
-                  }, 2500)
+                    if (val.trim().length > 2) pedCelRef.current?.focus()  // 3s parado \u2192 salta p/ celular
+                  }, 3000)
                 }}
                 onFocus={() => setCampoAtivoPed('nome')}
                 placeholder="Nome completo do paciente"
