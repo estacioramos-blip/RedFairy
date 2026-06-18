@@ -143,7 +143,7 @@ export default function TriagemResultadoModal({
           const { count: nTri } = await supabase
             .from('triagens').select('*', { count: 'exact', head: true })
             .eq('cpf', cpfDigits)
-          if ((nTri || 0) === 3) {
+          if ((nTri || 0) >= 2) {
             return { sucesso: true, limite3: true }
           }
           if ((nTri || 0) === 1) {
@@ -298,7 +298,7 @@ export default function TriagemResultadoModal({
           <div className="p-6 space-y-5">
             <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-center">
               <p className="text-sm font-bold text-red-900 leading-relaxed">
-                {"S\u00c3O POSS\u00cdVEIS TR\u00caS AVALIA\u00c7\u00d5ES GRATUITAS POR CPF."}
+                {"S\u00c3O POSS\u00cdVEIS DUAS AVALIA\u00c7\u00d5ES GRATUITAS POR CPF."}
                 <br />
                 {"PARA NOVA AVALIA\u00c7\u00c3O O PACIENTE DEVE ESTAR INSCRITO."}
               </p>

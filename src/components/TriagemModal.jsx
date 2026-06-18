@@ -306,7 +306,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       .select('*', { count: 'exact', head: true })
       .eq('cpf', cpfDigits);
     setBuscandoCpf(false);
-    if (!profile && (nTriagens || 0) >= 3) {
+    if (!profile && (nTriagens || 0) >= 2) {
       setPacienteConhecido('BLOQUEADO');
       return;
     }
