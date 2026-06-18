@@ -1085,17 +1085,24 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
         <div className={`${scheme.badge} text-white px-6 py-4 flex items-center justify-between`}>
           <div>
-            <p className="text-xs uppercase tracking-widest opacity-80 mb-1">{"Diagn\u00f3stico"}</p>
+            <p className="text-xs uppercase tracking-widest opacity-80 mb-1 font-bold">{"Diagn\u00f3stico"}</p>
             <h3 className="text-xl font-bold">{resultado.label}</h3>
             {resultado._inputs && (() => {
               const inp = resultado._inputs
+              // Data do hemograma (DD/MM/AAAA): aceita DD/MM/AAAA ou YYYY-MM-DD.
+              let dataHemo = ''
+              const dcRaw = String(inp.dataColeta || '')
+              if (/^\d{2}\/\d{2}\/\d{4}$/.test(dcRaw)) dataHemo = dcRaw
+              else if (/^\d{4}-\d{2}-\d{2}$/.test(dcRaw)) dataHemo = dcRaw.split('-').reverse().join('/')
+              // Subtexto por extenso: Sexo \u00b7 Hemoglobina \u00b7 VCM \u00b7 RDW (+ Ferritina/Satura\u00e7\u00e3o se houver).
               const labs = []
-              if (inp.hemoglobina !== undefined && inp.hemoglobina !== '') labs.push(`Hb ${inp.hemoglobina}`)
-              if (inp.ferritina   !== undefined && inp.ferritina   !== '') labs.push(`Ferr ${inp.ferritina}`)
-              if (inp.vcm         !== undefined && inp.vcm         !== '') labs.push(`VCM ${inp.vcm}`)
-              if (inp.rdw         !== undefined && inp.rdw         !== '') labs.push(`RDW ${inp.rdw}`)
-              if (inp.satTransf   !== undefined && inp.satTransf   !== '') labs.push(`Sat ${inp.satTransf}`)
-              const cabecalho = `${inp.sexo || '?'} ${inp.idade ? inp.idade + 'a' : ''}`.trim()
+              if (inp.hemoglobina !== undefined && inp.hemoglobina !== '') labs.push(`Hemoglobina ${inp.hemoglobina} g/dL`)
+              if (inp.vcm         !== undefined && inp.vcm         !== '') labs.push(`VCM ${inp.vcm} fL`)
+              if (inp.rdw         !== undefined && inp.rdw         !== '') labs.push(`RDW ${inp.rdw} %`)
+              if (inp.ferritina   !== undefined && inp.ferritina   !== '') labs.push(`Ferritina ${inp.ferritina} ng/mL`)
+              if (inp.satTransf   !== undefined && inp.satTransf   !== '') labs.push(`Satura\u00e7\u00e3o ${inp.satTransf} %`)
+              const sexoExtenso = inp.sexo === 'F' ? 'Feminino' : inp.sexo === 'M' ? 'Masculino' : '?'
+              const cabecalho = [sexoExtenso, ...labs].join(" \u00b7 ")
               const flagsAtivas = []
               const FLAGS_MAP = {
                 bariatrica: "bari\u00e1trica", vegetariano: 'vegetariana', perda: 'perda',
@@ -1113,7 +1120,8 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               }
               return (
                 <div className="text-xs opacity-75 mt-1 leading-snug">
-                  <div>{cabecalho}{" \u00b7 "}{labs.join(" \u00b7 ")}</div>
+                  {dataHemo && <div>{"\ud83d\udcc5 "}{dataHemo}</div>}
+                  <div>{cabecalho}</div>
                   {flagsAtivas.length > 0 && (
                     <div>{"Flags: "}{flagsAtivas.join(', ')}</div>
                   )}
@@ -1361,8 +1369,8 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
       <button onClick={onCopiar}
         className={`mt-6 w-full py-3 rounded-xl font-bold text-sm transition-all
-          ${copiado ? 'bg-green-500 text-white' : `${scheme.badge} text-white hover:opacity-90`}`}>
-        {copiado ? "\u2705 Resultado Copiado!" : "\ud83d\udccb Copiar Resultado Completo para WhatsApp"}
+          ${copiado ? 'bg-green-500 text-white' : 'bg-green-600 text-white hover:bg-green-700'}`}>
+        {copiado ? "\u2705 Resultado Copiado!" : "\ud83d\udccb Copiar Resultado para WhatsApp"}
       </button>
       {/* Design B: do resultado, m\u00e9dico volta ao formul\u00e1rio (Nova Avalia\u00e7\u00e3o) ou sai pra landing (Fechar e Sair). */}
       {!modoPaciente && (

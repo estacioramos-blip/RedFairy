@@ -10,7 +10,7 @@ import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
 import HistoricoChartModal from './HistoricoChartModal'
 import heroImg from '../assets/redfairy-hero.jpg'
-import telefonista3Img from '../assets/telefonista3.jpg'
+import telefonista6Img from '../assets/telefonista6.jpg'
 import logo from '../assets/logo.png'
 
 // Classes Tailwind por cor dos cards de checkbox (paridade com o CheckboxCard do
@@ -39,13 +39,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const { instalar: instalarFada, ios: fadaIOS } = useInstalarFada()
   const [fadaMarcada, setFadaMarcada] = useState(false)
   const [fadaInstrIOS, setFadaInstrIOS] = useState(false)
+  const [fadaInstaladaPopup, setFadaInstaladaPopup] = useState(false)  // Android: confirma instalação
   async function aoMarcarFada(e) {
     const marcado = e.target.checked
     setFadaMarcada(marcado)
     if (!marcado) { setFadaInstrIOS(false); return }
     const r = await instalarFada()
     if (r === 'ios') setFadaInstrIOS(true)        // iPhone: mostra instrução manual
-    else if (r === 'instalado') setFadaInstrIOS(false)
+    else if (r === 'instalado') { setFadaInstrIOS(false); setFadaInstaladaPopup(true) }  // Android: confirma na tela
   }
   // No mobile a imagem fica atrás dos cards; deixa a foto + saudação aparecerem
   // sozinhas por 2,5s antes de revelar os cards (paciente vê a imagem primeiro).
@@ -61,6 +62,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   // Pedido grátis: "um por paciente". Governa o card opt-in dos exames sugeridos.
   const [jaTemPedidoGratis, setJaTemPedidoGratis] = useState(false)
   const [pedidoExamesEnviado, setPedidoExamesEnviado] = useState(false)
+  // Tem assinatura ativa? (Fase 2) Sem assinatura = modo grátis: 1ª avaliação grátis,
+  // paywall na 2ª. Bariátrico paga na 1ª (obrigatório).
+  const [temAssinatura, setTemAssinatura] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showSobre, setShowSobre] = useState(false)
   const [showOBAModal, setShowOBAModal] = useState(false)
@@ -187,7 +191,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       if (d > 0) await new Promise(r => setTimeout(r, d))
       const { data } = await supabase
         .from('profiles')
-        .select('id, nome, cpf, sexo, data_nascimento, celular, bariatrica, gestante, boas_vindas_vista')
+        .select('id, nome, cpf, sexo, data_nascimento, celular, bariatrica, gestante, boas_vindas_vista, primeira_avaliacao_feita')
         .eq('id', session.user.id).maybeSingle()
       if (data) { prof = data; break }
     }
@@ -198,8 +202,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       return
     }
     setProfile(prof)
-    // Vencimento da anuidade: pega a assinatura ativa com a data_fim mais distante
-    // (renovações empilham linhas). Usado no alerta 15/5 dias.
+    // Bariátrico? (perfil já marcado, domínio bariatrico.net, ou flag rf_flag do
+    // hero "Sou Bariátrico"). Bariátrico paga na 1ª; não-bariátrico tem a 1ª grátis.
+    const flagBariatricaOBA = (() => { try { return localStorage.getItem('rf_flag') === 'bariatrica' } catch (e) { return false } })()
+    const ehBariatrico = !!prof.bariatrica || flagBariatricaOBA || ehDominioBariatrico()
+    // Assinatura ativa? Governa o alerta de anuidade E o paywall da 2ª avaliação.
+    let temAssinAtiva = false
     try {
       const { data: assinAtiva } = await supabase
         .from('assinaturas')
@@ -210,25 +218,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         .limit(1)
         .maybeSingle()
       setVencimentoAnuidade(assinAtiva?.data_fim || null)
-    } catch (e) { /* sem assinatura → sem alerta */ }
+      temAssinAtiva = !!assinAtiva
+      setTemAssinatura(temAssinAtiva)
+    } catch (e) { /* sem assinatura → modo grátis */ }
     // Perfil incompleto (paciente recem-cadastrado): pede dados pessoais antes de tudo
     if (prof && (!prof.nome || String(prof.nome).trim().length < 3)) {
       setShowCompletarPerfil(true)
     } else if (prof && prof.boas_vindas_vista === false) {
-      // So mostra boas-vindas se ja completou perfil E ja tem assinatura ativa.
-      // Senao, o BoasVindas e disparado manualmente apos o pagamento (onPago).
-      const { data: assin } = await supabase
-        .from('assinaturas')
-        .select('id')
-        .eq('user_id', prof.id)
-        .eq('status', 'ativa')
-        .maybeSingle()
-      if (assin) {
+      // Não-bariátrico: 1ª avaliação é GRÁTIS → boas-vindas sem exigir pagamento.
+      // Bariátrico: precisa de assinatura ativa antes (paga na 1ª) — senão, pagamento.
+      if (!ehBariatrico || temAssinAtiva) {
         setShowBoasVindas(true)
+      } else {
+        setShowPagamento(true)
       }
     }
-    // Captura ANTES de remover: paciente entrou pelo botão "Sou Bariátrico" (hero).
-    const flagBariatricaOBA = (() => { try { return localStorage.getItem('rf_flag') === 'bariatrica' } catch (e) { return false } })()
     localStorage.removeItem('rf_flag')
 
     // Persiste a marca bariátrica NO PERFIL já na entrada pelo flag — antes do gate
@@ -300,11 +304,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           .order('data_coleta', { ascending: false })
           .limit(1)
           .maybeSingle()
-        // "Aprofundada" = existe avaliação NA MESMA DATA já COM Ferritina. Atenção:
-        // a triagem, se o paciente já estava logado, cria um espelho em `avaliacoes`
-        // com ferritina=null — esse espelho NÃO conta como aprofundado.
-        const pendente = !!entrada &&
-          !(avals || []).some(a => a.data_coleta === entrada.data_coleta && a.ferritina != null)
+        // "Pendente" = ainda NÃO concluiu a 1ª avaliação. Antes isso era decidido
+        // pela Ferritina (ferritina != null), mas a 1ª pode ser só triagem do eritron
+        // (sem Ferritina) — então o paciente caía de novo em "Continuando a sua
+        // primeira avaliação" (loop). Agora usamos a flag primeira_avaliacao_feita.
+        const pendente = !!entrada && !prof.primeira_avaliacao_feita
         setEntradaPendente(pendente)
         if (inicial && pendente) {
           setDadosVieramDaEntrada(true)
@@ -323,6 +327,25 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           if (prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista === true) {
             setTela('nova')
           }
+        } else if (inicial && !pendente && (avals || []).length) {
+          // RETORNO (1ª já feita): pré-marca as flags da última avaliação — editáveis,
+          // pra ele desmarcar o que mudou (ex.: parou a aspirina, deixou de ser
+          // vegetariano). NÃO pré-preenche data/hemograma (são novos) nem gestante.
+          const ult = avals[0]
+          setInputs(prev => ({
+            ...prev,
+            vegetariano: !!ult.vegetariano, perda: !!ult.perda, alcoolista: !!ult.alcoolista,
+            transfundido: !!ult.transfundido, anemiaPrevia: !!ult.anemia_previa,
+            sideropenia: !!ult.sideropenia, sobrecargaFerro: !!ult.sobrecarga_ferro,
+            hbAlta: !!ult.hb_alta, doadorSangue: !!ult.doador_sangue, celiaco: !!ult.celiaco,
+            g6pd: !!ult.g6pd, hipermenorreia: !!ult.hipermenorreia,
+            aspirina: !!ult.aspirina, vitaminaB12: !!ult.vitamina_b12,
+            vitB12_SL: !!ult.vitb12_sl, vitB12_IM: !!ult.vitb12_im,
+            ferro_oral: !!ult.ferro_oral, ferro_injetavel: !!ult.ferro_injetavel,
+            testosterona: !!ult.testosterona, tiroxina: !!ult.tiroxina,
+            methotrexato: !!ult.methotrexato, hivTratamento: !!ult.hiv_tratamento,
+            hidroxiureia: !!ult.hidroxiureia, anticonvulsivante: !!ult.anticonvulsivante,
+          }))
         }
       } else {
         setEntradaPendente(false)
@@ -423,8 +446,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
     const pontosG1 = serie.filter((p) => p.hb !== null || p.vcm !== null || p.rdw !== null)
     if (pontosG1.length < 2) {
-      setHistoricoMsg('N\u00c3O H\u00c1 ELEMENTOS PARA GR\u00c1FICO')
-      setTimeout(() => setHistoricoMsg(''), 4000)
+      // Sem 2 pontos n\u00e3o h\u00e1 gr\u00e1fico \u2014 mostra aviso persistente (limpa no pr\u00f3ximo clique).
+      setHistoricoMsg('AINDA N\u00c3O H\u00c1 HIST\u00d3RICO')
       return
     }
 
@@ -485,15 +508,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     setEritronAnterior((avaliacoes || []).find(a => a.hemoglobina != null) || null)
 
     if (res.encontrado && session?.user) {
-      await supabase.from('avaliacoes').insert({
+      // null (não 0) quando o campo vier vazio — triagem do eritron não tem Ferritina/Sat.
+      const numOrNull = (v) => (v === '' || v === null || v === undefined || !Number.isFinite(Number(v))) ? null : Number(v)
+      const dados = {
         user_id: session.user.id,
         data_coleta: inputs.dataColeta,
-        peso: inputs.peso !== '' && Number.isFinite(Number(inputs.peso)) ? Number(inputs.peso) : null,
-        ferritina: Number(inputs.ferritina),
+        peso: numOrNull(inputs.peso),
+        ferritina: numOrNull(inputs.ferritina),
         hemoglobina: Number(inputs.hemoglobina),
         vcm: Number(inputs.vcm),
         rdw: Number(inputs.rdw),
-        sat_transf: Number(inputs.satTransf),
+        sat_transf: numOrNull(inputs.satTransf),
         bariatrica: inputs.bariatrica,
         vegetariano: inputs.vegetariano,
         perda: inputs.perda,
@@ -507,9 +532,48 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         vitb12_im: inputs.vitB12_IM,
         ferro_oral: inputs.ferro_oral,
         ferro_injetavel: inputs.ferro_injetavel,
+        // Flags de Histórico Clínico + Medicamentos que antes não eram gravadas
+        // (precisam das colunas de migrate_flags_avaliacoes.sql).
+        alcoolista: !!inputs.alcoolista,
+        transfundido: !!inputs.transfundido,
+        anemia_previa: !!inputs.anemiaPrevia,
+        sideropenia: !!inputs.sideropenia,
+        sobrecarga_ferro: !!inputs.sobrecargaFerro,
+        hb_alta: !!inputs.hbAlta,
+        doador_sangue: !!inputs.doadorSangue,
+        celiaco: !!inputs.celiaco,
+        g6pd: !!inputs.g6pd,
+        testosterona: !!inputs.testosterona,
+        tiroxina: !!inputs.tiroxina,
+        methotrexato: !!inputs.methotrexato,
+        hiv_tratamento: !!inputs.hivTratamento,
+        hidroxiureia: !!inputs.hidroxiureia,
+        anticonvulsivante: !!inputs.anticonvulsivante,
         diagnostico_label: res.label,
         diagnostico_color: res.color,
-      })
+      }
+      // Evita o DUPLICADO: se já existe avaliação nesta MESMA data (ex.: o "espelho"
+      // da triagem de entrada, com ferritina=null), ATUALIZA essa linha em vez de
+      // inserir outra. Assim a 1ª avaliação preenche o espelho — uma linha só.
+      const { data: existentes } = await supabase
+        .from('avaliacoes').select('id')
+        .eq('user_id', session.user.id)
+        .eq('data_coleta', inputs.dataColeta)
+        .limit(1)
+      const existeId = existentes?.[0]?.id
+      if (existeId) {
+        await supabase.from('avaliacoes').update(dados).eq('id', existeId)
+      } else {
+        await supabase.from('avaliacoes').insert(dados)
+      }
+      // 1ª avaliação concluída: marca no perfil. Isso (a) quebra o loop do
+      // "Continuando a sua primeira avaliação" e (b) é a base do paywall da 2ª.
+      if (!profile?.primeira_avaliacao_feita) {
+        try {
+          await supabase.from('profiles').update({ primeira_avaliacao_feita: true }).eq('id', session.user.id)
+          setProfile(p => (p ? { ...p, primeira_avaliacao_feita: true } : p))
+        } catch (e) {}
+      }
       carregarDados()
     }
     setPedidoExamesEnviado(false)
@@ -518,6 +582,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     if (inputs.bariatrica && res.encontrado) {
       try { localStorage.setItem('oba_aberto', String(profile?.cpf || '').replace(/\D/g, '')) } catch (e) {}
       setShowOBAModal(true)
+    }
+  }
+
+  // (Fase 2) Ir pra nova avaliação. Se o paciente já fez a 1ª (grátis) e NÃO tem
+  // assinatura, abre o PAYWALL (pagamento da anuidade) antes. Quem tem assinatura
+  // — ou ainda não fez a 1ª — segue direto ao formulário.
+  function irNovaAvaliacao() {
+    if (profile?.primeira_avaliacao_feita && !temAssinatura) {
+      setShowPagamento(true)
+    } else {
+      setTela('nova'); setResultado(null)
     }
   }
   // Card opt-in (tela de resultado): paciente pede o pedido GRATUITO para os
@@ -573,56 +648,20 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       await supabase.from('profiles')
         .update({ boas_vindas_vista: true })
         .eq('id', profile.id)
-      if (querPedidoGratis) {
-        await supabase.from('pedidos_documento').insert({
-          user_id: profile.id,
-          cpf: profile.cpf,
-          nome: profile.nome,
-          data_nascimento: profile.data_nascimento,
-          celular: profile.celular,
-          tipos_documento: ['HEMOGRAMA', 'FERRITINA', 'SAT_TRANSFERRINA'],
-          texto_documentos: 'Primeiro pedido gratuito apos cadastro',
-          valor_total: 0,
-          status: 'pendente_envio',
-        })
-
-        // Monta mensagem WhatsApp pro ADM
-        const dataNasc = profile.data_nascimento
-          ? new Date(profile.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR')
-          : '(nao informado)'
-        const celFormatado = (profile.celular || '').replace(/^(\d{2})(\d{4,5})(\d{4})$/, '($1) $2-$3') || '(nao informado)'
-        const mensagem =
-          `*RedFairy - Pedido GRATUITO de exames*\n\n` +
-          `*Nome:* ${profile.nome}\n` +
-          `*CPF:* ${profile.cpf}\n` +
-          `*Data de nascimento:* ${dataNasc}\n` +
-          `*Celular:* ${celFormatado}\n\n` +
-          `*Exames solicitados:*\n` +
-          `- Hemograma\n- Ferritina\n- Saturacao da Transferrina\n\n` +
-          `Solicito a emissao do pedido medico. Obrigado!`
-        const url = `https://wa.me/5571997110804?text=${encodeURIComponent(mensagem)}`
-        window.open(url, '_blank', 'noopener,noreferrer')
-      }
     } catch (err) {
       console.error('Erro ao salvar boas-vindas:', err)
     } finally {
       setSalvandoBoasVindas(false)
       setProfile(p => ({ ...p, boas_vindas_vista: true }))
       // Bariátrica tem PRIORIDADE: abre a anamnese OBA e fica no dashboard.
-      // Não-bariátrico:
-      //  - pediu o exame grátis → ainda não tem resultados em mãos → despedida (logout).
-      //  - NÃO pediu (já tem os exames) → vai DIRETO ao formulário de avaliação.
+      // Não-bariátrico: vai DIRETO ao formulário da 1ª avaliação. O pedido de exames
+      // (grátis na 1ª) agora é feito no RESULTADO (checkbox "Sim, quero receber…"),
+      // não mais aqui — por isso não existe mais a tela "Pronto!".
       // IMPORTANTE: abre o OBA (overlay) ANTES de fechar as boas-vindas — senão o
       // dashboard "Olá" vazio piscava entre o fim das boas-vindas e a abertura do OBA.
       const precisa = await verificarEAbrirOBA(profile)
       setShowBoasVindas(false)
-      if (!precisa) {
-        if (querPedidoGratis) {
-          setMostrarDespedida(true)
-        } else {
-          setTela('nova')
-        }
-      }
+      if (!precisa) setTela('nova')
     }
   }
 
@@ -667,30 +706,44 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   )
 
   if (mostrarDespedida) return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-red-50 via-white to-amber-50">
-      <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-xl text-center">
-        <img src={logo} alt="RedFairy" style={{ width: 64, height: 64, margin: '0 auto 16px' }} />
-        <h1 className="text-3xl font-black text-red-700 mb-3">{"Pronto!"}</h1>
-        <p className="text-sm text-gray-700 leading-relaxed mb-4">
-          {"Em breve voc\u00ea receber\u00e1 o seu primeiro pedido de exames via WhatsApp."}
-        </p>
-        <p className="text-sm text-gray-700 leading-relaxed mb-6">
-          {"Quando tiver os resultados em m\u00e3os, entre na plataforma com seu CPF e senha para uma an\u00e1lise mais detalhada do seu estado."}
-        </p>
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-6">
-          <p className="text-xs text-amber-900">
-            {"\ud83d\udca1 Se o WhatsApp n\u00e3o abriu, entre em contato pelo n\u00famero "}
-            <a href="https://wa.me/5571997110804" target="_blank" rel="noopener noreferrer"
-              className="font-bold underline">
-              {"+55 71 99711-0804"}
-            </a>
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-amber-50">
+      {/* Header igual ao do dashboard/boas-vindas: barra vermelha + fadinha + marca. */}
+      <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
+        <div className="max-w-3xl mx-auto flex items-center justify-center gap-3">
+          <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain" style={{ filter: 'brightness(10)' }} />
+          <h1 className="text-xl font-bold">{"RedFairy | Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"\u00ae"}</sup></h1>
         </div>
-        <button
-          onClick={handleSairDespedida}
-          className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold text-sm py-3 rounded-lg transition-colors">
-          {"Sair"}
-        </button>
+      </header>
+      <div className="flex items-center justify-center p-4" style={{ minHeight: 'calc(100vh - 64px)' }}>
+        <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-xl text-center">
+          <h1 className="text-3xl font-black text-red-700 mb-3">{"Pronto!"}</h1>
+          <p className="text-sm text-gray-700 leading-relaxed mb-4">
+            {"Em breve voc\u00ea receber\u00e1 o seu primeiro pedido de exames via WhatsApp."}
+          </p>
+          <p className="text-sm text-gray-700 leading-relaxed mb-6">
+            {"Quando tiver os resultados em m\u00e3os, entre na plataforma com seu CPF e senha para uma an\u00e1lise mais detalhada do seu estado."}
+          </p>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-6">
+            <p className="text-xs text-amber-900">
+              {"\ud83d\udca1 Se o WhatsApp n\u00e3o abriu, entre em contato pelo n\u00famero "}
+              <a href="https://wa.me/5571997110804" target="_blank" rel="noopener noreferrer"
+                className="font-bold underline">
+                {"+55 71 99711-0804"}
+              </a>
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <PlayButton
+              onClick={handleSairDespedida}
+              label="SAIR"
+              ariaLabel="Sair"
+              circleClass="bg-gray-300 hover:bg-gray-400"
+              playColor="#dc2626"
+              labelColor="#b91c1c"
+              ringColor="rgba(220,38,38,0.5)"
+            />
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -953,7 +1006,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             aprofundado (entradaPendente) e na tela de resultado (logo ap\u00f3s avaliar,
             n\u00e3o faz sentido para o paciente novo). S\u00f3 aparece com hist\u00f3rico de fato. */}
         {avaliacoes.length > 0 && !showBoasVindas && !entradaPendente && tela !== 'resultado' && (
-        <div className="flex gap-2 mb-6">
+        <div className="mb-6">
+          {tela === 'historico' && profile && (
+            <div className="mb-3">
+              <h2 className="text-lg font-bold text-red-700">
+                {"Ol\u00e1, "}{profile.nome?.split(' ')[0] || ''}{", "}{profile.sexo === 'F' ? 'bem-vinda' : 'bem-vindo'}{"!"}
+              </h2>
+              <p className="text-sm text-gray-600">{"O que voc\u00ea quer fazer?"}</p>
+            </div>
+          )}
+          <div className="flex gap-2">
           <button
             onClick={() => {
               // Sempre volta pra tela 'historico'; abre o grafico se houver dados suficientes.
@@ -961,43 +1023,55 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               setTela('historico');
               handleVerGrafico();
             }}
-            className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${pontosHistorico >= 2 ? 'rf-historico-pulse' : ''} ${tela === 'historico' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
+            className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all ${pontosHistorico >= 2 ? 'rf-historico-pulse' : ''} ${tela === 'historico' ? 'bg-blue-700 text-white border-2 border-blue-800' : 'bg-blue-100 text-blue-800 border-2 border-blue-800'}`}>
             <span className="text-sm font-medium">{"Hist\u00f3rico"}</span>
             <span className="text-[10px] tracking-widest opacity-80 leading-none mt-0.5">
               {"EVOLU\u00c7\u00c3O | GR\u00c1FICO"}
             </span>
           </button>
-          <button onClick={() => { setTela('nova'); setResultado(null) }}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${tela === 'nova' || tela === 'resultado' ? 'bg-red-700 text-white' : 'bg-white text-gray-600 border'}`}>
+          <button onClick={irNovaAvaliacao}
+            className="px-4 py-2 rounded-xl text-sm font-medium transition-all bg-red-700 text-white hover:bg-red-800">
             {"Nova Avalia\u00e7\u00e3o"}
           </button>
+          </div>
+          {/* Modo gr\u00e1tis (sem assinatura): oferece assinar a qualquer momento. */}
+          {!temAssinatura && tela === 'historico' && (
+            <button onClick={() => setShowPagamento(true)}
+              className="mt-3 text-xs text-blue-700 underline underline-offset-2 hover:text-blue-900">
+              {"Quero acesso completo (assinar a anuidade)"}
+            </button>
+          )}
         </div>
         )}
 
         {tela === 'historico' && (
           <div className="space-y-3">
             {showBoasVindas && profile && (
-              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden min-h-[545px] sm:min-h-0" style={{ position: 'relative' }}>
-                {/* Imagem de boas-vindas (telefonista3). Mobile: altura fixa + object-cover
-                    (preenche o card; a altura do card acompanha a da imagem — sem faixa
-                    branca embaixo). object-top mantém a imagem elevada (sujeito no topo);
-                    a altura maior devolve o pedaço que o object-cover cortava e abre espaço
-                    p/ os cards caberem dentro da foto. Desktop (sm+): inteira, sem corte. */}
-                <img src={telefonista3Img} alt="" className="block w-full h-[545px] object-cover object-top sm:h-auto" style={{ backgroundColor: '#FDF7F7' }} />
-                <div className="p-5 pb-4" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 1 }}>
-                <div className="mb-6 text-center">
+              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden min-h-[480px] sm:min-h-0" style={{ position: 'relative' }}>
+                {/* Imagem de boas-vindas (telefonista3, horizontal). A ALTURA é o zoom:
+                    menor = menos zoom = corta MENOS as laterais (mas mostra menos altura).
+                    Ajuste o h-[...] pra afinar. object-top mantém o topo. */}
+                <img src={telefonista6Img} alt="" className="block w-full h-[480px] object-cover object-bottom sm:h-auto" style={{ backgroundColor: '#FDF7F7' }} />
+                {/* Saudacao no TOPO da imagem (separada do card, pra nao sumir pra fora). */}
+                <div className="text-center px-5" style={{ position: 'absolute', top: '5%', left: 0, right: 0, zIndex: 1 }}>
                   <style>{`@keyframes rfBvFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}`}</style>
-                  <h2 className="text-base font-bold mb-1 text-center" style={{ color: '#ffffff', animation: 'rfBvFade 0.6s ease both' }}>
+                  <h2 className="text-base font-bold" style={{ color: '#ffffff', animation: 'rfBvFade 0.6s ease both' }}>
                     {(profile.sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo')}{", "}{profile.nome?.split(' ')[0] || ''}{", ao RedFairy | OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{"!"}
                   </h2>
                 </div>
 
+                {/* Card na BASE da imagem. */}
+                <div className="p-5 pb-2" style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 1 }}>
+
                 {/* Os cards só aparecem após 2,5s — tempo do paciente ver a foto + saudação. */}
                 <div style={{ opacity: cardsBV ? 1 : 0, transition: 'opacity 0.6s ease', pointerEvents: cardsBV ? 'auto' : 'none' }}>
-                <div className={`w-[75%] rounded-xl p-3 mb-3 ${(inputs.bariatrica || profile?.bariatrica) ? 'border-2 border-red-400' : 'border border-blue-200'}`}
+                <div className="flex items-end gap-2">
+                <div className={`w-[75%] rounded-xl p-3 mb-5 ${(inputs.bariatrica || profile?.bariatrica) ? 'border-2 border-red-400' : 'border border-blue-200'}`}
                   style={{ background: (inputs.bariatrica || profile?.bariatrica) ? 'rgba(253,242,248,0.55)' : 'rgba(239,246,255,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
-                  <p className="text-sm text-gray-800 mb-2">
-                    {"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<strong>um ano</strong>{"."}
+                  <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
+                    {(inputs.bariatrica || profile?.bariatrica || temAssinatura)
+                      ? <>{"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<span style={{ color: (inputs.bariatrica || profile?.bariatrica) ? '#9D174D' : '#1d4ed8' }}>{"um ano"}</span>{"."}</>
+                      : <>{"A sua "}<span style={{ color: '#1d4ed8' }}>{"primeira avalia\u00e7\u00e3o \u00e9 gratuita"}</span>{". Depois, para novas avalia\u00e7\u00f5es, voc\u00ea precisar\u00e1 assinar a plataforma."}</>}
                   </p>
                   <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica)
@@ -1006,8 +1080,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   </p>
                   <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica)
-                      ? "Marque a caixinha abaixo e n\u00f3s vamos instalar uma FADINHA na sua tela inicial. Ela vai conter o seu LOGIN, e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto."
-                      : "Marque a caixinha abaixo e n\u00f3s vamos instalar uma fadinha na sua tela inicial. Ela j\u00e1 vai conter o seu LOGIN e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto para voc\u00ea entrar os exames \u2014 \u00e9 muito simples."}
+                      ? "Marque a caixinha abaixo e n\u00f3s vamos instalar uma FADINHA na sua tela inicial. Ela vai conter o seu LOGIN, e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto. Vamos prosseguir."
+                      : "Marque a caixinha abaixo e n\u00f3s vamos instalar uma fadinha na sua tela inicial. Ela j\u00e1 vai conter o seu LOGIN e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto para voc\u00ea entrar os exames \u2014 \u00e9 muito simples. Vamos prosseguir."}
                   </p>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={fadaMarcada} onChange={aoMarcarFada} className="w-5 h-5 accent-red-700" />
@@ -1020,37 +1094,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   )}
                 </div>
 
-                {/* Pedido gr\u00e1tis (~75%) + PLAY ao lado, no espa\u00e7o livre \u00e0 direita. */}
-                <div className="flex items-center gap-2">
-                  <label className="w-[75%] flex items-start gap-3 p-3 border-2 border-amber-300 rounded-xl cursor-pointer"
-                    style={{ background: 'rgba(255,251,235,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
-                    <input
-                      type="checkbox"
-                      checked={querPedidoGratis}
-                      onChange={(e) => setQuerPedidoGratis(e.target.checked)}
-                      className="mt-1 w-5 h-5 accent-red-700"
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-amber-900">
-                        {"Quero o meu primeiro pedido de exames (GRATUITO)"}
-                      </p>
-                      <p className="text-xs font-bold mt-1" style={{ color: '#7B1E1E' }}>
-                        {"Inclui: Hemograma, Ferritina e Satura\u00e7\u00e3o da Transferrina"}
-                      </p>
-                      <p className="text-xs font-bold mt-1 text-black">
-                        {"Pedidos futuros: R$ 60,00 cada"}
-                      </p>
-                    </div>
-                  </label>
-                  <div className="flex-1 flex justify-center">
-                    <PlayButton
-                      onClick={handleConfirmarBoasVindas}
-                      loading={salvandoBoasVindas}
-                      label="CONTINUAR"
-                      ariaLabel="Continuar"
-                      labelColor="#ffffff"
-                    />
-                  </div>
+                {/* O pedido de exames (gr\u00e1tis na 1\u00aa) agora \u00e9 feito no RESULTADO, n\u00e3o aqui. */}
+                <div className="flex-1 flex justify-center">
+                  <PlayButton
+                    onClick={handleConfirmarBoasVindas}
+                    loading={salvandoBoasVindas}
+                    label="CONTINUAR"
+                    ariaLabel="Continuar"
+                    labelColor="#ffffff"
+                  />
+                </div>
                 </div>
                 </div>
                 </div>
@@ -1100,9 +1153,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             <h2 className="font-semibold text-gray-700">
               {dadosVieramDaEntrada
                 ? "Continuando a sua primeira avalia\u00e7\u00e3o"
-                : (inputs.bariatrica || profile?.bariatrica)
-                  ? "Ol\u00e1, vamos a uma nova avalia\u00e7\u00e3o da sua sa\u00fade!"
-                  : "Ol\u00e1, vamos a uma nova avalia\u00e7\u00e3o do seu eritron!"}
+                : "Vamos ent\u00e3o fazer uma NOVA avalia\u00e7\u00e3o:"}
             </h2>
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-xs text-gray-500 mb-1">{"Voc\u00ea"}</p>
@@ -1120,7 +1171,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               <label className="block text-sm font-medium text-gray-600 mb-1">{"Peso (kg)"}</label>
               <input type="number" step="0.1" name="peso" value={inputs.peso} onChange={handleChange}
                 placeholder="Ex: 72"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                className="w-full border-2 border-yellow-400 bg-yellow-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
               <p className="text-xs text-gray-400 mt-0.5">{"Opcional \u2014 usado no c\u00e1lculo de dose de ferro endovenoso, se necess\u00e1rio"}</p>
             </div>
 
@@ -1177,7 +1228,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   .rf-play-blue { animation: rfPlayBlinkBlue 1s ease-in-out infinite; }
                 `}</style>
                 <p className="text-sm font-semibold text-blue-700 leading-snug flex-1">
-                  {"Para digitar FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA (%) acione o bot\u00e3o"}
+                  {"Se voc\u00ea tem os resultados de FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA (%), acione o bot\u00e3o."}
                 </p>
                 <button
                   type="button"
@@ -1333,37 +1384,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
         {tela === 'resultado' && resultado && (
           <div>
-            {/* (passo 2) Evolução do eritron vs. a avaliação anterior */}
-            {eritronAnterior && (
-              <div className="mb-4 rounded-xl border-2 border-indigo-200 bg-indigo-50 p-4">
-                <p className="text-xs font-bold uppercase tracking-wide text-indigo-700 mb-1">{"Evolução desde a última avaliação"}</p>
-                {eritronAnterior.data_coleta && (
-                  <p className="text-xs text-indigo-600 mb-2">{"Comparado com "}{String(eritronAnterior.data_coleta).split('-').reverse().join('/')}{":"}</p>
-                )}
-                <p className="text-sm text-gray-700 mb-2">
-                  <span className="font-semibold">{"Diagnóstico: "}</span>
-                  {eritronAnterior.diagnostico_label || '—'} <span className="text-gray-400">{"→"}</span> <strong>{resultado.label || '—'}</strong>
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[
-                    ['Hb', eritronAnterior.hemoglobina, resultado._inputs?.hemoglobina, 'g/dL'],
-                    ['VCM', eritronAnterior.vcm, resultado._inputs?.vcm, 'fL'],
-                    ['RDW', eritronAnterior.rdw, resultado._inputs?.rdw, '%'],
-                    ['Ferritina', eritronAnterior.ferritina, resultado._inputs?.ferritina, 'ng/mL'],
-                    ['Sat', eritronAnterior.sat_transf, resultado._inputs?.satTransf, '%'],
-                  ].filter(([, prev, cur]) => Number(prev) > 0 && Number(cur) > 0).map(([lbl, prev, cur]) => {
-                    const p = Number(prev), c = Number(cur)
-                    const seta = c > p ? '↑' : c < p ? '↓' : '→'
-                    return (
-                      <div key={lbl} className="bg-white rounded-lg border border-indigo-100 px-2 py-1.5">
-                        <p className="text-[10px] uppercase font-bold text-gray-400">{lbl}</p>
-                        <p className="text-xs font-bold text-gray-700">{prev} <span className="text-gray-400">{seta}</span> {cur}</p>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+            {/* O card de comparação ("Evolução desde a última avaliação" + setas) foi
+                removido: a evolução agora vive no gráfico de Histórico. A data do
+                hemograma aparece no subtexto do ResultCard. */}
             <ResultCard resultado={resultado} mostrarPainelMedico={false}
               mostrarOptInExames={!jaTemPedidoGratis}
               optInExamesEnviado={pedidoExamesEnviado}
@@ -1378,21 +1401,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 alert('Erro ao copiar. Tente novamente.')
               })
             }} copiado={copiado} />
-            {pontosHistorico >= 2 ? (
-              <button onClick={() => setTela('historico')}
-                className="mt-4 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 rounded-xl transition-colors">
-                {"Ver Hist\u00f3rico"}
-              </button>
-            ) : (
-              <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-center">
-                <p className="text-sm font-medium text-blue-700">
-                  {"Em futuras avalia\u00e7\u00f5es voc\u00ea ver\u00e1 o hist\u00f3rico"}
-                </p>
-              </div>
-            )}
+            {/* "Ver o hist\u00f3rico..." sempre dispon\u00edvel. Se ainda n\u00e3o houver 2 pontos,
+                handleVerGrafico mostra "AINDA N\u00c3O H\u00c1 HIST\u00d3RICO" (sem gr\u00e1fico). */}
+            <button onClick={() => { setTela('historico'); handleVerGrafico(); }}
+              className="mt-4 w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-3 rounded-xl border border-blue-200 transition-colors">
+              {"Ver o hist\u00f3rico..."}
+            </button>
             <div className="mt-6 flex justify-center">
               <PlayButton
-                onClick={onVoltar}
+                onClick={handleSairDespedida}
                 label={"VOLTAR AO IN\u00cdCIO"}
                 ariaLabel={"Voltar ao in\u00edcio"}
                 circleClass="bg-red-700 hover:bg-red-800"
@@ -1406,13 +1423,33 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       </div>
     </div>
 
+    {/* Popup de confirmação da fadinha (Android, após aceitar a instalação). */}
+    {fadaInstaladaPopup && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6"
+        onClick={() => setFadaInstaladaPopup(false)}>
+        <div className="bg-white rounded-2xl shadow-xl max-w-xs w-full p-6 text-center" onClick={(e) => e.stopPropagation()}>
+          <img src={logo} alt="" className="w-20 h-20 object-contain mx-auto mb-3" style={{ opacity: 0.4 }} />
+          <p className="text-base font-bold text-red-700">{"FADINHA INSTALADA NA TELA"}</p>
+          <p className="text-sm text-gray-600 mt-2">{"Para um próximo teste, apenas toque nela."}</p>
+          <button onClick={() => setFadaInstaladaPopup(false)}
+            className="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
+            {"OK"}
+          </button>
+        </div>
+      </div>
+    )}
+
     {showCompletarPerfil && profile && (
       <CompletarPerfilModal
         profile={profile}
         onSalvo={(novoProfile) => {
           setShowCompletarPerfil(false)
           setProfile(novoProfile)
-          setShowPagamento(true)
+          // Bariátrico paga na 1ª (obrigatório → OBA). Não-bariátrico: 1ª grátis,
+          // vai direto às boas-vindas (paywall só aparece na 2ª avaliação).
+          const ehBari = !!(novoProfile?.bariatrica || inputs.bariatrica || ehDominioBariatrico())
+          if (ehBari) setShowPagamento(true)
+          else setShowBoasVindas(true)
         }}
         onVoltar={() => {
           // Única saída: abandona o cadastro incompleto e volta ao início (desloga).
@@ -1434,11 +1471,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         profile={profile}
         onPago={() => {
           setShowPagamento(false)
-          setShowBoasVindas(true)
+          setTemAssinatura(true)
+          // Se ainda não viu as boas-vindas (cadastro do bariátrico) → boas-vindas.
+          // Se já viu (paywall da 2ª avaliação / assinatura opcional) → vai à avaliação.
+          if (profile?.boas_vindas_vista) setTela('nova')
+          else setShowBoasVindas(true)
         }}
         onSairSemPagar={() => {
           setShowPagamento(false)
-          // Desloga: limpa credenciais locais do paciente
+          // Paywall/assinatura opcional (paciente já passou pelas boas-vindas): só
+          // fecha e volta pra tela de escolha — NÃO desloga.
+          if (profile?.boas_vindas_vista) {
+            setTela('historico')
+            return
+          }
+          // Cadastro (bariátrico) que recusou o pagamento: desloga.
           try {
             localStorage.removeItem('paciente_id')
             localStorage.removeItem('paciente_token')
