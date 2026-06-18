@@ -45,8 +45,8 @@ function calcularSangria(ferritina, satTransf, sexo, peso, hbAtual, isPolicitemi
 }
 
 const CLASSES_RECEITA = [
-  { id: 'alta_dose',       rotulo: 'Alta dose',       acesso: 'plano de saúde · centro de infusão · compra' },
-  { id: 'dose_fracionada', rotulo: 'Dose fracionada', acesso: 'sacarato · disponível no SUS' },
+  { id: 'alta_dose',       rotulo: 'Alta dose',       custo: 'Custo mais alto | Menor número de infusões',  acesso: 'plano de saúde · centro de infusão · compra' },
+  { id: 'dose_fracionada', rotulo: 'Dose fracionada', custo: 'Custo mais baixo | Maior número de infusões', acesso: 'sacarato · disponível no SUS' },
 ];
 
 function ModalFerroEV({ onClose, hbAtual, sexo, gestante, pesoInicial }) {
@@ -107,8 +107,8 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante, pesoInicial }) {
           </div>
           {pesoValido && (
           <div className="space-y-3">
-            <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">{"Receitas sugeridas (2)"}</p>
-            <p className="text-xs text-gray-500" style={{ marginTop: '-4px' }}>{"A plataforma emite duas receitas \u2014 o paciente aplica conforme o acesso dele."}</p>
+            <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">{"Receitas sugeridas"}</p>
+            <p className="text-xs font-bold text-gray-700" style={{ marginTop: '-4px' }}>{"A plataforma sugere duas receitas, mas NUNCA USE as duas: Uma exclui a outra. O excesso de ferro \u00e9 nocivo."}</p>
             {meds === null ? (
               <p className="text-sm text-gray-400">{"Carregando medicamentos..."}</p>
             ) : CLASSES_RECEITA.map(cl => {
@@ -123,6 +123,7 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante, pesoInicial }) {
               return (
                 <div key={cl.id} className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-1">
                   <p className="text-xs font-bold text-red-700 uppercase tracking-wide">{cl.rotulo}</p>
+                  {cl.custo && <p className="text-xs font-semibold text-gray-600">{cl.custo}</p>}
                   <p className="text-xs text-gray-400">{cl.acesso}</p>
                   <p className="font-semibold text-gray-800 pt-1">{med.nome_comercial}
                     <span className="font-normal text-gray-500 text-xs">{" \u00b7 "}{med.principio_ativo}</span></p>
@@ -1041,6 +1042,19 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
       resultado.recomendacao?.toUpperCase().includes('FERRO ENDOVENOSO')
     );
 
+  // (refino clínico) Indicação FORTE de ferro EV → protocolo direto. Senão (anemia
+  // mais leve: Hb acima do corte, sem má-absorção, sem hemorragia/doação nem anemia
+  // crônica) → mostra uma RESSALVA (oral provavelmente basta; EV opcional sob
+  // prescrição). Corte de Hb: < 12 (homem) / < 10 (mulher).
+  const _hbCorteFerroEV = _sexoFerroEV === 'M' ? 12 : 10;
+  const ferroEVForte =
+    !!resultado._inputs?.perda ||           // hemorragia
+    !!resultado._inputs?.doadorSangue ||    // doação de sangue
+    !!resultado._inputs?.bariatrica ||      // má absorção (bypass/gastrectomia)
+    !!resultado._inputs?.celiaco ||         // má absorção (doença celíaca)
+    (_hbAtualFerroEV > 0 && _hbAtualFerroEV < _hbCorteFerroEV);
+    // anemia crônica sozinha NÃO força o protocolo (cai na ressalva).
+
   const _precisaSangriaTextual =
     resultado.diagnostico?.toUpperCase().includes("SANGRIA TERAP\u00caUTICA") ||
     resultado.diagnostico?.toUpperCase().includes('SANGRIA TERAPEUTICA') ||
@@ -1192,10 +1206,15 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
             )
           })()}
 
+          {precisaFerroEV && !ferroEVForte && (
+            <p className="text-sm leading-relaxed bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-900">
+              {"Provavelmente voc\u00ea precisa apenas de ferro por via oral, mas se houver necessidade de uma recupera\u00e7\u00e3o mais r\u00e1pida, voc\u00ea pode ser tratado com ferro endovenoso, sob prescri\u00e7\u00e3o m\u00e9dica, de acordo com o protocolo a seguir."}
+            </p>
+          )}
           {precisaFerroEV && (
             <button onClick={() => setShowFerroEV(true)}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-              {"\ud83d\udc89 Como repor o Ferro Endovenoso"}
+              {ferroEVForte ? "\ud83d\udc89 Como repor o Ferro Endovenoso" : "\ud83d\udc89 Protocolo de Ferro Endovenoso (opcional)"}
             </button>
           )}
 
@@ -1322,7 +1341,9 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
                   onChange={() => onOptInExames && onOptInExames()}
                   className="mt-0.5 w-5 h-5 accent-blue-700 flex-shrink-0" />
                 <span className="text-sm font-bold text-blue-700 leading-snug">
-                  {"Sim, quero receber o pedido médico para esses exames."}
+                  {precisaFerroEV
+                    ? "Desejo uma TELECONSULTA MÉDICA para a avaliação do meu diagnóstico e emissão do pedido de exames e da receita de ferro endovenoso."
+                    : "Sim, quero receber o pedido médico para esses exames."}
                 </span>
               </label>
             )
@@ -1347,8 +1368,9 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
         <DocumentoMedicoPanel resultado={resultado} />
       )}
 
-      {/* Historico de evolucao no fim da avaliacao */}
-      {!modoPaciente && totalRegistrosHist >= 2 && (
+      {/* Historico de evolucao no fim da avaliacao (só no fluxo do médico — no
+          paciente já existe o "Ver o histórico..." do PatientDashboard). */}
+      {!modoPaciente && mostrarPainelMedico && totalRegistrosHist >= 2 && (
         <div className="mt-6">
           <button onClick={handleVerHistorico} disabled={historicoBuscando}
             className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold text-sm px-4 py-2.5 rounded-xl transition-colors disabled:opacity-50">

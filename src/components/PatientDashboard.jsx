@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
 import ResultCard from './ResultCard'
@@ -488,10 +488,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       alert('Informe a data da coleta.')
       return
     }
+    // No formulário de NOVA avaliação a data vem com máscara dd/mm/aaaa; exige
+    // formato completo e converte p/ ISO (YYYY-MM-DD) usado no banco. No 1º acesso
+    // a data já vem ISO (campo type=date travado).
+    if (!dadosVieramDaEntrada && !/^\d{2}\/\d{2}\/\d{4}$/.test(String(inputs.dataColeta || ''))) {
+      alert('Informe a data da coleta no formato dd/mm/aaaa.')
+      return
+    }
+    let dataColISO = inputs.dataColeta
+    const _mDt = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(inputs.dataColeta))
+    if (_mDt) dataColISO = `${_mDt[3]}-${_mDt[2]}-${_mDt[1]}`
 
     const inputsNumericos = {
       ...inputs,
       cpf: profile.cpf || '',
+      dataColeta: dataColISO,
       sexo: inputs.sexo,
       idade: idadeNum,
       ferritina: Number(inputs.ferritina),
@@ -512,7 +523,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       const numOrNull = (v) => (v === '' || v === null || v === undefined || !Number.isFinite(Number(v))) ? null : Number(v)
       const dados = {
         user_id: session.user.id,
-        data_coleta: inputs.dataColeta,
+        data_coleta: dataColISO,
         peso: numOrNull(inputs.peso),
         ferritina: numOrNull(inputs.ferritina),
         hemoglobina: Number(inputs.hemoglobina),
@@ -558,7 +569,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       const { data: existentes } = await supabase
         .from('avaliacoes').select('id')
         .eq('user_id', session.user.id)
-        .eq('data_coleta', inputs.dataColeta)
+        .eq('data_coleta', dataColISO)
         .limit(1)
       const existeId = existentes?.[0]?.id
       if (existeId) {
@@ -594,6 +605,46 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     } else {
       setTela('nova'); setResultado(null)
     }
+  }
+
+  // ===== Fluxo GUIADO do formulário de NOVA avaliação (só quando NÃO veio da
+  // triagem de entrada). Mesma ideia da triagem: campos amarelos com salto
+  // automático de foco (após maxChars dígitos, ou 1,3s da última digitação). =====
+  const refHb = useRef(null), refVcm = useRef(null), refRdw = useRef(null)
+  const refFerr = useRef(null), refSat = useRef(null)
+  const timerFocoRef = useRef(null), timerFerrRef = useRef(null)
+
+  // Foca o próximo campo: na hora se atingiu maxChars, ou 1,3s após parar de digitar.
+  function avancaFoco(valor, maxChars, refProx) {
+    if (timerFocoRef.current) clearTimeout(timerFocoRef.current)
+    if (!valor || !refProx) return
+    if (String(valor).length >= maxChars) { setTimeout(() => refProx.current?.focus(), 50); return }
+    timerFocoRef.current = setTimeout(() => refProx.current?.focus(), 1300)
+  }
+
+  // Hb/VCM/RDW: aceita só número/decimal, limita a maxChars e agenda o salto.
+  function handleNumGuiado(name, raw, maxChars, refProx) {
+    const v = String(raw).replace(/[^0-9.,]/g, '').replace(',', '.').slice(0, maxChars)
+    setInputs(prev => ({ ...prev, [name]: v }))
+    avancaFoco(v, maxChars, refProx)
+  }
+
+  // Data: máscara dd/mm/aaaa; ao completar 8 dígitos, foca a Hemoglobina.
+  function handleDataMask(raw) {
+    const d = String(raw).replace(/\D/g, '').slice(0, 8)
+    let m = d
+    if (d.length > 4) m = d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4)
+    else if (d.length > 2) m = d.slice(0, 2) + '/' + d.slice(2)
+    setInputs(prev => ({ ...prev, dataColeta: m }))
+    if (d.length === 8) setTimeout(() => refHb.current?.focus(), 80)
+  }
+
+  // Ferritina: 2,5s após parar de digitar, foca a Sat. da Transferrina.
+  function handleFerrGuiado(raw) {
+    const v = String(raw).replace(/[^0-9.,]/g, '').replace(',', '.')
+    setInputs(prev => ({ ...prev, ferritina: v }))
+    if (timerFerrRef.current) clearTimeout(timerFerrRef.current)
+    if (v) timerFerrRef.current = setTimeout(() => refSat.current?.focus(), 2500)
   }
   // Card opt-in (tela de resultado): paciente pede o pedido GRATUITO para os
   // exames sugeridos pelo motor. Mesmo padrão do pedido grátis de boas-vindas:
@@ -1005,7 +1056,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             "Ol\u00e1!" (showBoasVindas), enquanto o hemograma de entrada ainda n\u00e3o foi
             aprofundado (entradaPendente) e na tela de resultado (logo ap\u00f3s avaliar,
             n\u00e3o faz sentido para o paciente novo). S\u00f3 aparece com hist\u00f3rico de fato. */}
-        {avaliacoes.length > 0 && !showBoasVindas && !entradaPendente && tela !== 'resultado' && (
+        {avaliacoes.length > 0 && !showBoasVindas && !entradaPendente && tela === 'historico' && (
         <div className="mb-6">
           {tela === 'historico' && profile && (
             <div className="mb-3">
@@ -1102,6 +1153,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     label="CONTINUAR"
                     ariaLabel="Continuar"
                     labelColor="#ffffff"
+                    ringColor="rgba(229,231,235,0.9)"
                   />
                 </div>
                 </div>
@@ -1167,13 +1219,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">{"Peso (kg)"}</label>
-              <input type="number" step="0.1" name="peso" value={inputs.peso} onChange={handleChange}
-                placeholder="Ex: 72"
-                className="w-full border-2 border-yellow-400 bg-yellow-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
-              <p className="text-xs text-gray-400 mt-0.5">{"Opcional \u2014 usado no c\u00e1lculo de dose de ferro endovenoso, se necess\u00e1rio"}</p>
-            </div>
+            {/* Campo Peso removido: quando ha indicacao de ferro endovenoso, o proprio
+                modal do protocolo pede o peso (calculo de dose Ganzoni). */}
 
             {/* Bariátrico/a: só faz sentido aparecer se o paciente É bariátrico. Quando os
                 dados vieram da triagem e ele NÃO marcou bariátrica lá, o checkbox nem
@@ -1193,24 +1240,32 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Data da Coleta</label>
-              <input type="date" name="dataColeta" max={new Date().toISOString().split('T')[0]} value={inputs.dataColeta} onChange={handleChange}
-                disabled={dadosVieramDaEntrada}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed" />
+              {dadosVieramDaEntrada ? (
+                <input type="date" name="dataColeta" max={new Date().toISOString().split('T')[0]} value={inputs.dataColeta} disabled
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed" />
+              ) : (
+                <input type="text" inputMode="numeric" name="dataColeta" autoFocus autoComplete="off"
+                  placeholder="dd/mm/aaaa" maxLength={10} value={inputs.dataColeta}
+                  onChange={e => handleDataMask(e.target.value)}
+                  className="w-full border-2 border-yellow-400 bg-yellow-50 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400" />
+              )}
               {dadosVieramDaEntrada && (
                 <p className="text-xs text-gray-400 mt-0.5">{"Data do seu hemograma de entrada (registrado na triagem)"}</p>
               )}
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
-                { label: 'Hemoglobina (g/dL)', name: 'hemoglobina' },
-                { label: 'VCM (fL)', name: 'vcm' },
-                { label: 'RDW-CV (%)', name: 'rdw' },
+                { label: 'Hemoglobina (g/dL)', name: 'hemoglobina', ref: refHb, max: 4, next: refVcm },
+                { label: 'VCM (fL)', name: 'vcm', ref: refVcm, max: 5, next: refRdw },
+                { label: 'RDW-CV (%)', name: 'rdw', ref: refRdw, max: 4, next: null },
               ].map(f => (
                 <div key={f.name}>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
-                  <input type="number" step="0.1" name={f.name} value={inputs[f.name]} onChange={handleChange}
+                  <input ref={f.ref} type="text" inputMode="decimal" name={f.name} autoComplete="off"
+                    value={inputs[f.name]}
+                    onChange={dadosVieramDaEntrada ? handleChange : (e => handleNumGuiado(f.name, e.target.value, f.max, f.next))}
                     disabled={dadosVieramDaEntrada}
-                    className="w-full border-2 border-red-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed" />
+                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${dadosVieramDaEntrada ? 'border-red-500 focus:ring-red-400 disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-300 disabled:cursor-not-allowed' : 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400'}`} />
                 </div>
               ))}
             </div>
@@ -1232,7 +1287,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 </p>
                 <button
                   type="button"
-                  onClick={() => setMostrarExamesExtras(true)}
+                  onClick={() => { setMostrarExamesExtras(true); setTimeout(() => refFerr.current?.focus(), 80); }}
                   aria-label={"Liberar campos de Ferritina e Satura\u00e7\u00e3o da Transferrina"}
                   className="rf-play-blue flex-shrink-0 w-12 h-12 rounded-full bg-gray-300 hover:bg-gray-400 flex items-center justify-center transition-colors">
                   <span style={{ color: '#2563eb', fontSize: '1.3rem', lineHeight: 1 }}>{"\u25b6"}</span>
@@ -1242,20 +1297,22 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'Ferritina (ng/mL)', name: 'ferritina', hint: mostrarExamesExtras ? "N\u00e3o use ponto para valores superiores a 1000. Ex: 1140" : null },
-                { label: 'Sat. Transferrina (%)', name: 'satTransf' },
+                { label: 'Ferritina (ng/mL)', name: 'ferritina', ref: refFerr, onCh: e => handleFerrGuiado(e.target.value), hint: mostrarExamesExtras ? "N\u00e3o use ponto para valores superiores a 1000. Ex: 1140" : null },
+                { label: 'Sat. Transferrina (%)', name: 'satTransf', ref: refSat, onCh: handleChange, hint: null },
               ].map(f => (
                 <div key={f.name}>
                   <label className="block text-xs font-medium text-gray-600 mb-1">{f.label}</label>
                   <input
-                    type="number"
-                    step="0.1"
+                    ref={f.ref}
+                    type="text"
+                    inputMode="decimal"
                     name={f.name}
+                    autoComplete="off"
                     value={inputs[f.name]}
-                    onChange={handleChange}
+                    onChange={f.onCh}
                     disabled={!mostrarExamesExtras}
                     placeholder={!mostrarExamesExtras ? "Clique no bot\u00e3o azul para liberar" : ''}
-                    className="w-full border-2 border-blue-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic"
+                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${mostrarExamesExtras ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : 'border-blue-500 focus:ring-blue-400 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-400 disabled:placeholder:text-gray-400 disabled:placeholder:italic'}`}
                   />
                   {f.hint && <p className="text-xs text-orange-600 font-medium mt-1">{f.hint}</p>}
                 </div>
