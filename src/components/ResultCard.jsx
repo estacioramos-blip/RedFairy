@@ -1113,13 +1113,15 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               if (inp.hemoglobina !== undefined && inp.hemoglobina !== '') labs.push(`Hemoglobina ${inp.hemoglobina} g/dL`)
               if (inp.vcm         !== undefined && inp.vcm         !== '') labs.push(`VCM ${inp.vcm} fL`)
               if (inp.rdw         !== undefined && inp.rdw         !== '') labs.push(`RDW ${inp.rdw} %`)
-              if (inp.ferritina   !== undefined && inp.ferritina   !== '') labs.push(`Ferritina ${inp.ferritina} ng/mL`)
-              if (inp.satTransf   !== undefined && inp.satTransf   !== '') labs.push(`Satura\u00e7\u00e3o ${inp.satTransf} %`)
+              // Ferritina/Satura\u00e7\u00e3o s\u00f3 aparecem se houver valor REAL (> 0). Na triagem
+              // sem aprofundamento elas chegam como 0 \u2014 nao mostrar "0 ng/mL" / "0%".
+              if (Number(inp.ferritina) > 0) labs.push(`Ferritina ${inp.ferritina} ng/mL`)
+              if (Number(inp.satTransf) > 0) labs.push(`Satura\u00e7\u00e3o ${inp.satTransf} %`)
               const sexoExtenso = inp.sexo === 'F' ? 'Feminino' : inp.sexo === 'M' ? 'Masculino' : '?'
               const cabecalho = [sexoExtenso, ...labs].join(" \u00b7 ")
               const flagsAtivas = []
               const FLAGS_MAP = {
-                bariatrica: "bari\u00e1trica", vegetariano: 'vegetariana', perda: 'perda',
+                bariatrica: "bari\u00e1trica", vegetariano: inp.sexo === 'F' ? 'vegetariana' : 'vegetariano', perda: 'perda',
                 hipermenorreia: 'hipermenorreia', gestante: 'gestante', alcoolista: 'alcoolista',
                 transfundido: 'transfundido', aspirina: 'aspirina', vitaminaB12: 'B12',
                 ferroOral: 'ferro oral', tiroxina: 'tiroxina', hidroxiureia: 'hidroxiureia',
@@ -1339,16 +1341,21 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
                 <p className="text-sm font-bold text-green-700">{"✅ Pedido solicitado! Você o receberá via WhatsApp."}</p>
               </div>
             ) : (
-              <label className="flex items-start gap-3 rounded-xl border-2 border-blue-300 bg-blue-50 p-4 cursor-pointer">
-                <input type="checkbox" checked={false}
-                  onChange={() => onOptInExames && onOptInExames()}
-                  className="mt-0.5 w-5 h-5 accent-blue-700 flex-shrink-0" />
-                <span className="text-sm font-bold text-blue-700 leading-snug">
-                  {precisaFerroEV
-                    ? "Desejo uma TELECONSULTA MÉDICA para a avaliação do meu diagnóstico e emissão do pedido de exames e da receita de ferro endovenoso."
-                    : "Sim, quero receber o pedido médico para esses exames."}
-                </span>
-              </label>
+              <>
+                <label className="flex items-start gap-3 rounded-xl border-2 border-blue-300 bg-blue-50 p-4 cursor-pointer">
+                  <input type="checkbox" checked={false}
+                    onChange={() => onOptInExames && onOptInExames()}
+                    className="mt-0.5 w-5 h-5 accent-blue-700 flex-shrink-0" />
+                  <span className="text-sm font-bold text-blue-700 leading-snug">
+                    {precisaFerroEV
+                      ? "Desejo uma TELECONSULTA MÉDICA para a avaliação do meu diagnóstico e emissão do pedido de exames e da receita de ferro endovenoso."
+                      : "Sim, quero receber o pedido médico para esses exames."}
+                  </span>
+                </label>
+                {!precisaFerroEV && (
+                  <p className="text-xs text-gray-500 mt-1 px-1">{"Esse primeiro pedido de exames é gratuito."}</p>
+                )}
+              </>
             )
           )}
 

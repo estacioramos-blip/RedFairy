@@ -238,6 +238,18 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       if (!valida || a < 1900) errors.data_coleta = 'Data inv\u00e1lida';
       else if (dt > new Date()) errors.data_coleta = 'Data n\u00e3o pode ser futura';
     }
+    // A data do novo hemograma não pode ser anterior à da avaliação anterior.
+    if (!errors.data_coleta && pacienteConhecido && pacienteConhecido !== 'BLOQUEADO'
+        && pacienteConhecido.ultimoHemograma && pacienteConhecido.ultimoHemograma.data_coleta
+        && /^\d{2}\/\d{2}\/\d{4}$/.test(inputs.data_coleta)) {
+      const [dd, mm, aa] = inputs.data_coleta.split('/').map(Number);
+      const atualDt = new Date(aa, mm - 1, dd);
+      const prevStr = String(pacienteConhecido.ultimoHemograma.data_coleta).slice(0, 10);
+      const [pa, pm, pd] = prevStr.split('-').map(Number);
+      if (atualDt < new Date(pa, pm - 1, pd)) {
+        errors.data_coleta = 'A data não pode ser anterior à da avaliação anterior (' + prevStr.split('-').reverse().join('/') + ').';
+      }
+    }
     if (inputs.sexo === 'F' && inputs.gestante && !inputs.semanas_gestacao) {
       errors.semanas_gestacao = 'Informe as semanas'
     }
@@ -298,7 +310,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     setBuscandoCpf(true);
     const { data: profile } = await supabase
       .from('profiles')
-      .select('sexo, data_nascimento, bariatrica, gestante, semanas_gestacao_triagem, data_triagem_gestacao')
+      .select('nome, sexo, data_nascimento, bariatrica, gestante, semanas_gestacao_triagem, data_triagem_gestacao')
       .eq('cpf', cpfDigits)
       .maybeSingle();
     const { count: nTriagens } = await supabase
@@ -311,8 +323,17 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       return;
     }
     if (profile) {
+      // Última avaliação completa: para mostrar no topo e impedir data retroativa.
+      const { data: ultAval } = await supabase
+        .from('avaliacoes')
+        .select('data_coleta, hemoglobina, vcm, rdw')
+        .eq('cpf', cpfDigits)
+        .order('data_coleta', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       setPacienteConhecido({
         origem: 'profile',
+        nome: profile.nome || '',
         sexo: profile.sexo,
         data_nascimento: profile.data_nascimento,
         bariatrica: !!profile.bariatrica,
@@ -322,6 +343,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
         semanas_gestacao: null,
         dum: null,
         created_at: null,
+        ultimoHemograma: ultAval || null,
       });
       return;
     }
@@ -655,7 +677,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#7B1E1E', fontWeight: 700 }}>{" | OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>
             </h2>
           </div>
           <button
@@ -673,9 +695,34 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             <p style={{ fontSize: '0.62rem', fontWeight: 600, color: '#7B1E1E', letterSpacing: '0.5px', lineHeight: 1.2, margin: 0 }}>
               {twTopo}
             </p>
-            <p style={{ fontSize: '0.6rem', fontWeight: 700, color: '#991B1B', letterSpacing: '0.5px', marginTop: 1, opacity: 0.8, lineHeight: 1.2 }}>
-              {"SEUS DADOS DE LOGIN EST\u00c3O SALVOS"}
-            </p>
+            {(() => {
+              const pc = pacienteConhecido;
+              if (!pc || pc === 'BLOQUEADO' || !(pc.nome || pc.sexo)) {
+                return (
+                  <p style={{ fontSize: '0.6rem', fontWeight: 700, color: '#991B1B', letterSpacing: '0.5px', marginTop: 1, opacity: 0.8, lineHeight: 1.2 }}>
+                    {"SEUS DADOS DE LOGIN EST\u00c3O SALVOS"}
+                  </p>
+                );
+              }
+              const sexoExt = pc.sexo === 'F' ? 'Feminino' : pc.sexo === 'M' ? 'Masculino' : '';
+              const uh = pc.ultimoHemograma;
+              const dataBR = uh && uh.data_coleta ? String(uh.data_coleta).slice(0, 10).split('-').reverse().join('/') : '';
+              return (
+                <>
+                  <p style={{ fontSize: '0.66rem', fontWeight: 800, color: '#7B1E1E', lineHeight: 1.2, marginTop: 1 }}>
+                    {(pc.nome || '').toUpperCase()}{sexoExt ? ' \u00b7 ' + sexoExt : ''}
+                  </p>
+                  {uh && (
+                    <p style={{ fontSize: '0.58rem', fontWeight: 600, color: '#991B1B', lineHeight: 1.2, marginTop: 1, opacity: 0.9 }}>
+                      {'Avalia\u00e7\u00e3o anterior' + (dataBR ? ' (' + dataBR + ')' : '') + ': '}
+                      {uh.hemoglobina != null ? 'Hb ' + uh.hemoglobina : ''}
+                      {uh.vcm != null ? ' \u00b7 VCM ' + uh.vcm : ''}
+                      {uh.rdw != null ? ' \u00b7 RDW ' + uh.rdw : ''}
+                    </p>
+                  )}
+                </>
+              );
+            })()}
           </div>
           {/* Seta em coluna propria (item flex): nunca sobrepoe o texto. Alinhada sob o X. */}
           <span className="rf-arrow-x" style={{ fontSize: '1.4rem', color: '#b91c1c', fontWeight: 900, pointerEvents: 'none', lineHeight: 1, flexShrink: 0, marginRight: '8px' }}>
@@ -891,7 +938,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             );
           })()}
 
-          {pacienteConhecido !== 'BLOQUEADO' && inputs.sexo && (() => {
+          {pacienteConhecido !== 'BLOQUEADO' && inputs.sexo && !(pacienteConhecido && pacienteConhecido.bariatrica === true) && (() => {
             // Card Bari\u00e1trica aparece SEMPRE (paciente ainda nao registrado: editavel;
             // paciente conhecido com bariatrica=true no perfil: pre-marcado e disabled,
             // pois a condicao bariatrica e' permanente uma vez registrada).

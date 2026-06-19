@@ -308,7 +308,13 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         // pela Ferritina (ferritina != null), mas a 1ª pode ser só triagem do eritron
         // (sem Ferritina) — então o paciente caía de novo em "Continuando a sua
         // primeira avaliação" (loop). Agora usamos a flag primeira_avaliacao_feita.
-        const pendente = !!entrada && !prof.primeira_avaliacao_feita
+        // Pendente = existe uma triagem (hemograma) cuja DATA ainda não virou avaliação
+        // completa. Vale p/ TODA entrada (1ª, 2ª, 3ª...): sempre que o paciente acabou
+        // de fazer uma triagem nova e falta "concluir" (aprofundar). Por DATA, não por
+        // flag — evita o loop antigo e funciona em qualquer avaliação.
+        const entradaDia = entrada && entrada.data_coleta ? String(entrada.data_coleta).slice(0, 10) : null
+        const entradaJaAvaliada = !!entradaDia && (avals || []).some(a => String(a.data_coleta || '').slice(0, 10) === entradaDia)
+        const pendente = !!entrada && !entradaJaAvaliada
         setEntradaPendente(pendente)
         if (inicial && pendente) {
           setDadosVieramDaEntrada(true)
@@ -325,7 +331,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // Perfil completo e boas-vindas já vistas (login de retorno) → leva direto
           // ao formulário. No 1º acesso quem faz isso é o CONTINUAR das boas-vindas.
           if (prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista === true) {
-            setTela('nova')
+            setTela('nova'); setResultado(null)
+            // 3ª avaliação em diante (2 já feitas), sem assinatura → paywall ANTES,
+            // sobre o formulário (nunca sobre "O que você quer fazer?").
+            if (!temAssinAtiva && (avals || []).length >= 2) setShowPagamento(true)
           }
         } else if (inicial && !pendente && (avals || []).length) {
           // RETORNO (1ª já feita): pré-marca as flags da última avaliação — editáveis,
@@ -346,6 +355,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             methotrexato: !!ult.methotrexato, hivTratamento: !!ult.hiv_tratamento,
             hidroxiureia: !!ult.hidroxiureia, anticonvulsivante: !!ult.anticonvulsivante,
           }))
+          // RETORNO: vai direto à NOVA avaliação (não faz sentido cair em "O que
+          // você quer fazer?"). São 2 avaliações grátis; a partir da 3ª (sem
+          // assinatura), abre o paywall ANTES do formulário.
+          setTela('nova'); setResultado(null)
+          if (!temAssinAtiva && (avals || []).length >= 2) setShowPagamento(true)
         }
       } else {
         setEntradaPendente(false)
@@ -599,11 +613,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     }
   }
 
-  // (Fase 2) Ir pra nova avaliação. Se o paciente já fez a 1ª (grátis) e NÃO tem
-  // assinatura, abre o PAYWALL (pagamento da anuidade) antes. Quem tem assinatura
-  // — ou ainda não fez a 1ª — segue direto ao formulário.
+  // (Fase 2) Ir pra nova avaliação. São 2 avaliações grátis por CPF (a 1ª e a 2ª).
+  // A partir da 3ª, sem assinatura, abre o PAYWALL (pagamento da anuidade) antes.
+  // Quem tem assinatura segue sempre direto ao formulário.
   function irNovaAvaliacao() {
-    if (profile?.primeira_avaliacao_feita && !temAssinatura) {
+    if (!temAssinatura && avaliacoes.length >= 2) {
       setShowPagamento(true)
     } else {
       setTela('nova'); setResultado(null)
@@ -1125,7 +1139,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica || temAssinatura)
                       ? <>{"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<span style={{ color: (inputs.bariatrica || profile?.bariatrica) ? '#9D174D' : '#1d4ed8' }}>{"um ano"}</span>{"."}</>
-                      : <>{"A sua "}<span style={{ color: '#1d4ed8' }}>{"primeira avalia\u00e7\u00e3o \u00e9 gratuita"}</span>{". Depois, para novas avalia\u00e7\u00f5es, voc\u00ea precisar\u00e1 assinar a plataforma."}</>}
+                      : <span style={{ color: '#1d4ed8' }}>{"Voc\u00ea poder\u00e1 fazer duas avalia\u00e7\u00f5es gratuitas."}</span>}
                   </p>
                   <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica)
@@ -1207,9 +1221,28 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
             <h2 className="font-semibold text-gray-700">
               {dadosVieramDaEntrada
-                ? "Continuando a sua primeira avalia\u00e7\u00e3o"
+                ? (avaliacoes.length === 0
+                    ? "Continuando a sua primeira avalia\u00e7\u00e3o"
+                    : "Vamos ent\u00e3o concluir a sua " + ({ 2: 'segunda', 3: 'terceira', 4: 'quarta', 5: 'quinta', 6: 'sexta' }[avaliacoes.length + 1] || (avaliacoes.length + 1) + '\u00aa') + " avalia\u00e7\u00e3o")
                 : "Vamos ent\u00e3o fazer uma NOVA avalia\u00e7\u00e3o:"}
             </h2>
+            {/* 2\u00aa avalia\u00e7\u00e3o = \u00faltima gr\u00e1tis: aviso vinho. Some quando j\u00e1 \u00e9 assinante
+                ou na 3\u00aa+ (avaliacoes.length>=2, que cai no paywall antes do form). */}
+            {!dadosVieramDaEntrada && !temAssinatura && avaliacoes.length === 1 && (
+              <p className="text-sm font-bold -mt-3" style={{ color: '#9D174D' }}>
+                {"ATEN\u00c7\u00c3O: Essa \u00e9 a sua \u00faltima avalia\u00e7\u00e3o gratuita."}
+              </p>
+            )}
+            {/* 3\u00aa avalia\u00e7\u00e3o em diante: j\u00e1 h\u00e1 hist\u00f3rico (2+ pontos) \u2014 link p/ o gr\u00e1fico
+                (abre por cima e volta pra c\u00e1). Na 2\u00aa n\u00e3o aparece (s\u00f3 h\u00e1 1 ponto). */}
+            {avaliacoes.length >= 2 && (
+              <div className="-mt-2">
+                <button onClick={() => handleVerGrafico()}
+                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                  {"Ver o hist\u00f3rico"}
+                </button>
+              </div>
+            )}
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
               <p className="text-xs text-gray-500 mb-1">{"Voc\u00ea"}</p>
               <p className="text-sm text-gray-700">
