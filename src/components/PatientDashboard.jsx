@@ -313,8 +313,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         // de fazer uma triagem nova e falta "concluir" (aprofundar). Por DATA, não por
         // flag — evita o loop antigo e funciona em qualquer avaliação.
         const entradaDia = entrada && entrada.data_coleta ? String(entrada.data_coleta).slice(0, 10) : null
-        const entradaJaAvaliada = !!entradaDia && (avals || []).some(a => String(a.data_coleta || '').slice(0, 10) === entradaDia)
-        const pendente = !!entrada && !entradaJaAvaliada
+        // "Concluída" = avaliação REAL (não o espelho da triagem). Coluna avaliacoes.concluida.
+        const entradaConcluida = !!entradaDia && (avals || []).some(a => String(a.data_coleta || '').slice(0, 10) === entradaDia && a.concluida === true)
+        const nConcluidas = (avals || []).filter(a => a.concluida === true).length
+        const pendente = !!entrada && !entradaConcluida
         setEntradaPendente(pendente)
         if (inicial && pendente) {
           setDadosVieramDaEntrada(true)
@@ -332,9 +334,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // ao formulário. No 1º acesso quem faz isso é o CONTINUAR das boas-vindas.
           if (prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista === true) {
             setTela('nova'); setResultado(null)
-            // 3ª avaliação em diante (2 já feitas), sem assinatura → paywall ANTES,
+            // 3ª avaliação em diante (2 concluídas), sem assinatura → paywall ANTES,
             // sobre o formulário (nunca sobre "O que você quer fazer?").
-            if (!temAssinAtiva && (avals || []).length >= 2) setShowPagamento(true)
+            if (!temAssinAtiva && nConcluidas >= 2) setShowPagamento(true)
           }
         } else if (inicial && !pendente && (avals || []).length) {
           // RETORNO (1ª já feita): pré-marca as flags da última avaliação — editáveis,
@@ -359,7 +361,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // você quer fazer?"). São 2 avaliações grátis; a partir da 3ª (sem
           // assinatura), abre o paywall ANTES do formulário.
           setTela('nova'); setResultado(null)
-          if (!temAssinAtiva && (avals || []).length >= 2) setShowPagamento(true)
+          if (!temAssinAtiva && nConcluidas >= 2) setShowPagamento(true)
         }
       } else {
         setEntradaPendente(false)
@@ -516,6 +518,20 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     const _mDt = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(inputs.dataColeta))
     if (_mDt) dataColISO = `${_mDt[3]}-${_mDt[2]}-${_mDt[1]}`
 
+    // Trava: a data do novo hemograma não pode ser anterior à da avaliação anterior
+    // (compara com a última avaliação REAL concluída). Backstop p/ os dois caminhos.
+    const _concluidas = (avaliacoes || []).filter(a => a.concluida === true)
+    if (_concluidas.length) {
+      const _maxPrev = _concluidas.reduce((mx, a) => {
+        const d = String(a.data_coleta || '').slice(0, 10)
+        return d > mx ? d : mx
+      }, '')
+      if (_maxPrev && String(dataColISO).slice(0, 10) <= _maxPrev) {
+        alert('A data do hemograma deve ser posterior à da sua avaliação anterior (' + _maxPrev.split('-').reverse().join('/') + ').')
+        return
+      }
+    }
+
     const inputsNumericos = {
       ...inputs,
       cpf: profile.cpf || '',
@@ -579,6 +595,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         anticonvulsivante: !!inputs.anticonvulsivante,
         diagnostico_label: res.label,
         diagnostico_color: res.color,
+        concluida: true,  // avaliação REAL concluída (distingue do "espelho" da triagem)
       }
       // Evita o DUPLICADO: se já existe avaliação nesta MESMA data (ex.: o "espelho"
       // da triagem de entrada, com ferritina=null), ATUALIZA essa linha em vez de
@@ -617,7 +634,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   // A partir da 3ª, sem assinatura, abre o PAYWALL (pagamento da anuidade) antes.
   // Quem tem assinatura segue sempre direto ao formulário.
   function irNovaAvaliacao() {
-    if (!temAssinatura && avaliacoes.length >= 2) {
+    const nConc = (avaliacoes || []).filter(a => a.concluida === true).length
+    if (!temAssinatura && nConc >= 2) {
       setShowPagamento(true)
     } else {
       setTela('nova'); setResultado(null)
@@ -1220,22 +1238,24 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {tela === 'nova' && (
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
             <h2 className="font-semibold text-gray-700">
-              {dadosVieramDaEntrada
-                ? (avaliacoes.length === 0
-                    ? "Continuando a sua primeira avalia\u00e7\u00e3o"
-                    : "Vamos ent\u00e3o concluir a sua " + ({ 2: 'segunda', 3: 'terceira', 4: 'quarta', 5: 'quinta', 6: 'sexta' }[avaliacoes.length + 1] || (avaliacoes.length + 1) + '\u00aa') + " avalia\u00e7\u00e3o")
-                : "Vamos ent\u00e3o fazer uma NOVA avalia\u00e7\u00e3o:"}
+              {(() => {
+                if (!dadosVieramDaEntrada) return "Vamos ent\u00e3o fazer uma nova avalia\u00e7\u00e3o:"
+                const nc = (avaliacoes || []).filter(a => a.concluida === true).length
+                if (nc === 0) return "Continuando a sua primeira avalia\u00e7\u00e3o"
+                const ord = { 2: 'segunda', 3: 'terceira', 4: 'quarta', 5: 'quinta', 6: 'sexta' }[nc + 1] || (nc + 1) + '\u00aa'
+                return "Vamos ent\u00e3o concluir a sua " + ord + " avalia\u00e7\u00e3o"
+              })()}
             </h2>
             {/* 2\u00aa avalia\u00e7\u00e3o = \u00faltima gr\u00e1tis: aviso vinho. Some quando j\u00e1 \u00e9 assinante
                 ou na 3\u00aa+ (avaliacoes.length>=2, que cai no paywall antes do form). */}
-            {!dadosVieramDaEntrada && !temAssinatura && avaliacoes.length === 1 && (
+            {!temAssinatura && (avaliacoes || []).filter(a => a.concluida === true).length === 1 && (
               <p className="text-sm font-bold -mt-3" style={{ color: '#9D174D' }}>
                 {"ATEN\u00c7\u00c3O: Essa \u00e9 a sua \u00faltima avalia\u00e7\u00e3o gratuita."}
               </p>
             )}
             {/* 3\u00aa avalia\u00e7\u00e3o em diante: j\u00e1 h\u00e1 hist\u00f3rico (2+ pontos) \u2014 link p/ o gr\u00e1fico
                 (abre por cima e volta pra c\u00e1). Na 2\u00aa n\u00e3o aparece (s\u00f3 h\u00e1 1 ponto). */}
-            {avaliacoes.length >= 2 && (
+            {(avaliacoes || []).filter(a => a.concluida === true).length >= 2 && (
               <div className="-mt-2">
                 <button onClick={() => handleVerGrafico()}
                   className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">

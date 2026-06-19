@@ -167,7 +167,9 @@ export default function HistoricoChartModal({ cpf, serie, sexo, gestante, onFech
   }
 
   // ---------- Render ----------
-  const totalTelas = dadosG2.length >= 2 ? 2 : 1;
+  // G2 (Ferritina/Sat) é acessível com >= 1 medição: com 1 só, mostra os valores +
+  // "NÃO HÁ ELEMENTOS PARA GRÁFICO". Só não há tela G2 quando não há NENHUMA medição.
+  const totalTelas = dadosG2.length >= 1 ? 2 : 1;
   const status = tela === 1 ? statusG1 : statusG2;
   const tituloTela = tela === 1 ? 'Triagem do Eritron' : 'Aprofundamento';
 
@@ -232,16 +234,46 @@ export default function HistoricoChartModal({ cpf, serie, sexo, gestante, onFech
           </div>
         ) : (
           <div className="py-2">
-            <MiniChart
-              titulo="Ferritina" unit="ng/mL" dataKey="ferritina" cor="#7C3AED"
-              dominio={[1, 4000]} escala="log" faixaNormal={faixaFerritina}
-              dados={dadosG2}
-            />
-            <MiniChart
-              titulo="Sat. Transferrina" unit="%" dataKey="sat" cor="#F59E0B"
-              dominio={[1, 100]} escala="linear" faixaNormal={faixaSat}
-              dados={dadosG2}
-            />
+            {dadosG2.length >= 2 ? (
+              <>
+                <MiniChart
+                  titulo="Ferritina" unit="ng/mL" dataKey="ferritina" cor="#7C3AED"
+                  dominio={[1, 4000]} escala="log" faixaNormal={faixaFerritina}
+                  dados={dadosG2}
+                />
+                <MiniChart
+                  titulo="Sat. Transferrina" unit="%" dataKey="sat" cor="#F59E0B"
+                  dominio={[1, 100]} escala="linear" faixaNormal={faixaSat}
+                  dados={dadosG2}
+                />
+              </>
+            ) : (
+              // Só 1 medição de Ferritina/Sat: não há série p/ traçar — mostra os valores.
+              <div className="px-6 py-8 text-center">
+                {(() => {
+                  const p = dadosG2[0] || {};
+                  const dataBR = p.data && String(p.data).length === 8
+                    ? String(p.data).slice(0, 2) + '/' + String(p.data).slice(2, 4) + '/' + String(p.data).slice(4)
+                    : '';
+                  return (
+                    <div className="space-y-1 mb-4">
+                      {dataBR && <p className="text-xs text-gray-500">{dataBR}</p>}
+                      {p.ferritina != null && (
+                        <p className="text-sm text-gray-700">
+                          <span className="font-bold" style={{ color: '#7C3AED' }}>Ferritina:</span> {p.ferritina} ng/mL
+                        </p>
+                      )}
+                      {p.sat != null && (
+                        <p className="text-sm text-gray-700">
+                          <span className="font-bold" style={{ color: '#F59E0B' }}>Sat. Transferrina:</span> {p.sat} %
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+                <p className="text-sm font-bold text-gray-500 tracking-wide">{"NÃO HÁ ELEMENTOS PARA GRÁFICO"}</p>
+              </div>
+            )}
           </div>
         )}
 

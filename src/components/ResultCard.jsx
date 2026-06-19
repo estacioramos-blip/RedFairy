@@ -1335,27 +1335,27 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
             })()}
           </div>
 
-          {mostrarOptInExames && resultado.proximosExames?.length > 0 && (
+          {/* Opt-in do pedido NÃO aparece no caso de dados discrepantes (_fallback):
+              ali a sugestão é "Reavaliação clínica com médico", não há pedido a gerar. */}
+          {mostrarOptInExames && resultado.proximosExames?.length > 0 && !resultado._fallback && (
             optInExamesEnviado ? (
               <div className="rounded-xl border-2 border-green-300 bg-green-50 p-4 text-center">
                 <p className="text-sm font-bold text-green-700">{"✅ Pedido solicitado! Você o receberá via WhatsApp."}</p>
               </div>
             ) : (
-              <>
-                <label className="flex items-start gap-3 rounded-xl border-2 border-blue-300 bg-blue-50 p-4 cursor-pointer">
-                  <input type="checkbox" checked={false}
-                    onChange={() => onOptInExames && onOptInExames()}
-                    className="mt-0.5 w-5 h-5 accent-blue-700 flex-shrink-0" />
-                  <span className="text-sm font-bold text-blue-700 leading-snug">
-                    {precisaFerroEV
-                      ? "Desejo uma TELECONSULTA MÉDICA para a avaliação do meu diagnóstico e emissão do pedido de exames e da receita de ferro endovenoso."
-                      : "Sim, quero receber o pedido médico para esses exames."}
-                  </span>
-                </label>
-                {!precisaFerroEV && (
-                  <p className="text-xs text-gray-500 mt-1 px-1">{"Esse primeiro pedido de exames é gratuito."}</p>
-                )}
-              </>
+              <label className="flex items-start gap-3 rounded-xl border-2 border-blue-300 bg-blue-50 p-4 cursor-pointer">
+                <input type="checkbox" checked={false}
+                  onChange={() => onOptInExames && onOptInExames()}
+                  className="mt-0.5 w-5 h-5 accent-blue-700 flex-shrink-0" />
+                <span className="text-sm font-bold text-blue-700 leading-snug">
+                  {precisaFerroEV
+                    ? "Desejo uma TELECONSULTA MÉDICA para a avaliação do meu diagnóstico e emissão do pedido de exames e da receita de ferro endovenoso."
+                    : <>
+                        {"Sim, quero receber o pedido médico para esses exames."}
+                        <span className="block text-xs font-normal text-blue-600 mt-1">{"Esse primeiro pedido de exames é gratuito."}</span>
+                      </>}
+                </span>
+              </label>
             )
           )}
 

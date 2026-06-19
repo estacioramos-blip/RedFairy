@@ -606,18 +606,11 @@ export default function TriagemResultadoModal({
             </div>
           )}
 
-          {/* Subtexto: SANGUE COLHIDO EM + CRM (mesma fonte, sem negrito) */}
-          {(dataColetaFmt || crmExibir) && (
+          {/* "SANGUE COLHIDO EM: [data]" removido: CPF e data da coleta j\u00e1 aparecem
+              acima (em ACHADOS). Mant\u00e9m s\u00f3 o CRM, quando houver. */}
+          {crmExibir && (
             <div className="text-center mt-3" style={{ color: '#1d4ed8', fontSize: '12px', lineHeight: 1.4 }}>
-              {dataColetaFmt && (
-                <p>
-                  {dataEstimadaFlag ? "DATA ESTIMADA \u00b7 " : ""}
-                  {"SANGUE COLHIDO EM: "}{dataColetaFmt}
-                </p>
-              )}
-              {crmExibir && (
-                <p>CRM {crmExibir}</p>
-              )}
+              <p>CRM {crmExibir}</p>
             </div>
           )}
 

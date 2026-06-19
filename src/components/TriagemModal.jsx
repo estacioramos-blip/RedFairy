@@ -246,8 +246,8 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       const atualDt = new Date(aa, mm - 1, dd);
       const prevStr = String(pacienteConhecido.ultimoHemograma.data_coleta).slice(0, 10);
       const [pa, pm, pd] = prevStr.split('-').map(Number);
-      if (atualDt < new Date(pa, pm - 1, pd)) {
-        errors.data_coleta = 'A data não pode ser anterior à da avaliação anterior (' + prevStr.split('-').reverse().join('/') + ').';
+      if (atualDt <= new Date(pa, pm - 1, pd)) {
+        errors.data_coleta = 'A data deve ser posterior à da avaliação anterior (' + prevStr.split('-').reverse().join('/') + ').';
       }
     }
     if (inputs.sexo === 'F' && inputs.gestante && !inputs.semanas_gestacao) {
@@ -257,7 +257,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   }
 
   const [erroGeral, setErroGeral] = useState('')
-  function handleAvaliar() {
+  async function handleAvaliar() {
     setErroGeral('')
     const { errors, idadeCalc, dataNascimentoISO } = validar()
     if (Object.keys(errors).length > 0) {
@@ -301,6 +301,26 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       vcm: Number(inputs.vcm),
       rdw: Number(inputs.rdw),
       semanas_gestacao: inputs.semanas_gestacao ? Number(inputs.semanas_gestacao) : null,
+    }
+    // Trava confiável da data: consulta o banco a última avaliação REAL concluída do
+    // CPF e bloqueia se o novo hemograma for anterior. Independe do reconhecimento em
+    // tela (pacienteConhecido), então pega 2ª, 3ª... avaliação em qualquer caminho.
+    const _cpfDig = String(inputs.cpf || '').replace(/\D/g, '')
+    if (_cpfDig.length === 11 && dataColetaISO && /^\d{4}-\d{2}-\d{2}$/.test(dataColetaISO)) {
+      const { data: _ult } = await supabase
+        .from('avaliacoes')
+        .select('data_coleta')
+        .eq('cpf', _cpfDig)
+        .eq('concluida', true)
+        .order('data_coleta', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      const _prev = _ult && _ult.data_coleta ? String(_ult.data_coleta).slice(0, 10) : ''
+      if (_prev && dataColetaISO <= _prev) {
+        setErros(prev => ({ ...prev, data_coleta: 'A data deve ser posterior à da avaliação anterior (' + _prev.split('-').reverse().join('/') + ').' }))
+        setTimeout(() => { if (refDataColeta.current) refDataColeta.current.focus(); }, 0)
+        return
+      }
     }
     const resultado = triagemEritron(inputsNumericos)
     onConcluir(resultado, inputsNumericos)
@@ -515,10 +535,26 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     return () => clearTimeout(t);
   }, [inputs.sexo, modoMedico, pacConhSexoOk, pacConhDataNascOk]);
 
-  // Data de Nascimento completa (DD/MM/AAAA) \u2192 foca Data da Coleta.
+  // Data de Nascimento completa (DD/MM/AAAA): calcula a idade NA HORA. Se < 12 anos,
+  // bloqueia, limpa o campo e volta o cursor (com mensagem). Sen\u00e3o, foca Data da Coleta.
   useEffect(() => {
     if (modoMedico || pacConhDataNascOk) return;
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(String(inputs.dataNascimento || ''))) return;
+    const [d, m, a] = String(inputs.dataNascimento).split('/').map(Number);
+    const dt = new Date(a, m - 1, d);
+    const valida = dt.getFullYear() === a && dt.getMonth() === m - 1 && dt.getDate() === d;
+    if (valida && a >= 1900 && dt <= new Date()) {
+      const hoje = new Date();
+      let idade = hoje.getFullYear() - a;
+      const mDiff = hoje.getMonth() - (m - 1);
+      if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--;
+      if (idade < 12) {
+        setErros(prev => ({ ...prev, dataNascimento: 'O SISTEMA N\u00c3O AVALIA MENORES DE 12 ANOS DE IDADE' }));
+        setInputs(prev => ({ ...prev, dataNascimento: '' }));
+        setTimeout(() => { if (refDnInput.current) refDnInput.current.focus(); }, 0);
+        return;
+      }
+    }
     const t = setTimeout(() => { if (refDataColeta.current) refDataColeta.current.focus(); }, 150);
     return () => clearTimeout(t);
   }, [inputs.dataNascimento, modoMedico, pacConhDataNascOk]);
