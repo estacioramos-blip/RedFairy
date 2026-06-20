@@ -28,6 +28,9 @@ export const OBA_CUTOFFS = {
   // Lipideos
   triglicerides:  { min: 0,     max: 150   },
 
+  // Coagulacao
+  d_dimero:       { min: 0,     max: 500   },  // ng/mL FEU
+
   // Hepaticas (permissivo dimorfico - valor H)
   ast:            { min: 0,     max: 40    },
   alt:            { min: 0,     max: 56    },

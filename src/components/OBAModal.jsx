@@ -206,7 +206,8 @@ const EXAMES_BASE = [
   { key: 'ureia',          label: "Ur\u00e9ia",                     unit: 'mg/dL',  ref: "15\u201340" },
   { key: 'creatinina',     label: 'Creatinina',               unit: 'mg/dL',  ref: "H: 0,7\u20131,2 / F: 0,5\u20131,0" },
   { key: 'acido_urico',    label: "\u00c1cido \u00darico",              unit: 'mg/dL',  ref: "H: 3,4\u20137,0 / F: 2,4\u20136,0" },
-  { key: 'folatos',        label: "Folatos s\u00e9ricos",           unit: 'ng/mL',  ref: "4,0\u201320,0" },
+  { key: 'd_dimero',       label: "D-D\u00edmero",                 unit: 'ng/mL FEU', ref: "<500" },
+  { key: 'folatos',        label: "\u00c1cido F\u00f3lico (folato)",    unit: 'ng/mL',  ref: "4,0\u201320,0" },
   { key: 'zinco',          label: "Zinco s\u00e9rico",              unit: "\u00b5g/dL",  ref: "70\u2013120" },
   { key: 'pth',            label: 'PTH',                       unit: 'pg/mL',  ref: "15\u201365" },
   { key: 'calcio_ionico',  label: "C\u00e1lcio i\u00f4nico",             unit: 'mmol/L', ref: "1,15\u20131,32" },
@@ -367,6 +368,7 @@ const LIMITES_OBA = {
   'gama_gt': { min:5, max:1000 },
   'creatinina': { min:0.3, max:15 },
   'acido_urico': { min:1, max:20 },
+  'd_dimero': { min:0, max:50000 },
   'folatos': { min:1, max:50 },
   'zinco': { min:20, max:300 },
   'pth': { min:1, max:2000 },
@@ -1845,7 +1847,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       className="oba-exame-input"
                       onWheel={noWheel}
                       style={{ width:'100%', border:'1.5px solid #FACC15', borderRadius:5, padding:'0.28rem 0.32rem', fontSize:'0.74rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background:'#FFFDF5', color:'#111827', boxSizing:'border-box' }}
-                      type="number" step="0.01"
+                      type="text" inputMode="decimal"
                       value={exames[ex.key] || ''}
                       onChange={e => handleExameChangeOBA(ex.key, e.target.value)} />
                   </div>
@@ -1880,7 +1882,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       className="oba-exame-input"
                       onWheel={noWheel}
                       style={{ flex:1, minWidth:0, border:'1.5px solid #FACC15', borderRadius:5, padding:'0.28rem 0.32rem', fontSize:'0.74rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : '#FFFDF5', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
-                      type="number" step="0.01" placeholder={mascara}
+                      type="text" inputMode="decimal" placeholder={mascara}
                       readOnly={ex.readOnly}
                       value={exames[ex.key] || ''}
                       onChange={e => !ex.readOnly && handleExameChangeOBA(ex.key, e.target.value)} />
@@ -2588,7 +2590,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <CheckRow label="TIVE COVID-19" checked={form.teve_covid} onClick={() => sf('teve_covid', !form.teve_covid)} />
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.6rem' }}>Vacina:</label>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
-            {['VACINA PFIZER', 'VACINA JANSSEN', 'VACINA ASTRAZENECA', 'VACINA CORONAVAC', "N\u00c3O TOMEI VACINA"].map(v => (
+            {['VACINA PFIZER', 'VACINA JANSSEN', 'VACINA ASTRAZENECA', 'VACINA CORONAVAC', "TOMEI VACINAS, N\u00c3O SEI QUAIS", "N\u00c3O TOMEI VACINA"].map(v => (
               <CheckRow key={v} label={v}
                 checked={form.vacina_covid.includes(v)}
                 disabled={v !== "N\u00c3O TOMEI VACINA" && form.vacina_covid.includes("N\u00c3O TOMEI VACINA") || v === "N\u00c3O TOMEI VACINA" && form.vacina_covid.length > 0 && !form.vacina_covid.includes("N\u00c3O TOMEI VACINA")}
