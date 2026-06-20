@@ -94,11 +94,22 @@ export default function TriagemResultadoModal({
       // Sincroniza sexo + data_nascimento no profile do paciente logado.
       // Assim o CompletarPerfilModal sabe que ja temos esses dados.
       try {
-        if (userId && (inputs.sexo || inputs.data_nascimento)) {
+        if (userId) {
           const patch = {}
           if (inputs.sexo) patch.sexo = inputs.sexo
           if (inputs.data_nascimento) patch.data_nascimento = inputs.data_nascimento
-          await supabase.from('profiles').update(patch).eq('id', userId)
+          // Gestação: persiste a REFERÊNCIA (semanas + data da coleta) p/ recalcular as
+          // semanas nas próximas avaliações. Se não-gestante, zera a referência.
+          if (inputs.gestante) {
+            patch.gestante = true
+            patch.semanas_gestacao_triagem = inputs.semanas_gestacao ? Math.round(Number(inputs.semanas_gestacao)) : null
+            patch.data_triagem_gestacao = inputs.data_coleta || null
+          } else {
+            patch.gestante = false
+            patch.semanas_gestacao_triagem = null
+            patch.data_triagem_gestacao = null
+          }
+          if (Object.keys(patch).length) await supabase.from('profiles').update(patch).eq('id', userId)
         }
       } catch (e) { /* nao bloqueia */ }
 

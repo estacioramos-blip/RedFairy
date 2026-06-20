@@ -1119,6 +1119,9 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               if (Number(inp.satTransf) > 0) labs.push(`Satura\u00e7\u00e3o ${inp.satTransf} %`)
               const sexoExtenso = inp.sexo === 'F' ? 'Feminino' : inp.sexo === 'M' ? 'Masculino' : '?'
               const cabecalho = [sexoExtenso, ...labs].join(" \u00b7 ")
+              // Linha pessoal (acima da data): NOME \u00b7 IDADE \u00b7 CPF.
+              const _cpfFmt = String(inp.cpf || '').replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+              const linhaPessoal = [inp.nome || '', inp.idade ? inp.idade + ' anos' : '', _cpfFmt ? 'CPF ' + _cpfFmt : ''].filter(Boolean).join(" \u00b7 ")
               const flagsAtivas = []
               const FLAGS_MAP = {
                 bariatrica: "bari\u00e1trica", vegetariano: inp.sexo === 'F' ? 'vegetariana' : 'vegetariano', perda: 'perda',
@@ -1136,7 +1139,8 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
               }
               return (
                 <div className="text-xs opacity-75 mt-1 leading-snug">
-                  {dataHemo && <div>{"\ud83d\udcc5 "}{dataHemo}</div>}
+                  {linhaPessoal && <div className="font-semibold">{linhaPessoal}</div>}
+                  {dataHemo && <div>{"DATA DO \u00daLTIMO HEMOGRAMA: "}{dataHemo}</div>}
                   <div>{cabecalho}</div>
                   {flagsAtivas.length > 0 && (
                     <div>{"Flags: "}{flagsAtivas.join(', ')}</div>

@@ -258,6 +258,22 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       .eq('user_id', session.user.id)
       .order('data_coleta', { ascending: false })
     setAvaliacoes(avals || [])
+    // Flags de Histórico/Medicamentos da ÚLTIMA avaliação CONCLUÍDA — p/ pré-marcar
+    // (editável) na próxima entrada de dados. Ignora o "espelho" (concluida=false).
+    const ultConcluida = (avals || []).find(a => a.concluida === true)
+    const flagsAnteriores = ultConcluida ? {
+      vegetariano: !!ultConcluida.vegetariano, perda: !!ultConcluida.perda, alcoolista: !!ultConcluida.alcoolista,
+      transfundido: !!ultConcluida.transfundido, anemiaPrevia: !!ultConcluida.anemia_previa,
+      sideropenia: !!ultConcluida.sideropenia, sobrecargaFerro: !!ultConcluida.sobrecarga_ferro,
+      hbAlta: !!ultConcluida.hb_alta, doadorSangue: !!ultConcluida.doador_sangue, celiaco: !!ultConcluida.celiaco,
+      g6pd: !!ultConcluida.g6pd, hipermenorreia: !!ultConcluida.hipermenorreia,
+      aspirina: !!ultConcluida.aspirina, vitaminaB12: !!ultConcluida.vitamina_b12,
+      vitB12_SL: !!ultConcluida.vitb12_sl, vitB12_IM: !!ultConcluida.vitb12_im,
+      ferro_oral: !!ultConcluida.ferro_oral, ferro_injetavel: !!ultConcluida.ferro_injetavel,
+      testosterona: !!ultConcluida.testosterona, tiroxina: !!ultConcluida.tiroxina,
+      methotrexato: !!ultConcluida.methotrexato, hivTratamento: !!ultConcluida.hiv_tratamento,
+      hidroxiureia: !!ultConcluida.hidroxiureia, anticonvulsivante: !!ultConcluida.anticonvulsivante,
+    } : {}
     // Pedido grátis já usado? (primeiro pedido = valor_total 0). Se sim, o card
     // opt-in de exames sugeridos na tela de resultado não aparece.
     const { count: pedidosGratisCount } = await supabase
@@ -322,6 +338,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           setDadosVieramDaEntrada(true)
           setInputs(prev => ({
             ...prev,
+            ...flagsAnteriores,  // pré-marca Histórico/Medicamentos da avaliação anterior (editável)
             dataColeta: prev.dataColeta || entrada.data_coleta || '',
             hemoglobina: prev.hemoglobina || (entrada.hemoglobina != null ? String(entrada.hemoglobina) : ''),
             vcm: prev.vcm || (entrada.vcm != null ? String(entrada.vcm) : ''),
@@ -342,21 +359,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // RETORNO (1ª já feita): pré-marca as flags da última avaliação — editáveis,
           // pra ele desmarcar o que mudou (ex.: parou a aspirina, deixou de ser
           // vegetariano). NÃO pré-preenche data/hemograma (são novos) nem gestante.
-          const ult = avals[0]
-          setInputs(prev => ({
-            ...prev,
-            vegetariano: !!ult.vegetariano, perda: !!ult.perda, alcoolista: !!ult.alcoolista,
-            transfundido: !!ult.transfundido, anemiaPrevia: !!ult.anemia_previa,
-            sideropenia: !!ult.sideropenia, sobrecargaFerro: !!ult.sobrecarga_ferro,
-            hbAlta: !!ult.hb_alta, doadorSangue: !!ult.doador_sangue, celiaco: !!ult.celiaco,
-            g6pd: !!ult.g6pd, hipermenorreia: !!ult.hipermenorreia,
-            aspirina: !!ult.aspirina, vitaminaB12: !!ult.vitamina_b12,
-            vitB12_SL: !!ult.vitb12_sl, vitB12_IM: !!ult.vitb12_im,
-            ferro_oral: !!ult.ferro_oral, ferro_injetavel: !!ult.ferro_injetavel,
-            testosterona: !!ult.testosterona, tiroxina: !!ult.tiroxina,
-            methotrexato: !!ult.methotrexato, hivTratamento: !!ult.hiv_tratamento,
-            hidroxiureia: !!ult.hidroxiureia, anticonvulsivante: !!ult.anticonvulsivante,
-          }))
+          setInputs(prev => ({ ...prev, ...flagsAnteriores }))  // pré-marca Histórico/Medicamentos da avaliação anterior (editável)
           // RETORNO: vai direto à NOVA avaliação (não faz sentido cair em "O que
           // você quer fazer?"). São 2 avaliações grátis; a partir da 3ª (sem
           // assinatura), abre o paywall ANTES do formulário.
@@ -535,6 +538,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     const inputsNumericos = {
       ...inputs,
       cpf: profile.cpf || '',
+      nome: profile.nome || '',
       dataColeta: dataColISO,
       sexo: inputs.sexo,
       idade: idadeNum,

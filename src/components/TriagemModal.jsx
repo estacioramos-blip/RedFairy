@@ -154,6 +154,24 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
   }, [pacienteConhecido]);
 
+  // Gestante conhecida: ao informar a DATA DA COLETA, recalcula as semanas NAQUELA data
+  // (referência = semanas + data salvas no perfil). Mantém editável; > 42 desmarca.
+  useEffect(() => {
+    const pc = pacienteConhecido;
+    if (!pc || pc === 'BLOQUEADO' || !pc.gestante) return;
+    if (!pc.semanas_gestacao_triagem || !pc.data_triagem_gestacao) return;
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(String(inputs.data_coleta || ''))) return;
+    const [d, m, a] = inputs.data_coleta.split('/').map(Number);
+    const coleta = new Date(a, m - 1, d);
+    const ref = new Date(String(pc.data_triagem_gestacao).slice(0, 10) + 'T00:00:00');
+    const semanas = Number(pc.semanas_gestacao_triagem) + (coleta - ref) / (1000 * 60 * 60 * 24) / 7;
+    if (semanas > 42 || semanas < 0) {
+      setInputs(prev => ({ ...prev, gestante: false, semanas_gestacao: '' }));
+    } else {
+      setInputs(prev => ({ ...prev, gestante: true, semanas_gestacao: String(Math.round(semanas)) }));
+    }
+  }, [inputs.data_coleta, pacienteConhecido]);
+
   useEffect(() => {
     if (!modoMedico && !cpfBloqueado) return;
     const digits = String(inputs.cpf || '').replace(/\D/g, '');
@@ -927,48 +945,41 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           </>)}
 
           {inputs.sexo === 'F' && (() => {
-            const reval = revalidaGestante(pacienteConhecido);
-            const lockedGestante = !!pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && reval.gestanteAtual;
-            const semanasAuto = lockedGestante ? reval.semanas : null;
-            const showSemanas = lockedGestante || inputs.gestante;
+            // Gestante conhecida vem PR\u00c9-MARCADA com as semanas recalculadas, mas o campo
+            // \u00e9 EDIT\u00c1VEL \u2014 a gravidez pode ter terminado (aborto/interrup\u00e7\u00e3o) ou a paciente
+            // querer ajustar o n\u00famero de semanas.
+            const gestanteConhecida = !!pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && !!pacienteConhecido.gestante;
+            const showSemanas = inputs.gestante;
             return (
               <div className="rounded-xl border border-pink-200 bg-pink-50 p-3">
-                {/* Layout horizontal: GESTANTE checkbox \u00e0 esquerda (sem subtexto desnecess\u00e1rio) +
-                    SEMANAS DE GESTA\u00c7\u00c3O \u00e0 direita quando marcado, economizando altura no modal. */}
                 <div className="flex items-center gap-3">
                   <label className="flex items-center gap-2 cursor-pointer" style={{ flex: '1 1 0' }}>
                     <input
                       type="checkbox"
                       name="gestante"
-                      checked={lockedGestante ? true : inputs.gestante}
-                      onChange={lockedGestante ? undefined : handleChange}
-                      disabled={lockedGestante}
+                      checked={!!inputs.gestante}
+                      onChange={handleChange}
                       className="w-4 h-4"
                     />
-                    <span className="text-sm font-medium text-pink-700">
-                      {"Gestante"}{lockedGestante ? " (j\u00e1 registrada)" : ""}
-                    </span>
+                    <span className="text-sm font-medium text-pink-700">{"Gestante"}</span>
                   </label>
                   {showSemanas && (
                     <div style={{ flex: '1 1 0' }}>
-                      {lockedGestante ? (
-                        <div className="w-full border-2 border-pink-300 bg-pink-100 rounded-lg px-2 py-1.5 text-xs text-pink-900 font-semibold whitespace-nowrap">
-                          {semanasAuto !== null ? semanasAuto + ' sem. (calc.)' : 'sem dado'}
-                        </div>
-                      ) : (
-                        <input
-                          type="number"
-                          name="semanas_gestacao"
-                          value={inputs.semanas_gestacao}
-                          onChange={handleChange}
-                          min="1" max="42"
-                          placeholder={"Semanas de gesta\u00e7\u00e3o"}
-                          className={`w-full border-2 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-pink-400 ${erros.semanas_gestacao ? 'border-red-500' : 'border-pink-400 bg-white'}`}
-                        />
-                      )}
+                      <input
+                        type="number"
+                        name="semanas_gestacao"
+                        value={inputs.semanas_gestacao}
+                        onChange={handleChange}
+                        min="1" max="42"
+                        placeholder={"Semanas de gesta\u00e7\u00e3o"}
+                        className={`w-full border-2 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-pink-400 ${erros.semanas_gestacao ? 'border-red-500' : 'border-pink-400 bg-white'}`}
+                      />
                     </div>
                   )}
                 </div>
+                {showSemanas && gestanteConhecida && (
+                  <p className="text-[11px] text-pink-600 mt-1">{"Semanas atualizadas por c\u00e1lculo desde a avalia\u00e7\u00e3o anterior \u2014 edite se necess\u00e1rio."}</p>
+                )}
                 {erros.semanas_gestacao && <p className="text-red-500 text-xs mt-1">{erros.semanas_gestacao}</p>}
               </div>
             );
