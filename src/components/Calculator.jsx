@@ -1470,17 +1470,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             {/* CARD da FADINHA 4DOC (encaminhamento): aparece sobre a imagem; o splash só
                 sai quando o médico instala a fadinha OU opta por instalar depois. */}
             {cardFada4doc && (
-              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 6, maxHeight: '60%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, rgba(255,255,255,0.97) 78%, rgba(255,255,255,0))' }} className="px-4 pt-4 pb-3">
-                <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 space-y-2 shadow-lg">
-                  <p className="text-[11px] text-blue-900 leading-snug font-bold">
-                    {"AGORA INSTALE NA TELA INICIAL DO SEU CELULAR a "}<span style={{ color: '#7B1E1E' }}>{"FADINHA VERMELHA"}</span>{" de encaminhamento de pacientes. Sempre que você tocar nela surgirá o QR-CODE abaixo, através do qual você encaminha pacientes à plataforma sob o seu CRM. Cada paciente que se cadastrar gera UM CRÉDITO do programa para você."}
-                  </p>
-                  <div className="flex justify-center">
-                    <div style={{ background: '#fff', padding: 6, borderRadius: 10, border: '1px solid #e5e7eb' }}>
-                      <QRCodeSVG value={`${qrBaseAfil}/?ref=${encodeURIComponent(medicoCRM || '')}`} size={92} level="H" bgColor="#ffffff" fgColor="#7B1E1E" imageSettings={{ src: logo, height: 20, width: 20, excavate: true }} />
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 6, maxHeight: '60%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, rgba(255,255,255,0.97) 78%, rgba(255,255,255,0))' }} className="px-4 pt-4 pb-7">
+                <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 shadow-lg">
+                  <div className="flex items-center gap-3">
+                    <p className="flex-1 text-[11px] text-blue-900 leading-snug font-bold">
+                      {"AGORA INSTALE NA TELA INICIAL DO SEU CELULAR a "}<span style={{ color: '#7B1E1E' }}>{"FADINHA VERMELHA"}</span>{" de encaminhamento de pacientes. Sempre que você tocar nela surgirá o QR-CODE ao lado, através do qual você encaminha pacientes à plataforma sob o seu CRM. Cada paciente que se cadastrar gera UM CRÉDITO do programa para você."}
+                    </p>
+                    <div className="flex-shrink-0" style={{ background: '#fff', padding: 6, borderRadius: 10, border: '1px solid #e5e7eb' }}>
+                      <QRCodeSVG value={`${qrBaseAfil}/?ref=${encodeURIComponent(medicoCRM || '')}`} size={88} level="H" bgColor="#ffffff" fgColor="#7B1E1E" imageSettings={{ src: logo, height: 18, width: 18, excavate: true }} />
                     </div>
                   </div>
-                  <div className="text-center">
+                  <div className="text-center mt-2">
                     <button onClick={() => setShowCreditosPopup(true)} className="text-xs font-bold text-green-700 underline underline-offset-2 hover:text-green-800">
                       {"Saiba mais sobre os créditos do 4DOC"}
                     </button>
