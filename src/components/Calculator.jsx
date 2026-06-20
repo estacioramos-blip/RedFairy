@@ -17,6 +17,8 @@ import chatphone2Img from '../assets/chatphone2.jpg';
 import telefonista2Img from '../assets/telefonista2.jpg';
 import telefonista3Img from '../assets/telefonista3.jpg';
 import logo from '../assets/logo.png';
+import { QRCodeSVG } from 'qrcode.react';
+import { useInstalarFada } from '../lib/useInstalarFada';
 import { ehDominioBariatrico } from '../lib/dominio';
 
 const IconPaciente = () => (
@@ -759,12 +761,42 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [etapaAfil, setEtapaAfil] = useState(1);
   const [splashAfil, setSplashAfil] = useState(true);
   const [bgAfilRevelado, setBgAfilRevelado] = useState(false);
+  // Card da FADINHA 4DOC (encaminhamento): aparece sobre o splash; o splash só some
+  // quando o médico instala a fadinha OU opta por instalar depois.
+  const [cardFada4doc, setCardFada4doc] = useState(false);
+  const [showCreditosPopup, setShowCreditosPopup] = useState(false);
+  const [fada4docMarcada, setFada4docMarcada] = useState(false);
+  const [fada4docInstrIOS, setFada4docInstrIOS] = useState(false);
+  const { instalar: instalarFada4doc } = useInstalarFada();
+  const qrBaseAfil = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://redfairy.bio';
+  // Libera o splash e foca o formulário de afiliação.
+  function prosseguirAfil() {
+    setCardFada4doc(false); setSplashAfil(false);
+    setTimeout(() => { if (refAfilCEP.current) refAfilCEP.current.focus(); }, 100);
+  }
+  async function aoMarcarFada4doc(e) {
+    const marcado = e.target.checked;
+    setFada4docMarcada(marcado);
+    if (!marcado) { setFada4docInstrIOS(false); return; }
+    const r = await instalarFada4doc();
+    if (r === 'ios') setFada4docInstrIOS(true);   // iPhone: mostra instrução; segue pelo link "depois"
+    else prosseguirAfil();                          // Android instalado/recusado → prossegue
+  }
+  // Nome do atalho na tela inicial: "4DOC" enquanto o card do médico está aberto (iOS
+  // usa apple-mobile-web-app-title). Fora dele volta a "RedFairy" (fluxo do paciente).
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (!meta) return;
+    meta.setAttribute('content', cardFada4doc ? '4DOC' : 'RedFairy');
+  }, [cardFada4doc]);
   useEffect(() => {
     if (showAfiliados) {
       setEtapaAfil(1);
-      // SPLASH de entrada: imagem inteira + greeting por 2s; depois revela os campos e foca o CEP
+      // SPLASH de entrada: imagem + greeting; depois revela o CARD da FADINHA 4DOC.
+      // O splash NÃO some sozinho — só sai quando o médico instala ou opta por depois.
       setSplashAfil(true); setBgAfilRevelado(false);
-      const t = setTimeout(() => { setSplashAfil(false); if (refAfilCEP.current) refAfilCEP.current.focus(); }, 5000);
+      setCardFada4doc(false); setFada4docMarcada(false); setFada4docInstrIOS(false);
+      const t = setTimeout(() => { setCardFada4doc(true); }, 2500);
       // Recarrega medicoDados (celular/email) ao abrir o modal de afiliados,
       // pra garantir que os checkboxes "TELEFONE/EMAIL" usem dados FRESCOS do banco.
       if (medicoCRM) {
@@ -1427,13 +1459,66 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)', backgroundImage: `url(${welcomeImg})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgAfilRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgAfilRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
             {/* SPLASH de entrada: imagem (largura cheia, cortada na cintura, centrada) + greeting por 5s, antes dos campos */}
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashAfil ? 1 : 0, pointerEvents: splashAfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
-              <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)' }}>
+              <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, height: '320px' }}>
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${welcomeImg})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
-                <div style={{ position: 'absolute', left: 0, right: 0, bottom: '6%', padding: '0 28px', textAlign: 'center' }}>
-                  <p style={{ color: '#ffffff', fontSize: '26px', fontWeight: 900, lineHeight: 1.18, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{"Bem-Vindo ao 4DOC® Programa Patrocinado de Médicos Afiliados"}</p>
+                <div style={{ position: 'absolute', left: 0, right: 0, top: '14%', padding: '0 22px', textAlign: 'center' }}>
+                  <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{"Bem-Vindo ao 4DOC® Programa Patrocinado de Médicos Afiliados"}</p>
                 </div>
               </div>
             </div>
+
+            {/* CARD da FADINHA 4DOC (encaminhamento): aparece sobre a imagem; o splash só
+                sai quando o médico instala a fadinha OU opta por instalar depois. */}
+            {cardFada4doc && (
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 6, maxHeight: '60%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, rgba(255,255,255,0.97) 78%, rgba(255,255,255,0))' }} className="px-4 pt-4 pb-3">
+                <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 space-y-2 shadow-lg">
+                  <p className="text-[11px] text-blue-900 leading-snug font-bold">
+                    {"AGORA INSTALE NA TELA INICIAL DO SEU CELULAR a "}<span style={{ color: '#7B1E1E' }}>{"FADINHA VERMELHA"}</span>{" de encaminhamento de pacientes. Sempre que você tocar nela surgirá o QR-CODE abaixo, através do qual você encaminha pacientes à plataforma sob o seu CRM. Cada paciente que se cadastrar gera UM CRÉDITO do programa para você."}
+                  </p>
+                  <div className="flex justify-center">
+                    <div style={{ background: '#fff', padding: 6, borderRadius: 10, border: '1px solid #e5e7eb' }}>
+                      <QRCodeSVG value={`${qrBaseAfil}/?ref=${encodeURIComponent(medicoCRM || '')}`} size={92} level="H" bgColor="#ffffff" fgColor="#7B1E1E" imageSettings={{ src: logo, height: 20, width: 20, excavate: true }} />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <button onClick={() => setShowCreditosPopup(true)} className="text-xs font-bold text-green-700 underline underline-offset-2 hover:text-green-800">
+                      {"Saiba mais sobre os créditos do 4DOC"}
+                    </button>
+                  </div>
+                </div>
+                <label className="flex items-center justify-center gap-2 cursor-pointer mt-3">
+                  <input type="checkbox" checked={fada4docMarcada} onChange={aoMarcarFada4doc} className="w-4 h-4" style={{ accentColor: '#1d4ed8' }} />
+                  <span className="text-xs font-bold text-blue-700">{"Sim, instale a FADINHA do 4DOC® na minha tela."}</span>
+                </label>
+                {fada4docInstrIOS && (
+                  <p className="text-[11px] mt-1 leading-snug text-blue-700 text-center">{"No iPhone: toque em "}<strong>{"Compartilhar"}</strong>{" (↑) e depois em "}<strong>{"\"Adicionar à Tela de Início\""}</strong>{"."}</p>
+                )}
+                <button onClick={prosseguirAfil} className="block w-full text-center text-[11px] font-bold text-gray-500 mt-2 underline underline-offset-2 hover:text-gray-700">
+                  {"Instalo a FADINHA DEPOIS, prossiga."}
+                </button>
+              </div>
+            )}
+
+            {/* Popup "Saiba mais sobre os créditos do 4DOC" (nota de 10 dólares + USDC) */}
+            {showCreditosPopup && (
+              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }} onClick={() => setShowCreditosPopup(false)}>
+                <div onClick={e => e.stopPropagation()} style={{ position: 'relative', width: '100%', maxWidth: '398px', aspectRatio: '2.45 / 1', background: '#fff', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
+                  {/* Nota de 10 dólares preenchendo o popup (cover), esmaecida p/ o texto ler bem.
+                      aspectRatio fixo: alargar a caixa NÃO altera o enquadramento da nota. */}
+                  <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/nota10dolares.png)', backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.06)', opacity: 0.42 }} />
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', padding: '0 30px' }}>
+                    <p style={{ color: '#065f46', fontWeight: 800, fontSize: '10.5px', lineHeight: 1.5 }}>
+                      {"Cada CRÉDITO por paciente encaminhado e que SE CADASTRA vale DEZ DÓLARES DIGITAIS (USDC) que serão creditados em uma conta especial para você. Abrir essa conta é super simples, e mais adiante você será instruído como fazer isso."}
+                    </p>
+                  </div>
+                  {/* Fechar: círculo vinho com X branco, menor, no canto superior direito */}
+                  <button onClick={() => setShowCreditosPopup(false)} aria-label="Fechar"
+                    style={{ position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '10px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+                    {"✕"}
+                  </button>
+                </div>
+              </div>
+            )}
             {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons.
                 zIndex 10 (acima do splash zIndex 5) p/ o header ja aparecer durante a imagem. */}
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -1444,7 +1529,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
             {/* Subtitulo vinho do programa: zIndex 10 p/ aparecer desde o inicio, junto do header */}
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '0 14px 9px', flexShrink: 0 }}>
-              <p style={{ margin: 0, color: '#7B1E1E', fontWeight: 700, fontSize: '13px', letterSpacing: '0.3px' }}>{"4DOC® Programa de Afiliados"}</p>
+              <p style={{ margin: 0, color: '#7B1E1E', fontWeight: 700, fontSize: '13px', letterSpacing: '0.3px' }}>{"4DOC® Programa de Médicos Afiliados"}</p>
             </div>
 
             <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
