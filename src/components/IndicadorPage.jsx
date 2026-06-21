@@ -1,23 +1,19 @@
 import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
+import logo from '../assets/logo.png'
 
 // =============================================================================
 // IndicadorPage — 3º perfil do sistema (INDICADOR).
 // Qualquer pessoa (enfermeiro, fisio, leigo) indica bariátricos e ganha US$10
 // quando o indicado PAGA. Auth própria (CPF + senha) via RPCs SECURITY DEFINER
-// (register_indicador / login_indicador). Painel mostra o link/QR de indicação.
-// Pré-cadastro de CPF e lista de créditos virão na próxima fase (precisam de
-// novos RPCs de atribuição).
+// (register_indicador / login_indicador). Visual alinhado aos cards de médico/
+// paciente (AuthPage): fundo escuro + card branco + logo + vermelho-700.
 // =============================================================================
 
-const VINHO = '#7B1E2B'
-const VINHO_CLARO = '#FDF7F7'
-
-const card = { background: '#fff', borderRadius: 18, boxShadow: '0 10px 30px rgba(0,0,0,.08)', padding: 22, width: '100%', maxWidth: 420 }
-const inp = { width: '100%', border: '1.5px solid #E5C9CC', borderRadius: 12, padding: '11px 13px', fontSize: 15, outline: 'none', background: '#fff' }
-const lbl = { fontSize: 12, fontWeight: 700, color: VINHO, textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4, display: 'block' }
-const btnPrimary = { width: '100%', background: VINHO, color: '#fff', border: 'none', borderRadius: 12, padding: '12px 16px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }
+const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+const labelClass = "block text-sm font-medium text-gray-600 mb-1"
+const btnPrimary = "w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-60"
 
 function soDigitos(s) { return String(s || '').replace(/\D/g, '') }
 
@@ -66,22 +62,6 @@ export default function IndicadorPage({ onVoltar }) {
     } catch (e) {}
   }
   useEffect(() => { if (etapa === 'painel' && codigo) carregarPainel(codigo) }, [etapa, codigo])
-
-  async function preCadastrar() {
-    setPreMsg(''); setPreErro('')
-    if (soDigitos(cpfPac).length !== 11) { setPreErro('CPF inválido (11 dígitos).'); return }
-    setPreBusy(true)
-    try {
-      const { data, error } = await supabase.rpc('precadastrar_indicacao', { p_codigo: codigo, p_cpf: cpfPac })
-      if (error) throw error
-      if (data?.ja_no_projeto) { setPreErro('ESSE PACIENTE JÁ FAZ PARTE DO PROJETO'); return }
-      if (!data?.ok) { setPreErro(data?.erro || 'Não foi possível reservar.'); return }
-      setPreMsg('Paciente reservado! Você ganha quando ele pagar.')
-      setCpfPac('')
-      carregarPainel(codigo)
-    } catch (e) { setPreErro('Erro de conexão. Tente de novo.') }
-    finally { setPreBusy(false) }
-  }
 
   function salvarSessao(data) {
     try {
@@ -135,132 +115,162 @@ export default function IndicadorPage({ onVoltar }) {
       localStorage.removeItem('indicador_codigo')
       localStorage.removeItem('indicador_nome')
     } catch (e) {}
-    setCodigo(''); setNome(''); setCpf(''); setSenha(''); setEtapa('login')
+    setCodigo(''); setNome(''); setCpf(''); setSenha(''); setDados(null); setEtapa('login')
   }
 
   function copiarLink() {
     try { navigator.clipboard.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 1800) } catch (e) {}
   }
 
-  // ── PAINEL ────────────────────────────────────────────────────────────────
+  async function preCadastrar() {
+    setPreMsg(''); setPreErro('')
+    if (soDigitos(cpfPac).length !== 11) { setPreErro('CPF inválido (11 dígitos).'); return }
+    setPreBusy(true)
+    try {
+      const { data, error } = await supabase.rpc('precadastrar_indicacao', { p_codigo: codigo, p_cpf: cpfPac })
+      if (error) throw error
+      if (data?.ja_no_projeto) { setPreErro('ESSE PACIENTE JÁ FAZ PARTE DO PROJETO'); return }
+      if (!data?.ok) { setPreErro(data?.erro || 'Não foi possível reservar.'); return }
+      setPreMsg('Paciente reservado! Você ganha quando ele pagar.')
+      setCpfPac('')
+      carregarPainel(codigo)
+    } catch (e) { setPreErro('Erro de conexão. Tente de novo.') }
+    finally { setPreBusy(false) }
+  }
+
+  const VoltarBtn = onVoltar ? (
+    <button onClick={onVoltar}
+      className="absolute top-4 left-4 text-white px-3 py-1 rounded-lg text-xs font-medium shadow transition-colors"
+      style={{ backgroundColor: '#991b1b' }}>
+      Voltar
+    </button>
+  ) : null
+
+  const Cabecalho = (
+    <div className="text-center mb-6">
+      <img src={logo} alt="RedFairy"
+        className="w-16 h-16 object-contain mx-auto mb-2"
+        style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }} />
+      <h2 className="text-2xl font-bold text-red-700">{"RedFairy | Projeto OBA"}</h2>
+      <p className="text-gray-500 text-sm">Modo Indicador</p>
+    </div>
+  )
+
+  // ── PAINEL ──────────────────────────────────────────────────────────────────
   if (etapa === 'painel') {
     return (
-      <div style={{ minHeight: '100vh', background: VINHO_CLARO, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 16px', gap: 18 }}>
-        <div style={{ ...card, textAlign: 'center' }}>
-          <p style={{ fontSize: 12, fontWeight: 800, color: VINHO, letterSpacing: '.08em' }}>RedFairy | OBA® · INDICADOR</p>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1f2937', marginTop: 6 }}>Olá{nome ? `, ${nome.split(' ')[0]}` : ''}! 👋</h2>
-          <p style={{ fontSize: 14, color: '#6b7280', marginTop: 6 }}>
-            Compartilhe seu <b>link</b> ou mostre o <b>QR-CODE</b> a bariátricos que você conhece.
-            Quando a pessoa indicada <b>pagar</b>, você ganha <b>US$10</b>.
-          </p>
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6 relative">
+        {VoltarBtn}
+        <div className="w-full max-w-md space-y-4 mt-8">
 
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '18px 0 10px' }}>
-            <div style={{ background: '#fff', padding: 12, borderRadius: 14, border: `2px solid ${VINHO}` }}>
-              {link ? <QRCodeSVG value={link} size={168} fgColor={VINHO} /> : null}
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+            {Cabecalho}
+            <h3 className="text-lg font-bold text-gray-800">Olá{nome ? `, ${nome.split(' ')[0]}` : ''}! 👋</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Compartilhe seu <b>link</b> ou mostre o <b>QR-CODE</b> a bariátricos que você conhece.
+              Quando a pessoa indicada <b>pagar</b>, você ganha <b>US$10</b>.
+            </p>
+            <div className="flex justify-center my-4">
+              <div className="bg-white p-3 rounded-xl border-2 border-red-700">
+                {link ? <QRCodeSVG value={link} size={160} fgColor="#b91c1c" /> : null}
+              </div>
             </div>
-          </div>
-
-          <div style={{ background: VINHO_CLARO, borderRadius: 10, padding: '8px 10px', fontSize: 13, color: '#374151', wordBreak: 'break-all', border: '1px solid #E5C9CC' }}>
-            {link}
-          </div>
-          <button onClick={copiarLink} style={{ ...btnPrimary, marginTop: 10 }}>
-            {copiado ? 'LINK COPIADO ✓' : 'COPIAR LINK'}
-          </button>
-        </div>
-
-        <div style={{ ...card }}>
-          <p style={{ ...lbl }}>Pré-cadastrar paciente</p>
-          <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 10 }}>
-            Conhece um bariátrico? Reserve-o pelo <b>CPF</b>. Você ganha quando ele pagar.
-          </p>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input style={{ ...inp, flex: 1 }} inputMode="numeric" value={cpfPac}
-              onChange={e => setCpfPac(e.target.value)} placeholder="CPF do paciente" />
-            <button onClick={preCadastrar} disabled={preBusy}
-              style={{ ...btnPrimary, width: 'auto', padding: '11px 16px', opacity: preBusy ? 0.6 : 1 }}>
-              {preBusy ? '…' : 'Reservar'}
+            <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-gray-700 break-all">{link}</div>
+            <button onClick={copiarLink} className={`${btnPrimary} mt-3`}>
+              {copiado ? 'LINK COPIADO ✓' : 'COPIAR LINK'}
             </button>
           </div>
-          {preMsg && <p style={{ color: '#15803D', fontSize: 13, fontWeight: 600, marginTop: 8 }}>{preMsg}</p>}
-          {preErro && <p style={{ color: '#B91C1C', fontSize: 13, fontWeight: 700, marginTop: 8 }}>{preErro}</p>}
-        </div>
 
-        <div style={{ ...card }}>
-          <p style={{ ...lbl }}>Seus indicados</p>
-          {!dados ? (
-            <p style={{ fontSize: 13, color: '#9ca3af' }}>Carregando…</p>
-          ) : (
-            <>
-              <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-                <div style={{ flex: 1, background: VINHO_CLARO, borderRadius: 10, padding: '10px 8px', textAlign: 'center', border: '1px solid #E5C9CC' }}>
-                  <p style={{ fontSize: 22, fontWeight: 800, color: VINHO }}>{(dados.creditos || []).filter(c => c.pago).length}</p>
-                  <p style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>PAGOS</p>
-                </div>
-                <div style={{ flex: 1, background: VINHO_CLARO, borderRadius: 10, padding: '10px 8px', textAlign: 'center', border: '1px solid #E5C9CC' }}>
-                  <p style={{ fontSize: 22, fontWeight: 800, color: VINHO }}>{(dados.creditos || []).filter(c => !c.pago).length}</p>
-                  <p style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>A RECEBER</p>
-                </div>
-                <div style={{ flex: 1, background: VINHO_CLARO, borderRadius: 10, padding: '10px 8px', textAlign: 'center', border: '1px solid #E5C9CC' }}>
-                  <p style={{ fontSize: 22, fontWeight: 800, color: VINHO }}>{(dados.precadastros || []).length}</p>
-                  <p style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>RESERVADOS</p>
-                </div>
-              </div>
-              <p style={{ fontSize: 12, color: '#9ca3af', textAlign: 'center' }}>
-                Cada indicado que paga vale US$ {dados.comissao_usd || 10}.
-              </p>
-            </>
-          )}
-        </div>
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <p className="text-sm font-bold text-gray-700 mb-1">Pré-cadastrar paciente</p>
+            <p className="text-xs text-gray-500 mb-3">Conhece um bariátrico? Reserve-o pelo <b>CPF</b>. Você ganha quando ele pagar.</p>
+            <div className="flex gap-2">
+              <input className={inputClass} inputMode="numeric" value={cpfPac}
+                onChange={e => setCpfPac(e.target.value)} placeholder="CPF do paciente" />
+              <button onClick={preCadastrar} disabled={preBusy}
+                className="bg-red-700 hover:bg-red-800 text-white font-bold px-4 rounded-lg text-sm transition-colors disabled:opacity-60 whitespace-nowrap">
+                {preBusy ? '…' : 'Reservar'}
+              </button>
+            </div>
+            {preMsg && <p className="text-green-600 text-xs font-semibold mt-2">{preMsg}</p>}
+            {preErro && <p className="text-red-600 text-xs font-bold mt-2">{preErro}</p>}
+          </div>
 
-        <button onClick={sair} style={{ background: 'transparent', border: 'none', color: VINHO, fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
-          Sair
-        </button>
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <p className="text-sm font-bold text-gray-700 mb-3">Seus indicados</p>
+            {!dados ? (
+              <p className="text-xs text-gray-400">Carregando…</p>
+            ) : (
+              <>
+                <div className="flex gap-3 mb-3">
+                  {[
+                    { n: (dados.creditos || []).filter(c => c.pago).length, t: 'PAGOS' },
+                    { n: (dados.creditos || []).filter(c => !c.pago).length, t: 'A RECEBER' },
+                    { n: (dados.precadastros || []).length, t: 'RESERVADOS' },
+                  ].map((b, i) => (
+                    <div key={i} className="flex-1 bg-red-50 border border-red-100 rounded-lg py-2 text-center">
+                      <p className="text-2xl font-extrabold text-red-700">{b.n}</p>
+                      <p className="text-[11px] text-gray-500 font-semibold">{b.t}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 text-center">Cada indicado que paga vale US$ {dados.comissao_usd || 10}.</p>
+              </>
+            )}
+          </div>
+
+          <button onClick={sair} className="w-full text-gray-300 text-sm hover:text-white transition-colors">Sair</button>
+        </div>
       </div>
     )
   }
 
-  // ── LOGIN / CADASTRO ────────────────────────────────────────────────────────
+  // ── LOGIN / CADASTRO ─────────────────────────────────────────────────────────
   const ehCadastro = etapa === 'cadastro'
   return (
-    <div style={{ minHeight: '100vh', background: VINHO_CLARO, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 16px' }}>
-      <div style={card}>
-        <p style={{ fontSize: 12, fontWeight: 800, color: VINHO, letterSpacing: '.08em', textAlign: 'center' }}>RedFairy | OBA® · INDICADOR</p>
-        <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1f2937', textAlign: 'center', marginTop: 6 }}>
-          {ehCadastro ? 'Indique bariátricos e ganhe' : 'Entrar como indicador'}
-        </h2>
-        <p style={{ fontSize: 13, color: '#6b7280', textAlign: 'center', marginTop: 6 }}>
-          {ehCadastro
-            ? 'Cadastre-se para receber US$10 por cada bariátrico indicado que pagar.'
-            : 'Acesse seu link de indicação e acompanhe seus créditos.'}
-        </p>
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 relative">
+      {VoltarBtn}
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+        {Cabecalho}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 18 }}>
+        <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-center mb-4">
+          <p className="text-red-700 text-sm font-medium">
+            {ehCadastro ? 'Indique bariátricos e ganhe US$10' : 'Entrar como indicador'}
+          </p>
+          <p className="text-gray-500 text-xs mt-1">
+            {ehCadastro
+              ? 'Cadastre-se para receber US$10 por cada bariátrico indicado que pagar.'
+              : 'Acesse seu link de indicação e acompanhe seus créditos.'}
+          </p>
+        </div>
+
+        <div className="space-y-4">
           <div>
-            <label style={lbl}>CPF</label>
-            <input style={inp} inputMode="numeric" value={cpf} onChange={e => setCpf(e.target.value)} placeholder="Somente números" />
+            <label className={labelClass}>CPF</label>
+            <input className={inputClass} inputMode="numeric" value={cpf} onChange={e => setCpf(e.target.value)} placeholder="Somente números" autoComplete="off" />
           </div>
           <div>
-            <label style={lbl}>Senha</label>
-            <input style={inp} type="password" value={senha} onChange={e => setSenha(e.target.value)} placeholder="Mínimo 6 caracteres" />
+            <label className={labelClass}>Senha</label>
+            <input className={inputClass} type="password" value={senha} onChange={e => setSenha(e.target.value)} placeholder="Mínimo 6 caracteres" autoComplete="new-password" />
           </div>
 
           {ehCadastro && (
             <>
               <div>
-                <label style={lbl}>Nome completo</label>
-                <input style={inp} value={fNome} onChange={e => setFNome(e.target.value)} />
+                <label className={labelClass}>Nome completo</label>
+                <input className={inputClass} value={fNome} onChange={e => setFNome(e.target.value)} autoComplete="off" />
               </div>
               <div>
-                <label style={lbl}>WhatsApp</label>
-                <input style={inp} inputMode="tel" value={celular} onChange={e => setCelular(e.target.value)} placeholder="(DDD) número" />
+                <label className={labelClass}>WhatsApp</label>
+                <input className={inputClass} inputMode="tel" value={celular} onChange={e => setCelular(e.target.value)} placeholder="(DDD) número" autoComplete="off" />
               </div>
               <div>
-                <label style={lbl}>E-mail (opcional)</label>
-                <input style={inp} type="email" value={email} onChange={e => setEmail(e.target.value)} />
+                <label className={labelClass}>E-mail (opcional)</label>
+                <input className={inputClass} type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="off" />
               </div>
               <div>
-                <label style={lbl}>Você é</label>
-                <select style={inp} value={tipo} onChange={e => setTipo(e.target.value)}>
+                <label className={labelClass}>Você é</label>
+                <select className={inputClass} value={tipo} onChange={e => setTipo(e.target.value)}>
                   <option value="">Selecione…</option>
                   <option value="enfermeiro">Enfermeiro(a)</option>
                   <option value="fisio">Fisioterapeuta</option>
@@ -270,42 +280,32 @@ export default function IndicadorPage({ onVoltar }) {
                 </select>
               </div>
               <div>
-                <label style={lbl}>Chave PIX (para receber)</label>
-                <input style={inp} value={pix} onChange={e => setPix(e.target.value)} placeholder="CPF, e-mail, telefone ou aleatória" />
+                <label className={labelClass}>Chave PIX (para receber)</label>
+                <input className={inputClass} value={pix} onChange={e => setPix(e.target.value)} placeholder="CPF, e-mail, telefone ou aleatória" autoComplete="off" />
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#374151', cursor: 'pointer' }}>
-                <input type="checkbox" checked={usarUsdc} onChange={e => setUsarUsdc(e.target.checked)} />
+              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                <input type="checkbox" checked={usarUsdc} onChange={e => setUsarUsdc(e.target.checked)} className="w-4 h-4" />
                 Quero receber em USDC (dólar digital)
               </label>
               {usarUsdc && (
                 <div>
-                  <label style={lbl}>Carteira USDC</label>
-                  <input style={inp} value={usdc} onChange={e => setUsdc(e.target.value)} placeholder="Endereço da wallet" />
+                  <label className={labelClass}>Carteira USDC</label>
+                  <input className={inputClass} value={usdc} onChange={e => setUsdc(e.target.value)} placeholder="Endereço da wallet" autoComplete="off" />
                 </div>
               )}
             </>
           )}
 
-          {erro && <p style={{ color: '#B91C1C', fontSize: 13, fontWeight: 600 }}>{erro}</p>}
+          {erro && <p className="text-red-500 text-sm">{erro}</p>}
 
-          <button
-            onClick={ehCadastro ? handleCadastro : handleLogin}
-            disabled={carregando}
-            style={{ ...btnPrimary, opacity: carregando ? 0.6 : 1 }}>
+          <button onClick={ehCadastro ? handleCadastro : handleLogin} disabled={carregando} className={btnPrimary}>
             {carregando ? 'Aguarde…' : (ehCadastro ? 'CADASTRAR E GERAR MEU LINK' : 'ENTRAR')}
           </button>
 
-          <button
-            onClick={() => { setErro(''); setEtapa(ehCadastro ? 'login' : 'cadastro') }}
-            style={{ background: 'transparent', border: 'none', color: VINHO, fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>
+          <button onClick={() => { setErro(''); setEtapa(ehCadastro ? 'login' : 'cadastro') }}
+            className="w-full text-gray-400 text-sm hover:text-gray-600 transition-colors">
             {ehCadastro ? 'Já tenho cadastro — entrar' : 'Não tenho cadastro — quero indicar'}
           </button>
-
-          {onVoltar && (
-            <button onClick={onVoltar} style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: 13 }}>
-              ← Voltar
-            </button>
-          )}
         </div>
       </div>
     </div>

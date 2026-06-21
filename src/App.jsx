@@ -21,6 +21,8 @@ export default function App() {
   const [dadosPreCadastro, setDadosPreCadastro] = useState({ cpf: '', sexo: '', dataNascimento: '' })
   const [showInatividade, setShowInatividade] = useState(false)
   const [landingKey, setLandingKey] = useState(0)
+  // (bariatrico.net) URL externa para o "Voltar" quando o usuário entrou pelo site.
+  const [voltarExterno, setVoltarExterno] = useState(null)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -39,15 +41,17 @@ export default function App() {
     const params = new URLSearchParams(window.location.search)
     const modoParam = params.get('modo')
     if (modoParam === 'medico') {
+      // (bariatrico.net) abre o CARD DE LOGIN do médico (não o formulário direto).
+      try { localStorage.setItem('rf_open_login', '1') } catch (e) {}
       setCalcKey(k => k + 1)
       setModo('calculadora')
     } else if (modoParam === 'paciente') {
       setModo('paciente')
+    } else if (modoParam === 'login') {
+      // (bariatrico.net) card de login/senha do paciente.
+      setModo('login')
     } else if (modoParam === 'indicador') {
       setModo('indicador')
-    } else if (modoParam === 'triagem') {
-      // (bariatrico.net) paciente entra DIRETO na triagem, pulando a landing.
-      setModo('triagem-direta')
     }
     // (4DOC) ?ref=CRM/UF — paciente chegou pelo QR de encaminhamento do médico.
     // Guarda o CRM p/ pré-preencher o card do encaminhador no cadastro.
@@ -100,8 +104,12 @@ export default function App() {
     if (bariParam === '0') { try { localStorage.removeItem('rf_dom_bari') } catch (e) {} }
     if (ehDominioBariatrico()) { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {} }
 
+    // (bariatrico.net) Veio do site externo? O "Voltar" destas telas retorna ao site,
+    // em vez de cair na landing interna (splash bariátrico).
+    if (params.get('from') === 'bari') setVoltarExterno('https://bariatrico.net')
+
     // Limpa os parametros da URL sem reload (inclui o token, p/ não ficar visível)
-    if (modoParam || refParam || params.get('fada') || pToken || bariParam) {
+    if (modoParam || refParam || params.get('fada') || pToken || bariParam || params.get('from')) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
@@ -192,6 +200,13 @@ export default function App() {
     }
   }, [modo, showInatividade])
 
+  // "Voltar" das telas de entrada: se o usuário veio do bariatrico.net, retorna ao
+  // site externo; senão, vai para a landing interna.
+  function irVoltar() {
+    if (voltarExterno) { window.location.href = voltarExterno; return }
+    setModo('home')
+  }
+
   function handleLogoClick() {
     const next = adminClicks + 1
     setAdminClicks(next)
@@ -224,7 +239,7 @@ export default function App() {
   if (modo === 'calculadora') {
     return (
       <div>
-        <Calculator key={calcKey} onVoltar={() => setModo('home')} modoDemo={false} />
+        <Calculator key={calcKey} onVoltar={irVoltar} modoDemo={false} />
       </div>
     )
   }
@@ -232,7 +247,7 @@ export default function App() {
   if (modo === 'triagem-direta') {
     return (
       <TriagemDireta
-        onVoltar={() => setModo('home')}
+        onVoltar={irVoltar}
         onIrDashboard={() => setModo('paciente')}
         onCadastrar={(dados) => {
           setDadosPreCadastro(dados)
@@ -246,7 +261,7 @@ export default function App() {
     if (session) { setModo('paciente'); return null }
     return <AuthPage
       onLogin={() => setModo('paciente')}
-      onVoltar={() => setModo('home')}
+      onVoltar={irVoltar}
       onDemoEntrar={(perfil) => { setDemoPacientePerfil(perfil); setModo('paciente') }}
       etapaInicial="cpf"
     />
@@ -282,7 +297,7 @@ export default function App() {
   }
 
   if (modo === 'indicador') {
-    return <IndicadorPage onVoltar={() => setModo('home')} />
+    return <IndicadorPage onVoltar={irVoltar} />
   }
 
   if (modo === 'admin') {
