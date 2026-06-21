@@ -45,6 +45,9 @@ export default function App() {
       setModo('paciente')
     } else if (modoParam === 'indicador') {
       setModo('indicador')
+    } else if (modoParam === 'triagem') {
+      // (bariatrico.net) paciente entra DIRETO na triagem, pulando a landing.
+      setModo('triagem-direta')
     }
     // (4DOC) ?ref=CRM/UF — paciente chegou pelo QR de encaminhamento do médico.
     // Guarda o CRM p/ pré-preencher o card do encaminhador no cadastro.
