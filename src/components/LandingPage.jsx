@@ -1526,7 +1526,11 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           O PLAY faz EXATAMENTE o que a hemácia do RedFairy faz (entrarHero) — e
           como o domínio já gravou rf_flag='bariatrica' (App.jsx), entra no fluxo
           bariátrico/OBA. Some assim que o paciente entra (fluxoEtapa !== 'inicio'). */}
-      {ehDominioBariatrico() && fluxoEtapa === 'inicio' && (
+      {/* DESATIVADO: bariatrico.net agora é um SITE EXTERNO próprio (pasta site-bariatrico).
+          A entrada bariátrica vem pelos botões do site (?modo=...&bari=1), não por este
+          splash interno — que reaparecia dentro do redfairy.bio sempre que rf_dom_bari
+          ficava no navegador. Mantido como código morto (false &&) por ora. */}
+      {false && ehDominioBariatrico() && fluxoEtapa === 'inicio' && (
         <div style={{ position:'fixed', inset:0, zIndex:2000, backgroundColor:'#1a1a1a',
           backgroundImage:`url(${fatslim})`, backgroundSize:'cover', backgroundPosition:'center', backgroundRepeat:'no-repeat' }}>
           <div style={{ position:'absolute', top:'40%', left:0, right:0, textAlign:'center', padding:'0 1.2rem' }}>
