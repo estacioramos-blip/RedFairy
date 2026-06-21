@@ -8,6 +8,7 @@ import logo from './assets/logo.png'
 import LandingPage from './components/LandingPage'
 import TriagemDireta from './components/TriagemDireta'
 import IndicadorPage from './components/IndicadorPage'
+import OBAEntradaPaciente from './components/OBAEntradaPaciente'
 import { ehDominioBariatrico } from './lib/dominio'
 export default function App() {
   const [modo, setModo] = useState('home')
@@ -22,7 +23,7 @@ export default function App() {
   const [showInatividade, setShowInatividade] = useState(false)
   const [landingKey, setLandingKey] = useState(0)
   // (bariatrico.net) URL externa para o "Voltar" quando o usuário entrou pelo site.
-  const [voltarExterno, setVoltarExterno] = useState(null)
+  const [voltarExterno, setVoltarExterno] = useState(() => { try { return localStorage.getItem('rf_voltar_url') } catch (e) { return null } })
   // (bariatrico.net) "Sou Bariátrico" → abre direto o popup do Projeto OBA na landing.
   const [autoOBA, setAutoOBA] = useState(false)
 
@@ -108,9 +109,12 @@ export default function App() {
 
     // (bariatrico.net) Veio do site externo? O "Voltar" destas telas retorna ao site,
     // em vez de cair na landing interna (splash bariátrico).
-    if (params.get('from') === 'bari') setVoltarExterno('https://bariatrico.net')
-    // (bariatrico.net) "Sou Bariátrico" → cai na landing e abre o popup do Projeto OBA.
-    if (params.get('oba') === '1') setAutoOBA(true)
+    if (params.get('from') === 'bari') {
+      try { localStorage.setItem('rf_voltar_url', 'https://bariatrico.net') } catch (e) {}
+      setVoltarExterno('https://bariatrico.net')
+    }
+    // (bariatrico.net) "Sou Bariátrico" → tela própria do paciente (NÃO a landing do redfairy).
+    if (params.get('oba') === '1') setModo('oba-paciente')
 
     // Limpa os parametros da URL sem reload (inclui o token, p/ não ficar visível)
     if (modoParam || refParam || params.get('fada') || pToken || bariParam || params.get('from') || params.get('oba')) {
@@ -159,7 +163,7 @@ export default function App() {
   // (paciente logado -> Modo Medico desloga o paciente, e vice-versa).
   useEffect(() => {
     const fluxoMedico = modo === 'calculadora' || modo === 'admin'
-    const fluxoPaciente = modo === 'paciente' || modo === 'triagem-direta' || modo === 'login'
+    const fluxoPaciente = modo === 'paciente' || modo === 'triagem-direta' || modo === 'login' || modo === 'oba-paciente'
     if (fluxoMedico) {
       let pacLogado = false
       try { pacLogado = !!localStorage.getItem('paciente_id') } catch (e) {}
@@ -280,7 +284,7 @@ export default function App() {
       // Constroi um pseudo-session pro PatientDashboard. Se ele precisar de session.user.id,
       // entrega o paciente_id do localStorage.
       const pseudoSession = { user: { id: pacienteLocalId } }
-      return <PatientDashboard session={pseudoSession} onVoltar={() => setModo('home')} abrirOBA={!!localStorage.getItem('rf_flag')} />
+      return <PatientDashboard session={pseudoSession} onVoltar={irVoltar} abrirOBA={!!localStorage.getItem('rf_flag')} />
     }
     // Sem paciente_id E sem dadosPreCadastro: estado dessincronizado, volta pra home.
     if (!dadosPreCadastro.cpf && !dadosPreCadastro.semCpf) {
@@ -297,7 +301,11 @@ export default function App() {
       dataNascimentoInicial={dadosPreCadastro.dataNascimento}
       etapaInicial={dadosPreCadastro.etapa || (dadosPreCadastro.cpf ? 'cadastro' : 'cpf')}
     />
-    return <PatientDashboard session={session} onVoltar={() => setModo('home')} abrirOBA={!!localStorage.getItem('rf_flag')} />
+    return <PatientDashboard session={session} onVoltar={irVoltar} abrirOBA={!!localStorage.getItem('rf_flag')} />
+  }
+
+  if (modo === 'oba-paciente') {
+    return <OBAEntradaPaciente onVoltar={irVoltar} onConcluir={() => setModo('triagem-direta')} />
   }
 
   if (modo === 'indicador') {
