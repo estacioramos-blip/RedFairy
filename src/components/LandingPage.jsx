@@ -599,7 +599,7 @@ function ContagemRegressiva() {
   )
 }
 
-export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, onIrDashboardPaciente, onModoAdmin }) {
+export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, onIrDashboardPaciente, onModoAdmin, autoOBA = false }) {
   const [medicoLogado, setMedicoLogado] = useState(() => {
     try { return localStorage.getItem('medico_nome') || ''; } catch(e) { return ''; }
   })
@@ -841,6 +841,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     setObaPopup(true);
     obaTimerRef.current = setTimeout(irFluxoPacienteOBA, 8000);
   }
+  // (bariatrico.net) "Sou Bariátrico" → entra direto no fluxo OBA (popup do Projeto OBA).
+  useEffect(() => { if (autoOBA) iniciarFluxoOBA(); }, [autoOBA]);
   function signInMedico() {
     try { localStorage.setItem('rf_open_login','1'); } catch(e){}
     onModoMedico();

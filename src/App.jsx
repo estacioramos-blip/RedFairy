@@ -23,6 +23,8 @@ export default function App() {
   const [landingKey, setLandingKey] = useState(0)
   // (bariatrico.net) URL externa para o "Voltar" quando o usuário entrou pelo site.
   const [voltarExterno, setVoltarExterno] = useState(null)
+  // (bariatrico.net) "Sou Bariátrico" → abre direto o popup do Projeto OBA na landing.
+  const [autoOBA, setAutoOBA] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -107,9 +109,11 @@ export default function App() {
     // (bariatrico.net) Veio do site externo? O "Voltar" destas telas retorna ao site,
     // em vez de cair na landing interna (splash bariátrico).
     if (params.get('from') === 'bari') setVoltarExterno('https://bariatrico.net')
+    // (bariatrico.net) "Sou Bariátrico" → cai na landing e abre o popup do Projeto OBA.
+    if (params.get('oba') === '1') setAutoOBA(true)
 
     // Limpa os parametros da URL sem reload (inclui o token, p/ não ficar visível)
-    if (modoParam || refParam || params.get('fada') || pToken || bariParam || params.get('from')) {
+    if (modoParam || refParam || params.get('fada') || pToken || bariParam || params.get('from') || params.get('oba')) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
@@ -322,6 +326,7 @@ export default function App() {
 if (modo === 'home') {
   return (
     <LandingPage key={landingKey}
+      autoOBA={autoOBA}
       onModoMedico={(flag) => { if (flag) localStorage.setItem('rf_flag', flag); handleDemoMedico(); }}
       onModoPaciente={() => setModo('triagem-direta')}
       onModoAdmin={() => setModo('admin')}
