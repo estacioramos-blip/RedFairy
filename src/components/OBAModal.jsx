@@ -228,6 +228,7 @@ const EXAMES_BASE = [
   { key: 'vitamina_k',     label: 'Vitamina K',                unit: 'ng/mL',  ref: "0,2\u20133,2" },
   { key: 'niacina',        label: 'Niacina (B3)',              unit: "\u00b5g/mL",  ref: "0,5\u20138,9" },
   { key: 'testosterona',   label: 'Testosterona Total',        unit: 'ng/dL',  ref: "H: 300\u20131.000 / F: 15\u201370" },
+  { key: 'ige_total',      label: 'IgE Total',                 unit: 'UI/mL',  ref: "<100" },
 ]
 
 // Idade >= 45 (ambos os sexos): proteínas + globulina calculada (A/G).
@@ -369,6 +370,7 @@ const LIMITES_OBA = {
   'creatinina': { min:0.3, max:15 },
   'acido_urico': { min:1, max:20 },
   'd_dimero': { min:0, max:50000 },
+  'ige_total': { min:0, max:50000 },
   'folatos': { min:1, max:50 },
   'zinco': { min:20, max:300 },
   'pth': { min:1, max:2000 },

@@ -4,26 +4,28 @@
 // Retorna: relatório OBA com alertas, módulos e orientações
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { OBA_CUTOFFS } from './obaCutoffs'
+
 // ── Valores de referência pós-bariátrica (ASMBS/IFSO/literatura) ─────────────
 const REF = {
-  // Vitamina B12 (pg/mL)
-  b12:          { critico: 100, baixo: 200, normal: 300, alto: 900 },
+  // Vitamina B12 (pg/mL) — ≥200 já é normal (Dr. Ramos); >1000 sem suplementação = investigar
+  b12:          { critico: 100, baixo: 200, normal: 200, alto: 1000 },
   // Vitamina D 25-OH (ng/mL)
   vitD:         { critico: 10,  baixo: 20,  normal: 30,  alto: 100 },
   // Zinco sérico (mcg/dL)
-  zinco:        { critico: 50,  baixo: 60,  normal: 100, alto: 130 },
+  zinco:        { critico: 50,  baixo: 60,  normal: 70,  alto: 130 },
   // Vitamina A (mcg/dL)
   vitA:         { critico: 15,  baixo: 20,  normal: 65,  alto: 77  },
   // Tiamina / B1 (nmol/L)
   tiamina:      { critico: 50,  baixo: 70,  normal: 200, alto: 450 },
-  // Vitamina E (mg/dL)
-  vitE:         { critico: 0.5, baixo: 0.8, normal: 1.5, alto: 3.5 },
+  // Vitamina E (mg/L) — alinhado à unidade coletada no exame (faixa 5–18 mg/L)
+  vitE:         { critico: 3,   baixo: 5,   normal: 12,  alto: 18  },
   // Vitamina K (ng/mL)
   vitK:         { critico: 0.1, baixo: 0.2, normal: 1.0, alto: 2.2 },
   // Folatos (ng/mL)
   folatos:      { critico: 2,   baixo: 4,   normal: 6,   alto: 20  },
   // Selênio (mcg/L)
-  selenio:      { critico: 40,  baixo: 60,  normal: 120, alto: 200 },
+  selenio:      { critico: 40,  baixo: 63,  normal: 120, alto: 200 },
   // Vitamina C (mg/dL)
   vitC:         { critico: 0.2, baixo: 0.4, normal: 0.7, alto: 2.0 },
   // Niacina / B3 (mcg/dL) — como ácido nicotínico
@@ -154,7 +156,7 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   if (modOncol) modulos.push(modOncol)
 
   // ── 12. MÓDULO COMPORTAMENTAL E QUALIDADE DE VIDA ───────────────────────
-  const modComport = buildModComportamental(dadosOBA)
+  const modComport = buildModComportamental(dadosOBA, alertas, examesSuger)
   if (modComport) modulos.push(modComport)
 
   // ── 13. MÓDULO GESTACIONAL ───────────────────────────────────────────────
@@ -437,12 +439,20 @@ function buildModB12(ex, dados, disab, alertas, suger) {
     nivel = MODERADO
     linhas.push('DÉFICIT MODERADO DE VITAMINA B12 (100–200 pg/mL). PODE PRODUZIR MACROCITOSE, ANEMIA MACROCÍTICA E ALTERAÇÕES NEUROLÓGICAS SUBCLÍNICAS. REPOSIÇÃO SUBLINGUAL OU PARENTERAL OBRIGATÓRIA.')
     alertas.push({ nivel: MODERADO, texto: `B12 BAIXA: ${b12} pg/mL — DÉFICIT MODERADO. REPOSIÇÃO SUBLINGUAL OU IM NECESSÁRIA.` })
-  } else if (b12 < REF.b12.normal) {
-    nivel = LEVE
-    linhas.push('VITAMINA B12 EM ZONA LIMÍTROFE (200–300 pg/mL). NO BARIÁTRICO, ESSE NÍVEL É INSUFICIENTE. AUMENTAR A FREQUÊNCIA OU DOSE DA SUPLEMENTAÇÃO SUBLINGUAL OU PARENTERAL.')
-    alertas.push({ nivel: LEVE, texto: `B12 LIMÍTROFE: ${b12} pg/mL — AUMENTAR SUPLEMENTAÇÃO.` })
+  } else if (b12 > REF.b12.alto) {
+    // B12 alta: no bariátrico é MUITO comum por suplementação (sublingual/IM em altas
+    // doses) — nesse caso é esperada/benigna. SEM suplementação, B12 persistentemente
+    // alta (> 1.000) pede investigação (hepatopatia, mieloproliferativa, neoplasia oculta).
+    if (usaB12IM || usaB12Sub) {
+      linhas.push(`VITAMINA B12 ELEVADA (${b12} pg/mL): ESPERADA PELO USO DE B12 SUPLEMENTAR (SUBLINGUAL/INTRAMUSCULAR) NO BARIÁTRICO — ACHADO BENIGNO. PODE-SE REDUZIR OU ESPAÇAR A DOSE SE MUITO ALTA.`)
+    } else {
+      nivel = MODERADO
+      linhas.push(`VITAMINA B12 ELEVADA (> 1.000 pg/mL: ${b12}) SEM SUPLEMENTAÇÃO REGISTRADA: EMBORA POSSA SER BENIGNA/GENÉTICA, A B12 PERSISTENTEMENTE ALTA SEM CAUSA EXÓGENA PEDE INVESTIGAÇÃO — HEPATOPATIA, DOENÇA MIELOPROLIFERATIVA (HEMOGRAMA COM DIFERENCIAL) OU NEOPLASIA OCULTA.`)
+      alertas.push({ nivel: MODERADO, texto: `B12 ELEVADA (${b12} pg/mL) SEM SUPLEMENTAÇÃO — INVESTIGAR (HEPATOPATIA, MIELOPROLIFERATIVA, NEOPLASIA).` })
+      suger.push('HEMOGRAMA COM DIFERENCIAL + BIOQUÍMICA HEPÁTICA (B12 elevada sem suplementação)')
+    }
   } else {
-    linhas.push('VITAMINA B12 DENTRO DA FAIXA ADEQUADA PARA O CONTEXTO BARIÁTRICO. MANTER SUPLEMENTAÇÃO ATUAL E REMONITORAR EM 6 MESES.')
+    linhas.push('VITAMINA B12 ADEQUADA (≥ 200 pg/mL) PARA O CONTEXTO BARIÁTRICO. MANTER SUPLEMENTAÇÃO ATUAL E REMONITORAR EM 6 MESES.')
   }
 
   // Metformina e IBP agravam deficiência de B12
@@ -543,7 +553,7 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
       alertas.push({ nivel: MODERADO, texto: `ZINCO BAIXO: ${zinco} mcg/dL — SUPLEMENTAÇÃO NECESSÁRIA.` })
     } else if (zinco < REF.zinco.normal) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
-      linhas.push('ZINCO EM ZONA LIMÍTROFE (60–100 mcg/dL). MONITORAR. MANTER SUPLEMENTAÇÃO COM POLIVITAMÍNICO CONTENDO ZINCO.')
+      linhas.push('ZINCO EM ZONA LIMÍTROFE (60–70 mcg/dL). MONITORAR. MANTER SUPLEMENTAÇÃO COM POLIVITAMÍNICO CONTENDO ZINCO.')
     } else {
       linhas.push('ZINCO DENTRO DA FAIXA NORMAL.')
     }
@@ -597,11 +607,11 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
   const vitE = parseFloat(ex.vitamina_e)
   if (!isNaN(vitE)) {
     temAlgo = true
-    linhas.push(`VITAMINA E: ${vitE} mg/dL`)
+    linhas.push(`VITAMINA E: ${vitE} mg/L`)
     if (vitE < REF.vitE.baixo) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
-      linhas.push('VITAMINA E ABAIXO DO NORMAL (< 0.8 mg/dL). ANTIOXIDANTE ESSENCIAL. SUPLEMENTAR VIA POLIVITAMÍNICO COM TOCOFEROL.')
-      alertas.push({ nivel: LEVE, texto: `VITAMINA E BAIXA: ${vitE} mg/dL.` })
+      linhas.push('VITAMINA E ABAIXO DO NORMAL (< 5 mg/L). ANTIOXIDANTE ESSENCIAL. SUPLEMENTAR VIA POLIVITAMÍNICO COM TOCOFEROL.')
+      alertas.push({ nivel: LEVE, texto: `VITAMINA E BAIXA: ${vitE} mg/L.` })
     } else {
       linhas.push('VITAMINA E DENTRO DA FAIXA NORMAL.')
     }
@@ -720,9 +730,6 @@ function buildModGlico(ex, dados, alertas, suger) {
   const ins  = parseFloat(ex.insulina)
   const hba  = parseFloat(ex.hb_glicada)
   const tg   = parseFloat(ex.triglicerides)
-  const ast  = parseFloat(ex.ast)
-  const alt  = parseFloat(ex.alt)
-  const ggt  = parseFloat(ex.gama_gt)
   const stGli = dados.status_glicemico || ''
   // DUMPING agora é um campo próprio (checkbox), independente do radio glicêmico.
   // Mantém compat. com dados antigos onde vinha dentro de status_glicemico.
@@ -801,9 +808,9 @@ function buildModGlico(ex, dados, alertas, suger) {
       alertas.push({ nivel: MODERADO, texto: `TRIGLICÉRIDES MUITO ALTOS: ${tg} mg/dL — RISCO DE PANCREATITE.` })
       suger.push('AMILASE E LIPASE SÉRICAS')
     } else if (tg >= REF.tg.alto) {
-      if (nivelGeral === NORMAL) nivelGeral = LEVE
-      linhas.push('TRIGLICÉRIDES ELEVADOS (200–499 mg/dL). AVALIAR PADRÃO ALIMENTAR, USO DE ÁLCOOL E RESISTÊNCIA INSULÍNICA.')
-      alertas.push({ nivel: LEVE, texto: `TRIGLICÉRIDES ELEVADOS: ${tg} mg/dL.` })
+      // 200–499: o risco CV é contado no módulo LIPIDOGRAMA (evita contar 2x no
+      // estado). Aqui fica só informativo.
+      linhas.push('TRIGLICÉRIDES ELEVADOS (200–499 mg/dL) — risco cardiovascular avaliado no LIPIDOGRAMA. Avaliar padrão alimentar, álcool e resistência insulínica.')
     } else if (tg >= REF.tg.otimo) {
       linhas.push('TRIGLICÉRIDES LIMÍTROFES (150–199 mg/dL). ATENÇÃO À DIETA E ATIVIDADE FÍSICA.')
     } else {
@@ -932,6 +939,23 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
       linhas.push('ÁCIDO ÚRICO NORMAL.')
     }
   }
+
+  // Ureia (cortes a validar pelo médico)
+  const ure = parseFloat(ex.ureia)
+  if (!isNaN(ure)) {
+    temAlgo = true
+    linhas.push(`UREIA: ${ure} mg/dL`)
+    if (ure > 100) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('UREIA MUITO ELEVADA (> 100 mg/dL): avaliar função renal, desidratação ou sangramento gastrointestinal. Correlacionar com a creatinina.')
+      alertas.push({ nivel: MODERADO, texto: `UREIA MUITO ELEVADA: ${ure} mg/dL.` })
+    } else if (ure > 40) {
+      if (nivelGeral === NORMAL) nivelGeral = LEVE
+      linhas.push('UREIA ELEVADA (> 40 mg/dL): no bariátrico, causas comuns são desidratação e dieta hiperproteica; correlacionar com a creatinina e a hidratação.')
+    } else {
+      linhas.push('UREIA NORMAL.')
+    }
+  } else suger.push('UREIA')
 
   if (!temAlgo) return null
 
@@ -1240,6 +1264,8 @@ function buildModOsseo(dados, ex, alertas, suger) {
   const ca = parseFloat(ex.calcio_ionico || ex.calcio || NaN)
   const pth = parseFloat(ex.pth)
   const mg = parseFloat(ex.magnesio)
+  // Cortes ósseo-minerais: fonte única em obaCutoffs.js (sem literais duplicados).
+  const cMg = OBA_CUTOFFS.magnesio, cCa = OBA_CUTOFFS.calcio_ionico, cPth = OBA_CUTOFFS.pth
   const temLabOsseo = !isNaN(pth) || !isNaN(ca) || !isNaN(mg)
 
   if (!osseo && !dental && !temLabOsseo) return null
@@ -1293,11 +1319,11 @@ function buildModOsseo(dados, ex, alertas, suger) {
 
   // Magnésio — pré-requisito para a ação do PTH e da vitamina D
   if (!isNaN(mg)) {
-    if (mg < 1.7) {
+    if (mg < cMg.min) {
       linhas.push(`MAGNÉSIO BAIXO (${mg} MG/DL): A HIPOMAGNESEMIA É FREQUENTE NO BARIÁTRICO E PREJUDICA A SECREÇÃO E A AÇÃO DO PTH, ALÉM DA ATIVAÇÃO DA VITAMINA D. CORRIGIR O MAGNÉSIO É PRÉ-REQUISITO PARA QUE A REPOSIÇÃO DE CÁLCIO E VITAMINA D FUNCIONE.`)
       alertas.push({ nivel: MODERADO, texto: 'HIPOMAGNESEMIA — CORRIGIR ANTES DE OTIMIZAR CÁLCIO E VITAMINA D.' })
       subirNivel(MODERADO)
-    } else if (mg > 2.4) {
+    } else if (mg > cMg.max) {
       linhas.push(`MAGNÉSIO ELEVADO (${mg} MG/DL): INVESTIGAR FUNÇÃO RENAL E EXCESSO DE SUPLEMENTAÇÃO.`)
       subirNivel(LEVE)
     }
@@ -1306,12 +1332,12 @@ function buildModOsseo(dados, ex, alertas, suger) {
   // Cálcio iônico
   let caBaixo = false
   if (!isNaN(ca)) {
-    if (ca < 1.15) {
+    if (ca < cCa.min) {
       caBaixo = true
       linhas.push(`CÁLCIO IÔNICO BAIXO (${ca} MMOL/L): HIPOCALCEMIA. NO BARIÁTRICO, COMUMENTE SECUNDÁRIA À DEFICIÊNCIA DE VITAMINA D E À MÁ ABSORÇÃO. REPOR CITRATO DE CÁLCIO E CORRIGIR VITAMINA D E MAGNÉSIO.`)
       alertas.push({ nivel: MODERADO, texto: 'HIPOCALCEMIA — REPOSIÇÃO DE CÁLCIO (CITRATO) E CORREÇÃO DE VITAMINA D.' })
       subirNivel(MODERADO)
-    } else if (ca > 1.32) {
+    } else if (ca > cCa.max) {
       linhas.push(`CÁLCIO IÔNICO ELEVADO (${ca} MMOL/L): INVESTIGAR HIPERPARATIREOIDISMO PRIMÁRIO OU EXCESSO DE SUPLEMENTAÇÃO DE CÁLCIO E VITAMINA D.`)
       subirNivel(LEVE)
     }
@@ -1319,8 +1345,8 @@ function buildModOsseo(dados, ex, alertas, suger) {
 
   // PTH intacto — eixo do hiperparatireoidismo secundário no bariátrico
   if (!isNaN(pth)) {
-    if (pth > 65) {
-      if (!isNaN(ca) && ca > 1.32) {
+    if (pth > cPth.max) {
+      if (!isNaN(ca) && ca > cCa.max) {
         linhas.push(`PTH ELEVADO (${pth} PG/ML) COM CÁLCIO ALTO: PADRÃO SUGESTIVO DE HIPERPARATIREOIDISMO PRIMÁRIO. INVESTIGAÇÃO ENDOCRINOLÓGICA INDICADA.`)
         alertas.push({ nivel: GRAVE, texto: 'PTH E CÁLCIO ELEVADOS — INVESTIGAR HIPERPARATIREOIDISMO PRIMÁRIO.' })
         subirNivel(GRAVE)
@@ -1331,7 +1357,7 @@ function buildModOsseo(dados, ex, alertas, suger) {
         subirNivel(grave ? GRAVE : MODERADO)
         suger.push('PTH INTACTO (REAVALIAR APÓS CORREÇÃO)')
       }
-    } else if (pth < 15) {
+    } else if (pth < cPth.min) {
       linhas.push(`PTH BAIXO (${pth} PG/ML): AVALIAR HIPERCALCEMIA, HIPOPARATIREOIDISMO OU EXCESSO DE VITAMINA D E CÁLCIO.`)
       subirNivel(LEVE)
     }
@@ -1531,7 +1557,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
 // ─────────────────────────────────────────────────────────────────────────────
 // MÓDULO 12 — COMPORTAMENTAL E QUALIDADE DE VIDA
 // ─────────────────────────────────────────────────────────────────────────────
-function buildModComportamental(dados) {
+function buildModComportamental(dados, alertas, suger) {
   const linhas = []
   let nivelGeral = NORMAL
   let temAlgo = false
@@ -1555,12 +1581,15 @@ function buildModComportamental(dados) {
     nivelGeral = GRAVE
     linhas.push('COMPULSÃO POR ÁLCOOL: A SÍNDROME DE TRANSFERÊNCIA DE ADIÇÃO (ADDICTION TRANSFER) É RECONHECIDA NO PÓS-BARIÁTRICO. O ÁLCOOL É ABSORVIDO MAIS RÁPIDO E PRODUZ PICOS MAIORES DE ALCOOLEMIA NO BARIÁTRICO. AVALIAÇÃO COM PSIQUIATRA E ENCAMINHAMENTO PARA GRUPO DE APOIO (ALCOÓLICOS ANÔNIMOS). O ÁLCOOL AGRAVA DEFICIÊNCIAS DE TIAMINA, FOLATOS E PRODUZ DANO HEPÁTICO ACELERADO.')
     linhas.push('ALERTA: USO DE ÁLCOOL NO BARIÁTRICO ELEVA RISCO DE CÂNCER DE ESÔFAGO, CIRROSE E VARIZES ESOFAGIANAS.')
+    alertas.push({ nivel: GRAVE, texto: 'COMPULSÃO POR ÁLCOOL no pós-bariátrico (transferência de adição) — avaliação com psiquiatra e grupo de apoio.' })
+    suger.push('AVALIAÇÃO COM PSIQUIATRA (compulsão por álcool)')
   }
 
   if (compulsoes.includes('DOCES') || compulsoes.includes('COMIDA')) {
     temAlgo = true
     if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     linhas.push('COMPULSÃO ALIMENTAR POR DOCES OU COMIDA: FATOR DE RISCO PARA REGANHO DE PESO. AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA ESPECIALIZADO EM COMPULSÃO ALIMENTAR. SÍNDROME DE DUMPING TARDIA PODE MIMETIZAR COMPULSÃO POR DOCES.')
+    alertas.push({ nivel: MODERADO, texto: 'COMPULSÃO ALIMENTAR (doces/comida) — fator de risco para reganho de peso; avaliação especializada.' })
   }
 
   if (compulsoes.includes('GELO')) {
@@ -2013,6 +2042,7 @@ function buildModAcompanhamento(dadosOBA, alertas) {
   }
 
   return {
+    id:     'acompanhamento',
     titulo: 'Acompanhamento Multidisciplinar',
     nivel: nivelGeral,
     linhas,
@@ -2043,6 +2073,7 @@ function buildModLipidico(ex, dados, sexo, alertas, suger) {
 
   if (todosVazios) {
     return {
+      id:     'lipidico',
       titulo: '🩸 LIPIDOGRAMA / RISCO CARDIOVASCULAR',
       nivel: NORMAL,
       linhas: [
@@ -2155,6 +2186,7 @@ function buildModLipidico(ex, dados, sexo, alertas, suger) {
   }
 
   return {
+    id:     'lipidico',
     titulo: '🩸 LIPIDOGRAMA / RISCO CARDIOVASCULAR',
     nivel,
     linhas
@@ -2165,9 +2197,10 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
   const leuco   = parseFloat(examesOBA.leucocitos)
   const neutPct = parseFloat(examesOBA.neutrofilos)
   const neutAbs = parseFloat(examesOBA.neutrofilos_ul)
+  const plaq    = parseFloat(examesOBA.plaquetas)
 
   // Se nenhum informado, nao gerar modulo
-  if (isNaN(leuco) && isNaN(neutPct) && isNaN(neutAbs)) return null
+  if (isNaN(leuco) && isNaN(neutPct) && isNaN(neutAbs) && isNaN(plaq)) return null
 
   const linhas = []
   let nivelGeral = NORMAL
@@ -2222,8 +2255,45 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
     }
   }
 
+  // ─── Linfócitos estimados — possível linfocitose absoluta ───────────
+  // Linfócitos ≈ leucócitos − neutrófilos absolutos − ~10% (monócitos/eosinófilos/
+  // basófilos). > 6.000/uL → possível linfocitose absoluta a esclarecer (corte a validar).
+  const neutParaLinf = !isNaN(neutAbs) ? neutAbs : ((!isNaN(leuco) && !isNaN(neutPct)) ? Math.round(leuco * neutPct / 100) : NaN)
+  if (!isNaN(leuco) && !isNaN(neutParaLinf)) {
+    const linfEst = Math.round(leuco - neutParaLinf - leuco * 0.10)
+    if (linfEst > 6000) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push(`LINFÓCITOS ESTIMADOS ~${linfEst.toLocaleString('pt-BR')}/uL (leucócitos − neutrófilos − 10%): POSSÍVEL LINFOCITOSE ABSOLUTA A ESCLARECER. Solicitar hemograma com contagem diferencial; investigar causas (infecções virais; em adultos, descartar síndrome linfoproliferativa).`)
+      alertas.push({ nivel: MODERADO, texto: `POSSÍVEL LINFOCITOSE ABSOLUTA (linfócitos estimados ~${linfEst.toLocaleString('pt-BR')}/uL) — esclarecer.` })
+      examesSuger.push('HEMOGRAMA COM CONTAGEM DIFERENCIAL (linfócitos)')
+    }
+  }
+
+  // ─── Plaquetas (cortes a validar pelo médico) ───────────────────────
+  if (!isNaN(plaq)) {
+    linhas.push(`PLAQUETAS: ${plaq.toLocaleString('pt-BR')} mil/uL (referência 150–400).`)
+    if (plaq < 100) {
+      nivelGeral = GRAVE
+      linhas.push('PLAQUETOPENIA IMPORTANTE (<100 mil/uL): risco de sangramento. Avaliação hematológica. Investigar deficiência nutricional grave (B12/folato), hepatopatia, hiperesplenismo, medicamentos ou PTI.')
+      alertas.push({ nivel: GRAVE, texto: `PLAQUETOPENIA: ${plaq} mil/uL — avaliação hematológica.` })
+    } else if (plaq < 150) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('PLAQUETOPENIA LEVE (100–149 mil/uL): investigar causa (nutricional, hepática, medicamentosa).')
+      alertas.push({ nivel: MODERADO, texto: `PLAQUETOPENIA LEVE: ${plaq} mil/uL.` })
+    } else if (plaq > 450) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('TROMBOCITOSE (>450 mil/uL): frequentemente reativa (inflamação, ferropenia, infecção). Se persistente, avaliação hematológica.')
+      alertas.push({ nivel: MODERADO, texto: `TROMBOCITOSE: ${plaq} mil/uL.` })
+    } else if (plaq > 400) {
+      linhas.push('PLAQUETAS no limite superior (401–450 mil/uL). Correlacionar clinicamente.')
+    } else {
+      linhas.push('Plaquetas dentro da faixa de normalidade.')
+    }
+  }
+
   return {
-    titulo: 'Leucócitos e Neutrófilos',
+    id:     'leucos',
+    titulo: 'Hemograma — Leucócitos, Neutrófilos e Plaquetas',
     nivel: nivelGeral,
     linhas,
   }

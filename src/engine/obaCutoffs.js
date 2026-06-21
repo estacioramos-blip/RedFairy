@@ -31,6 +31,9 @@ export const OBA_CUTOFFS = {
   // Coagulacao
   d_dimero:       { min: 0,     max: 500   },  // ng/mL FEU
 
+  // Imuno/atopia
+  ige_total:      { min: 0,     max: 100   },  // UI/mL (adulto)
+
   // Hepaticas (permissivo dimorfico - valor H)
   ast:            { min: 0,     max: 40    },
   alt:            { min: 0,     max: 56    },
