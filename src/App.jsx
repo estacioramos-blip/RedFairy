@@ -7,6 +7,7 @@ import AdminPage from './components/AdminPage'
 import logo from './assets/logo.png'
 import LandingPage from './components/LandingPage'
 import TriagemDireta from './components/TriagemDireta'
+import IndicadorPage from './components/IndicadorPage'
 import { ehDominioBariatrico } from './lib/dominio'
 export default function App() {
   const [modo, setModo] = useState('home')
@@ -42,6 +43,8 @@ export default function App() {
       setModo('calculadora')
     } else if (modoParam === 'paciente') {
       setModo('paciente')
+    } else if (modoParam === 'indicador') {
+      setModo('indicador')
     }
     // (4DOC) ?ref=CRM/UF — paciente chegou pelo QR de encaminhamento do médico.
     // Guarda o CRM p/ pré-preencher o card do encaminhador no cadastro.
@@ -273,6 +276,10 @@ export default function App() {
       etapaInicial={dadosPreCadastro.etapa || (dadosPreCadastro.cpf ? 'cadastro' : 'cpf')}
     />
     return <PatientDashboard session={session} onVoltar={() => setModo('home')} abrirOBA={!!localStorage.getItem('rf_flag')} />
+  }
+
+  if (modo === 'indicador') {
+    return <IndicadorPage onVoltar={() => setModo('home')} />
   }
 
   if (modo === 'admin') {
