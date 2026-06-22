@@ -17,6 +17,7 @@ import chatphone2Img from '../assets/chatphone2.jpg';
 import telefonista2Img from '../assets/telefonista2.jpg';
 import telefonista3Img from '../assets/telefonista3.jpg';
 import logo from '../assets/logo.png';
+import obaLogo from '../assets/oba-logo.png';
 import { QRCodeSVG } from 'qrcode.react';
 import { useInstalarFada } from '../lib/useInstalarFada';
 import { ehDominioBariatrico } from '../lib/dominio';
@@ -374,31 +375,14 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
       )}
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md" style={{ overflow: 'hidden', position: 'relative' }}
         onMouseEnter={() => setBgRevelado(true)} onMouseLeave={() => setBgRevelado(false)} onTouchStart={() => setBgRevelado(true)}>
-        {/* Imagem de fundo: inteira (contain) e afastada, esmaecida; revela no hover (igual a' hero) */}
-        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundColor: '#FDF7F7', backgroundImage: `url(${telefonista3Img})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', filter: bgRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
-        {/* SPLASH de entrada: imagem INTEIRA + "Vamos!..." por 2s, antes dos campos */}
-        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', backgroundImage: `url(${telefonista3Img})`, backgroundSize: 'contain', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', opacity: splashAtivo ? 1 : 0, pointerEvents: splashAtivo ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
-          <div style={{ position: 'absolute', left: 0, right: 0, bottom: '28%', padding: '0 24px', textAlign: 'center' }}>
-            <p style={{ color: '#ffffff', fontSize: '42px', fontWeight: 900, lineHeight: 1.1, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{vamosTxt}</p>
+        {/* (limpo) Fundo e splash da telefonista removidos — card de acesso limpo (padrão OBA). */}
+        {/* Header OBA: faixa cinza + logo OBA + subt\u00edtulo do modo. */}
+        <div style={{ position: 'relative', zIndex: 10, background: '#fff', padding: '14px 14px 10px' }}>
+          <div style={{ background: '#B8B7B8', borderRadius: 14, padding: '8px 16px', display: 'flex', justifyContent: 'center' }}>
+            <img src={obaLogo} alt="Projeto OBA\u00ae" style={{ height: 100, objectFit: 'contain', display: 'block' }} />
           </div>
-        </div>
-        {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons.
-            zIndex 10 (acima do splash zIndex 5) para o header ja aparecer durante a
-            imagem nitida de entrada (3s), nao so' quando surgem os campos. */}
-        <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
-          <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-            <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
-          </h2>
-        </div>
-        {/* Titulo do modo (Primeiro Acesso / Acesso Medico): zIndex 10 p/ aparecer JUNTO do header
-            e da imagem desde o inicio (durante o splash), nao so' quando surgem os campos. */}
-        <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', padding: '6px 14px 10px', textAlign: 'center' }}>
-          <h2 className="text-xl font-bold text-red-700" style={{ margin: 0 }}>
+          <p className="text-gray-500 text-sm" style={{ margin: '10px 0 0', textAlign: 'center' }}>
             {modo === 'login' ? "Acesso M\u00e9dico" : "Primeiro Acesso M\u00e9dico"}
-          </h2>
-          <p className="text-gray-500 text-sm" style={{ margin: '2px 0 0' }}>
-            {modo === 'login' ? 'Entre com seu conselho e senha' : 'Crie seu acesso ao RedFairy'}
           </p>
         </div>
         <div className="px-8 pb-8 pt-3 space-y-5" style={{ position: 'relative', zIndex: 1 }}>

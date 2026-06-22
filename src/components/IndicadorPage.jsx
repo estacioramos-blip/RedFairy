@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
-import logo from '../assets/logo.png'
+import obaLogo from '../assets/oba-logo.png'
 import PlayButton from './PlayButton'
 
 // =============================================================================
@@ -213,12 +213,11 @@ export default function IndicadorPage({ onVoltar }) {
   ) : null
 
   const Cabecalho = (
-    <div className="text-center mb-6">
-      <img src={logo} alt="RedFairy"
-        className="w-16 h-16 object-contain mx-auto mb-2"
-        style={{ filter: "drop-shadow(0 0 12px rgba(239,68,68,0.6))" }} />
-      <h2 className="text-2xl font-bold text-red-700">{"RedFairy | Projeto OBA"}</h2>
-      <p className="text-gray-500 text-sm">Modo Indicador</p>
+    <div className="mb-6">
+      <div style={{ background: '#B8B7B8', borderRadius: 14, padding: '8px 16px', display: 'flex', justifyContent: 'center' }}>
+        <img src={obaLogo} alt="Projeto OBA®" style={{ height: 112, objectFit: 'contain', display: 'block' }} />
+      </div>
+      <p className="text-gray-500 text-sm text-center" style={{ marginTop: 10 }}>Modo Indicador</p>
     </div>
   )
 
