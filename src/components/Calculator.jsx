@@ -2247,6 +2247,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               setShowConviteAfiliado(true);
             }}
             onVoltar={() => {
+              setShowTriagem(false);   // evita o "flash" do modal de triagem ao voltar
               setShowAuthMedicoOverlay(false);
               if (onVoltar) onVoltar();
             }}
