@@ -292,5 +292,17 @@ class Component extends DCLogic {
   }
 }
 </script>
+<script>
+  /* Ao clicar nos botoes que levam ao app (redfairy.bio), cobre a tela com preto
+     antes de navegar — evita o "flash" na transicao site -> app. */
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest && e.target.closest('a[href]');
+    if (a && /redfairy\.bio/.test(a.getAttribute('href') || '')) {
+      var o = document.createElement('div');
+      o.style.cssText = 'position:fixed;inset:0;background:#000;z-index:2147483647';
+      document.body.appendChild(o);
+    }
+  }, true);
+</script>
 </body>
 </html>
