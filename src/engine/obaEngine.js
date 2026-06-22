@@ -370,7 +370,9 @@ function buildModNeurologico(dadosOBA, alertas, suger) {
 function buildModEndoscopico(dadosOBA, alertas, suger) {
   const lista = Array.isArray(dadosOBA.status_endoscopico) ? dadosOBA.status_endoscopico : []
   const achados = lista.filter(s => s && s !== 'NORMAL')
-  if (achados.length === 0) return null
+  const igmReag = dadosOBA.anti_hp_igm === 'REAGENTE'
+  const iggReag = dadosOBA.anti_hp_igg === 'REAGENTE'
+  if (achados.length === 0 && !igmReag && !iggReag) return null
 
   const ordem = { [NORMAL]: 0, [LEVE]: 1, [MODERADO]: 2, [GRAVE]: 3 }
   let nivel = NORMAL
@@ -386,10 +388,16 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
     suger.push('COLONOSCOPIA')
     bump(MODERADO)
   }
-  if (has('H. PYLORI')) {
-    linhas.push('H. PYLORI: ALÉM DE COMPROMETER A ABSORÇÃO DE B12 E FERRO E CAUSAR GASTRITE, É CLASSIFICADO COMO CARCINÓGENO DO GRUPO 1 (IARC/OMS) — O GENOMA DO MICRORGANISMO TEM POTENCIAL ONCOGÊNICO. PERMANECER INFECTADO REPRESENTA RISCO ALTO E AUMENTA SIGNIFICATIVAMENTE A CHANCE DE CÂNCER GÁSTRICO E DE LINFOMA MALT. A ERRADICAÇÃO É FORTEMENTE RECOMENDADA: SOLICITE A PRESCRIÇÃO DO TRATAMENTO E REAVALIE APÓS A ERRADICAÇÃO.')
-    alertas.push({ nivel: MODERADO, texto: 'H. PYLORI: agente carcinogênico (Grupo 1) — risco alto de câncer gástrico se não tratado. Solicitar prescrição do tratamento de erradicação.' })
-    suger.push('PESQUISA DE H. PYLORI (CONTROLE PÓS-TRATAMENTO)')
+  if (has('H. PYLORI') || igmReag || iggReag) {
+    const fonte = has('H. PYLORI') ? 'ACHADO ENDOSCÓPICO'
+      : igmReag ? 'SOROLOGIA IgM REAGENTE (INFECÇÃO RECENTE/ATIVA)'
+      : 'SOROLOGIA IgG REAGENTE'
+    linhas.push(`H. PYLORI (${fonte}): CARCINÓGENO DO GRUPO 1 (IARC/OMS) — AUMENTA O RISCO DE CÂNCER GÁSTRICO E LINFOMA MALT, ALÉM DE COMPROMETER A ABSORÇÃO DE B12 E FERRO E CAUSAR GASTRITE.`)
+    linhas.push('TRATADA OU NÃO? OS ANTICORPOS CONTRA O H. PYLORI NÃO SÃO PROTETORES E PERSISTEM APÓS O TRATAMENTO — A SOROLOGIA NÃO CONFIRMA CURA NEM IMUNIDADE. SE A INFECÇÃO NÃO FOI TRATADA, INDICA-SE A ERRADICAÇÃO. SE JÁ FOI TRATADA, CONFIRME A ERRADICAÇÃO POR TESTE NÃO SOROLÓGICO (ANTÍGENO FECAL, TESTE RESPIRATÓRIO DA UREIA OU BIÓPSIA) — NUNCA PELA SOROLOGIA.')
+    alertas.push({ nivel: MODERADO, texto: igmReag
+      ? 'H. PYLORI — IgM reagente (infecção ativa): erradicar e confirmar cura por teste não sorológico.'
+      : 'H. PYLORI — verificar se foi tratada; se não, erradicar. Sorologia não confirma cura (anticorpos persistem).' })
+    suger.push('PESQUISA DE H. PYLORI POR ANTÍGENO FECAL OU TESTE RESPIRATÓRIO DA UREIA (confirmar status / controle pós-tratamento)')
     bump(MODERADO)
   }
   if (has('BARRETT')) {
