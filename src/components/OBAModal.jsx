@@ -2438,26 +2438,30 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.8rem 0 0.5rem' }}>{"Articular"}</p>
           <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:'0.4rem' }}>
             {STATUS_ARTICULAR_OPS.map(op => (
-              <CheckRow key={op} label={op} checked={form.status_articular.includes(op)} onClick={() => sf('status_articular', tog(form.status_articular, op))} />
+              <CheckRow key={op} label={op} checked={form.status_articular.includes(op)} onClick={() => setForm(p => { const novo = tog(p.status_articular, op); return { ...p, status_articular: novo, ...(novo.includes('ARTRITE') ? {} : { fan: '', fan_titulo: '' }) }; })} />
             ))}
           </div>
-          <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.8rem 0 0.5rem' }}>{"FAN (Anticorpo Anti-C\u00e9lula)"}</p>
-          <RadioGroup
-            options={['REAGENTE', "N\u00c3O REAGENTE"]}
-            value={form.fan}
-            cols={2}
-            onChange={v => setForm(p => ({ ...p, fan: p.fan === v ? '' : v, fan_titulo: v === 'REAGENTE' ? p.fan_titulo : '' }))}
-          />
-          {form.fan === 'REAGENTE' && (
-            <div style={{ marginTop:'0.5rem' }}>
-              <p style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', margin:'0 0 0.35rem' }}>{"T\u00edtulo"}</p>
+          {form.status_articular.includes('ARTRITE') && (
+            <>
+              <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.8rem 0 0.5rem' }}>{"FAN (Anticorpo Anti-C\u00e9lula)"}</p>
               <RadioGroup
-                options={['1/80', '1/160', '1/320', '1/640+']}
-                value={form.fan_titulo}
-                cols={4}
-                onChange={v => sf('fan_titulo', form.fan_titulo === v ? '' : v)}
+                options={['REAGENTE', "N\u00c3O REAGENTE"]}
+                value={form.fan}
+                cols={2}
+                onChange={v => setForm(p => ({ ...p, fan: p.fan === v ? '' : v, fan_titulo: v === 'REAGENTE' ? p.fan_titulo : '' }))}
               />
-            </div>
+              {form.fan === 'REAGENTE' && (
+                <div style={{ marginTop:'0.5rem' }}>
+                  <p style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', margin:'0 0 0.35rem' }}>{"T\u00edtulo"}</p>
+                  <RadioGroup
+                    options={['1/80', '1/160', '1/320', '1/640+']}
+                    value={form.fan_titulo}
+                    cols={4}
+                    onChange={v => sf('fan_titulo', form.fan_titulo === v ? '' : v)}
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <SectionTitle>{"Status Neurol\u00f3gico"}</SectionTitle>
