@@ -158,6 +158,7 @@ export default function AdminPage({ onVoltar }) {
             { id: 'medicamentos', label: "\ud83e\ude78 Ferro EV" },
             { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
             { id: 'medicos',      label: "\ud83e\ude7a M\u00e9dicos" },
+            { id: 'indicadores',  label: "\ud83e\udd1d Indicadores" },
             { id: 'prescricoes',  label: "\ud83d\udcca Prescri\u00e7\u00f5es" },
             { id: 'recrutar',     label: "\ud83d\udce3 Recrutar" },
             { id: 'extratos',     label: "\ud83d\udccb Extratos OBA" },
@@ -179,6 +180,7 @@ export default function AdminPage({ onVoltar }) {
         {aba === 'medicamentos' && <AbaMedicamentos />}
         {aba === 'suplementos'  && <AbaSuplementos />}
         {aba === 'medicos'      && <AbaMedicos />}
+        {aba === 'indicadores'  && <AbaIndicadores />}
         {aba === 'prescricoes'  && <AbaPrescricoes />}
         {aba === 'recrutar'     && <AbaRecrutar />}
         {aba === 'extratos'     && <AbaExtratos />}
@@ -1395,6 +1397,89 @@ function GraficoCrescimento({ medicos }) {
       {dados.length < 2 && (
         <p className="text-xs text-gray-400 mt-2 text-center">{"Poucos dados ainda — o gráfico ganha forma conforme os médicos entram."}</p>
       )}
+    </div>
+  );
+}
+
+function AbaIndicadores() {
+  const [lista, setLista] = useState([]);
+  const [comissaoUsd, setComissaoUsd] = useState(0);
+  const [cotacao, setCotacao] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
+  const [busca, setBusca] = useState('');
+  const [liquidando, setLiquidando] = useState('');
+
+  async function carregar() {
+    const { data, error } = await supabase.rpc('admin_listar_indicadores', credAdmin());
+    if (error) setErro("Nao foi possivel carregar. A migration migrate_admin_indicadores.sql ja foi aplicada?");
+    else if (data && !data.ok) setErro(data.erro || 'Sem permissao de admin.');
+    else { setErro(''); setLista(data?.indicadores || []); setComissaoUsd(Number(data?.comissao_usd) || 0); setCotacao(Number(data?.cotacao_dolar) || 0); }
+    setLoading(false);
+  }
+  useEffect(() => { carregar(); }, []);
+
+  async function liquidar(i) {
+    const n = i.creditos_pendentes || 0;
+    if (!n) return;
+    if (!window.confirm("Marcar " + n + " credito(s) de " + (i.nome || i.codigo) + " como PAGO(s)? (" + fmtUsd(n * comissaoUsd) + ")")) return;
+    setLiquidando(i.codigo);
+    const { data, error } = await supabase.rpc('admin_liquidar_indicador', { ...credAdmin(), p_codigo: i.codigo });
+    setLiquidando('');
+    if (error || (data && !data.ok)) { window.alert('Erro: ' + (error?.message || data?.erro || 'sem permissao')); return; }
+    await carregar();
+  }
+
+  if (loading) return <div className="text-center py-12 text-gray-400">{"Carregando indicadores..."}</div>;
+  if (erro) return <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm">{erro}</div>;
+
+  const termo = busca.trim().toLowerCase();
+  const filtrados = lista.filter(i => !termo || (i.nome||'').toLowerCase().includes(termo) || (i.cpf||'').includes(termo) || (i.codigo||'').toLowerCase().includes(termo));
+  const totalPend = lista.reduce((s,i)=>s+(i.creditos_pendentes||0),0);
+  const totalPagos = lista.reduce((s,i)=>s+(i.creditos_pagos||0),0);
+  const usdPend = totalPend * comissaoUsd, usdPago = totalPagos * comissaoUsd;
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-gray-700">Indicadores</h2>
+        <p className="text-sm text-gray-400 mt-1">{"Pessoas que indicam bariatricos e ganham "}{fmtUsd(comissaoUsd)}{" por indicado que paga."}</p>
+        <div className="flex flex-wrap gap-3 mt-3 text-sm">
+          <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{lista.length}{" indicador(es)"}</span>
+          <span className="bg-amber-100 rounded-full px-3 py-1 font-medium text-amber-700">{"A pagar: "}{fmtUsd(usdPend)}{cotacao ? " ~ " + fmtBrl(usdPend*cotacao) : ''}</span>
+          <span className="bg-green-50 rounded-full px-3 py-1 font-medium text-green-700">{"Ja pago: "}{fmtUsd(usdPago)}{cotacao ? " ~ " + fmtBrl(usdPago*cotacao) : ''}</span>
+        </div>
+        <input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="Buscar por nome, CPF ou codigo"
+          className="w-full mt-3 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+      </div>
+
+      {filtrados.length === 0 ? (
+        <div className="text-center py-10 text-gray-400 text-sm">{"Nenhum indicador ainda."}</div>
+      ) : filtrados.map(i => {
+        const pend = i.creditos_pendentes || 0, pagos = i.creditos_pagos || 0;
+        return (
+          <div key={i.codigo} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-bold text-gray-800 truncate">{i.nome || '(sem nome)'} <span className="text-xs text-gray-400 font-mono">{i.codigo}</span></p>
+                <p className="text-xs text-gray-500">{maskCpf(i.cpf)}{i.celular ? ' - ' + i.celular : ''}{i.tipo ? ' - ' + i.tipo : ''}</p>
+                <p className="text-xs text-gray-600 mt-1">{"PIX: "}{i.pix_chave || i.usdc_wallet || '(nao cadastrado)'}</p>
+              </div>
+              <div className="text-right text-xs whitespace-nowrap">
+                <p className="text-gray-500">{"Reservados: "}<b>{i.reservados || 0}</b></p>
+                <p className="text-amber-700">{"A pagar: "}<b>{pend}</b></p>
+                <p className="text-green-700">{"Pagos: "}<b>{pagos}</b></p>
+              </div>
+            </div>
+            {pend > 0 && (
+              <button onClick={()=>liquidar(i)} disabled={liquidando===i.codigo}
+                className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-sm transition-colors disabled:opacity-60">
+                {liquidando===i.codigo ? 'Pagando...' : ("Marcar " + pend + " como PAGO (" + fmtUsd(pend*comissaoUsd) + ")")}
+              </button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
