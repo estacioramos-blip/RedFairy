@@ -365,23 +365,21 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
   }, [cadSucesso]);
 
   return (
-    <div className="bg-gray-900 relative" style={{ minHeight: '100vh', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}>
+    <div className="bg-gray-900 relative" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}>
       {onVoltar && (
         <button onClick={onVoltar}
-          className="absolute top-4 left-4 text-white px-3 py-1 rounded-lg text-xs font-medium shadow transition-colors"
-          style={{ backgroundColor: '#991b1b' }}>
+          className="absolute top-4 left-4 px-3 py-1 rounded-lg text-xs font-bold shadow transition-colors"
+          style={{ backgroundColor: '#E3AE37', color: '#14100E' }}>
           {"\u2190 Voltar"}
         </button>
       )}
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md" style={{ overflow: 'hidden', position: 'relative' }}
         onMouseEnter={() => setBgRevelado(true)} onMouseLeave={() => setBgRevelado(false)} onTouchStart={() => setBgRevelado(true)}>
         {/* (limpo) Fundo e splash da telefonista removidos — card de acesso limpo (padrão OBA). */}
-        {/* Header OBA: faixa cinza + logo OBA + subt\u00edtulo do modo. */}
-        <div style={{ position: 'relative', zIndex: 10, background: '#fff', padding: '14px 14px 10px' }}>
-          <div style={{ background: '#B8B7B8', borderRadius: 14, padding: '8px 16px', display: 'flex', justifyContent: 'center' }}>
-            <img src={obaLogo} alt="Projeto OBA\u00ae" style={{ height: 100, objectFit: 'contain', display: 'block' }} />
-          </div>
-          <p className="text-gray-500 text-sm" style={{ margin: '10px 0 0', textAlign: 'center' }}>
+        {/* Header OBA: logo OBA (sem faixa) + subt\u00edtulo do modo. */}
+        <div style={{ position: 'relative', zIndex: 10, background: '#fff', padding: '16px 14px 10px', textAlign: 'center' }}>
+          <img src={obaLogo} alt="Projeto OBA\u00ae" style={{ height: 150, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+          <p className="text-gray-500 text-sm" style={{ margin: '4px 0 0' }}>
             {modo === 'login' ? "Acesso M\u00e9dico" : "Primeiro Acesso M\u00e9dico"}
           </p>
         </div>

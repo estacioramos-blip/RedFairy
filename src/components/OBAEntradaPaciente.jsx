@@ -82,18 +82,16 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
 
   const VoltarBtn = onVoltar ? (
     <button onClick={onVoltar}
-      className="absolute top-4 left-4 text-white px-3 py-1 rounded-lg text-xs font-medium shadow transition-colors"
-      style={{ backgroundColor: '#991b1b' }}>
+      className="absolute top-4 left-4 px-3 py-1 rounded-lg text-xs font-bold shadow transition-colors"
+      style={{ backgroundColor: '#E3AE37', color: '#14100E' }}>
       Voltar
     </button>
   ) : null
 
   const Cabecalho = (
-    <div className="mb-5">
-      <div style={{ background: '#B8B7B8', borderRadius: 14, padding: '8px 16px', display: 'flex', justifyContent: 'center' }}>
-        <img src={obaLogo} alt="Projeto OBA®" style={{ height: 112, objectFit: 'contain', display: 'block' }} />
-      </div>
-      <p className="text-gray-500 text-sm text-center" style={{ marginTop: 10 }}>Otimizar o Bariátrico</p>
+    <div className="mb-5 text-center">
+      <img src={obaLogo} alt="Projeto OBA®" style={{ height: 160, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+      <p className="text-gray-500 text-sm" style={{ marginTop: 4 }}>Otimizar o Bariátrico</p>
     </div>
   )
 
@@ -106,11 +104,11 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
         {fase === 'intro' && (
           <>
             <p className="text-center text-gray-700 leading-relaxed font-medium">
-              {"Para participar do "}<strong className="text-red-700">Projeto OBA®</strong>{" você precisa criar um "}<strong>ACESSO (LOGIN/SENHA)</strong>{" e se cadastrar na plataforma… em alguns segundos você iniciará esse processo. "}<strong className="text-red-600">Vamos!…</strong>
+              {"Para participar do "}<strong style={{ color: '#E3AE37' }}>Projeto OBA®</strong>{" você precisa criar um "}<strong>ACESSO e SENHA</strong>{", e se cadastrar na plataforma."}
             </p>
             <div className="flex justify-center mt-6">
-              <PlayButton onClick={() => setFase('cpf')} label="VAMOS!" ariaLabel="Começar"
-                playColor="#b91c1c" labelColor="#b91c1c" ringColor="rgba(185,28,28,0.55)" />
+              <PlayButton onClick={() => setFase('cpf')} label="VAMOS!..." ariaLabel="Começar"
+                playColor="#E3AE37" labelColor="#000000" ringColor="rgba(227,174,55,0.65)" />
             </div>
           </>
         )}
@@ -127,7 +125,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
             {cpfOk && (
               <div className="flex justify-end mt-3">
                 <PlayButton onClick={avancarCpf} loading={busy} ariaLabel="Continuar"
-                  playColor="#b91c1c" labelColor="#b91c1c" ringColor="rgba(185,28,28,0.55)" />
+                  playColor="#E3AE37" labelColor="#000000" ringColor="rgba(227,174,55,0.65)" />
               </div>
             )}
           </>
@@ -170,7 +168,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
               <button onClick={() => { setFase('cpf'); setErro('') }} className="text-gray-400 text-xs hover:text-gray-600">{"← Voltar"}</button>
               {podeConcluir && (
                 <PlayButton onClick={concluir} loading={busy} ariaLabel="Entrar"
-                  playColor="#b91c1c" labelColor="#b91c1c" ringColor="rgba(185,28,28,0.55)" />
+                  playColor="#E3AE37" labelColor="#000000" ringColor="rgba(227,174,55,0.65)" />
               )}
             </div>
           </>
