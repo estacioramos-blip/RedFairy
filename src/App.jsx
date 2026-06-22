@@ -16,6 +16,16 @@ export default function App() {
   const [modo, setModo] = useState(() => {
     try {
       if (new URLSearchParams(window.location.search).get('oba') === '1') return 'oba-paciente'
+      // BOUNCE: carga "seca" (sem nenhum parâmetro) num navegador que veio do
+      // bariatrico.net → o bariátrico NUNCA pode cair na landing do RedFairy:
+      // devolve ao site antes de pintar a tela. (Reset p/ testes: redfairy.bio/?bari=0.)
+      const semParams = !window.location.search || window.location.search === '?'
+      let standalone = false
+      try { standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
+      if (semParams && !standalone) {
+        const voltar = localStorage.getItem('rf_voltar_url') || ''
+        if (voltar) window.location.replace(voltar)
+      }
     } catch (e) {}
     return 'home'
   })
@@ -113,7 +123,7 @@ export default function App() {
     // já entrar bariátrico (→ OBA). Em dev, ?bari=1/0 liga/desliga (persiste).
     const bariParam = params.get('bari')
     if (bariParam === '1') { try { localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }
-    if (bariParam === '0') { try { localStorage.removeItem('rf_dom_bari') } catch (e) {} }
+    if (bariParam === '0') { try { localStorage.removeItem('rf_dom_bari'); localStorage.removeItem('rf_voltar_url') } catch (e) {}; setVoltarExterno('') }
     if (ehDominioBariatrico()) { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {} }
 
     // (bariatrico.net) Veio do site externo? O "Voltar" destas telas retorna ao site,

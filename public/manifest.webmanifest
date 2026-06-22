@@ -1,16 +1,16 @@
 {
-  "name": "RedFairy | Projeto OBA",
-  "short_name": "RedFairy",
-  "description": "RedFairy — triagem e acompanhamento do eritron (hemograma).",
+  "name": "OBA RedFairy",
+  "short_name": "OBA",
+  "description": "Projeto OBA — acompanhamento do bariátrico e triagem do eritron (RedFairy).",
   "start_url": "/?fada=1",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FDF7F7",
-  "theme_color": "#7B1E1E",
+  "background_color": "#14100E",
+  "theme_color": "#14100E",
   "icons": [
-    { "src": "/fada-icon.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/fada-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/fada-icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+    { "src": "/oba-fairy.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/oba-fairy.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/oba-fairy.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
   ]
 }
