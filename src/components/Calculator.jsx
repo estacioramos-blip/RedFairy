@@ -286,9 +286,12 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     setLoginLoading(false)
     if (!resp || !resp.ok) {
       const e = resp && resp.erro
-      setLoginErro(e === 'CRM nao encontrado' ? 'Conselho n\u00e3o encontrado. Verifique ou cadastre-se.'
-        : e === 'Senha incorreta' ? 'Senha incorreta.'
-        : (e || 'Falha no login.'))
+      if (e === 'CRM nao encontrado') {
+        // Primeiro acesso: CRM novo -> vai pro cadastro (cria a senha la), com o CRM ja preenchido.
+        setCrmNum(loginCrmNum); setCrmUF(loginCrmUF); setLoginErro(''); setModo('cadastro')
+        return
+      }
+      setLoginErro(e === 'Senha incorreta' ? 'Senha incorreta.' : (e || 'Falha no login.'))
       return
     }
     const _crm = resp.crm || conselhoLimpo
@@ -407,7 +410,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                   className={`col-span-2 ${inputClass} ${etapaLogin === 1 ? 'border-yellow-400 bg-yellow-50' : 'bg-yellow-50 border-yellow-300'}`} />
                 <input ref={refCrmUfLogin} type="text" value={loginCrmUF}
                   onChange={e => setLoginCrmUF(sanitizarCrmUF(e.target.value))}
-                  placeholder="UF" autoComplete="off" name="rf-crm-uf-login"
+                  placeholder="BA" autoComplete="off" name="rf-crm-uf-login"
                   maxLength={2}
                   className={`${inputClass} text-center uppercase ${etapaLogin === 1 ? 'border-yellow-400 bg-yellow-50' : 'bg-yellow-50 border-yellow-300'} ${loginCrmUF.length === 2 && !UFS_VALIDAS.includes(loginCrmUF) ? 'border-red-500' : ''}`} />
               </div>
@@ -420,7 +423,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
               <div style={{ position: 'relative' }}>
                 <input ref={refSenhaLogin} type={showLoginSenha ? 'text' : 'password'} value={loginSenha}
                   onChange={e => setLoginSenha(e.target.value)} onFocus={() => setEtapaLogin(2)}
-                  placeholder="Sua senha"
+                  placeholder="Sua senha" autoComplete="off" name="rf-senha-login"
                   className={`${inputClass} ${etapaLogin === 2 ? 'border-yellow-400 bg-yellow-50' : ''}`}
                   style={{ paddingRight: '40px' }}
                   onKeyDown={e => e.key === 'Enter' && handleLogin()} />
@@ -473,7 +476,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                   inputMode="numeric" maxLength={6} />
                 <input ref={refCrmUf} type="text" value={crmUF}
                   onChange={e => setCrmUF(sanitizarCrmUF(e.target.value))}
-                  placeholder="UF" maxLength={2}
+                  placeholder="BA" maxLength={2}
                   className={`${inputAmarelo} text-center uppercase ${crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) ? 'border-red-500' : ''}`} autoComplete="off" />
               </div>
               {crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) && (
@@ -498,7 +501,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 placeholder="seu@email.com" className={inputAmarelo} autoComplete="off" />
             </div>
             <div>
-              {!jaLogadoSemSenha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie uma Senha</label>
+              {!jaLogadoSemSenha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie a sua Senha</label>
               <div style={{ position: 'relative' }}>
                 <input type={showSenha ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)}
                   placeholder={"M\u00ednimo 6 caracteres"} className={inputAmarelo} autoComplete="new-password"

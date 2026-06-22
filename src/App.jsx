@@ -26,6 +26,8 @@ export default function App() {
   const [voltarExterno, setVoltarExterno] = useState(() => { try { return localStorage.getItem('rf_voltar_url') } catch (e) { return null } })
   // (bariatrico.net) "Sou Bariátrico" → abre direto o popup do Projeto OBA na landing.
   const [autoOBA, setAutoOBA] = useState(false)
+  // Tela preta que cobre os "flashes" de tela durante o "Voltar".
+  const [saindo, setSaindo] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -211,8 +213,10 @@ export default function App() {
   // "Voltar" das telas de entrada: se o usuário veio do bariatrico.net, retorna ao
   // site externo; senão, vai para a landing interna.
   function irVoltar() {
-    if (voltarExterno) { window.location.href = voltarExterno; return }
+    setSaindo(true)   // tela preta cobre os flashes (OBA/calculator) durante a saída
+    if (voltarExterno) { setTimeout(() => { window.location.href = voltarExterno }, 40); return }
     setModo('home')
+    setTimeout(() => setSaindo(false), 80)
   }
 
   function handleLogoClick() {
@@ -472,6 +476,7 @@ if (modo === 'home') {
     <>
       {renderConteudo()}
       {InatividadeModal}
+      {saindo && <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 99999 }} />}
     </>
   )
 }
