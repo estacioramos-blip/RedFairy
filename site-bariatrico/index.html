@@ -202,7 +202,18 @@
           <div style="position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: clamp(30px, 6vw, 56px); overflow-y: auto;">
             <button onClick="{{ backComo }}" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 10px; background: none; border: none; padding: 0; cursor: pointer; color: rgba(247,241,231,0.7); font-family: 'Archivo', sans-serif; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;"><span style="flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 5px 8px 5px 0; border-color: transparent #E3AE37 transparent transparent; margin-right: 2px;"></span></span>Opções</button>
             <span style="font-size: 12px; letter-spacing: 0.26em; text-transform: uppercase; color: #E3AE37; font-weight: 600;">{{ comoTitle }}</span>
+            <sc-if value="{{ comoMedico }}" hint-placeholder-val="{{ false }}">
+              <span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(18px, 1.9vw, 22px); color: #E3AE37;">Quero encaminhar pacientes</span>
+            </sc-if>
             <p style="margin: 0; max-width: 56ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.66; white-space: pre-line; color: #F2ECE1;">{{ comoText }}</p>
+            <sc-if value="{{ comoMedico }}" hint-placeholder-val="{{ false }}">
+              <span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(18px, 1.9vw, 22px); color: #E3AE37;">Quero avaliar e prescrever pacientes</span>
+              <p style="margin: 0; max-width: 56ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.66; color: #F2ECE1;">Se você tiver interesse em avaliar, fazer teleconsultas e prescrever pacientes do Projeto, marque o checkbox abaixo.</p>
+              <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #F2ECE1; font-size: clamp(14px, 1.5vw, 16px); margin-top: 2px;">
+                <input type="checkbox" id="prescritorChk" style="width: 18px; height: 18px; accent-color: #E3AE37; cursor: pointer; flex: none;" />
+                Sim, quero ser médico prescritor do Projeto.
+              </label>
+            </sc-if>
           </div>
         </sc-if>
       </div>
@@ -271,6 +282,7 @@ class Component extends DCLogic {
       comoMsg: this.state.comoPhase === 'msg',
       comoTitle: comoCur.t,
       comoText: comoCur.m,
+      comoMedico: this.state.comoChoice === 'medico',
       openComo: (ev) => {
         if (ev) ev.preventDefault();
         clearTimeout(this._tComo);
@@ -303,6 +315,79 @@ class Component extends DCLogic {
       document.body.appendChild(o);
     }
   }, true);
+</script>
+<script>
+  /* Mini-cadastro de MÉDICO PRESCRITOR (colaborador). Abre ao marcar #prescritorChk
+     no "Como Funciona > Sou Médico". Salva via REST no RPC register_prescritor
+     (mesmo Supabase do app; chave pública/anon). */
+  (function () {
+    var SUPA_URL = 'https://pfzghybajniyesoiwrcp.supabase.co';
+    var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmemdoeWJham5peWVzb2l3cmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTAyMzksImV4cCI6MjA5MDU2NjIzOX0.Cw_mNX4I0L_SsIp1lHr3XxmsloqNCr3zgXpd47B3Oc4';
+    var ESP = ["CIRURGIÃO","CLÍNICO","HEMATOLOGISTA","GASTROENTEROLOGISTA","NUTRÓLOGO","ENDOCRINOLOGISTA","CARDIOLOGISTA","NEUROLOGISTA","PSIQUIATRA","REUMATOLOGISTA","ORTOPEDISTA","GINECOLOGISTA","OBSTETRA","PNEUMOLOGISTA","NEFROLOGISTA","UROLOGISTA","DERMATOLOGISTA","OUTRO"];
+    var aberto = false;
+    function val(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
+    function campo(id,label,type,half){
+      return '<div style="'+(half?'flex:1;':'')+'margin-top:8px;"><label style="display:block;font-size:12px;font-weight:600;color:#2b2420;margin-bottom:2px;">'+label+'</label>'
+        +'<input id="'+id+'" type="'+type+'" autocomplete="off" style="width:100%;border:1px solid #d8cfc2;border-radius:8px;padding:8px 10px;font-size:14px;box-sizing:border-box;"></div>';
+    }
+    function fechar(){ var m=document.getElementById('prescritorModal'); if(m) m.remove(); aberto=false; var c=document.getElementById('prescritorChk'); if(c) c.checked=false; }
+    function renderRqe(checked){
+      var d=document.getElementById('pRqe'); d.innerHTML='';
+      checked.forEach(function(cb){ d.innerHTML+='<div style="margin-top:8px;"><label style="display:block;font-size:12px;font-weight:600;color:#2b2420;margin-bottom:2px;">RQE — '+cb.value+'</label><input class="prqe" data-esp="'+cb.value+'" type="text" autocomplete="off" style="width:100%;border:1px solid #d8cfc2;border-radius:8px;padding:8px 10px;font-size:14px;box-sizing:border-box;"></div>'; });
+    }
+    function onEsp(e){
+      var checked=Array.prototype.slice.call(document.querySelectorAll('.pesp:checked'));
+      if(checked.length>2){ e.target.checked=false; return; }
+      renderRqe(checked);
+    }
+    function sucesso(){
+      var b=document.getElementById('pBody');
+      if(b) b.innerHTML='<p style="font-size:15px;color:#14100E;line-height:1.6;font-weight:600;">Pronto, você já está no nosso radar. Obrigado por seu interesse. Quando necessário, entraremos em contato.</p><button id="pOk" style="width:100%;margin-top:14px;background:#6E1A1C;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer;">Fechar</button>';
+      var ok=document.getElementById('pOk'); if(ok) ok.addEventListener('click', fechar);
+    }
+    function enviar(){
+      var erro=document.getElementById('pErro');
+      var nome=val('pNome'), crm=val('pCrm');
+      if(!nome||!crm){ erro.textContent='Informe nome e CRM.'; erro.style.display='block'; return; }
+      var esp=Array.prototype.slice.call(document.querySelectorAll('.pesp:checked')).map(function(c){return c.value;});
+      var rqe={}; document.querySelectorAll('.prqe').forEach(function(r){ rqe[r.getAttribute('data-esp')]=r.value.trim(); });
+      var body={ p_nome:nome, p_crm:crm, p_uf:val('pUf'), p_celular:val('pCel'),
+        p_esp1:esp[0]||null, p_rqe1:esp[0]?(rqe[esp[0]]||null):null,
+        p_esp2:esp[1]||null, p_rqe2:esp[1]?(rqe[esp[1]]||null):null };
+      var btn=document.getElementById('pEnviar'); btn.disabled=true; btn.textContent='Enviando...';
+      fetch(SUPA_URL+'/rest/v1/rpc/register_prescritor',{ method:'POST',
+        headers:{ 'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY },
+        body: JSON.stringify(body) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if(d&&d.ok){ sucesso(); } else { erro.textContent=(d&&d.erro)||'Não foi possível enviar.'; erro.style.display='block'; btn.disabled=false; btn.textContent='Enviar cadastro'; } })
+        .catch(function(){ erro.textContent='Erro de conexão. Tente de novo.'; erro.style.display='block'; btn.disabled=false; btn.textContent='Enviar cadastro'; });
+    }
+    function abrir(){
+      if(aberto) return; aberto=true;
+      var espOpts=ESP.map(function(e){ return '<label style="display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;font-size:13px;color:#2b2420;"><input type="checkbox" class="pesp" value="'+e+'" style="accent-color:#6E1A1C;"> '+e+'</label>'; }).join('');
+      var ov=document.createElement('div'); ov.id='prescritorModal';
+      ov.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(12,9,8,0.88);display:flex;align-items:center;justify-content:center;padding:18px;font-family:Archivo,sans-serif;overflow-y:auto;';
+      ov.innerHTML='<div style="background:#F7F1E7;border-radius:12px;max-width:440px;width:100%;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,0.5);position:relative;">'
+        +'<button id="pFechar" style="position:absolute;top:8px;right:12px;background:none;border:none;font-size:24px;cursor:pointer;color:#6E1A1C;line-height:1;">×</button>'
+        +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;font-weight:600;color:#14100E;">Médico prescritor — OBA<span style="color:#E3AE37;">®</span></div>'
+        +'<p style="font-size:12px;color:#6b6258;margin:2px 0 12px;">Entre no nosso radar de colaboradores avaliadores/prescritores.</p>'
+        +'<div id="pBody">'
+        +campo('pNome','Nome completo','text')
+        +'<div style="display:flex;gap:8px;">'+campo('pCrm','CRM','text',1)+campo('pUf','UF','text',1)+'</div>'
+        +campo('pCel','Celular (WhatsApp)','tel')
+        +'<p style="font-size:12px;font-weight:700;color:#14100E;margin:12px 0 4px;">Especialidades (até 2) + RQE</p>'
+        +'<div style="max-height:148px;overflow-y:auto;border:1px solid #d8cfc2;border-radius:8px;padding:6px 10px;background:#fff;">'+espOpts+'</div>'
+        +'<div id="pRqe"></div>'
+        +'<p id="pErro" style="color:#b91c1c;font-size:12px;font-weight:700;margin:8px 0 0;display:none;"></p>'
+        +'<button id="pEnviar" style="width:100%;margin-top:14px;background:#6E1A1C;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;font-size:14px;cursor:pointer;">Enviar cadastro</button>'
+        +'</div></div>';
+      document.body.appendChild(ov);
+      document.getElementById('pFechar').addEventListener('click', fechar);
+      Array.prototype.slice.call(ov.querySelectorAll('.pesp')).forEach(function(cb){ cb.addEventListener('change', onEsp); });
+      document.getElementById('pEnviar').addEventListener('click', enviar);
+    }
+    document.addEventListener('change', function(e){ if(e.target && e.target.id==='prescritorChk' && e.target.checked) abrir(); }, true);
+  })();
 </script>
 </body>
 </html>
