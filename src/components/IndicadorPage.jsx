@@ -44,6 +44,14 @@ export default function IndicadorPage({ onVoltar }) {
   const [preBusy, setPreBusy] = useState(false)
   const [dados, setDados] = useState(null)
   const [copiado, setCopiado] = useState(false)
+  // sessão + PIX
+  const [token, setToken] = useState('')
+  const [pixVal, setPixVal] = useState('')
+  const [pixMsg, setPixMsg] = useState('')
+  const [pixBusy, setPixBusy] = useState(false)
+  const [pixTipo, setPixTipo] = useState('')        // cpf | celular | outra | ''
+  const [contatoCpf, setContatoCpf] = useState('')
+  const [contatoCel, setContatoCel] = useState('')
 
   const cpfDigits = soDigitos(cpf)
   const cpfOk = cpfDigits.length === 11
@@ -52,7 +60,12 @@ export default function IndicadorPage({ onVoltar }) {
   useEffect(() => {
     try {
       const c = localStorage.getItem('indicador_codigo')
-      if (c) { setCodigo(c); setNome(localStorage.getItem('indicador_nome') || ''); setEtapa('painel') }
+      if (c) {
+        setCodigo(c); setNome(localStorage.getItem('indicador_nome') || '')
+        setToken(localStorage.getItem('indicador_token') || '')
+        setPixVal(localStorage.getItem('indicador_pix') || '')
+        setEtapa('painel')
+      }
     } catch (e) {}
   }, [])
 
@@ -64,15 +77,37 @@ export default function IndicadorPage({ onVoltar }) {
       if (data && data.ok) setDados(data)
     } catch (e) {}
   }
-  useEffect(() => { if (etapa === 'painel' && codigo) carregarPainel(codigo) }, [etapa, codigo])
+  async function carregarContato() {
+    try {
+      const t = token || localStorage.getItem('indicador_token') || ''
+      const { data } = await supabase.rpc('contato_indicador', { p_codigo: codigo, p_token: t })
+      if (data && data.ok) { setContatoCpf(data.cpf || ''); setContatoCel(data.celular || '') }
+    } catch (e) {}
+  }
+  useEffect(() => { if (etapa === 'painel' && codigo) { carregarPainel(codigo); carregarContato() } }, [etapa, codigo])
 
   function salvarSessao(data) {
     try {
       localStorage.setItem('indicador_id', data.id || '')
       localStorage.setItem('indicador_codigo', data.codigo || '')
       localStorage.setItem('indicador_nome', data.nome || '')
+      localStorage.setItem('indicador_token', data.token || '')
+      localStorage.setItem('indicador_pix', data.pix || '')
     } catch (e) {}
-    setCodigo(data.codigo || ''); setNome(data.nome || ''); setEtapa('painel')
+    setCodigo(data.codigo || ''); setNome(data.nome || ''); setToken(data.token || '')
+    setPixVal(data.pix || ''); setEtapa('painel')
+  }
+
+  async function salvarPix() {
+    setPixMsg(''); setPixBusy(true)
+    try {
+      const { data, error } = await supabase.rpc('salvar_pix_indicador', { p_codigo: codigo, p_token: token, p_pix: pixVal })
+      if (error) throw error
+      if (!data?.ok) { setPixMsg(data?.erro || 'Não foi possível salvar.'); return }
+      try { localStorage.setItem('indicador_pix', pixVal || '') } catch (e) {}
+      setPixMsg('Chave PIX salva! ✓')
+    } catch (e) { setPixMsg('Erro de conexão. Tente de novo.') }
+    finally { setPixBusy(false) }
   }
 
   async function avancarCpf() {
@@ -105,8 +140,10 @@ export default function IndicadorPage({ onVoltar }) {
   function sair() {
     try {
       localStorage.removeItem('indicador_id'); localStorage.removeItem('indicador_codigo'); localStorage.removeItem('indicador_nome')
+      localStorage.removeItem('indicador_token'); localStorage.removeItem('indicador_pix')
     } catch (e) {}
-    setCodigo(''); setNome(''); setCpf(''); setSenha(''); setModo(null); setDados(null); setEtapa('cpf')
+    setCodigo(''); setNome(''); setCpf(''); setSenha(''); setModo(null); setDados(null)
+    setToken(''); setPixVal(''); setPixMsg(''); setEtapa('cpf')
   }
 
   function copiarLink() {
@@ -180,6 +217,34 @@ export default function IndicadorPage({ onVoltar }) {
             </div>
             {preMsg && <p className="text-green-600 text-xs font-semibold mt-2">{preMsg}</p>}
             {preErro && <p className="text-red-600 text-xs font-bold mt-2">{preErro}</p>}
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <p className="text-sm font-bold text-gray-700 mb-1">Sua chave PIX (para receber)</p>
+            <p className="text-xs text-gray-500 mb-3">É por aqui que você recebe os US$10 de cada indicado que paga.</p>
+            <div className="space-y-1.5 mb-2">
+              <label className="flex items-center gap-2 cursor-pointer text-xs">
+                <input type="checkbox" checked={pixTipo === 'cpf'} style={{ accentColor: '#b91c1c' }}
+                  onChange={() => { if (pixTipo === 'cpf') { setPixTipo(''); setPixVal('') } else { setPixTipo('cpf'); setPixVal(contatoCpf || '') } setPixMsg('') }} />
+                <span className="text-gray-700 font-medium tracking-wide">MEU CPF É O MEU PIX</span>
+              </label>
+              {contatoCel && (
+                <label className="flex items-center gap-2 cursor-pointer text-xs">
+                  <input type="checkbox" checked={pixTipo === 'celular'} style={{ accentColor: '#b91c1c' }}
+                    onChange={() => { if (pixTipo === 'celular') { setPixTipo(''); setPixVal('') } else { setPixTipo('celular'); setPixVal(contatoCel) } setPixMsg('') }} />
+                  <span className="text-gray-700 font-medium tracking-wide">MEU CELULAR É O MEU PIX</span>
+                </label>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={pixVal}
+                onChange={e => { setPixVal(e.target.value); setPixTipo('outra'); setPixMsg('') }} placeholder="CPF, telefone ou chave aleatória" />
+              <button onClick={salvarPix} disabled={pixBusy}
+                className="bg-red-700 hover:bg-red-800 text-white font-bold px-4 rounded-lg text-sm transition-colors disabled:opacity-60 whitespace-nowrap">
+                {pixBusy ? '…' : 'Salvar'}
+              </button>
+            </div>
+            {pixMsg && <p className={`text-xs font-semibold mt-2 ${pixMsg.includes('✓') ? 'text-green-600' : 'text-red-600'}`}>{pixMsg}</p>}
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-6">
