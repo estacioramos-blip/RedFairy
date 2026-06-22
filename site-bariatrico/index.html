@@ -208,10 +208,10 @@
             <p style="margin: 0; max-width: 56ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.66; white-space: pre-line; color: #F2ECE1;">{{ comoText }}</p>
             <sc-if value="{{ comoMedico }}" hint-placeholder-val="{{ false }}">
               <span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(18px, 1.9vw, 22px); color: #E3AE37;">Quero avaliar e prescrever pacientes</span>
-              <p style="margin: 0; max-width: 56ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.66; color: #F2ECE1;">Se você tiver interesse em avaliar, fazer teleconsultas e prescrever pacientes do Projeto, marque o checkbox abaixo.</p>
+              <p style="margin: 0; max-width: 56ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.66; color: #F2ECE1;">Se você tiver interesse em avaliar, fazer teleconsultas e prescrever pacientes do Projeto OBA®, marque o checkbox abaixo.</p>
               <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #F2ECE1; font-size: clamp(14px, 1.5vw, 16px); margin-top: 2px;">
                 <input type="checkbox" id="prescritorChk" style="width: 18px; height: 18px; accent-color: #E3AE37; cursor: pointer; flex: none;" />
-                Sim, quero ser médico prescritor do Projeto.
+                Sim, quero ser médico prescritor.
               </label>
             </sc-if>
           </div>
@@ -327,13 +327,13 @@ class Component extends DCLogic {
     var aberto = false;
     function val(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
     function campo(id,label,type,half){
-      return '<div style="'+(half?'flex:1;':'')+'margin-top:8px;"><label style="display:block;font-size:12px;font-weight:600;color:#2b2420;margin-bottom:2px;">'+label+'</label>'
-        +'<input id="'+id+'" type="'+type+'" autocomplete="off" style="width:100%;border:1px solid #d8cfc2;border-radius:8px;padding:8px 10px;font-size:14px;box-sizing:border-box;"></div>';
+      return '<div style="'+(half?'flex:1;':'')+'margin-top:8px;"><label style="display:block;font-size:12px;font-weight:600;color:#e7e0d6;margin-bottom:2px;">'+label+'</label>'
+        +'<input id="'+id+'" type="'+type+'" autocomplete="off" style="width:100%;border:1.5px solid #E3AE37;border-radius:8px;padding:8px 10px;font-size:14px;box-sizing:border-box;background:#fefce8;color:#1e3a8a;font-weight:600;"></div>';
     }
     function fechar(){ var m=document.getElementById('prescritorModal'); if(m) m.remove(); aberto=false; var c=document.getElementById('prescritorChk'); if(c) c.checked=false; }
     function renderRqe(checked){
       var d=document.getElementById('pRqe'); d.innerHTML='';
-      checked.forEach(function(cb){ d.innerHTML+='<div style="margin-top:8px;"><label style="display:block;font-size:12px;font-weight:600;color:#2b2420;margin-bottom:2px;">RQE — '+cb.value+'</label><input class="prqe" data-esp="'+cb.value+'" type="text" autocomplete="off" style="width:100%;border:1px solid #d8cfc2;border-radius:8px;padding:8px 10px;font-size:14px;box-sizing:border-box;"></div>'; });
+      checked.forEach(function(cb){ d.innerHTML+='<div style="margin-top:8px;"><label style="display:block;font-size:12px;font-weight:600;color:#e7e0d6;margin-bottom:2px;">RQE — '+cb.value+'</label><input class="prqe" data-esp="'+cb.value+'" type="text" autocomplete="off" style="width:100%;border:1.5px solid #E3AE37;border-radius:8px;padding:8px 10px;font-size:14px;box-sizing:border-box;background:#fefce8;color:#1e3a8a;font-weight:600;"></div>'; });
     }
     function onEsp(e){
       var checked=Array.prototype.slice.call(document.querySelectorAll('.pesp:checked'));
@@ -342,7 +342,7 @@ class Component extends DCLogic {
     }
     function sucesso(){
       var b=document.getElementById('pBody');
-      if(b) b.innerHTML='<p style="font-size:15px;color:#14100E;line-height:1.6;font-weight:600;">Pronto, você já está no nosso radar. Obrigado por seu interesse. Quando necessário, entraremos em contato.</p><button id="pOk" style="width:100%;margin-top:14px;background:#6E1A1C;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer;">Fechar</button>';
+      if(b) b.innerHTML='<p style="font-size:15px;color:#F7F1E7;line-height:1.6;font-weight:600;">Pronto, você já está no nosso radar. Obrigado por seu interesse. Quando necessário, entraremos em contato.</p><button id="pOk" style="width:100%;margin-top:14px;background:#6E1A1C;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;cursor:pointer;">Fechar</button>';
       var ok=document.getElementById('pOk'); if(ok) ok.addEventListener('click', fechar);
     }
     function enviar(){
@@ -354,32 +354,37 @@ class Component extends DCLogic {
       var body={ p_nome:nome, p_crm:crm, p_uf:val('pUf'), p_celular:val('pCel'),
         p_esp1:esp[0]||null, p_rqe1:esp[0]?(rqe[esp[0]]||null):null,
         p_esp2:esp[1]||null, p_rqe2:esp[1]?(rqe[esp[1]]||null):null };
-      var btn=document.getElementById('pEnviar'); btn.disabled=true; btn.textContent='Enviando...';
+      var btn=document.getElementById('pEnviar'); var txt=document.getElementById('pEnviarTxt'); btn.disabled=true; if(txt) txt.textContent='Enviando...';
       fetch(SUPA_URL+'/rest/v1/rpc/register_prescritor',{ method:'POST',
         headers:{ 'Content-Type':'application/json','apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY },
         body: JSON.stringify(body) })
         .then(function(r){ return r.json(); })
-        .then(function(d){ if(d&&d.ok){ sucesso(); } else { erro.textContent=(d&&d.erro)||'Não foi possível enviar.'; erro.style.display='block'; btn.disabled=false; btn.textContent='Enviar cadastro'; } })
-        .catch(function(){ erro.textContent='Erro de conexão. Tente de novo.'; erro.style.display='block'; btn.disabled=false; btn.textContent='Enviar cadastro'; });
+        .then(function(d){ if(d&&d.ok){ sucesso(); } else { erro.textContent=(d&&d.erro)||'Não foi possível enviar.'; erro.style.display='block'; btn.disabled=false; if(txt) txt.textContent='Enviar os meus dados'; } })
+        .catch(function(){ erro.textContent='Erro de conexão. Tente de novo.'; erro.style.display='block'; btn.disabled=false; if(txt) txt.textContent='Enviar os meus dados'; });
     }
     function abrir(){
       if(aberto) return; aberto=true;
       var espOpts=ESP.map(function(e){ return '<label style="display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;font-size:13px;color:#2b2420;"><input type="checkbox" class="pesp" value="'+e+'" style="accent-color:#6E1A1C;"> '+e+'</label>'; }).join('');
       var ov=document.createElement('div'); ov.id='prescritorModal';
       ov.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(12,9,8,0.88);display:flex;align-items:center;justify-content:center;padding:18px;font-family:Archivo,sans-serif;overflow-y:auto;';
-      ov.innerHTML='<div style="background:#F7F1E7;border-radius:12px;max-width:440px;width:100%;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,0.5);position:relative;">'
-        +'<button id="pFechar" style="position:absolute;top:8px;right:12px;background:none;border:none;font-size:24px;cursor:pointer;color:#6E1A1C;line-height:1;">×</button>'
-        +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;font-weight:600;color:#14100E;">Médico prescritor — OBA<span style="color:#E3AE37;">®</span></div>'
-        +'<p style="font-size:12px;color:#6b6258;margin:2px 0 12px;">Entre no nosso radar de colaboradores avaliadores/prescritores.</p>'
+      ov.innerHTML='<style>@keyframes pPulse{0%,100%{box-shadow:0 0 0 0 rgba(227,174,55,0.65);}50%{box-shadow:0 0 0 9px transparent;}}</style>'
+        +'<div style="background:#2b2b2b;border-radius:12px;max-width:440px;width:100%;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,0.6);position:relative;">'
+        +'<button id="pFechar" style="position:absolute;top:8px;right:12px;background:none;border:none;font-size:24px;cursor:pointer;color:#E3AE37;line-height:1;">×</button>'
+        +'<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;font-weight:600;color:#F7F1E7;">Médico prescritor — OBA<span style="color:#E3AE37;">®</span></div>'
+        +'<p style="font-size:12px;color:#b7b0a6;margin:2px 0 12px;">Entre no nosso radar de colaboradores avaliadores/prescritores.</p>'
         +'<div id="pBody">'
         +campo('pNome','Nome completo','text')
         +'<div style="display:flex;gap:8px;">'+campo('pCrm','CRM','text',1)+campo('pUf','UF','text',1)+'</div>'
         +campo('pCel','Celular (WhatsApp)','tel')
-        +'<p style="font-size:12px;font-weight:700;color:#14100E;margin:12px 0 4px;">Especialidades (até 2) + RQE</p>'
-        +'<div style="max-height:148px;overflow-y:auto;border:1px solid #d8cfc2;border-radius:8px;padding:6px 10px;background:#fff;">'+espOpts+'</div>'
+        +'<p style="font-size:12px;font-weight:700;color:#F7F1E7;margin:12px 0 4px;">Especialidades (até 2) + RQE</p>'
+        +'<div style="max-height:148px;overflow-y:auto;border:1.5px solid #E3AE37;border-radius:8px;padding:6px 10px;background:#fefce8;">'+espOpts+'</div>'
         +'<div id="pRqe"></div>'
-        +'<p id="pErro" style="color:#b91c1c;font-size:12px;font-weight:700;margin:8px 0 0;display:none;"></p>'
-        +'<button id="pEnviar" style="width:100%;margin-top:14px;background:#6E1A1C;color:#fff;border:none;border-radius:10px;padding:11px;font-weight:700;font-size:14px;cursor:pointer;">Enviar cadastro</button>'
+        +'<p id="pErro" style="color:#fca5a5;font-size:12px;font-weight:700;margin:8px 0 0;display:none;"></p>'
+        +'<div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:18px;">'
+        +'<button id="pEnviar" aria-label="Enviar os meus dados" style="width:56px;height:56px;border-radius:50%;background:#cfcfcf;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;animation:pPulse 1.1s ease-in-out infinite;">'
+        +'<span style="color:#6E1A1C;font-size:1.5rem;line-height:1;margin-left:3px;">▶</span></button>'
+        +'<span id="pEnviarTxt" style="font-size:12px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#000;">Enviar os meus dados</span>'
+        +'</div>'
         +'</div></div>';
       document.body.appendChild(ov);
       document.getElementById('pFechar').addEventListener('click', fechar);

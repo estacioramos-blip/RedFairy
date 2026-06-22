@@ -159,6 +159,7 @@ export default function AdminPage({ onVoltar }) {
             { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
             { id: 'medicos',      label: "\ud83e\ude7a M\u00e9dicos" },
             { id: 'indicadores',  label: "\ud83e\udd1d Indicadores" },
+            { id: 'prescritores', label: "\ud83e\ude7b Prescritores" },
             { id: 'prescricoes',  label: "\ud83d\udcca Prescri\u00e7\u00f5es" },
             { id: 'recrutar',     label: "\ud83d\udce3 Recrutar" },
             { id: 'extratos',     label: "\ud83d\udccb Extratos OBA" },
@@ -181,6 +182,7 @@ export default function AdminPage({ onVoltar }) {
         {aba === 'suplementos'  && <AbaSuplementos />}
         {aba === 'medicos'      && <AbaMedicos />}
         {aba === 'indicadores'  && <AbaIndicadores />}
+        {aba === 'prescritores' && <AbaPrescritores />}
         {aba === 'prescricoes'  && <AbaPrescricoes />}
         {aba === 'recrutar'     && <AbaRecrutar />}
         {aba === 'extratos'     && <AbaExtratos />}
@@ -1397,6 +1399,93 @@ function GraficoCrescimento({ medicos }) {
       {dados.length < 2 && (
         <p className="text-xs text-gray-400 mt-2 text-center">{"Poucos dados ainda — o gráfico ganha forma conforme os médicos entram."}</p>
       )}
+    </div>
+  );
+}
+
+function AbaPrescritores() {
+  const [lista, setLista] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState('');
+  const [busca, setBusca] = useState('');
+  const [filtro, setFiltro] = useState('todos'); // todos | inativos | ativos
+  const [salvando, setSalvando] = useState('');
+
+  async function carregar() {
+    const { data, error } = await supabase.rpc('admin_listar_prescritores', credAdmin());
+    if (error) setErro("Nao foi possivel carregar. A migration migrate_admin_prescritores.sql ja foi aplicada?");
+    else if (data && !data.ok) setErro(data.erro || 'Sem permissao de admin.');
+    else { setErro(''); setLista(data?.prescritores || []); }
+    setLoading(false);
+  }
+  useEffect(() => { carregar(); }, []);
+
+  async function toggle(p) {
+    setSalvando(p.id);
+    const { data, error } = await supabase.rpc('admin_ativar_prescritor', { ...credAdmin(), p_id: p.id, p_ativo: !p.ativo });
+    setSalvando('');
+    if (error || (data && !data.ok)) { window.alert('Erro: ' + (error?.message || data?.erro || 'sem permissao')); return; }
+    await carregar();
+  }
+
+  if (loading) return <div className="text-center py-12 text-gray-400">{"Carregando prescritores..."}</div>;
+  if (erro) return <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm">{erro}</div>;
+
+  const termo = busca.trim().toLowerCase();
+  const filtrados = lista.filter(p => {
+    if (filtro === 'ativos' && !p.ativo) return false;
+    if (filtro === 'inativos' && p.ativo) return false;
+    return !termo || (p.nome||'').toLowerCase().includes(termo) || (p.crm||'').toLowerCase().includes(termo)
+      || (p.uf||'').toLowerCase().includes(termo) || (p.especialidade_1||'').toLowerCase().includes(termo)
+      || (p.especialidade_2||'').toLowerCase().includes(termo);
+  });
+  const nAtivos = lista.filter(p => p.ativo).length;
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <h2 className="text-lg font-semibold text-gray-700">Médicos prescritores</h2>
+        <p className="text-sm text-gray-400 mt-1">Colaboradores captados no site. Ative quando precisar de avaliadores/prescritores.</p>
+        <div className="flex flex-wrap gap-3 mt-3 text-sm">
+          <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{lista.length}{" cadastrado(s)"}</span>
+          <span className="bg-green-100 rounded-full px-3 py-1 font-medium text-green-700">{nAtivos}{" ativo(s)"}</span>
+        </div>
+        <div className="flex gap-2 mt-3">
+          {[['todos','Todos'],['inativos','Inativos'],['ativos','Ativos']].map(([id,label]) => (
+            <button key={id} onClick={() => setFiltro(id)}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-colors ${filtro===id?'bg-red-700 text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{label}</button>
+          ))}
+        </div>
+        <input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="Buscar por nome, CRM, UF ou especialidade"
+          className="w-full mt-3 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+      </div>
+
+      {filtrados.length === 0 ? (
+        <div className="text-center py-10 text-gray-400 text-sm">{"Nenhum prescritor."}</div>
+      ) : filtrados.map(p => {
+        const esp = [
+          p.especialidade_1 && (p.especialidade_1 + (p.rqe_1 ? ' (RQE ' + p.rqe_1 + ')' : '')),
+          p.especialidade_2 && (p.especialidade_2 + (p.rqe_2 ? ' (RQE ' + p.rqe_2 + ')' : '')),
+        ].filter(Boolean).join(' · ');
+        return (
+          <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-bold text-gray-800">
+                  {p.nome || '(sem nome)'}{' '}
+                  {p.ativo && <span className="text-[10px] bg-green-100 text-green-700 rounded-full px-2 py-0.5 font-bold align-middle">ATIVO</span>}
+                </p>
+                <p className="text-xs text-gray-500">{"CRM "}{p.crm}{p.uf ? '/' + p.uf : ''}{p.celular ? ' · ' + p.celular : ''}</p>
+                {esp && <p className="text-xs text-gray-600 mt-1">{esp}</p>}
+              </div>
+              <button onClick={()=>toggle(p)} disabled={salvando===p.id}
+                className={`whitespace-nowrap font-bold px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-60 ${p.ativo ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-green-600 text-white hover:bg-green-700'}`}>
+                {salvando===p.id ? '...' : (p.ativo ? 'Desativar' : 'Ativar')}
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
