@@ -28,8 +28,7 @@ const REF = {
   selenio:      { critico: 40,  baixo: 63,  normal: 120, alto: 200 },
   // Vitamina C (mg/dL)
   vitC:         { critico: 0.2, baixo: 0.4, normal: 0.7, alto: 2.0 },
-  // Niacina / B3 (mcg/dL) — como ácido nicotínico
-  niacina:      { critico: 20,  baixo: 50,  normal: 90,  alto: 200 },
+  // (niacina: o corte fica no obaCutoffs.js em mcg/mL; REF.niacina era código morto)
   // Glicemia jejum (mg/dL)
   glicemia:     { otimo: 100, preD: 126, diabetes: 200 },
   // Insulina jejum (mcUI/mL)
@@ -404,7 +403,7 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
     suger.push('SANGUE OCULTO NAS FEZES')
     bump(LEVE)
   }
-  if (has('ESOFAGITE') || has('DRGE') || has('REFLUXO GASTRO ESOFÁGICO')) {
+  if (has('ESOFAGITE') || has('REFLUXO GASTRO ESOFÁGICO')) {
     linhas.push('ESOFAGITE / DRGE: REFLUXO COMUM NO PÓS-BARIÁTRICO; PODE SANGRAR. MANEJO COM GASTROENTEROLOGISTA. ATENÇÃO: O USO CRÔNICO DE IBP PARA O REFLUXO AGRAVA O DÉFICIT DE B12 E FERRO.')
     bump(LEVE)
   }
@@ -425,7 +424,7 @@ function buildModB12(ex, dados, disab, alertas, suger) {
   const linhas = []
   let nivel = NORMAL
   const meds = dados.medicamentos || []
-  const usaB12IM  = meds.some(m => m.includes('B12') && (m.includes('INTRAMUSCULAR') || m.includes(' IM')))
+  const usaB12IM  = meds.some(m => m.includes('B12') && m.includes('INTRAMUSCULAR'))
   const usaB12Sub = meds.some(m => m.includes('B12') && m.includes('SUBLINGUAL'))
 
   linhas.push(`VITAMINA B12: ${b12} pg/mL`)
@@ -1541,7 +1540,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
         linhas.push('CEA DENTRO DA NORMALIDADE.')
       }
     } else suger.push('CEA')
-  if (sexo === 'F') suger.push('CA 125 (RASTREIO DE NEOPLASIA OVARIANA)')
+  if (temAlgo && sexo === 'F') suger.push('CA 125 (RASTREIO DE NEOPLASIA OVARIANA)')
   }
 
   if (!temAlgo) return null
@@ -2043,7 +2042,7 @@ function buildModAcompanhamento(dadosOBA, alertas) {
 
   return {
     id:     'acompanhamento',
-    titulo: 'Acompanhamento Multidisciplinar',
+    titulo: 'ACOMPANHAMENTO MULTIDISCIPLINAR',
     nivel: nivelGeral,
     linhas,
   }
@@ -2071,17 +2070,7 @@ function buildModLipidico(ex, dados, sexo, alertas, suger) {
   const todos = [colT, ldl, hdl, tg, lpa, apob, apoa, sdldl]
   const todosVazios = todos.every(v => isNaN(v) || v === null || v === undefined)
 
-  if (todosVazios) {
-    return {
-      id:     'lipidico',
-      titulo: '🩸 LIPIDOGRAMA / RISCO CARDIOVASCULAR',
-      nivel: NORMAL,
-      linhas: [
-        'Lipidograma não solicitado/preenchido.',
-        'Recomenda-se solicitar: Colesterol Total, LDL-c, HDL-c, Triglicérides, Lp(a), ApoB, ApoA e sdLDL para avaliação completa de risco CV.'
-      ]
-    }
-  }
+  if (todosVazios) return null   // sem nenhum lipídeo preenchido → não exibe o módulo
 
   // Score por marcador
   let score = 0
@@ -2293,7 +2282,7 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
 
   return {
     id:     'leucos',
-    titulo: 'Hemograma — Leucócitos, Neutrófilos e Plaquetas',
+    titulo: 'HEMOGRAMA — LEUCÓCITOS, NEUTRÓFILOS E PLAQUETAS',
     nivel: nivelGeral,
     linhas,
   }
