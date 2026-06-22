@@ -1628,7 +1628,7 @@ function buildModComportamental(dados, alertas, suger) {
     linhas.push('USO DE PROCINÉTICO (DOMPERIDONA OU BROMOPRIDA): SUGERE DISMOTILIDADE GÁSTRICA OU NÁUSEAS PERSISTENTES. NO BARIÁTRICO, PODE INDICAR DUMPING, ESTENOSE DA ANASTOMOSE OU INTOLERÂNCIA ALIMENTAR. AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO.')
   }
 
-  if (meds.some(m => m.includes('FERRO VENOSO'))) {
+  if (meds.some(m => (m.includes('FERRO INJET') || m.includes('FERRO VENOSO')))) {
     temAlgo = true
     linhas.push('USO DE FERRO ENDOVENOSO: INDICA ABSORÇÃO ORAL INSUFICIENTE OU INTOLERÂNCIA AO FERRO ORAL. IMPORTANTE MONITORAR FERRITINA E SATURAÇÃO DA TRANSFERRINA PERIODICAMENTE PARA EVITAR SOBRECARGA.')
   }
@@ -1765,7 +1765,7 @@ function buildModIntestinal(dados, alertas, suger) {
   const linhas = []
   let nivelGeral = NORMAL
   const meds = dados.medicamentos || []
-  const usaFerroEV  = meds.some(m => m.includes('FERRO VENOSO'))
+  const usaFerroEV  = meds.some(m => (m.includes('FERRO INJET') || m.includes('FERRO VENOSO')))
   const usaFerroOral = meds.some(m => m.includes('FERRO ORAL') || (dados.medicamentos || []).includes('FERRO ORAL'))
 
   if (intestinal === 'OBSTIPAÇÃO CRÔNICA (PRISÃO DE VENTRE)') {
@@ -1843,7 +1843,7 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
   const linhas = []
   let nivelGeral = NORMAL
 
-  const temDiagnostico  = sintomas.includes('FUI DIAGNOSTICADO COM FIBROMIALGIA')
+  const temDiagnostico  = sintomas.some(s => s.includes('FIBROMIALGIA DIAGNOSTICADA'))
   const temInsonia      = sintomas.includes('INSÔNIA')
   const temDores        = sintomas.includes('DORES NO CORPO')
   const temCabeca       = sintomas.includes('DOR DE CABEÇA / ENXAQUECAS')
@@ -1855,7 +1855,7 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
   const temHumor        = sintomas.includes('VARIAÇÃO DO HUMOR')
   const temTermo        = sintomas.includes('SINTO FRIO OU CALOR EXCESSIVO')
 
-  const qtdSintomas = sintomas.filter(s => s !== 'FUI DIAGNOSTICADO COM FIBROMIALGIA').length
+  const qtdSintomas = sintomas.filter(s => !s.includes('FIBROMIALGIA DIAGNOSTICADA')).length
 
   // B12, VitD, Zinco disponíveis para correlação
   const b12  = parseFloat(ex.vitamina_b12)
@@ -1870,7 +1870,7 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
     suger.push('AVALIAÇÃO COM REUMATOLOGISTA')
   } else if (qtdSintomas >= 2) {
     nivelGeral = LEVE
-    linhas.push(`${qtdSintomas} SINTOMAS FIBROMIÁLGICOS RELATADOS: A CONSTELAÇÃO DE SINTOMAS APRESENTADA (${sintomas.filter(s => s !== 'FUI DIAGNOSTICADO COM FIBROMIALGIA').join(', ')}) É COMPATÍVEL COM SÍNDROME FIBROMIÁLGICA SECUNDÁRIA ÀS DEFICIÊNCIAS NUTRICIONAIS DO PÓS-BARIÁTRICO. PRIORIZAR A CORREÇÃO DAS DEFICIÊNCIAS ANTES DE DIAGNÓSTICO DEFINITIVO.`)
+    linhas.push(`${qtdSintomas} SINTOMAS FIBROMIÁLGICOS RELATADOS: A CONSTELAÇÃO DE SINTOMAS APRESENTADA (${sintomas.filter(s => !s.includes('FIBROMIALGIA DIAGNOSTICADA')).join(', ')}) É COMPATÍVEL COM SÍNDROME FIBROMIÁLGICA SECUNDÁRIA ÀS DEFICIÊNCIAS NUTRICIONAIS DO PÓS-BARIÁTRICO. PRIORIZAR A CORREÇÃO DAS DEFICIÊNCIAS ANTES DE DIAGNÓSTICO DEFINITIVO.`)
     alertas.push({ nivel: LEVE, texto: `${qtdSintomas} SINTOMAS FIBROMIÁLGICOS — INVESTIGAR DEFICIÊNCIAS NUTRICIONAIS COMO CAUSA PRIMÁRIA.` })
   }
 
