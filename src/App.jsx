@@ -11,7 +11,14 @@ import IndicadorPage from './components/IndicadorPage'
 import OBAEntradaPaciente from './components/OBAEntradaPaciente'
 import { ehDominioBariatrico } from './lib/dominio'
 export default function App() {
-  const [modo, setModo] = useState('home')
+  // Modo inicial lido da URL JÁ no 1º render — evita o "flash" da landing (branca)
+  // antes do useEffect trocar de tela (ex.: ?oba=1 -> tela escura do paciente).
+  const [modo, setModo] = useState(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get('oba') === '1') return 'oba-paciente'
+    } catch (e) {}
+    return 'home'
+  })
   const [session, setSession] = useState(null)
   const [visible, setVisible] = useState(false)
   const [calcKey, setCalcKey] = useState(0)
