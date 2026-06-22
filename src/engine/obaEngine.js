@@ -2054,7 +2054,7 @@ function buildModAcompanhamento(dadosOBA, alertas) {
 // Avalia leucograma (leucocitos e neutrofilos).
 // Cutoffs baseados em EXAMES_BASE:
 //   Leucocitos normais: 4.000 - 11.000 /uL
-//   Neutrofilos absolutos: 1.800 - 7.700 /uL
+//   Neutrofilos absolutos: 1.500 - 7.700 /uL (corte de alerta 1.500, validado pelo Dr. Ramos)
 // ════════════════════════════════════════════════════════════════════════════
 function buildModLipidico(ex, dados, sexo, alertas, suger) {
   // Coleta valores
@@ -2223,7 +2223,7 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
 
   // ─── Neutrofilos absolutos ──────────────────────────────────────────
   if (!isNaN(neutAbs)) {
-    linhas.push(`NEUTRÓFILOS ABSOLUTOS: ${neutAbs.toLocaleString('pt-BR')}/uL (referência 1.800–7.700).`)
+    linhas.push(`NEUTRÓFILOS ABSOLUTOS: ${neutAbs.toLocaleString('pt-BR')}/uL (referência 1.500–7.700).`)
 
     if (neutAbs < 500) {
       nivelGeral = GRAVE
@@ -2237,7 +2237,7 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
   } else if (!isNaN(leuco) && !isNaN(neutPct)) {
     // Calcula neutrofilos absolutos a partir de leuco + %
     const neutCalc = Math.round(leuco * neutPct / 100)
-    linhas.push(`NEUTRÓFILOS ABSOLUTOS (calculado): ${neutCalc.toLocaleString('pt-BR')}/uL (referência 1.800–7.700).`)
+    linhas.push(`NEUTRÓFILOS ABSOLUTOS (calculado): ${neutCalc.toLocaleString('pt-BR')}/uL (referência 1.500–7.700).`)
     if (neutCalc < 1500 && nivelGeral !== GRAVE) {
       nivelGeral = MODERADO
       linhas.push('NEUTROPENIA CALCULADA (<1.500/uL): relevante. Investigar como acima.')
@@ -2323,14 +2323,14 @@ export function classificarEstadoClinico(relatorio, contexto = {}) {
     motivo = eritron === 'orange'
       ? 'O eritron está comprometido de forma moderada a importante.'
       : 'Há múltiplos alertas de gravidade moderada a corrigir.'
-  } else if (eritron === 'yellow' || moderados === 1 || leves >= 3) {
+  } else if (eritron === 'yellow' || moderados === 1 || leves >= 3 || !temExames) {
     estado = 'RAZOAVEL'
-    motivo = 'Há alterações que pedem ajuste de suplementação e acompanhamento.'
-  } else if (leves >= 1 || !temExames) {
-    estado = 'BOM'
     motivo = !temExames
-      ? 'Sem alterações relevantes nos dados disponíveis — falta confirmar com exames.'
-      : 'Quadro estável, com pequenos pontos de atenção.'
+      ? 'Ainda sem exames — classificação provisória; confirme com exames laboratoriais.'
+      : 'Há alterações que pedem ajuste de suplementação e acompanhamento.'
+  } else if (leves >= 1) {
+    estado = 'BOM'
+    motivo = 'Quadro estável, com pequenos pontos de atenção.'
   } else {
     estado = 'OTIMO'
     motivo = 'Eritron compensado, sem alertas e com acompanhamento — manter conduta.'
