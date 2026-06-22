@@ -29,7 +29,10 @@ TRUNCATE TABLE
   public.creditos_medico,
   public.pedidos_documento,
   public.extratos_oba,
-  public.leads_comerciais
+  public.leads_comerciais,
+  public.indicadores,
+  public.creditos_indicador,
+  public.indicacoes_precadastro
 RESTART IDENTITY CASCADE;
 
 -- 2) Apaga todos os médicos EXCETO o administrador (você).
@@ -41,6 +44,8 @@ SELECT 'medicos restantes' AS info, count(*) AS n FROM public.medicos
 UNION ALL SELECT 'profiles',     count(*) FROM public.profiles
 UNION ALL SELECT 'avaliacoes',   count(*) FROM public.avaliacoes
 UNION ALL SELECT 'triagens',     count(*) FROM public.triagens
-UNION ALL SELECT 'assinaturas',  count(*) FROM public.assinaturas;
+UNION ALL SELECT 'assinaturas',  count(*) FROM public.assinaturas
+UNION ALL SELECT 'indicadores',  count(*) FROM public.indicadores
+UNION ALL SELECT 'creditos_indicador', count(*) FROM public.creditos_indicador;
 
 COMMIT;
