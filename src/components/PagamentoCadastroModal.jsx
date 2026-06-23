@@ -21,6 +21,22 @@ import PlayButton from './PlayButton'
  *   onSairSemPagar:    funcao() - chamada quando o paciente fecha sem pagar
  */
 
+// Tabela de custos do "trabalho médico" exibida no popup ATENÇÃO.
+// Cada item lê seu valor de config (chave). Os valores/labels podem ser
+// ajustados depois — por ora a estrutura já lê do Supabase e mostra "—"
+// quando a chave ainda não existe no banco.
+const SERVICOS = [
+  { chave: 'valor_teleconsulta',         label: 'CONSULTA (VÍDEO)' },
+  { chave: 'valor_discussao_caso',       label: 'DISCUSSÃO DE CASO CLÍNICO' },
+  { chave: 'valor_relatorio_especifico', label: 'RELATÓRIO PARA FINS ESPECÍFICOS' },
+  { chave: 'valor_atestado',             label: 'ATESTADO APÓS TELECONSULTA' },
+  { chave: 'valor_solic_laboratorio',    label: 'SOLICITAÇÃO DE LABORATÓRIO' },
+  { chave: 'valor_solic_bioimagem',      label: 'SOLICITAÇÃO DE BIOIMAGEM' },
+  { chave: 'valor_solic_endoscopia',     label: 'SOLICITAÇÃO DE ENDOSCOPIA' },
+  { chave: 'valor_solic_cardiologico',   label: 'SOLICITAÇÃO DE EXAME CARDIOLÓGICO' },
+  { chave: 'valor_solic_outros',         label: 'SOLICITAÇÃO DE OUTROS EXAMES' },
+]
+
 export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar }) {
   const [copiado, setCopiado] = useState(false)
   const [confirmandoSaida, setConfirmandoSaida] = useState(false)
@@ -28,9 +44,20 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
   const [erro, setErro] = useState('')
   // Valor da anuidade lido do banco (config.valor_anuidade); cai no padrão se ausente.
   const [valor, setValor] = useState(VALOR_ANUIDADE_PADRAO)
+  // Popup "ATENÇÃO" com os custos do trabalho médico (valores vindos de config).
+  const [mostrarCustos, setMostrarCustos] = useState(false)
+  const [custos, setCustos] = useState({})
   useEffect(() => {
-    supabase.from('config').select('valor').eq('chave', 'valor_anuidade').maybeSingle()
-      .then(({ data }) => { const n = Number(data?.valor); if (Number.isFinite(n) && n > 0) setValor(n); })
+    const chaves = ['valor_anuidade', ...SERVICOS.map(s => s.chave)]
+    supabase.from('config').select('chave, valor').in('chave', chaves)
+      .then(({ data }) => {
+        if (!data) return
+        const map = {}
+        data.forEach(r => { map[r.chave] = r.valor })
+        const n = Number(map['valor_anuidade'])
+        if (Number.isFinite(n) && n > 0) setValor(n)
+        setCustos(map)
+      })
   }, [])
   // Código Pix gerado dinamicamente a partir do valor (com CRC recalculado).
   const pixCode = gerarPixAnuidade(valor)
@@ -112,6 +139,8 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
             <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{" | "}</span>
+            <span style={{ color: '#000000' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
           </h2>
         </div>
 
@@ -130,8 +159,15 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           <div className="text-3xl font-black text-red-700">
             {"R$ "}{formatarBRL(valor)}
           </div>
-          <div className="text-xs text-gray-500 mt-1">
-            {"Assinatura anual \u2014 acesso completo"}
+          <div className="text-xs mt-1 inline-flex items-center gap-1.5">
+            <span className="font-bold text-black">{"ASSINATURA ANUAL"}</span>
+            <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-red-600 text-red-600 text-[9px] font-bold leading-none">{"!"}</span>
+            <button
+              type="button"
+              onClick={() => setMostrarCustos(true)}
+              className="font-bold text-red-700 underline hover:text-red-800 transition-colors">
+              {"Entenda"}
+            </button>
           </div>
         </div>
 
@@ -143,7 +179,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
             level="M"
             includeMargin={false}
           />
-          <p className="text-xs text-gray-500 mt-3 text-center">
+          <p className="text-sm text-black mt-3 text-center">
             {"Aponte a c\u00e2mera do seu banco para o QR Code"}
           </p>
         </div>
@@ -189,7 +225,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
 
         {/* Aviso */}
         <div className="pt-3 border-t border-gray-100">
-          <p className="text-[10px] text-gray-400 leading-relaxed text-center">
+          <p className="text-sm text-black leading-relaxed text-center">
             {"O seu acesso \u00e9 ativado imediatamente. Se o recebimento n\u00e3o for confirmado em at\u00e9 48 horas \u2014 o acesso ser\u00e1 suspenso."}
           </p>
         </div>
@@ -202,6 +238,51 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
 
         </div>
       </div>
+
+      {/* Popup ATENÇÃO — custos do trabalho médico (valores de config). */}
+      {mostrarCustos && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[70]"
+          onClick={() => setMostrarCustos(false)}>
+          <div
+            className="bg-white border-2 border-gray-300 rounded-2xl max-w-md w-full p-5 shadow-xl max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-2">
+              <h3 className="text-base font-extrabold text-red-700">{"ATENÇÃO:"}</h3>
+              <button
+                onClick={() => setMostrarCustos(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl leading-none -mt-1"
+                aria-label="Fechar">
+                {"×"}
+              </button>
+            </div>
+            <p className="text-sm font-bold text-black leading-relaxed mb-3">
+              {"A assinatura dá direito a quantas avaliações você quiser fazer no algoritmo ao longo de um ano, com relatórios de STATUS, ORIENTAÇÕES e RECOMENDAÇÕES."}
+            </p>
+            <p className="text-sm font-bold text-black leading-relaxed mb-4">
+              {"Seguir as recomendações do sistema levará à melhor qualidade de vida possível para você, mas o trabalho médico decorrente dessas recomendações terá os seguintes custos:"}
+            </p>
+            <table className="w-full text-xs">
+              <tbody>
+                {SERVICOS.map((s) => {
+                  const v = Number(custos[s.chave])
+                  const txt = Number.isFinite(v) && v > 0 ? `R$ ${formatarBRL(v)}` : '—'
+                  return (
+                    <tr key={s.chave} className="border-b border-gray-100">
+                      <td className="py-1.5 pr-2 text-gray-700 font-medium">{s.label}</td>
+                      <td className="py-1.5 text-right font-bold text-gray-900 whitespace-nowrap">{txt}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            <p className="text-[11px] font-bold text-gray-700 leading-relaxed mt-4">
+              <span className="text-red-700">{"OBSERVAÇÃO:"}</span>
+              {" As solicitações são separadas porque destinam-se a diferentes serviços, mas cada solicitação pode conter um ou mais exames. O valor é cobrado por documento."}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
