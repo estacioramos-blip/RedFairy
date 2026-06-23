@@ -1606,6 +1606,14 @@ function buildModComportamental(dados, alertas, suger) {
     linhas.push('ALERTA PAGOFAGIA: SE FERRO NORMAL E COMPULSÃO PERSISTE, INVESTIGAR OUTRAS CAUSAS (ANEMIA PERNICIOSA, DISTÚRBIO COMPULSIVO).')
   }
 
+  if (compulsoes.includes('COMPRAS')) {
+    temAlgo = true
+    if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+    linhas.push('COMPULSÃO POR COMPRAS (ONIOMANIA): PODE REPRESENTAR TRANSFERÊNCIA DE ADIÇÃO NO PÓS-BARIÁTRICO, EM QUE O COMPORTAMENTO ALIMENTAR COMPULSIVO É SUBSTITUÍDO POR OUTRO COMPORTAMENTO COMPULSIVO. ALÉM DO SOFRIMENTO PSÍQUICO, TEM IMPACTO NEGATIVO SOBRE AS FINANÇAS PESSOAIS, COM RISCO DE ENDIVIDAMENTO EXCESSIVO, COMPROMETIMENTO DOS RECURSOS NECESSÁRIOS AO INVESTIMENTO NA PRÓPRIA SAÚDE (CONSULTAS, EXAMES E SUPLEMENTAÇÃO) E IMPACTO DELETÉRIO SOBRE O ORÇAMENTO FAMILIAR. AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA.')
+    alertas.push({ nivel: MODERADO, texto: 'COMPULSÃO POR COMPRAS (oniomania) — possível transferência de adição; impacto sobre finanças pessoais, risco de endividamento e do orçamento familiar; avaliação psicológica/psiquiátrica.' })
+    suger.push('AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA (compulsão por compras)')
+  }
+
   // Sedentarismo
   if (sedentario) {
     temAlgo = true
