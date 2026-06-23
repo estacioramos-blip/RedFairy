@@ -65,7 +65,12 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
 - Tabelas: profiles, medicos, triagens, avaliacoes, assinaturas, pedidos_documento, oba_anamnese, config
 - RLS desabilitado nas tabelas principais.
 - `oba_anamnese` ganhou colunas **`relatorio_oba` (jsonb)** e **`estado_clinico` (text)** — o relatório/baseline do OBA é gravado na última linha do CPF.
-- `config` (chave/valor) — preços: `valor_solicitacao_medica`, `valor_documento_medico` (documento/prescrição/pedido — **em uso no fluxo do médico**, Calculator/ResultCard), `valor_teleconsulta` (**novo**, teleconsulta do OBA — NÃO reaproveitar o documento_medico), `valor_anuidade`, `pix_chave`, etc. Editáveis em Admin → Configurações (RPC `salvar_config`).
+- `config` (chave/valor) — preços. **Modelo consolidado (2 valores de "trabalho médico"):**
+  - `valor_solicitacao_medica` = **"Valor da Solicitação de Exame"** — cobre TODAS as solicitações (lab, bioimagem, endoscopia, cardiológico, outros) **+ atestado pós-consulta**. Em uso no fluxo do médico (Calculator/ResultCard).
+  - `valor_documento_medico` = **"Valor de Relatório"** — cobre **consulta/teleconsulta, discussão de caso, relatório específico** e documentos (prescrição/pedido). **Também é a fonte do CTA de teleconsulta do OBA** (OBAModal lê esta chave).
+  - **`valor_teleconsulta` foi APOSENTADA** (unificada no `valor_documento_medico`) — ninguém mais lê. A linha pode continuar órfã no banco sem efeito. **NÃO reintroduzir** consulta/teleconsulta como valor separado.
+  - Comissões em **dólar digital** (moeda única, quantidade diferente): `comissao_usd_por_conversao` (médico **afiliado** 4DOC) e `comissao_usd_nao_afiliado` (**indicador não-médico** do OBA — lida por `fn_credita_medico`/`listar_creditos_indicador`/`admin_listar_indicadores`, com fallback para a antiga).
+  - Outros: `valor_anuidade`, `cotacao_dolar`, `pix_chave`, etc. Editáveis em Admin → Configurações (RPC `salvar_config`).
 - Médico de teste: CRM 6302/BA (ESTÁCIO, afiliado).
 - Paciente de teste no banco: CPF 013.529.807-54 (sexo M, nasc. 10/10/1990).
 
@@ -109,7 +114,7 @@ Fluxo atual: bariátrico sem anamnese → `verificarEAbrirOBA` (PatientDashboard
 Invocação: `<OBAModal>` em PatientDashboard ~l.525, props: `cpf, nome, dataNascimento, sexo, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar`.
 
 **Roadmap por fases (acordado):**
-- **Fase 1 — BASELINE visível ✅ FEITA** (commit `78eedf9`): etapa `'relatorio'` com Estado Geral Clínico + termômetro + alertas + módulos + exames; salva `relatorio_oba`/`estado_clinico`; título "AGORA TEMOS UM CONHECIMENTO CLÍNICO SOBRE VOCÊ"; CTA teleconsulta (RUIM/CRÍTICO) com `valor_teleconsulta` + WhatsApp.
+- **Fase 1 — BASELINE visível ✅ FEITA** (commit `78eedf9`): etapa `'relatorio'` com Estado Geral Clínico + termômetro + alertas + módulos + exames; salva `relatorio_oba`/`estado_clinico`; título "AGORA TEMOS UM CONHECIMENTO CLÍNICO SOBRE VOCÊ"; CTA teleconsulta (RUIM/CRÍTICO) com `valor_documento_medico` (ex-`valor_teleconsulta`, unificado) + WhatsApp.
 - **Fase 2 — persistência longitudinal:** tabelas `oba_pacientes` (estável) + `oba_ciclos` (por avaliação); migrar do modelo simples atual (colunas em `oba_anamnese`).
 - **Fase 3 — follow-up simplificado:** OBA "curto" que reusa o estável + comparação entre ciclos.
 - **Fase 4 — evolução visual:** termômetro do estado ao longo do tempo + gráficos por analito.

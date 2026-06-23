@@ -22,19 +22,19 @@ import PlayButton from './PlayButton'
  */
 
 // Tabela de custos do "trabalho médico" exibida no popup ATENÇÃO.
-// Cada item lê seu valor de config (chave). Os valores/labels podem ser
-// ajustados depois — por ora a estrutura já lê do Supabase e mostra "—"
-// quando a chave ainda não existe no banco.
+// Apenas 2 valores de config cobrem tudo:
+//   valor_documento_medico  → "Valor de Relatório" (consulta/teleconsulta, discussão, relatório específico)
+//   valor_solicitacao_medica → "Valor da Solicitação de Exame" (todas as solicitações + atestado)
 const SERVICOS = [
-  { chave: 'valor_teleconsulta',         label: 'CONSULTA (VÍDEO)' },
-  { chave: 'valor_discussao_caso',       label: 'DISCUSSÃO DE CASO CLÍNICO' },
-  { chave: 'valor_relatorio_especifico', label: 'RELATÓRIO PARA FINS ESPECÍFICOS' },
-  { chave: 'valor_atestado',             label: 'ATESTADO APÓS TELECONSULTA' },
-  { chave: 'valor_solic_laboratorio',    label: 'SOLICITAÇÃO DE LABORATÓRIO' },
-  { chave: 'valor_solic_bioimagem',      label: 'SOLICITAÇÃO DE BIOIMAGEM' },
-  { chave: 'valor_solic_endoscopia',     label: 'SOLICITAÇÃO DE ENDOSCOPIA' },
-  { chave: 'valor_solic_cardiologico',   label: 'SOLICITAÇÃO DE EXAME CARDIOLÓGICO' },
-  { chave: 'valor_solic_outros',         label: 'SOLICITAÇÃO DE OUTROS EXAMES' },
+  { chave: 'valor_documento_medico',  label: 'CONSULTA (VÍDEO)' },
+  { chave: 'valor_documento_medico',  label: 'DISCUSSÃO DE CASO CLÍNICO' },
+  { chave: 'valor_documento_medico',  label: 'RELATÓRIO PARA FINS ESPECÍFICOS' },
+  { chave: 'valor_solicitacao_medica', label: 'ATESTADO (PÓS-CONSULTA)' },
+  { chave: 'valor_solicitacao_medica', label: 'SOLICITAÇÃO DE LABORATÓRIO' },
+  { chave: 'valor_solicitacao_medica', label: 'SOLICITAÇÃO DE BIOIMAGEM' },
+  { chave: 'valor_solicitacao_medica', label: 'SOLICITAÇÃO DE ENDOSCOPIA' },
+  { chave: 'valor_solicitacao_medica', label: 'SOLICITAÇÃO DE EXAME CARDIOLÓGICO' },
+  { chave: 'valor_solicitacao_medica', label: 'SOLICITAÇÃO DE OUTROS EXAMES' },
 ]
 
 export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar }) {
@@ -268,7 +268,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
                   const v = Number(custos[s.chave])
                   const txt = Number.isFinite(v) && v > 0 ? `R$ ${formatarBRL(v)}` : '—'
                   return (
-                    <tr key={s.chave} className="border-b border-gray-100">
+                    <tr key={s.label} className="border-b border-gray-100">
                       <td className="py-1.5 pr-2 text-gray-700 font-medium">{s.label}</td>
                       <td className="py-1.5 text-right font-bold text-gray-900 whitespace-nowrap">{txt}</td>
                     </tr>

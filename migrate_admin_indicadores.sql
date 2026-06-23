@@ -38,7 +38,8 @@ BEGIN
   IF NOT public.token_admin_ok(p_crm, p_token) THEN
     RETURN jsonb_build_object('ok', false, 'erro', 'Nao autorizado');
   END IF;
-  v_usd := COALESCE((SELECT NULLIF(valor,'')::numeric FROM public.config WHERE chave = 'comissao_usd_por_conversao'), 10);
+  -- Indicador NAO afiliado: chave propria, com fallback para a antiga e depois 10
+  v_usd := COALESCE((SELECT NULLIF(valor,'')::numeric FROM public.config WHERE chave = 'comissao_usd_nao_afiliado'), (SELECT NULLIF(valor,'')::numeric FROM public.config WHERE chave = 'comissao_usd_por_conversao'), 10);
   v_cot := COALESCE((SELECT NULLIF(valor,'')::numeric FROM public.config WHERE chave = 'cotacao_dolar'), 0);
 
   WITH

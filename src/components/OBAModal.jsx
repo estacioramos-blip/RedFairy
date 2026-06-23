@@ -592,17 +592,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     return () => clearTimeout(t)
   }, [etapa])
 
-  // Valores da config: teleconsulta (valor_teleconsulta) e prescrição/documento
-  // médico (valor_documento_medico) — usados nos CTAs do relatório e da conclusão.
+  // Valor unificado da config: consulta/teleconsulta E prescrição/relatório usam
+  // o mesmo valor (valor_documento_medico = "Valor de Relatório"). A chave antiga
+  // valor_teleconsulta foi aposentada — ambos os CTAs leem documento_medico.
   useEffect(() => {
     let ativo = true
-    supabase.from('config').select('chave, valor').in('chave', ['valor_teleconsulta', 'valor_documento_medico'])
+    supabase.from('config').select('valor').eq('chave', 'valor_documento_medico').maybeSingle()
       .then(({ data }) => {
-        if (!ativo || !data) return
-        const tele = data.find(d => d.chave === 'valor_teleconsulta')
-        const presc = data.find(d => d.chave === 'valor_documento_medico')
-        if (tele?.valor != null) setValorTeleconsulta(tele.valor)
-        if (presc?.valor != null) setValorPrescricao(presc.valor)
+        if (!ativo || data?.valor == null) return
+        setValorPrescricao(data.valor)
+        setValorTeleconsulta(data.valor)
       })
     return () => { ativo = false }
   }, [])

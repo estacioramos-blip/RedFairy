@@ -769,7 +769,7 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
 function AbaConfig() {
   const [valor, setValor] = useState('');
   const [valorDoc, setValorDoc] = useState('');
-  const [valorTele, setValorTele] = useState('');
+  const [comissaoUsdNaoAfiliado, setComissaoUsdNaoAfiliado] = useState('');
   const [pixChave, setPixChave] = useState('');
   const [valorAnuidade, setValorAnuidade] = useState('');
   const [comissaoUsd, setComissaoUsd] = useState('');
@@ -786,8 +786,8 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'valor_solicitacao_medica').single();
       const { data: docConfig } = await supabase
         .from('config').select('valor').eq('chave', 'valor_documento_medico').single();
-      const { data: teleConfig } = await supabase
-        .from('config').select('valor').eq('chave', 'valor_teleconsulta').maybeSingle();
+      const { data: comNaoAfilConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'comissao_usd_nao_afiliado').maybeSingle();
       const { data: pixConfig } = await supabase
         .from('config').select('valor').eq('chave', 'pix_chave').single();
       const { data: anuConfig } = await supabase
@@ -802,7 +802,7 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'telegram_chat_id').maybeSingle();
       setValor(valConfig?.valor || '');
       setValorDoc(docConfig?.valor || '');
-      setValorTele(teleConfig?.valor || '');
+      setComissaoUsdNaoAfiliado(comNaoAfilConfig?.valor || '10');
       setPixChave(pixConfig?.valor || '');
       setValorAnuidade(anuConfig?.valor || '149.90');
       setComissaoUsd(comConfig?.valor || '10');
@@ -820,10 +820,10 @@ function AbaConfig() {
     const itens = [
       { p_chave: 'valor_solicitacao_medica', p_valor: valor,    p_descricao: "Valor em R$ da solicita\u00e7\u00e3o m\u00e9dica via Pix" },
       { p_chave: 'valor_documento_medico',   p_valor: valorDoc, p_descricao: "Valor em R$ da gera\u00e7\u00e3o de documento m\u00e9dico (prescri\u00e7\u00e3o/pedido de exames)" },
-      { p_chave: 'valor_teleconsulta',       p_valor: valorTele, p_descricao: "Valor em R$ da teleconsulta m\u00e9dica (OBA / bari\u00e1trico)" },
       { p_chave: 'pix_chave',                p_valor: pixChave, p_descricao: "Chave Pix para recebimento de solicita\u00e7\u00f5es m\u00e9dicas" },
       { p_chave: 'valor_anuidade',           p_valor: valorAnuidade, p_descricao: "Valor em R$ da anuidade do paciente (exibido na landing e cobrado no Pix de cadastro)" },
-      { p_chave: 'comissao_usd_por_conversao', p_valor: comissaoUsd,  p_descricao: "Valor em DÓLAR pago ao médico por paciente convertido" },
+      { p_chave: 'comissao_usd_por_conversao', p_valor: comissaoUsd,  p_descricao: "Comissão em DÓLAR do médico AFILIADO (4DOC) por paciente convertido" },
+      { p_chave: 'comissao_usd_nao_afiliado', p_valor: comissaoUsdNaoAfiliado, p_descricao: "Comissão em DÓLAR do indicador NÃO afiliado (não-médico do OBA) por paciente convertido" },
       { p_chave: 'cotacao_dolar',            p_valor: cotacaoDolar,  p_descricao: "Cotação USD->BRL para converter a comissão dos médicos em reais" },
       { p_chave: 'telegram_bot_token',       p_valor: tgToken,       p_descricao: "Token do Bot do Telegram para notificações da ADM" },
       { p_chave: 'telegram_chat_id',         p_valor: tgChat,        p_descricao: "Chat ID do Telegram que recebe as notificações da ADM" },
@@ -856,24 +856,17 @@ function AbaConfig() {
       ) : (
         <>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor da Solicita\u00e7\u00e3o M\u00e9dica (R$)"}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor da Solicita\u00e7\u00e3o de Exame (R$)"}</label>
             <input type="number" step="0.01" min="0" value={valor}
               onChange={e => setValor(e.target.value)} placeholder="Ex: 50.00" className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">{"Valor \u00fanico cobrado para emiss\u00e3o de qualquer solicita\u00e7\u00e3o m\u00e9dica."}</p>
+            <p className="text-xs text-gray-400 mt-1">{"Vale para qualquer solicita\u00e7\u00e3o de exame (laborat\u00f3rio, bioimagem, endoscopia, cardiol\u00f3gico, outros) e para o atestado p\u00f3s-consulta."}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor da Gera\u00e7\u00e3o de Documento M\u00e9dico (R$)"}</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor de Relat\u00f3rio (R$)"}</label>
             <input type="number" step="0.01" min="0" value={valorDoc}
               onChange={e => setValorDoc(e.target.value)} placeholder="Ex: 29.90" className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">{"Valor cobrado por documento m\u00e9dico gerado via WhatsApp (prescri\u00e7\u00e3o, pedido de exames)."}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor da Teleconsulta (R$)"}</label>
-            <input type="number" step="0.01" min="0" value={valorTele}
-              onChange={e => setValorTele(e.target.value)} placeholder="Ex: 150.00" className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">{"Valor da teleconsulta m\u00e9dica oferecida no relat\u00f3rio OBA quando o estado cl\u00ednico \u00e9 RUIM ou CR\u00cdTICO."}</p>
+            <p className="text-xs text-gray-400 mt-1">{"Vale para consulta/teleconsulta, discuss\u00e3o de caso, relat\u00f3rio espec\u00edfico e documentos m\u00e9dicos (prescri\u00e7\u00e3o/pedido). Tamb\u00e9m usado no CTA de teleconsulta do OBA."}</p>
           </div>
 
           <div>
@@ -884,20 +877,26 @@ function AbaConfig() {
           </div>
 
           <div className="pt-4 border-t border-gray-100">
-            <h3 className="text-base font-semibold text-gray-700 mb-1">{"Comiss\u00e3o de Afiliados (4DOC)"}</h3>
-            <p className="text-sm text-gray-400 mb-3">{"Valor pago ao m\u00e9dico por paciente convertido e a cota\u00e7\u00e3o do d\u00f3lar para o equivalente em reais."}</p>
+            <h3 className="text-base font-semibold text-gray-700 mb-1">{"Comiss\u00e3o por Convers\u00e3o (d\u00f3lar digital)"}</h3>
+            <p className="text-sm text-gray-400 mb-3">{"Valor pago por paciente convertido (triado + cadastrado + pago). A moeda \u00e9 \u00fanica (d\u00f3lar digital); s\u00f3 muda a quantidade entre afiliado e n\u00e3o-afiliado."}</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">{"Comiss\u00e3o por convers\u00e3o (US$)"}</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Afiliado \u2014 m\u00e9dico 4DOC (US$)"}</label>
                 <input type="number" step="0.01" min="0" value={comissaoUsd}
                   onChange={e => setComissaoUsd(e.target.value)} placeholder="Ex: 10" className={inputClass} />
-                <p className="text-xs text-gray-400 mt-1">{"Em d\u00f3lar, por paciente triado + cadastrado + pago."}</p>
+                <p className="text-xs text-gray-400 mt-1">{"Comiss\u00e3o do m\u00e9dico afiliado (4DOC)."}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00e3o afiliado \u2014 indicador OBA (US$)"}</label>
+                <input type="number" step="0.01" min="0" value={comissaoUsdNaoAfiliado}
+                  onChange={e => setComissaoUsdNaoAfiliado(e.target.value)} placeholder="Ex: 10" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"Comiss\u00e3o do indicador n\u00e3o-m\u00e9dico do OBA."}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{"Cota\u00e7\u00e3o do d\u00f3lar (R$/US$)"}</label>
                 <input type="number" step="0.0001" min="0" value={cotacaoDolar}
                   onChange={e => setCotacaoDolar(e.target.value)} placeholder="Ex: 5.40" className={inputClass} />
-                <p className="text-xs text-gray-400 mt-1">{"Atualize com a cota\u00e7\u00e3o atual. Usada para mostrar a comiss\u00e3o em R$."}</p>
+                <p className="text-xs text-gray-400 mt-1">{"Atualize com a cota\u00e7\u00e3o atual. Usada para mostrar as comiss\u00f5es em R$."}</p>
               </div>
             </div>
           </div>
