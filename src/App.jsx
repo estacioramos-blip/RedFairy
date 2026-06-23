@@ -16,16 +16,12 @@ export default function App() {
   const [modo, setModo] = useState(() => {
     try {
       if (new URLSearchParams(window.location.search).get('oba') === '1') return 'oba-paciente'
-      // BOUNCE: carga "seca" (sem nenhum parâmetro) num navegador que veio do
-      // bariatrico.net → o bariátrico NUNCA pode cair na landing do RedFairy:
-      // devolve ao site antes de pintar a tela. (Reset p/ testes: redfairy.bio/?bari=0.)
-      const semParams = !window.location.search || window.location.search === '?'
-      let standalone = false
-      try { standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
-      if (semParams && !standalone) {
-        const voltar = localStorage.getItem('rf_voltar_url') || ''
-        if (voltar) window.location.replace(voltar)
-      }
+      // (decisão de produto) redfairy.bio digitado DIRETO sempre abre a landing
+      // própria — é a casa do projeto RedFairy (acesso ao Admin pelo logo + guarda-
+      // chuva dos outros problemas hematológicos). NÃO há mais bounce automático
+      // para o bariatrico.net: o bariátrico vive no bariatrico.net e no PWA
+      // instalado, e entra no app via ?from=bari/?oba=1. O "Voltar" das telas do
+      // fluxo continua devolvendo ao site externo via rf_voltar_url (irVoltar).
     } catch (e) {}
     return 'home'
   })
