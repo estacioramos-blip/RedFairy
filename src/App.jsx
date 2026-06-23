@@ -36,13 +36,22 @@ export default function App() {
   const [showInatividade, setShowInatividade] = useState(false)
   const [landingKey, setLandingKey] = useState(0)
   // (bariatrico.net) URL externa para o "Voltar" quando o usuário entrou pelo site.
-  const [voltarExterno, setVoltarExterno] = useState(() => { try { return localStorage.getItem('rf_voltar_url') } catch (e) { return null } })
+  // Vive só na SESSÃO/aba (sessionStorage): se o paciente chegou via ?from=bari, o
+  // "Voltar" devolve ao site externo durante aquela visita; se digitou redfairy.bio
+  // direto (aba nova), não há valor → "Voltar" vai para a landing interna. (Antes era
+  // localStorage e "grudava" para sempre, sequestrando o "Voltar" do RedFairy.)
+  const [voltarExterno, setVoltarExterno] = useState(() => { try { return sessionStorage.getItem('rf_voltar_url') } catch (e) { return null } })
   // (bariatrico.net) "Sou Bariátrico" → abre direto o popup do Projeto OBA na landing.
   const [autoOBA, setAutoOBA] = useState(false)
   // Tela preta que cobre os "flashes" de tela durante o "Voltar".
   const [saindo, setSaindo] = useState(false)
 
   useEffect(() => {
+    // Migração: apaga a marca ANTIGA de "Voltar" externo que ficou gravada no
+    // localStorage (eterna) em navegadores que já passaram pelo bariatrico.net.
+    // Agora o "Voltar" externo vive só no sessionStorage; sem isto, o localStorage
+    // legado continuaria sequestrando o botão até o usuário rodar ?bari=0.
+    try { localStorage.removeItem('rf_voltar_url') } catch (e) {}
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
     // IMPORTANTE: o Supabase dispara onAuthStateChange ao voltar o foco da aba
     // (TOKEN_REFRESHED/SIGNED_IN do MESMO usuário). Se chamarmos setSession com um
@@ -119,13 +128,13 @@ export default function App() {
     // já entrar bariátrico (→ OBA). Em dev, ?bari=1/0 liga/desliga (persiste).
     const bariParam = params.get('bari')
     if (bariParam === '1') { try { localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }
-    if (bariParam === '0') { try { localStorage.removeItem('rf_dom_bari'); localStorage.removeItem('rf_voltar_url') } catch (e) {}; setVoltarExterno('') }
+    if (bariParam === '0') { try { localStorage.removeItem('rf_dom_bari'); localStorage.removeItem('rf_voltar_url'); sessionStorage.removeItem('rf_voltar_url') } catch (e) {}; setVoltarExterno('') }
     if (ehDominioBariatrico()) { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {} }
 
     // (bariatrico.net) Veio do site externo? O "Voltar" destas telas retorna ao site,
     // em vez de cair na landing interna (splash bariátrico).
     if (params.get('from') === 'bari') {
-      try { localStorage.setItem('rf_voltar_url', 'https://bariatrico.net') } catch (e) {}
+      try { sessionStorage.setItem('rf_voltar_url', 'https://bariatrico.net') } catch (e) {}
       setVoltarExterno('https://bariatrico.net')
     }
     // (bariatrico.net) "Sou Bariátrico" → tela própria do paciente (NÃO a landing do redfairy).
