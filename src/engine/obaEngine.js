@@ -1614,6 +1614,14 @@ function buildModComportamental(dados, alertas, suger) {
     suger.push('AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA (compulsão por compras)')
   }
 
+  if (compulsoes.includes('JOGO')) {
+    temAlgo = true
+    if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+    linhas.push('COMPULSÃO POR JOGO (JOGO PATOLÓGICO / LUDOMANIA): PODE REPRESENTAR TRANSFERÊNCIA DE ADIÇÃO NO PÓS-BARIÁTRICO, EM QUE O COMPORTAMENTO ALIMENTAR COMPULSIVO É SUBSTITUÍDO POR OUTRO COMPORTAMENTO COMPULSIVO. ALÉM DO SOFRIMENTO PSÍQUICO, TEM IMPACTO NEGATIVO SOBRE AS FINANÇAS PESSOAIS, COM RISCO DE ENDIVIDAMENTO EXCESSIVO, COMPROMETIMENTO DOS RECURSOS NECESSÁRIOS AO INVESTIMENTO NA PRÓPRIA SAÚDE (CONSULTAS, EXAMES E SUPLEMENTAÇÃO) E IMPACTO DELETÉRIO SOBRE O ORÇAMENTO FAMILIAR. AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA E ENCAMINHAMENTO PARA GRUPO DE APOIO (JOGADORES ANÔNIMOS).')
+    alertas.push({ nivel: MODERADO, texto: 'COMPULSÃO POR JOGO (ludomania) — possível transferência de adição; impacto sobre finanças pessoais, risco de endividamento e do orçamento familiar; avaliação psicológica/psiquiátrica.' })
+    suger.push('AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA (compulsão por jogo)')
+  }
+
   // Sedentarismo
   if (sedentario) {
     temAlgo = true
