@@ -131,8 +131,8 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl my-8 overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 flex items-start justify-center p-4 z-50 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl my-6 overflow-hidden">
 
         {/* Header padr\u00e3o (logo-fada + RedFairy) */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
@@ -144,20 +144,20 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           </h2>
         </div>
 
-        <div className="p-6">
+        <div className="px-6 pt-4 pb-5">
 
         {/* T\u00edtulo vinho do modal */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-3">
           <h2 className="text-xl font-bold text-red-700">{"Ativar seu cadastro"}</h2>
         </div>
 
         {/* Valor destaque */}
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center mb-4">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center mb-3">
           <div className="text-xs font-semibold text-red-700 uppercase tracking-wider mb-1">
             {"Valor a pagar | PIX"}
           </div>
-          <div className="text-3xl font-black text-red-700">
-            {"R$ "}{formatarBRL(valor)}
+          <div className="text-2xl font-black text-red-700">
+            {"R$ "}{formatarBRL(valor).replace(/,00$/, '')}
           </div>
           <div className="text-xs mt-1 inline-flex items-center gap-1.5">
             <span className="font-bold text-black">{"ASSINATURA ANUAL"}</span>
@@ -172,10 +172,10 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
         </div>
 
         {/* QR Code */}
-        <div className="flex flex-col items-center bg-white border border-gray-200 rounded-xl p-4 mb-3">
+        <div className="flex flex-col items-center bg-white border border-gray-200 rounded-xl p-3 mb-3">
           <QRCodeSVG
             value={pixCode}
-            size={150}
+            size={124}
             level="M"
             includeMargin={false}
           />

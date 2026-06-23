@@ -15,13 +15,27 @@ export default function App() {
   // antes do useEffect trocar de tela (ex.: ?oba=1 -> tela escura do paciente).
   const [modo, setModo] = useState(() => {
     try {
-      if (new URLSearchParams(window.location.search).get('oba') === '1') return 'oba-paciente'
-      // (decisão de produto) redfairy.bio digitado DIRETO sempre abre a landing
-      // própria — é a casa do projeto RedFairy (acesso ao Admin pelo logo + guarda-
-      // chuva dos outros problemas hematológicos). NÃO há mais bounce automático
-      // para o bariatrico.net: o bariátrico vive no bariatrico.net e no PWA
-      // instalado, e entra no app via ?from=bari/?oba=1. O "Voltar" das telas do
-      // fluxo continua devolvendo ao site externo via rf_voltar_url (irVoltar).
+      const params = new URLSearchParams(window.location.search)
+      // (bariatrico.net) REFRESH vindo do bariátrico: num refresh "limpo" (a URL já foi
+      // higienizada no 1º load, então não há mais params de tela) que cairia na landing,
+      // se a SESSÃO veio do bariatrico.net (rf_voltar_url setado pelo ?from=bari) devolve
+      // ao site externo — em vez de cair na landing do RedFairy. É o mesmo destino do
+      // botão "Voltar" (irVoltar/voltarExterno), agora também no F5. Cobre TODOS os
+      // modais/popups (o bounce é no init do App, antes de qualquer tela renderizar).
+      // NÃO dispara: (a) no 1º load (que ainda tem params de tela); (b) no PWA instalado
+      // (standalone, start_url=?fada=1, sem rf_voltar_url); (c) em redfairy.bio digitado
+      // direto numa aba nova (sem rf_voltar_url) → esse abre a landing própria.
+      const temParamTela = params.get('oba') || params.get('modo') || params.get('from') ||
+                           params.get('fada') || params.get('p') || params.get('ref') || params.get('bari')
+      let standalone = false
+      try { standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
+      let voltarUrl = null
+      try { voltarUrl = sessionStorage.getItem('rf_voltar_url') } catch (e) {}
+      if (!temParamTela && voltarUrl && !standalone) {
+        window.location.replace(voltarUrl)
+        return 'home'
+      }
+      if (params.get('oba') === '1') return 'oba-paciente'
     } catch (e) {}
     return 'home'
   })
@@ -131,9 +145,11 @@ export default function App() {
     if (bariParam === '0') { try { localStorage.removeItem('rf_dom_bari'); localStorage.removeItem('rf_voltar_url'); sessionStorage.removeItem('rf_voltar_url') } catch (e) {}; setVoltarExterno('') }
     if (ehDominioBariatrico()) { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {} }
 
-    // (bariatrico.net) Veio do site externo? O "Voltar" destas telas retorna ao site,
-    // em vez de cair na landing interna (splash bariátrico).
-    if (params.get('from') === 'bari') {
+    // (bariatrico.net) Veio do site externo? O "Voltar" destas telas (e o F5 — ver o
+    // bounce no inicializador do `modo`) retorna ao site, em vez de cair na landing
+    // interna. Tanto `?from=bari` quanto `?oba=1` marcam a sessão como "veio do
+    // bariátrico" (o ?oba=1 é entrada exclusiva do bariátrico, "Sou Bariátrico").
+    if (params.get('from') === 'bari' || params.get('oba') === '1') {
       try { sessionStorage.setItem('rf_voltar_url', 'https://bariatrico.net') } catch (e) {}
       setVoltarExterno('https://bariatrico.net')
     }

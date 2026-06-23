@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import obaLogo from '../assets/oba-logo.png'
 import PlayButton from './PlayButton'
+import TermosModal from './TermosModal'
 
 // =============================================================================
 // OBAEntradaPaciente — tela PRÓPRIA do paciente bariátrico (vindo do bariatrico.net).
@@ -32,6 +33,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   const [aceitoTC, setAceitoTC] = useState(true)
   const [busy, setBusy] = useState(false)
   const [erro, setErro] = useState('')
+  const [showTC, setShowTC] = useState(false)   // modal de Termos e Condições
 
   // Flag bariátrico desde a entrada (o algoritmo/OBA trata o paciente como bariátrico).
   useEffect(() => { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {} }, [])
@@ -151,7 +153,13 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
             {modo === 'cadastro' && (
               <label className="flex items-start gap-2 mt-3 cursor-pointer">
                 <input type="checkbox" checked={aceitoTC} onChange={e => setAceitoTC(e.target.checked)} className="mt-0.5 w-4 h-4 flex-shrink-0" />
-                <span className="text-xs text-gray-600">Li e aceito os <strong className="text-red-700">Termos e Condições de Uso</strong>.</span>
+                <span className="text-xs text-gray-600">Li e aceito os{" "}
+                  <button type="button"
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); setShowTC(true) }}
+                    className="text-red-700 font-bold underline hover:text-red-800">
+                    {"Termos e Condições de Uso"}
+                  </button>.
+                </span>
               </label>
             )}
 
@@ -174,6 +182,8 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
           </>
         )}
       </div>
+
+      {showTC && <TermosModal tipo="paciente" onFechar={() => setShowTC(false)} />}
     </div>
   )
 }

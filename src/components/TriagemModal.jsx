@@ -786,7 +786,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
 
         {/* Subt\u00edtulo TRIAGEM DO ERITRON centralizado abaixo da faixa pink (sem logo grande nem nome RedFairy duplicados) */}
         <div className="bg-white px-6 pt-5 pb-2 text-center">
-          <p className="text-xs uppercase tracking-widest text-gray-500">{"\ud83e\ude7a Triagem do Eritron"}</p>
+          <p className="text-xs uppercase tracking-widest text-gray-500">{"\ud83e\ude7a Começamos por aqui"}</p>
           <h3 className="text-base font-semibold text-gray-800 mt-1 leading-tight">{fraseAbertura}</h3>
           <p className="text-xs text-gray-500 mt-0.5 leading-relaxed px-2">{"Com apenas tr\u00eas par\u00e2metros do eritrograma o algoritmo faz uma avalia\u00e7\u00e3o inicial. Com FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA (%) voc\u00ea pode aprofundar o diagn\u00f3stico, agora ou no futuro."}</p>
         </div>
@@ -1060,23 +1060,38 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                 <p className="text-xs font-bold uppercase tracking-wide text-gray-600">{"\ud83d\udcca Hemograma"}</p>
                 {/* (PWA fase 5) Ilustra\u00e7\u00e3o: onde achar DATA/HB/VCM/RDW no exame. S\u00f3 paciente. */}
                 {!modoMedico && (
-                  <button type="button" onClick={() => setMostrarExemploHemograma(v => !v)}
+                  <button type="button" onClick={() => setMostrarExemploHemograma(true)}
                     className="text-[0.68rem] font-semibold text-red-700 underline whitespace-nowrap">
-                    {mostrarExemploHemograma ? 'ocultar exemplo' : 'onde acho isso no meu exame?'}
+                    {"Onde acho isso no meu exame?"}
                   </button>
                 )}
               </div>
               {!modoMedico && mostrarExemploHemograma && (
-                <div className="mb-3 rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
-                  <img
-                    src="/hemograma-exemplo.jpg"
-                    alt="Exemplo: DATA, HEMOGLOBINA, VCM e RDW circulados em vermelho no hemograma"
-                    className="w-full h-auto block"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                  <p className="text-[0.66rem] text-gray-500 px-2 py-1.5 text-center leading-snug">
-                    {"Copie a DATA, a HEMOGLOBINA, o VCM e o RDW (itens circulados em vermelho) do seu hemograma."}
-                  </p>
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
+                  style={{ background: 'rgba(0,0,0,0.6)' }}
+                  onClick={() => setMostrarExemploHemograma(false)}>
+                  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col"
+                    style={{ maxHeight: '85vh' }}
+                    onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                      <p className="font-bold text-red-700 text-sm">{"Onde acho isso no meu exame?"}</p>
+                      <button onClick={() => setMostrarExemploHemograma(false)}
+                        className="text-gray-400 hover:text-gray-600 text-xl leading-none" aria-label="Fechar">{"✕"}</button>
+                    </div>
+                    <div className="overflow-y-auto p-5">
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {"Vá no ERITROGRAMA - geralmente a primeira parte do HEMOGRAMA - procure e anote o valor da HEMOGLOBINA expresso em g/dL. Abaixo você encontra e anota o VCM (ou VGM) que corresponde ao VOLUME CORPUSCULAR MÉDIO (ou VOLUME GLOBULAR MÉDIO) expresso em fL, por fim geralmente o último item é o RDW, ou RDW-CV expresso em %; anote também."}
+                      </p>
+                      <div className="mt-4 rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
+                        <img
+                          src="/hemograma-exemplo.jpg"
+                          alt="Exemplo: HEMOGLOBINA, VCM e RDW no hemograma"
+                          className="w-full h-auto block"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
               {/* Grid 5 colunas: Hb (col-span-2), VCM (1), RDW (1), PLAY (1). PLAY substitui o bot\u00e3o CONFIRMO redondo. */}

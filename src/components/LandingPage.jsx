@@ -1892,26 +1892,13 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                       )}
                       <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 10px', textAlign:'center' }}>{"LOGIN DO PACIENTE"}</p>
 
-                      <label style={{ display:'flex', alignItems:'center', gap:'8px', justifyContent:'center', margin:'0 0 12px', cursor:'pointer', userSelect:'none' }}>
-                        <input
-                          type="checkbox"
-                          checked={cpfPacSemCpf}
-                          onChange={e => setCpfPacSemCpf(e.target.checked)}
-                          style={{ width:'14px', height:'14px', cursor:'pointer', accentColor:'#1f2937' }} />
-                        <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#374151', letterSpacing:'0.3px' }}>{"N\u00c3O TENHO CPF"}</span>
-                      </label>
-
                       {cpfPacErro && (
                         <div style={{ textAlign:'center', margin:'0 0 10px' }}>
                           <p style={{ color:'#dc2626', fontSize:'0.72rem', fontWeight:800, letterSpacing:'0.5px', margin:'0' }}>{cpfPacErro}</p>
                         </div>
                       )}
 
-                      {cpfPacSemCpf ? (
-                        <div style={{ display:'flex', justifyContent:'flex-end' }}>
-                          <PlayButton onClick={cpfPacAlternativo} ariaLabel="Continuar sem CPF" />
-                        </div>
-                      ) : cpfPacValido && (
+                      {cpfPacValido && (
                         <div style={{ display:'flex', justifyContent:'flex-end' }}>
                           <PlayButton onClick={cpfPacAvancar} loading={cpfPacBuscando} ariaLabel="Continuar" />
                         </div>
