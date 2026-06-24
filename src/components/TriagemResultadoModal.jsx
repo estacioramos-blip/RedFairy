@@ -378,7 +378,7 @@ export default function TriagemResultadoModal({
 
           <div className="p-6 space-y-4">
             <div className="text-center">
-              <img src={obaLogo} alt="Projeto OBA" className="h-20 object-contain mx-auto mb-3" />
+              <img src={obaLogo} alt="Projeto OBA" className="h-36 object-contain mx-auto mb-3" />
               {modoMedico && inputs?.bariatrica ? (
                 <p className="text-gray-800 leading-relaxed">
                   <strong>{"Doutor, paciente bari\u00e1trico exige uma investiga\u00e7\u00e3o mais complexa,"}</strong>

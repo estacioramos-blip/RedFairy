@@ -1477,7 +1477,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashAfil ? 1 : 0, pointerEvents: splashAfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
               <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, height: '320px' }}>
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat' }} />
-                <div style={{ position: 'absolute', left: 0, right: 0, top: '14%', padding: '0 22px', textAlign: 'center' }}>
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: '6%', padding: '0 22px', textAlign: 'center' }}>
                   <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{"Bem-Vindo ao 4DOC"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup>{" Programa Patrocinado de Médicos Afiliados"}</p>
                 </div>
               </div>
@@ -2358,8 +2358,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
             {/* HERO: imagem nitida no topo (bloco proprio, sem sobreposicao com o texto).
                 Saudacao branca fica sobre a imagem; os botoes surgem ABAIXO, apos o splash de 2s. */}
-            <div style={{ position: 'relative', width: '100%', height: '240px', overflow: 'hidden', backgroundColor: '#FDF7F7' }}>
-              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: `url(${ehDominioBariatrico() ? '/new-tele.png' : chatphone2Img})`, backgroundSize: ehDominioBariatrico() ? 'cover' : '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
+            <div style={{ position: 'relative', width: '100%', height: ehDominioBariatrico() ? '360px' : '240px', overflow: 'hidden', backgroundColor: '#FDF7F7' }}>
+              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: `url(${ehDominioBariatrico() ? '/new-tele.png' : chatphone2Img})`, backgroundSize: ehDominioBariatrico() ? 'contain' : '100% auto', backgroundPosition: ehDominioBariatrico() ? 'center' : 'center top', backgroundRepeat: 'no-repeat' }} />
               <div style={{ position: 'absolute', left: 0, right: 0, bottom: '6%', padding: '0 24px', textAlign: 'center' }}>
                 <p style={{ color: '#ffffff', fontSize: '22px', fontWeight: 900, lineHeight: 1.18, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>
                   {"Estamos felizes de ter voc\u00ea no RedFairy | OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>

@@ -717,10 +717,10 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       }
       .rf-arrow-x { animation: rfArrowPulse 1s ease-in-out infinite; }
       @keyframes rfPlayBlink {
-        0%, 100% { background-color: #b91c1c; box-shadow: 0 0 0 0 rgba(185,28,28,0.7); }
-        50%      { background-color: #ef4444; box-shadow: 0 0 0 8px rgba(185,28,28,0); }
+        0%, 100% { box-shadow: 0 0 0 0 rgba(227,174,55,0.7); }
+        50%      { box-shadow: 0 0 0 8px rgba(227,174,55,0); }
       }
-      .rf-play-ready { animation: rfPlayBlink 1s ease-in-out infinite; }
+      .rf-play-ready { background-color: #d1d5db; animation: rfPlayBlink 1s ease-in-out infinite; }
     `}</style>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.6)' }}>
@@ -1184,7 +1184,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                         disabled={!ready}
                         aria-label="Prosseguir"
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-md ${ready ? 'rf-play-ready cursor-pointer' : 'bg-gray-300 cursor-not-allowed'}`}>
-                        <span style={{ fontSize: '1.1rem', lineHeight: 1, color: '#fff', marginLeft: 3 }}>{"\u25B6"}</span>
+                        <span style={{ fontSize: '1.1rem', lineHeight: 1, color: '#7B1E1E', marginLeft: 3 }}>{"\u25B6"}</span>
                       </button>
                     );
                   })()}
