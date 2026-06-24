@@ -18,6 +18,8 @@ import telefonista2Img from '../assets/telefonista2.jpg';
 import telefonista3Img from '../assets/telefonista3.jpg';
 import logo from '../assets/logo.png';
 import obaLogo from '../assets/oba-logo.png';
+import medicoBariImg from '../assets/oba-medico.jpg';
+import obaFairyIcon from '../assets/oba-fairy-icon.png';
 import { QRCodeSVG } from 'qrcode.react';
 import { useInstalarFada } from '../lib/useInstalarFada';
 import { ehDominioBariatrico } from '../lib/dominio';
@@ -178,6 +180,12 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
   const [bgRevelado, setBgRevelado] = useState(false);
   const [splashAtivo, setSplashAtivo] = useState(true);
 
+  // (b) Forca limpeza dos campos CRM/UF/SENHA ao abrir o card (evita residuo de
+  // sessao anterior ou autofill do navegador puxando dados antigos para o login).
+  useEffect(() => {
+    setLoginCrmNum(''); setLoginCrmUF(''); setLoginSenha('');
+  }, []);
+
   // Timer 1800ms apos digitar no NUMERO do CRM (login): se >= 1 digito, espera 1800ms
   // ocioso e move o foco para o campo UF. Se atingir 6 digitos antes, avanca imediato.
   useEffect(() => {
@@ -288,7 +296,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
       const e = resp && resp.erro
       if (e === 'CRM nao encontrado') {
         // Primeiro acesso: CRM novo -> vai pro cadastro (cria a senha la), com o CRM ja preenchido.
-        setCrmNum(loginCrmNum); setCrmUF(loginCrmUF); setLoginErro(''); setModo('cadastro')
+        // (d) A senha foi criada na ENTRADA (tela de Acesso) — leva ela para o cadastro
+        // para nao pedir "Crie a sua Senha" de novo no Primeiro Acesso.
+        setCrmNum(loginCrmNum); setCrmUF(loginCrmUF); setSenha(loginSenha); setLoginErro(''); setModo('cadastro')
         return
       }
       setLoginErro(e === 'Senha incorreta' ? 'Senha incorreta.' : (e || 'Falha no login.'))
@@ -438,8 +448,11 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 </button>
               </div>
             </div>
+            {loginSenha.length > 0 && loginSenha.length < 6 && (
+              <p className="text-amber-600 text-xs">{"Mínimo 6 caracteres"}</p>
+            )}
             {loginErro && <p className="text-red-500 text-sm">{loginErro}</p>}
-            {loginConselho.trim() && loginSenha.trim() && (
+            {loginConselho.trim() && loginSenha.length >= 6 && (
               <div className="flex flex-col items-center gap-1 pt-1">
                 <button onClick={handleLogin} disabled={loginLoading} aria-label="Confirmar login"
                   className="w-14 h-14 rounded-full bg-gray-400 hover:bg-gray-500 text-red-700 font-bold flex items-center justify-center transition-colors shadow-md disabled:opacity-50"
@@ -501,7 +514,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 placeholder="seu@email.com" className={inputAmarelo} autoComplete="off" />
             </div>
             <div>
-              {!jaLogadoSemSenha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie a sua Senha</label>
+              {!jaLogadoSemSenha && !senha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie a sua Senha</label>
               <div style={{ position: 'relative' }}>
                 <input type={showSenha ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)}
                   placeholder={"M\u00ednimo 6 caracteres"} className={inputAmarelo} autoComplete="new-password"
@@ -754,6 +767,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [fada4docInstrIOS, setFada4docInstrIOS] = useState(false);
   const { instalar: instalarFada4doc } = useInstalarFada();
   const qrBaseAfil = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://redfairy.bio';
+  // (i) Vindo do bariatrico.net (Sou Medico), a imagem do topo do modal de afiliados
+  // troca para a da landing "Quero encaminhar pacientes" (o medico + paciente).
+  // Como a imagem do bari e landscape (2:1) e a welcome e retrato, ajusta enquadramento.
+  const afilBg = ehDominioBariatrico()
+    ? { img: medicoBariImg, size: 'cover', pos: 'center center' }
+    : { img: welcomeImg, size: '100% auto', pos: 'center top' };
   // Libera o splash e foca o formulário de afiliação.
   function prosseguirAfil() {
     setCardFada4doc(false); setSplashAfil(false);
@@ -1441,13 +1460,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             onMouseEnter={() => setBgAfilRevelado(true)} onMouseLeave={() => setBgAfilRevelado(false)} onTouchStart={() => setBgAfilRevelado(true)}>
             {/* Imagem de fundo: inteira (contain) e esmaecida; revela no hover (igual a' hero) */}
             {/* Imagem de fundo: faixa de largura cheia, cortada na cintura, CENTRADA no modal; revela no hover */}
-            <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)', backgroundImage: `url(${welcomeImg})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgAfilRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgAfilRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+            <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)', backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat', filter: bgAfilRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgAfilRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
             {/* SPLASH de entrada: imagem (largura cheia, cortada na cintura, centrada) + greeting por 5s, antes dos campos */}
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashAfil ? 1 : 0, pointerEvents: splashAfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
               <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, height: '320px' }}>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${welcomeImg})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat' }} />
                 <div style={{ position: 'absolute', left: 0, right: 0, top: '14%', padding: '0 22px', textAlign: 'center' }}>
-                  <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{"Bem-Vindo ao 4DOC® Programa Patrocinado de Médicos Afiliados"}</p>
+                  <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{"Bem-Vindo ao 4DOC"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup>{" Programa Patrocinado de Médicos Afiliados"}</p>
                 </div>
               </div>
             </div>
@@ -1459,7 +1478,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 shadow-lg">
                   <div className="flex items-center gap-3">
                     <p className="flex-1 text-[11px] text-blue-900 leading-snug font-bold">
-                      {"AGORA INSTALE NA TELA INICIAL DO SEU CELULAR a "}<span style={{ color: '#7B1E1E' }}>{"FADINHA VERMELHA"}</span>{" de encaminhamento de pacientes. Sempre que você tocar nela surgirá o QR-CODE ao lado, através do qual você encaminha pacientes à plataforma sob o seu CRM. Cada paciente que se cadastrar gera UM CRÉDITO do programa para você."}
+                      {"AGORA INSTALE NA TELA INICIAL DO SEU CELULAR "}<span style={{ color: '#7B1E1E' }}>{"o ÍCONE do Projeto"}</span>{" para encaminhamento de pacientes. Sempre que você tocar nele surgirá o QR-CODE ao lado, através do qual você encaminha pacientes à plataforma sob o seu CRM. Cada paciente que se cadastrar gera UM CRÉDITO do programa para você."}
                     </p>
                     <div className="flex-shrink-0" style={{ background: '#fff', padding: 6, borderRadius: 10, border: '1px solid #e5e7eb' }}>
                       <QRCodeSVG value={`${qrBaseAfil}/?ref=${encodeURIComponent(medicoCRM || '')}`} size={88} level="H" bgColor="#ffffff" fgColor="#7B1E1E" imageSettings={{ src: logo, height: 18, width: 18, excavate: true }} />
@@ -1471,15 +1490,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     </button>
                   </div>
                 </div>
-                <label className="flex items-center justify-center gap-2 cursor-pointer mt-3">
-                  <input type="checkbox" checked={fada4docMarcada} onChange={aoMarcarFada4doc} className="w-4 h-4" style={{ accentColor: '#1d4ed8' }} />
-                  <span className="text-xs font-bold text-blue-700">{"Sim, instale a FADINHA do 4DOC® na minha tela."}</span>
-                </label>
+                <div className="flex items-center justify-between gap-2 mt-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={fada4docMarcada} onChange={aoMarcarFada4doc} className="w-4 h-4 flex-shrink-0" style={{ accentColor: '#1d4ed8' }} />
+                    <span className="text-xs font-bold text-blue-700">{"Sim, instale o ÍCONE do 4DOC® na minha tela."}</span>
+                  </label>
+                  <img src={obaFairyIcon} alt="Ícone do 4DOC" className="flex-shrink-0 w-11 h-11 rounded-lg" style={{ objectFit: 'contain' }} />
+                </div>
                 {fada4docInstrIOS && (
                   <p className="text-[11px] mt-1 leading-snug text-blue-700 text-center">{"No iPhone: toque em "}<strong>{"Compartilhar"}</strong>{" (↑) e depois em "}<strong>{"\"Adicionar à Tela de Início\""}</strong>{"."}</p>
                 )}
-                <button onClick={prosseguirAfil} className="block w-full text-center text-[11px] font-bold text-gray-500 mt-2 underline underline-offset-2 hover:text-gray-700">
-                  {"Instalo a FADINHA DEPOIS, prossiga."}
+                <button onClick={prosseguirAfil} className="block w-full text-right text-[11px] font-bold text-gray-500 mt-2 underline underline-offset-2 hover:text-gray-700">
+                  {"Instalo o ÍCONE depois, prossiga"}
                 </button>
               </div>
             )}
@@ -1509,7 +1531,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
               <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
               <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#000000', margin: '0 6px' }}>|</span><span style={{ color: '#9ca3af' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
               </h2>
             </div>
             {/* Subtitulo vinho do programa: zIndex 10 p/ aparecer desde o inicio, junto do header */}
@@ -1519,11 +1541,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
             <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
               <p className="text-gray-700 text-sm leading-relaxed">
-                {"Para concluir a sua inscri\u00e7\u00e3o no "}<strong>Programa de Afiliados Patrocinado</strong>{" de RedFairy e receber os benef\u00edcios previstos, precisamos do seu "}<strong>CEP</strong>{", "}<strong>CPF</strong>{" e da sua "}<strong>chave Pix</strong>{"."}
+                {"Para concluir a sua inscri\u00e7\u00e3o no "}<strong>Programa de Médicos Afiliados Patrocinado</strong>{" e receber os benef\u00edcios previstos, precisamos do seu "}<strong>CEP</strong>{", "}<strong>CPF</strong>{" e da sua "}<strong>chave Pix</strong>{"."}
               </p>
               <p className="text-xs text-red-800 text-center leading-relaxed font-medium">
                 {"\ud83d\udd12 Entre seus dados tranquilamente. Voc\u00ea est\u00e1 em um servidor seguro, e n\u00e3o existe a possibilidade de uso inadequado dessas informa\u00e7\u00f5es."}
-              </p>
+              <br/>{"O projeto inclui proteção contra invasão e segue as exigências da LGPD."}</p>
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CEP</label>

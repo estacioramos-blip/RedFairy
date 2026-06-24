@@ -58,7 +58,12 @@ export default function App() {
   // (bariatrico.net) "Sou Bariátrico" → abre direto o popup do Projeto OBA na landing.
   const [autoOBA, setAutoOBA] = useState(false)
   // Tela preta que cobre os "flashes" de tela durante o "Voltar".
-  const [saindo, setSaindo] = useState(false)
+  // (a) Tela preta tambem cobre a ENTRADA no card escuro de Acesso Medico: quando o
+  // medico chega por ?modo=medico (ex.: "Sou Medico" do bariatrico.net), inicia ja
+  // preta no 1o render para nao piscar a landing branca antes do card escuro montar.
+  const [saindo, setSaindo] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('modo') === 'medico' } catch (e) { return false }
+  })
 
   useEffect(() => {
     // Migração: apaga a marca ANTIGA de "Voltar" externo que ficou gravada no
@@ -86,6 +91,8 @@ export default function App() {
       try { localStorage.setItem('rf_open_login', '1') } catch (e) {}
       setCalcKey(k => k + 1)
       setModo('calculadora')
+      // (a) some com a tela preta quando o card escuro ja deve estar montado.
+      setTimeout(() => setSaindo(false), 450)
     } else if (modoParam === 'paciente') {
       setModo('paciente')
     } else if (modoParam === 'login') {
@@ -267,6 +274,7 @@ export default function App() {
   }
 
   function handleDemoMedico() {
+    setSaindo(true)   // (a) tela preta cobre o flash branco da entrada no card escuro
     const next = demoMedicoClicks + 1
     setDemoMedicoClicks(next)
     if (demoMedicoTimer) clearTimeout(demoMedicoTimer)
@@ -276,12 +284,14 @@ export default function App() {
       localStorage.setItem('medico_nome', 'Dr. Demo RedFairy')
       setCalcKey(k => k + 1)
       setModo('calculadora')
+      setTimeout(() => setSaindo(false), 450)
       return
     }
     const t = setTimeout(() => setDemoMedicoClicks(0), 2000)
     setDemoMedicoTimer(t)
     setCalcKey(k => k + 1)
     setModo('calculadora')
+    setTimeout(() => setSaindo(false), 450)
   }
 
 
