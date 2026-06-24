@@ -902,11 +902,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [bgFelicRevelado, setBgFelicRevelado] = useState(false);
   // SPLASH de entrada: imagem nitida + saudacao por 2s; depois surgem os botoes (abaixo da imagem).
   const [splashFelic, setSplashFelic] = useState(true);
+  // (felicitacoes) o botao PLAY surge 2s DEPOIS do texto (que ja aparece apos o splash de 2s).
+  const [mostrarPlayFelic, setMostrarPlayFelic] = useState(false);
   useEffect(() => {
     if (showFelicitacoes) {
-      setSplashFelic(true); setBgFelicRevelado(false);
-      const t = setTimeout(() => setSplashFelic(false), 2000);
-      return () => clearTimeout(t);
+      setSplashFelic(true); setBgFelicRevelado(false); setMostrarPlayFelic(false);
+      const t1 = setTimeout(() => setSplashFelic(false), 2000);
+      const t2 = setTimeout(() => setMostrarPlayFelic(true), 4000);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
     }
   }, [showFelicitacoes]);
 
@@ -2316,11 +2319,20 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       {showFelicitacoes && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-4" style={{ position: 'relative' }}>
+            {/* (a) Fechar (canto sup. direito): sai DESLOGADO para a landing do bariatrico.net. */}
+            <button onClick={() => {
+                try { ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill'].forEach(k => localStorage.removeItem(k)); } catch (e) {}
+                window.location.href = 'https://bariatrico.net';
+              }}
+              aria-label="Fechar"
+              style={{ position: 'absolute', top: 6, right: 9, zIndex: 20, background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', lineHeight: 1, color: '#9ca3af' }}>
+              {"✕"}
+            </button>
             {/* Header fada */}
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
               <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#000000', margin: '0 6px' }}>|</span><span style={{ color: '#9ca3af' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
               </h2>
             </div>
             {/* HERO: imagem nitida no topo (bloco proprio, sem sobreposicao com o texto).
@@ -2335,51 +2347,22 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
             {/* Conteudo: surge apos o splash (2s), ABAIXO da imagem (sem sobreposicao) */}
             <div className="px-5 py-5" style={{ position: 'relative', zIndex: 1, opacity: splashFelic ? 0 : 1, transform: splashFelic ? 'translateY(8px)' : 'translateY(0)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}>
-              <p className="text-red-700 text-xs font-bold tracking-widest uppercase text-center mb-4">{"Agora voc\u00ea pode:"}</p>
-              <div className="space-y-2.5">
-                <button
-                  onClick={() => { setShowFelicitacoes(false); }}
-                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow">
-                  {"APROFUNDAR AVALIA\u00c7\u00c3O INICIADA"}
-                </button>
-                <button
-                  onClick={() => { setShowFelicitacoes(false); setShowTriagem(true); }}
-                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow">
-                  AVALIAR | REAVALIAR PACIENTE
-                </button>
-                <button
-                  onClick={() => { setShowFelicitacoes(false); setShowOBA(true); }}
-                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow flex flex-col items-center leading-tight">
-                  <span>{"CONHECER O PROJETO OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup></span>
-                  <span style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '1px', opacity: 0.75 }}>{"OTIMIZAR O BARI\u00c1TRICO"}</span>
-                </button>
-                <button
-                  onClick={async () => {
-                    let afiliado = false;
-                    try {
-                      const { data: md } = await supabase
-                        .from('medicos')
-                        .select('cep, cpf, pix_chave')
-                        .eq('crm', medicoCRM)
-                        .maybeSingle();
-                      afiliado = !!(md?.cep && md?.cpf && md?.pix_chave);
-                    } catch (e) {}
-                    if (afiliado) {
-                      setShowFelicitacoes(false);
-                      setShowBeneficios(true);
-                    } else {
-                      alert("FILIE-SE PARA CONHECER OS BENEF\u00cdCIOS");
-                    }
-                  }}
-                  className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors shadow">
-                  {"CONHECER OS BENEF\u00cdCIOS"}
-                </button>
-                <button
-                  onClick={() => { setShowFelicitacoes(false); if (onVoltar) onVoltar(); }}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition-colors">
-                  {"VOLTAR PARA O IN\u00cdCIO"}
-                </button>
-              </div>
+              {/* (a) Boas-vindas simplificada: texto cinza-escuro abaixo da imagem. */}
+              <p className="text-gray-700 text-sm leading-relaxed text-center">
+                {"Agora voc\u00ea vai iniciar uma investiga\u00e7\u00e3o simplificada de um paciente, onde voc\u00ea ver\u00e1 um resumo do que a anamnese do bari\u00e1trico faz. Tenha em m\u00e3os o HEMOGRAMA, e idealmente a FERRITINA e a SATURA\u00c7\u00c3O DA TRANSFERRINA."}
+              </p>
+              {/* Play DOURADO surge 2s depois do texto: seta o flag bariatrico e abre a triagem
+                  (com isso o checkbox "paciente bariatrico" ja vem marcado e travado la). */}
+              {mostrarPlayFelic && (
+                <div className="flex justify-center mt-5">
+                  <PlayButton
+                    onClick={() => { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {}; setShowFelicitacoes(false); setShowTriagem(true); }}
+                    label="INICIAR"
+                    ariaLabel="Iniciar investiga\u00e7\u00e3o"
+                    ringColor="rgba(227,174,55,0.75)"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
