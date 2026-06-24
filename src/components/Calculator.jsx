@@ -453,13 +453,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
             )}
             {loginErro && <p className="text-red-500 text-sm">{loginErro}</p>}
             {loginConselho.trim() && loginSenha.length >= 6 && (
-              <div className="flex flex-col items-center gap-1 pt-1">
-                <button onClick={handleLogin} disabled={loginLoading} aria-label="Confirmar login"
-                  className="w-14 h-14 rounded-full bg-gray-400 hover:bg-gray-500 text-red-700 font-bold flex items-center justify-center transition-colors shadow-md disabled:opacity-50"
-                  style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, sans-serif' }}>
-                  <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>{"\u2714"}</span>
-                </button>
-                <span className="text-xs font-bold text-red-800 tracking-wide">{loginLoading ? '...' : 'CONFIRMO'}</span>
+              <div className="flex justify-center pt-1">
+                {/* Padrao PlayButton: \u25b6 vinho + piscar DOURADO (ring #E3AE37). */}
+                <PlayButton onClick={handleLogin} loading={loginLoading} label="CONFIRMO" ariaLabel="Confirmar login" ringColor="rgba(227,174,55,0.75)" />
               </div>
             )}
             <p className="text-center text-xs">
@@ -539,10 +535,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 loading={cadLoading}
                 label="CONTINUAR"
                 ariaLabel="Confirmar cadastro"
-                circleClass="bg-red-700 hover:bg-red-800"
-                playColor="#2563eb"
-                labelColor="#991b1b"
-                ringColor="rgba(220,38,38,0.55)"
+                ringColor="rgba(227,174,55,0.75)"
               />
             </div>
             <button type="button" onClick={() => setShowReversaoAdesao(true)}
@@ -1639,10 +1632,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               {afiliadoSalvo ? null : (
                 <div className="space-y-2">
                 {afiliadoCEP.trim() && afiliadoCPF.trim() && afiliadoPix.trim() && !afiliadoCPFErro && (
-                  <div className="flex flex-col items-end gap-1 pt-1">
-                    {/* Botao cinza piscante com PLAY + "CONFIRMO" (vinho) \u2014 padrao novo, alinhado a' direita */}
-                    <style>{`@keyframes rfPlayBlinkWine { 0%,100%{box-shadow:0 0 0 0 rgba(123,30,30,0.55);} 50%{box-shadow:0 0 0 9px rgba(123,30,30,0);} } .rf-play-wine{ animation: rfPlayBlinkWine 1.1s ease-in-out infinite; }`}</style>
-                    <button disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || !!afiliadoCPFErro}
+                  <div className="flex justify-end pt-1">
+                    {/* Padrao PlayButton: \u25b6 vinho + piscar DOURADO + subtexto PROSSEGUIR. */}
+                    <PlayButton
                       onClick={async () => {
                         setAfiliadoSalvando(true);
                         const { error } = await supabase.from('medicos').update({
@@ -1656,16 +1648,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         // Direto para tela de felicita\u00e7\u00f5es sem mensagem intermedi\u00e1ria "Dados salvos"
                         setAfiliadoSalvo(true); setShowAfiliados(false); setShowFelicitacoes(true);
                       }}
-                      aria-label="Confirmar dados"
-                      className="rf-play-wine w-14 h-14 rounded-full bg-gray-300 hover:bg-gray-400 flex items-center justify-center transition-colors shadow-md disabled:opacity-50">
-                      <span style={{ color: '#7B1E1E', fontSize: '1.4rem', lineHeight: 1, marginLeft: 3 }}>{afiliadoSalvando ? '\u2026' : "\u25b6"}</span>
-                    </button>
-                    <span className="text-xs font-bold tracking-wide" style={{ color: '#7B1E1E' }}>{afiliadoSalvando ? '...' : 'CONFIRMO'}</span>
+                      loading={afiliadoSalvando}
+                      disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || !!afiliadoCPFErro}
+                      label="PROSSEGUIR"
+                      ariaLabel="Confirmar dados"
+                      ringColor="rgba(227,174,55,0.75)"
+                    />
                   </div>
                 )}
+                  {/* Link discreto "\u2190 VOLTAR" (substitui o antigo "Preencher depois"). */}
                   <button onClick={() => setShowAfiliados(false)}
-                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
-                    Preencher depois
+                    className="text-gray-400 hover:text-gray-600 text-xs font-medium pt-1">
+                    {"\u2190 VOLTAR"}
                   </button>
                 </div>
               )}
