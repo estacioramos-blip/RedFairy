@@ -1631,9 +1631,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               </label>
               {afiliadoSalvo ? null : (
                 <div className="space-y-2">
-                {afiliadoCEP.trim() && afiliadoCPF.trim() && afiliadoPix.trim() && !afiliadoCPFErro && (
-                  <div className="flex justify-end pt-1">
-                    {/* Padrao PlayButton: \u25b6 vinho + piscar DOURADO + subtexto PROSSEGUIR. */}
+                  {/* Padrao PlayButton: \u25b6 vinho + piscar DOURADO + subtexto PROSSEGUIR.
+                      SEMPRE visivel; desabilitado ate CEP + CPF(valido) + chave Pix; o hint
+                      mostra o que ainda falta (antes o botao sumia e o medico ficava preso). */}
+                  <div className="flex flex-col items-end gap-1 pt-1">
                     <PlayButton
                       onClick={async () => {
                         setAfiliadoSalvando(true);
@@ -1651,11 +1652,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       loading={afiliadoSalvando}
                       disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || !!afiliadoCPFErro}
                       label="PROSSEGUIR"
+                      hint={(!afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || afiliadoCPFErro)
+                        ? `Falta: ${[!afiliadoCEP.trim() && 'CEP', (!afiliadoCPF.trim() || afiliadoCPFErro) && 'CPF', !afiliadoPix.trim() && 'chave Pix'].filter(Boolean).join(', ')}`
+                        : undefined}
                       ariaLabel="Confirmar dados"
                       ringColor="rgba(227,174,55,0.75)"
                     />
                   </div>
-                )}
                   {/* Link discreto "\u2190 VOLTAR" (substitui o antigo "Preencher depois"). */}
                   <button onClick={() => setShowAfiliados(false)}
                     className="text-gray-400 hover:text-gray-600 text-xs font-medium pt-1">
