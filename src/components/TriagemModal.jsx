@@ -490,6 +490,14 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     let idadeCalc = hoje.getFullYear() - a;
     const mDiffN = hoje.getMonth() - (m - 1);
     if (mDiffN < 0 || (mDiffN === 0 && hoje.getDate() < d)) idadeCalc--;
+    // (fix) menor de 12 anos: rejeita imediatamente no campo (modulo pediatrico em
+    // desenvolvimento) — antes o auto-avanco do medico so' checava futuro/>120/>=100.
+    if (idadeCalc < 12) {
+      setErros(prev => ({ ...prev, dataNascimento: 'O RedFairy ainda não atende menores de 12 anos (módulo pediátrico em desenvolvimento).' }));
+      setInputs(prev => ({ ...prev, dataNascimento: '' }));
+      setTimeout(() => { if (refDnInput.current) refDnInput.current.focus(); }, 0);
+      return;
+    }
     if (idadeCalc > 120 || (idadeCalc >= 100 && !window.confirm(`A data informada resulta em ${idadeCalc} anos. Confirma?`))) {
       setErros(prev => ({ ...prev, dataNascimento: idadeCalc > 120 ? 'Idade acima de 120 anos não é aceita — verifique a data.' : 'Confirme a data de nascimento.' }));
       setInputs(prev => ({ ...prev, dataNascimento: '' }));

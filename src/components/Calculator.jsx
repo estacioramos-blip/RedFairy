@@ -1519,7 +1519,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-56%)', backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat', filter: (flashFormImg || bgAfilRevelado) ? 'blur(0px)' : 'blur(10px)', opacity: flashFormImg ? 0.6 : (bgAfilRevelado ? 0.5 : 0.12), transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
             {/* SPLASH de entrada: imagem (largura cheia, cortada na cintura, centrada) + greeting por 5s, antes dos campos */}
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashAfil ? 1 : 0, pointerEvents: splashAfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
-              <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, height: '320px' }}>
+              <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, bottom: '8px' }}>
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat' }} />
                 <div style={{ position: 'absolute', left: 0, right: 0, bottom: '16%', padding: '0 22px', textAlign: 'center' }}>
                   <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{"Bem-Vindo ao 4DOC"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup>{" Programa Patrocinado de Médicos Afiliados"}</p>
@@ -1735,7 +1735,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       label="PROSSEGUIR"
                       hint={(!afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || afiliadoCPFErro)
                         ? `Falta: ${[!afiliadoCEP.trim() && 'CEP', (!afiliadoCPF.trim() || afiliadoCPFErro) && 'CPF', !afiliadoPix.trim() && 'chave Pix'].filter(Boolean).join(', ')}`
-                        : undefined}
+                        : ' '}
                       ariaLabel="Confirmar dados"
                       ringColor="rgba(227,174,55,0.75)"
                     />

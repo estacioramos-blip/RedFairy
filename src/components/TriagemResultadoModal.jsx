@@ -381,8 +381,7 @@ export default function TriagemResultadoModal({
               <img src={obaLogo} alt="Projeto OBA" className="h-36 object-contain mx-auto mb-3" />
               {modoMedico && inputs?.bariatrica ? (
                 <p className="text-gray-800 leading-relaxed">
-                  <strong>{"Doutor, paciente bari\u00e1trico exige uma investiga\u00e7\u00e3o mais complexa,"}</strong>
-                  {" inclusive uma "}<strong>{"ANAMNESE ESPEC\u00cdFICA"}</strong>{". Encaminhe o paciente para que se cadastre: n\u00f3s cuidaremos de tudo e retornaremos a voc\u00ea com o resultado dessa avalia\u00e7\u00e3o."}
+                  {"Doutor, voc\u00ea vai fazer uma avalia\u00e7\u00e3o b\u00e1sica, do eritron apenas, mas o paciente bari\u00e1trico exige uma investiga\u00e7\u00e3o mais complexa, inclusive uma "}<strong>{"ANAMNESE ESPEC\u00cdFICA"}</strong>{", como voc\u00ea ver\u00e1 no resumo. Assim sendo, encaminhe o paciente para que se cadastre: n\u00f3s cuidaremos de tudo e retornaremos a voc\u00ea com o resultado dessa avalia\u00e7\u00e3o."}
                 </p>
               ) : modoMedico ? (
                 <p className="text-gray-800 leading-relaxed">
