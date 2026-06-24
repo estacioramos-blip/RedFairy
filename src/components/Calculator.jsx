@@ -1640,6 +1640,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   <div className="flex flex-col items-end gap-1 pt-1">
                     <PlayButton
                       onClick={async () => {
+                        // Botao SEMPRE clicavel: se faltar algo, foca o campo que falta (em vez de
+                        // ficar mudo / "nao progredir"). So salva com CEP + CPF(valido) + chave Pix.
+                        if (!afiliadoCEP.trim()) { refAfilCEP.current?.focus(); return; }
+                        if (!afiliadoCPF.trim() || afiliadoCPFErro) { setEtapaAfil(2); refAfilCPF.current?.focus(); return; }
+                        if (!afiliadoPix.trim()) { refAfilPix.current?.focus(); return; }
                         setAfiliadoSalvando(true);
                         const { error } = await supabase.from('medicos').update({
                           endereco: '', cep: afiliadoCEP.trim(),
@@ -1653,7 +1658,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         setAfiliadoSalvo(true); setShowAfiliados(false); setShowFelicitacoes(true);
                       }}
                       loading={afiliadoSalvando}
-                      disabled={afiliadoSalvando || !afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || !!afiliadoCPFErro}
+                      disabled={afiliadoSalvando}
                       label="PROSSEGUIR"
                       hint={(!afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || afiliadoCPFErro)
                         ? `Falta: ${[!afiliadoCEP.trim() && 'CEP', (!afiliadoCPF.trim() || afiliadoCPFErro) && 'CPF', !afiliadoPix.trim() && 'chave Pix'].filter(Boolean).join(', ')}`
