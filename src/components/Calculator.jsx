@@ -298,6 +298,11 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
         // Primeiro acesso: CRM novo -> vai pro cadastro (cria a senha la), com o CRM ja preenchido.
         // (d) A senha foi criada na ENTRADA (tela de Acesso) — leva ela para o cadastro
         // para nao pedir "Crie a sua Senha" de novo no Primeiro Acesso.
+        // (BUG FIX) CRM novo no Acesso = cadastro NOVO -> register_medico. Limpa qualquer
+        // sessao de medico ANTERIOR no localStorage (ex.: residuo apos limpar o banco de
+        // teste). Sem isso, jaLogadoSemSenha ficava true e o handleCadastro usava
+        // complete_medico (UPDATE numa linha inexistente) -> o medico NUNCA era inserido.
+        try { ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin'].forEach(k => localStorage.removeItem(k)); } catch (er) {}
         setCrmNum(loginCrmNum); setCrmUF(loginCrmUF); setSenha(loginSenha); setLoginErro(''); setModo('cadastro')
         return
       }
@@ -317,17 +322,23 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     setCadErro('')
     const conselhoLimpo = conselho.trim().toUpperCase()
     const celularDigits = celular.replace(/\D/g, '')
+    // (BUG FIX) "completar perfil" (complete_medico) SO' se o medico logado FOR ESTE crm.
+    // Senao e' cadastro NOVO (register_medico). Com residuo de medico_crm de OUTRO medico
+    // (ex.: apos limpar o banco), o complete_medico daria UPDATE numa linha inexistente e
+    // o medico nunca era inserido.
+    let ehMesmoMedico = false;
+    try { const mc = localStorage.getItem('medico_crm'); ehMesmoMedico = !!mc && mc === conselhoLimpo; } catch (e) {}
     if (!nome.trim() || nome.trim().length < 5) { setCadErro('Informe seu nome completo.'); return }
     if (!crmNum) { setCadErro("Informe o n\u00famero do CRM."); return }
     if (!crmUF) { setCadErro("Informe a UF."); return }
     if (!UFS_VALIDAS.includes(crmUF)) { setCadErro("UF inv\u00e1lida."); return }
     if (celularDigits.length < 10) { setCadErro("Informe um celular v\u00e1lido com DDD."); return }
     if (!email || !email.includes('@')) { setCadErro("Informe um e-mail v\u00e1lido."); return }
-    if (!jaLogadoSemSenha && (!senha || senha.length < 6)) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
+    if (!ehMesmoMedico && (!senha || senha.length < 6)) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
     setCadLoading(true)
     // Médico já identificado em sessão anterior (cadastro mínimo pela caixa do
     // hero): aqui só completa o perfil (nome/celular/email), sem recriar a conta.
-    if (jaLogadoSemSenha) {
+    if (ehMesmoMedico) {
       try {
         const { error } = await supabase.rpc('complete_medico', {
           p_crm: conselhoLimpo, p_nome: nome.trim(),
@@ -1519,7 +1530,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             {/* CARD da FADINHA 4DOC (encaminhamento): aparece sobre a imagem; o splash só
                 sai quando o médico instala a fadinha OU opta por instalar depois. */}
             {cardFada4doc && (
-              <div style={{ position: 'absolute', left: 0, right: 0, top: '360px', zIndex: 6, maxHeight: '60%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, rgba(255,255,255,0.97) 78%, rgba(255,255,255,0))' }} className="px-4 pt-4 pb-7">
+              <div style={{ position: 'absolute', left: 0, right: 0, top: '404px', zIndex: 6, maxHeight: '52%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, rgba(255,255,255,0.97) 78%, rgba(255,255,255,0))' }} className="px-4 pt-3 pb-6">
                 <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 shadow-lg">
                   <div className="flex items-center gap-3">
                     <p className="flex-1 text-[11px] text-blue-900 leading-snug font-bold">
