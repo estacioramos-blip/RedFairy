@@ -755,6 +755,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [etapaAfil, setEtapaAfil] = useState(1);
   const [splashAfil, setSplashAfil] = useState(true);
   const [bgAfilRevelado, setBgAfilRevelado] = useState(false);
+  // (b) Flash da imagem por 1.5s ao entrar no form do afiliado, antes de esmaecer p/ fundo.
+  const [flashFormImg, setFlashFormImg] = useState(false);
   // Card da FADINHA 4DOC (encaminhamento): aparece sobre o splash; o splash só some
   // quando o médico instala a fadinha OU opta por instalar depois.
   const [cardFada4doc, setCardFada4doc] = useState(false);
@@ -772,6 +774,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   // Libera o splash e foca o formulário de afiliação.
   function prosseguirAfil() {
     setCardFada4doc(false); setSplashAfil(false);
+    // (b) imagem aparece nitida por 1.5s e depois esmaece para o fundo.
+    setFlashFormImg(true); setTimeout(() => setFlashFormImg(false), 1500);
     setTimeout(() => { if (refAfilCEP.current) refAfilCEP.current.focus(); }, 100);
   }
   async function aoMarcarFada4doc(e) {
@@ -1501,7 +1505,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             onMouseEnter={() => setBgAfilRevelado(true)} onMouseLeave={() => setBgAfilRevelado(false)} onTouchStart={() => setBgAfilRevelado(true)}>
             {/* Imagem de fundo: inteira (contain) e esmaecida; revela no hover (igual a' hero) */}
             {/* Imagem de fundo: faixa de largura cheia, cortada na cintura, CENTRADA no modal; revela no hover */}
-            <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-50%)', backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat', filter: bgAfilRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgAfilRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+            <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-56%)', backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat', filter: (flashFormImg || bgAfilRevelado) ? 'blur(0px)' : 'blur(10px)', opacity: flashFormImg ? 0.6 : (bgAfilRevelado ? 0.5 : 0.12), transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
             {/* SPLASH de entrada: imagem (largura cheia, cortada na cintura, centrada) + greeting por 5s, antes dos campos */}
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashAfil ? 1 : 0, pointerEvents: splashAfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
               <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, height: '320px' }}>
@@ -1515,7 +1519,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             {/* CARD da FADINHA 4DOC (encaminhamento): aparece sobre a imagem; o splash só
                 sai quando o médico instala a fadinha OU opta por instalar depois. */}
             {cardFada4doc && (
-              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 6, maxHeight: '60%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, rgba(255,255,255,0.97) 78%, rgba(255,255,255,0))' }} className="px-4 pt-4 pb-7">
+              <div style={{ position: 'absolute', left: 0, right: 0, top: '360px', zIndex: 6, maxHeight: '60%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, rgba(255,255,255,0.97) 78%, rgba(255,255,255,0))' }} className="px-4 pt-4 pb-7">
                 <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 shadow-lg">
                   <div className="flex items-center gap-3">
                     <p className="flex-1 text-[11px] text-blue-900 leading-snug font-bold">
