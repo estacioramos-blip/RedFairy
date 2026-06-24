@@ -1506,7 +1506,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashAfil ? 1 : 0, pointerEvents: splashAfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
               <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, height: '320px' }}>
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat' }} />
-                <div style={{ position: 'absolute', left: 0, right: 0, bottom: '6%', padding: '0 22px', textAlign: 'center' }}>
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: '16%', padding: '0 22px', textAlign: 'center' }}>
                   <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{"Bem-Vindo ao 4DOC"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup>{" Programa Patrocinado de Médicos Afiliados"}</p>
                 </div>
               </div>
@@ -1584,9 +1584,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <p className="text-gray-700 text-sm leading-relaxed">
                 {"Para concluir a sua inscri\u00e7\u00e3o no "}<strong>Programa de Médicos Afiliados Patrocinado</strong>{" e receber os benef\u00edcios previstos, precisamos do seu "}<strong>CEP</strong>{", "}<strong>CPF</strong>{" e da sua "}<strong>chave Pix</strong>{"."}
               </p>
-              <p className="text-xs text-red-800 text-center leading-relaxed font-medium">
+              <p className="text-xs text-red-800 leading-relaxed font-medium" style={{ textAlign: 'justify' }}>
                 {"\ud83d\udd12 Entre seus dados tranquilamente. Voc\u00ea est\u00e1 em um servidor seguro, e n\u00e3o existe a possibilidade de uso inadequado dessas informa\u00e7\u00f5es."}
-              <br/>{"O projeto inclui proteção contra invasão e segue as exigências da LGPD."}</p>
+              {" O projeto inclui proteção contra invasão e segue as exigências da LGPD."}</p>
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-600 uppercase tracking-wide mb-1">CEP</label>
@@ -1641,7 +1641,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       <input type="checkbox" checked={pixTipo === 'telefone'}
                         onChange={async () => {
                           if (pixTipo === 'telefone') { setPixTipo(''); setAfiliadoPix(''); return; }
-                          setPixTipo('telefone'); setAfiliadoPix(await valorPixMedico('celular'));
+                          setPixTipo('telefone');
+                          const v = await valorPixMedico('celular'); setAfiliadoPix(v);
+                          if (!v && refAfilPix.current) refAfilPix.current.focus();
                         }}
                         style={{ accentColor: '#7B1E1E' }} />
                       <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"MEU TELEFONE \u00c9 O MEU PIX"}</span>
@@ -1659,16 +1661,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       <input type="checkbox" checked={pixTipo === 'email'}
                         onChange={async () => {
                           if (pixTipo === 'email') { setPixTipo(''); setAfiliadoPix(''); return; }
-                          setPixTipo('email'); setAfiliadoPix(await valorPixMedico('email'));
+                          setPixTipo('email');
+                          const v = await valorPixMedico('email'); setAfiliadoPix(v);
+                          if (!v && refAfilPix.current) refAfilPix.current.focus();
                         }}
                         style={{ accentColor: '#7B1E1E' }} />
                       <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"MEU E-MAIL \u00c9 O MEU PIX"}</span>
                     </label>
                   </div>
-                  <p className="text-xs text-red-800 font-semibold mb-1">DIGITE ou marque um check-box acima</p>
                   <input ref={refAfilPix} type="text" value={afiliadoPix}
                     onChange={e => { setAfiliadoPix(e.target.value); if (pixTipo) setPixTipo('outra'); }}
-                    placeholder={"Chave aleat\u00f3ria ou outra chave PIX"}
+                    placeholder={"ou DIGITE outra chave PIX"}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                   />
                 </div>
