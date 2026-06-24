@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
+import obaLogo from '../assets/oba-logo.png'
 import PlayButton from './PlayButton'
 
 /**
@@ -377,7 +378,7 @@ export default function TriagemResultadoModal({
 
           <div className="p-6 space-y-4">
             <div className="text-center">
-              <div className="text-5xl mb-3">{"\ud83d\udd2c"}</div>
+              <img src={obaLogo} alt="Projeto OBA" className="h-20 object-contain mx-auto mb-3" />
               {modoMedico && inputs?.bariatrica ? (
                 <p className="text-gray-800 leading-relaxed">
                   <strong>{"Doutor, paciente bari\u00e1trico exige uma investiga\u00e7\u00e3o mais complexa,"}</strong>
@@ -410,12 +411,9 @@ export default function TriagemResultadoModal({
             )}
           </div>
 
-          <div className="px-6 pb-6 flex gap-3">
-            <button
-              onClick={onVoltarInicio}
-              className="w-full py-3 rounded-xl bg-red-900 hover:bg-red-950 active:bg-red-950 text-white font-bold transition-colors text-sm">
-              Continuar
-            </button>
+          <div className="px-6 pb-6 flex justify-center">
+            {/* (medico) "Continuar" volta ao Calculator (onContinuar), nao ao Primeiro Acesso. */}
+            <PlayButton onClick={onContinuar || onVoltarInicio} label="CONTINUAR" ariaLabel="Continuar" ringColor="rgba(227,174,55,0.75)" />
           </div>
         </div>
       </div>

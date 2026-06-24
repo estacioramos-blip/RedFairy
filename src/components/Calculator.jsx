@@ -981,6 +981,21 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     carregarMedico();
   }, [medicoCRM]);
 
+  // (a) Valor do medico (celular/email) para a chave Pix, a prova de falha: se medicoDados
+  // ainda nao carregou (ou veio sem o campo), busca fresco no banco pelo CRM na hora do clique.
+  async function valorPixMedico(campo) {
+    const cache = medicoDados?.[campo];
+    if (cache) return cache;
+    let crm = medicoCRM;
+    try { if (!crm) crm = localStorage.getItem('medico_crm') || ''; } catch (e) {}
+    if (!crm) return '';
+    try {
+      const { data } = await supabase.from('medicos').select('celular, email').eq('crm', crm).maybeSingle();
+      if (data) { setMedicoDados(prev => ({ ...(prev || {}), ...data })); return data[campo] || ''; }
+    } catch (e) {}
+    return '';
+  }
+
   function carregarDemo(sexo) {
     const hoje = new Date().toISOString().split('T')[0];
     if (sexo === 'F') {
@@ -1595,9 +1610,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   <div className="space-y-1.5 mb-3">
                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                       <input type="checkbox" checked={pixTipo === 'telefone'}
-                        onChange={() => {
-                          if (pixTipo === 'telefone') { setPixTipo(''); setAfiliadoPix(''); }
-                          else { setPixTipo('telefone'); setAfiliadoPix(medicoDados?.celular || ''); }
+                        onChange={async () => {
+                          if (pixTipo === 'telefone') { setPixTipo(''); setAfiliadoPix(''); return; }
+                          setPixTipo('telefone'); setAfiliadoPix(await valorPixMedico('celular'));
                         }}
                         style={{ accentColor: '#7B1E1E' }} />
                       <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"MEU TELEFONE \u00c9 O MEU PIX"}</span>
@@ -1613,9 +1628,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                       <input type="checkbox" checked={pixTipo === 'email'}
-                        onChange={() => {
-                          if (pixTipo === 'email') { setPixTipo(''); setAfiliadoPix(''); }
-                          else { setPixTipo('email'); setAfiliadoPix(medicoDados?.email || ''); }
+                        onChange={async () => {
+                          if (pixTipo === 'email') { setPixTipo(''); setAfiliadoPix(''); return; }
+                          setPixTipo('email'); setAfiliadoPix(await valorPixMedico('email'));
                         }}
                         style={{ accentColor: '#7B1E1E' }} />
                       <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"MEU E-MAIL \u00c9 O MEU PIX"}</span>
@@ -2344,10 +2359,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             {/* HERO: imagem nitida no topo (bloco proprio, sem sobreposicao com o texto).
                 Saudacao branca fica sobre a imagem; os botoes surgem ABAIXO, apos o splash de 2s. */}
             <div style={{ position: 'relative', width: '100%', height: '240px', overflow: 'hidden', backgroundColor: '#FDF7F7' }}>
-              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: `url(${chatphone2Img})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
+              <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: `url(${ehDominioBariatrico() ? '/new-tele.png' : chatphone2Img})`, backgroundSize: ehDominioBariatrico() ? 'cover' : '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
               <div style={{ position: 'absolute', left: 0, right: 0, bottom: '6%', padding: '0 24px', textAlign: 'center' }}>
                 <p style={{ color: '#ffffff', fontSize: '22px', fontWeight: 900, lineHeight: 1.18, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>
-                  {"Estamos felizes de ter voc\u00ea no RedFairy"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>
+                  {"Estamos felizes de ter voc\u00ea no RedFairy | OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>
                 </p>
               </div>
             </div>
