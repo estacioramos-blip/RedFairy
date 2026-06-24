@@ -85,6 +85,19 @@ export default function App() {
 
     // Le parametro ?modo= da URL para deep link da landing page
     const params = new URLSearchParams(window.location.search)
+    // (teste) ?reset=1 zera a sessao de medico/paciente do NAVEGADOR (nao toca no banco).
+    // Util no mobile, onde nao da' pra abrir o console p/ limpar o localStorage manualmente.
+    // Ctrl-Shift-R NAO limpa o localStorage (so' o cache de arquivos), por isso este atalho.
+    if (params.get('reset') === '1') {
+      try {
+        ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
+         'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
+         'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador'].forEach(k => localStorage.removeItem(k))
+        sessionStorage.removeItem('rf_voltar_url')
+      } catch (e) {}
+      window.location.replace(window.location.pathname)
+      return
+    }
     const modoParam = params.get('modo')
     if (modoParam === 'medico') {
       // (bariatrico.net) abre o CARD DE LOGIN do médico (não o formulário direto).
