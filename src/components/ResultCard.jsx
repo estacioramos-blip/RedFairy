@@ -588,12 +588,8 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
           )}
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-start gap-3">
-          <span className="text-green-600 text-lg flex-shrink-0">{"\ud83d\udcb0"}</span>
-          <p className="text-green-800 text-xs leading-relaxed">
-            {"Foram computados "}<strong>{"Cr\u00e9ditos"}</strong>{" para voc\u00ea no "}<strong>{"4DOC \u2014 Programa Patrocinado de M\u00e9dicos Afiliados"}</strong>{"."}
-          </p>
-        </div>
+        {/* (removido) Card verde "Foram computados Creditos no 4DOC" \u2014 o credito so e
+            informado ao medico quando o paciente pre-avaliado se cadastrar e pagar. */}
 
       </div>
     </div>

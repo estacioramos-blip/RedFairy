@@ -733,6 +733,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [triagemInputs, setTriagemInputs] = useState(null);
   const [showAfiliados, setShowAfiliados] = useState(false);
   const [showAfiliadosBanner, setShowAfiliadosBanner] = useState(false);
+  // (item 8) Convite 4DOC pos-avaliacao para medico ainda nao afiliado — PLACEHOLDER a
+  // redesenhar. Substitui a antiga "tarja cinza" (showAfiliadosBanner) que auto-aparecia.
+  const [showConvite4doc, setShowConvite4doc] = useState(false);
   const [showQRMedico, setShowQRMedico] = useState(false);  // QR de encaminhamento (4DOC)
   // Marca que o 4DOC ja foi oferecido (modal cheio) nesta sessao: evita o modal reaparecer
   // depois que o medico ja declinou ("Preencher depois"). Apos isso, no maximo o banner.
@@ -1302,7 +1305,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           // Se o 4DOC ja foi oferecido (e declinado) nesta sessao, nao reabre o modal cheio:
           // no maximo o banner discreto. (Antes, o modal reaparecia logo apos a 1a avaliacao.)
           if ((totalAvals || 0) === 0 && !jaOfereceu4DOCRef.current) setTimeout(() => setShowAfiliados(true), 1200)
-          else setTimeout(() => setShowAfiliadosBanner(true), 1200)
+          else setTimeout(() => setShowConvite4doc(true), 1200)
         }
       }
       // dataColeta esta em DD/MM/AAAA; Supabase coluna date espera YYYY-MM-DD
@@ -1461,6 +1464,32 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   {"Agora n\u00e3o"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* (item 8) PLACEHOLDER do convite 4DOC pos-avaliacao (so para medico nao afiliado).
+          Substitui a antiga tarja cinza. A versao redesenhada sera feita depois. */}
+      {showConvite4doc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="bg-red-700 px-5 py-3 flex items-center justify-between">
+              <p className="text-white font-bold text-sm">{"🎯 Programa 4DOC"}</p>
+              <button onClick={() => setShowConvite4doc(false)} className="text-red-200 hover:text-white text-lg" style={{ lineHeight: 1 }}>{"✕"}</button>
+            </div>
+            <div className="p-5 space-y-4 text-center">
+              <p className="text-[11px] uppercase tracking-widest text-gray-400 font-bold">{"Placeholder — a redesenhar"}</p>
+              <p className="text-gray-700 text-sm leading-relaxed">
+                {"Você ainda não forneceu CPF e chave Pix para o "}<strong>{"4DOC — Programa Patrocinado de Médicos Afiliados"}</strong>{". Integre-se para receber créditos quando seus pacientes se cadastrarem."}
+              </p>
+              <button onClick={() => { setShowConvite4doc(false); setShowAfiliados(true); }}
+                className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+                {"Quero participar →"}
+              </button>
+              <button onClick={() => setShowConvite4doc(false)} className="block w-full text-gray-400 hover:text-gray-600 text-xs font-medium">
+                {"Agora não"}
+              </button>
             </div>
           </div>
         </div>
@@ -1737,7 +1766,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               style={{ filter: 'brightness(10)', cursor: 'pointer' }}
               onClick={handleLogoTripleClick} />
             <div>
-              <h1 className="text-xl font-bold tracking-wide leading-tight">{"RedFairy | Projeto OBA"}</h1>
+              <h1 className="text-xl font-bold tracking-wide leading-tight">{"RedFairy | "}<span style={{ color: '#e5e7eb', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup></span></h1>
               <p className="text-red-200 text-xs">{"Calculadora Cl\u00ednica | Eritron"}</p>
             </div>
           </div>
@@ -2142,13 +2171,21 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
           </section>
 
-          <div className="flex gap-3">
-            <button id="btn-avaliar-paciente" type="submit" className="flex-1 bg-red-700 hover:bg-red-800 active:bg-red-900 text-white font-bold py-4 px-6 rounded-xl transition-colors shadow-md text-base">
-              Avaliar Paciente
-            </button>
-            <button type="button" onClick={handleLimpar} className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-medium py-4 px-5 rounded-xl transition-colors">
+          {/* LIMPAR (base esquerda) + AVALIAR no padrao PlayButton cinza/dourado (id e
+              type=submit preservados para o submit do form e o clique programatico). */}
+          <style>{`@keyframes rfGoldBlink { 0%,100%{box-shadow:0 0 0 0 rgba(227,174,55,0.7);} 50%{box-shadow:0 0 0 9px rgba(227,174,55,0);} } .rf-pb-gold{ animation: rfGoldBlink 1.1s ease-in-out infinite; }`}</style>
+          <div className="flex items-end justify-between pt-2">
+            <button type="button" onClick={handleLimpar}
+              className="text-gray-400 hover:text-gray-600 text-sm font-medium pb-1">
               Limpar
             </button>
+            <div className="flex flex-col items-center gap-1">
+              <button id="btn-avaliar-paciente" type="submit" aria-label="Avaliar Paciente"
+                className="rf-pb-gold w-14 h-14 rounded-full bg-gray-300 hover:bg-gray-400 flex items-center justify-center shadow-md transition-colors">
+                <span style={{ color: '#7B1E1E', fontSize: '1.4rem', lineHeight: 1, marginLeft: 3 }}>{"▶"}</span>
+              </button>
+              <span className="text-xs font-bold tracking-wide" style={{ color: '#7B1E1E' }}>{"AVALIAR PACIENTE"}</span>
+            </div>
           </div>
 
           {Object.values(erros).some(v => v) && (
@@ -2193,12 +2230,15 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 que abre o QR de encaminhamento. Como exige a avaliação completa salva, a
                 régua de elegibilidade do crédito (≥1 avaliação completa) já está garantida. */}
             {medicoCRM && resultado?.encontrado && inputs.cpf && inputs.cpf.trim() && (
-              <div className="mt-4 flex justify-center">
+              <div className="mt-3 flex flex-col items-center gap-1.5">
                 <button onClick={() => setShowQRMedico(true)}
                   className="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-md transition-colors">
                   <span style={{ fontSize: '1.1rem' }}>{"🧚"}</span>
                   <span>{"Gerar QR de encaminhamento (4DOC)"}</span>
                 </button>
+                <p className="text-[11px] text-center text-gray-600 font-semibold leading-snug px-4">
+                  {"MOSTRE AGORA AO SEU PACIENTE, QUANDO ELE SE CADASTRAR VOCÊ RECEBE CRÉDITOS NO 4DOC"}<sup style={{ fontSize: '0.7em', verticalAlign: 'super' }}>{"®"}</sup>
+                </p>
               </div>
             )}
             {!medicoCRM && (
