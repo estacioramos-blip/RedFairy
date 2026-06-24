@@ -1693,16 +1693,26 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         if (!afiliadoCEP.trim()) { refAfilCEP.current?.focus(); return; }
                         if (!afiliadoCPF.trim() || afiliadoCPFErro) { setEtapaAfil(2); refAfilCPF.current?.focus(); return; }
                         if (!afiliadoPix.trim()) { refAfilPix.current?.focus(); return; }
+                        // CRM robusto (prop ou localStorage) e salvamento AUTOVERIFICAVEL:
+                        // .select() devolve as linhas afetadas \u2014 se vier 0, o UPDATE nao gravou
+                        // nada (CRM nao casou) e a gente AVISA, em vez de seguir calado.
+                        let crmSalvar = (medicoCRM || '').trim();
+                        try { if (!crmSalvar) crmSalvar = (localStorage.getItem('medico_crm') || '').trim(); } catch (e) {}
+                        const cpfLimpo = afiliadoCPF.replace(/\D/g, '');
+                        const pixLimpo = afiliadoPix.trim();
+                        const cepLimpo = afiliadoCEP.trim();
                         setAfiliadoSalvando(true);
-                        const { error } = await supabase.from('medicos').update({
-                          endereco: '', cep: afiliadoCEP.trim(),
-                          cpf: afiliadoCPF.replace(/\D/g, ''),
-                          pix_chave: afiliadoPix.trim(),
-                          usa_telegram: usaTelegram,
-                        }).eq('crm', medicoCRM);
+                        const { data: linhas, error } = await supabase.from('medicos').update({
+                          endereco: '', cep: cepLimpo, cpf: cpfLimpo, pix_chave: pixLimpo, usa_telegram: usaTelegram,
+                        }).eq('crm', crmSalvar).select('crm');
                         setAfiliadoSalvando(false);
-                        if (error) { alert('Erro ao salvar. Tente novamente.'); return; }
-                        // Direto para tela de felicita\u00e7\u00f5es sem mensagem intermedi\u00e1ria "Dados salvos"
+                        if (error) { alert('Erro ao salvar: ' + (error.message || 'tente novamente.')); return; }
+                        if (!linhas || linhas.length === 0) {
+                          alert('Nao foi possivel gravar seus dados: o cadastro do medico (CRM ' + (crmSalvar || '\u2014') + ') nao foi encontrado no banco. Refaca o login/cadastro do medico e tente de novo.');
+                          return;
+                        }
+                        // Sucesso confirmado: atualiza o cache local p/ o medico ja contar como afiliado.
+                        setMedicoDados(prev => ({ ...(prev || {}), cep: cepLimpo, cpf: cpfLimpo, pix_chave: pixLimpo }));
                         setAfiliadoSalvo(true); setShowAfiliados(false); setShowFelicitacoes(true);
                       }}
                       loading={afiliadoSalvando}
