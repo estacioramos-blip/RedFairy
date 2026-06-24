@@ -1408,6 +1408,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           medicoCRM={medicoCRM}
           onVoltarInicio={() => { decidirPosTriagem(); }}
           onCadastrar={() => { decidirPosTriagem(); }}
+          onContinuar={() => { setTriagemResultado(null); setShowTriagem(false); }}
           onAprofundar={() => {
             setTriagemResultado(null);
             setShowTriagem(false);

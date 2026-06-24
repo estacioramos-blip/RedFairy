@@ -25,7 +25,8 @@ export default function TriagemResultadoModal({
   onAprofundar = null,
   userId = null,
   onVoltarInicio,
-  onCadastrar
+  onCadastrar,
+  onContinuar = null
 }) {
   const [tela, setTela] = useState('resultado')
   // Macrocitose (VCM > 100): além de Ferritina/Saturação, recomenda-se também B12 e
@@ -301,10 +302,13 @@ export default function TriagemResultadoModal({
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
         <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
-          <div className="bg-white px-6 pt-6 pb-4 rounded-t-2xl text-center">
-            <img src={logo} alt="RedFairy" className="w-20 h-20 object-contain mx-auto mb-2" />
-            <h2 className="text-2xl font-bold text-red-700 leading-tight">{"RedFairy | Projeto OBA"}</h2>
-            <p className="text-xs uppercase tracking-widest text-gray-500 mt-1">Limite gratuito</p>
+          {/* Header padrao compacto (igual aos modais recentes): RedFairy | OBA(R). */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
+            <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
+              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#000000', margin: '0 6px' }}>|</span><span style={{ color: '#9ca3af' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
+            </h2>
+            <span className="ml-auto text-xs uppercase tracking-widest text-gray-500">Limite gratuito</span>
           </div>
           <div className="p-6 space-y-5">
             <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-center">
@@ -322,7 +326,7 @@ export default function TriagemResultadoModal({
                   <p className="text-xs text-gray-500 mt-0.5">ACUMULE PONTOS NO PROGRAMA 4DOC</p>
                 </div>
                 <button
-                  onClick={onVoltarInicio}
+                  onClick={onContinuar || onVoltarInicio}
                   className="w-full py-3 rounded-xl bg-red-900 hover:bg-red-950 text-white font-bold transition-colors text-sm">
                   Continuar
                 </button>
