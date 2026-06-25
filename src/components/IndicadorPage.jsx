@@ -58,14 +58,12 @@ export default function IndicadorPage({ onVoltar }) {
   const senhaOk = senha.length >= 6
 
   useEffect(() => {
+    // (logout efemero) NAO restaura a sessao do indicador no refresh: limpa qualquer
+    // residuo e comeca no CPF. Assim o indicador desloga ao Voltar/fechar e tambem no
+    // Ctrl-Shift-R (antes a sessao ficava grudada no localStorage e nunca deslogava).
     try {
-      const c = localStorage.getItem('indicador_codigo')
-      if (c) {
-        setCodigo(c); setNome(localStorage.getItem('indicador_nome') || '')
-        setToken(localStorage.getItem('indicador_token') || '')
-        setPixVal(localStorage.getItem('indicador_pix') || '')
-        setEtapa('painel')
-      }
+      ['indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix']
+        .forEach(k => localStorage.removeItem(k))
     } catch (e) {}
   }, [])
 
@@ -166,7 +164,7 @@ export default function IndicadorPage({ onVoltar }) {
   }
 
   const VoltarBtn = onVoltar ? (
-    <button onClick={onVoltar}
+    <button onClick={() => { sair(); onVoltar(); }}
       className="absolute top-4 left-4 px-3 py-1 rounded-lg text-xs font-bold shadow transition-colors"
       style={{ backgroundColor: '#E3AE37', color: '#14100E' }}>
       Voltar

@@ -62,7 +62,7 @@ export default function App() {
   // medico chega por ?modo=medico (ex.: "Sou Medico" do bariatrico.net), inicia ja
   // preta no 1o render para nao piscar a landing branca antes do card escuro montar.
   const [saindo, setSaindo] = useState(() => {
-    try { return new URLSearchParams(window.location.search).get('modo') === 'medico' } catch (e) { return false }
+    try { const m = new URLSearchParams(window.location.search).get('modo'); return m === 'medico' || m === 'indicador' } catch (e) { return false }
   })
 
   useEffect(() => {
@@ -92,6 +92,7 @@ export default function App() {
       try {
         ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
          'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
+         'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
          'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador'].forEach(k => localStorage.removeItem(k))
         sessionStorage.removeItem('rf_voltar_url')
       } catch (e) {}
@@ -113,6 +114,7 @@ export default function App() {
       setModo('login')
     } else if (modoParam === 'indicador') {
       setModo('indicador')
+      setTimeout(() => setSaindo(false), 450)
     }
     // (4DOC) ?ref=CRM/UF — paciente chegou pelo QR de encaminhamento do médico.
     // Guarda o CRM p/ pré-preencher o card do encaminhador no cadastro.
