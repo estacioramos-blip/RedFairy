@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import fadaIcon from '../assets/logo.png'
 
@@ -24,6 +24,12 @@ export default function QRMedicoModal({ crm, onClose }) {
       })
     } catch (e) {}
   }
+
+  // Ao APARECER o QR, o link e' copiado automaticamente no celular do medico — ele cola
+  // no WhatsApp/Telegram e envia aos pacientes (ou a secretaria dispara para todos).
+  useEffect(() => {
+    try { navigator.clipboard.writeText(link).then(() => setCopiado(true)).catch(() => {}) } catch (e) {}
+  }, [])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -55,6 +61,14 @@ export default function QRMedicoModal({ crm, onClose }) {
               {" do hemograma."}
             </p>
           </div>
+
+          {copiado && (
+            <div className="w-full bg-green-50 border border-green-200 rounded-xl px-3 py-2 text-left">
+              <p className="text-xs text-green-800 font-bold leading-relaxed">
+                {"✓ LINK copiado no seu celular! Cole no WhatsApp ou Telegram e envie aos seus pacientes — ou peça à sua secretária para enviar a todos do arquivo."}
+              </p>
+            </div>
+          )}
 
           <div className="w-full flex items-center gap-2">
             <input readOnly value={link}
