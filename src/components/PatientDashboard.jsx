@@ -9,6 +9,7 @@ import PlayButton from './PlayButton'
 import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
 import EscolhaIndicacaoModal from './EscolhaIndicacaoModal'
+import PacienteIndicaModal from './PacienteIndicaModal'
 import HistoricoChartModal from './HistoricoChartModal'
 import heroImg from '../assets/redfairy-hero.jpg'
 import telefonista6Img from '../assets/telefonista6.jpg'
@@ -37,6 +38,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   // (escolha da indicacao) o paciente escolhe de quem aceita a indicacao, antes de pagar.
   const [showEscolhaIndicacao, setShowEscolhaIndicacao] = useState(false)
   const [opcoesIndicacao, setOpcoesIndicacao] = useState(null)
+  // (paciente vira indicador) indica outros bariatricos e ganha creditos.
+  const [showIndica, setShowIndica] = useState(false)
   const [querPedidoGratis, setQuerPedidoGratis] = useState(false)
   const [salvandoBoasVindas, setSalvandoBoasVindas] = useState(false)
   // "Instale a fadinha" (PWA) — checkbox dentro do card de boas-vindas.
@@ -1095,6 +1098,19 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       )}
 
       <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* (paciente vira indicador) card de indicar outros bariatricos e ganhar creditos. */}
+        {temAssinatura && tela === 'historico' && !showBoasVindas && !entradaPendente && (
+          <div className="mb-5 bg-gradient-to-br from-red-50 to-white border-2 border-red-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-red-800">{"💸 Indique e ganhe créditos"}</p>
+              <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Cada um que entrar e pagar = US$10 para você."}</p>
+            </div>
+            <button onClick={() => setShowIndica(true)}
+              className="shrink-0 bg-red-700 hover:bg-red-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors whitespace-nowrap">
+              {"Indicar"}
+            </button>
+          </div>
+        )}
         {/* Barra Hist\u00f3rico / Nova Avalia\u00e7\u00e3o: escondida no primeiro acesso \u2014 durante o
             "Ol\u00e1!" (showBoasVindas), enquanto o hemograma de entrada ainda n\u00e3o foi
             aprofundado (entradaPendente) e na tela de resultado (logo ap\u00f3s avaliar,
@@ -1608,6 +1624,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         indicador={opcoesIndicacao.indicador}
         onConcluir={() => { setShowEscolhaIndicacao(false); setShowPagamento(true) }}
       />
+    )}
+
+    {showIndica && profile && (
+      <PacienteIndicaModal cpf={profile.cpf} onFechar={() => setShowIndica(false)} />
     )}
 
     {showPagamento && profile && (
