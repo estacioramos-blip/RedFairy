@@ -107,7 +107,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
   // Modal de confirmacao de saida sobreposto
   if (confirmandoSaida) {
     return (
-      <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]">
+      <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-[60]">
         <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
           <h3 className="text-lg font-bold text-red-700 mb-2">{"Sair sem completar o cadastro?"}</h3>
           <p className="text-sm text-gray-600 leading-relaxed mb-4">
@@ -131,7 +131,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-start justify-center p-4 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/95 flex items-start justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-2xl max-w-md w-full shadow-xl my-6 overflow-hidden">
 
         {/* Header padr\u00e3o (logo-fada + RedFairy) */}
@@ -242,7 +242,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
       {/* Popup ATENÇÃO — custos do trabalho médico (valores de config). */}
       {mostrarCustos && (
         <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[70]"
+          className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-[70]"
           onClick={() => setMostrarCustos(false)}>
           <div
             className="bg-white border-2 border-gray-300 rounded-2xl max-w-md w-full p-5 shadow-xl max-h-[85vh] overflow-y-auto"

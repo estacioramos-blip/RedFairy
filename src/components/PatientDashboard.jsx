@@ -1033,7 +1033,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       )}
       {showSobre && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.7)' }}
+          style={{ background: 'rgba(0,0,0,0.95)' }}
           onClick={() => { setShowSobre(false); setShowSaibaMais(false) }}>
           <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl"
             style={{ maxHeight: '90vh', overflowY: 'auto' }}
@@ -1548,7 +1548,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
     {/* Popup de confirmação da fadinha (Android, após aceitar a instalação). */}
     {fadaInstaladaPopup && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6"
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 px-6"
         onClick={() => setFadaInstaladaPopup(false)}>
         <div className="bg-white rounded-2xl shadow-xl max-w-xs w-full p-6 text-center" onClick={(e) => e.stopPropagation()}>
           <img src={logo} alt="" className="w-20 h-20 object-contain mx-auto mb-3" style={{ opacity: 0.4 }} />

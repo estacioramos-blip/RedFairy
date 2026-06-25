@@ -69,7 +69,7 @@ export default function TermosModal({ tipo = 'paciente', onFechar }) {
   return (
     <div
       className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.75)', zIndex: 10000 }}
+      style={{ background: 'rgba(0,0,0,0.95)', zIndex: 10000 }}
       onClick={onFechar}>
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col"

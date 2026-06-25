@@ -221,7 +221,7 @@ export default function TriagemResultadoModal({
       window.open('https://wa.me/5571997110804?text=' + texto, '_blank')
     }
     return (
-      <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.7)' }}>
+      <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.95)' }}>
         <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl my-8 overflow-hidden">
           {/* Header compacto com a fadinha RedFairy a' esquerda (padrao novo) */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
@@ -301,7 +301,7 @@ export default function TriagemResultadoModal({
   // ===== TELA LIMITE 3 =====
   if (tela === 'limite3') {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
         <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
           {/* Header padrao compacto (igual aos modais recentes): RedFairy | OBA(R). */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
@@ -360,7 +360,7 @@ export default function TriagemResultadoModal({
   if (tela === 'aguardo') {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(0,0,0,0.6)' }}>
+        style={{ background: 'rgba(0,0,0,0.95)' }}>
         <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
           {/* Header compacto com a fadinha RedFairy a' esquerda (padrao novo) */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
@@ -430,7 +430,7 @@ export default function TriagemResultadoModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)' }}>
+      style={{ background: 'rgba(0,0,0,0.95)' }}>
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl">
 
         {/* Header compacto horizontal: logo-fada + "RedFairy" em serif (dois tons),

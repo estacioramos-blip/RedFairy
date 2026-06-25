@@ -566,7 +566,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
         )}
 
         {showReversaoAdesao && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
               {/* (d) Imagem ohhh com a frase branca na base. */}
               <div style={{ position: 'relative', width: '100%' }}>
@@ -590,7 +590,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
         )}
 
         {showEsqueciSenha && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowEsqueciSenha(false)}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }} onClick={() => setShowEsqueciSenha(false)}>
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={e => e.stopPropagation()}>
               <div className="bg-red-700 px-5 py-4">
                 <h3 className="text-white font-bold text-base">{"Recupera\u00e7\u00e3o de senha"}</h3>
@@ -649,7 +649,7 @@ function AdminConfigModal({ onFechar }) {
   const inp = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }} onClick={onFechar}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onFechar}>
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-80 space-y-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <p className="font-bold text-gray-700 text-sm">{"\u2699\ufe0f Configura\u00e7\u00f5es"}</p>
@@ -1462,7 +1462,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     <div className="min-h-screen bg-gray-50">
 
       {showAfiliadosBanner && !showAfiliados && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-4" style={{ background: 'rgba(0,0,0,0.5)' }}>
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="bg-red-700 px-5 py-3 flex items-center justify-between">
               <p className="text-white font-bold text-sm">{"\ud83c\udfaf Programa de Afiliados RedFairy"}</p>
@@ -1493,7 +1493,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       {/* (item 8) PLACEHOLDER do convite 4DOC pos-avaliacao (so para medico nao afiliado).
           Substitui a antiga tarja cinza. A versao redesenhada sera feita depois. */}
       {showConvite4doc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-red-700 px-5 py-3 flex items-center justify-between">
               <p className="text-white font-bold text-sm">{"🎯 Programa 4DOC"}</p>
@@ -1517,7 +1517,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       )}
 
       {showAfiliados && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column', position: 'relative' }}
             onMouseEnter={() => setBgAfilRevelado(true)} onMouseLeave={() => setBgAfilRevelado(false)} onTouchStart={() => setBgAfilRevelado(true)}>
             {/* (f) Imagem de fundo do FORM removida — o form (CEP/CPF/Pix) fica limpo. */}
@@ -1568,7 +1568,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
             {/* Popup "Saiba mais sobre os créditos do 4DOC" (nota de 10 dólares + USDC) */}
             {showCreditosPopup && (
-              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }} onClick={() => setShowCreditosPopup(false)}>
+              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }} onClick={() => setShowCreditosPopup(false)}>
                 <div onClick={e => e.stopPropagation()} style={{ position: 'relative', width: '100%', maxWidth: '398px', aspectRatio: '2.45 / 1', background: '#fff', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
                   {/* Nota de 10 dólares preenchendo o popup (cover), esmaecida p/ o texto ler bem.
                       aspectRatio fixo: alargar a caixa NÃO altera o enquadramento da nota. */}
@@ -1826,7 +1826,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
       {showLogoutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowLogoutConfirm(false)}>
+          style={{ background: 'rgba(0,0,0,0.95)' }} onClick={() => setShowLogoutConfirm(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-72 space-y-4" onClick={e => e.stopPropagation()}>
             <p className="text-center text-base font-bold text-gray-700">{"Trocar m\u00e9dico?"}</p>
             <p className="text-center text-sm text-gray-500">{"Voc\u00ea ser\u00e1 desconectado e voltar\u00e1 \u00e0 tela de login."}</p>
@@ -1846,7 +1846,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
       {showDemoMenu && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.7)' }} onClick={() => setShowDemoMenu(false)}>
+          style={{ background: 'rgba(0,0,0,0.95)' }} onClick={() => setShowDemoMenu(false)}>
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-64 space-y-4" onClick={e => e.stopPropagation()}>
             <p className="text-center text-sm font-bold text-gray-700">{"\ud83c\udfad Modo Demo"}</p>
             <p className="text-center text-xs text-gray-400">Escolha o perfil de teste</p>
@@ -1859,7 +1859,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
       {showSobre && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.7)' }}
+          style={{ background: 'rgba(0,0,0,0.95)' }}
           onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}>
           <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl" style={{ maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
@@ -2291,7 +2291,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       )}
 
       {showConviteAfiliado && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div style={{ position: 'relative', width: '100%', height: '440px', overflow: 'hidden' }}>
               <img src={fairyChatImg} alt="Programa de Afiliados RedFairy"
@@ -2410,7 +2410,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       )}
 
       {showFelicitacoes && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4" style={{ background: 'rgba(0,0,0,0.7)', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-4" style={{ position: 'relative' }}>
             {/* (a) Fechar (canto sup. direito): sai DESLOGADO para a landing do bariatrico.net. */}
             <button onClick={() => {
@@ -2462,7 +2462,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       )}
 
       {showBeneficios && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="bg-red-700 px-6 py-4 flex items-center justify-between">
               <h2 className="text-white text-lg font-bold">{"Benef\u00edcios do Programa"}</h2>

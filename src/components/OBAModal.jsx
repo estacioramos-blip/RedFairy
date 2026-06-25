@@ -405,7 +405,7 @@ const inpA = { ...inp, background:'#FEFCE8', border:'1.5px solid #FACC15' }
 const noWheel = () => {}
 const btnP = { width:'100%', background:'#7B1E1E', color:'white', border:'none', borderRadius:10, padding:'0.9rem', fontSize:'1rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit', marginTop:'1.5rem' }
 const btnS = { width:'100%', background:'#F3F4F6', color:'#374151', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginTop:'0.5rem' }
-const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'1.5rem 1rem', boxSizing:'border-box' }
+const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'1.5rem 1rem', boxSizing:'border-box' }
 const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, boxShadow:'0 20px 60px rgba(0,0,0,0.3)', marginBottom:'2rem', boxSizing:'border-box' }
 const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
@@ -1967,7 +1967,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   return (
     <>
       {showPesquisa && (
-        <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1.5rem', boxSizing:'border-box' }} onClick={() => setShowPesquisa(false)}>
+        <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1.5rem', boxSizing:'border-box' }} onClick={() => setShowPesquisa(false)}>
           <div style={{ position:'relative', background:'white', borderRadius:16, maxWidth:440, width:'100%', padding:'1.7rem 1.4rem 1.4rem', boxShadow:'0 20px 60px rgba(0,0,0,0.35)' }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowPesquisa(false)} aria-label="Fechar" style={{ position:'absolute', top:12, right:12, width:30, height:30, borderRadius:'50%', background:'#7B1E1E', color:'white', border:'none', fontSize:'1.05rem', fontWeight:800, cursor:'pointer', lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center' }}>{"\u00d7"}</button>
             <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.6rem' }}>{"Pesquisa M\u00e9dica"}</p>

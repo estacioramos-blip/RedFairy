@@ -144,7 +144,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const labelCls = "block text-xs font-semibold text-gray-600 mb-1"
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-start justify-center p-4 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/95 flex items-start justify-center p-4 z-50 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden my-8" style={{ minHeight: 'min(700px, 92vh)', maxHeight: '92vh', display: 'flex', flexDirection: 'column', position: 'relative' }}
         onMouseEnter={() => setBgPerfilRevelado(true)} onMouseLeave={() => setBgPerfilRevelado(false)} onTouchStart={() => setBgPerfilRevelado(true)}>
 

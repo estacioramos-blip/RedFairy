@@ -731,7 +731,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       .rf-play-ready { background-color: #d1d5db; animation: rfPlayBlink 1s ease-in-out infinite; }
     `}</style>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.6)' }}>
+      style={{ background: 'rgba(0,0,0,0.95)' }}>
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl relative">
         {/* Barra do topo no padr\u00e3o da landing: fundo branco, logo-fada \u00e0 esquerda + "RedFairy" em serif (dois tons),
             X de fechar na extremidade direita centralizado verticalmente. Substitui a Fada grande + nome que ocupavam muito espa\u00e7o vertical. */}
@@ -1076,7 +1076,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
               </div>
               {!modoMedico && mostrarExemploHemograma && (
                 <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
-                  style={{ background: 'rgba(0,0,0,0.6)' }}
+                  style={{ background: 'rgba(0,0,0,0.95)' }}
                   onClick={() => setMostrarExemploHemograma(false)}>
                   <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col"
                     style={{ maxHeight: '85vh' }}

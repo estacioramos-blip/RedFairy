@@ -184,7 +184,7 @@ export default function HistoricoChartModal({ cpf, serie, sexo, gestante, onFech
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-         style={{ background: 'rgba(0,0,0,0.75)' }}
+         style={{ background: 'rgba(0,0,0,0.95)' }}
          onClick={onFechar}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
            onClick={(e) => e.stopPropagation()}>
