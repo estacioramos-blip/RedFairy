@@ -64,6 +64,8 @@ export default function App() {
   const [saindo, setSaindo] = useState(() => {
     try { const m = new URLSearchParams(window.location.search).get('modo'); return m === 'medico' || m === 'indicador' } catch (e) { return false }
   })
+  // (medico) toast "link de encaminhamento copiado" ao abrir pelo icone instalado (PWA).
+  const [linkMedToast, setLinkMedToast] = useState(false)
 
   useEffect(() => {
     // Migração: apaga a marca ANTIGA de "Voltar" externo que ficou gravada no
@@ -269,6 +271,32 @@ export default function App() {
       eventos.forEach(ev => window.removeEventListener(ev, resetar))
     }
   }, [modo, showInatividade])
+
+  // (medico) Ao abrir pelo ICONE instalado (PWA) com sessao de medico, copia o link de
+  // encaminhamento (?ref=CRM) para o clipboard. O navegador exige um gesto -> tenta direto
+  // e, se barrado, copia no PRIMEIRO toque na tela. 1x por abertura (sessionStorage).
+  useEffect(() => {
+    let standalone = false
+    try { standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
+    let crm = ''
+    try { crm = localStorage.getItem('medico_crm') || '' } catch (e) {}
+    if (!standalone || !crm) return
+    try { if (sessionStorage.getItem('rf_med_link_copiado')) return } catch (e) {}
+    const link = `${window.location.origin}/?ref=${encodeURIComponent(crm)}`
+    let listener = null
+    const marcar = () => {
+      try { sessionStorage.setItem('rf_med_link_copiado', '1') } catch (e) {}
+      setLinkMedToast(true)
+      setTimeout(() => setLinkMedToast(false), 3500)
+    }
+    const copiarNoToque = () => { navigator.clipboard.writeText(link).then(marcar).catch(() => {}) }
+    // Tenta direto (alguns contextos permitem); se falhar, copia no 1o toque.
+    navigator.clipboard.writeText(link).then(marcar).catch(() => {
+      listener = copiarNoToque
+      window.addEventListener('pointerdown', listener, { once: true })
+    })
+    return () => { if (listener) window.removeEventListener('pointerdown', listener) }
+  }, [])
 
   // "Voltar" das telas de entrada: se o usuário veio do bariatrico.net, retorna ao
   // site externo; senão, vai para a landing interna.
@@ -540,6 +568,13 @@ if (modo === 'home') {
       {renderConteudo()}
       {InatividadeModal}
       {saindo && <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 99999 }} />}
+      {linkMedToast && (
+        <div style={{ position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 100000, maxWidth: '92%' }}>
+          <div style={{ background: '#15803d', color: '#fff', padding: '10px 16px', borderRadius: 12, boxShadow: '0 6px 20px rgba(0,0,0,.25)', fontSize: 13, fontWeight: 700, textAlign: 'center' }}>
+            {"✓ Seu link de encaminhamento foi copiado — cole no WhatsApp ou Telegram."}
+          </div>
+        </div>
+      )}
     </>
   )
 }
