@@ -796,7 +796,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     setCardFada4doc(false); setSplashAfil(false);
     // (b) imagem aparece nitida por 1.5s e depois esmaece para o fundo.
     setFlashFormImg(true); setTimeout(() => setFlashFormImg(false), 1500);
-    setTimeout(() => { if (refAfilCEP.current) refAfilCEP.current.focus(); }, 100);
+    // preventScroll: foca o CEP SEM rolar o form — senao o texto introdutorio "Para
+    // concluir..." some sob o header ao abrir.
+    setTimeout(() => { if (refAfilCEP.current) { try { refAfilCEP.current.focus({ preventScroll: true }); } catch (e) { refAfilCEP.current.focus(); } } }, 100);
   }
   async function aoMarcarFada4doc(e) {
     const marcado = e.target.checked;
