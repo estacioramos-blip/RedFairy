@@ -920,7 +920,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     try { if (localStorage.getItem('medico_crm')) return false; } catch(e) {}
     return !cadastrado;
   }
-  const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(false);
+  // Abre o card de Acesso JA' no 1o render quando veio com rf_open_login (?modo=medico):
+  // assim nao ha' um frame da Calculadora (com o logo) antes do modal — evita o flash do
+  // icone no mobile.
+  const [showAuthMedicoOverlay, setShowAuthMedicoOverlay] = useState(() => {
+    try { return localStorage.getItem('rf_open_login') === '1' ? 'login' : false; } catch (e) { return false; }
+  });
   const [showFelicitacoes, setShowFelicitacoes] = useState(false);
   // Modal de felicitacoes: imagem de fundo revela no hover.
   const [bgFelicRevelado, setBgFelicRevelado] = useState(false);
@@ -961,12 +966,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [showBeneficios, setShowBeneficios] = useState(false);
 
   useEffect(() => {
-    let pedirLogin = false;
-    try { pedirLogin = localStorage.getItem('rf_open_login') === '1'; } catch(e) {}
-    if (pedirLogin) {
-      try { localStorage.removeItem('rf_open_login'); } catch(e) {}
-      setShowAuthMedicoOverlay('login');
-    }
+    // O overlay de Acesso ja' abre pelo initializer do estado; aqui so' consome a flag.
+    try { localStorage.removeItem('rf_open_login'); } catch (e) {}
   }, []);
 
   const [copiado, setCopiado] = useState(false);
