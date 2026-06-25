@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import obaLogo from '../assets/oba-logo.png'
+import obaFairyIcon from '../assets/oba-fairy-icon.png'
 import PlayButton from './PlayButton'
+import { useInstalarFada } from '../lib/useInstalarFada'
 
 // =============================================================================
 // IndicadorPage — 3º perfil (INDICADOR). Entrada igual à do paciente bariátrico:
@@ -36,6 +38,13 @@ export default function IndicadorPage({ onVoltar }) {
   // sessão
   const [codigo, setCodigo] = useState('')
   const [nome, setNome] = useState('')
+
+  // (instalar icone) checkbox que instala o icone do Projeto + copia o link.
+  const [iconeMarcado, setIconeMarcado] = useState(false)
+  const [linkCopiado, setLinkCopiado] = useState(false)
+  const [iosInstr, setIosInstr] = useState(false)
+  const [mostrarQR, setMostrarQR] = useState(false)
+  const { instalar } = useInstalarFada()
 
   // painel
   const [cpfPac, setCpfPac] = useState('')
@@ -148,6 +157,16 @@ export default function IndicadorPage({ onVoltar }) {
     try { navigator.clipboard.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 1800) } catch (e) {}
   }
 
+  // Instalar o ICONE do Projeto na tela + copiar o LINK (dentro do gesto do clique).
+  async function aoInstalarIcone(e) {
+    const marcado = e.target.checked
+    setIconeMarcado(marcado)
+    if (!marcado) { setIosInstr(false); setLinkCopiado(false); return }
+    try { await navigator.clipboard.writeText(link); setLinkCopiado(true) } catch (er) {}
+    const r = await instalar()
+    if (r === 'ios') setIosInstr(true)
+  }
+
   async function preCadastrar() {
     setPreMsg(''); setPreErro('')
     if (soDigitos(cpfPac).length !== 11) { setPreErro('CPF inválido (11 dígitos).'); return }
@@ -187,41 +206,42 @@ export default function IndicadorPage({ onVoltar }) {
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
             {Cabecalho}
             <h3 className="text-lg font-bold text-gray-800">Olá{nome ? `, ${nome.split(' ')[0]}` : ''}! 👋</h3>
-            <p className="text-sm text-gray-600 mt-2 leading-relaxed text-left">
+            <p className="text-sm text-gray-600 mt-3 leading-relaxed text-left">
               Aqui você cadastra a sua <b>chave PIX</b> e acompanha os seus <b>INDICADOS</b>: os{' '}
               <b>CADASTRADOS</b> (crédito gerado) e os <b>RESERVADOS</b> (crédito após o cadastro).
               Você acompanha também os <b>CRÉDITOS RECEBIDOS</b> e os <b>PENDENTES</b>.
             </p>
-            <p className="text-sm text-gray-600 mt-2 leading-relaxed text-left">
-              Mostre o <b>QR-CODE</b> abaixo para um bariátrico fotografar e entrar no projeto sob a sua
-              indicação, ou <b>copie o LINK</b> e envie pelo WhatsApp/Telegram. Cada indicado que <b>pagar</b>{' '}
-              gera <b>US$10</b> para você.
+            <p className="text-sm text-gray-600 mt-3 leading-relaxed text-left">
+              Na caixinha abaixo você instala o <b>ÍCONE do Projeto OBA</b> na tela do seu celular. Ao tocar
+              nele, abre o <b>QR-CODE</b> para o indicado fotografar e entrar sob a sua indicação — e, no mesmo
+              momento, um <b>LINK</b> é copiado no seu dispositivo, pronto pra colar no WhatsApp, Telegram ou
+              nas suas redes. Cada indicado que se cadastrar gera <b>crédito</b> para você.
             </p>
-            <div className="flex justify-center my-4">
-              <div className="bg-white p-3 rounded-xl border-2 border-red-700">
-                {link ? <QRCodeSVG value={link} size={160} fgColor="#b91c1c" /> : null}
-              </div>
+            <div className="flex items-center justify-between gap-2 mt-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={iconeMarcado} onChange={aoInstalarIcone} className="w-4 h-4 flex-shrink-0" style={{ accentColor: '#b91c1c' }} />
+                <span className="text-xs font-bold text-red-800 leading-tight text-left">{"Instalar o ÍCONE do Projeto OBA na minha tela"}</span>
+              </label>
+              <img src={obaFairyIcon} alt="Ícone do Projeto OBA" className="flex-shrink-0 w-12 h-12 rounded-lg" style={{ objectFit: 'contain' }} />
             </div>
-            <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-gray-700 break-all">{link}</div>
-            <button onClick={copiarLink} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors mt-3">
-              {copiado ? 'LINK COPIADO ✓' : 'COPIAR LINK'}
+            {linkCopiado && <p className="text-[11px] mt-2 text-green-700 font-bold text-left">{"✓ LINK copiado! Cole no WhatsApp, Telegram ou nas suas redes."}</p>}
+            {iosInstr && <p className="text-[11px] mt-1 text-gray-500 leading-snug text-left">{"No iPhone: toque em Compartilhar (↑) e depois em \"Adicionar à Tela de Início\"."}</p>}
+            <button onClick={() => setMostrarQR(v => !v)} className="block w-full text-center text-xs font-bold text-red-700 underline mt-3">
+              {mostrarQR ? 'Ocultar QR-CODE' : 'Mostrar QR-CODE'}
             </button>
+            {mostrarQR && link && (
+              <div className="flex flex-col items-center mt-2 gap-2">
+                <div className="bg-white p-3 rounded-xl border-2 border-red-700">
+                  <QRCodeSVG value={link} size={150} fgColor="#b91c1c" />
+                </div>
+                <button onClick={copiarLink} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
+                  {copiado ? 'LINK COPIADO ✓' : 'COPIAR LINK'}
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <p className="text-sm font-bold text-gray-700 mb-1">Pré-cadastrar paciente</p>
-            <p className="text-xs text-gray-500 mb-3">Conhece um bariátrico? Reserve-o pelo <b>CPF</b>. Você ganha quando ele pagar.</p>
-            <div className="flex gap-2">
-              <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" inputMode="numeric" value={cpfPac}
-                onChange={e => setCpfPac(formatarCPF(e.target.value))} placeholder="CPF do paciente" maxLength={14} />
-              <button onClick={preCadastrar} disabled={preBusy}
-                className="bg-red-700 hover:bg-red-800 text-white font-bold px-4 rounded-lg text-sm transition-colors disabled:opacity-60 whitespace-nowrap">
-                {preBusy ? '…' : 'Reservar'}
-              </button>
-            </div>
-            {preMsg && <p className="text-green-600 text-xs font-semibold mt-2">{preMsg}</p>}
-            {preErro && <p className="text-red-600 text-xs font-bold mt-2">{preErro}</p>}
-          </div>
+          {/* (removido) card "Pré-cadastrar paciente" — a indicação agora é pelo QR/link. */}
 
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <p className="text-sm font-bold text-gray-700 mb-1">Sua chave PIX (para receber)</p>
@@ -244,8 +264,9 @@ export default function IndicadorPage({ onVoltar }) {
               <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={pixVal}
                 onChange={e => { setPixVal(e.target.value); setPixTipo('outra'); setPixMsg('') }} placeholder="CPF, telefone ou chave aleatória" />
               <button onClick={salvarPix} disabled={pixBusy}
-                className="bg-red-700 hover:bg-red-800 text-white font-bold px-4 rounded-lg text-sm transition-colors disabled:opacity-60 whitespace-nowrap">
-                {pixBusy ? '…' : 'Salvar'}
+                className="bg-gray-700 hover:bg-gray-800 font-bold px-4 rounded-lg text-sm transition-colors disabled:opacity-60 whitespace-nowrap"
+                style={{ color: '#facc15' }}>
+                {pixBusy ? '…' : 'SALVAR'}
               </button>
             </div>
             {pixMsg && <p className={`text-xs font-semibold mt-2 ${pixMsg.includes('✓') ? 'text-green-600' : 'text-red-600'}`}>{pixMsg}</p>}
@@ -264,10 +285,10 @@ export default function IndicadorPage({ onVoltar }) {
                     { n: (dados.creditos || []).filter(c => c.pago).length, t: 'CRÉD. RECEBIDOS', sub: '' },
                     { n: (dados.creditos || []).filter(c => !c.pago).length, t: 'CRÉD. PENDENTES', sub: '' },
                   ].map((b, i) => (
-                    <div key={i} className="bg-red-50 border border-red-100 rounded-lg py-2 px-2 text-center">
-                      <p className="text-2xl font-extrabold text-red-700">{b.n}</p>
-                      <p className="text-[10px] text-gray-500 font-semibold leading-tight">{b.t}</p>
-                      {b.sub && <p className="text-[9px] text-gray-400 leading-tight mt-0.5">{b.sub}</p>}
+                    <div key={i} className="bg-gray-700 rounded-lg py-2 px-2 text-center">
+                      <p className="text-2xl font-extrabold" style={{ color: '#facc15' }}>{b.n}</p>
+                      <p className="text-[10px] font-semibold leading-tight" style={{ color: '#facc15' }}>{b.t}</p>
+                      {b.sub && <p className="text-[9px] leading-tight mt-0.5" style={{ color: '#fde68a' }}>{b.sub}</p>}
                     </div>
                   ))}
                 </div>
