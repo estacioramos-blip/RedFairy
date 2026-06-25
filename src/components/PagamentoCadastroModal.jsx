@@ -200,6 +200,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           </div>
         </div>
 
+        {valorLiquido > 0 ? (<>
         {/* QR Code */}
         <div className="flex flex-col items-center bg-white border border-gray-200 rounded-xl p-3 mb-3">
           <QRCodeSVG
@@ -233,6 +234,12 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
             </button>
           </div>
         </div>
+        </>) : (
+          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center mb-3">
+            <p className="text-sm font-bold text-green-800 leading-relaxed">{"✓ Sua anuidade está coberta pelos seus créditos!"}</p>
+            <p className="text-xs text-green-700 mt-1">{"É só confirmar para ativar — sem precisar pagar."}</p>
+          </div>
+        )}
 
         {erro && (
           <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">
@@ -246,7 +253,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           <PlayButton
             onClick={handleJaPaguei}
             loading={salvando}
-            label={"J\u00c1 PAGUEI"}
+            label={valorLiquido > 0 ? "J\u00c1 PAGUEI" : "ATIVAR"}
             hint="Ativar meu acesso"
             ariaLabel="Ja paguei - ativar meu acesso"
           />

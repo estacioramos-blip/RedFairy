@@ -40,6 +40,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [opcoesIndicacao, setOpcoesIndicacao] = useState(null)
   // (paciente vira indicador) indica outros bariatricos e ganha creditos.
   const [showIndica, setShowIndica] = useState(false)
+  const [saldoIndicadorBrl, setSaldoIndicadorBrl] = useState(0)
   const [querPedidoGratis, setQuerPedidoGratis] = useState(false)
   const [salvandoBoasVindas, setSalvandoBoasVindas] = useState(false)
   // "Instale a fadinha" (PWA) — checkbox dentro do card de boas-vindas.
@@ -113,6 +114,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   })
 
   useEffect(() => { carregarDados(true) }, [])
+
+  // (paciente vira indicador) busca o saldo de créditos do paciente p/ mostrar no card.
+  useEffect(() => {
+    const cpfd = String(profile?.cpf || '').replace(/\D/g, '')
+    if (cpfd.length !== 11) return
+    supabase.rpc('saldo_indicador', { p_cpf: cpfd })
+      .then(({ data }) => { if (data && data.ok) setSaldoIndicadorBrl(Number(data.saldo_brl) || 0) })
+      .catch(() => {})
+  }, [profile])
 
   // (PWA fase 4) Atalho da fada → abre direto o "novo hemograma". A flag
   // rf_abrir_nova é setada pelo App no lançamento como app. Consome após o perfil
@@ -1103,7 +1113,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           <div className="mb-5 bg-gradient-to-br from-red-50 to-white border-2 border-red-200 rounded-2xl p-4 flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-bold text-red-800">{"💸 Indique e ganhe créditos"}</p>
-              <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Cada um que entrar e pagar = US$10 para você."}</p>
+              {saldoIndicadorBrl > 0
+                ? <p className="text-xs text-green-700 font-bold mt-0.5">{"Seu saldo: R$ "}{saldoIndicadorBrl.toFixed(2).replace('.', ',')}{" — abate da sua anuidade."}</p>
+                : <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Cada um que entrar e pagar = US$10 para você."}</p>}
             </div>
             <button onClick={() => setShowIndica(true)}
               className="shrink-0 bg-red-700 hover:bg-red-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors whitespace-nowrap">
