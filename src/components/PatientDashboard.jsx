@@ -8,6 +8,7 @@ import { ehDominioBariatrico } from '../lib/dominio'
 import PlayButton from './PlayButton'
 import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
+import EscolhaIndicacaoModal from './EscolhaIndicacaoModal'
 import HistoricoChartModal from './HistoricoChartModal'
 import heroImg from '../assets/redfairy-hero.jpg'
 import telefonista6Img from '../assets/telefonista6.jpg'
@@ -33,6 +34,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [showBoasVindas, setShowBoasVindas] = useState(false)
   const [showCompletarPerfil, setShowCompletarPerfil] = useState(false)
   const [showPagamento, setShowPagamento] = useState(false)
+  // (escolha da indicacao) o paciente escolhe de quem aceita a indicacao, antes de pagar.
+  const [showEscolhaIndicacao, setShowEscolhaIndicacao] = useState(false)
+  const [opcoesIndicacao, setOpcoesIndicacao] = useState(null)
   const [querPedidoGratis, setQuerPedidoGratis] = useState(false)
   const [salvandoBoasVindas, setSalvandoBoasVindas] = useState(false)
   // "Instale a fadinha" (PWA) — checkbox dentro do card de boas-vindas.
@@ -1565,14 +1569,22 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     {showCompletarPerfil && profile && (
       <CompletarPerfilModal
         profile={profile}
-        onSalvo={(novoProfile) => {
+        onSalvo={async (novoProfile) => {
           setShowCompletarPerfil(false)
           setProfile(novoProfile)
           // Bariátrico paga na 1ª (obrigatório → OBA). Não-bariátrico: 1ª grátis,
           // vai direto às boas-vindas (paywall só aparece na 2ª avaliação).
           const ehBari = !!(novoProfile?.bariatrica || inputs.bariatrica || ehDominioBariatrico())
-          if (ehBari) setShowPagamento(true)
-          else setShowBoasVindas(true)
+          if (ehBari) {
+            // (escolha) se há um INDICADOR reservando este CPF, o paciente escolhe de quem
+            // aceita a indicação ANTES de pagar; senão vai direto ao pagamento (médico = default).
+            try {
+              const cpfd = String(novoProfile?.cpf || '').replace(/\D/g, '')
+              const { data: op } = await supabase.rpc('opcoes_indicacao', { p_cpf: cpfd })
+              if (op?.ok && op.indicador) { setOpcoesIndicacao(op); setShowEscolhaIndicacao(true); return }
+            } catch (e) {}
+            setShowPagamento(true)
+          } else setShowBoasVindas(true)
         }}
         onVoltar={() => {
           // Única saída: abandona o cadastro incompleto e volta ao início (desloga).
@@ -1586,6 +1598,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           } catch (e) {}
           if (onVoltar) onVoltar()
         }}
+      />
+    )}
+
+    {showEscolhaIndicacao && opcoesIndicacao && profile && (
+      <EscolhaIndicacaoModal
+        cpf={profile.cpf}
+        medico={opcoesIndicacao.medico}
+        indicador={opcoesIndicacao.indicador}
+        onConcluir={() => { setShowEscolhaIndicacao(false); setShowPagamento(true) }}
       />
     )}
 
