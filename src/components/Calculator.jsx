@@ -797,6 +797,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [cardFada4doc, setCardFada4doc] = useState(false);
   const [showCreditosPopup, setShowCreditosPopup] = useState(false);
   const [fada4docMarcada, setFada4docMarcada] = useState(false);
+  // (encaminhamento em massa) Ao instalar o icone, o LINK do medico tambem e' copiado.
+  const [linkMedCopiado, setLinkMedCopiado] = useState(false);
   const [fada4docInstrIOS, setFada4docInstrIOS] = useState(false);
   const { instalar: instalarFada4doc } = useInstalarFada();
   const qrBaseAfil = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://redfairy.bio';
@@ -818,7 +820,15 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   async function aoMarcarFada4doc(e) {
     const marcado = e.target.checked;
     setFada4docMarcada(marcado);
-    if (!marcado) { setFada4docInstrIOS(false); return; }
+    if (!marcado) { setFada4docInstrIOS(false); setLinkMedCopiado(false); return; }
+    // (encaminhamento em massa) Copia o LINK de encaminhamento do medico pro clipboard
+    // — ele cola no WhatsApp/Telegram (ou manda a secretaria disparar para todos os
+    // bariatricos do arquivo). Feito DENTRO do gesto do clique (clipboard exige gesto).
+    try {
+      const linkMed = `${qrBaseAfil}/?ref=${encodeURIComponent(medicoCRM || '')}`;
+      await navigator.clipboard.writeText(linkMed);
+      setLinkMedCopiado(true);
+    } catch (er) {}
     const r = await instalarFada4doc();
     if (r === 'ios') setFada4docInstrIOS(true);   // iPhone: mostra instrução; segue pelo link "depois"
     else prosseguirAfil();                          // Android instalado/recusado → prossegue
@@ -1559,7 +1569,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 shadow-lg">
                   <div className="flex items-center gap-3">
                     <p className="flex-1 text-[11px] text-blue-900 leading-snug font-bold">
-                      {"AGORA INSTALE NA TELA INICIAL DO SEU CELULAR "}<span style={{ color: '#7B1E1E' }}>{"o ÍCONE do Projeto"}</span>{" para encaminhamento de pacientes. Sempre que você tocar nele surgirá o QR-CODE ao lado, através do qual você encaminha pacientes à plataforma sob o seu CRM. Cada paciente que se cadastrar gera UM CRÉDITO do programa para você."}
+                      {"AGORA INSTALE NA TELA INICIAL DO SEU CELULAR "}<span style={{ color: '#7B1E1E' }}>{"o ÍCONE do Projeto"}</span>{" para encaminhamento de pacientes. Sempre que você tocar nele surgirá o QR-CODE ao lado, através do qual você encaminha pacientes à plataforma sob o seu CRM. Ao instalar, um "}<span style={{ color: '#7B1E1E' }}>{"LINK"}</span>{" de encaminhamento também é COPIADO no seu celular — cole no WhatsApp ou Telegram e envie aos seus pacientes (ou peça à sua secretária para enviar a todos do arquivo). Cada paciente que se cadastrar gera UM CRÉDITO do programa para você."}
                     </p>
                     <div className="flex-shrink-0" style={{ background: '#fff', padding: 6, borderRadius: 10, border: '1px solid #e5e7eb' }}>
                       <QRCodeSVG value={`${qrBaseAfil}/?ref=${encodeURIComponent(medicoCRM || '')}`} size={88} level="H" bgColor="#ffffff" fgColor="#7B1E1E" imageSettings={{ src: logo, height: 18, width: 18, excavate: true }} />
@@ -1578,6 +1588,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   </label>
                   <img src={obaFairyIcon} alt="Ícone do 4DOC" className="flex-shrink-0 w-11 h-11 rounded-lg" style={{ objectFit: 'contain' }} />
                 </div>
+                {linkMedCopiado && (
+                  <p className="text-[11px] mt-1.5 leading-snug text-green-700 font-bold text-center">{"✓ LINK copiado! Cole no WhatsApp ou Telegram e envie aos seus pacientes."}</p>
+                )}
                 {fada4docInstrIOS && (
                   <p className="text-[11px] mt-1 leading-snug text-blue-700 text-center">{"No iPhone: toque em "}<strong>{"Compartilhar"}</strong>{" (↑) e depois em "}<strong>{"\"Adicionar à Tela de Início\""}</strong>{"."}</p>
                 )}
