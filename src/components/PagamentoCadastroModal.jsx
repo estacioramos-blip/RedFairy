@@ -44,6 +44,8 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
   const [erro, setErro] = useState('')
   // Valor da anuidade lido do banco (config.valor_anuidade); cai no padrão se ausente.
   const [valor, setValor] = useState(VALOR_ANUIDADE_PADRAO)
+  // (abatimento) saldo de créditos do paciente-indicador (R$), que abate a anuidade.
+  const [saldoBrl, setSaldoBrl] = useState(0)
   // Popup "ATENÇÃO" com os custos do trabalho médico (valores vindos de config).
   const [mostrarCustos, setMostrarCustos] = useState(false)
   const [custos, setCustos] = useState({})
@@ -59,8 +61,19 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
         setCustos(map)
       })
   }, [])
-  // Código Pix gerado dinamicamente a partir do valor (com CRC recalculado).
-  const pixCode = gerarPixAnuidade(valor)
+  // (abatimento) busca o saldo de créditos do paciente (US$10 por indicado que pagou) p/
+  // descontar da anuidade. saldo_indicador NÃO consome — só mostra.
+  useEffect(() => {
+    const cpfd = String(profile?.cpf || '').replace(/\D/g, '')
+    if (cpfd.length !== 11) return
+    supabase.rpc('saldo_indicador', { p_cpf: cpfd })
+      .then(({ data }) => { if (data && data.ok) setSaldoBrl(Number(data.saldo_brl) || 0) })
+      .catch(() => {})
+  }, [profile])
+  const desconto = Math.min(saldoBrl, valor)
+  const valorLiquido = Math.max(0, valor - desconto)
+  // Código Pix gerado dinamicamente a partir do valor LÍQUIDO (com CRC recalculado).
+  const pixCode = gerarPixAnuidade(valorLiquido)
 
   async function copiarPix() {
     try {
@@ -84,15 +97,25 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
         status: 'ativa',
         data_inicio: agora.toISOString(),
         data_fim: umAno.toISOString(),
-        valor_pago: valor,
+        valor_pago: valorLiquido,
       })
       .select()
       .maybeSingle()
-    setSalvando(false)
     if (error) {
+      setSalvando(false)
       setErro('Erro ao registrar pagamento. Tente novamente em alguns segundos.')
       return
     }
+    // (abatimento) consome os créditos usados no desconto desta anuidade.
+    if (desconto > 0) {
+      try {
+        await supabase.rpc('aplicar_abatimento', {
+          p_cpf: String(profile?.cpf || '').replace(/\D/g, ''),
+          p_anuidade_brl: valor,
+        })
+      } catch (e) {}
+    }
+    setSalvando(false)
     if (onPago) onPago(data)
   }
 
@@ -153,11 +176,17 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
 
         {/* Valor destaque */}
         <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-center mb-3">
+          {desconto > 0 && (
+            <div className="text-[11px] text-gray-600 mb-1 leading-tight">
+              {"Anuidade R$ "}{formatarBRL(valor).replace(/,00$/, '')}
+              <span className="text-green-700 font-bold">{"  −  seus créditos R$ "}{formatarBRL(desconto).replace(/,00$/, '')}</span>
+            </div>
+          )}
           <div className="text-xs font-semibold text-red-700 uppercase tracking-wider mb-1">
             {"Valor a pagar | PIX"}
           </div>
           <div className="text-2xl font-black text-red-700">
-            {"R$ "}{formatarBRL(valor).replace(/,00$/, '')}
+            {"R$ "}{formatarBRL(valorLiquido).replace(/,00$/, '')}
           </div>
           <div className="text-xs mt-1 inline-flex items-center gap-1.5">
             <span className="font-bold text-black">{"ASSINATURA ANUAL"}</span>
