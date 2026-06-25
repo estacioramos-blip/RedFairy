@@ -796,7 +796,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
         <div className="bg-white px-6 pt-5 pb-2 text-center">
           <p className="text-xs uppercase tracking-widest text-gray-500">{"\ud83e\ude7a Começamos por aqui"}</p>
           <h3 className="text-base font-semibold text-gray-800 mt-1 leading-tight">{fraseAbertura}</h3>
-          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed px-2">{"Com apenas tr\u00eas par\u00e2metros do eritrograma o algoritmo faz uma avalia\u00e7\u00e3o inicial. Com FERRITINA e SATURA\u00c7\u00c3O DA TRANSFERRINA (%) voc\u00ea pode aprofundar o diagn\u00f3stico, agora ou no futuro."}</p>
+          {/* (g) frase "Com apenas tres parametros..." removida (aparecia em 3 lugares). */}
         </div>
 
         <div className="p-6 space-y-4">

@@ -20,6 +20,7 @@ import logo from '../assets/logo.png';
 import obaLogo from '../assets/oba-logo.png';
 import medicoBariImg from '../assets/oba-medico.jpg';
 import obaFairyIcon from '../assets/oba-fairy-icon.png';
+import ohhhImg from '../assets/ohhh.png';
 import { QRCodeSVG } from 'qrcode.react';
 import { useInstalarFada } from '../lib/useInstalarFada';
 import { ehDominioBariatrico } from '../lib/dominio';
@@ -253,11 +254,21 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     }, 3000);
     return () => clearTimeout(t);
   }, [nome, modo]);
-  // CELULAR completo (11 digitos) -> EMAIL.
+  // CELULAR -> EMAIL. 11 digitos: salta na hora. 10 digitos (ha' WhatsApp com 10):
+  // se o medico parar 2s, salta automaticamente para o e-mail.
   useEffect(() => {
     if (modo !== 'cadastro') return;
-    if (celular.replace(/\D/g, '').length >= 11 && refEmailCad.current && document.activeElement === refCelular.current) {
-      refEmailCad.current.focus();
+    if (document.activeElement !== refCelular.current) return;
+    const dig = celular.replace(/\D/g, '');
+    if (dig.length >= 11) {
+      if (refEmailCad.current) refEmailCad.current.focus();
+      return;
+    }
+    if (dig.length === 10) {
+      const t = setTimeout(() => {
+        if (refEmailCad.current && document.activeElement === refCelular.current) refEmailCad.current.focus();
+      }, 2000);
+      return () => clearTimeout(t);
     }
   }, [celular, modo]);
 
@@ -479,9 +490,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
 
         {modo === 'cadastro' && (
           <div className="space-y-3">
-            <button onClick={() => { setLoginErro(''); setCadErro(''); onVoltarParaConvite?.() }} className="text-gray-400 hover:text-gray-600 text-xs font-medium">
-              {"\u2190 Voltar"}
-            </button>
+            {/* (a) Seta "Voltar" removida \u2014 o link "Nao quero fornecer esses dados" ja' faz isso. */}
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
               <input ref={refNomeCad} type="text" value={nome} onChange={e => setNome(e.target.value.toUpperCase())} style={{ textTransform: 'uppercase' }}
@@ -510,9 +519,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputAmarelo} autoComplete="off" />
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-              <p className="text-blue-800 text-xs font-bold mb-1">{"\u2728 Programa de Afiliados"}</p>
+              <p className="text-blue-800 text-xs font-bold mb-1">{"4DOC"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{" | Programa de M\u00e9dicos Afiliados"}</p>
               <p className="text-blue-700 text-xs leading-relaxed">
-                {"Ao avaliar pacientes voc\u00ea passa a integrar o nosso Programa de Afiliados, com suporte dos nossos patrocinadores. Ao beneficiar pacientes, voc\u00ea tamb\u00e9m passa a auferir benef\u00edcios."}
+                {"Avalie e encaminhe um paciente em modo simplificado \u2013 apenas tr\u00eas par\u00e2metros do Hemograma. Descubra o que podemos fazer pelo bari\u00e1trico e integre-se ao 4DOC"}<sup style={{ fontSize: '0.7em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{". Da\u00ed voc\u00ea poder\u00e1 encaminhar novos pacientes mostrando um QR-CODE no seu celular. Cada paciente que se cadastra ganha vida, e gera benef\u00edcios patrocinados exclusivos para voc\u00ea."}
               </p>
             </div>
             <div>
@@ -559,25 +568,22 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
         {showReversaoAdesao && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-              <div className="p-6 space-y-5">
-                <p style={{ color: '#374151', fontSize: '15px', fontWeight: 600, lineHeight: 1.5, textAlign: 'center', margin: 0 }}>
-                  {"RedFairy"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{" precisa do seu WhatsApp + e-mail para que voc\u00ea possa operar a plataforma, conhecer o Projeto OBA, e os benef\u00edcios do 4DOC - Programa Patrocinado de M\u00e9dicos Afiliados."}
-                </p>
-                <div className="space-y-3">
-                  <button onClick={() => setShowReversaoAdesao(false)}
-                    className="w-full bg-red-700 hover:bg-gray-400 text-white font-bold py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2">
-                    <span>{"QUERO CONTINUAR"}</span>
-                    <span style={{ fontSize: '15px' }}>{"\u25ba"}</span>
-                  </button>
-                  <div className="text-center">
-                    <button onClick={() => { setShowReversaoAdesao(false); onVoltar?.(); }}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold py-2.5 px-5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2 mx-auto">
-                      <span style={{ color: '#dc2626', fontSize: '15px' }}>{"\u25c4"}</span>
-                      <span>{"SAIR"}</span>
-                    </button>
-                    <p style={{ color: '#7B1E1E', fontSize: '11px', margin: '6px 0 0' }}>{"Se mudar de ideia \u00e9 s\u00f3 voltar"}</p>
-                  </div>
+              {/* (d) Imagem ohhh com a frase branca na base. */}
+              <div style={{ position: 'relative', width: '100%' }}>
+                <img src={ohhhImg} alt="" className="w-full block" />
+                <div style={{ position: 'absolute', left: 0, right: 0, bottom: '7%', textAlign: 'center', padding: '0 16px' }}>
+                  <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 12px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.7)' }}>{"Assim n\u00e3o podemos come\u00e7ar."}</p>
                 </div>
+              </div>
+              <div className="px-5 pt-4 pb-5">
+                <p style={{ color: '#111827', fontSize: '13px', fontWeight: 600, textAlign: 'center', margin: 0 }}>{"Se mudar de ideia, estaremos aqui."}</p>
+                <div className="flex justify-center mt-4">
+                  <PlayButton onClick={() => setShowReversaoAdesao(false)} label="QUERO CONTINUAR" labelColor="#111827" ringColor="rgba(227,174,55,0.75)" ariaLabel="Quero continuar" />
+                </div>
+                <button onClick={() => { setShowReversaoAdesao(false); onVoltar?.(); }}
+                  className="flex items-center gap-1 text-gray-400 hover:text-gray-600 text-xs font-medium mt-4">
+                  <span style={{ fontSize: '13px' }}>{"\u2190"}</span><span>{"SAIR"}</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1514,9 +1520,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden" style={{ maxHeight: '92vh', display: 'flex', flexDirection: 'column', position: 'relative' }}
             onMouseEnter={() => setBgAfilRevelado(true)} onMouseLeave={() => setBgAfilRevelado(false)} onTouchStart={() => setBgAfilRevelado(true)}>
-            {/* Imagem de fundo: inteira (contain) e esmaecida; revela no hover (igual a' hero) */}
-            {/* Imagem de fundo: faixa de largura cheia, cortada na cintura, CENTRADA no modal; revela no hover */}
-            <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '370px', transform: 'translateY(-56%)', backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat', filter: (flashFormImg || bgAfilRevelado) ? 'blur(0px)' : 'blur(10px)', opacity: flashFormImg ? 0.6 : (bgAfilRevelado ? 0.5 : 0.12), transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+            {/* (f) Imagem de fundo do FORM removida — o form (CEP/CPF/Pix) fica limpo. */}
             {/* SPLASH de entrada: imagem (largura cheia, cortada na cintura, centrada) + greeting por 5s, antes dos campos */}
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashAfil ? 1 : 0, pointerEvents: splashAfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
               <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, bottom: '8px' }}>
@@ -1530,7 +1534,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             {/* CARD da FADINHA 4DOC (encaminhamento): aparece sobre a imagem; o splash só
                 sai quando o médico instala a fadinha OU opta por instalar depois. */}
             {cardFada4doc && (
-              <div style={{ position: 'absolute', left: 0, right: 0, top: '404px', zIndex: 6, maxHeight: '52%', overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, rgba(255,255,255,0.97) 78%, rgba(255,255,255,0))' }} className="px-4 pt-3 pb-6">
+              <div style={{ position: 'absolute', left: 0, right: 0, top: '404px', bottom: 0, zIndex: 6, overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, #ffffff 86%, rgba(255,255,255,0))' }} className="px-4 pt-3 pb-6">
                 <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 shadow-lg">
                   <div className="flex items-center gap-3">
                     <p className="flex-1 text-[11px] text-blue-900 leading-snug font-bold">
@@ -1733,7 +1737,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       loading={afiliadoSalvando}
                       disabled={afiliadoSalvando}
                       label="PROSSEGUIR"
-                      hint={(!afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || afiliadoCPFErro)
+                      hint={false && (!afiliadoCEP.trim() || !afiliadoCPF.trim() || !afiliadoPix.trim() || afiliadoCPFErro)
                         ? `Falta: ${[!afiliadoCEP.trim() && 'CEP', (!afiliadoCPF.trim() || afiliadoCPFErro) && 'CPF', !afiliadoPix.trim() && 'chave Pix'].filter(Boolean).join(', ')}`
                         : ' '}
                       ariaLabel="Confirmar dados"

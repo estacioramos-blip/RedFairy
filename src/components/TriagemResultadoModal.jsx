@@ -565,7 +565,7 @@ export default function TriagemResultadoModal({
                   {"\ud83e\ude7a IMPORTANTE"}
                 </p>
                 <p className="text-sm text-blue-900 leading-snug">
-                  {"Para entender melhor o eritron, precisamos da "}<strong>FERRITINA</strong>{" e da "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA [%]"}</strong>{sufB12}{". Solicite esses exames e lance aqui os resultados, ou encaminhe o/a paciente para que se cadastre na plataforma, nos solicite o pedido desses exames, e lance os resultados. N\u00f3s faremos a an\u00e1lise e retornaremos a voc\u00ea com a conclus\u00e3o."}
+                  {"Para entender melhor o eritron do paciente precisamos da "}<strong>FERRITINA</strong>{" e do \u00edndice de "}<strong>{"SATURA\u00c7\u00c3O DA TRANSFERRINA"}</strong>{sufB12}{". Se voc\u00ea tem esses exames, voc\u00ea poder\u00e1 entrar os resultados mais adiante. Ou quando o paciente se cadastrar na plataforma ele poder\u00e1 solicitar o pedido desses exames para depois lan\u00e7ar os resultados."}
                 </p>
               </div>
             ) : isDemo ? (
