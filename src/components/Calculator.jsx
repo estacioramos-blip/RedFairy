@@ -438,6 +438,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 <input ref={refCrmNumLogin} type="text" value={loginCrmNum}
                   onChange={e => setLoginCrmNum(sanitizarCrmNum(e.target.value))}
                   placeholder="Ex: 6302" autoComplete="off" name="rf-crm-num-login"
+                  data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"
                   inputMode="numeric" maxLength={6}
                   className={`col-span-2 ${inputClass} ${etapaLogin === 1 ? 'border-yellow-400 bg-yellow-50' : 'bg-yellow-50 border-yellow-300'}`} />
                 <input ref={refCrmUfLogin} type="text" value={loginCrmUF}
@@ -456,6 +457,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 <input ref={refSenhaLogin} type={showLoginSenha ? 'text' : 'password'} value={loginSenha}
                   onChange={e => setLoginSenha(e.target.value)} onFocus={() => setEtapaLogin(2)}
                   placeholder="Sua senha" autoComplete="off" name="rf-senha-login"
+                  data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"
                   className={`${inputClass} ${etapaLogin === 2 ? 'border-yellow-400 bg-yellow-50' : ''}`}
                   style={{ paddingRight: '40px' }}
                   onKeyDown={e => e.key === 'Enter' && handleLogin()} />
@@ -533,7 +535,8 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
               {!jaLogadoSemSenha && !senha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie a sua Senha</label>
               <div style={{ position: 'relative' }}>
                 <input type={showSenha ? 'text' : 'password'} value={senha} onChange={e => setSenha(e.target.value)}
-                  placeholder={"M\u00ednimo 6 caracteres"} className={inputAmarelo} autoComplete="new-password"
+                  placeholder={"M\u00ednimo 6 caracteres"} className={inputAmarelo} autoComplete="off"
+                  data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"
                   style={{ paddingRight: '40px' }} />
                 <button type="button" onClick={() => setShowSenha(!showSenha)}
                   style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#9ca3af' }}
