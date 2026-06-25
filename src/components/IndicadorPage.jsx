@@ -187,9 +187,15 @@ export default function IndicadorPage({ onVoltar }) {
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
             {Cabecalho}
             <h3 className="text-lg font-bold text-gray-800">Olá{nome ? `, ${nome.split(' ')[0]}` : ''}! 👋</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Compartilhe seu <b>link</b> ou mostre o <b>QR-CODE</b> a bariátricos que você conhece.
-              Quando a pessoa indicada <b>pagar</b>, você ganha <b>US$10</b>.
+            <p className="text-sm text-gray-600 mt-2 leading-relaxed text-left">
+              Aqui você cadastra a sua <b>chave PIX</b> e acompanha os seus <b>INDICADOS</b>: os{' '}
+              <b>CADASTRADOS</b> (crédito gerado) e os <b>RESERVADOS</b> (crédito após o cadastro).
+              Você acompanha também os <b>CRÉDITOS RECEBIDOS</b> e os <b>PENDENTES</b>.
+            </p>
+            <p className="text-sm text-gray-600 mt-2 leading-relaxed text-left">
+              Mostre o <b>QR-CODE</b> abaixo para um bariátrico fotografar e entrar no projeto sob a sua
+              indicação, ou <b>copie o LINK</b> e envie pelo WhatsApp/Telegram. Cada indicado que <b>pagar</b>{' '}
+              gera <b>US$10</b> para você.
             </p>
             <div className="flex justify-center my-4">
               <div className="bg-white p-3 rounded-xl border-2 border-red-700">
@@ -251,15 +257,17 @@ export default function IndicadorPage({ onVoltar }) {
               <p className="text-xs text-gray-400">Carregando…</p>
             ) : (
               <>
-                <div className="flex gap-3 mb-3">
+                <div className="grid grid-cols-2 gap-2.5 mb-3">
                   {[
-                    { n: (dados.creditos || []).filter(c => c.pago).length, t: 'PAGOS' },
-                    { n: (dados.creditos || []).filter(c => !c.pago).length, t: 'A RECEBER' },
-                    { n: (dados.precadastros || []).length, t: 'RESERVADOS' },
+                    { n: (dados.creditos || []).length, t: 'CADASTRADOS', sub: 'crédito gerado' },
+                    { n: (dados.precadastros || []).length, t: 'RESERVADOS', sub: 'crédito após cadastro' },
+                    { n: (dados.creditos || []).filter(c => c.pago).length, t: 'CRÉD. RECEBIDOS', sub: '' },
+                    { n: (dados.creditos || []).filter(c => !c.pago).length, t: 'CRÉD. PENDENTES', sub: '' },
                   ].map((b, i) => (
-                    <div key={i} className="flex-1 bg-red-50 border border-red-100 rounded-lg py-2 text-center">
+                    <div key={i} className="bg-red-50 border border-red-100 rounded-lg py-2 px-2 text-center">
                       <p className="text-2xl font-extrabold text-red-700">{b.n}</p>
-                      <p className="text-[11px] text-gray-500 font-semibold">{b.t}</p>
+                      <p className="text-[10px] text-gray-500 font-semibold leading-tight">{b.t}</p>
+                      {b.sub && <p className="text-[9px] text-gray-400 leading-tight mt-0.5">{b.sub}</p>}
                     </div>
                   ))}
                 </div>
