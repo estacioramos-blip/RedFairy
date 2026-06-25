@@ -134,6 +134,8 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
   const [loginCrmNum, setLoginCrmNum] = useState('')
   const [loginCrmUF, setLoginCrmUF] = useState('')
   const loginConselho = (loginCrmNum && loginCrmUF) ? `${loginCrmNum}/${loginCrmUF}` : '';
+  // (1o acesso) CRM existe no banco? null=ainda nao checado, true=login, false=cadastro novo.
+  const [loginCrmExiste, setLoginCrmExiste] = useState(null)
   const [loginSenha, setLoginSenha] = useState('')
   const [loginErro, setLoginErro] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
@@ -212,6 +214,25 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
       if (refSenhaLogin.current) refSenhaLogin.current.focus();
     }
   }, [loginCrmUF, modo]);
+
+  // (1o acesso) Com CRM+UF completos, consulta o banco: se o CRM NAO existe, e' primeiro
+  // acesso -> o campo de senha mostra "CRIE AGORA A SUA SENHA". Igual a caixa do hero.
+  useEffect(() => {
+    if (modo !== 'login') return;
+    if (!(loginCrmNum && loginCrmUF.length === 2 && UFS_VALIDAS.includes(loginCrmUF))) {
+      setLoginCrmExiste(null);
+      return;
+    }
+    const crmLimpo = `${loginCrmNum}/${loginCrmUF}`.toUpperCase();
+    let cancelado = false;
+    (async () => {
+      try {
+        const { data } = await supabase.from('medicos').select('crm').eq('crm', crmLimpo).maybeSingle();
+        if (!cancelado) setLoginCrmExiste(!!data);
+      } catch (e) { if (!cancelado) setLoginCrmExiste(null); }
+    })();
+    return () => { cancelado = true; };
+  }, [loginCrmNum, loginCrmUF, modo]);
 
   // Mesmo padrao no CADASTRO. So' ativa apos o nome (o cursor comeca no nome).
   useEffect(() => {
@@ -452,11 +473,13 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Senha</label>
+              <label className={`block text-sm font-medium mb-1 ${loginCrmExiste === false ? 'text-red-700 font-bold' : 'text-gray-600'}`}>
+                {loginCrmExiste === false ? 'CRIE AGORA A SUA SENHA' : (loginCrmExiste === true ? 'DIGITE A SUA SENHA' : 'Senha')}
+              </label>
               <div style={{ position: 'relative' }}>
                 <input ref={refSenhaLogin} type={showLoginSenha ? 'text' : 'password'} value={loginSenha}
                   onChange={e => setLoginSenha(e.target.value)} onFocus={() => setEtapaLogin(2)}
-                  placeholder="Sua senha" autoComplete="off" name="rf-senha-login"
+                  placeholder={loginCrmExiste === false ? 'Crie uma senha (mín. 6)' : 'Sua senha'} autoComplete="off" name="rf-senha-login"
                   data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other"
                   className={`${inputClass} ${etapaLogin === 2 ? 'border-yellow-400 bg-yellow-50' : ''}`}
                   style={{ paddingRight: '40px' }}
