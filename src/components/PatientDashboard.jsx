@@ -11,6 +11,7 @@ import PagamentoCadastroModal from './PagamentoCadastroModal'
 import EscolhaIndicacaoModal from './EscolhaIndicacaoModal'
 import PacienteIndicaModal from './PacienteIndicaModal'
 import obaFairyIcon from '../assets/oba-fairy-icon.png'
+import obaLogo from '../assets/oba-logo.png'
 import HistoricoChartModal from './HistoricoChartModal'
 import heroImg from '../assets/redfairy-hero.jpg'
 import comeonImg from '../assets/comeon.jpg'
@@ -1662,35 +1663,43 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
     {showEscolhaEntrarIndicar && profile && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
-          <div className="bg-red-700 text-white px-5 py-4 text-center">
-            <h2 className="text-base font-bold">{"Olá"}{profile.nome ? `, ${profile.nome.split(' ')[0]}` : ''}{"! O que você quer fazer?"}</h2>
-          </div>
-          <div className="p-5 space-y-3">
-            <button onClick={() => { setShowEscolhaEntrarIndicar(false); setResultado(null); setTela('nova') }}
-              className="w-full bg-red-700 hover:bg-red-800 active:bg-red-900 text-white rounded-2xl py-5 px-4 transition-colors flex items-center gap-3 text-left">
-              <span className="text-3xl leading-none flex-shrink-0" aria-hidden="true">{"▶"}</span>
-              <span className="min-w-0">
-                <span className="block text-xl font-extrabold leading-none tracking-wide">{"ENTRAR"}</span>
-                <span className="block text-sm font-medium opacity-90 mt-1">{"Nova avaliação clínica"}</span>
-              </span>
-            </button>
-            <button onClick={() => { setShowEscolhaEntrarIndicar(false); setIndicaView('indicar'); setShowIndica(true) }}
-              className="w-full bg-white hover:bg-red-50 active:bg-red-100 text-red-800 rounded-2xl py-5 px-4 border-2 border-red-300 transition-colors flex items-center gap-3 text-left">
-              <span className="text-3xl leading-none flex-shrink-0" aria-hidden="true">{"💸"}</span>
-              <span className="min-w-0">
-                <span className="block text-xl font-extrabold leading-none tracking-wide">{"INDICAR"}</span>
-                <span className="block text-sm font-medium text-gray-500 mt-1">{"Indicar paciente"}</span>
-              </span>
-            </button>
-            <button onClick={() => { setShowEscolhaEntrarIndicar(false); setIndicaView('creditos'); setShowIndica(true) }}
-              className="w-full bg-white hover:bg-red-50 active:bg-red-100 text-red-800 rounded-2xl py-5 px-4 border-2 border-red-300 transition-colors flex items-center gap-3 text-left">
-              <span className="text-3xl leading-none flex-shrink-0" aria-hidden="true">{"📊"}</span>
-              <span className="min-w-0">
-                <span className="block text-lg font-extrabold leading-tight tracking-wide">{"VER MEUS CRÉDITOS"}</span>
-                <span className="block text-sm font-medium text-gray-500 mt-1">{"Cadastrados, recebidos e a receber"}</span>
-              </span>
-            </button>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative">
+          {/* X fechar — círculo vinho, X branco. Fecha o modal e o paciente fica LOGADO. */}
+          <button onClick={() => setShowEscolhaEntrarIndicar(false)} aria-label="Fechar"
+            style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '12px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+            {"✕"}
+          </button>
+          <div className="p-5 pt-7">
+            <img src={obaLogo} alt="Projeto OBA" className="h-16 object-contain mx-auto mb-1" />
+            <p className="text-center text-sm font-bold text-gray-700 mb-3">
+              {"Olá"}{profile.nome ? `, ${profile.nome.split(' ')[0]}` : ''}{"! O que você quer fazer?"}
+            </p>
+            <div className="divide-y divide-gray-100">
+              <div className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="text-lg font-extrabold text-red-800 leading-tight">{"ENTRAR"}</p>
+                  <p className="text-xs text-gray-500">{"Nova avaliação clínica"}</p>
+                </div>
+                <PlayButton onClick={() => { setShowEscolhaEntrarIndicar(false); setResultado(null); setTela('nova') }}
+                  ariaLabel="Entrar" circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
+              </div>
+              <div className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="text-lg font-extrabold text-red-800 leading-tight">{"INDICAR"}</p>
+                  <p className="text-xs text-gray-500">{"Indicar paciente"}</p>
+                </div>
+                <PlayButton onClick={() => { setShowEscolhaEntrarIndicar(false); setIndicaView('indicar'); setShowIndica(true) }}
+                  ariaLabel="Indicar" circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
+              </div>
+              <div className="flex items-center justify-between gap-3 py-3">
+                <div className="min-w-0">
+                  <p className="text-base font-extrabold text-red-800 leading-tight">{"VER MEUS CRÉDITOS"}</p>
+                  <p className="text-xs text-gray-500">{"Cadastrados, recebidos e a receber"}</p>
+                </div>
+                <PlayButton onClick={() => { setShowEscolhaEntrarIndicar(false); setIndicaView('creditos'); setShowIndica(true) }}
+                  ariaLabel="Ver meus créditos" circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
