@@ -156,7 +156,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
 
         {/* Imagem de fundo: faixa de largura cheia, esmaecida; revela no hover (atrás dos inputs).
             top 52% (um pouco mais alta) e altura 430px (corta menos a base da imagem). */}
-        <div aria-hidden="true" style={{ position: 'absolute', top: '52%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)', backgroundImage: `url(${fotoDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgPerfilRevelado ? 'blur(0px)' : 'blur(10px)', opacity: bgPerfilRevelado ? 0.5 : 0.12, transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+        <div aria-hidden="true" style={{ position: 'absolute', top: '52%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)', backgroundImage: `url(${fotoDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgPerfilRevelado ? 'blur(0px)' : (ehBari ? 'blur(3px)' : 'blur(10px)'), opacity: bgPerfilRevelado ? (ehBari ? 0.62 : 0.5) : (ehBari ? 0.42 : 0.12), transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
 
         {/* SPLASH de entrada: imagem nítida (largura cheia, centrada) por 1,2s, antes dos campos */}
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashPerfil ? 1 : 0, pointerEvents: splashPerfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
