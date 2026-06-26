@@ -40,6 +40,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [opcoesIndicacao, setOpcoesIndicacao] = useState(null)
   // (paciente vira indicador) indica outros bariatricos e ganha creditos.
   const [showIndica, setShowIndica] = useState(false)
+  const [indicaView, setIndicaView] = useState('indicar')   // 'indicar' | 'creditos'
   const [saldoIndicadorBrl, setSaldoIndicadorBrl] = useState(0)
   // (icone do bariatrico) bifurcacao ao abrir pelo icone: Entrar x Indicar.
   const [showEscolhaEntrarIndicar, setShowEscolhaEntrarIndicar] = useState(false)
@@ -1128,7 +1129,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 ? <p className="text-xs text-green-700 font-bold mt-0.5">{"Seu saldo: R$ "}{saldoIndicadorBrl.toFixed(2).replace('.', ',')}{" — abate da sua anuidade."}</p>
                 : <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Cada um que entrar e pagar = US$10 para você."}</p>}
             </div>
-            <button onClick={() => setShowIndica(true)}
+            <button onClick={() => { setIndicaView('indicar'); setShowIndica(true) }}
               className="shrink-0 bg-red-700 hover:bg-red-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors whitespace-nowrap">
               {"Indicar"}
             </button>
@@ -1664,12 +1665,20 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 <span className="block text-sm font-medium opacity-90 mt-1">{"Nova avaliação clínica"}</span>
               </span>
             </button>
-            <button onClick={() => { setShowEscolhaEntrarIndicar(false); setShowIndica(true) }}
+            <button onClick={() => { setShowEscolhaEntrarIndicar(false); setIndicaView('indicar'); setShowIndica(true) }}
               className="w-full bg-white hover:bg-red-50 active:bg-red-100 text-red-800 rounded-2xl py-5 px-4 border-2 border-red-300 transition-colors flex items-center gap-3 text-left">
               <span className="text-3xl leading-none flex-shrink-0" aria-hidden="true">{"💸"}</span>
               <span className="min-w-0">
                 <span className="block text-xl font-extrabold leading-none tracking-wide">{"INDICAR"}</span>
                 <span className="block text-sm font-medium text-gray-500 mt-1">{"Indicar paciente"}</span>
+              </span>
+            </button>
+            <button onClick={() => { setShowEscolhaEntrarIndicar(false); setIndicaView('creditos'); setShowIndica(true) }}
+              className="w-full bg-white hover:bg-red-50 active:bg-red-100 text-red-800 rounded-2xl py-5 px-4 border-2 border-red-300 transition-colors flex items-center gap-3 text-left">
+              <span className="text-3xl leading-none flex-shrink-0" aria-hidden="true">{"📊"}</span>
+              <span className="min-w-0">
+                <span className="block text-lg font-extrabold leading-tight tracking-wide">{"VER MEUS CRÉDITOS"}</span>
+                <span className="block text-sm font-medium text-gray-500 mt-1">{"Cadastrados, recebidos e a receber"}</span>
               </span>
             </button>
           </div>
@@ -1678,7 +1687,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     )}
 
     {showIndica && profile && (
-      <PacienteIndicaModal cpf={profile.cpf} onFechar={() => setShowIndica(false)} />
+      <PacienteIndicaModal cpf={profile.cpf} view={indicaView} onFechar={() => setShowIndica(false)} />
     )}
 
     {showPagamento && profile && (

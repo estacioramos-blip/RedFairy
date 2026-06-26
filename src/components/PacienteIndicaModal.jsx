@@ -7,10 +7,13 @@ import { useInstalarFada } from '../lib/useInstalarFada'
  * PacienteIndicaModal — o PACIENTE bariátrico vira INDICADOR: indica outros bariátricos
  * e ganha créditos (US$10 por indicado que paga), abatendo o próprio investimento.
  *
- * 1ª vez: pede NOME + chave PIX (o CPF já aparece) — é por onde ele recebe os créditos
- * em dinheiro. Depois: painel com QR + link + contadores e um link "trocar PIX".
+ * 1ª vez: pede NOME + chave PIX (o CPF já aparece) — é por onde ele recebe os créditos.
+ * Depois, dois modos (prop `view`):
+ *   - 'indicar'  → foca em compartilhar (QR + link) + contadores abaixo.
+ *   - 'creditos' → foca nos créditos (contadores + valor + PIX) + link de indicação abaixo.
  *
- * Props: cpf, onFechar(). Requer migrate_paciente_indicador.sql + migrate_paciente_pix.sql.
+ * Props: cpf, view ('indicar'|'creditos'), onFechar().
+ * Requer migrate_paciente_indicador.sql + migrate_paciente_pix.sql.
  */
 function fmtCPF(v) {
   const d = String(v || '').replace(/\D/g, '').slice(0, 11)
@@ -18,7 +21,7 @@ function fmtCPF(v) {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
 }
 
-export default function PacienteIndicaModal({ cpf, onFechar }) {
+export default function PacienteIndicaModal({ cpf, view = 'indicar', onFechar }) {
   const [codigo, setCodigo] = useState('')
   const [nome, setNome] = useState('')
   const [pixChave, setPixChave] = useState('')
@@ -90,19 +93,70 @@ export default function PacienteIndicaModal({ cpf, onFechar }) {
   const precisaPix = !pixChave || mostrarTroca
   const inputCls = "w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-red-400"
 
+  // Bloco: compartilhar (QR + link + copiar + instalar)
+  const blocoCompartilhar = (
+    <div className="space-y-3">
+      <div className="flex justify-center">
+        <div className="bg-white p-3 rounded-xl border-2 border-red-700">
+          <QRCodeSVG value={link} size={150} fgColor="#b91c1c" />
+        </div>
+      </div>
+      <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-gray-700 break-all">{link}</div>
+      <button onClick={copiar} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
+        {copiado ? 'LINK COPIADO ✓' : 'COPIAR LINK'}
+      </button>
+      <button onClick={instalarIcone} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">
+        {"📲 Instalar o ícone na minha tela (copia o link)"}
+      </button>
+      {ios && <p className="text-[11px] text-gray-500 leading-snug text-center">{"No iPhone: toque em Compartilhar (↑) e depois em \"Adicionar à Tela de Início\"."}</p>}
+    </div>
+  )
+
+  // Bloco: contadores de créditos (o mesmo que o indicador vê)
+  const blocoCreditos = (
+    <div className="space-y-2">
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { n: (dados?.creditos || []).length, t: 'CADASTRADOS' },
+          { n: (dados?.precadastros || []).length, t: 'RESERVADOS' },
+          { n: (dados?.creditos || []).filter(c => c.pago).length, t: 'RECEBIDOS' },
+          { n: (dados?.creditos || []).filter(c => !c.pago).length, t: 'PENDENTES' },
+        ].map((b, i) => (
+          <div key={i} className="bg-red-50 border border-red-100 rounded-lg py-2 text-center">
+            <p className="text-2xl font-extrabold text-red-700">{b.n}</p>
+            <p className="text-[9px] text-gray-500 font-semibold">{b.t}</p>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-gray-400 text-center">{"Cada indicado que paga vale US$ "}{dados?.comissao_usd || 10}{"."}</p>
+    </div>
+  )
+
+  // Bloco: PIX cadastrado + trocar
+  const blocoPix = (
+    <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-left">
+      <p className="text-[11px] text-gray-500">{"Você recebe em (PIX):"}</p>
+      <p className="text-sm font-bold text-gray-700 break-all">{pixChave}</p>
+      <button onClick={() => { setPixInput(pixChave); setMsgPix(''); setMostrarTroca(true) }}
+        className="text-xs font-bold text-red-700 underline underline-offset-2 hover:text-red-800 mt-1">
+        {"Desejo trocar minha chave PIX"}
+      </button>
+    </div>
+  )
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.95)' }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-6">
         <div className="bg-red-700 text-white px-5 py-4 flex items-center justify-between">
-          <h2 className="text-base font-bold">{"💸 Indique e ganhe créditos"}</h2>
+          <h2 className="text-base font-bold">{view === 'creditos' ? '📊 Meus créditos' : '💸 Indique e ganhe créditos'}</h2>
           <button onClick={onFechar} className="text-red-200 hover:text-white text-lg" aria-label="Fechar">{"✕"}</button>
         </div>
 
         <div className="p-5 space-y-3">
           {erro && <p className="text-red-600 text-xs font-bold text-center">{erro}</p>}
+          {!codigo && !erro && <p className="text-xs text-gray-400 text-center">Carregando…</p>}
 
-          {!codigo && !erro && <p className="text-xs text-gray-400 text-center">Ativando…</p>}
-
+          {/* Form de PIX (1ª vez ou trocar) */}
           {codigo && precisaPix && (
             <>
               <p className="text-sm text-gray-600 leading-relaxed">
@@ -135,46 +189,33 @@ export default function PacienteIndicaModal({ cpf, onFechar }) {
             </>
           )}
 
-          {codigo && !precisaPix && (
-            <div className="text-center space-y-3">
+          {/* Painel — modo CRÉDITOS */}
+          {codigo && !precisaPix && view === 'creditos' && (
+            <>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {"Estes são os seus créditos por indicar outros bariátricos. Eles abatem documentos médicos e a sua anuidade."}
+              </p>
+              {blocoCreditos}
+              {blocoPix}
+              <div className="border-t border-gray-100 pt-3">
+                <p className="text-xs font-bold text-gray-500 mb-2 text-center">{"SEU LINK DE INDICAÇÃO"}</p>
+                {blocoCompartilhar}
+              </div>
+            </>
+          )}
+
+          {/* Painel — modo INDICAR */}
+          {codigo && !precisaPix && view !== 'creditos' && (
+            <>
               <p className="text-sm text-gray-600 leading-relaxed text-left">
                 Conhece outros bariátricos? Indique-os ao <b>Projeto OBA</b>: cada um que se cadastrar
                 e pagar vale <b>US$10</b> de crédito para você. Mostre o <b>QR</b>, ou copie o <b>LINK</b>{' '}
                 e envie no WhatsApp/Telegram.
               </p>
-              <div className="flex justify-center my-1">
-                <div className="bg-white p-3 rounded-xl border-2 border-red-700">
-                  <QRCodeSVG value={link} size={150} fgColor="#b91c1c" />
-                </div>
-              </div>
-              <div className="bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-gray-700 break-all">{link}</div>
-              <button onClick={copiar} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
-                {copiado ? 'LINK COPIADO ✓' : 'COPIAR LINK'}
-              </button>
-              <button onClick={instalarIcone} className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">
-                {"📲 Instalar o ícone na minha tela (copia o link)"}
-              </button>
-              {ios && <p className="text-[11px] text-gray-500 leading-snug">{"No iPhone: toque em Compartilhar (↑) e depois em \"Adicionar à Tela de Início\"."}</p>}
-              {dados && (
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  {[
-                    { n: (dados.creditos || []).length, t: 'CADASTRADOS' },
-                    { n: (dados.precadastros || []).length, t: 'RESERVADOS' },
-                    { n: (dados.creditos || []).filter(c => c.pago).length, t: 'RECEBIDOS' },
-                    { n: (dados.creditos || []).filter(c => !c.pago).length, t: 'PENDENTES' },
-                  ].map((b, i) => (
-                    <div key={i} className="bg-red-50 border border-red-100 rounded-lg py-1.5 text-center">
-                      <p className="text-xl font-extrabold text-red-700">{b.n}</p>
-                      <p className="text-[9px] text-gray-500 font-semibold">{b.t}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <button onClick={() => { setPixInput(pixChave); setMsgPix(''); setMostrarTroca(true) }}
-                className="text-xs font-bold text-red-700 underline underline-offset-2 hover:text-red-800">
-                {"Desejo trocar minha chave PIX"}
-              </button>
-            </div>
+              {blocoCompartilhar}
+              {blocoCreditos}
+              {blocoPix}
+            </>
           )}
         </div>
       </div>
