@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import obaLogo from '../assets/oba-logo.png'
 import obaFairyIcon from '../assets/oba-fairy-icon.png'
 import PlayButton from './PlayButton'
+import PacienteIndicaModal from './PacienteIndicaModal'
 import { useInstalarFada } from '../lib/useInstalarFada'
 
 // =============================================================================
@@ -44,6 +45,7 @@ export default function IndicadorPage({ onVoltar }) {
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [iosInstr, setIosInstr] = useState(false)
   const [mostrarQR, setMostrarQR] = useState(false)
+  const [indView, setIndView] = useState('gate')   // 'gate' | 'indicar' | 'creditos' (sem ENTRAR)
   const { instalar } = useInstalarFada()
 
   // painel
@@ -199,105 +201,52 @@ export default function IndicadorPage({ onVoltar }) {
 
   // ── PAINEL ──────────────────────────────────────────────────────────────────
   if (etapa === 'painel') {
+    // Submodais reutilizam o PacienteIndicaModal (idempotente pelo CPF do indicador):
+    // mesmos modais do paciente, mas SEM "ENTRAR" (indicador não faz avaliação clínica).
+    if (indView === 'indicar' || indView === 'creditos') {
+      return <PacienteIndicaModal cpf={cpf} celular={contatoCel} view={indView} onFechar={() => setIndView('gate')} />
+    }
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6 relative">
-        {VoltarBtn}
-        <div className="w-full max-w-md space-y-4 mt-8">
-          <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
-            {Cabecalho}
-            <h3 className="text-lg font-bold text-gray-800">Olá{nome ? `, ${nome.split(' ')[0]}` : ''}! 👋</h3>
-            <p className="text-sm text-gray-600 mt-3 leading-relaxed text-left">
-              Aqui você cadastra a sua <b>chave PIX</b> e acompanha os seus <b>INDICADOS</b>: os{' '}
-              <b>CADASTRADOS</b> (crédito gerado) e os <b>RESERVADOS</b> (crédito após o cadastro).
-              Você acompanha também os <b>CRÉDITOS RECEBIDOS</b> e os <b>PENDENTES</b>.
-            </p>
-            <p className="text-sm text-gray-600 mt-3 leading-relaxed text-left">
-              Na caixinha abaixo você instala o <b>ÍCONE do Projeto OBA</b> na tela do seu celular. Ao tocar
-              nele, abre o <b>QR-CODE</b> para o indicado fotografar e entrar sob a sua indicação — e, no mesmo
-              momento, um <b>LINK</b> é copiado no seu dispositivo, pronto pra colar no WhatsApp, Telegram ou
-              nas suas redes. Cada indicado que se cadastrar gera <b>crédito</b> para você.
-            </p>
-            <div className="flex items-center justify-between gap-2 mt-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={iconeMarcado} onChange={aoInstalarIcone} className="w-4 h-4 flex-shrink-0" style={{ accentColor: '#b91c1c' }} />
-                <span className="text-xs font-bold text-red-800 leading-tight text-left">{"Instalar o ÍCONE do Projeto OBA na minha tela"}</span>
-              </label>
-              <img src={obaFairyIcon} alt="Ícone do Projeto OBA" className="flex-shrink-0 w-12 h-12 rounded-lg" style={{ objectFit: 'contain' }} />
-            </div>
-            {linkCopiado && <p className="text-[11px] mt-2 text-green-700 font-bold text-left">{"✓ LINK copiado! Cole no WhatsApp, Telegram ou nas suas redes."}</p>}
-            {iosInstr && <p className="text-[11px] mt-1 text-gray-500 leading-snug text-left">{"No iPhone: toque em Compartilhar (↑) e depois em \"Adicionar à Tela de Início\"."}</p>}
-            <button onClick={() => setMostrarQR(v => !v)} className="block w-full text-center text-xs font-bold text-red-700 underline mt-3">
-              {mostrarQR ? 'Ocultar QR-CODE' : 'Mostrar QR-CODE'}
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6">
+        <div className="w-full max-w-sm mt-10">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden relative">
+            {/* X fechar — círculo vinho (igual aos modais do paciente). */}
+            <button onClick={() => { sair(); if (onVoltar) onVoltar(); }} aria-label="Fechar"
+              style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '12px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+              {"✕"}
             </button>
-            {mostrarQR && link && (
-              <div className="flex flex-col items-center mt-2 gap-2">
-                <div className="bg-white p-3 rounded-xl border-2 border-red-700">
-                  <QRCodeSVG value={link} size={150} fgColor="#b91c1c" />
+            <div className="p-5 pt-7">
+              <img src={obaLogo} alt="Projeto OBA" className="h-24 object-contain mx-auto" />
+              <p className="text-center text-[11px] text-gray-400 mt-1 mb-3">{nome ? nome : 'Modo Indicador'}</p>
+              <div className="divide-y divide-gray-100">
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-lg font-extrabold text-red-800 leading-tight">{"INDICAR"}</p>
+                    <p className="text-xs text-gray-500">{"Indicar paciente"}</p>
+                  </div>
+                  <PlayButton onClick={() => setIndView('indicar')} ariaLabel="Indicar"
+                    circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
                 </div>
-                <button onClick={copiarLink} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
-                  {copiado ? 'LINK COPIADO ✓' : 'COPIAR LINK'}
-                </button>
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-base font-extrabold text-red-800 leading-tight">{"VER MEUS CRÉDITOS"}</p>
+                    <p className="text-xs text-gray-500">{"Cadastrados, recebidos e a receber"}</p>
+                  </div>
+                  <PlayButton onClick={() => setIndView('creditos')} ariaLabel="Ver meus créditos"
+                    circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
+                </div>
               </div>
-            )}
-          </div>
-
-          {/* (removido) card "Pré-cadastrar paciente" — a indicação agora é pelo QR/link. */}
-
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <p className="text-sm font-bold text-gray-700 mb-1">Sua chave PIX (para receber)</p>
-            <p className="text-xs text-gray-500 mb-3">É por aqui que você recebe os US$10 de cada indicado que paga.</p>
-            <div className="space-y-1.5 mb-2">
-              <label className="flex items-center gap-2 cursor-pointer text-xs">
-                <input type="checkbox" checked={pixTipo === 'cpf'} style={{ accentColor: '#b91c1c' }}
-                  onChange={() => { if (pixTipo === 'cpf') { setPixTipo(''); setPixVal('') } else { setPixTipo('cpf'); setPixVal(contatoCpf || '') } setPixMsg('') }} />
-                <span className="text-gray-700 font-medium tracking-wide">MEU CPF É O MEU PIX</span>
-              </label>
-              {contatoCel && (
-                <label className="flex items-center gap-2 cursor-pointer text-xs">
-                  <input type="checkbox" checked={pixTipo === 'celular'} style={{ accentColor: '#b91c1c' }}
-                    onChange={() => { if (pixTipo === 'celular') { setPixTipo(''); setPixVal('') } else { setPixTipo('celular'); setPixVal(contatoCel) } setPixMsg('') }} />
-                  <span className="text-gray-700 font-medium tracking-wide">MEU CELULAR É O MEU PIX</span>
+              <div className="mt-4 pt-3 border-t border-gray-100">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={iconeMarcado} onChange={aoInstalarIcone} className="w-4 h-4 flex-shrink-0" style={{ accentColor: '#7B1E1E' }} />
+                  <span className="text-xs font-bold text-gray-700 leading-tight">{"Instalar o ÍCONE do Projeto OBA na minha tela"}</span>
+                  <img src={obaFairyIcon} alt="" className="ml-auto w-10 h-10 rounded-lg flex-shrink-0" style={{ objectFit: 'contain' }} />
                 </label>
-              )}
+                {linkCopiado && <p className="text-[11px] mt-2 text-green-700 font-bold">{"✓ LINK copiado! Cole no WhatsApp, Telegram ou nas suas redes."}</p>}
+                {iosInstr && <p className="text-[11px] mt-1 text-gray-500 leading-snug">{"No iPhone: toque em Compartilhar (↑) e depois em \"Adicionar à Tela de Início\"."}</p>}
+              </div>
             </div>
-            <div className="flex gap-2">
-              <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" value={pixVal}
-                onChange={e => { setPixVal(e.target.value); setPixTipo('outra'); setPixMsg('') }} placeholder="CPF, telefone ou chave aleatória" />
-              <button onClick={salvarPix} disabled={pixBusy}
-                className="bg-gray-700 hover:bg-gray-800 font-bold px-4 rounded-lg text-sm transition-colors disabled:opacity-60 whitespace-nowrap"
-                style={{ color: '#facc15' }}>
-                {pixBusy ? '…' : 'SALVAR'}
-              </button>
-            </div>
-            {pixMsg && <p className={`text-xs font-semibold mt-2 ${pixMsg.includes('✓') ? 'text-green-600' : 'text-red-600'}`}>{pixMsg}</p>}
           </div>
-
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <p className="text-sm font-bold text-gray-700 mb-3">Seus indicados</p>
-            {!dados ? (
-              <p className="text-xs text-gray-400">Carregando…</p>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 gap-2.5 mb-3">
-                  {[
-                    { n: (dados.creditos || []).length, t: 'CADASTRADOS', sub: 'crédito gerado' },
-                    { n: (dados.precadastros || []).length, t: 'RESERVADOS', sub: 'crédito após cadastro' },
-                    { n: (dados.creditos || []).filter(c => c.pago).length, t: 'CRÉD. RECEBIDOS', sub: '' },
-                    { n: (dados.creditos || []).filter(c => !c.pago).length, t: 'CRÉD. PENDENTES', sub: '' },
-                  ].map((b, i) => (
-                    <div key={i} className="bg-gray-700 rounded-lg py-2 px-2 text-center">
-                      <p className="text-2xl font-extrabold" style={{ color: '#facc15' }}>{b.n}</p>
-                      <p className="text-[10px] font-semibold leading-tight" style={{ color: '#facc15' }}>{b.t}</p>
-                      {b.sub && <p className="text-[9px] leading-tight mt-0.5" style={{ color: '#fde68a' }}>{b.sub}</p>}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-xs text-gray-400 text-center">Cada indicado que paga vale US$ {dados.comissao_usd || 10}.</p>
-              </>
-            )}
-          </div>
-
-          <button onClick={sair} className="w-full text-gray-300 text-sm hover:text-white transition-colors">Sair</button>
         </div>
       </div>
     )
