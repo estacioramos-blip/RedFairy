@@ -777,9 +777,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       // não mais aqui — por isso não existe mais a tela "Pronto!".
       // IMPORTANTE: abre o OBA (overlay) ANTES de fechar as boas-vindas — senão o
       // dashboard "Olá" vazio piscava entre o fim das boas-vindas e a abertura do OBA.
-      const precisa = await verificarEAbrirOBA(profile)
+      await verificarEAbrirOBA(profile)   // bariátrico sem anamnese → abre o OBA por cima
       setShowBoasVindas(false)
-      if (!precisa) setTela('nova')
+      // Tela limpa SEMPRE: nunca cair numa avaliação concluída/antiga (ex.: CPF reusado).
+      // O OBA (se precisou) já abriu por cima; o fundo fica no formulário em branco.
+      setResultado(null)
+      setTela('nova')
     }
   }
 
