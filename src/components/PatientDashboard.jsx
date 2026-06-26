@@ -1670,10 +1670,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             {"✕"}
           </button>
           <div className="p-5 pt-7">
-            <img src={obaLogo} alt="Projeto OBA" className="h-16 object-contain mx-auto mb-1" />
-            <p className="text-center text-sm font-bold text-gray-700 mb-3">
-              {"Olá"}{profile.nome ? `, ${profile.nome.split(' ')[0]}` : ''}{"! O que você quer fazer?"}
-            </p>
+            <img src={obaLogo} alt="Projeto OBA" className="h-24 object-contain mx-auto mb-4" />
             <div className="divide-y divide-gray-100">
               <div className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
