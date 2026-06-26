@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import { useInstalarFada } from '../lib/useInstalarFada'
+import PlayButton from './PlayButton'
 
 /**
  * PacienteIndicaModal — o PACIENTE bariátrico vira INDICADOR: indica outros bariátricos
@@ -35,6 +36,9 @@ export default function PacienteIndicaModal({ cpf, view = 'indicar', onFechar })
   const [pixInput, setPixInput] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [msgPix, setMsgPix] = useState('')
+  const nomeRef = useRef(null)
+  const pixRef = useRef(null)
+  const nomeTimer = useRef(null)
 
   const { instalar, ios } = useInstalarFada()
   const base = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://redfairy.bio'
@@ -82,6 +86,17 @@ export default function PacienteIndicaModal({ cpf, view = 'indicar', onFechar })
     finally { setSalvando(false) }
   }
 
+  // (seamless) salto entre campos: para de digitar o NOME por 2s -> foca a chave PIX.
+  function onNomeChange(v) {
+    setNomeInput(v.toUpperCase()); setMsgPix('')
+    if (nomeTimer.current) clearTimeout(nomeTimer.current)
+    nomeTimer.current = setTimeout(() => { if ((v || '').trim().length >= 3) pixRef.current?.focus() }, 2000)
+  }
+  // Foca o NOME quando o form de PIX da 1a vez aparece.
+  useEffect(() => {
+    if (codigo && !pixChave) { const t = setTimeout(() => { if (nomeRef.current) nomeRef.current.focus() }, 120); return () => clearTimeout(t) }
+  }, [codigo, pixChave])
+
   async function copiar() {
     try { await navigator.clipboard.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 2500) } catch (e) {}
   }
@@ -91,7 +106,7 @@ export default function PacienteIndicaModal({ cpf, view = 'indicar', onFechar })
   }
 
   const precisaPix = !pixChave || mostrarTroca
-  const inputCls = "w-full border-2 border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-red-400"
+  const inputCls = "w-full border-2 border-yellow-300 bg-yellow-50 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-yellow-400"
 
   // Bloco: compartilhar (QR + link + copiar + instalar)
   const blocoCompartilhar = (
@@ -166,21 +181,23 @@ export default function PacienteIndicaModal({ cpf, view = 'indicar', onFechar })
               </p>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">{"Nome completo"}</label>
-                <input className={inputCls} value={nomeInput} onChange={e => { setNomeInput(e.target.value.toUpperCase()); setMsgPix('') }} style={{ textTransform: 'uppercase' }} />
+                <input ref={nomeRef} className={inputCls} value={nomeInput} onChange={e => onNomeChange(e.target.value)} style={{ textTransform: 'uppercase' }} />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">{"CPF"}</label>
-                <input className={`${inputCls} bg-gray-100 text-gray-500`} value={fmtCPF(cpf)} readOnly disabled />
+                <input className="w-full border-2 border-gray-200 bg-gray-100 text-gray-500 rounded-lg px-3 py-2.5 text-sm" value={fmtCPF(cpf)} readOnly disabled />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">{"Chave PIX"}</label>
-                <input className={inputCls} value={pixInput} onChange={e => { setPixInput(e.target.value); setMsgPix('') }} placeholder="CPF, celular, e-mail ou chave aleatória" />
+                <input ref={pixRef} className={inputCls} value={pixInput} onChange={e => { setPixInput(e.target.value); setMsgPix('') }} placeholder="CPF, celular, e-mail ou chave aleatória" />
               </div>
               {msgPix && <p className="text-xs font-semibold text-red-600">{msgPix}</p>}
-              <button onClick={salvarPix} disabled={salvando}
-                className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-60">
-                {salvando ? 'Salvando…' : 'SALVAR'}
-              </button>
+              {pixInput.trim().length >= 3 && (
+                <div className="flex flex-col items-center pt-1">
+                  <PlayButton onClick={salvarPix} loading={salvando} label="SALVAR" ariaLabel="Salvar chave PIX"
+                    circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" labelColor="#7B1E1E" ringColor="rgba(250,204,21,0.7)" />
+                </div>
+              )}
               {mostrarTroca && (
                 <button onClick={() => { setMostrarTroca(false); setMsgPix('') }} className="w-full text-xs text-gray-400 hover:text-gray-600 font-medium">
                   {"Cancelar"}
