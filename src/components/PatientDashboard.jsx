@@ -1703,7 +1703,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     )}
 
     {showIndica && profile && (
-      <PacienteIndicaModal cpf={profile.cpf} view={indicaView} onFechar={() => setShowIndica(false)} />
+      <PacienteIndicaModal cpf={profile.cpf} celular={profile.celular} view={indicaView} onFechar={() => setShowIndica(false)} />
     )}
 
     {showPagamento && profile && (
