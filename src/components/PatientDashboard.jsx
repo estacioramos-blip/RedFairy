@@ -1657,14 +1657,20 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </div>
           <div className="p-5 space-y-3">
             <button onClick={() => { setShowEscolhaEntrarIndicar(false); setResultado(null); setTela('nova') }}
-              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl transition-colors leading-tight">
-              {"QUERO ENTRAR"}
-              <span className="block text-xs font-medium opacity-90 mt-0.5">{"nova avaliação"}</span>
+              className="w-full bg-red-700 hover:bg-red-800 active:bg-red-900 text-white rounded-2xl py-5 px-4 transition-colors flex items-center gap-3 text-left">
+              <span className="text-3xl leading-none flex-shrink-0" aria-hidden="true">{"▶"}</span>
+              <span className="min-w-0">
+                <span className="block text-xl font-extrabold leading-none tracking-wide">{"ENTRAR"}</span>
+                <span className="block text-sm font-medium opacity-90 mt-1">{"Nova avaliação clínica"}</span>
+              </span>
             </button>
             <button onClick={() => { setShowEscolhaEntrarIndicar(false); setShowIndica(true) }}
-              className="w-full bg-white hover:bg-red-50 text-red-800 font-bold py-4 rounded-xl border-2 border-red-300 transition-colors leading-tight">
-              {"DESEJO INDICAR UM PACIENTE"}
-              <span className="block text-xs font-medium text-gray-500 mt-0.5">{"abre o QR e copia o seu link"}</span>
+              className="w-full bg-white hover:bg-red-50 active:bg-red-100 text-red-800 rounded-2xl py-5 px-4 border-2 border-red-300 transition-colors flex items-center gap-3 text-left">
+              <span className="text-3xl leading-none flex-shrink-0" aria-hidden="true">{"💸"}</span>
+              <span className="min-w-0">
+                <span className="block text-xl font-extrabold leading-none tracking-wide">{"INDICAR"}</span>
+                <span className="block text-sm font-medium text-gray-500 mt-1">{"Indicar paciente"}</span>
+              </span>
             </button>
           </div>
         </div>
