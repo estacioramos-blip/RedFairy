@@ -9,6 +9,7 @@ import TriagemResultadoModal from './TriagemResultadoModal';
 import TermosModalShared from './TermosModal';
 import ResultCard from './ResultCard';
 import QRMedicoModal from './QRMedicoModal';
+import CreditosMedicoModal from './CreditosMedicoModal';
 import PlayButton from './PlayButton';
 import heroImg from '../assets/redfairy-hero.jpg';
 import fairyChatImg from '../assets/fairy-chat.jpg';
@@ -796,6 +797,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   // quando o médico instala a fadinha OU opta por instalar depois.
   const [cardFada4doc, setCardFada4doc] = useState(false);
   const [showCreditosPopup, setShowCreditosPopup] = useState(false);
+  const [showMeusCreditosMed, setShowMeusCreditosMed] = useState(false);   // médico vê os próprios créditos 4DOC
   const [fada4docMarcada, setFada4docMarcada] = useState(false);
   // (encaminhamento em massa) Ao instalar o icone, o LINK do medico tambem e' copiado.
   const [linkMedCopiado, setLinkMedCopiado] = useState(false);
@@ -1575,9 +1577,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                       <QRCodeSVG value={`${qrBaseAfil}/?ref=${encodeURIComponent(medicoCRM || '')}`} size={88} level="H" bgColor="#ffffff" fgColor="#7B1E1E" imageSettings={{ src: logo, height: 18, width: 18, excavate: true }} />
                     </div>
                   </div>
-                  <div className="text-center mt-2">
+                  <div className="text-center mt-2 flex flex-col gap-1.5">
                     <button onClick={() => setShowCreditosPopup(true)} className="text-xs font-bold text-green-700 underline underline-offset-2 hover:text-green-800">
                       {"Saiba mais sobre os créditos do 4DOC"}
+                    </button>
+                    <button onClick={() => setShowMeusCreditosMed(true)} className="text-xs font-bold text-red-700 underline underline-offset-2 hover:text-red-800">
+                      {"📊 Ver os meus créditos 4DOC"}
                     </button>
                   </div>
                 </div>
@@ -1620,6 +1625,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 </div>
               </div>
             )}
+            {showMeusCreditosMed && <CreditosMedicoModal onFechar={() => setShowMeusCreditosMed(false)} />}
             {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons.
                 zIndex 10 (acima do splash zIndex 5) p/ o header ja aparecer durante a imagem. */}
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
