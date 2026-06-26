@@ -146,8 +146,8 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
       campoAtivo === campo ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white'
     }`
   const labelCls = "block text-xs font-semibold text-gray-600 mb-1"
-  // (bariátrico) imagem de fundo escura → rótulos de Celular/E-mail em branco com sombra.
-  const estiloBranco = ehBari ? { color: '#ffffff', textShadow: '0 1px 3px rgba(0,0,0,.55)' } : undefined
+  // (bariátrico) rótulos de Celular/E-mail em PRETO (a imagem de fundo é só um leve fundo).
+  const estiloLabel = ehBari ? { color: '#000000' } : undefined
 
   return (
     <div className="fixed inset-0 bg-black/95 flex items-start justify-center p-4 z-50 overflow-y-auto">
@@ -156,7 +156,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
 
         {/* Imagem de fundo: faixa de largura cheia, esmaecida; revela no hover (atrás dos inputs).
             top 52% (um pouco mais alta) e altura 430px (corta menos a base da imagem). */}
-        <div aria-hidden="true" style={{ position: 'absolute', top: '52%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)', backgroundImage: `url(${fotoDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgPerfilRevelado ? 'blur(0px)' : (ehBari ? 'blur(3px)' : 'blur(10px)'), opacity: bgPerfilRevelado ? (ehBari ? 0.62 : 0.5) : (ehBari ? 0.42 : 0.12), transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+        <div aria-hidden="true" style={{ position: 'absolute', top: '52%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)', backgroundImage: `url(${fotoDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgPerfilRevelado ? (ehBari ? 'blur(2px)' : 'blur(0px)') : (ehBari ? 'blur(8px)' : 'blur(10px)'), opacity: bgPerfilRevelado ? (ehBari ? 0.42 : 0.5) : (ehBari ? 0.28 : 0.12), transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
 
         {/* SPLASH de entrada: imagem nítida (largura cheia, centrada) por 1,2s, antes dos campos */}
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashPerfil ? 1 : 0, pointerEvents: splashPerfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
@@ -192,7 +192,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
             </div>
 
             <div>
-              <label className={labelCls} style={estiloBranco}>{"Celular (WhatsApp)"}</label>
+              <label className={labelCls} style={estiloLabel}>{"Celular (WhatsApp)"}</label>
               <input
                 ref={celRef} type="text" value={celular}
                 onChange={e => onCelChange(e.target.value)}
@@ -201,11 +201,11 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
                 placeholder="(00) 00000-0000"
               />
               {dddInvalido && <p className="text-xs mt-1" style={{ color: '#F97316' }}>{"DDD inválido — verifique o código da sua região."}</p>}
-              <p className="text-xs text-gray-900 mt-1" style={estiloBranco}>{"Necessário para receber documentos médicos."}</p>
+              <p className="text-xs text-gray-900 mt-1" style={estiloLabel}>{"Necessário para receber documentos médicos."}</p>
             </div>
 
             <div>
-              <label className={labelCls} style={estiloBranco}>{"E-mail"}</label>
+              <label className={labelCls} style={estiloLabel}>{"E-mail"}</label>
               <input
                 ref={emailRef} type="email" value={email}
                 onChange={e => onEmailChange(e.target.value)}
