@@ -41,6 +41,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   // (paciente vira indicador) indica outros bariatricos e ganha creditos.
   const [showIndica, setShowIndica] = useState(false)
   const [saldoIndicadorBrl, setSaldoIndicadorBrl] = useState(0)
+  // (icone do bariatrico) bifurcacao ao abrir pelo icone: Entrar x Indicar.
+  const [showEscolhaEntrarIndicar, setShowEscolhaEntrarIndicar] = useState(false)
   const [querPedidoGratis, setQuerPedidoGratis] = useState(false)
   const [salvandoBoasVindas, setSalvandoBoasVindas] = useState(false)
   // "Instale a fadinha" (PWA) — checkbox dentro do card de boas-vindas.
@@ -132,8 +134,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     try {
       if (localStorage.getItem('rf_abrir_nova') === '1') {
         localStorage.removeItem('rf_abrir_nova')
-        setResultado(null)
-        setTela('nova')
+        // (icone do bariatrico) o bariatrico tambem pode ser INDICADOR: ao abrir pelo
+        // icone, oferece a escolha Entrar (nova avaliacao) x Indicar paciente (QR+link).
+        // Nao-bariatrico segue direto para a nova avaliacao (comportamento antigo).
+        if (profile.bariatrica) {
+          setShowEscolhaEntrarIndicar(true)
+        } else {
+          setResultado(null)
+          setTela('nova')
+        }
       }
     } catch (e) {}
   }, [profile])
@@ -1638,6 +1647,28 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         indicador={opcoesIndicacao.indicador}
         onConcluir={() => { setShowEscolhaIndicacao(false); setShowPagamento(true) }}
       />
+    )}
+
+    {showEscolhaEntrarIndicar && profile && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div className="bg-red-700 text-white px-5 py-4 text-center">
+            <h2 className="text-base font-bold">{"Olá"}{profile.nome ? `, ${profile.nome.split(' ')[0]}` : ''}{"! O que você quer fazer?"}</h2>
+          </div>
+          <div className="p-5 space-y-3">
+            <button onClick={() => { setShowEscolhaEntrarIndicar(false); setResultado(null); setTela('nova') }}
+              className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-4 rounded-xl transition-colors leading-tight">
+              {"QUERO ENTRAR"}
+              <span className="block text-xs font-medium opacity-90 mt-0.5">{"nova avaliação"}</span>
+            </button>
+            <button onClick={() => { setShowEscolhaEntrarIndicar(false); setShowIndica(true) }}
+              className="w-full bg-white hover:bg-red-50 text-red-800 font-bold py-4 rounded-xl border-2 border-red-300 transition-colors leading-tight">
+              {"DESEJO INDICAR UM PACIENTE"}
+              <span className="block text-xs font-medium text-gray-500 mt-0.5">{"abre o QR e copia o seu link"}</span>
+            </button>
+          </div>
+        </div>
+      </div>
     )}
 
     {showIndica && profile && (
