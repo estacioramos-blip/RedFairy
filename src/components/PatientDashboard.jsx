@@ -12,7 +12,7 @@ import EscolhaIndicacaoModal from './EscolhaIndicacaoModal'
 import PacienteIndicaModal from './PacienteIndicaModal'
 import HistoricoChartModal from './HistoricoChartModal'
 import heroImg from '../assets/redfairy-hero.jpg'
-import telefonista6Img from '../assets/telefonista6.jpg'
+import comeonImg from '../assets/comeon.jpg'
 import logo from '../assets/logo.png'
 
 // Classes Tailwind por cor dos cards de checkbox (paridade com o CheckboxCard do
@@ -923,10 +923,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
               Sair
             </button>
-            <button onClick={() => setShowSobre(true)}
-              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
-              Sobre
-            </button>
+            {!(inputs.bariatrica || profile?.bariatrica) && (
+              <button onClick={() => setShowSobre(true)}
+                className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+                Sobre
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -1173,7 +1175,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 {/* Imagem de boas-vindas (telefonista3, horizontal). A ALTURA é o zoom:
                     menor = menos zoom = corta MENOS as laterais (mas mostra menos altura).
                     Ajuste o h-[...] pra afinar. object-top mantém o topo. */}
-                <img src={telefonista6Img} alt="" className="block w-full h-[480px] object-cover object-bottom sm:h-auto" style={{ backgroundColor: '#FDF7F7' }} />
+                <img src={comeonImg} alt="" className="block w-full h-[480px] object-cover object-bottom sm:h-auto" style={{ backgroundColor: '#FDF7F7' }} />
                 {/* Saudacao no TOPO da imagem (separada do card, pra nao sumir pra fora). */}
                 <div className="text-center px-5" style={{ position: 'absolute', top: '5%', left: 0, right: 0, zIndex: 1 }}>
                   <style>{`@keyframes rfBvFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}`}</style>
@@ -1202,7 +1204,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   </p>
                   <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica)
-                      ? "Marque a caixinha abaixo e n\u00f3s vamos instalar uma FADINHA na sua tela inicial. Ela vai conter o seu LOGIN, e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto. Vamos prosseguir."
+                      ? "Marque a caixinha abaixo e n\u00f3s vamos instalar um \u00cdCONE na sua tela inicial. Ele vai conter o seu LOGIN, e quando voc\u00ea tocar nele o sistema j\u00e1 abre direto. Vamos prosseguir."
                       : "Marque a caixinha abaixo e n\u00f3s vamos instalar uma fadinha na sua tela inicial. Ela j\u00e1 vai conter o seu LOGIN e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto para voc\u00ea entrar os exames \u2014 \u00e9 muito simples. Vamos prosseguir."}
                   </p>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -1224,7 +1226,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     label="CONTINUAR"
                     ariaLabel="Continuar"
                     labelColor="#ffffff"
-                    ringColor="rgba(229,231,235,0.9)"
+                    ringColor="rgba(227,174,55,0.85)"
                   />
                 </div>
                 </div>
