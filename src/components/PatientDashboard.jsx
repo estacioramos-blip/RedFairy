@@ -10,6 +10,7 @@ import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
 import EscolhaIndicacaoModal from './EscolhaIndicacaoModal'
 import PacienteIndicaModal from './PacienteIndicaModal'
+import obaFairyIcon from '../assets/oba-fairy-icon.png'
 import HistoricoChartModal from './HistoricoChartModal'
 import heroImg from '../assets/redfairy-hero.jpg'
 import comeonImg from '../assets/comeon.jpg'
@@ -1595,9 +1596,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 px-6"
         onClick={() => setFadaInstaladaPopup(false)}>
         <div className="bg-white rounded-2xl shadow-xl max-w-xs w-full p-6 text-center" onClick={(e) => e.stopPropagation()}>
-          <img src={logo} alt="" className="w-20 h-20 object-contain mx-auto mb-3" style={{ opacity: 0.4 }} />
-          <p className="text-base font-bold text-red-700">{"FADINHA INSTALADA NA TELA"}</p>
-          <p className="text-sm text-gray-600 mt-2">{"Para um próximo teste, apenas toque nela."}</p>
+          <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
+            <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{" | "}</span>
+            <span style={{ color: '#000000' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
+          </h2>
+          <img src={obaFairyIcon} alt="Ícone do Projeto OBA" className="w-20 h-20 object-contain mx-auto my-3 rounded-2xl" />
+          <p className="text-sm text-gray-700 leading-relaxed">
+            {"ÍCONE instalado na tela! Através dele você pode "}<b>{"ENTRAR"}</b>{" no sistema sem LOGIN/SENHA, "}<b>{"INDICAR"}</b>{" outros pacientes, ou "}<b>{"VER SEUS CRÉDITOS"}</b>{"."}
+          </p>
           <button onClick={() => setFadaInstaladaPopup(false)}
             className="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
             {"OK"}
