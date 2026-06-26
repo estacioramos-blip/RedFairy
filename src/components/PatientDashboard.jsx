@@ -1194,7 +1194,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   style={{ background: (inputs.bariatrica || profile?.bariatrica) ? 'rgba(60,25,45,0.50)' : 'rgba(25,35,60,0.50)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
                   <p className="text-xs text-white leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica || temAssinatura)
-                      ? <>{"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<span style={{ color: (inputs.bariatrica || profile?.bariatrica) ? '#f9a8d4' : '#93c5fd' }}>{"um ano"}</span>{"."}</>
+                      ? <>{"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<span style={{ color: '#facc15' }}>{"um ano"}</span>{"."}</>
                       : <span style={{ color: '#93c5fd' }}>{"Voc\u00ea poder\u00e1 fazer duas avalia\u00e7\u00f5es gratuitas."}</span>}
                   </p>
                   <p className="text-xs text-white leading-relaxed mb-2 font-bold">
