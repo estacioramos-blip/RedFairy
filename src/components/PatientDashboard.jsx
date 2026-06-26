@@ -1191,28 +1191,28 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 <div style={{ opacity: cardsBV ? 1 : 0, transition: 'opacity 0.6s ease', pointerEvents: cardsBV ? 'auto' : 'none' }}>
                 <div className="flex items-end gap-2">
                 <div className={`w-[75%] rounded-xl p-3 mb-5 ${(inputs.bariatrica || profile?.bariatrica) ? 'border-2 border-red-400' : 'border border-blue-200'}`}
-                  style={{ background: (inputs.bariatrica || profile?.bariatrica) ? 'rgba(253,242,248,0.55)' : 'rgba(239,246,255,0.55)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
-                  <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
+                  style={{ background: (inputs.bariatrica || profile?.bariatrica) ? 'rgba(60,25,45,0.50)' : 'rgba(25,35,60,0.50)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
+                  <p className="text-xs text-white leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica || temAssinatura)
-                      ? <>{"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<span style={{ color: (inputs.bariatrica || profile?.bariatrica) ? '#9D174D' : '#1d4ed8' }}>{"um ano"}</span>{"."}</>
-                      : <span style={{ color: '#1d4ed8' }}>{"Voc\u00ea poder\u00e1 fazer duas avalia\u00e7\u00f5es gratuitas."}</span>}
+                      ? <>{"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<span style={{ color: (inputs.bariatrica || profile?.bariatrica) ? '#f9a8d4' : '#93c5fd' }}>{"um ano"}</span>{"."}</>
+                      : <span style={{ color: '#93c5fd' }}>{"Voc\u00ea poder\u00e1 fazer duas avalia\u00e7\u00f5es gratuitas."}</span>}
                   </p>
-                  <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
+                  <p className="text-xs text-white leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica)
                       ? "A qualquer momento voc\u00ea pode fazer uma nova avalia\u00e7\u00e3o, e incluir novos exames. Eles ser\u00e3o comparados com os anteriores e interpretados, e voc\u00ea receber\u00e1 recomenda\u00e7\u00f5es, e poder\u00e1 solicitar receitas ou novos pedidos de exames."
                       : "Traga os resultados de cada novo HEMOGRAMA \u2014 e se tiver, traga a FERRITINA e a SATURA\u00c7\u00c3O DA TRANSFERRINA. N\u00f3s vamos avaliar e p\u00f4r a sua evolu\u00e7\u00e3o em gr\u00e1fico, e medicar voc\u00ea se necess\u00e1rio."}
                   </p>
-                  <p className="text-xs text-gray-700 leading-relaxed mb-2 font-bold">
+                  <p className="text-xs text-white leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica)
                       ? "Marque a caixinha abaixo e n\u00f3s vamos instalar um \u00cdCONE na sua tela inicial. Ele vai conter o seu LOGIN, e quando voc\u00ea tocar nele o sistema j\u00e1 abre direto. Vamos prosseguir."
                       : "Marque a caixinha abaixo e n\u00f3s vamos instalar uma fadinha na sua tela inicial. Ela j\u00e1 vai conter o seu LOGIN e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto para voc\u00ea entrar os exames \u2014 \u00e9 muito simples. Vamos prosseguir."}
                   </p>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={fadaMarcada} onChange={aoMarcarFada} className="w-5 h-5 accent-red-700" />
-                    <span className="text-sm font-bold" style={{ color: (inputs.bariatrica || profile?.bariatrica) ? '#9D174D' : '#1d4ed8' }}>{"Ok. Instale a fadinha."}</span>
+                    <span className="text-sm font-bold" style={{ color: '#facc15' }}>{(inputs.bariatrica || profile?.bariatrica) ? "OK. Instale o ÍCONE." : "Ok. Instale a fadinha."}</span>
                   </label>
                   {fadaInstrIOS && (
-                    <p className="text-xs mt-2 leading-snug" style={{ color: (inputs.bariatrica || profile?.bariatrica) ? '#9D174D' : '#1d4ed8' }}>
+                    <p className="text-xs mt-2 leading-snug" style={{ color: '#fde68a' }}>
                       {"No iPhone: toque em "}<strong>{"Compartilhar"}</strong>{" (\u2191) e depois em "}<strong>{"\"Adicionar \u00e0 Tela de In\u00edcio\""}</strong>{"."}
                     </p>
                   )}
