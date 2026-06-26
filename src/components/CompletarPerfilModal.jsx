@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 import elaDigita from '../assets/ELA_DIGITA.jpg'
 import eleDigita from '../assets/ELE_DIGITA.jpg'
+import bariMale from '../assets/barimale.jpg'
+import bariFem from '../assets/barifem.jpg'
 import PlayButton from './PlayButton'
 
 /**
@@ -72,7 +74,9 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   // Imagem dinâmica por sexo: homem → "ELE DIGITA"; mulher (ou desconhecido,
   // padrão) → "ELA DIGITA".
   const isMasc = /^m/i.test(String(profile?.sexo || '').trim())
-  const fotoDigita = isMasc ? eleDigita : elaDigita
+  const ehBari = !!profile?.bariatrica
+  // Bariátrico usa as imagens do OBA (barimale/barifem); senão, ELE/ELA DIGITA.
+  const fotoDigita = ehBari ? (isMasc ? bariMale : bariFem) : (isMasc ? eleDigita : elaDigita)
 
   const celDigits = (celular || '').replace(/\D/g, '')
   const dddOk = celDigits.length >= 2 && DDDS_VALIDOS.has(celDigits.slice(0, 2))
@@ -142,6 +146,8 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
       campoAtivo === campo ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white'
     }`
   const labelCls = "block text-xs font-semibold text-gray-600 mb-1"
+  // (bariátrico) imagem de fundo escura → rótulos de Celular/E-mail em branco com sombra.
+  const estiloBranco = ehBari ? { color: '#ffffff', textShadow: '0 1px 3px rgba(0,0,0,.55)' } : undefined
 
   return (
     <div className="fixed inset-0 bg-black/95 flex items-start justify-center p-4 z-50 overflow-y-auto">
@@ -164,6 +170,8 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
           <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
             <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{" | "}</span>
+            <span style={{ color: '#000000' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
           </h2>
         </div>
         {/* Título vinho: zIndex 10 p/ aparecer desde o início, junto do header */}
@@ -184,7 +192,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
             </div>
 
             <div>
-              <label className={labelCls}>{"Celular (WhatsApp)"}</label>
+              <label className={labelCls} style={estiloBranco}>{"Celular (WhatsApp)"}</label>
               <input
                 ref={celRef} type="text" value={celular}
                 onChange={e => onCelChange(e.target.value)}
@@ -193,11 +201,11 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
                 placeholder="(00) 00000-0000"
               />
               {dddInvalido && <p className="text-xs mt-1" style={{ color: '#F97316' }}>{"DDD inválido — verifique o código da sua região."}</p>}
-              <p className="text-xs text-gray-900 mt-1">{"Necessário para receber documentos médicos."}</p>
+              <p className="text-xs text-gray-900 mt-1" style={estiloBranco}>{"Necessário para receber documentos médicos."}</p>
             </div>
 
             <div>
-              <label className={labelCls}>{"E-mail"}</label>
+              <label className={labelCls} style={estiloBranco}>{"E-mail"}</label>
               <input
                 ref={emailRef} type="email" value={email}
                 onChange={e => onEmailChange(e.target.value)}
