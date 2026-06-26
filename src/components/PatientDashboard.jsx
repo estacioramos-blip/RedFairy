@@ -1224,7 +1224,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   </label>
                   {fadaInstrIOS && (
                     <p className="text-xs mt-2 leading-snug" style={{ color: '#fde68a' }}>
-                      {"No iPhone: toque em "}<strong>{"Compartilhar"}</strong>{" (\u2191) e depois em "}<strong>{"\"Adicionar \u00e0 Tela de In\u00edcio\""}</strong>{"."}
+                      {"No iPhone: toque em "}<strong>{"Compartilhar"}</strong>{" (\u2191) e depois em "}<strong>{"\"Adicionar \u00e0 Tela de In\u00edcio\""}</strong>{". Atrav\u00e9s do \u00cdCONE voc\u00ea "}<strong>{"ENTRA"}</strong>{" sem LOGIN/SENHA, "}<strong>{"INDICA"}</strong>{" outros pacientes, ou "}<strong>{"V\u00ca SEUS CR\u00c9DITOS"}</strong>{"."}
                     </p>
                   )}
                 </div>
