@@ -43,6 +43,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   // (paciente vira indicador) indica outros bariatricos e ganha creditos.
   const [showIndica, setShowIndica] = useState(false)
   const [indicaView, setIndicaView] = useState('indicar')   // 'indicar' | 'creditos'
+  const [voltarParaGate, setVoltarParaGate] = useState(false)  // INDICAR/VER aberto pela bifurcação → ao fechar, volta pra ela
   const [saldoIndicadorBrl, setSaldoIndicadorBrl] = useState(0)
   // (icone do bariatrico) bifurcacao ao abrir pelo icone: Entrar x Indicar.
   const [showEscolhaEntrarIndicar, setShowEscolhaEntrarIndicar] = useState(false)
@@ -1679,8 +1680,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     {showEscolhaEntrarIndicar && profile && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative">
-          {/* X fechar — círculo vinho, X branco. Fecha o modal e o paciente fica LOGADO. */}
-          <button onClick={() => setShowEscolhaEntrarIndicar(false)} aria-label="Fechar"
+          {/* X fechar — círculo vinho, X branco. Fecha a bifurcação e SAI pra landing (desloga;
+              a credencial rf_reentry sobrevive, então o ícone reentra depois). */}
+          <button onClick={() => { setShowEscolhaEntrarIndicar(false); if (onVoltar) onVoltar() }} aria-label="Fechar"
             style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '12px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
             {"✕"}
           </button>
@@ -1700,7 +1702,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   <p className="text-lg font-extrabold text-red-800 leading-tight">{"INDICAR"}</p>
                   <p className="text-xs text-gray-500">{"Indicar paciente"}</p>
                 </div>
-                <PlayButton onClick={() => { setShowEscolhaEntrarIndicar(false); setIndicaView('indicar'); setShowIndica(true) }}
+                <PlayButton onClick={() => { setIndicaView('indicar'); setVoltarParaGate(true); setShowEscolhaEntrarIndicar(false); setShowIndica(true) }}
                   ariaLabel="Indicar" circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
               </div>
               <div className="flex items-center justify-between gap-3 py-3">
@@ -1708,7 +1710,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   <p className="text-base font-extrabold text-red-800 leading-tight">{"VER MEUS CRÉDITOS"}</p>
                   <p className="text-xs text-gray-500">{"Cadastrados, recebidos e a receber"}</p>
                 </div>
-                <PlayButton onClick={() => { setShowEscolhaEntrarIndicar(false); setIndicaView('creditos'); setShowIndica(true) }}
+                <PlayButton onClick={() => { setIndicaView('creditos'); setVoltarParaGate(true); setShowEscolhaEntrarIndicar(false); setShowIndica(true) }}
                   ariaLabel="Ver meus créditos" circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
               </div>
             </div>
@@ -1718,7 +1720,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     )}
 
     {showIndica && profile && (
-      <PacienteIndicaModal cpf={profile.cpf} celular={profile.celular} view={indicaView} onFechar={() => setShowIndica(false)} />
+      <PacienteIndicaModal cpf={profile.cpf} celular={profile.celular} view={indicaView}
+        onFechar={() => { setShowIndica(false); if (voltarParaGate) { setVoltarParaGate(false); setShowEscolhaEntrarIndicar(true) } }} />
     )}
 
     {showPagamento && profile && (
