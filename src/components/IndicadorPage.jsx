@@ -208,7 +208,7 @@ export default function IndicadorPage({ onVoltar }) {
 
   const Cabecalho = (
     <div className="mb-5 text-center">
-      <img src={obaLogo} alt="Projeto OBA®" style={{ height: 160, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+      <img src={obaLogo} alt="Projeto OBA®" style={{ height: 128, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
       <p className="text-gray-500 text-sm" style={{ marginTop: 4 }}>Modo Indicador</p>
     </div>
   )

@@ -435,7 +435,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
         {/* (limpo) Fundo e splash da telefonista removidos — card de acesso limpo (padrão OBA). */}
         {/* Header OBA: logo OBA (sem faixa) + subt\u00edtulo do modo. */}
         <div style={{ position: 'relative', zIndex: 10, background: '#fff', padding: '16px 14px 10px', textAlign: 'center' }}>
-          <img src={obaLogo} alt="Projeto OBA\u00ae" style={{ height: 150, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+          <img src={obaLogo} alt="Projeto OBA\u00ae" style={{ height: 128, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
           <p className="text-gray-500 text-sm" style={{ margin: '4px 0 0' }}>
             {modo === 'login' ? "Acesso M\u00e9dico" : "Primeiro Acesso M\u00e9dico"}
           </p>
@@ -1631,7 +1631,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
               <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
               <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#000000', margin: '0 6px' }}>|</span><span style={{ color: '#9ca3af' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
+                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', margin: '0 6px', fontWeight: 700 }}>|</span><span style={{ color: '#374151' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
               </h2>
             </div>
             {/* Subtitulo vinho do programa: zIndex 10 p/ aparecer desde o inicio, junto do header */}
@@ -2465,7 +2465,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
               <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#000000', margin: '0 6px' }}>|</span><span style={{ color: '#9ca3af' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
+                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', margin: '0 6px', fontWeight: 700 }}>|</span><span style={{ color: '#374151' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
               </h2>
             </div>
             {/* HERO: imagem nitida no topo (bloco proprio, sem sobreposicao com o texto).

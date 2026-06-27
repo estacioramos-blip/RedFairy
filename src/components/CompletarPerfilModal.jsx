@@ -170,8 +170,8 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
           <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
             <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
-            <span style={{ color: '#9ca3af', fontWeight: 400 }}>{" | "}</span>
-            <span style={{ color: '#000000' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
+            <span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span>
+            <span style={{ color: '#374151' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
           </h2>
         </div>
         {/* Título vinho: zIndex 10 p/ aparecer desde o início, junto do header */}

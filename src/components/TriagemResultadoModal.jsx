@@ -307,7 +307,7 @@ export default function TriagemResultadoModal({
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: 'rgba(255,255,255,0.92)' }}>
             <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
-              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#000000', margin: '0 6px' }}>|</span><span style={{ color: '#9ca3af' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
+              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', margin: '0 6px', fontWeight: 700 }}>|</span><span style={{ color: '#374151' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
             </h2>
             <span className="ml-auto text-xs uppercase tracking-widest text-gray-500">Limite gratuito</span>
           </div>
@@ -378,7 +378,7 @@ export default function TriagemResultadoModal({
 
           <div className="p-6 space-y-4">
             <div className="text-center">
-              <img src={obaLogo} alt="Projeto OBA" className="h-36 object-contain mx-auto mb-3" />
+              <img src={obaLogo} alt="Projeto OBA" className="h-32 object-contain mx-auto mb-3" />
               {modoMedico && inputs?.bariatrica ? (
                 <p className="text-gray-800 leading-relaxed">
                   {"Doutor, voc\u00ea vai fazer uma avalia\u00e7\u00e3o b\u00e1sica, do eritron apenas, mas o paciente bari\u00e1trico exige uma investiga\u00e7\u00e3o mais complexa, inclusive uma "}<strong>{"ANAMNESE ESPEC\u00cdFICA"}</strong>{", como voc\u00ea ver\u00e1 no resumo. Assim sendo, encaminhe o paciente para que se cadastre: n\u00f3s cuidaremos de tudo e retornaremos a voc\u00ea com o resultado dessa avalia\u00e7\u00e3o."}

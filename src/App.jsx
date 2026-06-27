@@ -7,6 +7,7 @@ import AdminPage from './components/AdminPage'
 import logo from './assets/logo.png'
 import LandingPage from './components/LandingPage'
 import TriagemDireta from './components/TriagemDireta'
+import PlayButton from './components/PlayButton'
 import IndicadorPage from './components/IndicadorPage'
 import OBAEntradaPaciente from './components/OBAEntradaPaciente'
 import { ehDominioBariatrico } from './lib/dominio'
@@ -649,7 +650,7 @@ if (modo === 'home') {
   const InatividadeModal = showInatividade ? (
     <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div style={{ background: '#fff', borderRadius: '16px', maxWidth: '360px', width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-        <div style={{ background: '#b91c1c', padding: '16px 20px' }}>
+        <div style={{ background: '#374151', padding: '16px 20px' }}>
           <h3 style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', margin: 0 }}>{"Voc\u00ea ainda est\u00e1 a\u00ed?"}</h3>
         </div>
         <div style={{ padding: '20px', textAlign: 'center' }}>
@@ -659,11 +660,9 @@ if (modo === 'home') {
           <p style={{ color: '#9ca3af', fontSize: '0.75rem', margin: '0 0 16px' }}>
             {"Voc\u00ea ser\u00e1 desconectado em 30s."}
           </p>
-          <button
-            onClick={() => setShowInatividade(false)}
-            style={{ width: '100%', background: '#b91c1c', color: '#fff', fontWeight: 800, border: 'none', borderRadius: '10px', padding: '12px', fontSize: '0.9rem', cursor: 'pointer' }}>
-            Continuar
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <PlayButton onClick={() => setShowInatividade(false)} label={"CONTINUAR"} labelColor="#374151" />
+          </div>
         </div>
       </div>
     </div>
