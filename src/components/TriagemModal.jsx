@@ -85,7 +85,10 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   const [historicoData, setHistoricoData] = useState(null);
   const [erros, setErros] = useState({})
 
-  const mostrarCPF = modoMedico || isDemoPaciente
+  // Paciente com CPF já conhecido/bloqueado (entrou logado): NÃO mostra o campo CPF (nem a
+  // linha de identidade) — o CPF aparece pequeno e preto sob o título. Reduz a altura do
+  // modal p/ caber com o teclado erguido no mobile. O médico (e o demo sem login) ainda digita.
+  const mostrarCPF = modoMedico || (isDemoPaciente && !cpfBloqueado)
   // Flags derivadas: paciente conhecido REALMENTE tem sexo / data_nascimento.
   // (pode existir profile mas com esses campos NULL - entao precisamos pedir)
   const pacConhSexoOk = !!(pacienteConhecido && pacienteConhecido !== 'BLOQUEADO' && pacienteConhecido.sexo);
@@ -799,6 +802,10 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
         <div className="bg-white px-6 pt-5 pb-2 text-center">
           <p className="text-xs uppercase tracking-widest text-gray-500">{"\ud83e\ude7a Começamos por aqui"}</p>
           <h3 className="text-base font-semibold text-gray-800 mt-1 leading-tight">{fraseAbertura}</h3>
+          {/* CPF já conhecido (entrou logado): pequeno e preto sob o título, no lugar do campo. */}
+          {cpfBloqueado && inputs.cpf && (
+            <p className="text-xs font-bold text-black mt-1">{formatarCPF(inputs.cpf)}</p>
+          )}
           {/* (g) frase "Com apenas tres parametros..." removida (aparecia em 3 lugares). */}
         </div>
 
