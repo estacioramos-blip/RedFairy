@@ -17,6 +17,13 @@ import heroImg from '../assets/redfairy-hero.jpg'
 import comeonImg from '../assets/comeon.jpg'
 import logo from '../assets/logo.png'
 
+// Formata CPF (xxx.xxx.xxx-xx) — mesmo estilo do PacienteIndicaModal.
+function fmtCPF(v) {
+  const d = String(v || '').replace(/\D/g, '').slice(0, 11)
+  if (d.length !== 11) return String(v || '')
+  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
+}
+
 // Classes Tailwind por cor dos cards de checkbox (paridade com o CheckboxCard do
 // formulário do médico). Mantido fora do componente p/ não recriar a cada render.
 const CORES_CARD = {
@@ -1700,7 +1707,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             {"✕"}
           </button>
           <div className="p-5 pt-7">
-            <img src={obaLogo} alt="Projeto OBA" className="h-24 object-contain mx-auto mb-4" />
+            <img src={obaLogo} alt="Projeto OBA" className="h-24 object-contain mx-auto mb-1" />
+            {(profile.nome || profile.cpf) && (
+              <p className="text-center text-[11px] text-gray-400 mb-4">{[profile.nome, fmtCPF(profile.cpf)].filter(Boolean).join('  ·  ')}</p>
+            )}
             <div className="divide-y divide-gray-100">
               <div className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
