@@ -40,7 +40,7 @@ export default function App() {
         // "Sempre deslogar na landing": ao voltar (F5) ao site externo, limpa a sessão.
         try {
           ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
-           'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
+           'paciente_id','paciente_nome','paciente_login_at',  /* mantém paciente_cpf + paciente_token: reentrada passwordless do ÍCONE */
            'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
            'rf_abrir_nova','rf_ref_encaminhador','oba_aberto'].forEach(k => localStorage.removeItem(k))
         } catch (e) {}
@@ -180,6 +180,27 @@ export default function App() {
       let temPaciente = false
       try { temPaciente = !!localStorage.getItem('paciente_id') } catch (e) {}
       if (temPaciente) setModo('paciente')
+      else {
+        // Reentrada passwordless pelo ÍCONE: sem sessão ativa (deslogou na landing), mas com
+        // o token guardado → reloga e entra no fluxo do paciente, em vez de cair na landing.
+        let rCpf = '', rTok = ''
+        try { rCpf = localStorage.getItem('paciente_cpf') || ''; rTok = localStorage.getItem('paciente_token') || '' } catch (e) {}
+        if (rCpf && rTok) {
+          ;(async () => {
+            try {
+              const { data } = await supabase.rpc('login_paciente_token', { p_cpf: rCpf, p_token: rTok })
+              if (data && data.ok && data.id) {
+                try {
+                  localStorage.setItem('paciente_id', data.id)
+                  localStorage.setItem('paciente_nome', data.nome || '')
+                  localStorage.setItem('paciente_login_at', Date.now().toString())
+                } catch (e) {}
+                setModo('paciente')
+              }
+            } catch (e) {}
+          })()
+        }
+      }
     }
     // (bariatrico.net) MODO BARIÁTRICO: o domínio bariátrico liga o flag p/ o paciente
     // já entrar bariátrico (→ OBA). Em dev, ?bari=1/0 liga/desliga (persiste).
