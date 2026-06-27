@@ -374,6 +374,10 @@ export default function App() {
     setSaindo(true)   // tela preta cobre os flashes (OBA/calculator) durante a saída
     limparTodasSessoes()   // "sempre deslogar na landing": VOLTAR sempre desloga
     if (voltarExterno) { setTimeout(() => { window.location.href = voltarExterno }, 40); return }
+    // (bariátrico) sem URL externa (ex.: saída pelo ÍCONE) → bariatrico.net, NUNCA a landing
+    // do RedFairy. A tela preta (saindo) cobre o flash até a navegação.
+    let domBari = false; try { domBari = localStorage.getItem('rf_dom_bari') === '1' } catch (e) {}
+    if (domBari) { setTimeout(() => { window.location.href = 'https://bariatrico.net' }, 40); return }
     setModo('home')
     setTimeout(() => setSaindo(false), 80)
   }

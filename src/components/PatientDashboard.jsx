@@ -1694,7 +1694,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   <p className="text-lg font-extrabold text-red-800 leading-tight">{"ENTRAR"}</p>
                   <p className="text-xs text-gray-500">{"Nova avaliação clínica"}</p>
                 </div>
-                <PlayButton onClick={() => { setShowEscolhaEntrarIndicar(false); setResultado(null); setTela('nova') }}
+                <PlayButton onClick={() => {
+                    // ENTRAR (re-entrada de membro) = NOVA avaliação LIMPA. Reseta o estado da
+                    // entrada/triagem para não cair em "Continuando a sua primeira avaliação".
+                    setShowEscolhaEntrarIndicar(false); setResultado(null)
+                    setDadosVieramDaEntrada(false); setEntradaPendente(false)
+                    setInputs(prev => ({ ...prev, dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', b12_valor: '', folato_valor: '' }))
+                    setTela('nova')
+                  }}
                   ariaLabel="Entrar" circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
               </div>
               <div className="flex items-center justify-between gap-3 py-3">
