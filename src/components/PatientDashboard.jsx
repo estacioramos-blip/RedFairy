@@ -455,6 +455,18 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     } catch (e) { return false }  // silencioso — não atrapalha o dashboard
   }
 
+  // Logout COMPLETO (diferente do X, que mantém a reentrada): limpa também a credencial de
+  // reentrada (rf_reentry), pra outro paciente poder entrar no mesmo telefone — sobrescreve
+  // o ícone sem afetar nada no Supabase. Mantém rf_dom_bari (segue no contexto bariátrico).
+  function sairEDeslogar() {
+    try {
+      ['paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
+       'rf_reentry_cpf','rf_reentry_token','rf_abrir_nova','oba_aberto'].forEach(k => localStorage.removeItem(k))
+    } catch (e) {}
+    setShowEscolhaEntrarIndicar(false)
+    if (onVoltar) onVoltar()
+  }
+
   // Reune triagens + avaliacoes do paciente logado e abre o modal de grafico.
   // Espelha handleBuscarHistorico do TriagemModal, mas usa profile.cpf direto
   // (paciente nao precisa redigitar).
@@ -1745,6 +1757,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 <PlayButton onClick={() => { setIndicaView('creditos'); setVoltarParaGate(true); setShowEscolhaEntrarIndicar(false); setShowIndica(true) }}
                   ariaLabel="Ver meus créditos" circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
               </div>
+            </div>
+            <div className="mt-5 pt-3 border-t border-gray-100 text-center">
+              <button onClick={sairEDeslogar} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR E DESLOGAR"}</button>
+              <p className="text-[10px] text-gray-400 mt-2 leading-snug">{"Para entrar sem LOGIN/SENHA, use o ÍCONE instalado no celular."}</p>
             </div>
           </div>
         </div>
