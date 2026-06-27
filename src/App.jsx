@@ -150,6 +150,29 @@ export default function App() {
     if (refParam) {
       try { localStorage.setItem('rf_ref_encaminhador', decodeURIComponent(refParam).toUpperCase().trim()) } catch (e) {}
     }
+    // Reentra (passwordless) com a credencial guardada. Retorna true se logou.
+    async function reentrarPacienteToken(rCpf, rTok) {
+      try {
+        const { data } = await supabase.rpc('login_paciente_token', { p_cpf: rCpf, p_token: rTok })
+        if (data && data.ok && data.id) {
+          try {
+            const cpfL = String(rCpf).replace(/\D/g, '')
+            localStorage.setItem('paciente_id', data.id)
+            localStorage.setItem('paciente_cpf', cpfL)
+            localStorage.setItem('paciente_nome', data.nome || '')
+            localStorage.setItem('paciente_login_at', Date.now().toString())
+            if (data.token) {
+              localStorage.setItem('paciente_token', data.token)
+              localStorage.setItem('rf_reentry_token', data.token)
+              localStorage.setItem('rf_reentry_cpf', cpfL)
+            }
+          } catch (e) {}
+          return true
+        }
+      } catch (e) {}
+      return false
+    }
+
     // (PWA fase 4b) Atalho da fada no iPhone: o link carrega o token de sessão
     // (?p=TOKEN&c=CPF) porque o app standalone tem storage separado do Safari.
     // Loga por token (sem senha) e abre o "novo hemograma".
@@ -179,7 +202,7 @@ export default function App() {
     // direto pro "novo hemograma" (passwordless). A flag rf_abrir_nova é consumida
     // pelo PatientDashboard. Se não há sessão (1ª vez no iPhone), cai na landing
     // p/ logar 1×, e a flag faz abrir o "novo hemograma" logo após.
-    if (fadaLaunch && !(pToken && pCpf)) {
+    if (fadaLaunch && !(pToken && pCpf) && params.get('oba') !== '1') {
       try { localStorage.setItem('rf_abrir_nova', '1') } catch (e) {}
       let temPaciente = false
       try { temPaciente = !!localStorage.getItem('paciente_id') } catch (e) {}
@@ -192,28 +215,7 @@ export default function App() {
           rCpf = localStorage.getItem('rf_reentry_cpf') || localStorage.getItem('paciente_cpf') || ''
           rTok = localStorage.getItem('rf_reentry_token') || localStorage.getItem('paciente_token') || ''
         } catch (e) {}
-        if (rCpf && rTok) {
-          ;(async () => {
-            try {
-              const { data } = await supabase.rpc('login_paciente_token', { p_cpf: rCpf, p_token: rTok })
-              if (data && data.ok && data.id) {
-                try {
-                  localStorage.setItem('paciente_id', data.id)
-                  localStorage.setItem('paciente_nome', data.nome || '')
-                  localStorage.setItem('paciente_login_at', Date.now().toString())
-                  // Se o RPC ROTACIONA o token (one-time), o antigo fica inválido na próxima
-                  // reentrada → atualiza a credencial com o token novo devolvido.
-                  if (data.token) {
-                    localStorage.setItem('paciente_token', data.token)
-                    localStorage.setItem('rf_reentry_token', data.token)
-                    localStorage.setItem('rf_reentry_cpf', rCpf)
-                  }
-                } catch (e) {}
-                setModo('paciente')
-              }
-            } catch (e) {}
-          })()
-        }
+        if (rCpf && rTok) { ;(async () => { if (await reentrarPacienteToken(rCpf, rTok)) setModo('paciente') })() }
       }
     }
     // (bariatrico.net) MODO BARIÁTRICO: o domínio bariátrico liga o flag p/ o paciente
@@ -232,7 +234,30 @@ export default function App() {
       setVoltarExterno('https://bariatrico.net')
     }
     // (bariatrico.net) "Sou Bariátrico" → tela própria do paciente (NÃO a landing do redfairy).
-    if (params.get('oba') === '1') { setModo('oba-paciente'); setTimeout(() => setSaindo(false), 450) }
+    // ATALHO DO JÁ-CONHECIDO: se há sessão ativa OU credencial de reentrada (paciente que já
+    // se cadastrou / tem o ícone), pula o cadastro SOU BARIÁTRICO e vai DIRETO à bifurcação
+    // (ENTRAR/INDICAR/VER). Só o paciente NOVO vê a tela de cadastro (OBAEntradaPaciente).
+    if (params.get('oba') === '1') {
+      let temSessao = false, rCpf = '', rTok = ''
+      try {
+        temSessao = !!localStorage.getItem('paciente_id')
+        rCpf = localStorage.getItem('rf_reentry_cpf') || ''
+        rTok = localStorage.getItem('rf_reentry_token') || ''
+      } catch (e) {}
+      if (temSessao) {
+        try { localStorage.setItem('rf_abrir_nova', '1') } catch (e) {}
+        setModo('paciente'); setTimeout(() => setSaindo(false), 250)
+      } else if (rCpf && rTok) {
+        try { localStorage.setItem('rf_abrir_nova', '1') } catch (e) {}
+        ;(async () => {
+          const ok = await reentrarPacienteToken(rCpf, rTok)
+          if (ok) { setModo('paciente'); setTimeout(() => setSaindo(false), 250) }
+          else { setModo('oba-paciente'); setTimeout(() => setSaindo(false), 450) }
+        })()
+      } else {
+        setModo('oba-paciente'); setTimeout(() => setSaindo(false), 450)
+      }
+    }
 
     // (bariatrico.net) ?contato=1 — abre o modal CONTATO na landing do redfairy. Guarda a
     // marca p/ a LandingPage consumir (a URL é higienizada logo abaixo).
