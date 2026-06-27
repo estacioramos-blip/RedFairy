@@ -1719,10 +1719,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         onPago={() => {
           setShowPagamento(false)
           setTemAssinatura(true)
-          // Se ainda não viu as boas-vindas (cadastro do bariátrico) → boas-vindas.
-          // Se já viu (paywall da 2ª avaliação / assinatura opcional) → vai à avaliação.
-          if (profile?.boas_vindas_vista) setTela('nova')
-          else setShowBoasVindas(true)
+          // Cadastro novo (ainda não viu boas-vindas): boas-vindas (com instalar o ÍCONE) →
+          // CONTINUAR leva ao OBA (bariátrico) ou à 'nova' (não-bariátrico).
+          if (!profile?.boas_vindas_vista) { setShowBoasVindas(true); return }
+          // Já viu boas-vindas. BARIÁTRICO: a 1ª avaliação É o OBA (anamnese + exames) — vai
+          // DIRETO pro OBA, NUNCA a 'nova' (que duplica o que o OBA já coleta). A 'nova' fica
+          // só pra follow-up / 2ª avaliação em diante (e pro não-bariátrico).
+          const ehBari = !!(profile?.bariatrica || inputs.bariatrica || ehDominioBariatrico())
+          if (ehBari) { setResultado(null); setTela('historico'); verificarEAbrirOBA(profile) }
+          else setTela('nova')
         }}
         onSairSemPagar={() => {
           setShowPagamento(false)
