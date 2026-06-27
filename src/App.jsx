@@ -118,7 +118,10 @@ export default function App() {
          'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
          'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
          'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador',
-         'rf_reentry_cpf','rf_reentry_token'].forEach(k => localStorage.removeItem(k))
+         'rf_reentry_cpf','rf_reentry_token','oba_aberto'].forEach(k => localStorage.removeItem(k))
+        // Rascunhos do OBA (oba_progresso_<cpf>) — por CPF, só limpam ao CONCLUIR. No teste,
+        // o ?reset deve zerar TODOS, senão um CPF reusado "retoma" no relatório.
+        try { Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_') === 0).forEach(k => localStorage.removeItem(k)) } catch (e) {}
         sessionStorage.removeItem('rf_voltar_url')
       } catch (e) {}
       window.location.replace(window.location.pathname)

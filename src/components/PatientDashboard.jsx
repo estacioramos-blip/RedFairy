@@ -676,7 +676,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // Bariátrico → após enviar o hemograma, o OBA Modal abre (fluxo A do ENTRAR e do 1º
     // fluxo). Usa profile.bariatrica/domínio além do inputs, p/ a re-entrada pelo ÍCONE.
     if ((inputs.bariatrica || profile?.bariatrica || ehDominioBariatrico()) && res.encontrado) {
-      try { localStorage.setItem('oba_aberto', String(profile?.cpf || '').replace(/\D/g, '')) } catch (e) {}
+      const cpfL = String(profile?.cpf || '').replace(/\D/g, '')
+      // NOVA avaliação (hemograma fresco) → OBA do ZERO: descarta rascunho antigo, senão um
+      // ciclo anterior abandonado (etapa 'relatorio') "retoma" no final em vez da anamnese.
+      try { localStorage.removeItem('oba_progresso_' + cpfL) } catch (e) {}
+      try { localStorage.setItem('oba_aberto', cpfL) } catch (e) {}
       setShowOBAModal(true)
     }
   }
