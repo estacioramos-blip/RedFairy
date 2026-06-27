@@ -245,6 +245,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // hero "Sou Bariátrico"). Bariátrico paga na 1ª; não-bariátrico tem a 1ª grátis.
     const flagBariatricaOBA = (() => { try { return localStorage.getItem('rf_flag') === 'bariatrica' } catch (e) { return false } })()
     const ehBariatrico = !!prof.bariatrica || flagBariatricaOBA || ehDominioBariatrico()
+    // Sessão bariátrica → marca rf_dom_bari (persistente) p/ a saída/F5 (inclusive pelo
+    // ÍCONE em redfairy.bio) ir pro bariatrico.net, nunca a landing do RedFairy.
+    if (ehBariatrico) { try { localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }
     // Assinatura ativa? Governa o alerta de anuidade E o paywall da 2ª avaliação.
     let temAssinAtiva = false
     try {

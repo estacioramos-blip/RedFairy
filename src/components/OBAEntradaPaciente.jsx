@@ -49,7 +49,9 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   const [showTC, setShowTC] = useState(false)   // modal de Termos e Condições
 
   // Flag bariátrico desde a entrada (o algoritmo/OBA trata o paciente como bariátrico).
-  useEffect(() => { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {} }, [])
+  // rf_dom_bari persistente: saída/F5 (inclusive pelo ÍCONE em redfairy.bio) → bariatrico.net,
+  // nunca a landing do RedFairy. Só o ?reset limpa.
+  useEffect(() => { try { localStorage.setItem('rf_flag', 'bariatrica'); localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }, [])
 
   const cpfDigits = soDigitos(cpf)
   const cpfOk = cpfDigits.length === 11 && validarCPF(cpfDigits)   // só avança com CPF válido
