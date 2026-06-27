@@ -16,6 +16,19 @@ const inputClass = "w-full border-2 rounded-lg px-3 py-2.5 text-sm text-center f
 const inpStyle = { borderColor: '#facc15', background: '#fefce8', color: '#1e3a8a' }
 
 function soDigitos(s) { return String(s || '').replace(/\D/g, '') }
+// Valida o CPF pelo dígito verificador (não só o tamanho) — detecta CPF inválido cedo.
+function validarCPF(cpf) {
+  const c = soDigitos(cpf)
+  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false
+  let s = 0
+  for (let i = 0; i < 9; i++) s += parseInt(c[i], 10) * (10 - i)
+  let d1 = 11 - (s % 11); if (d1 >= 10) d1 = 0
+  if (d1 !== parseInt(c[9], 10)) return false
+  s = 0
+  for (let i = 0; i < 10; i++) s += parseInt(c[i], 10) * (11 - i)
+  let d2 = 11 - (s % 11); if (d2 >= 10) d2 = 0
+  return d2 === parseInt(c[10], 10)
+}
 function formatarCPF(v) {
   const d = soDigitos(v).slice(0, 11)
   if (d.length <= 3) return d
@@ -39,7 +52,8 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   useEffect(() => { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {} }, [])
 
   const cpfDigits = soDigitos(cpf)
-  const cpfOk = cpfDigits.length === 11
+  const cpfOk = cpfDigits.length === 11 && validarCPF(cpfDigits)   // só avança com CPF válido
+  const cpfInvalido = cpfDigits.length === 11 && !validarCPF(cpfDigits)
   const senhaOk = senha.length >= 6
   const podeConcluir = cpfOk && senhaOk && (modo !== 'cadastro' || aceitoTC)
 
@@ -124,6 +138,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
               placeholder="000.000.000-00" />
             <p className="text-center text-[11px] font-bold text-gray-400 tracking-widest mt-2">LOGIN DO PACIENTE</p>
             {erro && <p className="text-center text-red-600 text-xs font-bold mt-2">{erro}</p>}
+            {cpfInvalido && !erro && <p className="text-center text-red-600 text-xs font-bold mt-2">CPF inválido</p>}
             {cpfOk && (
               <div className="flex justify-end mt-3">
                 <PlayButton onClick={avancarCpf} loading={busy} ariaLabel="Continuar"
