@@ -31,7 +31,12 @@ export default function App() {
       try { standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
       let voltarUrl = null
       try { voltarUrl = sessionStorage.getItem('rf_voltar_url') } catch (e) {}
-      if (!temParamTela && voltarUrl && !standalone) {
+      // (d) o BARIÁTRICO nunca deve cair na landing do redfairy: se for domínio bariátrico
+      // (rf_dom_bari), o F5 em qualquer modal volta pro bariatrico.net — mesmo sem rf_voltar_url.
+      let domBari = false
+      try { domBari = localStorage.getItem('rf_dom_bari') === '1' } catch (e) {}
+      const destinoBounce = voltarUrl || (domBari ? 'https://bariatrico.net' : null)
+      if (!temParamTela && destinoBounce && !standalone) {
         // "Sempre deslogar na landing": ao voltar (F5) ao site externo, limpa a sessão.
         try {
           ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
@@ -39,7 +44,7 @@ export default function App() {
            'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
            'rf_abrir_nova','rf_ref_encaminhador','oba_aberto'].forEach(k => localStorage.removeItem(k))
         } catch (e) {}
-        window.location.replace(voltarUrl)
+        window.location.replace(destinoBounce)
         return 'home'
       }
       if (params.get('oba') === '1') return 'oba-paciente'
