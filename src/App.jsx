@@ -26,7 +26,8 @@ export default function App() {
       // (standalone, start_url=?fada=1, sem rf_voltar_url); (c) em redfairy.bio digitado
       // direto numa aba nova (sem rf_voltar_url) → esse abre a landing própria.
       const temParamTela = params.get('oba') || params.get('modo') || params.get('from') ||
-                           params.get('fada') || params.get('p') || params.get('ref') || params.get('bari')
+                           params.get('fada') || params.get('p') || params.get('ref') || params.get('bari') ||
+                           params.get('reset')   // ?reset=1 NÃO pode dar bounce: precisa rodar o handler que limpa o localStorage
       let standalone = false
       try { standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
       let voltarUrl = null
