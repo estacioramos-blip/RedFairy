@@ -121,7 +121,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   )
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 relative">
+    <div className="min-h-screen bg-gray-900 flex items-start sm:items-center justify-center p-4 sm:p-6 pt-6 relative">
       {VoltarBtn}
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         {Cabecalho}

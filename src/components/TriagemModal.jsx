@@ -736,9 +736,9 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       }
       .rf-play-ready { background-color: #d1d5db; animation: rfPlayBlink 1s ease-in-out infinite; }
     `}</style>
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4"
       style={{ background: 'rgba(0,0,0,0.95)' }}>
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[95vh] overflow-y-auto shadow-2xl relative">
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[97vh] sm:max-h-[95vh] overflow-y-auto shadow-2xl relative">
         {/* Barra do topo no padr\u00e3o da landing: fundo branco, logo-fada \u00e0 esquerda + "RedFairy" em serif (dois tons),
             X de fechar na extremidade direita centralizado verticalmente. Substitui a Fada grande + nome que ocupavam muito espa\u00e7o vertical. */}
         <div style={{ background: '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
