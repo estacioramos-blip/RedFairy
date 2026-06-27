@@ -527,7 +527,14 @@ export default function TriagemResultadoModal({
 
           {/* Bloco azul - recomendacao */}
           <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
-            {isNormal ? (
+            {inputs?.bariatrica ? (
+              <div>
+                <p className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-2">{"SOBRE A HEMOGLOBINA"}</p>
+                <p className="text-sm text-blue-900 leading-snug">
+                  {"O impacto mais importante da cirurgia bariátrica é sobre a produção da Hemoglobina e da multiplicação celular — e aqui começamos a entender a sua vida. Mas o Projeto OBA® tem por objetivo otimizar você, e para isso precisamos saber muito mais. As informações que você vai fornecer nesta primeira visita são fundamentais; mas, se você não tem os seus exames mais recentes, pode trazê-los depois. De qualquer forma, o algoritmo vai recomendar as condutas e os exames necessários a tornar a sua vida o melhor possível."}
+                </p>
+              </div>
+            ) : isNormal ? (
               modoMedico ? (
                 <div className="space-y-2">
                   <p className="text-sm font-bold text-blue-900">

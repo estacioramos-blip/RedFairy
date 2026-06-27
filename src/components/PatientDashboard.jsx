@@ -1236,7 +1236,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {tela === 'historico' && (
           <div className="space-y-3">
             {showBoasVindas && profile && (
-              <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm mb-4 overflow-hidden min-h-[480px] sm:min-h-0 sm:max-w-sm sm:mx-auto" style={{ position: 'relative' }}>
+              <div className="bg-white rounded-2xl border-2 border-yellow-400 shadow-sm mb-4 overflow-hidden min-h-[480px] sm:min-h-0 sm:max-w-sm sm:mx-auto" style={{ position: 'relative' }}>
                 {/* Imagem de boas-vindas (telefonista3, horizontal). A ALTURA é o zoom:
                     menor = menos zoom = corta MENOS as laterais (mas mostra menos altura).
                     Ajuste o h-[...] pra afinar. object-top mantém o topo. */}

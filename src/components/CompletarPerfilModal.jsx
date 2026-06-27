@@ -151,16 +151,16 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
 
   return (
     <div className="fixed inset-0 bg-black/95 flex items-start justify-center p-2 sm:p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden my-8" style={{ minHeight: 'min(700px, 92vh)', maxHeight: '92vh', display: 'flex', flexDirection: 'column', position: 'relative' }}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden my-4" style={{ maxHeight: '94vh', display: 'flex', flexDirection: 'column', position: 'relative' }}
         onMouseEnter={() => setBgPerfilRevelado(true)} onMouseLeave={() => setBgPerfilRevelado(false)} onTouchStart={() => setBgPerfilRevelado(true)}>
 
         {/* Imagem de fundo: faixa de largura cheia, esmaecida; revela no hover (atrás dos inputs).
             top 52% (um pouco mais alta) e altura 430px (corta menos a base da imagem). */}
-        <div aria-hidden="true" style={{ position: 'absolute', top: '52%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)', backgroundImage: `url(${fotoDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgPerfilRevelado ? (ehBari ? 'blur(2px)' : 'blur(0px)') : (ehBari ? 'blur(8px)' : 'blur(10px)'), opacity: bgPerfilRevelado ? (ehBari ? 0.42 : 0.5) : (ehBari ? 0.28 : 0.12), transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
+        <div aria-hidden="true" style={{ position: 'absolute', top: '44%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)', backgroundImage: `url(${fotoDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat', filter: bgPerfilRevelado ? (ehBari ? 'blur(2px)' : 'blur(0px)') : (ehBari ? 'blur(8px)' : 'blur(10px)'), opacity: bgPerfilRevelado ? (ehBari ? 0.42 : 0.5) : (ehBari ? 0.28 : 0.12), transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none' }} />
 
         {/* SPLASH de entrada: imagem nítida (largura cheia, centrada) por 1,2s, antes dos campos */}
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashPerfil ? 1 : 0, pointerEvents: splashPerfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
-          <div style={{ position: 'absolute', top: '52%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)' }}>
+          <div style={{ position: 'absolute', top: '44%', left: 0, right: 0, height: '430px', transform: 'translateY(-50%)' }}>
             <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${fotoDigita})`, backgroundSize: '100% auto', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat' }} />
           </div>
         </div>
