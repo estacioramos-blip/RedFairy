@@ -1133,6 +1133,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   const [showSobre, setShowSobre] = useState(false)
   const [showAfiliados, setShowAfiliados] = useState(false)
   const [showContato, setShowContato] = useState(false)
+  const [contatoPB, setContatoPB] = useState(false)   // contato em P&B quando vem do bariatrico.net
   const [bgContatoRevelado, setBgContatoRevelado] = useState(false)
   const [contatoEntrada, setContatoEntrada] = useState(false)
   const [showIndMais, setShowIndMais] = useState(false)
@@ -1186,6 +1187,18 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       window.removeEventListener('scroll', handleScroll)
       obs.disconnect()
     }
+  }, [])
+
+  // (bariatrico.net) ?contato=1 chegou pela landing → abre o modal CONTATO; a marca foi
+  // gravada pelo App (rf_abrir_contato). Vindo do bariátrico, a imagem fica em P&B.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('rf_abrir_contato') === '1') {
+        localStorage.removeItem('rf_abrir_contato')
+        setShowContato(true)
+        setContatoPB(true)
+      }
+    } catch (e) {}
   }, [])
 
   useEffect(() => {
@@ -1438,7 +1451,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
               position: 'absolute', inset: 0, backgroundColor: '#FDF7F7',
               backgroundImage: `url(${laiseImg})`, backgroundSize: 'cover', backgroundPosition: '40% center',
               backgroundRepeat: 'no-repeat',
-              filter: (contatoEntrada || bgContatoRevelado) ? 'blur(0px)' : 'blur(10px)',
+              filter: ((contatoEntrada || bgContatoRevelado) ? 'blur(0px)' : 'blur(10px)') + (contatoPB ? ' grayscale(1)' : ''),
               opacity: contatoEntrada ? 0.9 : (bgContatoRevelado ? 0.5 : 0.35),
               transition: 'filter 0.6s ease, opacity 0.6s ease', pointerEvents: 'none',
             }} />

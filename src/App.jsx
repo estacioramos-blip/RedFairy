@@ -192,6 +192,10 @@ export default function App() {
     // (bariatrico.net) "Sou Bariátrico" → tela própria do paciente (NÃO a landing do redfairy).
     if (params.get('oba') === '1') setModo('oba-paciente')
 
+    // (bariatrico.net) ?contato=1 — abre o modal CONTATO na landing do redfairy. Guarda a
+    // marca p/ a LandingPage consumir (a URL é higienizada logo abaixo).
+    if (params.get('contato') === '1') { try { localStorage.setItem('rf_abrir_contato', '1') } catch (e) {} }
+
     // Limpa os parametros da URL sem reload (inclui o token, p/ não ficar visível)
     if (modoParam || refParam || params.get('fada') || pToken || bariParam || params.get('from') || params.get('oba')) {
       window.history.replaceState({}, '', window.location.pathname)
