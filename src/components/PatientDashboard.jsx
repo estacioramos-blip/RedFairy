@@ -462,6 +462,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     try {
       ['paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
        'rf_reentry_cpf','rf_reentry_token','rf_abrir_nova','oba_aberto'].forEach(k => localStorage.removeItem(k))
+      // Rascunhos do OBA também (logout completo / trocar paciente) — senão um CPF reusado retoma.
+      Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_') === 0).forEach(k => localStorage.removeItem(k))
     } catch (e) {}
     setShowEscolhaEntrarIndicar(false)
     if (onVoltar) onVoltar()
