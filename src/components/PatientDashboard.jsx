@@ -136,7 +136,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     if (!profile) return
     try {
       if (localStorage.getItem('rf_abrir_nova') === '1') {
+        // rf_abrir_nova = "abriu pelo ÍCONE instalado" (re-entrada). Só vale para MEMBRO
+        // JÁ onboarded (boas-vindas vistas). No 1º cadastro (PWA standalone seta a flag no
+        // launch), NÃO mostra a bifurcação nem 'nova' — o fluxo de cadastro/boas-vindas/OBA
+        // conduz. Só consome a flag.
         localStorage.removeItem('rf_abrir_nova')
+        if (!profile.boas_vindas_vista) return
         // (icone do bariatrico) o bariatrico tambem pode ser INDICADOR: ao abrir pelo
         // icone, oferece a escolha Entrar (nova avaliacao) x Indicar paciente (QR+link).
         // Nao-bariatrico segue direto para a nova avaliacao (comportamento antigo).
