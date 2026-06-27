@@ -30,7 +30,7 @@
     <div style="position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,8,7,0.5) 0%, rgba(10,8,7,0.12) 32%, rgba(10,8,7,0.32) 62%, rgba(10,8,7,0.78) 100%);"></div>
   </div>
 
-  <div style="position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; padding: clamp(20px, 3.4vh, 30px) clamp(24px, 5vw, 60px) clamp(18px, 3vh, 26px);">
+  <div style="position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; padding: clamp(12px, 2.2vh, 20px) clamp(24px, 5vw, 60px) clamp(10px, 1.8vh, 18px);">
 
     <header style="display: flex; align-items: flex-start; justify-content: space-between; flex: none; opacity: {{ o }}; transition: {{ trHeader }};">
       <div data-contato="1" style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; cursor: pointer;">
@@ -46,17 +46,17 @@
     </header>
 
     <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 0;">
-      <h1 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(52px, 8.6vw, 112px); line-height: 0.9; letter-spacing: -0.015em; color: #FBF6EC; text-shadow: 0 4px 38px rgba(0,0,0,0.55); opacity: {{ o }}; transform: {{ tUp }}; transition: {{ trTitle }};">Projeto&nbsp;OBA<span style="font-family: 'Cormorant Garamond', serif; font-size: 0.32em; vertical-align: super; color: #E3AE37;">®</span></h1>
-      <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 16px; opacity: {{ o }}; transition: {{ trSub }};">
+      <h1 style="margin: 0; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(44px, 7.5vw, 92px); line-height: 0.92; letter-spacing: -0.015em; color: #FBF6EC; text-shadow: 0 4px 38px rgba(0,0,0,0.55); opacity: {{ o }}; transform: {{ tUp }}; transition: {{ trTitle }};">Projeto&nbsp;OBA<span style="font-family: 'Cormorant Garamond', serif; font-size: 0.32em; vertical-align: super; color: #E3AE37;">®</span></h1>
+      <div style="display: inline-flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px; opacity: {{ o }}; transition: {{ trSub }};">
         <span style="height: 2px; width: 50px; background: #E3AE37; transform-origin: center; transform: {{ lineX }}; transition: {{ trLine }};"></span>
         <span style="font-size: clamp(12px, 1.5vw, 15px); letter-spacing: 0.32em; text-transform: uppercase; font-weight: 600; color: #E3AE37; text-shadow: 0 2px 20px rgba(0,0,0,0.5);">Otimizar o Bariátrico</span>
       </div>
     </div>
 
     <div style="flex: none;">
-      <nav style="display: flex; gap: 16px; width: 100%; max-width: 1120px; margin: 0 auto; flex-wrap: wrap; justify-content: center;">
+      <nav style="display: flex; gap: 10px; width: 100%; max-width: 1120px; margin: 0 auto; flex-wrap: wrap; justify-content: center;">
 
-        <a href="#sou-bariatrico" onClick="{{ openBariatrico }}" style="flex: 1 1 240px; min-width: 0; text-decoration: none; color: #F7F1E7; border: 1px solid rgba(255,255,255,0.22); border-radius: 5px; padding: 20px 22px; display: flex; flex-direction: column; min-height: 118px; background: rgba(255,255,255,0.10); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); opacity: {{ o }}; transform: {{ tUp }}; transition: {{ trCard1 }};" style-hover="{{ cardHover }}">
+        <a href="#sou-bariatrico" onClick="{{ openBariatrico }}" style="flex: 1 1 240px; min-width: 0; text-decoration: none; color: #F7F1E7; border: 1px solid rgba(255,255,255,0.22); border-radius: 5px; padding: 16px 20px; display: flex; flex-direction: column; min-height: 100px; background: rgba(255,255,255,0.10); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); opacity: {{ o }}; transform: {{ tUp }}; transition: {{ trCard1 }};" style-hover="{{ cardHover }}">
           <div style="display: flex; flex-direction: column; gap: 7px;">
             <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.18em; color: #E3AE37;">01</span>
             <span style="font-size: clamp(14px, 1.35vw, 17px); font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.2; color: inherit;">Sou Bariátrico</span>
@@ -69,7 +69,7 @@
           </div>
         </a>
 
-        <a href="#sou-medico" onClick="{{ openMedico }}" style="flex: 1 1 240px; min-width: 0; text-decoration: none; color: #F7F1E7; border: 1px solid rgba(255,255,255,0.22); border-radius: 5px; padding: 20px 22px; display: flex; flex-direction: column; min-height: 118px; background: rgba(255,255,255,0.10); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); opacity: {{ o }}; transform: {{ tUp }}; transition: {{ trCard2 }};" style-hover="{{ cardHover }}">
+        <a href="#sou-medico" onClick="{{ openMedico }}" style="flex: 1 1 240px; min-width: 0; text-decoration: none; color: #F7F1E7; border: 1px solid rgba(255,255,255,0.22); border-radius: 5px; padding: 16px 20px; display: flex; flex-direction: column; min-height: 100px; background: rgba(255,255,255,0.10); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); opacity: {{ o }}; transform: {{ tUp }}; transition: {{ trCard2 }};" style-hover="{{ cardHover }}">
           <div style="display: flex; flex-direction: column; gap: 7px;">
             <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.18em; color: #E3AE37;">02</span>
             <span style="font-size: clamp(14px, 1.35vw, 17px); font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.2; color: inherit;">Sou Médico</span>
@@ -82,7 +82,7 @@
           </div>
         </a>
 
-        <a href="#conheco" onClick="{{ openConheco }}" style="flex: 1 1 240px; min-width: 0; text-decoration: none; color: #F7F1E7; border: 1px solid rgba(255,255,255,0.22); border-radius: 5px; padding: 20px 22px; display: flex; flex-direction: column; min-height: 118px; background: rgba(255,255,255,0.10); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); opacity: {{ o }}; transform: {{ tUp }}; transition: {{ trCard3 }};" style-hover="{{ cardHover }}">
+        <a href="#conheco" onClick="{{ openConheco }}" style="flex: 1 1 240px; min-width: 0; text-decoration: none; color: #F7F1E7; border: 1px solid rgba(255,255,255,0.22); border-radius: 5px; padding: 16px 20px; display: flex; flex-direction: column; min-height: 100px; background: rgba(255,255,255,0.10); backdrop-filter: blur(16px) saturate(1.2); -webkit-backdrop-filter: blur(16px) saturate(1.2); opacity: {{ o }}; transform: {{ tUp }}; transition: {{ trCard3 }};" style-hover="{{ cardHover }}">
           <div style="display: flex; flex-direction: column; gap: 7px;">
             <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.18em; color: #E3AE37;">03</span>
             <span style="font-size: clamp(14px, 1.35vw, 17px); font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.2; color: inherit;">Conheço um Bariátrico</span>
