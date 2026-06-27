@@ -673,7 +673,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     setPedidoExamesEnviado(false)
     setTela('resultado')
 
-    if (inputs.bariatrica && res.encontrado) {
+    // Bariátrico → após enviar o hemograma, o OBA Modal abre (fluxo A do ENTRAR e do 1º
+    // fluxo). Usa profile.bariatrica/domínio além do inputs, p/ a re-entrada pelo ÍCONE.
+    if ((inputs.bariatrica || profile?.bariatrica || ehDominioBariatrico()) && res.encontrado) {
       try { localStorage.setItem('oba_aberto', String(profile?.cpf || '').replace(/\D/g, '')) } catch (e) {}
       setShowOBAModal(true)
     }
