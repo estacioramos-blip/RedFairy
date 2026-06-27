@@ -33,7 +33,7 @@
   <div style="position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; padding: clamp(20px, 3.4vh, 30px) clamp(24px, 5vw, 60px) clamp(18px, 3vh, 26px);">
 
     <header style="display: flex; align-items: flex-start; justify-content: space-between; flex: none; opacity: {{ o }}; transition: {{ trHeader }};">
-      <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+      <div data-contato="1" style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; cursor: pointer;">
         <a href="#contato" id="rfContatoLink" style="font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(247,241,231,0.9); font-weight: 600; text-decoration: none; cursor: pointer;">Contato</a>
         <div style="font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; letter-spacing: 0.04em; color: #F7F1E7;">OBA<span style="font-size: 12px; vertical-align: super; color: #E3AE37;">®</span></div>
       </div>
@@ -445,7 +445,7 @@ class Component extends DCLogic {
       }, 2000);
     }
     document.addEventListener('click', function(e){
-      var a=e.target && e.target.closest && e.target.closest('#rfContatoLink');
+      var a=e.target && e.target.closest && e.target.closest('[data-contato]');
       if(a){ e.preventDefault(); abrir(); }
     }, true);
   })();
