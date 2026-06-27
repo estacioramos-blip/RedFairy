@@ -175,7 +175,10 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
   useEffect(() => {
     if (!modoMedico && !cpfBloqueado) return;
     const digits = String(inputs.cpf || '').replace(/\D/g, '');
-    if (digits.length === 11) {
+    // Só busca quando o CPF é VÁLIDO. Antes, qualquer 11 dígitos (inclusive CPF inválido)
+    // disparava a busca + re-renders a cada tecla, atrapalhando/roubando o foco do campo
+    // no mobile — dando a sensação de "campo travado/não-editável" ao corrigir o CPF.
+    if (digits.length === 11 && validarCPF(inputs.cpf)) {
       buscarCpfConhecido(digits);
     } else {
       setPacienteConhecido(null);
