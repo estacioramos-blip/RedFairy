@@ -74,7 +74,9 @@ export default function App() {
   // medico chega por ?modo=medico (ex.: "Sou Medico" do bariatrico.net), inicia ja
   // preta no 1o render para nao piscar a landing branca antes do card escuro montar.
   const [saindo, setSaindo] = useState(() => {
-    try { const m = new URLSearchParams(window.location.search).get('modo'); return m === 'medico' || m === 'indicador' } catch (e) { return false }
+    // (b) Tela preta cobre o flash do ICONE grande na entrada do bariatrico (?oba=1) e do
+    // card escuro do medico/indicador, antes de o conteudo montar.
+    try { const p = new URLSearchParams(window.location.search); const m = p.get('modo'); return m === 'medico' || m === 'indicador' || p.get('oba') === '1' } catch (e) { return false }
   })
   // (medico) toast "link de encaminhamento copiado" ao abrir pelo icone instalado (PWA).
   const [linkMedToast, setLinkMedToast] = useState(false)
@@ -195,7 +197,7 @@ export default function App() {
       setVoltarExterno('https://bariatrico.net')
     }
     // (bariatrico.net) "Sou Bariátrico" → tela própria do paciente (NÃO a landing do redfairy).
-    if (params.get('oba') === '1') setModo('oba-paciente')
+    if (params.get('oba') === '1') { setModo('oba-paciente'); setTimeout(() => setSaindo(false), 450) }
 
     // (bariatrico.net) ?contato=1 — abre o modal CONTATO na landing do redfairy. Guarda a
     // marca p/ a LandingPage consumir (a URL é higienizada logo abaixo).
@@ -437,7 +439,9 @@ export default function App() {
   }
 
   if (modo === 'oba-paciente') {
-    return <OBAEntradaPaciente onVoltar={irVoltar} onConcluir={() => setModo('triagem-direta')} />
+    // (b) cobre a transição (login → triagem) com a tela preta, evitando o flash do ícone
+    // grande do OBAEntradaPaciente antes do primeiro modal (TriagemModal) aparecer.
+    return <OBAEntradaPaciente onVoltar={irVoltar} onConcluir={() => { setSaindo(true); setModo('triagem-direta'); setTimeout(() => setSaindo(false), 550) }} />
   }
 
   if (modo === 'indicador') {

@@ -782,12 +782,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       // não mais aqui — por isso não existe mais a tela "Pronto!".
       // IMPORTANTE: abre o OBA (overlay) ANTES de fechar as boas-vindas — senão o
       // dashboard "Olá" vazio piscava entre o fim das boas-vindas e a abertura do OBA.
+      const ehBari = !!(profile?.bariatrica || inputs.bariatrica || ehDominioBariatrico())
       await verificarEAbrirOBA(profile)   // bariátrico sem anamnese → abre o OBA por cima
       setShowBoasVindas(false)
       // Tela limpa SEMPRE: nunca cair numa avaliação concluída/antiga (ex.: CPF reusado).
-      // O OBA (se precisou) já abriu por cima; o fundo fica no formulário em branco.
+      // BARIÁTRICO vai DIRETO pro OBA: o fundo fica no HISTÓRICO — NUNCA a 'nova' avaliação,
+      // que exige Ferritina/Sat e trava o paciente (essa página não serve pra ele).
+      // Não-bariátrico → formulário 'nova' (1ª avaliação grátis).
       setResultado(null)
-      setTela('nova')
+      setTela(ehBari ? 'historico' : 'nova')
     }
   }
 
