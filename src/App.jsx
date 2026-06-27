@@ -32,6 +32,13 @@ export default function App() {
       let voltarUrl = null
       try { voltarUrl = sessionStorage.getItem('rf_voltar_url') } catch (e) {}
       if (!temParamTela && voltarUrl && !standalone) {
+        // "Sempre deslogar na landing": ao voltar (F5) ao site externo, limpa a sessão.
+        try {
+          ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
+           'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
+           'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
+           'rf_abrir_nova','rf_ref_encaminhador','oba_aberto'].forEach(k => localStorage.removeItem(k))
+        } catch (e) {}
         window.location.replace(voltarUrl)
         return 'home'
       }
@@ -73,20 +80,28 @@ export default function App() {
     // Agora o "Voltar" externo vive só no sessionStorage; sem isto, o localStorage
     // legado continuaria sequestrando o botão até o usuário rodar ?bari=0.
     try { localStorage.removeItem('rf_voltar_url') } catch (e) {}
-    supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+
+    // Le parametro ?modo= da URL para deep link da landing page
+    const params = new URLSearchParams(window.location.search)
+    // (landing) Detecta ROTEAMENTO (deep link / PWA / token de sessão). SEM roteamento =
+    // landing genuína → desloga TODOS os papéis ("sempre deslogar na landing"). Com
+    // roteamento, busca a sessão do Supabase normalmente.
+    let ehStandalone = false
+    try { ehStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
+    const fadaLaunch = params.get('fada') === '1' || ehStandalone
+    const roteou = !!(params.get('modo') || params.get('oba') === '1' || (params.get('p') && params.get('c')) || fadaLaunch)
+    if (params.get('reset') !== '1' && !roteou) {
+      limparTodasSessoes()
+    } else {
+      supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
+    }
     // IMPORTANTE: o Supabase dispara onAuthStateChange ao voltar o foco da aba
-    // (TOKEN_REFRESHED/SIGNED_IN do MESMO usuário). Se chamarmos setSession com um
-    // objeto novo a cada vez, o App re-renderiza e o PatientDashboard perde o
-    // estado em memória — fechando o OBA Modal e caindo na tela "Olá". Por isso só
-    // atualizamos quando o usuário realmente muda (login/logout); renovação de
-    // token do mesmo usuário mantém a mesma referência e não re-renderiza.
+    // (TOKEN_REFRESHED do MESMO usuário). Só atualizamos quando o usuário realmente muda
+    // (login/logout); renovação de token mantém a mesma referência e não re-renderiza.
     supabase.auth.onAuthStateChange((_event, novaSession) => {
       setSession(prev => (prev?.user?.id === novaSession?.user?.id ? prev : novaSession))
     })
     setTimeout(() => setVisible(true), 100)
-
-    // Le parametro ?modo= da URL para deep link da landing page
-    const params = new URLSearchParams(window.location.search)
     // (teste) ?reset=1 zera a sessao de medico/paciente do NAVEGADOR (nao toca no banco).
     // Util no mobile, onde nao da' pra abrir o console p/ limpar o localStorage manualmente.
     // Ctrl-Shift-R NAO limpa o localStorage (so' o cache de arquivos), por isso este atalho.
@@ -153,9 +168,6 @@ export default function App() {
     // direto pro "novo hemograma" (passwordless). A flag rf_abrir_nova é consumida
     // pelo PatientDashboard. Se não há sessão (1ª vez no iPhone), cai na landing
     // p/ logar 1×, e a flag faz abrir o "novo hemograma" logo após.
-    let ehStandalone = false
-    try { ehStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
-    const fadaLaunch = params.get('fada') === '1' || ehStandalone
     if (fadaLaunch && !(pToken && pCpf)) {
       try { localStorage.setItem('rf_abrir_nova', '1') } catch (e) {}
       let temPaciente = false
@@ -209,6 +221,21 @@ export default function App() {
       localStorage.removeItem('paciente_cpf')
       localStorage.removeItem('paciente_nome')
       localStorage.removeItem('paciente_login_at')
+    } catch (e) {}
+    try { supabase.auth.signOut() } catch (e) {}
+    setSession(null)
+  }
+
+  // Desloga TODOS os papéis (paciente/médico/indicador). Usado ao chegar à LANDING:
+  // "sempre deslogar na landing" — a landing não mostra quem está logado, então cada
+  // visita começa limpa (evita sessão fantasma e o roteamento bizarro). Mantém os
+  // marcadores de domínio/bounce (rf_voltar_url, rf_dom_bari, rf_flag).
+  function limparTodasSessoes() {
+    try {
+      ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
+       'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
+       'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
+       'rf_abrir_nova','rf_ref_encaminhador','oba_aberto'].forEach(k => localStorage.removeItem(k))
     } catch (e) {}
     try { supabase.auth.signOut() } catch (e) {}
     setSession(null)
@@ -302,6 +329,7 @@ export default function App() {
   // site externo; senão, vai para a landing interna.
   function irVoltar() {
     setSaindo(true)   // tela preta cobre os flashes (OBA/calculator) durante a saída
+    limparTodasSessoes()   // "sempre deslogar na landing": VOLTAR sempre desloga
     if (voltarExterno) { setTimeout(() => { window.location.href = voltarExterno }, 40); return }
     setModo('home')
     setTimeout(() => setSaindo(false), 80)

@@ -201,6 +201,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
   async function carregarDados(inicial = false) {
     setLoading(true)
+    // (ícone) abertura pelo ÍCONE instalado (rf_abrir_nova): mostra a bifurcação
+    // ENTRAR/INDICAR/VER MEUS CRÉDITOS — o OBA NÃO deve auto-abrir/reabrir por cima dela.
+    let ehIconLaunch = false
+    try { ehIconLaunch = localStorage.getItem('rf_abrir_nova') === '1' } catch (e) {}
     if (demoPerfil) {
       setProfile(demoPerfil)
       setAvaliacoes([])
@@ -277,7 +281,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
     // Bariátrico com perfil completo e boas-vindas já vistas (login de retorno):
     // abre a anamnese OBA direto se ainda não preencheu.
-    if (prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista !== false) {
+    if (!ehIconLaunch && prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista !== false) {
       // await: garante que o OBA já abra (overlay) ANTES de loading=false renderizar
       // o dashboard "Olá" vazio por baixo. Sem isso, a tela vazia piscava antes do OBA.
       await verificarEAbrirOBA(prof)
@@ -404,7 +408,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // conteúdo do localStorage). A flag é limpa ao fechar/concluir o modal.
     try {
       const obaAberto = localStorage.getItem('oba_aberto')
-      if (obaAberto && obaAberto === (prof.cpf || '').replace(/\D/g, '')) setShowOBAModal(true)
+      if (!ehIconLaunch && obaAberto && obaAberto === (prof.cpf || '').replace(/\D/g, '')) setShowOBAModal(true)
     } catch (e) {}
     setLoading(false)
   }
