@@ -383,21 +383,24 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // Perfil completo e boas-vindas já vistas (login de retorno) → leva direto
           // ao formulário. No 1º acesso quem faz isso é o CONTINUAR das boas-vindas.
           if (prof.nome && String(prof.nome).trim().length >= 3 && prof.boas_vindas_vista === true) {
-            setTela('nova'); setResultado(null)
-            // 3ª avaliação em diante (2 concluídas), sem assinatura → paywall ANTES,
-            // sobre o formulário (nunca sobre "O que você quer fazer?").
-            if (!temAssinAtiva && nConcluidas >= 2) setShowPagamento(true)
+            // BARIÁTRICO fica no histórico (o verificarEAbrirOBA acima conduz ao OBA quando
+            // preciso); só o NÃO-bariátrico vai direto ao formulário 'nova'.
+            if (!ehBariatrico) {
+              setTela('nova'); setResultado(null)
+              // 3ª avaliação em diante (2 concluídas), sem assinatura → paywall ANTES.
+              if (!temAssinAtiva && nConcluidas >= 2) setShowPagamento(true)
+            }
           }
         } else if (inicial && !pendente && (avals || []).length) {
           // RETORNO (1ª já feita): pré-marca as flags da última avaliação — editáveis,
           // pra ele desmarcar o que mudou (ex.: parou a aspirina, deixou de ser
           // vegetariano). NÃO pré-preenche data/hemograma (são novos) nem gestante.
           setInputs(prev => ({ ...prev, ...flagsAnteriores }))  // pré-marca Histórico/Medicamentos da avaliação anterior (editável)
-          // RETORNO: vai direto à NOVA avaliação (não faz sentido cair em "O que
-          // você quer fazer?"). São 2 avaliações grátis; a partir da 3ª (sem
-          // assinatura), abre o paywall ANTES do formulário.
-          setTela('nova'); setResultado(null)
-          if (!temAssinAtiva && nConcluidas >= 2) setShowPagamento(true)
+          // RETORNO: vai direto à NOVA avaliação — MAS o BARIÁTRICO não (a 1ª avaliação é o
+          // OBA; e a triagem já cria 1 avaliação, que faria parecer "retorno"). Ele fica no
+          // histórico e a boas-vindas/OBA conduz. Não-bariátrico mantém o comportamento.
+          if (!ehBariatrico) { setTela('nova'); setResultado(null) }
+          if (!ehBariatrico && !temAssinAtiva && nConcluidas >= 2) setShowPagamento(true)
         }
       } else {
         setEntradaPendente(false)

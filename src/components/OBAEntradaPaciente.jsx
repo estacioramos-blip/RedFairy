@@ -92,6 +92,9 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
         if (data.token) localStorage.setItem('paciente_token', data.token)
         localStorage.setItem('rf_flag', 'bariatrica')
       } catch (e) {}
+      // Entrou por SOU BARIÁTRICO → marca o perfil como bariátrico JÁ no cadastro (fonte
+      // confiável, não depende do rf_flag sobreviver até o dashboard). RLS off em profiles.
+      try { if (data.id) await supabase.from('profiles').update({ bariatrica: true }).eq('id', data.id) } catch (e) {}
       onConcluir && onConcluir()
     } catch (e) { setBusy(false); setErro('ERRO DE CONEXÃO. TENTE NOVAMENTE.') }
   }
