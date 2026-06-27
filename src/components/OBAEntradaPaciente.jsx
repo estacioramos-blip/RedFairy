@@ -90,6 +90,10 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
         localStorage.setItem('paciente_nome', data.nome || '')
         localStorage.setItem('paciente_login_at', Date.now().toString())
         if (data.token) localStorage.setItem('paciente_token', data.token)
+        // (ÍCONE) credencial PERSISTENTE de reentrada passwordless — sobrevive a TODOS os
+        // logouts (não é limpa pelos clears de sessão; só pelo ?reset). O ícone reentra com ela.
+        localStorage.setItem('rf_reentry_cpf', cpfDigits)
+        if (data.token) localStorage.setItem('rf_reentry_token', data.token)
         localStorage.setItem('rf_flag', 'bariatrica')
       } catch (e) {}
       // Entrou por SOU BARIÁTRICO → marca o perfil como bariátrico JÁ no cadastro (fonte

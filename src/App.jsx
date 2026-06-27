@@ -117,7 +117,8 @@ export default function App() {
         ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
          'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
          'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
-         'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador'].forEach(k => localStorage.removeItem(k))
+         'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador',
+         'rf_reentry_cpf','rf_reentry_token'].forEach(k => localStorage.removeItem(k))
         sessionStorage.removeItem('rf_voltar_url')
       } catch (e) {}
       window.location.replace(window.location.pathname)
@@ -184,7 +185,10 @@ export default function App() {
         // Reentrada passwordless pelo ÍCONE: sem sessão ativa (deslogou na landing), mas com
         // o token guardado → reloga e entra no fluxo do paciente, em vez de cair na landing.
         let rCpf = '', rTok = ''
-        try { rCpf = localStorage.getItem('paciente_cpf') || ''; rTok = localStorage.getItem('paciente_token') || '' } catch (e) {}
+        try {
+          rCpf = localStorage.getItem('rf_reentry_cpf') || localStorage.getItem('paciente_cpf') || ''
+          rTok = localStorage.getItem('rf_reentry_token') || localStorage.getItem('paciente_token') || ''
+        } catch (e) {}
         if (rCpf && rTok) {
           ;(async () => {
             try {
