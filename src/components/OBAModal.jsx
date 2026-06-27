@@ -410,7 +410,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, coletarHemograma = false }) {
   // FOLLOW-UP: avaliação de RETORNO de um bariátrico que já fez o baseline.
   // anamneseAnterior = última linha de oba_anamnese. Nesse modo, os campos
   // IMUTÁVEIS (data/tipo/indicação da cirurgia, peso antes, altura) são
@@ -1070,6 +1070,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   }
 
   async function salvarExames() {
+    // Re-entrada (ENTRAR): hemograma é OBRIGATÓRIO antes de gerar o relatório.
+    if (coletarHemograma && !(Number(form.hb_novo) > 0 && Number(form.vcm_novo) > 0 && Number(form.rdw_novo) > 0)) {
+      alert('Digite o seu novo hemograma: Hemoglobina, VCM e RDW.')
+      return
+    }
     setLoading(true)
     const examesObj = buildExamesOBA()
 
@@ -1096,6 +1101,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   }
 
   function pularExames() {
+    // Na re-entrada (ENTRAR) o hemograma é obrigatório — não dá pra pular esta etapa sem ele.
+    if (coletarHemograma) { alert('Digite o seu novo hemograma (Hemoglobina, VCM e RDW) para continuar.'); return }
     gerarRelatorio({})
   }
 
@@ -1725,7 +1732,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     { key:'sat_novo', label:"Sat. Transferrina", unit:'%' },
   ]
   let eritronNovoFields = []
-  if (novaDataExames) {
+  if (novaDataExames || coletarHemograma) {
+    // coletarHemograma = re-entrada pelo ÍCONE (ENTRAR): não veio hemograma da triagem,
+    // então o paciente digita o hemograma completo aqui (é o que alimenta o eritron).
     eritronNovoFields = ERITRON_NOVO_TODOS
   } else if (_temRF) {
     if (!examesRedFairy.ferritina) eritronNovoFields.push(ERITRON_NOVO_TODOS[3])
@@ -1746,7 +1755,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               {"\u2713 Anamnese salva com sucesso!"}
             </p>
             <p style={{ fontSize:'0.75rem', color:'#15803D', marginTop:'0.3rem' }}>
-              {"Preencha os exames que tiver em m\u00e3os. Pode pular se n\u00e3o tiver agora."}
+              {coletarHemograma
+                ? "Digite o seu novo HEMOGRAMA (Hemoglobina, VCM e RDW s\u00e3o obrigat\u00f3rios) e os exames que tiver em m\u00e3os."
+                : "Preencha os exames que tiver em m\u00e3os. Pode pular se n\u00e3o tiver agora."}
             </p>
           </div>
 

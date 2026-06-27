@@ -82,6 +82,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [loading, setLoading] = useState(true)
   const [showSobre, setShowSobre] = useState(false)
   const [showOBAModal, setShowOBAModal] = useState(false)
+  const [obaColetarHemograma, setObaColetarHemograma] = useState(false)  // re-entrada (ENTRAR): o hemograma é digitado DENTRO do OBA (etapa exames), sem a página 'nova'
   const [precisaOBA, setPrecisaOBA] = useState(false)  // bariátrico sem anamnese OBA → banner persistente
   const [anamneseAnterior, setAnamneseAnterior] = useState(null)  // última oba_anamnese → OBA em modo follow-up
   const [eritronAnterior, setEritronAnterior] = useState(null)    // avaliação eritron anterior → comparação no resultado
@@ -1072,6 +1073,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // Resultado do eritron p/ o relatório OBA: fresco (pós-avaliação) ou
           // reconstruído da última linha de avaliacoes (login c/ anamnese pendente).
           resultadoEritron={
+            obaColetarHemograma ? null :
             resultado
               ? { label: resultado.label, color: resultado.color, inputs: resultado._inputs }
               : (avaliacoes && avaliacoes.length)
@@ -1079,6 +1081,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 : null
           }
           examesRedFairy={
+            obaColetarHemograma ? null :
             resultado?._inputs
               ? { ferritina: resultado._inputs.ferritina, hemoglobina: resultado._inputs.hemoglobina, vcm: resultado._inputs.vcm, rdw: resultado._inputs.rdw, satTransf: resultado._inputs.satTransf, dataColeta: inputs.dataColeta || null }
               : (avaliacoes && avaliacoes.length)
@@ -1086,8 +1089,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 : null
           }
           anamneseAnterior={anamneseAnterior}
-          onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false) }}
-          onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setPrecisaOBA(false); if (onVoltar) onVoltar() }}
+          coletarHemograma={obaColetarHemograma}
+          onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false) }}
+          onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false); setPrecisaOBA(false); if (onVoltar) onVoltar() }}
         />
       )}
       {showSobre && (
@@ -1704,12 +1708,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   <p className="text-xs text-gray-500">{"Nova avaliação clínica"}</p>
                 </div>
                 <PlayButton onClick={() => {
-                    // ENTRAR (re-entrada de membro) = NOVA avaliação LIMPA. Reseta o estado da
-                    // entrada/triagem para não cair em "Continuando a sua primeira avaliação".
+                    // ENTRAR (re-entrada pelo ÍCONE) = nova avaliação DENTRO do OBA: o hemograma
+                    // é digitado na etapa de exames do OBA (sem a página 'nova' intermediária).
                     setShowEscolhaEntrarIndicar(false); setResultado(null)
-                    setDadosVieramDaEntrada(false); setEntradaPendente(false)
-                    setInputs(prev => ({ ...prev, dataColeta: '', ferritina: '', hemoglobina: '', vcm: '', rdw: '', satTransf: '', b12_valor: '', folato_valor: '' }))
-                    setTela('nova')
+                    const cpfL = String(profile?.cpf || '').replace(/\D/g, '')
+                    try { localStorage.removeItem('oba_progresso_' + cpfL) } catch (e) {}  // começa do zero
+                    setObaColetarHemograma(true)
+                    setTela('historico')
+                    setShowOBAModal(true)
                   }}
                   ariaLabel="Entrar" circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
               </div>
