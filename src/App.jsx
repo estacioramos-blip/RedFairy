@@ -198,6 +198,13 @@ export default function App() {
                   localStorage.setItem('paciente_id', data.id)
                   localStorage.setItem('paciente_nome', data.nome || '')
                   localStorage.setItem('paciente_login_at', Date.now().toString())
+                  // Se o RPC ROTACIONA o token (one-time), o antigo fica inválido na próxima
+                  // reentrada → atualiza a credencial com o token novo devolvido.
+                  if (data.token) {
+                    localStorage.setItem('paciente_token', data.token)
+                    localStorage.setItem('rf_reentry_token', data.token)
+                    localStorage.setItem('rf_reentry_cpf', rCpf)
+                  }
                 } catch (e) {}
                 setModo('paciente')
               }
