@@ -195,7 +195,7 @@ const EXAMES_BASE = [
   { key: 'plaquetas',      label: 'Plaquetas',                unit: "x1000/\u00b5L", ref: "150\u2013400", hint: 'Ex: 250 = 250.000/\u00b5L' },
   { key: 'ferritina_oba',  label: 'Ferritina',                unit: 'ng/mL',  ref: "H: 24\u2013300 / F: 25\u2013150" },
   { key: 'vitamina_b12',   label: 'Vitamina B12',             unit: 'pg/mL',  ref: "200\u2013900" },
-  { key: 'vitamina_d',     label: 'Vitamina D 25-OH',         unit: 'ng/mL',  ref: "30\u2013100 (bari: >30)" },
+  { key: 'vitamina_d',     label: 'Vitamina D', sublabel: '25-OH', unit: 'ng/mL',  ref: "30\u2013100 (bari: >30)" },
   { key: 'tsh',            label: 'TSH',                      unit: 'mUI/L',  ref: "0,4\u20134,5" },
   { key: 'hb_glicada',     label: 'Hb Glicada',               unit: '%',      ref: '<5,7%' },
   { key: 'glicemia',       label: 'Glicemia (jejum)',          unit: 'mg/dL',  ref: "70\u201399" },
@@ -222,11 +222,11 @@ const EXAMES_BASE = [
   { key: 'sdldl',            label: 'sdLDL',                   unit: 'mg/dL',  ref: '<30' },
   { key: 'vitamina_a',     label: 'Vitamina A (Retinol)',      unit: "\u00b5g/dL",  ref: "20\u201377" },
   { key: 'vitamina_e',     label: 'Vitamina E (Tocoferol)',    unit: 'mg/L',   ref: "5\u201318" },
-  { key: 'tiamina',        label: 'Tiamina (B1)',              unit: 'nmol/L', ref: "70\u2013180" },
+  { key: 'tiamina',        label: 'Vitamina B1', sublabel: '(Tiamina)', unit: 'nmol/L', ref: "70\u2013180" },
   { key: 'selenio',        label: "Sel\u00eanio",                   unit: "\u00b5g/L",   ref: "63\u2013160" },
   { key: 'vitamina_c',     label: 'Vitamina C',                unit: 'mg/dL',  ref: "0,4\u20132,0" },
   { key: 'vitamina_k',     label: 'Vitamina K',                unit: 'ng/mL',  ref: "0,2\u20133,2" },
-  { key: 'niacina',        label: 'Niacina (B3)',              unit: "\u00b5g/mL",  ref: "0,5\u20138,9" },
+  { key: 'niacina',        label: 'Vitamina B3', sublabel: '(Niacina)', unit: "\u00b5g/mL",  ref: "0,5\u20138,9" },
   { key: 'testosterona',   label: 'Testosterona Total',        unit: 'ng/dL',  ref: "H: 300\u20131.000 / F: 15\u201370" },
   { key: 'ige_total',      label: 'IgE Total',                 unit: 'UI/mL',  ref: "<100" },
 ]
@@ -1755,6 +1755,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // Onde fica o "primeiro campo dos exames" (alvo do salto após o ANO): o 1º campo do
   // bloco eritron-novo se ele existir, senão o 1º campo da grade (Leucócitos).
   const primeiroExameGridKey = eritronNovoFields.length ? null : 'leucocitos'
+  // Só os indicadores de ferro (ferritina/sat) — sem hb/vcm/rdw → grupo "Reserva de Ferro".
+  const soFerro = eritronNovoFields.length > 0 && eritronNovoFields.every(f => f.key === 'ferritina_novo' || f.key === 'sat_novo')
 
   if (etapa === 'exames') return (
     <div style={OV} onClick={pularExames}>
@@ -1861,16 +1863,18 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           {/* (d) Eritron de NOVA data / faltante na triagem \u2014 campos no TOPO dos exames. */}
           {eritronNovoFields.length > 0 && (
-            <div style={{ background:'#FEF2F2', border:'1.5px solid #FCA5A5', borderRadius:10, padding:'0.7rem 0.9rem', margin:'0.2rem 0 0.9rem' }}>
-              <p style={{ fontSize:'0.72rem', fontWeight:800, color:'#9F1239', margin:'0 0 0.5rem', lineHeight:1.35 }}>
-                {novaDataExames
-                  ? "Como esta \u00e9 uma NOVA data, lance os valores atualizados do eritron:"
-                  : "Inclua tamb\u00e9m estes (n\u00e3o vieram na triagem):"}
+            <div style={{ margin:'0.2rem 0 0.9rem' }}>
+              <p style={{ fontSize:'0.78rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.4px', color:'#7B1E1E', margin:'0 0 0.4rem' }}>
+                {soFerro
+                  ? "Indicadores | Reserva de Ferro"
+                  : (novaDataExames ? "Lance os valores atualizados do eritron:" : "Inclua tamb\u00e9m estes (n\u00e3o vieram na triagem):")}
               </p>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:'0.3rem' }}>
-                {eritronNovoFields.map((ex, i) => (
-                  <div key={ex.key} style={{ display:'flex', flexDirection:'column', background:'#FFFDF5', border:'1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
-                    <span style={{ fontSize:'0.62rem', fontWeight:600, color:'#374151', lineHeight:1.15 }}>{ex.label}</span>
+                {eritronNovoFields.map((ex, i) => {
+                  const ehFerro = ex.key === 'ferritina_novo' || ex.key === 'sat_novo'
+                  return (
+                  <div key={ex.key} style={{ display:'flex', flexDirection:'column', background:'#FEFCE8', border: ehFerro ? '1.5px solid #7B1E1E' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
+                    <span style={{ fontSize:'0.74rem', fontWeight:600, color:'#1F2937', lineHeight:1.15 }}>{ex.label}</span>
                     <span style={{ fontSize:'0.66rem', fontWeight:600, color:'#4B5563', minHeight:'0.72rem', lineHeight:1.1 }}>{ex.unit}</span>
                     <input
                       ref={i === 0 ? refPrimeiroExame : null}
@@ -1881,7 +1885,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       value={exames[ex.key] || ''}
                       onChange={e => handleExameChangeOBA(ex.key, e.target.value)} />
                   </div>
-                ))}
+                  )
+                })}
+                {soFerro && (
+                  <div style={{ display:'flex', flexDirection:'column', background:'#FEFCE8', border:'1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
+                    <span style={{ fontSize:'0.74rem', fontWeight:600, color:'#1F2937', lineHeight:1.15 }}>{"Ferro s\u00e9rico"}</span>
+                    <span style={{ fontSize:'0.66rem', fontWeight:600, color:'#4B5563', minHeight:'0.72rem', lineHeight:1.1 }}>{"\u00b5g/dL"}</span>
+                    <input className="oba-exame-input" onWheel={noWheel}
+                      style={{ width:'100%', border:'1.5px solid #FACC15', borderRadius:5, padding:'0.3rem 0.34rem', fontSize:'0.92rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background:'#FFFDF5', color:'#111827', boxSizing:'border-box' }}
+                      type="text" inputMode="decimal"
+                      value={exames.ferro_serico || ''}
+                      onChange={e => handleExameChangeOBA('ferro_serico', e.target.value)} />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1904,6 +1920,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               return (
                 <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : '#FEFCE8', border: aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
                   <span style={{ fontSize:'0.74rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#1F2937', lineHeight:1.15 }}>{ex.label}</span>
+                  {ex.sublabel && <span style={{ fontSize:'0.58rem', fontWeight:600, color:'#9CA3AF', lineHeight:1.05 }}>{ex.sublabel}</span>}
                   <span style={{ fontSize:'0.66rem', fontWeight:600, color:'#4B5563', lineHeight:1.1 }}>{ex.unit || ''}</span>
                   {/* Sempre reserva a linha do subtexto (nbsp quando não há) p/ manter
                       os inputs alinhados horizontalmente com os campos que têm hint laranja. */}
