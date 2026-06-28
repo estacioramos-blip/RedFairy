@@ -1071,7 +1071,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
   async function salvarExames() {
     // Re-entrada (ENTRAR): hemograma é OBRIGATÓRIO antes de gerar o relatório.
-    if (coletarHemograma && !(Number(form.hb_novo) > 0 && Number(form.vcm_novo) > 0 && Number(form.rdw_novo) > 0)) {
+    if (coletarHemograma && !(Number(exames.hb_novo) > 0 && Number(exames.vcm_novo) > 0 && Number(exames.rdw_novo) > 0)) {
       alert('Digite o seu novo hemograma: Hemoglobina, VCM e RDW.')
       return
     }
@@ -1101,8 +1101,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   }
 
   function pularExames() {
-    // Na re-entrada (ENTRAR) o hemograma é obrigatório — não dá pra pular esta etapa sem ele.
-    if (coletarHemograma) { alert('Digite o seu novo hemograma (Hemoglobina, VCM e RDW) para continuar.'); return }
+    // Na re-entrada (ENTRAR) o hemograma é obrigatório. Se já preenchido, segue (com ele);
+    // senão, avisa — não dá pra pular esta etapa sem o hemograma.
+    if (coletarHemograma) {
+      if (Number(exames.hb_novo) > 0 && Number(exames.vcm_novo) > 0 && Number(exames.rdw_novo) > 0) { salvarExames(); return }
+      alert('Digite o seu novo hemograma (Hemoglobina, VCM e RDW) para continuar.')
+      return
+    }
     gerarRelatorio({})
   }
 
