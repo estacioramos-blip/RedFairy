@@ -36,9 +36,9 @@ export default function QRMedicoModal({ crm, onClose }) {
       style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
         onClick={e => e.stopPropagation()}>
-        <div className="bg-red-700 text-white px-6 py-4">
-          <h2 className="text-lg font-bold">{"🧚 Seu QR de encaminhamento"}</h2>
-          <p className="text-red-200 text-xs mt-1">{"Cada paciente que escanear, se cadastrar e pagar = 1 crédito 4DOC pra você."}</p>
+        <div className="px-6 py-4" style={{ background: '#6B7280' }}>
+          <h2 className="text-lg font-bold" style={{ color: '#facc15' }}>{"Seu QR de encaminhamento"}</h2>
+          <p className="text-xs mt-1" style={{ color: '#FDE68A' }}>{"Cada paciente que escanear, se cadastrar e pagar = 1 crédito pra você."}</p>
         </div>
 
         <div className="p-6 flex flex-col items-center text-center gap-3">
@@ -49,7 +49,6 @@ export default function QRMedicoModal({ crm, onClose }) {
               level="H"
               bgColor="#ffffff"
               fgColor="#7B1E1E"
-              imageSettings={{ src: fadaIcon, height: 40, width: 40, excavate: true }}
             />
           </div>
           <p className="text-sm font-bold text-gray-800">{"CRM "}{crm}</p>
