@@ -801,6 +801,24 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   // Bifurcação do MÉDICO (pós-login): ENCAMINHAR · AVALIAR · VER CRÉDITOS. Pula se já vier
   // com dados de demo (vai direto ao formulário).
   const [menuMedico, setMenuMedico] = useState(!preDemoDados)
+  // AVALIAR: o médico digita o CPF (ou lê o QR) do paciente → abre o OBA Modal com os
+  // dados dele (o médico faz a avaliação/OBA pelo paciente).
+  const [avaliarFase, setAvaliarFase] = useState(null)        // null | 'cpf' | 'oba'
+  const [avaliarPaciente, setAvaliarPaciente] = useState(null)
+  const [avaliarCpfInput, setAvaliarCpfInput] = useState('')
+  const [avaliarErro, setAvaliarErro] = useState('')
+  const [avaliarBusy, setAvaliarBusy] = useState(false)
+  async function carregarPacienteAvaliar() {
+    const d = String(avaliarCpfInput || '').replace(/\D/g, '')
+    if (d.length !== 11) { setAvaliarErro('CPF inválido'); return }
+    setAvaliarBusy(true); setAvaliarErro('')
+    try {
+      const { data } = await supabase.from('profiles').select('cpf, nome, sexo, data_nascimento').eq('cpf', d).maybeSingle()
+      if (!data) { setAvaliarErro('Paciente não cadastrado. Peça que se cadastre primeiro.'); setAvaliarBusy(false); return }
+      setAvaliarPaciente(data); setAvaliarFase('oba')
+    } catch (e) { setAvaliarErro('Erro de conexão. Tente de novo.') }
+    setAvaliarBusy(false)
+  }
   const [fada4docMarcada, setFada4docMarcada] = useState(false);
   // (encaminhamento em massa) Ao instalar o icone, o LINK do medico tambem e' copiado.
   const [linkMedCopiado, setLinkMedCopiado] = useState(false);
@@ -1511,7 +1529,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     <p className="text-lg font-extrabold text-red-800 leading-tight">{"AVALIAR"}</p>
                     <p className="text-xs text-gray-500">{"Avaliar um paciente · US$ 15"}</p>
                   </div>
-                  <PlayButton onClick={() => setMenuMedico(false)} ariaLabel="Avaliar" />
+                  <PlayButton onClick={() => { setAvaliarFase('cpf'); setAvaliarCpfInput(''); setAvaliarErro('') }} ariaLabel="Avaliar" />
                 </div>
                 <div className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
@@ -1539,6 +1557,51 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           className="fixed top-3 left-3 z-30 bg-gray-700 hover:bg-gray-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md">
           {"← Menu"}
         </button>
+      )}
+
+      {/* AVALIAR — passo 1: CPF do paciente (já cadastrado). */}
+      {avaliarFase === 'cpf' && (
+        <div className="fixed inset-0 z-[45] flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.95)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative my-4 p-5 pt-7">
+            <button onClick={() => setAvaliarFase(null)} aria-label="Voltar" style={{ position:'absolute', top:10, right:10, width:26, height:26, borderRadius:'50%', background:'#7B1E1E', color:'#fff', border:'2px solid #fff', cursor:'pointer', fontSize:'12px', fontWeight:700, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>{"✕"}</button>
+            <img src={obaLogo} alt="Projeto OBA" className="h-20 object-contain mx-auto mb-3" />
+            <p className="text-center text-xs font-extrabold text-gray-500 tracking-widest mb-2">{"CPF DO PACIENTE"}</p>
+            <input autoFocus className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-base text-center font-bold outline-none focus:border-gray-500"
+              inputMode="numeric" maxLength={14} placeholder="000.000.000-00"
+              value={avaliarCpfInput}
+              onChange={e => { setAvaliarCpfInput(e.target.value); setAvaliarErro('') }}
+              onKeyDown={e => { if (e.key === 'Enter') carregarPacienteAvaliar() }} />
+            {avaliarErro && <p className="text-center text-red-600 text-xs font-bold mt-2">{avaliarErro}</p>}
+            <div className="flex justify-end mt-3">
+              <PlayButton onClick={carregarPacienteAvaliar} ariaLabel="Avaliar" />
+            </div>
+            <p className="text-center text-[11px] text-gray-400 mt-3">{"O paciente precisa já estar cadastrado. (Leitura de QR: em breve.)"}</p>
+          </div>
+        </div>
+      )}
+
+      {/* AVALIAR — passo 2: o OBA Modal do paciente (médico faz a avaliação). */}
+      {avaliarFase === 'oba' && avaliarPaciente && (
+        <OBAModal
+          cpf={avaliarPaciente.cpf}
+          nome={avaliarPaciente.nome}
+          sexo={avaliarPaciente.sexo}
+          dataNascimento={avaliarPaciente.data_nascimento}
+          idade={avaliarPaciente.data_nascimento ? Math.floor((Date.now() - new Date(avaliarPaciente.data_nascimento)) / 31557600000) : 0}
+          dadosRedFairy={{}}
+          resultadoEritron={null}
+          examesRedFairy={null}
+          anamneseAnterior={null}
+          coletarHemograma={true}
+          onFechar={() => { setAvaliarFase(null); setAvaliarPaciente(null) }}
+          onConcluir={async () => {
+            try {
+              const tok = localStorage.getItem('medico_token') || ''
+              await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: avaliarPaciente.cpf, p_opiniao: '', p_sugestao: '' })
+            } catch (e) {}
+            setAvaliarFase(null); setAvaliarPaciente(null)
+          }}
+        />
       )}
 
       {showAfiliadosBanner && !showAfiliados && (
