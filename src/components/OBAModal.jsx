@@ -1133,9 +1133,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const subPaciente = [nome, idadeNum ? `${idadeNum} anos` : null, isFem ? 'Feminino' : 'Masculino'].filter(Boolean).join(' \u00b7 ')
   const TITULO_RESULTADO = "RELAT\u00d3RIO M\u00c9DICO"
 
-  const Header = ({ sub, titulo }) => (
+  const Header = ({ sub, titulo, semVoltar }) => (
     <div style={HD}>
-      <button onClick={onFechar} style={{ background:'#E3AE37', border:'none', borderRadius:8, color:'#000', fontSize:'0.8rem', fontWeight:800, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
+      {!semVoltar && <button onClick={onFechar} style={{ background:'#E3AE37', border:'none', borderRadius:8, color:'#000', fontSize:'0.8rem', fontWeight:800, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>}
       <img src={logo} alt="OBA" style={{ width:40, height:40, objectFit:'contain', filter:'brightness(10)' }} />
       <div>
         <h2 style={{ color:'#facc15', fontSize: titulo ? '1.02rem' : '1.2rem', fontWeight:800, margin:0, lineHeight:1.25 }}>{titulo || `${saudacao} ao Projeto OBA!`}</h2>
@@ -1261,7 +1261,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           )}
 
           <div style={{ position:'relative', zIndex:10 }}>
-            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} />
+            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} semVoltar />
           </div>
 
           <div style={{ position:'relative', zIndex:1, padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
@@ -1500,7 +1500,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           {/* Header (zIndex 10 p/ aparecer durante o splash) */}
           <div style={{ position:'relative', zIndex:10 }}>
-            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} />
+            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} semVoltar />
           </div>
 
           {/* Conte\u00fado do relat\u00f3rio */}
