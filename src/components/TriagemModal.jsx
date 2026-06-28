@@ -745,7 +745,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#7B1E1E', fontWeight: 700 }}>{" | OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>
+              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span><span style={{ color: '#374151', fontWeight: 700 }}>{"OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>
             </h2>
           </div>
           <button
