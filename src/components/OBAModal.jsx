@@ -1140,10 +1140,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     else if (etapa === 'exames') setEtapa('anamnese')
     else onFechar()
   }
-  const Header = ({ sub, titulo }) => (
+  const Header = ({ sub, titulo, semFada }) => (
     <div style={HD}>
       <button onClick={voltarEtapa} style={{ background:'#E3AE37', border:'none', borderRadius:8, color:'#000', fontSize:'0.8rem', fontWeight:800, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
-      <img src={logo} alt="OBA" style={{ width:40, height:40, objectFit:'contain', filter:'brightness(10)' }} />
+      {!semFada && <img src={logo} alt="OBA" style={{ width:40, height:40, objectFit:'contain', filter:'brightness(10)' }} />}
       <div>
         <h2 style={{ color:'#facc15', fontSize: titulo ? '1.02rem' : '1.2rem', fontWeight:800, margin:0, lineHeight:1.25 }}>{titulo || `${saudacao} ao Projeto OBA!`}</h2>
         <p style={{ color:'#FDE68A', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', marginTop:'0.2rem' }}>{sub}</p>
@@ -1759,7 +1759,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   if (etapa === 'exames') return (
     <div style={OV} onClick={pularExames}>
       <div style={CD} onClick={e => e.stopPropagation()}>
-        <Header sub={subPaciente} />
+        <Header titulo={"Exames | OBA®"} sub={subPaciente} semFada />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
           <div style={{ background:'#F0FDF4', border:'1px solid #BBF7D0', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
@@ -1775,8 +1775,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           {examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && (
             <div style={{ background:'#FEF2F2', border:'1.5px solid #DC2626', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
-              <p style={{ fontSize:'0.72rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', marginBottom:'0.6rem' }}>
-                {"\ud83d\udd12 Exames registrados na avalia\u00e7\u00e3o RedFairy \u2014 somente leitura"}
+              <p style={{ fontSize:'0.8rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.4px', color:'#7B1E1E', margin:'0 0 0.15rem' }}>
+                {"VALORES DA TRIAGEM | ERITROGRAMA"}
+              </p>
+              <p style={{ fontSize:'0.62rem', fontWeight:700, letterSpacing:'1px', color:'#9F1239', marginBottom:'0.6rem' }}>
+                {"\ud83d\udd12 SOMENTE LEITURA"}
               </p>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem' }}>
                 {[
@@ -1799,8 +1802,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           )}
 
           {examesRedFairy && examesRedFairy.dataColeta && (
-            <div style={{ background:'#FDF2F8', border:'1.5px solid #F9A8D4', borderRadius:10, padding:'0.9rem 1rem', marginBottom:'1rem' }}>
-              <p style={{ color:'#831843', fontSize:'0.8rem', lineHeight:'1.5', marginBottom:'0.8rem' }}>
+            <div style={{ background:'#EFF6FF', border:'1.5px solid #2563EB', borderRadius:10, padding:'0.9rem 1rem', marginBottom:'1rem' }}>
+              <p style={{ color:'#1E3A8A', fontSize:'0.8rem', lineHeight:'1.5', marginBottom:'0.8rem' }}>
                 {"Se, na data em que voc\u00ea realizou o hemograma inicial, tamb\u00e9m fez alguns desses exames, pode inserir os resultados na plataforma. De todo modo, \u00e9 recomend\u00e1vel repetir ou complementar os exames em cerca de duas semanas, e, se desejar, podemos emitir a solicita\u00e7\u00e3o m\u00e9dica mediante o pagamento de uma pequena taxa. Isso costuma valer muito a pena, pois economiza tempo, reduz custos de deslocamento e evita a necessidade de uma nova consulta presencial apenas para esse fim. Se preferir, a plataforma tamb\u00e9m poder\u00e1 disponibilizar uma teleconsulta m\u00e9dica, especialmente caso os exames apresentem altera\u00e7\u00f5es mais significativas."}
               </p>
               <label style={{ display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
@@ -1818,20 +1821,20 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       setExAno(''); setExMes(''); setExDia('')
                     }
                   }}
-                  style={{ width:'1.1rem', height:'1.1rem', accentColor:'#DB2777' }}
+                  style={{ width:'1.1rem', height:'1.1rem', accentColor:'#2563EB' }}
                 />
-                <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#831843' }}>
+                <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#7B1E1E' }}>
                   {"OS EXAMES QUE VOU DIGITAR SÃO DA MESMA DATA DO HEMOGRAMA ACIMA"}
                 </span>
               </label>
-              <p style={{ fontSize:'0.74rem', color:'#9D174D', margin:'0.45rem 0 0', lineHeight:1.4 }}>
+              <p style={{ fontSize:'0.74rem', color:'#1E40AF', margin:'0.45rem 0 0', lineHeight:1.4 }}>
                 {"Se são exames mais recentes, digite a nova data no campo abaixo."}
               </p>
             </div>
           )}
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#374151', marginBottom:'0.5rem' }}>Data dos exames</label>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem', maxWidth:320 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem' }}>
             <div>
               <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>DIA</label>
               <input ref={refExDia} style={inpA} onWheel={noWheel} type="number" min="1" max="31" placeholder="DD" value={exDia}
