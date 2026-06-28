@@ -1111,7 +1111,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           }
           anamneseAnterior={anamneseAnterior}
           coletarHemograma={obaColetarHemograma}
-          onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false) }}
+          onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false); setShowEscolhaEntrarIndicar(true) }}
           onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false); setPrecisaOBA(false); if (onVoltar) onVoltar() }}
         />
       )}

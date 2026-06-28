@@ -1268,7 +1268,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           )}
 
           <div style={{ position:'relative', zIndex:10 }}>
-            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} />
+            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} semFada />
           </div>
 
           <div style={{ position:'relative', zIndex:1, padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
@@ -1507,7 +1507,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           {/* Header (zIndex 10 p/ aparecer durante o splash) */}
           <div style={{ position:'relative', zIndex:10 }}>
-            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} />
+            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} semFada />
           </div>
 
           {/* Conte\u00fado do relat\u00f3rio */}
@@ -1920,7 +1920,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               return (
                 <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : '#FEFCE8', border: aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
                   <span style={{ fontSize:'0.74rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#1F2937', lineHeight:1.15 }}>{ex.label}</span>
-                  {ex.sublabel && <span style={{ fontSize:'0.58rem', fontWeight:600, color:'#9CA3AF', lineHeight:1.05 }}>{ex.sublabel}</span>}
+                  {ex.sublabel && <span style={{ fontSize:'0.74rem', fontWeight:600, color:'#1F2937', lineHeight:1.15 }}>{ex.sublabel}</span>}
                   <span style={{ fontSize:'0.66rem', fontWeight:600, color:'#4B5563', lineHeight:1.1 }}>{ex.unit || ''}</span>
                   {/* Sempre reserva a linha do subtexto (nbsp quando não há) p/ manter
                       os inputs alinhados horizontalmente com os campos que têm hint laranja. */}
