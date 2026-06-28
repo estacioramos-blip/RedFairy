@@ -174,12 +174,9 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
             <span style={{ color: ehBari ? '#facc15' : '#374151' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
           </h2>
         </div>
-        {/* Título: zIndex 10 p/ aparecer desde o início, junto do header */}
-        <div style={{ position: 'relative', zIndex: 10, background: ehBari ? '#6B7280' : 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '0 14px 9px', flexShrink: 0 }}>
-          <p style={{ margin: 0, color: ehBari ? '#facc15' : '#7B1E1E', fontWeight: 800, fontSize: '15px', letterSpacing: '0.2px' }}>{"Complete o seu Perfil"}</p>
-        </div>
-
         <div className="p-5" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Título dentro do conteúdo (não na faixa do header), mais abaixo. */}
+          <p style={{ margin: '0 0 12px', color: '#7B1E1E', fontWeight: 800, fontSize: '15px', letterSpacing: '0.2px' }}>{"Complete o seu Perfil"}</p>
           <div className="space-y-3">
             <div>
               <label className={labelCls}>{"Nome completo"}</label>

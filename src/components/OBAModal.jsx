@@ -1884,7 +1884,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             .oba-exame-input::-webkit-outer-spin-button,
             .oba-exame-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
             .oba-exame-input{ -moz-appearance:textfield; appearance:textfield; }
-            .oba-exame-input::placeholder{ color:#4B5563; opacity:1; font-weight:600; font-size:0.84rem; }
+            .oba-exame-input::placeholder{ color:#9CA3AF; opacity:1; }
           `}</style>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:'0.3rem' }}>
             {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => {
@@ -1902,7 +1902,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       ref={ex.key === primeiroExameGridKey ? refPrimeiroExame : null}
                       className="oba-exame-input"
                       onWheel={noWheel}
-                      style={{ flex:1, minWidth:0, border:'1.5px solid #FACC15', borderRadius:5, padding:'0.32rem 0.36rem', fontSize:'0.95rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : '#FFFDF5', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
+                      style={{ flex:1, minWidth:0, border:'1.5px solid #FACC15', borderRadius:5, padding:'0.3rem 0.34rem', fontSize:'0.82rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : '#FFFDF5', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
                       type="text" inputMode="decimal" placeholder={mascara}
                       readOnly={ex.readOnly}
                       value={exames[ex.key] || ''}
