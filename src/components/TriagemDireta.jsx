@@ -42,13 +42,16 @@ export default function TriagemDireta({ onVoltar, onCadastrar, onIrDashboard }) 
     pacienteId = localStorage.getItem('paciente_id') || ''
   } catch (e) {}
   const pacienteLogado = !!pacienteCpf && !!pacienteId
+  // Fluxo bariátrico → o "Voltar" segue a paleta OBA (amarelo + texto preto).
+  let ehBari = false
+  try { ehBari = localStorage.getItem('rf_flag') === 'bariatrica' || localStorage.getItem('rf_dom_bari') === '1' } catch (e) {}
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Cabecalho minimo com botao Voltar */}
       <div className="absolute top-4 left-4 z-10">
         <button onClick={onVoltar}
-          className="bg-red-700 hover:bg-red-800 text-white text-sm font-medium px-4 py-2 rounded-lg shadow-md transition-colors">
+          className={`${ehBari ? 'bg-yellow-400 hover:bg-yellow-500 text-black' : 'bg-red-700 hover:bg-red-800 text-white'} text-sm font-medium px-4 py-2 rounded-lg shadow-md transition-colors`}>
           Voltar
         </button>
       </div>

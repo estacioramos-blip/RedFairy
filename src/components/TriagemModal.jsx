@@ -751,7 +751,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           <button
             onClick={onFechar}
             aria-label="Fechar"
-            className="w-7 h-7 rounded-full bg-red-700 hover:bg-red-800 text-white text-sm flex items-center justify-center transition-colors shadow-md"
+            className={`w-7 h-7 rounded-full ${flagBariatricaOBA ? 'bg-yellow-400 hover:bg-yellow-500 text-black' : 'bg-red-700 hover:bg-red-800 text-white'} text-sm flex items-center justify-center transition-colors shadow-md`}
             style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
             {"\u2715"}
           </button>
