@@ -41,8 +41,8 @@ const PlayButton = forwardRef(function PlayButton(
         disabled={disabled || loading}
         aria-label={ariaLabel || label}
         style={{ '--rf-pb-ring': 'rgba(250,204,21,0.75)', borderColor: '#000' }}
-        className="rf-pb w-14 h-14 rounded-full bg-gray-700 hover:bg-gray-800 border-2 flex items-center justify-center transition-colors shadow-md disabled:opacity-50">
-        <span style={{ color: '#E3AE37', fontSize: '1.4rem', lineHeight: 1, marginLeft: 3 }}>{loading ? '…' : '▶'}</span>
+        className="rf-pb w-12 h-12 rounded-full bg-gray-500 hover:bg-gray-600 border-2 flex items-center justify-center transition-colors shadow-md disabled:opacity-50">
+        <span style={{ color: '#E3AE37', fontSize: '1.25rem', lineHeight: 1, marginLeft: 3 }}>{loading ? '…' : '▶'}</span>
       </button>
       {label && <span className="text-xs font-bold tracking-wide text-center" style={{ color: labelColor, textShadow: labelShadow }}>{loading ? '...' : label}</span>}
       {hint && <span className="text-[10px] font-medium text-center leading-tight" style={{ color: '#ea580c' }}>{hint}</span>}

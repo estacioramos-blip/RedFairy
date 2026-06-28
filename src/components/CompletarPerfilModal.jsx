@@ -166,17 +166,17 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
         </div>
 
         {/* Header padrão (logo-fada + RedFairy). zIndex 10 p/ aparecer já durante o splash. */}
-        <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <div style={{ position: 'relative', zIndex: 10, background: ehBari ? '#6B7280' : 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
           <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
-            <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+            <span style={{ color: ehBari ? '#facc15' : '#b91c1c' }}>Red</span><span style={{ color: ehBari ? '#facc15' : '#ef4444' }}>Fairy</span>
             <span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span>
-            <span style={{ color: '#374151' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
+            <span style={{ color: ehBari ? '#facc15' : '#374151' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
           </h2>
         </div>
-        {/* Título vinho: zIndex 10 p/ aparecer desde o início, junto do header */}
-        <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '0 14px 9px', flexShrink: 0 }}>
-          <p style={{ margin: 0, color: '#7B1E1E', fontWeight: 800, fontSize: '15px', letterSpacing: '0.2px' }}>{"Complete o seu Perfil"}</p>
+        {/* Título: zIndex 10 p/ aparecer desde o início, junto do header */}
+        <div style={{ position: 'relative', zIndex: 10, background: ehBari ? '#6B7280' : 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '0 14px 9px', flexShrink: 0 }}>
+          <p style={{ margin: 0, color: ehBari ? '#facc15' : '#7B1E1E', fontWeight: 800, fontSize: '15px', letterSpacing: '0.2px' }}>{"Complete o seu Perfil"}</p>
         </div>
 
         <div className="p-5" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column' }}>

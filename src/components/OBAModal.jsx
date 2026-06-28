@@ -407,7 +407,7 @@ const btnP = { width:'100%', background:'#7B1E1E', color:'white', border:'none',
 const btnS = { width:'100%', background:'#F3F4F6', color:'#374151', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginTop:'0.5rem' }
 const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'0.5rem 1rem 1.5rem', boxSizing:'border-box' }
 const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, boxShadow:'0 20px 60px rgba(0,0,0,0.3)', marginBottom:'2rem', boxSizing:'border-box' }
-const HD = { background:'linear-gradient(135deg, #374151, #1f2937)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
+const HD = { background:'linear-gradient(135deg, #6B7280, #4B5563)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
 export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, coletarHemograma = false }) {
@@ -1801,6 +1801,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                     if (checked && examesRedFairy?.dataColeta) {
                       const [a, m, d] = examesRedFairy.dataColeta.split('-')
                       setExAno(a || ''); setExMes(m || ''); setExDia(d || '')
+                    } else if (!checked) {
+                      // Desmarcou → limpa a DATA DOS EXAMES (eram da data do hemograma).
+                      setExAno(''); setExMes(''); setExDia('')
                     }
                   }}
                   style={{ width:'1.1rem', height:'1.1rem', accentColor:'#DB2777' }}
@@ -1876,7 +1879,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             .oba-exame-input::-webkit-outer-spin-button,
             .oba-exame-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
             .oba-exame-input{ -moz-appearance:textfield; appearance:textfield; }
-            .oba-exame-input::placeholder{ color:#6B7280; opacity:1; font-weight:600; }
+            .oba-exame-input::placeholder{ color:#4B5563; opacity:1; font-weight:600; font-size:0.84rem; }
           `}</style>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:'0.3rem' }}>
             {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => {
@@ -1894,7 +1897,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       ref={ex.key === primeiroExameGridKey ? refPrimeiroExame : null}
                       className="oba-exame-input"
                       onWheel={noWheel}
-                      style={{ flex:1, minWidth:0, border:'1.5px solid #FACC15', borderRadius:5, padding:'0.3rem 0.34rem', fontSize:'0.86rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : '#FFFDF5', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
+                      style={{ flex:1, minWidth:0, border:'1.5px solid #FACC15', borderRadius:5, padding:'0.32rem 0.36rem', fontSize:'0.95rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : '#FFFDF5', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
                       type="text" inputMode="decimal" placeholder={mascara}
                       readOnly={ex.readOnly}
                       value={exames[ex.key] || ''}
@@ -1999,7 +2002,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       )}
       <div style={OV} onClick={onFechar}>
       <div style={CD} onClick={e => e.stopPropagation()}>
-        <Header titulo={"Anamnese | Projeto OBA\u00ae"} sub={subPaciente} />
+        <Header titulo={"Anamnese | OBA\u00ae"} sub={subPaciente} />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
           {/* Identifica\u00e7\u00e3o do paciente (nome, nascimento, sexo, CPF) */}

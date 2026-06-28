@@ -114,9 +114,8 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   ) : null
 
   const Cabecalho = (
-    <div className="mb-5 text-center">
+    <div className="mb-3 text-center">
       <img src={obaLogo} alt="Projeto OBA®" style={{ height: 128, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
-      <p className="text-gray-500 text-sm" style={{ marginTop: 4 }}>Otimizar o Bariátrico</p>
     </div>
   )
 

@@ -3,6 +3,7 @@ import { triagemEritron } from '../engine/decisionEngine'
 import logo from '../assets/logo.png'
 import { supabase } from '../lib/supabase';
 import HistoricoChartModal from './HistoricoChartModal';
+import PlayButton from './PlayButton';
 
 /**
  * TriagemModal - popup inicial de triagem do eritron.
@@ -741,7 +742,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[97vh] sm:max-h-[95vh] overflow-y-auto shadow-2xl relative">
         {/* Barra do topo no padr\u00e3o da landing: fundo branco, logo-fada \u00e0 esquerda + "RedFairy" em serif (dois tons),
             X de fechar na extremidade direita centralizado verticalmente. Substitui a Fada grande + nome que ocupavam muito espa\u00e7o vertical. */}
-        <div style={{ background: flagBariatricaOBA ? '#374151' : '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: flagBariatricaOBA ? '#6B7280' : '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
@@ -1196,15 +1197,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                 <div className="flex flex-col items-center justify-end pb-[3px]">
                   {(() => {
                     const ready = etapaHemograma >= 4 && inputs.hemoglobina && inputs.vcm && inputs.rdw;
-                    return (
-                      <button
-                        onClick={ready ? handleAvaliar : undefined}
-                        disabled={!ready}
-                        aria-label="Prosseguir"
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-md ${ready ? 'rf-play-ready cursor-pointer' : 'bg-gray-300 cursor-not-allowed'}`}>
-                        <span style={{ fontSize: '1.1rem', lineHeight: 1, color: '#7B1E1E', marginLeft: 3 }}>{"\u25B6"}</span>
-                      </button>
-                    );
+                    return <PlayButton onClick={handleAvaliar} disabled={!ready} ariaLabel="Prosseguir" />;
                   })()}
                 </div>
               </div>

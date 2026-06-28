@@ -650,7 +650,7 @@ if (modo === 'home') {
   const InatividadeModal = showInatividade ? (
     <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div style={{ background: '#fff', borderRadius: '16px', maxWidth: '360px', width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-        <div style={{ background: '#374151', padding: '16px 20px' }}>
+        <div style={{ background: '#6B7280', padding: '16px 20px' }}>
           <h3 style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', margin: 0 }}>{"Voc\u00ea ainda est\u00e1 a\u00ed?"}</h3>
         </div>
         <div style={{ padding: '20px', textAlign: 'center' }}>
