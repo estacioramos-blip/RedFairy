@@ -1255,8 +1255,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 {/* Os cards só aparecem após 2,5s — tempo do paciente ver a foto + saudação. */}
                 <div style={{ opacity: cardsBV ? 1 : 0, transition: 'opacity 0.6s ease', pointerEvents: cardsBV ? 'auto' : 'none' }}>
                 <div className="flex items-end gap-2">
-                <div className={`w-[75%] rounded-xl p-3 mb-5 ${(inputs.bariatrica || profile?.bariatrica) ? 'border-2 border-red-400' : 'border border-blue-200'}`}
-                  style={{ background: (inputs.bariatrica || profile?.bariatrica) ? 'rgba(60,25,45,0.50)' : 'rgba(25,35,60,0.50)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
+                <div className={`w-[75%] rounded-xl p-3 mb-5 ${(inputs.bariatrica || profile?.bariatrica) ? 'border-2 border-yellow-400' : 'border border-blue-200'}`}
+                  style={{ background: (inputs.bariatrica || profile?.bariatrica) ? 'rgba(55,65,81,0.55)' : 'rgba(25,35,60,0.50)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
                   <p className="text-xs text-white leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica || temAssinatura)
                       ? <>{"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<span style={{ color: '#facc15' }}>{"um ano"}</span>{"."}</>
@@ -1273,7 +1273,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                       : "Marque a caixinha abaixo e n\u00f3s vamos instalar uma fadinha na sua tela inicial. Ela j\u00e1 vai conter o seu LOGIN e quando voc\u00ea tocar nela o sistema j\u00e1 abre direto para voc\u00ea entrar os exames \u2014 \u00e9 muito simples. Vamos prosseguir."}
                   </p>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={fadaMarcada} onChange={aoMarcarFada} className="w-5 h-5 accent-red-700" />
+                    <input type="checkbox" checked={fadaMarcada} onChange={aoMarcarFada} className="w-5 h-5 accent-yellow-500" />
                     <span className="text-sm font-bold" style={{ color: '#facc15' }}>{(inputs.bariatrica || profile?.bariatrica) ? "OK. Instale o ÍCONE." : "Ok. Instale a fadinha."}</span>
                   </label>
                   {fadaInstrIOS && (
