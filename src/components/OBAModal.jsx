@@ -407,7 +407,7 @@ const btnP = { width:'100%', background:'#7B1E1E', color:'white', border:'none',
 const btnS = { width:'100%', background:'#F3F4F6', color:'#374151', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:600, cursor:'pointer', fontFamily:'inherit', marginTop:'0.5rem' }
 const OV = { position:'fixed', inset:0, zIndex:1000, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'flex-start', justifyContent:'center', overflowY:'auto', padding:'0.5rem 1rem 1.5rem', boxSizing:'border-box' }
 const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, boxShadow:'0 20px 60px rgba(0,0,0,0.3)', marginBottom:'2rem', boxSizing:'border-box' }
-const HD = { background:'linear-gradient(135deg, #7B1E1E, #DC2626)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
+const HD = { background:'linear-gradient(135deg, #374151, #1f2937)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
 export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, coletarHemograma = false }) {
@@ -1126,15 +1126,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // Subt\u00edtulo padr\u00e3o do paciente (NOME \u00b7 IDADE \u00b7 SEXO) \u2014 usado nos headers de
   // resultado (relat\u00f3rio e conclus\u00e3o).
   const subPaciente = [nome, idadeNum ? `${idadeNum} anos` : null, isFem ? 'Feminino' : 'Masculino'].filter(Boolean).join(' \u00b7 ')
-  const TITULO_RESULTADO = "RESULTADO DA SUA ANAMNESE M\u00c9DICA ASSISTIDA POR IA"
+  const TITULO_RESULTADO = "RELAT\u00d3RIO M\u00c9DICO"
 
   const Header = ({ sub, titulo }) => (
     <div style={HD}>
-      <button onClick={onFechar} style={{ background:'rgba(255,255,255,0.15)', border:'none', borderRadius:8, color:'white', fontSize:'0.8rem', fontWeight:700, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
+      <button onClick={onFechar} style={{ background:'#E3AE37', border:'none', borderRadius:8, color:'#000', fontSize:'0.8rem', fontWeight:800, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
       <img src={logo} alt="OBA" style={{ width:40, height:40, objectFit:'contain', filter:'brightness(10)' }} />
       <div>
-        <h2 style={{ color:'white', fontSize: titulo ? '1.02rem' : '1.2rem', fontWeight:800, margin:0, lineHeight:1.25 }}>{titulo || `${saudacao} ao Projeto OBA!`}</h2>
-        <p style={{ color:'rgba(255,255,255,0.75)', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', marginTop:'0.2rem' }}>{sub}</p>
+        <h2 style={{ color:'#facc15', fontSize: titulo ? '1.02rem' : '1.2rem', fontWeight:800, margin:0, lineHeight:1.25 }}>{titulo || `${saudacao} ao Projeto OBA!`}</h2>
+        <p style={{ color:'#FDE68A', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', marginTop:'0.2rem' }}>{sub}</p>
       </div>
     </div>
   )
@@ -1256,7 +1256,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           )}
 
           <div style={{ position:'relative', zIndex:10 }}>
-            <Header titulo={TITULO_RESULTADO} sub={subPaciente} />
+            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} />
           </div>
 
           <div style={{ position:'relative', zIndex:1, padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
@@ -1495,7 +1495,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           {/* Header (zIndex 10 p/ aparecer durante o splash) */}
           <div style={{ position:'relative', zIndex:10 }}>
-            <Header titulo={TITULO_RESULTADO} sub={subPaciente} />
+            <Header titulo={TITULO_RESULTADO} sub={"ANAMNESE ASSISTIDA POR IA"} />
           </div>
 
           {/* Conte\u00fado do relat\u00f3rio */}
@@ -1876,6 +1876,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             .oba-exame-input::-webkit-outer-spin-button,
             .oba-exame-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
             .oba-exame-input{ -moz-appearance:textfield; appearance:textfield; }
+            .oba-exame-input::placeholder{ color:#6B7280; opacity:1; font-weight:600; }
           `}</style>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:'0.3rem' }}>
             {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => {
@@ -1884,7 +1885,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               const mascara = ex.readOnly ? 'auto' : [refPorSexo(ex.ref, isFem), ex.unit].filter(Boolean).join(' ')
               return (
                 <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : '#FEFCE8', border: aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
-                  <span style={{ fontSize:'0.62rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#374151', lineHeight:1.15 }}>{ex.label}</span>
+                  <span style={{ fontSize:'0.74rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#1F2937', lineHeight:1.15 }}>{ex.label}</span>
                   {/* Sempre reserva a linha do subtexto (nbsp quando não há) p/ manter
                       os inputs alinhados horizontalmente com os campos que têm hint laranja. */}
                   <span style={{ fontSize:'0.5rem', color:'#F97316', minHeight:'0.6rem', lineHeight:1.1 }}>{ex.hint || ' '}</span>
@@ -1893,7 +1894,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       ref={ex.key === primeiroExameGridKey ? refPrimeiroExame : null}
                       className="oba-exame-input"
                       onWheel={noWheel}
-                      style={{ flex:1, minWidth:0, border:'1.5px solid #FACC15', borderRadius:5, padding:'0.28rem 0.32rem', fontSize:'0.74rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : '#FFFDF5', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
+                      style={{ flex:1, minWidth:0, border:'1.5px solid #FACC15', borderRadius:5, padding:'0.3rem 0.34rem', fontSize:'0.86rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background: ex.readOnly ? '#F0F0F0' : '#FFFDF5', color: ex.readOnly ? '#6B7280' : '#111827', boxSizing:'border-box' }}
                       type="text" inputMode="decimal" placeholder={mascara}
                       readOnly={ex.readOnly}
                       value={exames[ex.key] || ''}
@@ -1998,7 +1999,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       )}
       <div style={OV} onClick={onFechar}>
       <div style={CD} onClick={e => e.stopPropagation()}>
-        <Header sub={"Otimizar o Bari\u00e1trico"} />
+        <Header titulo={"Anamnese | Projeto OBA\u00ae"} sub={subPaciente} />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
           {/* Identifica\u00e7\u00e3o do paciente (nome, nascimento, sexo, CPF) */}
