@@ -798,6 +798,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [cardFada4doc, setCardFada4doc] = useState(false);
   const [showCreditosPopup, setShowCreditosPopup] = useState(false);
   const [showMeusCreditosMed, setShowMeusCreditosMed] = useState(false);   // médico vê os próprios créditos 4DOC
+  // Bifurcação do MÉDICO (pós-login): ENCAMINHAR · AVALIAR · VER CRÉDITOS. Pula se já vier
+  // com dados de demo (vai direto ao formulário).
+  const [menuMedico, setMenuMedico] = useState(!preDemoDados)
   const [fada4docMarcada, setFada4docMarcada] = useState(false);
   // (encaminhamento em massa) Ao instalar o icone, o LINK do medico tambem e' copiado.
   const [linkMedCopiado, setLinkMedCopiado] = useState(false);
@@ -1493,6 +1496,50 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         />
       )}
     <div className="min-h-screen bg-gray-50">
+
+      {/* Bifurcação do MÉDICO (pós-login): AVALIAR · ENCAMINHAR · VER CRÉDITOS. */}
+      {cadastrado && menuMedico && !showAuthMedicoOverlay && (
+        <div className="fixed inset-0 z-40 flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.95)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative my-4">
+            <button onClick={onVoltar} aria-label="Sair" style={{ position:'absolute', top:10, right:10, width:26, height:26, borderRadius:'50%', background:'#7B1E1E', color:'#fff', border:'2px solid #fff', cursor:'pointer', fontSize:'12px', fontWeight:700, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>{"✕"}</button>
+            <div className="p-5 pt-7">
+              <img src={obaLogo} alt="Projeto OBA" className="h-24 object-contain mx-auto mb-1" />
+              {(medicoNome || medicoCRM) && <p className="text-center text-[11px] text-gray-400 mb-4">{[medicoNome, medicoCRM].filter(Boolean).join('  ·  ')}</p>}
+              <div className="divide-y divide-gray-100">
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-lg font-extrabold text-red-800 leading-tight">{"AVALIAR"}</p>
+                    <p className="text-xs text-gray-500">{"Avaliar um paciente · US$ 15"}</p>
+                  </div>
+                  <PlayButton onClick={() => setMenuMedico(false)} ariaLabel="Avaliar" />
+                </div>
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-lg font-extrabold text-red-800 leading-tight">{"ENCAMINHAR"}</p>
+                    <p className="text-xs text-gray-500">{"Encaminhar paciente · US$ 10"}</p>
+                  </div>
+                  <PlayButton onClick={() => setShowQRMedico(true)} ariaLabel="Encaminhar" />
+                </div>
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-base font-extrabold text-red-800 leading-tight">{"VER MEUS CRÉDITOS"}</p>
+                    <p className="text-xs text-gray-500">{"Encaminhamentos e avaliações"}</p>
+                  </div>
+                  <PlayButton onClick={() => setShowMeusCreditosMed(true)} ariaLabel="Ver créditos" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* "← Menu" — volta à bifurcação do médico. */}
+      {cadastrado && !menuMedico && !showAuthMedicoOverlay && (
+        <button onClick={() => setMenuMedico(true)}
+          className="fixed top-3 left-3 z-30 bg-gray-700 hover:bg-gray-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md">
+          {"← Menu"}
+        </button>
+      )}
 
       {showAfiliadosBanner && !showAfiliados && (
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
