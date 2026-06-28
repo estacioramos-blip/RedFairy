@@ -1868,12 +1868,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 {eritronNovoFields.map((ex, i) => (
                   <div key={ex.key} style={{ display:'flex', flexDirection:'column', background:'#FFFDF5', border:'1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
                     <span style={{ fontSize:'0.62rem', fontWeight:600, color:'#374151', lineHeight:1.15 }}>{ex.label}</span>
-                    <span style={{ fontSize:'0.5rem', color:'#F97316', minHeight:'0.6rem', lineHeight:1.1 }}>{ex.unit}</span>
+                    <span style={{ fontSize:'0.66rem', fontWeight:600, color:'#4B5563', minHeight:'0.72rem', lineHeight:1.1 }}>{ex.unit}</span>
                     <input
                       ref={i === 0 ? refPrimeiroExame : null}
                       className="oba-exame-input"
                       onWheel={noWheel}
-                      style={{ width:'100%', border:'1.5px solid #FACC15', borderRadius:5, padding:'0.28rem 0.32rem', fontSize:'0.74rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background:'#FFFDF5', color:'#111827', boxSizing:'border-box' }}
+                      style={{ width:'100%', border:'1.5px solid #FACC15', borderRadius:5, padding:'0.3rem 0.34rem', fontSize:'0.92rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background:'#FFFDF5', color:'#111827', boxSizing:'border-box' }}
                       type="text" inputMode="decimal"
                       value={exames[ex.key] || ''}
                       onChange={e => handleExameChangeOBA(ex.key, e.target.value)} />
@@ -1897,10 +1897,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => {
               const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
               const dotColor = cl ? (cl.nivel === 'alterado' ? '#DC2626' : cl.nivel === 'limitrofe' ? '#F59E0B' : '#16A34A') : null
-              const mascara = ex.readOnly ? 'auto' : [refPorSexo(ex.ref, isFem), ex.unit].filter(Boolean).join(' ')
+              const mascara = ex.readOnly ? 'auto' : refPorSexo(ex.ref, isFem)   // só a referência; a unidade vai sob o nome
               return (
                 <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : '#FEFCE8', border: aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
                   <span style={{ fontSize:'0.74rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#1F2937', lineHeight:1.15 }}>{ex.label}</span>
+                  <span style={{ fontSize:'0.66rem', fontWeight:600, color:'#4B5563', lineHeight:1.1 }}>{ex.unit || ''}</span>
                   {/* Sempre reserva a linha do subtexto (nbsp quando não há) p/ manter
                       os inputs alinhados horizontalmente com os campos que têm hint laranja. */}
                   <span style={{ fontSize:'0.5rem', color:'#F97316', minHeight:'0.6rem', lineHeight:1.1 }}>{ex.hint || ' '}</span>
