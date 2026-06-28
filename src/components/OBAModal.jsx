@@ -1884,7 +1884,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             .oba-exame-input::-webkit-outer-spin-button,
             .oba-exame-input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
             .oba-exame-input{ -moz-appearance:textfield; appearance:textfield; }
-            .oba-exame-input::placeholder{ color:#9CA3AF; opacity:1; font-size:0.8rem; }
+            .oba-exame-input::placeholder{ color:#B5BBC3; opacity:1; font-size:0.76rem; }
           `}</style>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:'0.3rem' }}>
             {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => {
