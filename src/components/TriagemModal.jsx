@@ -741,11 +741,11 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       <div className="bg-white rounded-2xl max-w-lg w-full max-h-[97vh] sm:max-h-[95vh] overflow-y-auto shadow-2xl relative">
         {/* Barra do topo no padr\u00e3o da landing: fundo branco, logo-fada \u00e0 esquerda + "RedFairy" em serif (dois tons),
             X de fechar na extremidade direita centralizado verticalmente. Substitui a Fada grande + nome que ocupavam muito espa\u00e7o vertical. */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: flagBariatricaOBA ? '#374151' : '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span><span style={{ color: '#374151', fontWeight: 700 }}>{"OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>
+              <span style={{ color: flagBariatricaOBA ? '#facc15' : '#b91c1c' }}>Red</span><span style={{ color: flagBariatricaOBA ? '#facc15' : '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span><span style={{ color: flagBariatricaOBA ? '#facc15' : '#374151', fontWeight: 700 }}>{"OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>
             </h2>
           </div>
           <button
