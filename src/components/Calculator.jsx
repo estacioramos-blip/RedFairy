@@ -564,7 +564,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                   <span style={{ fontSize: '17px', lineHeight: 1 }}>{showSenha ? '🙈' : '👁'}</span>
                 </button>
               </div>
-              <p className="text-xs text-red-800 font-medium mt-0.5">{"Ser\u00e1 sua senha de acesso ao RedFairy."}</p></>)}
+              <p className="text-xs text-red-800 font-medium mt-0.5">{"Ser\u00e1 sua senha de acesso ao Projeto OBA\u00ae."}</p></>)}
             </div>
             {cadErro && <p className="text-red-500 text-sm">{cadErro}</p>}
             {showTC && <TermosModal onFechar={() => setShowTC(false)} />}
@@ -1229,7 +1229,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           const mDiff = hoje.getMonth() - (m - 1);
           if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--;
           if (idade < 12) {
-            novosErros.dataNascimento = "O RedFairy ainda n\u00e3o atende crian\u00e7as menores de 12 anos. Em breve teremos um m\u00f3dulo pedi\u00e1trico espec\u00edfico!";
+            novosErros.dataNascimento = "O Projeto OBA\u00ae ainda n\u00e3o atende crian\u00e7as menores de 12 anos. Em breve teremos um m\u00f3dulo pedi\u00e1trico espec\u00edfico!";
           } else if (idade > 100) {
             novosErros.dataNascimento = 'Verifique a data de nascimento';
           }
@@ -1624,7 +1624,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="bg-red-700 px-5 py-3 flex items-center justify-between">
-              <p className="text-white font-bold text-sm">{"\ud83c\udfaf Programa de Afiliados RedFairy"}</p>
+              <p className="text-white font-bold text-sm">{"\ud83c\udfaf 4DOC | Programa de Afiliados OBA\u00ae"}</p>
               <button onClick={() => setShowAfiliadosBanner(false)} className="text-red-200 hover:text-white text-lg"
                 style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
                 {"\u2715"}
@@ -2618,7 +2618,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               {mostrarPlayFelic && (
                 <div className="flex justify-center mt-5">
                   <PlayButton
-                    onClick={() => { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {}; setShowFelicitacoes(false); setShowTriagem(true); }}
+                    onClick={() => { setShowFelicitacoes(false); setAvaliarFase('cpf'); setAvaliarCpfInput(''); setAvaliarErro(''); }}
                     label="INICIAR"
                     ariaLabel="Iniciar investiga\u00e7\u00e3o"
                     ringColor="rgba(227,174,55,0.75)"
@@ -2644,7 +2644,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
             <div className="p-6 text-center space-y-4">
               <p className="text-gray-600 text-sm leading-relaxed">
-                {"Em breve: lista detalhada dos benef\u00edcios do Programa de Afiliados Patrocinado RedFairy."}
+                {"Em breve: lista detalhada dos benef\u00edcios do 4DOC | Programa de Afiliados OBA\u00ae."}
               </p>
               <p className="text-gray-400 text-xs">
                 {"Conte\u00fado em desenvolvimento."}
