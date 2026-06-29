@@ -1753,10 +1753,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             )}
             {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons.
                 zIndex 10 (acima do splash zIndex 5) p/ o header ja aparecer durante a imagem. */}
-            <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-              <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            <div style={{ position: 'relative', zIndex: 10, background: '#6B7280', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              <img src={obaLogo} alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} />
               <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', margin: '0 6px', fontWeight: 700 }}>|</span><span style={{ color: '#374151' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
+                <span style={{ color: '#facc15' }}>{"Projeto OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
               </h2>
             </div>
             {/* Subtitulo vinho do programa: zIndex 10 p/ aparecer desde o inicio, junto do header */}
@@ -2590,10 +2590,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               {"✕"}
             </button>
             {/* Header fada */}
-            <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            <div style={{ position: 'relative', zIndex: 10, background: '#6B7280', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <img src={obaLogo} alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} />
               <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', margin: '0 6px', fontWeight: 700 }}>|</span><span style={{ color: '#374151' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
+                <span style={{ color: '#facc15' }}>{"Projeto OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>
               </h2>
             </div>
             {/* HERO: imagem nitida no topo (bloco proprio, sem sobreposicao com o texto).
@@ -2602,15 +2602,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: `url(${ehDominioBariatrico() ? '/new-tele.png' : chatphone2Img})`, backgroundSize: ehDominioBariatrico() ? 'contain' : '100% auto', backgroundPosition: ehDominioBariatrico() ? 'center' : 'center top', backgroundRepeat: 'no-repeat' }} />
               <div style={{ position: 'absolute', left: 0, right: 0, bottom: '6%', padding: '0 24px', textAlign: 'center' }}>
                 <p style={{ color: '#ffffff', fontSize: '22px', fontWeight: 900, lineHeight: 1.18, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>
-                  {"Estamos felizes de ter voc\u00ea no RedFairy | OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>
+                  {"Estamos felizes de ter voc\u00ea no Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super', marginLeft: '1px' }}>{"\u00ae"}</sup>
                 </p>
               </div>
             </div>
             {/* Conteudo: surge apos o splash (2s), ABAIXO da imagem (sem sobreposicao) */}
             <div className="px-5 py-5" style={{ position: 'relative', zIndex: 1, opacity: splashFelic ? 0 : 1, transform: splashFelic ? 'translateY(8px)' : 'translateY(0)', transition: 'opacity 0.5s ease, transform 0.5s ease' }}>
-              {/* (a) Boas-vindas simplificada: texto cinza-escuro abaixo da imagem. */}
+              {/* (g) Logo + (f) nova frase: as duas fun\u00e7\u00f5es do m\u00e9dico (AVALIAR / ENCAMINHAR). */}
+              <img src={obaLogo} alt="Projeto OBA" className="h-16 object-contain mx-auto mb-3" />
               <p className="text-gray-700 text-sm leading-relaxed text-center">
-                {"Agora voc\u00ea vai iniciar uma investiga\u00e7\u00e3o simplificada de um paciente, onde voc\u00ea ver\u00e1 um resumo do que a anamnese do bari\u00e1trico faz. Tenha em m\u00e3os o HEMOGRAMA, e idealmente a FERRITINA e a SATURA\u00c7\u00c3O DA TRANSFERRINA."}
+                {"Agora voc\u00ea pode AVALIAR ou ENCAMINHAR novos pacientes para o Projeto OBA\u00ae, recebendo incentivo dos nossos patrocinadores para cada paciente que se cadastre sob o seu CRM. Para AVALIAR um/uma paciente voc\u00ea precisar\u00e1 dos seus exames mais recentes; para ENCAMINHAR voc\u00ea s\u00f3 precisa do CPF dele/dela."}
               </p>
               {/* Play DOURADO surge 2s depois do texto: seta o flag bariatrico e abre a triagem
                   (com isso o checkbox "paciente bariatrico" ja vem marcado e travado la). */}
