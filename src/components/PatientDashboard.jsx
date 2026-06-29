@@ -946,6 +946,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     return Math.ceil((d.getTime() - Date.now()) / 86400000)
   })()
   const mostrarAlertaHpylori = diasHpylori !== null && diasHpylori <= 15 && !alertaHpyloriFechado
+  // Fluxo bariátrico (OBA): header cinza + texto amarelo, "Projeto OBA®", sem fadinha, botões dourados.
+  const ehBari = inputs.bariatrica || profile?.bariatrica
 
   return (
     <>
@@ -958,17 +960,20 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     `}</style>
     <div className="min-h-screen bg-gray-50">
 
-      <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
+      <header className="py-4 px-4 shadow-lg text-white" style={{ background: ehBari ? '#6B7280' : '#b91c1c' }}>
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <button onClick={onVoltar}
-            className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+            className={`rounded-lg px-3 py-1 text-xs whitespace-nowrap transition-colors ${ehBari ? 'font-bold' : 'bg-red-800 hover:bg-red-900 font-medium'}`}
+            style={ehBari ? { background: '#E3AE37', color: '#000' } : undefined}>
             Voltar
           </button>
           <div className="flex items-center gap-3">
-            <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
-              style={{ filter: 'brightness(10)' }} />
+            {!ehBari && (
+              <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
+                style={{ filter: 'brightness(10)' }} />
+            )}
             <div>
-              <h1 className="text-xl font-bold">{"RedFairy | Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"\u00ae"}</sup></h1>
+              <h1 className="text-xl font-bold" style={ehBari ? { color: '#facc15' } : undefined}>{ehBari ? "Projeto OBA" : "RedFairy | Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"\u00ae"}</sup></h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -982,7 +987,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               </div>
             )}
             <button onClick={handleLogout}
-              className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors">
+              className={`rounded-lg px-3 py-1 text-xs whitespace-nowrap transition-colors ${ehBari ? 'font-bold' : 'bg-red-800 hover:bg-red-900 font-medium'}`}
+              style={ehBari ? { background: '#E3AE37', color: '#000' } : undefined}>
               Sair
             </button>
             {!(inputs.bariatrica || profile?.bariatrica) && (

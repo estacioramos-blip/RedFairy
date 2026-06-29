@@ -2035,7 +2035,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       )}
       <div style={OV} onClick={onFechar}>
       <div style={CD} onClick={e => e.stopPropagation()}>
-        <Header titulo={"Anamnese | OBA\u00ae"} sub={subPaciente} />
+        <Header titulo={"Anamnese | OBA\u00ae"} sub={subPaciente} semFada />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
 
           {/* Identifica\u00e7\u00e3o do paciente (nome, nascimento, sexo, CPF) */}
