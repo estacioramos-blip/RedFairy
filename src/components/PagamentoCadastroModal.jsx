@@ -159,7 +159,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
 
         {/* Header padr\u00e3o (logo-fada + RedFairy) */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: profile?.bariatrica ? '#6B7280' : 'rgba(255,255,255,0.92)' }}>
-          {!profile?.bariatrica && <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
+          {profile?.bariatrica ? <img src="/oba-fairy.png" alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
             {profile?.bariatrica ? (
               <span style={{ color: '#facc15' }}>{"Projeto OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>

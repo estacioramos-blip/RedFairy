@@ -167,7 +167,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
 
         {/* Header padrão (logo-fada + RedFairy). zIndex 10 p/ aparecer já durante o splash. */}
         <div style={{ position: 'relative', zIndex: 10, background: ehBari ? '#6B7280' : 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          {!ehBari && <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
+          {ehBari ? <img src="/oba-fairy.png" alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
             {ehBari ? (
               <span style={{ color: '#facc15' }}>{"Projeto OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>

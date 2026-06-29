@@ -225,7 +225,7 @@ export default function TriagemResultadoModal({
         <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl my-8 overflow-hidden">
           {/* Header compacto com a fadinha RedFairy a' esquerda (padrao novo) */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: inputs?.bariatrica ? '#6B7280' : 'rgba(255,255,255,0.92)' }}>
-            {!inputs?.bariatrica && <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
+            {inputs?.bariatrica ? <img src="/oba-fairy.png" alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
               {inputs?.bariatrica ? (<span style={{ color: '#facc15', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>) : (<><span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span><span style={{ color: '#374151', fontWeight: 700 }}>{"OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span></>)}
             </h2>
@@ -305,7 +305,7 @@ export default function TriagemResultadoModal({
         <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
           {/* Header padrao compacto (igual aos modais recentes): RedFairy | OBA(R). */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: inputs?.bariatrica ? '#6B7280' : 'rgba(255,255,255,0.92)' }}>
-            {!inputs?.bariatrica && <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
+            {inputs?.bariatrica ? <img src="/oba-fairy.png" alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
               {inputs?.bariatrica ? (<span style={{ color: '#facc15', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span>) : (<><span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', margin: '0 6px', fontWeight: 700 }}>|</span><span style={{ color: '#374151' }}>OBA<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>®</sup></span></>)}
             </h2>
@@ -364,7 +364,7 @@ export default function TriagemResultadoModal({
         <div className="bg-white rounded-2xl max-w-md w-full max-h-[95vh] overflow-y-auto shadow-2xl">
           {/* Header compacto com a fadinha RedFairy a' esquerda (padrao novo) */}
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100" style={{ background: inputs?.bariatrica ? '#6B7280' : 'rgba(255,255,255,0.92)' }}>
-            {!inputs?.bariatrica && <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
+            {inputs?.bariatrica ? <img src="/oba-fairy.png" alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
               {inputs?.bariatrica ? (<span style={{ color: '#facc15', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>) : (<><span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span><span style={{ color: '#374151', fontWeight: 700 }}>{"OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span></>)}
             </h2>
@@ -437,7 +437,7 @@ export default function TriagemResultadoModal({
             no padrão da landing/TriagemModal. Reduz a altura do modal. */}
         <div style={{ background: inputs?.bariatrica ? '#6B7280' : '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }} className="rounded-t-2xl">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {!inputs?.bariatrica && <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
+            {inputs?.bariatrica ? <img src="/oba-fairy.png" alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
               {inputs?.bariatrica ? (<span style={{ color: '#facc15', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>) : (<><span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span><span style={{ color: '#374151', fontWeight: 700 }}>{"OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span></>)}
             </h2>

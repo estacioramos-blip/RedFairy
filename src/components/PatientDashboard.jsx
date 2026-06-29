@@ -968,7 +968,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             Voltar
           </button>
           <div className="flex items-center gap-3">
-            {!ehBari && (
+            {ehBari ? (
+              <img src="/oba-fairy.png" alt="Projeto OBA" className="w-9 h-9 object-contain" />
+            ) : (
               <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
                 style={{ filter: 'brightness(10)' }} />
             )}
