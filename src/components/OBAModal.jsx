@@ -1867,7 +1867,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <p style={{ fontSize:'0.78rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.4px', color:'#7B1E1E', margin:'0 0 0.4rem' }}>
                 {soFerro
                   ? "Indicadores | Reserva de Ferro"
-                  : (novaDataExames ? "Lance os valores atualizados do eritron:" : "Inclua tamb\u00e9m estes (n\u00e3o vieram na triagem):")}
+                  : (novaDataExames ? "Lance os valores atualizados do eritron:" : "Lance os valores do eritron:")}
               </p>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:'0.3rem' }}>
                 {eritronNovoFields.map((ex, i) => {
