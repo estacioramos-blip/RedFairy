@@ -813,9 +813,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (d.length !== 11) { setAvaliarErro('CPF inválido'); return }
     setAvaliarBusy(true); setAvaliarErro('')
     try {
-      const { data } = await supabase.from('profiles').select('cpf, nome, sexo, data_nascimento').eq('cpf', d).maybeSingle()
-      if (!data) { setAvaliarErro('Paciente não cadastrado. Peça que se cadastre primeiro.'); setAvaliarBusy(false); return }
-      setAvaliarPaciente(data); setAvaliarFase('oba')
+      const { data: prof } = await supabase.from('profiles').select('cpf, nome, sexo, data_nascimento').eq('cpf', d).maybeSingle()
+      if (!prof) { setAvaliarErro('Paciente não cadastrado. Peça que se cadastre primeiro.'); setAvaliarBusy(false); return }
+      // Traz o que o paciente já tem: última avaliação (eritron) + última anamnese do OBA.
+      const { data: avals } = await supabase.from('avaliacoes').select('*').eq('cpf', d).order('data_coleta', { ascending: false }).limit(1)
+      let anam = null
+      try {
+        const { data: obaRows } = await supabase.from('oba_anamnese').select('*').eq('cpf', d).order('created_at', { ascending: false }).limit(1)
+        anam = (obaRows && obaRows.length) ? obaRows[0] : null
+      } catch (e) {}
+      setAvaliarPaciente({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam })
+      setAvaliarFase('oba')
     } catch (e) { setAvaliarErro('Erro de conexão. Tente de novo.') }
     setAvaliarBusy(false)
   }
@@ -1589,10 +1597,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           dataNascimento={avaliarPaciente.data_nascimento}
           idade={avaliarPaciente.data_nascimento ? Math.floor((Date.now() - new Date(avaliarPaciente.data_nascimento)) / 31557600000) : 0}
           dadosRedFairy={{}}
-          resultadoEritron={null}
-          examesRedFairy={null}
-          anamneseAnterior={null}
-          coletarHemograma={true}
+          resultadoEritron={avaliarPaciente.ultimaAval
+            ? { label: avaliarPaciente.ultimaAval.diagnostico_label, color: avaliarPaciente.ultimaAval.diagnostico_color, inputs: { sexo: avaliarPaciente.sexo } }
+            : null}
+          examesRedFairy={avaliarPaciente.ultimaAval
+            ? { ferritina: avaliarPaciente.ultimaAval.ferritina, hemoglobina: avaliarPaciente.ultimaAval.hemoglobina, vcm: avaliarPaciente.ultimaAval.vcm, rdw: avaliarPaciente.ultimaAval.rdw, satTransf: avaliarPaciente.ultimaAval.sat_transf, dataColeta: avaliarPaciente.ultimaAval.data_coleta }
+            : null}
+          anamneseAnterior={avaliarPaciente.anamneseAnterior}
+          coletarHemograma={!avaliarPaciente.ultimaAval}
           onFechar={() => { setAvaliarFase(null); setAvaliarPaciente(null) }}
           onConcluir={async () => {
             try {
