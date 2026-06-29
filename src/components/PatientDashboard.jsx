@@ -1251,7 +1251,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 <div className="text-center px-5" style={{ position: 'absolute', top: '5%', left: 0, right: 0, zIndex: 1 }}>
                   <style>{`@keyframes rfBvFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}`}</style>
                   <h2 className="text-base font-bold" style={{ color: '#ffffff', animation: 'rfBvFade 0.6s ease both' }}>
-                    {(profile.sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo')}{", "}{profile.nome?.split(' ')[0] || ''}{", ao RedFairy | OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{"!"}
+                    {(profile.sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo')}{", "}{profile.nome?.split(' ')[0] || ''}{ehBari ? ", ao Projeto OBA" : ", ao RedFairy | OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{"!"}
                   </h2>
                 </div>
 

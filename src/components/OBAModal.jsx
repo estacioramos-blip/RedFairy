@@ -1143,7 +1143,6 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const Header = ({ sub, titulo, semFada }) => (
     <div style={HD}>
       <button onClick={voltarEtapa} style={{ background:'#E3AE37', border:'none', borderRadius:8, color:'#000', fontSize:'0.8rem', fontWeight:800, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
-      {!semFada && <img src={logo} alt="OBA" style={{ width:40, height:40, objectFit:'contain', filter:'brightness(10)' }} />}
       <div>
         <h2 style={{ color:'#facc15', fontSize: titulo ? '1.02rem' : '1.2rem', fontWeight:800, margin:0, lineHeight:1.25 }}>{titulo || `${saudacao} ao Projeto OBA!`}</h2>
         <p style={{ color:'#FDE68A', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', marginTop:'0.2rem' }}>{sub}</p>
@@ -1178,7 +1177,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     'Antes da 1ª dose: 10.000 UI de vitamina D (prevenção de hipofosfatemia).',
     'Precauções: adrenalina/anti-histamínico disponíveis; observar 30 min após a infusão.',
     'Monitoramento: hemograma em 4 semanas; ferritina e saturação em 8 semanas.',
-    '— RedFairy | OBA',
+    '— Projeto OBA®',
   ].join('\n')
 
   // Gera o PDF do protocolo de ferro EV (jsPDF carregado sob demanda p/ não pesar
@@ -1199,7 +1198,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(123, 30, 30)
       doc.text('Protocolo de Reposição de Ferro Endovenoso', M, y); y += 7
       doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(110, 110, 110)
-      doc.text('RedFairy — OBA (paciente bariátrico) · Fórmula de Ganzoni', M, y); y += 11
+      doc.text('Projeto OBA® (paciente bariátrico) · Fórmula de Ganzoni', M, y); y += 11
       doc.setTextColor(30, 30, 30); doc.setFontSize(11)
       doc.text('Paciente: ' + (nome || '—'), M, y); y += 9
       if (calc) {
@@ -1516,7 +1515,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
             {!rel ? (
               <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'1rem' }}>
-                <p style={{ color:'#7B1E1E', fontWeight:700, fontSize:'0.9rem', margin:0 }}>{"N\u00e3o foi poss\u00edvel gerar a avalia\u00e7\u00e3o (eritron indispon\u00edvel). Refa\u00e7a ap\u00f3s uma avalia\u00e7\u00e3o RedFairy."}</p>
+                <p style={{ color:'#7B1E1E', fontWeight:700, fontSize:'0.9rem', margin:0 }}>{"N\u00e3o foi poss\u00edvel gerar a avalia\u00e7\u00e3o (eritron indispon\u00edvel). Refa\u00e7a ap\u00f3s uma avalia\u00e7\u00e3o do Projeto OBA\u00ae."}</p>
               </div>
             ) : (
               <>

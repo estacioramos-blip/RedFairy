@@ -1,7 +1,7 @@
 {
-  "name": "RedFairy | OBA®",
+  "name": "Projeto OBA®",
   "short_name": "OBA",
-  "description": "Projeto OBA — acompanhamento do bariátrico e triagem do eritron (RedFairy).",
+  "description": "Projeto OBA — acompanhamento do paciente bariátrico.",
   "start_url": "/?oba=1",
   "scope": "/",
   "display": "standalone",
