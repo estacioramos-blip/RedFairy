@@ -206,6 +206,10 @@ export default function App() {
     // p/ logar 1×, e a flag faz abrir o "novo hemograma" logo após.
     if (fadaLaunch && !(pToken && pCpf) && params.get('oba') !== '1') {
       try { localStorage.setItem('rf_abrir_nova', '1') } catch (e) {}
+      // Ícone bariátrico que NÃO consegue re-entrar nunca pode cair na landing redfairy:
+      // o fallback é a entrada bariátrica ('oba-paciente'), não 'home'.
+      let domBariIcon = false
+      try { domBariIcon = localStorage.getItem('rf_dom_bari') === '1' || localStorage.getItem('rf_flag') === 'bariatrica' } catch (e) {}
       let temPaciente = false
       try { temPaciente = !!localStorage.getItem('paciente_id') } catch (e) {}
       if (temPaciente) setModo('paciente')
@@ -217,7 +221,11 @@ export default function App() {
           rCpf = localStorage.getItem('rf_reentry_cpf') || localStorage.getItem('paciente_cpf') || ''
           rTok = localStorage.getItem('rf_reentry_token') || localStorage.getItem('paciente_token') || ''
         } catch (e) {}
-        if (rCpf && rTok) { ;(async () => { if (await reentrarPacienteToken(rCpf, rTok)) setModo('paciente') })() }
+        if (rCpf && rTok) {
+          ;(async () => { if (await reentrarPacienteToken(rCpf, rTok)) setModo('paciente'); else if (domBariIcon) setModo('oba-paciente') })()
+        } else if (domBariIcon) {
+          setModo('oba-paciente')
+        }
       }
     }
     // (bariatrico.net) MODO BARIÁTRICO: o domínio bariátrico liga o flag p/ o paciente
