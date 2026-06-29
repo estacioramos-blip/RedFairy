@@ -1555,6 +1555,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   <PlayButton onClick={() => setShowMeusCreditosMed(true)} ariaLabel="Ver créditos" />
                 </div>
               </div>
+              <div className="mt-4 pt-3 border-t border-gray-100 text-center">
+                <button onClick={() => { onLogout(); if (onVoltar) onVoltar(); }} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR E DESLOGAR"}</button>
+              </div>
             </div>
           </div>
         </div>
