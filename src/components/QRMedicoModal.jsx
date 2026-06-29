@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import { supabase } from '../lib/supabase'
 import fadaIcon from '../assets/logo.png'
 import obaLogo from '../assets/oba-logo.png'
 
@@ -24,6 +25,37 @@ export default function QRMedicoModal({ crm, onClose }) {
         setTimeout(() => setCopiado(false), 2500)
       })
     } catch (e) {}
+  }
+
+  // Encaminhar DIGITANDO o CPF (o médico tem o CPF mas não vai mandar link/QR).
+  const [cpfEnc, setCpfEnc] = useState('')
+  const [cpfEncMsg, setCpfEncMsg] = useState(null)   // {ok, txt}
+  const [cpfEncBusy, setCpfEncBusy] = useState(false)
+  const formatarCPF = (raw) => {
+    const d = String(raw || '').replace(/\D/g, '').slice(0, 11)
+    if (d.length <= 3) return d
+    if (d.length <= 6) return d.slice(0, 3) + '.' + d.slice(3)
+    if (d.length <= 9) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6)
+    return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9)
+  }
+  async function encaminharPorCpf() {
+    const d = String(cpfEnc || '').replace(/\D/g, '')
+    if (d.length !== 11) { setCpfEncMsg({ ok: false, txt: 'CPF inválido (11 dígitos).' }); return }
+    setCpfEncBusy(true); setCpfEncMsg(null)
+    let token = ''
+    try { token = localStorage.getItem('medico_token') || '' } catch (e) {}
+    try {
+      const { data } = await supabase.rpc('medico_encaminhar_cpf', { p_crm: crm, p_token: token, p_cpf: d })
+      if (data && data.ok) {
+        setCpfEncMsg({ ok: true, txt: data.ja_cadastrado
+          ? 'Esse paciente já faz parte do Projeto. O encaminhamento foi registrado mesmo assim.'
+          : 'Encaminhamento registrado! Quando esse paciente se cadastrar e pagar, o crédito é seu.' })
+        setCpfEnc('')
+      } else {
+        setCpfEncMsg({ ok: false, txt: (data && data.erro) || 'Não foi possível registrar.' })
+      }
+    } catch (e) { setCpfEncMsg({ ok: false, txt: 'Erro de conexão. Tente de novo.' }) }
+    setCpfEncBusy(false)
   }
 
   // Ao APARECER o QR, o link e' copiado automaticamente no celular do medico — ele cola
@@ -81,6 +113,21 @@ export default function QRMedicoModal({ crm, onClose }) {
               className={`shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${copiado ? 'border-2 border-red-500' : ''}`}>
               {copiado ? '✓ Copiado' : 'Copiar'}
             </button>
+          </div>
+
+          {/* Encaminhar DIGITANDO o CPF (sem precisar do link/QR). */}
+          <div className="w-full border-t border-gray-100 pt-3 text-left">
+            <p className="text-xs font-bold text-gray-600 mb-1.5">{"Ou encaminhe pelo CPF (sem o link):"}</p>
+            <div className="flex items-center gap-2">
+              <input value={cpfEnc} onChange={e => { setCpfEnc(formatarCPF(e.target.value)); setCpfEncMsg(null) }}
+                placeholder="000.000.000-00" inputMode="numeric" maxLength={14}
+                className="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-sm" />
+              <button onClick={encaminharPorCpf} disabled={cpfEncBusy}
+                className="shrink-0 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50" style={{ background: '#6B7280' }}>
+                {cpfEncBusy ? '...' : 'Encaminhar'}
+              </button>
+            </div>
+            {cpfEncMsg && <p className="text-xs font-bold mt-1.5 leading-snug" style={{ color: cpfEncMsg.ok ? '#15803d' : '#b91c1c' }}>{cpfEncMsg.txt}</p>}
           </div>
 
           <button onClick={onClose}

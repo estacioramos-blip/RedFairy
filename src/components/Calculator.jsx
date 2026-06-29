@@ -1580,7 +1580,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <input autoFocus className="w-full border-2 border-gray-300 rounded-lg px-3 py-2.5 text-base text-center font-bold outline-none focus:border-gray-500"
               inputMode="numeric" maxLength={14} placeholder="000.000.000-00"
               value={avaliarCpfInput}
-              onChange={e => { setAvaliarCpfInput(e.target.value); setAvaliarErro('') }}
+              onChange={e => { const d = e.target.value.replace(/\D/g, '').slice(0, 11); const f = d.length <= 3 ? d : d.length <= 6 ? d.slice(0,3)+'.'+d.slice(3) : d.length <= 9 ? d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6) : d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9); setAvaliarCpfInput(f); setAvaliarErro('') }}
               onKeyDown={e => { if (e.key === 'Enter') carregarPacienteAvaliar() }} />
             {avaliarErro && <p className="text-center text-red-600 text-xs font-bold mt-2">{avaliarErro}</p>}
             <div className="flex justify-end mt-3">
