@@ -817,13 +817,17 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       const { data: prof } = await supabase.from('profiles').select('cpf, nome, sexo, data_nascimento, bariatrica').eq('cpf', d).maybeSingle()
       if (!prof) { setAvaliarErro('Paciente não cadastrado. Peça que se cadastre primeiro.'); setAvaliarBusy(false); return }
       // Traz o que o paciente já tem: última avaliação (eritron) + última anamnese do OBA.
-      const { data: avals } = await supabase.from('avaliacoes').select('*').eq('cpf', d).order('data_coleta', { ascending: false }).limit(1)
+      const { data: avals } = await supabase.from('avaliacoes').select('*').eq('cpf', d).order('data_coleta', { ascending: false }).limit(6)
       let anam = null
       try {
         const { data: obaRows } = await supabase.from('oba_anamnese').select('*').eq('cpf', d).order('created_at', { ascending: false }).limit(1)
         anam = (obaRows && obaRows.length) ? obaRows[0] : null
       } catch (e) {}
-      setAvaliarPaciente({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam })
+      const historico = (avals || []).map(a => ({
+        data: a.data_coleta ? String(a.data_coleta).slice(0, 10).split('-').reverse().join('/') : '—',
+        hb: a.hemoglobina, vcm: a.vcm, rdw: a.rdw,
+      }))
+      setAvaliarPaciente({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam, historico })
       setAvaliarFase('triagem')
     } catch (e) { setAvaliarErro('Erro de conexão. Tente de novo.') }
     setAvaliarBusy(false)
@@ -1598,7 +1602,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           modoMedico={true}
           cpfPrefill={avaliarPaciente.cpf}
           cpfBloqueado={true}
-          pacientePrefill={{ nome: avaliarPaciente.nome, sexo: avaliarPaciente.sexo, data_nascimento: avaliarPaciente.data_nascimento, bariatrica: avaliarPaciente.bariatrica, ultimoHemograma: avaliarPaciente.ultimaAval }}
+          pacientePrefill={{ nome: avaliarPaciente.nome, sexo: avaliarPaciente.sexo, data_nascimento: avaliarPaciente.data_nascimento, bariatrica: avaliarPaciente.bariatrica, ultimoHemograma: avaliarPaciente.ultimaAval, historico: avaliarPaciente.historico }}
           onConcluir={(resultado, novosInputs) => { setAvaliarTriagem({ resultado, inputs: novosInputs }); setAvaliarFase('oba') }}
           onFechar={() => { setAvaliarFase(null); setAvaliarPaciente(null); setAvaliarTriagem(null) }}
         />
