@@ -16,7 +16,7 @@ import PlayButton from './PlayButton';
  *   onConcluir:       function(resultado, inputs) - chamada apos avaliar com sucesso
  *   onFechar:         function() - usuario fechou sem avaliar
  */
-export default function TriagemModal({ modoMedico = false, isDemoPaciente = false, cpfPrefill = '', cpfBloqueado = false, pacientePrefill = null, onConcluir, onFechar, onAprofundar }) {
+export default function TriagemModal({ modoMedico = false, isDemoPaciente = false, cpfPrefill = '', cpfBloqueado = false, onConcluir, onFechar, onAprofundar }) {
   // Formata CPF inicial (se vier prefilled como digitos puros)
   const formatarCPFInicial = (raw) => {
     const d = String(raw || '').replace(/\D/g, '').slice(0, 11);
@@ -176,26 +176,8 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
   }, [inputs.data_coleta, pacienteConhecido]);
 
-  // AVALIAR (médico): paciente já carregado pelo CPF-entry → semeia o reconhecimento direto
-  // (não depende da busca interna por CPF, que aqui é pulada).
   useEffect(() => {
-    if (!pacientePrefill || !pacientePrefill.sexo) return;
-    setPacienteConhecido({
-      origem: 'prefill',
-      nome: pacientePrefill.nome || '',
-      sexo: pacientePrefill.sexo,
-      data_nascimento: pacientePrefill.data_nascimento,
-      bariatrica: !!pacientePrefill.bariatrica,
-      gestante: false, semanas_gestacao_triagem: null, data_triagem_gestacao: null,
-      semanas_gestacao: null, dum: null, created_at: null,
-      ultimoHemograma: pacientePrefill.ultimoHemograma || null,
-      historico: pacientePrefill.historico || null,
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if ((!modoMedico && !cpfBloqueado) || pacientePrefill) return;
+    if (!modoMedico && !cpfBloqueado) return;
     const digits = String(inputs.cpf || '').replace(/\D/g, '');
     // Só busca quando o CPF é VÁLIDO. Antes, qualquer 11 dígitos (inclusive CPF inválido)
     // disparava a busca + re-renders a cada tecla, atrapalhando/roubando o foco do campo
@@ -1053,19 +1035,6 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           })()}
 
           {pacienteConhecido !== 'BLOQUEADO' && (<>
-            {modoMedico && Array.isArray(pacienteConhecido?.historico) && pacienteConhecido.historico.length > 0 && (
-              <div className="mb-3 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2">
-                <p className="text-[0.6rem] font-bold uppercase tracking-wider text-gray-500 mb-1">{"Histórico do paciente"}</p>
-                <div className="space-y-0.5">
-                  {pacienteConhecido.historico.map((h, i) => (
-                    <div key={i} className="flex items-center justify-between text-[0.68rem] text-gray-700">
-                      <span className="font-semibold text-gray-600">{h.data}</span>
-                      <span style={{ fontVariantNumeric: 'tabular-nums' }}>{"Hb "}{h.hb ?? '—'}{"  ·  VCM "}{h.vcm ?? '—'}{"  ·  RDW "}{h.rdw ?? '—'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">{"Data do Hemograma"}</label>
               {/* Mesmo padr\u00e3o de grid grid-cols-2 do bloco Sexo/Data Nascimento, garantindo larguras id\u00eanticas. */}
