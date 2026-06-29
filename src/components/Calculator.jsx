@@ -803,8 +803,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [menuMedico, setMenuMedico] = useState(!preDemoDados)
   // AVALIAR: o médico digita o CPF (ou lê o QR) do paciente → abre o OBA Modal com os
   // dados dele (o médico faz a avaliação/OBA pelo paciente).
-  const [avaliarFase, setAvaliarFase] = useState(null)        // null | 'cpf' | 'oba'
+  const [avaliarFase, setAvaliarFase] = useState(null)        // null | 'cpf' | 'triagem' | 'oba'
   const [avaliarPaciente, setAvaliarPaciente] = useState(null)
+  const [avaliarTriagem, setAvaliarTriagem] = useState(null)  // {resultado, inputs} da triagem
   const [avaliarCpfInput, setAvaliarCpfInput] = useState('')
   const [avaliarErro, setAvaliarErro] = useState('')
   const [avaliarBusy, setAvaliarBusy] = useState(false)
@@ -823,7 +824,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         anam = (obaRows && obaRows.length) ? obaRows[0] : null
       } catch (e) {}
       setAvaliarPaciente({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam })
-      setAvaliarFase('oba')
+      setAvaliarFase('triagem')
     } catch (e) { setAvaliarErro('Erro de conexão. Tente de novo.') }
     setAvaliarBusy(false)
   }
@@ -1588,30 +1589,45 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         </div>
       )}
 
-      {/* AVALIAR — passo 2: o OBA Modal do paciente (médico faz a avaliação). */}
-      {avaliarFase === 'oba' && avaliarPaciente && (
+      {/* AVALIAR — passo 2: TRIAGEM (eritron), pré-preenchida p/ paciente cadastrado. */}
+      {avaliarFase === 'triagem' && avaliarPaciente && (
+        <TriagemModal
+          modoMedico={true}
+          cpfPrefill={avaliarPaciente.cpf}
+          cpfBloqueado={true}
+          onConcluir={(resultado, novosInputs) => { setAvaliarTriagem({ resultado, inputs: novosInputs }); setAvaliarFase('oba') }}
+          onFechar={() => { setAvaliarFase(null); setAvaliarPaciente(null); setAvaliarTriagem(null) }}
+        />
+      )}
+
+      {/* AVALIAR — passo 3: o OBA Modal (médico faz a avaliação, com o eritron da triagem). */}
+      {avaliarFase === 'oba' && avaliarPaciente && avaliarTriagem && (
         <OBAModal
           cpf={avaliarPaciente.cpf}
           nome={avaliarPaciente.nome}
-          sexo={avaliarPaciente.sexo}
-          dataNascimento={avaliarPaciente.data_nascimento}
-          idade={avaliarPaciente.data_nascimento ? Math.floor((Date.now() - new Date(avaliarPaciente.data_nascimento)) / 31557600000) : 0}
-          dadosRedFairy={{}}
-          resultadoEritron={avaliarPaciente.ultimaAval
-            ? { label: avaliarPaciente.ultimaAval.diagnostico_label, color: avaliarPaciente.ultimaAval.diagnostico_color, inputs: { sexo: avaliarPaciente.sexo } }
-            : null}
-          examesRedFairy={avaliarPaciente.ultimaAval
-            ? { ferritina: avaliarPaciente.ultimaAval.ferritina, hemoglobina: avaliarPaciente.ultimaAval.hemoglobina, vcm: avaliarPaciente.ultimaAval.vcm, rdw: avaliarPaciente.ultimaAval.rdw, satTransf: avaliarPaciente.ultimaAval.sat_transf, dataColeta: avaliarPaciente.ultimaAval.data_coleta }
-            : null}
+          sexo={avaliarTriagem.inputs.sexo || avaliarPaciente.sexo}
+          dataNascimento={avaliarTriagem.inputs.dataNascimento || avaliarPaciente.data_nascimento}
+          idade={avaliarTriagem.inputs.idade || (avaliarPaciente.data_nascimento ? Math.floor((Date.now() - new Date(avaliarPaciente.data_nascimento)) / 31557600000) : 0)}
+          dadosRedFairy={{
+            gestante: avaliarTriagem.inputs.gestante,
+            semanas_gestacao: avaliarTriagem.inputs.semanas_gestacao ? Number(avaliarTriagem.inputs.semanas_gestacao) : null,
+            dum: avaliarTriagem.inputs.dum || null,
+          }}
+          resultadoEritron={{ label: avaliarTriagem.resultado?.label, color: avaliarTriagem.resultado?.color, inputs: avaliarTriagem.inputs }}
+          examesRedFairy={{
+            ferritina: '', satTransf: '',
+            hemoglobina: avaliarTriagem.inputs.hemoglobina, vcm: avaliarTriagem.inputs.vcm, rdw: avaliarTriagem.inputs.rdw,
+            dataColeta: avaliarTriagem.inputs.data_coleta || null,
+          }}
           anamneseAnterior={avaliarPaciente.anamneseAnterior}
-          coletarHemograma={!avaliarPaciente.ultimaAval}
-          onFechar={() => { setAvaliarFase(null); setAvaliarPaciente(null) }}
+          coletarHemograma={false}
+          onFechar={() => { setAvaliarFase(null); setAvaliarPaciente(null); setAvaliarTriagem(null) }}
           onConcluir={async () => {
             try {
               const tok = localStorage.getItem('medico_token') || ''
               await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: avaliarPaciente.cpf, p_opiniao: '', p_sugestao: '' })
             } catch (e) {}
-            setAvaliarFase(null); setAvaliarPaciente(null)
+            setAvaliarFase(null); setAvaliarPaciente(null); setAvaliarTriagem(null)
           }}
         />
       )}
