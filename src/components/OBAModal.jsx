@@ -427,7 +427,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   //  States: declarados PRIMEIRO, antes de qualquer useEffect que os use
   // BUG #4 e #5 corrigidos: ordem dos hooks. form, exames, dataExames,
   // aberrantesOBA, alertaPeso agora vem antes dos useEffects que os mexem.
-  const [etapa, setEtapa] = useState(salvo?.etapa || 'anamnese')
+  const [etapa, setEtapa] = useState(salvo?.etapa || (coletarHemograma ? 'eritron' : 'anamnese'))
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [anamneseSalva, setAnamneseSalva] = useState(null)
@@ -440,6 +440,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [exMes, setExMes] = useState(_edSalvo[1] || '')
   const [exAno, setExAno] = useState(_edSalvo[0] || '')
   const [aberrantesOBA, setAberrantesOBA] = useState({})
+  // Etapa ERITRON (médico/ícone): popup com o resultado do eritron após lançar Hb/VCM/RDW.
+  const [showEritronPopup, setShowEritronPopup] = useState(false)
+  const [eritronPopup, setEritronPopup] = useState(null)
   // Etapa 'relatorio' (BASELINE): saída do avaliarOBA + estado clínico calculado.
   const [relatorio, setRelatorio] = useState(salvo?.relatorio || null)
   const [estadoClinico, setEstadoClinico] = useState(salvo?.estadoClinico || null)
@@ -1139,8 +1142,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     if (etapa === 'conclusao') setEtapa('relatorio')
     else if (etapa === 'relatorio') setEtapa('exames')
     else if (etapa === 'exames') setEtapa('anamnese')
+    else if (etapa === 'anamnese' && coletarHemograma) setEtapa('eritron')
     else onFechar()
   }
+  const corEritron = (c) => c === 'red' ? '#DC2626' : c === 'orange' ? '#EA580C' : c === 'yellow' ? '#CA8A04' : c === 'green' ? '#16A34A' : '#6B7280'
+  function verAchadosEritron() {
+    const hb = Number(exames.hb_novo), vcm = Number(exames.vcm_novo), rdw = Number(exames.rdw_novo)
+    if (!(hb > 0) || !(vcm > 0) || !(rdw > 0)) { setErro('Lance Hemoglobina, VCM e RDW.'); return }
+    if (!dataExames) { setErro('Informe a data do hemograma.'); return }
+    setErro('')
+    setEritronPopup(eritronEfetivo(buildExamesOBA()))
+    setShowEritronPopup(true)
+  }
+  function encerrarAvaliacao() { setShowEritronPopup(false); finalizar() }
   const Header = ({ sub, titulo, semFada }) => (
     <div style={HD}>
       <button onClick={voltarEtapa} style={{ background:'#E3AE37', border:'none', borderRadius:8, color:'#000', fontSize:'0.8rem', fontWeight:800, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
@@ -1745,9 +1759,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     { key:'sat_novo', label:"Sat. Transferrina", unit:'%' },
   ]
   let eritronNovoFields = []
-  if (novaDataExames || coletarHemograma) {
-    // coletarHemograma = re-entrada pelo ÍCONE (ENTRAR): não veio hemograma da triagem,
-    // então o paciente digita o hemograma completo aqui (é o que alimenta o eritron).
+  if (coletarHemograma) {
+    // Hb/VCM/RDW já foram lançados na ETAPA 'eritron' (topo do fluxo); aqui só ferritina/sat.
+    eritronNovoFields = [ERITRON_NOVO_TODOS[3], ERITRON_NOVO_TODOS[4]]
+  } else if (novaDataExames) {
     eritronNovoFields = ERITRON_NOVO_TODOS
   } else if (_temRF) {
     if (!examesRedFairy.ferritina) eritronNovoFields.push(ERITRON_NOVO_TODOS[3])
@@ -1758,6 +1773,64 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const primeiroExameGridKey = eritronNovoFields.length ? null : 'leucocitos'
   // Só os indicadores de ferro (ferritina/sat) — sem hb/vcm/rdw → grupo "Reserva de Ferro".
   const soFerro = eritronNovoFields.length > 0 && eritronNovoFields.every(f => f.key === 'ferritina_novo' || f.key === 'sat_novo')
+
+  if (etapa === 'eritron') return (
+    <div style={OV}>
+      <div style={CD} onClick={e => e.stopPropagation()}>
+        <Header titulo={"Hemograma | OBA®"} sub={subPaciente} semFada />
+        <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
+          <p style={{ fontSize:'0.85rem', color:'#374151', marginBottom:'1rem', lineHeight:1.5 }}>
+            {"Lance a DATA e o HEMOGRAMA do paciente (Hemoglobina, VCM e RDW)."}
+          </p>
+          <label style={{ display:'block', fontSize:'0.75rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#374151', marginBottom:'0.5rem' }}>{"Data do hemograma"}</label>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem', marginBottom:'1.1rem' }}>
+            <div><label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>{"DIA"}</label>
+              <input ref={refExDia} style={inpA} onWheel={noWheel} type="number" min="1" max="31" placeholder="DD" value={exDia}
+                onChange={e => { setExDia(e.target.value); saltoPorDigitos(e.target.value, refExMes, 2) }} /></div>
+            <div><label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>{"MÊS"}</label>
+              <input ref={refExMes} style={inpA} onWheel={noWheel} type="number" min="1" max="12" placeholder="MM" value={exMes}
+                onChange={e => { setExMes(e.target.value); saltoPorDigitos(e.target.value, refExAno, 2) }} /></div>
+            <div><label style={{ fontSize:'0.7rem', color:'#374151', fontWeight:700 }}>{"ANO"}</label>
+              <input ref={refExAno} style={inpA} onWheel={noWheel} type="number" min="2000" max="2030" placeholder="AAAA" value={exAno}
+                onChange={e => setExAno(e.target.value)} /></div>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:'0.5rem' }}>
+            {[{ k:'hb_novo', l:'Hemoglobina', u:'g/dL' }, { k:'vcm_novo', l:'VCM', u:'fL' }, { k:'rdw_novo', l:'RDW', u:'%' }].map(f => (
+              <div key={f.k} style={{ display:'flex', flexDirection:'column', background:'#FEFCE8', border:'1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
+                <span style={{ fontSize:'0.74rem', fontWeight:600, color:'#1F2937', lineHeight:1.15 }}>{f.l}</span>
+                <span style={{ fontSize:'0.66rem', fontWeight:600, color:'#4B5563', lineHeight:1.1 }}>{f.u}</span>
+                <input className="oba-exame-input" onWheel={noWheel} style={{ width:'100%', border:'1.5px solid #FACC15', borderRadius:5, padding:'0.3rem 0.34rem', fontSize:'0.92rem', fontWeight:700, outline:'none', textAlign:'right', fontFamily:'inherit', background:'#FFFDF5', color:'#111827', boxSizing:'border-box' }}
+                  type="text" inputMode="decimal" value={exames[f.k] || ''} onChange={e => handleExameChangeOBA(f.k, e.target.value)} />
+              </div>
+            ))}
+          </div>
+          {erro && <p style={{ color:'#DC2626', fontSize:'0.8rem', fontWeight:700, marginTop:'0.8rem' }}>{erro}</p>}
+          <div style={{ display:'flex', justifyContent:'flex-end', marginTop:'1.3rem' }}>
+            <PlayButton onClick={verAchadosEritron} label={"VER ACHADOS"} ringColor="rgba(250,204,21,0.75)" />
+          </div>
+        </div>
+      </div>
+      {showEritronPopup && eritronPopup && (
+        <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}>
+          <div style={{ background:'#fff', borderRadius:16, maxWidth:380, width:'100%', overflow:'hidden', boxShadow:'0 10px 40px rgba(0,0,0,0.4)' }}>
+            <div style={{ background: corEritron(eritronPopup.color), padding:'1rem 1.2rem' }}>
+              <p style={{ color:'#fff', fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'1px', margin:0, opacity:0.9 }}>{"Achados do Eritron"}</p>
+              <p style={{ color:'#fff', fontSize:'1.05rem', fontWeight:900, margin:'0.2rem 0 0', lineHeight:1.2 }}>{eritronPopup.label || 'Eritrograma'}</p>
+            </div>
+            <div style={{ padding:'1.2rem' }}>
+              <p style={{ fontSize:'0.85rem', color:'#374151', lineHeight:1.5, margin:'0 0 1rem' }}>
+                {"Esse é o resultado da leitura do eritron. Você pode CONTINUAR a avaliação (anamnese + exames) agora, ou ENCERRAR e deixar o paciente completar a anamnese depois."}
+              </p>
+              <div style={{ display:'flex', flexDirection:'column', gap:'0.6rem' }}>
+                <button onClick={() => { setShowEritronPopup(false); setEtapa('anamnese') }} style={{ background:'#6B7280', color:'#facc15', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.9rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>{"CONTINUAR A AVALIAÇÃO"}</button>
+                <button onClick={encerrarAvaliacao} style={{ background:'#fff', color:'#6B7280', border:'1.5px solid #D1D5DB', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>{"ENCERRAR (paciente completa depois)"}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 
   if (etapa === 'exames') return (
     <div style={OV} onClick={pularExames}>
