@@ -9,8 +9,8 @@
   "background_color": "#14100E",
   "theme_color": "#14100E",
   "icons": [
-    { "src": "/oba-fairy.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/oba-fairy.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/oba-fairy.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+    { "src": "/oba-fairy-v2.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/oba-fairy-v2.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/oba-fairy-v2.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
   ]
 }
