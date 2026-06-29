@@ -167,11 +167,15 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
 
         {/* Header padrão (logo-fada + RedFairy). zIndex 10 p/ aparecer já durante o splash. */}
         <div style={{ position: 'relative', zIndex: 10, background: ehBari ? '#6B7280' : 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-          <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+          {!ehBari && <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
-            <span style={{ color: ehBari ? '#facc15' : '#b91c1c' }}>Red</span><span style={{ color: ehBari ? '#facc15' : '#ef4444' }}>Fairy</span>
-            <span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span>
-            <span style={{ color: ehBari ? '#facc15' : '#374151' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
+            {ehBari ? (
+              <span style={{ color: '#facc15' }}>{"Projeto OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
+            ) : (<>
+              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+              <span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span>
+              <span style={{ color: '#374151' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
+            </>)}
           </h2>
         </div>
         <div className="p-5" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column' }}>

@@ -241,7 +241,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           const mDiff = hoje.getMonth() - (m - 1)
           if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--
           if (idade < 12) {
-            errors.dataNascimento = "O RedFairy ainda n\u00e3o atende crian\u00e7as menores de 12 anos. Os valores de refer\u00eancia do eritron pedi\u00e1trico s\u00e3o diferentes dos do adulto e exigem um m\u00f3dulo espec\u00edfico que est\u00e1 em desenvolvimento. Em breve!"
+            errors.dataNascimento = (flagBariatricaOBA ? "O Projeto OBA\u00ae" : "O RedFairy") + " ainda n\u00e3o atende crian\u00e7as menores de 12 anos. Os valores de refer\u00eancia do eritron pedi\u00e1trico s\u00e3o diferentes dos do adulto e exigem um m\u00f3dulo espec\u00edfico que est\u00e1 em desenvolvimento. Em breve!"
           } else if (idade > 100) {
             errors.dataNascimento = 'Verifique a data de nascimento'
           } else {
@@ -500,7 +500,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     // (fix) menor de 12 anos: rejeita imediatamente no campo (modulo pediatrico em
     // desenvolvimento) — antes o auto-avanco do medico so' checava futuro/>120/>=100.
     if (idadeCalc < 12) {
-      setErros(prev => ({ ...prev, dataNascimento: 'O RedFairy ainda não atende menores de 12 anos (módulo pediátrico em desenvolvimento).' }));
+      setErros(prev => ({ ...prev, dataNascimento: (flagBariatricaOBA ? 'O Projeto OBA®' : 'O RedFairy') + ' ainda não atende menores de 12 anos (módulo pediátrico em desenvolvimento).' }));
       setInputs(prev => ({ ...prev, dataNascimento: '' }));
       setTimeout(() => { if (refDnInput.current) refDnInput.current.focus(); }, 0);
       return;
@@ -744,9 +744,13 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             X de fechar na extremidade direita centralizado verticalmente. Substitui a Fada grande + nome que ocupavam muito espa\u00e7o vertical. */}
         <div style={{ background: flagBariatricaOBA ? '#6B7280' : '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            {!flagBariatricaOBA && <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
-              <span style={{ color: flagBariatricaOBA ? '#facc15' : '#b91c1c' }}>Red</span><span style={{ color: flagBariatricaOBA ? '#facc15' : '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span><span style={{ color: flagBariatricaOBA ? '#facc15' : '#374151', fontWeight: 700 }}>{"OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>
+              {flagBariatricaOBA ? (
+                <span style={{ color: '#facc15', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>
+              ) : (<>
+                <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span><span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span><span style={{ color: '#374151', fontWeight: 700 }}>{"OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>
+              </>)}
             </h2>
           </div>
           <button
