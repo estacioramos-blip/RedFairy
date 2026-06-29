@@ -814,7 +814,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (d.length !== 11) { setAvaliarErro('CPF inválido'); return }
     setAvaliarBusy(true); setAvaliarErro('')
     try {
-      const { data: prof } = await supabase.from('profiles').select('cpf, nome, sexo, data_nascimento').eq('cpf', d).maybeSingle()
+      const { data: prof } = await supabase.from('profiles').select('cpf, nome, sexo, data_nascimento, bariatrica').eq('cpf', d).maybeSingle()
       if (!prof) { setAvaliarErro('Paciente não cadastrado. Peça que se cadastre primeiro.'); setAvaliarBusy(false); return }
       // Traz o que o paciente já tem: última avaliação (eritron) + última anamnese do OBA.
       const { data: avals } = await supabase.from('avaliacoes').select('*').eq('cpf', d).order('data_coleta', { ascending: false }).limit(1)
@@ -1595,6 +1595,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           modoMedico={true}
           cpfPrefill={avaliarPaciente.cpf}
           cpfBloqueado={true}
+          pacientePrefill={{ nome: avaliarPaciente.nome, sexo: avaliarPaciente.sexo, data_nascimento: avaliarPaciente.data_nascimento, bariatrica: avaliarPaciente.bariatrica, ultimoHemograma: avaliarPaciente.ultimaAval }}
           onConcluir={(resultado, novosInputs) => { setAvaliarTriagem({ resultado, inputs: novosInputs }); setAvaliarFase('oba') }}
           onFechar={() => { setAvaliarFase(null); setAvaliarPaciente(null); setAvaliarTriagem(null) }}
         />

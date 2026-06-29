@@ -16,7 +16,7 @@ import PlayButton from './PlayButton';
  *   onConcluir:       function(resultado, inputs) - chamada apos avaliar com sucesso
  *   onFechar:         function() - usuario fechou sem avaliar
  */
-export default function TriagemModal({ modoMedico = false, isDemoPaciente = false, cpfPrefill = '', cpfBloqueado = false, onConcluir, onFechar, onAprofundar }) {
+export default function TriagemModal({ modoMedico = false, isDemoPaciente = false, cpfPrefill = '', cpfBloqueado = false, pacientePrefill = null, onConcluir, onFechar, onAprofundar }) {
   // Formata CPF inicial (se vier prefilled como digitos puros)
   const formatarCPFInicial = (raw) => {
     const d = String(raw || '').replace(/\D/g, '').slice(0, 11);
@@ -176,8 +176,25 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
   }, [inputs.data_coleta, pacienteConhecido]);
 
+  // AVALIAR (médico): paciente já carregado pelo CPF-entry → semeia o reconhecimento direto
+  // (não depende da busca interna por CPF, que aqui é pulada).
   useEffect(() => {
-    if (!modoMedico && !cpfBloqueado) return;
+    if (!pacientePrefill || !pacientePrefill.sexo) return;
+    setPacienteConhecido({
+      origem: 'prefill',
+      nome: pacientePrefill.nome || '',
+      sexo: pacientePrefill.sexo,
+      data_nascimento: pacientePrefill.data_nascimento,
+      bariatrica: !!pacientePrefill.bariatrica,
+      gestante: false, semanas_gestacao_triagem: null, data_triagem_gestacao: null,
+      semanas_gestacao: null, dum: null, created_at: null,
+      ultimoHemograma: pacientePrefill.ultimoHemograma || null,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if ((!modoMedico && !cpfBloqueado) || pacientePrefill) return;
     const digits = String(inputs.cpf || '').replace(/\D/g, '');
     // Só busca quando o CPF é VÁLIDO. Antes, qualquer 11 dígitos (inclusive CPF inválido)
     // disparava a busca + re-renders a cada tecla, atrapalhando/roubando o foco do campo
