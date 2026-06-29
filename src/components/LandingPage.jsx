@@ -1108,6 +1108,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     } catch (e) {}
     setPacienteLogado(resp.nome || '');
     setPacienteLogadoFlag(true);
+    // Bariátrico que faz LOGIN (já cadastrado) → cai na BIFURCAÇÃO (hub), não na triagem.
+    // Marca rf_abrir_nova (mesmo gatilho do ícone) e vai pro dashboard (→ bifurcação).
+    if (cpfPacModo === 'login' && resp.id) {
+      try {
+        const { data: pf } = await supabase.from('profiles').select('bariatrica').eq('id', resp.id).maybeSingle();
+        if (pf && pf.bariatrica) {
+          try { localStorage.setItem('rf_abrir_nova', '1'); } catch (e) {}
+          if (onIrDashboardPaciente) { onIrDashboardPaciente(); return; }
+        }
+      } catch (e) {}
+    }
     onModoPaciente && onModoPaciente();
   }
   function cpfPacAlternativo() {
