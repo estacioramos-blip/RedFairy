@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { triagemEritron } from '../engine/decisionEngine'
 import logo from '../assets/logo.png'
+import obaLogo from '../assets/oba-logo.png'
 import { supabase } from '../lib/supabase';
 import HistoricoChartModal from './HistoricoChartModal';
 import PlayButton from './PlayButton';
@@ -744,7 +745,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             X de fechar na extremidade direita centralizado verticalmente. Substitui a Fada grande + nome que ocupavam muito espa\u00e7o vertical. */}
         <div style={{ background: flagBariatricaOBA ? '#6B7280' : '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {flagBariatricaOBA ? <img src="/oba-fairy.png" alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
+            {flagBariatricaOBA ? <img src={obaLogo} alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
               {flagBariatricaOBA ? (
                 <span style={{ color: '#facc15', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { classificarValor } from '../engine/obaCutoffs'
 import { avaliarOBA, classificarEstadoClinico, ESTADOS_CLINICOS } from '../engine/obaEngine'
 import logo from '../assets/logo.png'
+import obaLogo from '../assets/oba-logo.png'
 import PlayButton from './PlayButton'
 import ModalFerroEV from './ModalFerroEV'
 import { calcularDeficitFerroGanzoni } from '../engine/ferroProtocol'
@@ -1143,7 +1144,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const Header = ({ sub, titulo, semFada }) => (
     <div style={HD}>
       <button onClick={voltarEtapa} style={{ background:'#E3AE37', border:'none', borderRadius:8, color:'#000', fontSize:'0.8rem', fontWeight:800, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
-      <img src="/oba-fairy.png" alt="Projeto OBA" style={{ width:36, height:36, objectFit:'contain', flexShrink:0 }} />
+      <img src={obaLogo} alt="Projeto OBA" style={{ width:36, height:36, objectFit:'contain', flexShrink:0 }} />
       <div>
         <h2 style={{ color:'#facc15', fontSize: titulo ? '1.02rem' : '1.2rem', fontWeight:800, margin:0, lineHeight:1.25 }}>{titulo || `${saudacao} ao Projeto OBA!`}</h2>
         <p style={{ color:'#FDE68A', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', marginTop:'0.2rem' }}>{sub}</p>
