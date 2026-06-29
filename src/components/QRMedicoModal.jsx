@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import fadaIcon from '../assets/logo.png'
+import obaLogo from '../assets/oba-logo.png'
 
 /**
  * QRMedicoModal — QR de ENCAMINHAMENTO do médico (4DOC).
@@ -36,9 +37,12 @@ export default function QRMedicoModal({ crm, onClose }) {
       style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
         onClick={e => e.stopPropagation()}>
-        <div className="px-6 py-4" style={{ background: '#6B7280' }}>
-          <h2 className="text-lg font-bold" style={{ color: '#facc15' }}>{"Seu QR de encaminhamento"}</h2>
-          <p className="text-xs mt-1" style={{ color: '#FDE68A' }}>{"Cada paciente que escanear, se cadastrar e pagar = 1 crédito pra você."}</p>
+        <div className="px-6 py-4 flex items-center gap-3" style={{ background: '#6B7280' }}>
+          <img src={obaLogo} alt="Projeto OBA" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: '#facc15' }}>{"Seu QR-CODE + Link de Encaminhar"}</h2>
+            <p className="text-xs mt-1" style={{ color: '#FDE68A' }}>{"Cada paciente que escanear, se cadastrar e pagar = 1 crédito pra você."}</p>
+          </div>
         </div>
 
         <div className="p-6 flex flex-col items-center text-center gap-3">
@@ -74,7 +78,7 @@ export default function QRMedicoModal({ crm, onClose }) {
               className="flex-1 min-w-0 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 bg-gray-50"
               onFocus={e => e.target.select()} />
             <button onClick={copiar}
-              className="shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+              className={`shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${copiado ? 'border-2 border-red-500' : ''}`}>
               {copiado ? '✓ Copiado' : 'Copiar'}
             </button>
           </div>

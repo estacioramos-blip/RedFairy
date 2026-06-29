@@ -1751,7 +1751,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 </div>
               </div>
             )}
-            {showMeusCreditosMed && <CreditosMedicoModal onFechar={() => setShowMeusCreditosMed(false)} />}
             {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons.
                 zIndex 10 (acima do splash zIndex 5) p/ o header ja aparecer durante a imagem. */}
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -2455,6 +2454,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       {showQRMedico && medicoCRM && (
         <QRMedicoModal crm={medicoCRM} onClose={() => setShowQRMedico(false)} />
       )}
+
+      {/* Top-level: funciona da bifurcação E de dentro do 4DOC (antes só montava dentro do 4DOC). */}
+      {showMeusCreditosMed && <CreditosMedicoModal onFechar={() => setShowMeusCreditosMed(false)} />}
 
       {showConviteAfiliado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import obaLogo from '../assets/oba-logo.png'
 
 /**
  * CreditosMedicoModal — o MÉDICO vê os PRÓPRIOS créditos 4DOC (contadores).
@@ -34,9 +35,12 @@ export default function CreditosMedicoModal({ onFechar }) {
   return (
     <div className="fixed inset-0 z-[70] flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.95)' }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-6">
-        <div className="bg-red-700 text-white px-5 py-4 flex items-center justify-between">
-          <h2 className="text-base font-bold">{"📊 Meus créditos 4DOC"}</h2>
-          <button onClick={onFechar} className="text-red-200 hover:text-white text-lg" aria-label="Fechar">{"✕"}</button>
+        <div className="px-5 py-4 flex items-center justify-between" style={{ background: '#6B7280' }}>
+          <div className="flex items-center gap-2">
+            <img src={obaLogo} alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain', flexShrink: 0 }} />
+            <h2 className="text-base font-bold" style={{ color: '#facc15' }}>{"Meus Créditos | Projeto OBA®"}</h2>
+          </div>
+          <button onClick={onFechar} className="text-lg" style={{ color: '#facc15' }} aria-label="Fechar">{"✕"}</button>
         </div>
         <div className="p-5 space-y-3">
           {erro && <p className="text-red-600 text-xs font-bold text-center">{erro}</p>}
