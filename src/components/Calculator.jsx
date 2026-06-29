@@ -734,6 +734,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
     localStorage.removeItem('medico_nome')
     localStorage.removeItem('medico_is_admin')
     localStorage.removeItem('medico_token')
+    localStorage.removeItem('rf_med_oba_cpf')
     setCadastrado(false)
     setMedicoNome('')
     setMedicoCRM('')
@@ -808,8 +809,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [avaliarCpfInput, setAvaliarCpfInput] = useState('')
   const [avaliarErro, setAvaliarErro] = useState('')
   const [avaliarBusy, setAvaliarBusy] = useState(false)
-  async function carregarPacienteAvaliar() {
-    const d = String(avaliarCpfInput || '').replace(/\D/g, '')
+  async function carregarPacienteAvaliar(cpfArg) {
+    const d = String(cpfArg || avaliarCpfInput || '').replace(/\D/g, '')
     if (d.length !== 11) { setAvaliarErro('CPF inválido'); return }
     setAvaliarBusy(true); setAvaliarErro('')
     try {
@@ -823,10 +824,19 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         anam = (obaRows && obaRows.length) ? obaRows[0] : null
       } catch (e) {}
       setAvaliarPaciente({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam })
+      try { localStorage.setItem('rf_med_oba_cpf', d) } catch (e) {}   // p/ reabrir no refresh
       setAvaliarFase('oba')
     } catch (e) { setAvaliarErro('Erro de conexão. Tente de novo.') }
     setAvaliarBusy(false)
   }
+  // Refresh/remontagem: se o médico estava no OBA, reabre ao montar (não perde o que preencheu).
+  React.useEffect(() => {
+    if (!cadastrado) return
+    let cpf = ''
+    try { cpf = localStorage.getItem('rf_med_oba_cpf') || '' } catch (e) {}
+    if (cpf.length === 11) carregarPacienteAvaliar(cpf)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cadastrado])
   const [fada4docMarcada, setFada4docMarcada] = useState(false);
   // (encaminhamento em massa) Ao instalar o icone, o LINK do medico tambem e' copiado.
   const [linkMedCopiado, setLinkMedCopiado] = useState(false);
@@ -1609,12 +1619,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             : null}
           anamneseAnterior={avaliarPaciente.anamneseAnterior}
           coletarHemograma={!avaliarPaciente.ultimaAval}
-          onFechar={() => { setAvaliarFase(null); setAvaliarPaciente(null) }}
+          onFechar={() => { try { localStorage.removeItem('rf_med_oba_cpf') } catch (e) {}; setAvaliarFase(null); setAvaliarPaciente(null) }}
           onConcluir={async () => {
             try {
               const tok = localStorage.getItem('medico_token') || ''
               await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: avaliarPaciente.cpf, p_opiniao: '', p_sugestao: '' })
             } catch (e) {}
+            try { localStorage.removeItem('rf_med_oba_cpf') } catch (e) {}
             setAvaliarFase(null); setAvaliarPaciente(null)
           }}
         />
