@@ -765,7 +765,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [resultado, setResultado] = useState(null);
   const [mostrarExamesExtras, setMostrarExamesExtras] = useState(false);
   const ferritinaRef = useRef(null);
-  const [showTriagem, setShowTriagem] = useState(true);
+  // Fluxo novo do médico: NÃO abre triagem automática (entra pela bifurcação → AVALIAR → OBA).
+  // Só o DEMO (preDemoDados) ainda usa a triagem como demonstração.
+  const [showTriagem, setShowTriagem] = useState(!!preDemoDados);
   const [triagemResultado, setTriagemResultado] = useState(null);
   const [triagemInputs, setTriagemInputs] = useState(null);
   const [showAfiliados, setShowAfiliados] = useState(false);
