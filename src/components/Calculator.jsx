@@ -164,6 +164,8 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
   const refCrmNum = useRef(null);
   const refCrmUf = useRef(null);
   const refCelular = useRef(null);
+  const refSexo = useRef(null);
+  const [medSexo, setMedSexo] = useState('')   // sexo do médico → textos dinâmicos (Doutor/a)
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -268,11 +270,11 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     }, 4000);
     return () => clearTimeout(t);
   }, []);
-  // NOME -> CELULAR apos 3s ocioso (se o cursor ainda estiver no nome).
+  // NOME -> SEXO apos 3s ocioso (se o cursor ainda estiver no nome). SEXO -> CELULAR ao escolher.
   useEffect(() => {
     if (modo !== 'cadastro' || !nome.trim()) return;
     const t = setTimeout(() => {
-      if (refCelular.current && document.activeElement === refNomeCad.current) refCelular.current.focus();
+      if (refSexo.current && document.activeElement === refNomeCad.current) refSexo.current.focus();
     }, 3000);
     return () => clearTimeout(t);
   }, [nome, modo]);
@@ -527,20 +529,30 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM e UF"}</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex gap-2">
                 <input ref={refCrmNum} type="text" value={crmNum}
                   onChange={e => setCrmNum(sanitizarCrmNum(e.target.value))}
-                  placeholder="Ex: 6302" className={inputAmarelo} autoComplete="off"
+                  placeholder="Ex: 6302" className={`${inputAmarelo} flex-1`} autoComplete="off"
                   inputMode="numeric" maxLength={6} />
                 <input ref={refCrmUf} type="text" value={crmUF}
                   onChange={e => setCrmUF(sanitizarCrmUF(e.target.value))}
-                  placeholder="BA" maxLength={2}
+                  placeholder="BA" maxLength={2} style={{ width: '4rem' }}
                   className={`${inputAmarelo} text-center uppercase ${crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) ? 'border-red-500' : ''}`} autoComplete="off" />
               </div>
               {crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) && (
                 <p className="text-red-500 text-xs mt-1">{"UF inv\u00e1lida"}</p>
               )}
-              <p className="text-xs text-red-800 font-medium mt-0.5">{"Este ser\u00e1 seu login permanente"}</p>
+              <p className="text-xs text-red-800 font-medium mt-0.5">{"Este ser\u00e1 o seu LOGIN permanente"}</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
+              <select ref={refSexo} value={medSexo}
+                onChange={e => { setMedSexo(e.target.value); try { localStorage.setItem('medico_sexo', e.target.value) } catch (er) {}; if (e.target.value && refCelular.current) refCelular.current.focus(); }}
+                className={inputAmarelo}>
+                <option value="">{"Selecione\u2026"}</option>
+                <option value="M">Masculino</option>
+                <option value="F">Feminino</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
@@ -550,7 +562,10 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
               <p className="text-blue-800 text-xs font-bold mb-1">{"4DOC"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{" | Programa de M\u00e9dicos Afiliados"}</p>
               <p className="text-blue-700 text-xs leading-relaxed">
-                {"Avalie e encaminhe um paciente em modo simplificado \u2013 apenas tr\u00eas par\u00e2metros do Hemograma. Descubra o que podemos fazer pelo bari\u00e1trico e integre-se ao 4DOC"}<sup style={{ fontSize: '0.7em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{". Da\u00ed voc\u00ea poder\u00e1 encaminhar novos pacientes mostrando um QR-CODE no seu celular. Cada paciente que se cadastra ganha vida, e gera benef\u00edcios patrocinados exclusivos para voc\u00ea."}
+                <strong>{medSexo === 'F' ? 'Doutora,' : 'Doutor,'}</strong><br />
+                {"Com mais algumas informa\u00e7\u00f5es, voc\u00ea breve estar\u00e1 "}{medSexo === 'F' ? 'integrada' : 'integrado'}{" ao nosso Programa Patrocinado que tem por objetivo trazer um n\u00famero crescente de pacientes bari\u00e1tricos a este Projeto OBA\u00ae, para que possam desfrutar de mais sa\u00fade e qualidade de vida."}<br /><br />
+                {"Ao indicar ou avaliar novos pacientes voc\u00ea receber\u00e1 incentivos dos nossos patrocinadores."}<br /><br />
+                {"N\u00e3o h\u00e1 custo, risco ou compromisso para voc\u00ea \u2014 s\u00f3 benef\u00edcios \u2014 e voc\u00ea pode deixar o Programa a qualquer hora, a seu crit\u00e9rio."}
               </p>
             </div>
             <div>
@@ -2638,7 +2653,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               {mostrarPlayFelic && (
                 <div className="flex justify-center mt-5">
                   <PlayButton
-                    onClick={() => { setShowFelicitacoes(false); setAvaliarFase('cpf'); setAvaliarCpfInput(''); setAvaliarErro(''); }}
+                    onClick={() => { setShowFelicitacoes(false); setMenuMedico(true); }}
                     label="INICIAR"
                     ariaLabel="Iniciar investiga\u00e7\u00e3o"
                     ringColor="rgba(227,174,55,0.75)"
