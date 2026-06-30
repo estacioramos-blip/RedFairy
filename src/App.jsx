@@ -151,6 +151,12 @@ export default function App() {
     const refParam = params.get('ref')
     if (refParam) {
       try { localStorage.setItem('rf_ref_encaminhador', decodeURIComponent(refParam).toUpperCase().trim()) } catch (e) {}
+      // self=1 → link enviado (remoto): paciente faz a AUTO-AVALIAÇÃO → Situação 2 ("Opa!").
+      // Sem self (QR presencial) → Situação 1 ("Super!", decide com o médico após pagar).
+      try {
+        if (params.get('self') === '1') localStorage.setItem('rf_ref_self', '1')
+        else localStorage.removeItem('rf_ref_self')
+      } catch (e) {}
     }
     // Reentra (passwordless) com a credencial guardada. Retorna true se logou.
     async function reentrarPacienteToken(rCpf, rTok) {

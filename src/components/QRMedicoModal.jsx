@@ -16,11 +16,12 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
   const base = (typeof window !== 'undefined' && window.location && window.location.origin)
     ? window.location.origin
     : 'https://redfairy.bio'
-  const link = `${base}/?ref=${encodeURIComponent(crm || '')}`
+  const linkQR = `${base}/?ref=${encodeURIComponent(crm || '')}`   // QR presencial → Situação 1 ("Super!")
+  const linkSelf = `${linkQR}&self=1`                              // link enviado → Situação 2 ("Opa!", auto-avaliação)
 
   function copiar() {
     try {
-      navigator.clipboard.writeText(link).then(() => {
+      navigator.clipboard.writeText(linkSelf).then(() => {
         setCopiado(true)
         setTimeout(() => setCopiado(false), 2500)
       })
@@ -62,7 +63,7 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
   // no WhatsApp/Telegram e envia aos pacientes (ou a secretaria dispara para todos).
   useEffect(() => {
     if (foco !== 'qr') return
-    try { navigator.clipboard.writeText(link).then(() => setCopiado(true)).catch(() => {}) } catch (e) {}
+    try { navigator.clipboard.writeText(linkSelf).then(() => setCopiado(true)).catch(() => {}) } catch (e) {}
   }, [])
 
   return (
@@ -82,7 +83,7 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
           {foco === 'qr' && (<>
           <div style={{ background: '#fff', padding: 12, borderRadius: 14, border: '1px solid #e5e7eb' }}>
             <QRCodeSVG
-              value={link}
+              value={linkQR}
               size={216}
               level="H"
               bgColor="#ffffff"
@@ -108,7 +109,7 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
           )}
 
           <div className="w-full flex items-center gap-2">
-            <input readOnly value={link}
+            <input readOnly value={linkSelf}
               className="flex-1 min-w-0 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 bg-gray-50"
               onFocus={e => e.target.select()} />
             <button onClick={copiar}
