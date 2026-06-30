@@ -446,6 +446,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       presencial = !!crm && localStorage.getItem('rf_ref_self') !== '1'
     } catch (e) {}
     if (presencial) { setSuperCrm(crm); setShowSuper(true); return }
+    setObaColetarHemograma(true)   // 1ª avaliação sem Triagem → eritron coletado no topo do OBA
     await verificarEAbrirOBA(prof)
   }
   async function verificarEAbrirOBA(prof) {
@@ -1103,7 +1104,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       {showSuper && profile && (
         <SuperEncaminhadoModal crm={superCrm}
           onMedicoConduz={() => setShowSuper(false)}
-          onPacienteFaz={() => { setShowSuper(false); verificarEAbrirOBA(profile) }}
+          onPacienteFaz={() => { setShowSuper(false); setObaColetarHemograma(true); verificarEAbrirOBA(profile) }}
         />
       )}
 
