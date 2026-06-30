@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import obaLogo from '../assets/oba-logo.png'
 import PlayButton from './PlayButton'
 import TermosModal from './TermosModal'
+import OpaAutoavaliacaoModal from './OpaAutoavaliacaoModal'
 
 // =============================================================================
 // OBAEntradaPaciente — tela PRÓPRIA do paciente bariátrico (vindo do bariatrico.net).
@@ -47,17 +48,33 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   const [busy, setBusy] = useState(false)
   const [erro, setErro] = useState('')
   const [showTC, setShowTC] = useState(false)   // modal de Termos e Condições
+  // Sexo + nascimento (coletados aqui, já que a Triagem foi aposentada). Só no cadastro.
+  const [sexo, setSexo] = useState('')
+  const [nDia, setNDia] = useState(''); const [nMes, setNMes] = useState(''); const [nAno, setNAno] = useState('')
+  // Situação 2 ("Opa!", auto-avaliação): link self=1 ou CPF recomendado.
+  const [showOpa, setShowOpa] = useState(false); const [opaCrm, setOpaCrm] = useState('')
 
   // Flag bariátrico desde a entrada (o algoritmo/OBA trata o paciente como bariátrico).
   // rf_dom_bari persistente: saída/F5 (inclusive pelo ÍCONE em redfairy.bio) → bariatrico.net,
   // nunca a landing do RedFairy. Só o ?reset limpa.
   useEffect(() => { try { localStorage.setItem('rf_flag', 'bariatrica'); localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }, [])
 
+  // Situação 2: chegou por LINK (self=1) → boas-vindas de AUTO-AVALIAÇÃO ("Opa!").
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('rf_ref_self') === '1') {
+        const c = localStorage.getItem('rf_ref_encaminhador') || ''
+        if (c) { setOpaCrm(c); setShowOpa(true) }
+      }
+    } catch (e) {}
+  }, [])
+
   const cpfDigits = soDigitos(cpf)
   const cpfOk = cpfDigits.length === 11 && validarCPF(cpfDigits)   // só avança com CPF válido
   const cpfInvalido = cpfDigits.length === 11 && !validarCPF(cpfDigits)
   const senhaOk = senha.length >= 6
   const podeConcluir = cpfOk && senhaOk && (modo !== 'cadastro' || aceitoTC)
+  const dadosOk = !!sexo && nDia.length >= 1 && nMes.length >= 1 && String(nAno).length === 4
 
   async function avancarCpf() {
     if (!cpfOk || busy) return
@@ -67,10 +84,17 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
       const { data } = await supabase.rpc('lookup_cpf_triagem', { cpf_input: cpfDigits })
       existe = !!(data?.find?.(r => r.origem === 'profile'))
     } catch (e) {}
+    // Situação 2 (recomendado): o médico digitou este CPF na bifurcação? → "Opa!".
+    if (!showOpa) {
+      try {
+        const { data: rec } = await supabase.rpc('cpf_recomendado_por', { p_cpf: cpfDigits })
+        if (rec && rec.ok && rec.crm) { setOpaCrm(rec.crm); setShowOpa(true) }
+      } catch (e) {}
+    }
     setBusy(false)
     setModo(existe ? 'login' : 'cadastro')
     setSenha(''); setAceitoTC(true)
-    setFase('senha')
+    setFase(existe ? 'senha' : 'dados')   // cadastro coleta sexo/nascimento antes da senha
   }
 
   async function concluir() {
@@ -102,7 +126,23 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
       } catch (e) {}
       // Entrou por SOU BARIÁTRICO → marca o perfil como bariátrico JÁ no cadastro (fonte
       // confiável, não depende do rf_flag sobreviver até o dashboard). RLS off em profiles.
-      try { if (data.id) await supabase.from('profiles').update({ bariatrica: true }).eq('id', data.id) } catch (e) {}
+      try {
+        if (data.id) {
+          const patch = { bariatrica: true }
+          if (modo === 'cadastro') {
+            patch.sexo = sexo
+            patch.data_nascimento = `${nAno}-${String(nMes).padStart(2, '0')}-${String(nDia).padStart(2, '0')}`
+          }
+          await supabase.from('profiles').update(patch).eq('id', data.id)
+        }
+      } catch (e) {}
+      // Vincula o médico encaminhador no banco (crédito sem depender da Triagem).
+      if (modo === 'cadastro') {
+        try {
+          const ref = localStorage.getItem('rf_ref_encaminhador') || ''
+          if (ref) await supabase.rpc('paciente_set_encaminhador', { p_cpf: cpfDigits, p_crm: ref })
+        } catch (e) {}
+      }
       onConcluir && onConcluir()
     } catch (e) { setBusy(false); setErro('ERRO DE CONEXÃO. TENTE NOVAMENTE.') }
   }
@@ -158,6 +198,35 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
           </>
         )}
 
+        {fase === 'dados' && (
+          <>
+            <p className="text-center text-xs font-bold text-gray-500 tracking-widest mb-3">{"SEUS DADOS"}</p>
+            <label className="block text-xs font-bold text-gray-500 mb-1.5">{"Sexo"}</label>
+            <div className="flex gap-2 mb-4">
+              {[{ v: 'M', l: 'Masculino' }, { v: 'F', l: 'Feminino' }].map(o => (
+                <button key={o.v} type="button" onClick={() => setSexo(o.v)}
+                  className="flex-1 rounded-lg border-2 py-2.5 text-sm font-bold transition-colors"
+                  style={{ borderColor: sexo === o.v ? '#7B1E1E' : '#E5E7EB', background: sexo === o.v ? '#FDF2F2' : '#fff', color: sexo === o.v ? '#7B1E1E' : '#6B7280' }}>
+                  {o.l}
+                </button>
+              ))}
+            </div>
+            <label className="block text-xs font-bold text-gray-500 mb-1.5">{"Data de nascimento"}</label>
+            <div className="grid grid-cols-3 gap-2">
+              <input className={inputClass} style={inpStyle} inputMode="numeric" maxLength={2} placeholder="DD" value={nDia} onChange={e => setNDia(soDigitos(e.target.value).slice(0, 2))} />
+              <input className={inputClass} style={inpStyle} inputMode="numeric" maxLength={2} placeholder="MM" value={nMes} onChange={e => setNMes(soDigitos(e.target.value).slice(0, 2))} />
+              <input className={inputClass} style={inpStyle} inputMode="numeric" maxLength={4} placeholder="AAAA" value={nAno} onChange={e => setNAno(soDigitos(e.target.value).slice(0, 4))} />
+            </div>
+            {erro && <p className="text-center text-red-600 text-xs font-bold mt-2">{erro}</p>}
+            <div className="flex justify-between items-end mt-4">
+              <button onClick={() => { setFase('cpf'); setErro('') }} className="text-gray-400 text-xs hover:text-gray-600">{"← Voltar"}</button>
+              {dadosOk && (
+                <PlayButton onClick={() => setFase('senha')} ariaLabel="Continuar" labelColor="#000000" />
+              )}
+            </div>
+          </>
+        )}
+
         {fase === 'senha' && (
           <>
             <p className="text-center text-xs font-bold text-gray-500 tracking-widest mb-2">
@@ -209,6 +278,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
       </div>
 
       {showTC && <TermosModal tipo="paciente" onFechar={() => setShowTC(false)} />}
+      {showOpa && <OpaAutoavaliacaoModal crm={opaCrm} onContinuar={() => setShowOpa(false)} />}
     </div>
   )
 }

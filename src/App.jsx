@@ -522,10 +522,11 @@ export default function App() {
     // (b) cobre a transição (login → triagem) com a tela preta, evitando o flash do ícone
     // grande do OBAEntradaPaciente antes do primeiro modal (TriagemModal) aparecer.
     return <OBAEntradaPaciente onVoltar={irVoltar} onConcluir={() => {
-      // LOGIN de bariátrico cadastrado (rf_abrir_nova) → bifurcação; NOVO → triagem.
-      let nova = false
-      try { nova = localStorage.getItem('rf_abrir_nova') === '1' } catch (e) {}
-      setSaindo(true); setModo(nova ? 'paciente' : 'triagem-direta'); setTimeout(() => setSaindo(false), 550)
+      // Triagem APOSENTADA no fluxo bariátrico: bariátrico (novo OU login) vai direto pro
+      // dashboard. O eritron é coletado no topo do OBA; sexo/nascimento na própria
+      // OBAEntradaPaciente. O PatientDashboard decide: novo → cadastro/pagamento/OBA;
+      // login (rf_abrir_nova) → bifurcação.
+      setSaindo(true); setModo('paciente'); setTimeout(() => setSaindo(false), 550)
     }} />
   }
 
