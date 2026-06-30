@@ -734,7 +734,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
     localStorage.removeItem('medico_nome')
     localStorage.removeItem('medico_is_admin')
     localStorage.removeItem('medico_token')
-    localStorage.removeItem('rf_med_oba_cpf')
+    try { sessionStorage.removeItem('rf_med_oba_cpf') } catch (e) {}
     setCadastrado(false)
     setMedicoNome('')
     setMedicoCRM('')
@@ -824,7 +824,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         anam = (obaRows && obaRows.length) ? obaRows[0] : null
       } catch (e) {}
       setAvaliarPaciente({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam })
-      try { localStorage.setItem('rf_med_oba_cpf', d) } catch (e) {}   // p/ reabrir no refresh
+      try { sessionStorage.setItem('rf_med_oba_cpf', d) } catch (e) {}   // p/ reabrir no refresh (mesma aba)
       setAvaliarFase('oba')
     } catch (e) { setAvaliarErro('Erro de conexão. Tente de novo.') }
     setAvaliarBusy(false)
@@ -833,7 +833,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   React.useEffect(() => {
     if (!cadastrado) return
     let cpf = ''
-    try { cpf = localStorage.getItem('rf_med_oba_cpf') || '' } catch (e) {}
+    try { cpf = sessionStorage.getItem('rf_med_oba_cpf') || '' } catch (e) {}
     if (cpf.length === 11) carregarPacienteAvaliar(cpf)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cadastrado])
@@ -1594,7 +1594,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               onKeyDown={e => { if (e.key === 'Enter') carregarPacienteAvaliar() }} />
             {avaliarErro && <p className="text-center text-red-600 text-xs font-bold mt-2">{avaliarErro}</p>}
             <div className="flex justify-end mt-3">
-              <PlayButton onClick={carregarPacienteAvaliar} ariaLabel="Avaliar" />
+              <PlayButton onClick={() => carregarPacienteAvaliar()} ariaLabel="Avaliar" />
             </div>
             <p className="text-center text-[11px] text-gray-400 mt-3">{"O paciente precisa já estar cadastrado. (Leitura de QR: em breve.)"}</p>
           </div>
@@ -1619,13 +1619,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             : null}
           anamneseAnterior={avaliarPaciente.anamneseAnterior}
           coletarHemograma={!avaliarPaciente.ultimaAval}
-          onFechar={() => { try { localStorage.removeItem('rf_med_oba_cpf') } catch (e) {}; setAvaliarFase(null); setAvaliarPaciente(null) }}
+          onFechar={() => { try { sessionStorage.removeItem('rf_med_oba_cpf') } catch (e) {}; setAvaliarFase(null); setAvaliarPaciente(null) }}
           onConcluir={async () => {
             try {
               const tok = localStorage.getItem('medico_token') || ''
               await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: avaliarPaciente.cpf, p_opiniao: '', p_sugestao: '' })
             } catch (e) {}
-            try { localStorage.removeItem('rf_med_oba_cpf') } catch (e) {}
+            try { sessionStorage.removeItem('rf_med_oba_cpf') } catch (e) {}
             setAvaliarFase(null); setAvaliarPaciente(null)
           }}
         />
