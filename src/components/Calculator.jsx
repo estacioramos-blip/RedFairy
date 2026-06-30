@@ -377,7 +377,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
       try {
         const { error } = await supabase.rpc('complete_medico', {
           p_crm: conselhoLimpo, p_nome: nome.trim(),
-          p_celular: celularDigits, p_email: email.trim().toLowerCase(),
+          p_celular: celularDigits, p_email: email.trim().toLowerCase(), p_sexo: medSexo,
         })
         if (error) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
       } catch (e) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
@@ -393,7 +393,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     try {
       const { data, error } = await supabase.rpc('register_medico', {
         p_nome: nome.trim(), p_crm: conselhoLimpo, p_uf: uf,
-        p_celular: celularDigits, p_email: email.trim().toLowerCase(), p_senha: senha,
+        p_celular: celularDigits, p_email: email.trim().toLowerCase(), p_senha: senha, p_sexo: medSexo,
       })
       if (error) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
       resp = data
