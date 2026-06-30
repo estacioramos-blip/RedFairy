@@ -826,6 +826,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   // Bifurcação do MÉDICO (pós-login): ENCAMINHAR · AVALIAR · VER CRÉDITOS. Pula se já vier
   // com dados de demo (vai direto ao formulário).
   const [menuMedico, setMenuMedico] = useState(!preDemoDados)
+  const medicoSexo = (() => { try { return localStorage.getItem('medico_sexo') || '' } catch (e) { return '' } })()  // textos dinâmicos (Bem-vindo/a)
   // AVALIAR: o médico digita o CPF (ou lê o QR) do paciente → abre o OBA Modal com os
   // dados dele (o médico faz a avaliação/OBA pelo paciente).
   const [avaliarFase, setAvaliarFase] = useState(null)        // null | 'cpf' | 'oba'
@@ -1719,8 +1720,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 5, backgroundColor: '#FDF7F7', opacity: splashAfil ? 1 : 0, pointerEvents: splashAfil ? 'auto' : 'none', transition: 'opacity 0.5s ease' }}>
               <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, bottom: '8px' }}>
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat' }} />
-                <div style={{ position: 'absolute', left: 0, right: 0, bottom: '16%', padding: '0 22px', textAlign: 'center' }}>
-                  <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{"Bem-Vindo ao 4DOC"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup>{" Programa Patrocinado de Médicos Afiliados"}</p>
+                <div style={{ position: 'absolute', left: 0, right: 0, top: '8%', padding: '0 22px', textAlign: 'center' }}>
+                  <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{medicoSexo === 'F' ? 'Bem-vinda' : 'Bem-Vindo'}{" ao 4DOC"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup>{" Programa Patrocinado de Médicos Afiliados"}</p>
                 </div>
               </div>
             </div>
@@ -1730,20 +1731,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             {cardFada4doc && (
               <div style={{ position: 'absolute', left: 0, right: 0, top: '404px', bottom: 0, zIndex: 6, overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, #ffffff 86%, rgba(255,255,255,0))' }} className="px-4 pt-3 pb-6">
                 <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 shadow-lg">
-                  <div className="flex items-center gap-3">
-                    <p className="flex-1 text-[11px] text-blue-900 leading-snug font-bold">
-                      {"AGORA INSTALE NA TELA INICIAL DO SEU CELULAR "}<span style={{ color: '#7B1E1E' }}>{"o ÍCONE do Projeto"}</span>{". Sempre que você tocar nele, aparece o seu QR-CODE de encaminhamento E o "}<span style={{ color: '#7B1E1E' }}>{"LINK"}</span>{" é copiado no seu celular: mostre o QR ao paciente, ou cole o link no WhatsApp/Telegram (ou peça à sua secretária para enviar a todos os bariátricos do arquivo). Cada paciente que se cadastrar sob o seu CRM gera UM CRÉDITO do programa para você."}
-                    </p>
-                    <div className="flex-shrink-0" style={{ background: '#fff', padding: 6, borderRadius: 10, border: '1px solid #e5e7eb' }}>
-                      <QRCodeSVG value={`${qrBaseAfil}/?ref=${encodeURIComponent(medicoCRM || '')}`} size={88} level="H" bgColor="#ffffff" fgColor="#7B1E1E" imageSettings={{ src: logo, height: 18, width: 18, excavate: true }} />
-                    </div>
-                  </div>
-                  <div className="text-center mt-2 flex flex-col gap-1.5">
+                  <p className="text-[11px] text-blue-900 leading-snug font-bold">
+                    {"AGORA INSTALE o ÍCONE do Programa — "}<span style={{ color: '#7B1E1E' }}>{"o Chapéu de Ouro"}</span>{" — na tela do seu celular. É apenas um atalho seguro para que você possa entrar rapidamente no programa sem precisar digitar LOGIN/SENHA, e que disponibiliza ferramentas imediatas para você AVALIAR ou simplesmente ENCAMINHAR um paciente para que se auto-avalie. Através desse acesso, você também vai poder consultar os seus créditos no 4DOC®."}
+                  </p>
+                  <div className="text-center mt-2">
                     <button onClick={() => setShowCreditosPopup(true)} className="text-xs font-bold text-green-700 underline underline-offset-2 hover:text-green-800">
                       {"Saiba mais sobre os créditos do 4DOC"}
-                    </button>
-                    <button onClick={() => setShowMeusCreditosMed(true)} className="text-xs font-bold text-red-700 underline underline-offset-2 hover:text-red-800">
-                      {"📊 Ver os meus créditos 4DOC"}
                     </button>
                   </div>
                 </div>
@@ -1775,7 +1768,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/nota10dolares.png)', backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.06)', opacity: 0.42 }} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', padding: '0 30px' }}>
                     <p style={{ color: '#065f46', fontWeight: 800, fontSize: '10.5px', lineHeight: 1.5 }}>
-                      {"Cada CRÉDITO por paciente encaminhado e que SE CADASTRA vale DEZ DÓLARES DIGITAIS (USDC) que serão creditados em uma conta especial para você. Abrir essa conta é super simples, e mais adiante você será instruído como fazer isso."}
+                      {"Cada paciente que você AVALIA e que se CADASTRA (ou seja, paga uma pequena anuidade) gera para você um crédito de 15 USDC (dólares digitais)."}<br /><br />{"Cada paciente que você simplesmente ENCAMINHA para auto-avaliação e que SE CADASTRA gera um crédito de 10 USDC."}
                     </p>
                   </div>
                   {/* Fechar: círculo vinho com X branco, menor, no canto superior direito */}
@@ -1800,9 +1793,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
 
             <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
-              <p className="text-gray-700 text-sm leading-relaxed">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <p className="text-blue-800 text-sm leading-relaxed">
                 {"Para concluir a sua inscri\u00e7\u00e3o no "}<strong>Programa de Médicos Afiliados Patrocinado</strong>{" e receber os benef\u00edcios previstos, precisamos do seu "}<strong>CEP</strong>{", "}<strong>CPF</strong>{" e da sua "}<strong>chave Pix</strong>{"."}
               </p>
+              </div>
               <p className="text-xs text-red-800 leading-relaxed font-medium" style={{ textAlign: 'justify' }}>
                 {"\ud83d\udd12 Entre seus dados tranquilamente. Voc\u00ea est\u00e1 em um servidor seguro, e n\u00e3o existe a possibilidade de uso inadequado dessas informa\u00e7\u00f5es."}
               {" O projeto inclui proteção contra invasão e segue as exigências da LGPD."}</p>
@@ -2646,7 +2641,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               {/* (g) Logo + (f) nova frase: as duas fun\u00e7\u00f5es do m\u00e9dico (AVALIAR / ENCAMINHAR). */}
               <img src={obaLogo} alt="Projeto OBA" className="h-16 object-contain mx-auto mb-3" />
               <p className="text-gray-700 text-sm leading-relaxed text-center">
-                {"Agora voc\u00ea pode AVALIAR ou ENCAMINHAR novos pacientes para o Projeto OBA\u00ae, recebendo incentivo dos nossos patrocinadores para cada paciente que se cadastre sob o seu CRM. Para AVALIAR um/uma paciente voc\u00ea precisar\u00e1 dos seus exames mais recentes; para ENCAMINHAR voc\u00ea s\u00f3 precisa do CPF dele/dela."}
+                {"Agora voc\u00ea pode AVALIAR ou ENCAMINHAR novos pacientes para o Projeto OBA\u00ae, recebendo incentivo dos nossos patrocinadores para cada paciente que se cadastre sob o seu CRM. Para AVALIAR um/uma paciente voc\u00ea precisar\u00e1 dos seus exames mais recentes; para ENCAMINHAR voc\u00ea s\u00f3 precisará mostrar um QR-CODE a ele/ela na tela do seu celular, ou enviar um link por WhatsApp, ou simplesmente digitar o CPF dele/dela."}
               </p>
               {/* Play DOURADO surge 2s depois do texto: seta o flag bariatrico e abre a triagem
                   (com isso o checkbox "paciente bariatrico" ja vem marcado e travado la). */}
