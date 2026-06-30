@@ -426,8 +426,15 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
       {onVoltar && (
         <button onClick={onVoltar}
           className="absolute top-4 left-4 px-3 py-1 rounded-lg text-xs font-bold shadow transition-colors"
-          style={{ backgroundColor: '#E3AE37', color: '#14100E' }}>
+          style={{ backgroundColor: '#E3AE37', color: '#14100E', zIndex: 30 }}>
           {"\u2190 Voltar"}
+        </button>
+      )}
+      {onVoltar && (
+        <button onClick={onVoltar} aria-label="Fechar e sair"
+          className="absolute top-4 right-4"
+          style={{ width: 30, height: 30, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '13px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30, boxShadow: '0 1px 6px rgba(0,0,0,0.4)' }}>
+          {"\u2715"}
         </button>
       )}
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md" style={{ overflow: 'hidden', position: 'relative' }}
