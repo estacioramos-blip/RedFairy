@@ -10,6 +10,7 @@ import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
 import EscolhaIndicacaoModal from './EscolhaIndicacaoModal'
 import PacienteIndicaModal from './PacienteIndicaModal'
+import SuperEncaminhadoModal from './SuperEncaminhadoModal'
 import obaFairyIcon from '../assets/oba-fairy-icon.png'
 import obaLogo from '../assets/oba-logo.png'
 import HistoricoChartModal from './HistoricoChartModal'
@@ -42,6 +43,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [avaliacoes, setAvaliacoes] = useState([])
   const [tela, setTela] = useState('historico')
   const [showBoasVindas, setShowBoasVindas] = useState(false)
+  const [showSuper, setShowSuper] = useState(false); const [superCrm, setSuperCrm] = useState('')  // Situação 1 (QR presencial)
   const [showCompletarPerfil, setShowCompletarPerfil] = useState(false)
   const [showPagamento, setShowPagamento] = useState(false)
   // (escolha da indicacao) o paciente escolhe de quem aceita a indicacao, antes de pagar.
@@ -435,6 +437,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
   // Abre a anamnese OBA para paciente bariátrico que ainda NÃO preencheu.
   // Detecção robusta (perfil OU triagem OU avaliação) — não depende do rf_flag/localStorage.
+  // Situação 1 (QR presencial): antes de abrir o OBA pós-pagamento, o encaminhado decide
+  // COM o médico (Super!). Sem encaminhador presencial (ou veio por link self=1) → OBA direto.
+  async function abrirOBAouSuper(prof) {
+    let crm = '', presencial = false
+    try {
+      crm = localStorage.getItem('rf_ref_encaminhador') || ''
+      presencial = !!crm && localStorage.getItem('rf_ref_self') !== '1'
+    } catch (e) {}
+    if (presencial) { setSuperCrm(crm); setShowSuper(true); return }
+    await verificarEAbrirOBA(prof)
+  }
   async function verificarEAbrirOBA(prof) {
     try {
       const cpf = (prof?.cpf || '').replace(/\D/g, '')
@@ -823,7 +836,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       // IMPORTANTE: abre o OBA (overlay) ANTES de fechar as boas-vindas — senão o
       // dashboard "Olá" vazio piscava entre o fim das boas-vindas e a abertura do OBA.
       const ehBari = !!(profile?.bariatrica || inputs.bariatrica || ehDominioBariatrico())
-      await verificarEAbrirOBA(profile)   // bariátrico sem anamnese → abre o OBA por cima
+      await abrirOBAouSuper(profile)   // bariátrico: Super! (QR presencial) ou OBA direto
       setShowBoasVindas(false)
       // Tela limpa SEMPRE: nunca cair numa avaliação concluída/antiga (ex.: CPF reusado).
       // BARIÁTRICO vai DIRETO pro OBA: o fundo fica no HISTÓRICO — NUNCA a 'nova' avaliação,
@@ -1085,6 +1098,13 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             </button>
           </div>
         </div>
+      )}
+
+      {showSuper && profile && (
+        <SuperEncaminhadoModal crm={superCrm}
+          onMedicoConduz={() => setShowSuper(false)}
+          onPacienteFaz={() => { setShowSuper(false); verificarEAbrirOBA(profile) }}
+        />
       )}
 
       {showOBAModal && profile && (
@@ -1795,7 +1815,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // DIRETO pro OBA, NUNCA a 'nova' (que duplica o que o OBA já coleta). A 'nova' fica
           // só pra follow-up / 2ª avaliação em diante (e pro não-bariátrico).
           const ehBari = !!(profile?.bariatrica || inputs.bariatrica || ehDominioBariatrico())
-          if (ehBari) { setResultado(null); setTela('historico'); verificarEAbrirOBA(profile) }
+          if (ehBari) { setResultado(null); setTela('historico'); abrirOBAouSuper(profile) }
           else setTela('nova')
         }}
         onSairSemPagar={() => {
