@@ -528,7 +528,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 className={inputAmarelo} autoComplete="off" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM e UF"}</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">{"CRM, UF e Sexo"}</label>
               <div className="flex gap-2">
                 <input ref={refCrmNum} type="text" value={crmNum}
                   onChange={e => setCrmNum(sanitizarCrmNum(e.target.value))}
@@ -536,23 +536,20 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                   inputMode="numeric" maxLength={6} />
                 <input ref={refCrmUf} type="text" value={crmUF}
                   onChange={e => setCrmUF(sanitizarCrmUF(e.target.value))}
-                  placeholder="BA" maxLength={2} style={{ width: '4rem' }}
+                  placeholder="BA" maxLength={2} style={{ width: '3.5rem' }}
                   className={`${inputAmarelo} text-center uppercase ${crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) ? 'border-red-500' : ''}`} autoComplete="off" />
+                <select ref={refSexo} value={medSexo}
+                  onChange={e => { setMedSexo(e.target.value); try { localStorage.setItem('medico_sexo', e.target.value) } catch (er) {}; if (e.target.value && refCelular.current) refCelular.current.focus(); }}
+                  className={inputAmarelo} style={{ width: '5rem' }}>
+                  <option value="">{"Sexo"}</option>
+                  <option value="M">{"Masc."}</option>
+                  <option value="F">{"Fem."}</option>
+                </select>
               </div>
               {crmUF.length === 2 && !UFS_VALIDAS.includes(crmUF) && (
                 <p className="text-red-500 text-xs mt-1">{"UF inv\u00e1lida"}</p>
               )}
               <p className="text-xs text-red-800 font-medium mt-0.5">{"Este ser\u00e1 o seu LOGIN permanente"}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Sexo</label>
-              <select ref={refSexo} value={medSexo}
-                onChange={e => { setMedSexo(e.target.value); try { localStorage.setItem('medico_sexo', e.target.value) } catch (er) {}; if (e.target.value && refCelular.current) refCelular.current.focus(); }}
-                className={inputAmarelo}>
-                <option value="">{"Selecione\u2026"}</option>
-                <option value="M">Masculino</option>
-                <option value="F">Feminino</option>
-              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Celular / WhatsApp</label>
@@ -571,7 +568,8 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
               <input ref={refEmailCad} type="email" value={email} onChange={e => setEmail(e.target.value.toLowerCase())}
-                placeholder="seu@email.com" className={inputAmarelo} autoComplete="off" />
+                placeholder="seu@email.com" className={inputAmarelo} autoComplete="off"
+                inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
             </div>
             <div>
               {!jaLogadoSemSenha && !senha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie a sua Senha</label>
@@ -798,6 +796,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   // redesenhar. Substitui a antiga "tarja cinza" (showAfiliadosBanner) que auto-aparecia.
   const [showConvite4doc, setShowConvite4doc] = useState(false);
   const [showQRMedico, setShowQRMedico] = useState(false);  // QR de encaminhamento (4DOC)
+  const [qrFoco, setQrFoco] = useState('qr');  // 'qr' (ENCAMINHAR: QR+link) | 'cpf' (RECOMENDAR: digitar CPF)
   // Marca que o 4DOC ja foi oferecido (modal cheio) nesta sessao: evita o modal reaparecer
   // depois que o medico ja declinou ("Preencher depois"). Apos isso, no maximo o banner.
   const jaOfereceu4DOCRef = React.useRef(false);
@@ -1567,24 +1566,35 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <img src={obaLogo} alt="Projeto OBA" className="h-24 object-contain mx-auto mb-1" />
               {(medicoNome || medicoCRM) && <p className="text-center text-[11px] text-gray-400 mb-4">{[medicoNome, medicoCRM].filter(Boolean).join('  ·  ')}</p>}
               <div className="divide-y divide-gray-100">
+                {/* 1. ENCAMINHAR */}
                 <div className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
-                    <p className="text-lg font-extrabold text-red-800 leading-tight">{"AVALIAR"}</p>
-                    <p className="text-xs text-gray-500">{"Avaliar um paciente · US$ 15"}</p>
+                    <p className="text-lg font-extrabold text-gray-900 leading-tight">{"ENCAMINHAR"}</p>
+                    <p className="text-xs leading-snug" style={{ color: '#7B1E1E' }}>{"Encaminhe o paciente para que se cadastre antes da sua avaliação, ou para que ele possa se auto-avaliar."}</p>
+                  </div>
+                  <PlayButton onClick={() => { setQrFoco('qr'); setShowQRMedico(true) }} ariaLabel="Encaminhar" />
+                </div>
+                {/* 2. AVALIAR */}
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-lg font-extrabold text-gray-900 leading-tight">{"AVALIAR"}</p>
+                    <p className="text-xs leading-snug" style={{ color: '#7B1E1E' }}>{"Para avaliar um paciente ele tem que ser encaminhado e estar cadastrado."}</p>
                   </div>
                   <PlayButton onClick={() => { setAvaliarFase('cpf'); setAvaliarCpfInput(''); setAvaliarErro('') }} ariaLabel="Avaliar" />
                 </div>
+                {/* 3. RECOMENDAR */}
                 <div className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
-                    <p className="text-lg font-extrabold text-red-800 leading-tight">{"ENCAMINHAR"}</p>
-                    <p className="text-xs text-gray-500">{"Encaminhar paciente · US$ 10"}</p>
+                    <p className="text-lg font-extrabold text-gray-900 leading-tight">{"RECOMENDAR"}</p>
+                    <p className="text-xs leading-snug" style={{ color: '#7B1E1E' }}>{"Registre o CPF do bariátrico no sistema. Ao se cadastrar ele terá a opção de destinar o crédito para você."}</p>
                   </div>
-                  <PlayButton onClick={() => setShowQRMedico(true)} ariaLabel="Encaminhar" />
+                  <PlayButton onClick={() => { setQrFoco('cpf'); setShowQRMedico(true) }} ariaLabel="Recomendar" />
                 </div>
+                {/* 4. VER MEUS CRÉDITOS */}
                 <div className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
-                    <p className="text-base font-extrabold text-red-800 leading-tight">{"VER MEUS CRÉDITOS"}</p>
-                    <p className="text-xs text-gray-500">{"Encaminhamentos e avaliações"}</p>
+                    <p className="text-base font-extrabold text-gray-900 leading-tight">{"VER MEUS CRÉDITOS"}</p>
+                    <p className="text-xs leading-snug" style={{ color: '#7B1E1E' }}>{"Seus encaminhamentos e avaliações."}</p>
                   </div>
                   <PlayButton onClick={() => setShowMeusCreditosMed(true)} ariaLabel="Ver créditos" />
                 </div>
@@ -1793,7 +1803,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
 
             <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <div className="bg-blue-50 border-2 border-blue-400 rounded-xl p-3">
               <p className="text-blue-800 text-sm leading-relaxed">
                 {"Para concluir a sua inscri\u00e7\u00e3o no "}<strong>Programa de Médicos Afiliados Patrocinado</strong>{" e receber os benef\u00edcios previstos, precisamos do seu "}<strong>CEP</strong>{", "}<strong>CPF</strong>{" e da sua "}<strong>chave Pix</strong>{"."}
               </p>
@@ -2482,7 +2492,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         )}
 
       {showQRMedico && medicoCRM && (
-        <QRMedicoModal crm={medicoCRM} onClose={() => setShowQRMedico(false)} />
+        <QRMedicoModal crm={medicoCRM} foco={qrFoco} onClose={() => setShowQRMedico(false)} />
       )}
 
       {/* Top-level: funciona da bifurcação E de dentro do 4DOC (antes só montava dentro do 4DOC). */}

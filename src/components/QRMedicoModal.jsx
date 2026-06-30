@@ -11,7 +11,7 @@ import obaLogo from '../assets/oba-logo.png'
  *
  * Props: crm ('6302/BA'), onClose().
  */
-export default function QRMedicoModal({ crm, onClose }) {
+export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
   const [copiado, setCopiado] = useState(false)
   const base = (typeof window !== 'undefined' && window.location && window.location.origin)
     ? window.location.origin
@@ -61,6 +61,7 @@ export default function QRMedicoModal({ crm, onClose }) {
   // Ao APARECER o QR, o link e' copiado automaticamente no celular do medico — ele cola
   // no WhatsApp/Telegram e envia aos pacientes (ou a secretaria dispara para todos).
   useEffect(() => {
+    if (foco !== 'qr') return
     try { navigator.clipboard.writeText(link).then(() => setCopiado(true)).catch(() => {}) } catch (e) {}
   }, [])
 
@@ -72,12 +73,13 @@ export default function QRMedicoModal({ crm, onClose }) {
         <div className="px-6 py-4 flex items-center gap-3" style={{ background: '#6B7280' }}>
           <img src={obaLogo} alt="Projeto OBA" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div>
-            <h2 className="text-lg font-bold" style={{ color: '#facc15' }}>{"Seu QR-CODE + Link de Encaminhar"}</h2>
-            <p className="text-xs mt-1" style={{ color: '#FDE68A' }}>{"Cada paciente que escanear, se cadastrar e pagar = 1 crédito pra você."}</p>
+            <h2 className="text-lg font-bold" style={{ color: '#facc15' }}>{foco === 'cpf' ? 'Recomendar pelo CPF' : 'Seu QR-CODE + Link de Encaminhar'}</h2>
+            <p className="text-xs mt-1" style={{ color: '#FDE68A' }}>{foco === 'cpf' ? 'Registre o CPF do bariátrico. Ao se cadastrar, ele pode destinar o crédito a você.' : 'Cada paciente que escanear, se cadastrar e pagar = 1 crédito pra você.'}</p>
           </div>
         </div>
 
         <div className="p-6 flex flex-col items-center text-center gap-3">
+          {foco === 'qr' && (<>
           <div style={{ background: '#fff', padding: 12, borderRadius: 14, border: '1px solid #e5e7eb' }}>
             <QRCodeSVG
               value={link}
@@ -114,10 +116,12 @@ export default function QRMedicoModal({ crm, onClose }) {
               {copiado ? '✓ Copiado' : 'Copiar'}
             </button>
           </div>
+          </>)}
 
-          {/* Encaminhar DIGITANDO o CPF (sem precisar do link/QR). */}
-          <div className="w-full border-t border-gray-100 pt-3 text-left">
-            <p className="text-xs font-bold text-gray-600 mb-1.5">{"Ou encaminhe pelo CPF (sem o link):"}</p>
+          {/* RECOMENDAR: registrar o CPF do paciente (sem link/QR). */}
+          {foco === 'cpf' && (
+          <div className="w-full pt-1 text-left">
+            <p className="text-xs font-bold text-gray-600 mb-1.5">{"Digite o CPF do paciente:"}</p>
             <div className="flex items-center gap-2">
               <input value={cpfEnc} onChange={e => { setCpfEnc(formatarCPF(e.target.value)); setCpfEncMsg(null) }}
                 placeholder="000.000.000-00" inputMode="numeric" maxLength={14}
@@ -129,6 +133,7 @@ export default function QRMedicoModal({ crm, onClose }) {
             </div>
             {cpfEncMsg && <p className="text-xs font-bold mt-1.5 leading-snug" style={{ color: cpfEncMsg.ok ? '#15803d' : '#b91c1c' }}>{cpfEncMsg.txt}</p>}
           </div>
+          )}
 
           <button onClick={onClose}
             className="w-full mt-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl text-sm transition-colors">
