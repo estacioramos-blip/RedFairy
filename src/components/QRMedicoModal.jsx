@@ -16,7 +16,7 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
   const base = (typeof window !== 'undefined' && window.location && window.location.origin)
     ? window.location.origin
     : 'https://redfairy.bio'
-  const linkQR = `${base}/?ref=${encodeURIComponent(crm || '')}`   // QR presencial → Situação 1 ("Super!")
+  const linkQR = `${base}/?ref=${encodeURIComponent(crm || '')}&oba=1`   // QR presencial → entra na bariátrica (Situação 1 "Super!")
   const linkSelf = `${linkQR}&self=1`                              // link enviado → Situação 2 ("Opa!", auto-avaliação)
 
   function copiar() {

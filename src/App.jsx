@@ -396,7 +396,7 @@ export default function App() {
     try { crm = localStorage.getItem('medico_crm') || '' } catch (e) {}
     if (!standalone || !crm) return
     try { if (sessionStorage.getItem('rf_med_link_copiado')) return } catch (e) {}
-    const link = `${window.location.origin}/?ref=${encodeURIComponent(crm)}`
+    const link = `${window.location.origin}/?ref=${encodeURIComponent(crm)}&oba=1&self=1`   // link enviado = remoto → auto-avaliação (Situação 2)
     let listener = null
     const marcar = () => {
       try { sessionStorage.setItem('rf_med_link_copiado', '1') } catch (e) {}
