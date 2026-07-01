@@ -803,6 +803,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   React.useEffect(() => { if (showAfiliados) jaOfereceu4DOCRef.current = true; }, [showAfiliados]);
   const [afiliadoEndereco, setAfiliadoEndereco] = useState('');
   const [afiliadoPix, setAfiliadoPix] = useState('');
+  const [afilTitular, setAfilTitular] = useState(medicoNome || ''); const [afilPj, setAfilPj] = useState(false); const [afilCnpj, setAfilCnpj] = useState('');  // titular do PIX (PF/PJ)
   const [afiliadoSalvando, setAfiliadoSalvando] = useState(false);
   const [afiliadoSalvo, setAfiliadoSalvo] = useState(false);
   const [afiliadoCEP, setAfiliadoCEP] = useState('');
@@ -1899,6 +1900,20 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     placeholder={"ou DIGITE outra chave PIX"}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                   />
+                  {/* Titular da conta PIX (pode ser um familiar) + PF/PJ */}
+                  <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide mt-3 mb-1">{afilPj ? 'Razão Social (titular)' : 'Nome do titular da conta (quem recebe)'}</label>
+                  <input type="text" value={afilTitular} onChange={e => setAfilTitular(e.target.value)}
+                    placeholder={afilPj ? 'Razão Social da empresa' : 'Pode ser você ou um familiar'}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                  <label className="flex items-center gap-2 cursor-pointer mt-2">
+                    <input type="checkbox" checked={afilPj} onChange={e => setAfilPj(e.target.checked)} style={{ accentColor: '#7B1E1E' }} />
+                    <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"A conta é de empresa (CNPJ)"}</span>
+                  </label>
+                  {afilPj && (
+                    <input type="text" value={afilCnpj} onChange={e => setAfilCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
+                      placeholder="CNPJ (só números)" inputMode="numeric"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-red-400" />
+                  )}
                 </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer mt-1 mb-2">
@@ -1918,6 +1933,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         if (!afiliadoCEP.trim()) { refAfilCEP.current?.focus(); return; }
                         if (!afiliadoCPF.trim() || afiliadoCPFErro) { setEtapaAfil(2); refAfilCPF.current?.focus(); return; }
                         if (!afiliadoPix.trim()) { refAfilPix.current?.focus(); return; }
+                        if (!afilTitular.trim()) { alert(afilPj ? 'Informe a Razão Social do titular.' : 'Informe o nome do titular da conta.'); return; }
+                        if (afilPj && String(afilCnpj).replace(/\D/g, '').length !== 14) { alert('Informe o CNPJ (14 dígitos).'); return; }
                         // CRM robusto (prop ou localStorage) e salvamento AUTOVERIFICAVEL:
                         // .select() devolve as linhas afetadas \u2014 se vier 0, o UPDATE nao gravou
                         // nada (CRM nao casou) e a gente AVISA, em vez de seguir calado.
@@ -1930,6 +1947,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         const { data: linhas, error } = await supabase.from('medicos').update({
                           endereco: '', cep: cepLimpo, cpf: cpfLimpo, pix_chave: pixLimpo, usa_telegram: usaTelegram,
                         }).eq('crm', crmSalvar).select('crm');
+                        // Titular do PIX: colunas podem nao existir ainda (migrate_pix_titular_medico.sql).
+                        // Update SEPARADO e tolerante — nao quebra o cadastro do medico se faltarem.
+                        try { await supabase.from('medicos').update({ pix_titular: afilTitular.trim(), pix_titular_pj: afilPj, pix_cnpj: afilPj ? String(afilCnpj).replace(/\D/g, '') : null }).eq('crm', crmSalvar); } catch (e) {}
                         setAfiliadoSalvando(false);
                         if (error) { alert('Erro ao salvar: ' + (error.message || 'tente novamente.')); return; }
                         if (!linhas || linhas.length === 0) {
