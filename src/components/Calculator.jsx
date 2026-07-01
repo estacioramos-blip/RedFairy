@@ -1654,6 +1654,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             : null}
           anamneseAnterior={avaliarPaciente.anamneseAnterior}
           coletarHemograma={!avaliarPaciente.ultimaAval}
+          modoMedico={true}
           onFechar={() => { try { sessionStorage.removeItem('rf_med_oba_cpf') } catch (e) {}; setAvaliarFase(null); setAvaliarPaciente(null) }}
           onConcluir={async () => {
             try {
@@ -1963,6 +1964,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
       {showOBA && (
         <OBAModal
+          modoMedico={true}
           sexo={inputs.sexo}
           cpf={inputs.cpf}
           idade={inputs.idade || '0'}

@@ -411,7 +411,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #6B7280, #4B5563)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, coletarHemograma = false }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, coletarHemograma = false, modoMedico = false }) {
   // FOLLOW-UP: avaliação de RETORNO de um bariátrico que já fez o baseline.
   // anamneseAnterior = última linha de oba_anamnese. Nesse modo, os campos
   // IMUTÁVEIS (data/tipo/indicação da cirurgia, peso antes, altura) são
@@ -427,7 +427,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   //  States: declarados PRIMEIRO, antes de qualquer useEffect que os use
   // BUG #4 e #5 corrigidos: ordem dos hooks. form, exames, dataExames,
   // aberrantesOBA, alertaPeso agora vem antes dos useEffects que os mexem.
-  const [etapa, setEtapa] = useState(salvo?.etapa || (coletarHemograma ? 'eritron' : 'anamnese'))
+  const [etapa, setEtapa] = useState(salvo?.etapa || ((coletarHemograma && modoMedico) ? 'eritron' : 'anamnese'))
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [anamneseSalva, setAnamneseSalva] = useState(null)
@@ -1142,7 +1142,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     if (etapa === 'conclusao') setEtapa('relatorio')
     else if (etapa === 'relatorio') setEtapa('exames')
     else if (etapa === 'exames') setEtapa('anamnese')
-    else if (etapa === 'anamnese' && coletarHemograma) setEtapa('eritron')
+    else if (etapa === 'anamnese' && coletarHemograma && modoMedico) setEtapa('eritron')
     else onFechar()
   }
   const corEritron = (c) => c === 'red' ? '#DC2626' : c === 'orange' ? '#EA580C' : c === 'yellow' ? '#CA8A04' : c === 'green' ? '#16A34A' : '#6B7280'
@@ -1759,9 +1759,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     { key:'sat_novo', label:"Sat. Transferrina", unit:'%' },
   ]
   let eritronNovoFields = []
-  if (coletarHemograma) {
-    // Hb/VCM/RDW já foram lançados na ETAPA 'eritron' (topo do fluxo); aqui só ferritina/sat.
+  if (coletarHemograma && modoMedico) {
+    // MÉDICO: Hb/VCM/RDW já foram lançados na ETAPA 'eritron' (topo do fluxo); aqui só ferritina/sat.
     eritronNovoFields = [ERITRON_NOVO_TODOS[3], ERITRON_NOVO_TODOS[4]]
+  } else if (coletarHemograma) {
+    // PACIENTE (sem a etapa 'eritron'): coleta o hemograma COMPLETO aqui, nos exames (como no original).
+    eritronNovoFields = ERITRON_NOVO_TODOS
   } else if (novaDataExames) {
     eritronNovoFields = ERITRON_NOVO_TODOS
   } else if (_temRF) {
