@@ -153,7 +153,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
                 <p className="text-sm text-gray-600 leading-relaxed">
                   {mostrarTroca
                     ? 'Atualize a sua chave PIX (você pode receber em outra conta).'
-                    : 'Precisamos da sua chave PIX para transferir os seus créditos.'}
+                    : 'Precisamos da sua Chave PIX para créditos.'}
                 </p>
                 <div className="space-y-1.5">
                   <label className={checkCls(pixTipo === 'cpf')}>
@@ -273,7 +273,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
                   ))}
                 </div>
                 <p className="text-xs text-gray-400 text-center">{"Cada indicado que paga vale US$ "}{dados?.comissao_usd || 10}{"."}</p>
-                {!precisaPix ? (
+                {!precisaPix && (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-left">
                     <p className="text-[11px] text-gray-500">{"Você recebe em (PIX):"}</p>
                     <p className="text-sm font-bold text-gray-700 break-all">{pixChave}</p>
@@ -282,8 +282,6 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
                       {"QUERO TROCAR MINHA CHAVE PIX"}
                     </button>
                   </div>
-                ) : (
-                  <p className="text-[11px] text-gray-400 text-center">{"Cadastre a sua chave PIX (nos campos acima) para receber os créditos."}</p>
                 )}
               </>
             )}
