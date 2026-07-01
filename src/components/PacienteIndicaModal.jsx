@@ -38,6 +38,9 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
   const [salvando, setSalvando] = useState(false)
   const [msgPix, setMsgPix] = useState('')
   const [resCpf, setResCpf] = useState(''); const [resMsg, setResMsg] = useState(null); const [resBusy, setResBusy] = useState(false)  // RESERVAR um CPF
+  // Titular da conta PIX (a chave pode ser de um familiar) + PJ/CNPJ + (indicador) nome/telefone.
+  const [pixTitular, setPixTitular] = useState(''); const [pixPj, setPixPj] = useState(false); const [pixCnpj, setPixCnpj] = useState('')
+  const [indNome, setIndNome] = useState(''); const [indTel, setIndTel] = useState('')
   const pixRef = useRef(null)
 
   const base = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://redfairy.bio'
@@ -62,6 +65,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
         if (data && data.ok && data.codigo) {
           setCodigo(data.codigo)
           setNome(data.nome || '')
+          setPixTitular(prev => prev || data.nome || '')   // titular default = próprio nome
           setPixChave(data.pix || '')
           if (data.pix) carregarPainel(data.codigo)
         } else setErro((data && data.erro) || 'Não foi possível ativar a sua indicação.')
@@ -81,9 +85,18 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
   async function salvarPix() {
     setMsgPix('')
     if (!pixInput.trim()) { setMsgPix('Informe a sua chave PIX.'); return }
+    const nomeFinal = (indNome.trim() || nome).trim()
+    if (!nomeFinal) { setMsgPix('Informe o seu nome.'); return }
+    const tit = pixTitular.trim()
+    if (!tit) { setMsgPix(pixPj ? 'Informe a Razão Social do titular.' : 'Informe o nome do titular da conta.'); return }
+    if (pixPj && String(pixCnpj).replace(/\D/g, '').length !== 14) { setMsgPix('Informe o CNPJ (14 dígitos).'); return }
     setSalvando(true)
     try {
-      const { data } = await supabase.rpc('paciente_salvar_pix', { p_cpf: cpfLimpo, p_nome: nome, p_pix: pixInput.trim() })
+      const { data } = await supabase.rpc('paciente_salvar_pix', {
+        p_cpf: cpfLimpo, p_nome: nomeFinal, p_pix: pixInput.trim(),
+        p_celular: indTel.replace(/\D/g, '') || celLimpo, p_email: emailLimpo,
+        p_titular: tit, p_pj: pixPj, p_cnpj: pixPj ? String(pixCnpj).replace(/\D/g, '') : null,
+      })
       if (data && data.ok) {
         setPixChave(pixInput.trim())
         setMostrarTroca(false)
@@ -165,6 +178,33 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
                     value={pixInput} onChange={e => { setPixInput(e.target.value); setPixTipo('outra'); setMsgPix('') }}
                     placeholder="Digite ou cole outra chave PIX" />
                 </div>
+                {/* (indicador sem cadastro completo) nome + telefone */}
+                {!nome && (
+                  <input value={indNome} onChange={e => setIndNome(e.target.value.toUpperCase().replace(/[0-9]/g, ''))}
+                    placeholder="SEU NOME COMPLETO" style={{ textTransform: 'uppercase' }}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                )}
+                {!celLimpo && (
+                  <input value={indTel} onChange={e => setIndTel(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                    placeholder="Seu telefone / WhatsApp (com DDD)" inputMode="numeric"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                )}
+                {/* Titular da conta (a chave PIX pode ser de um familiar) */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 mb-1">{pixPj ? 'Razão Social (titular da conta)' : 'Nome do titular da conta (quem recebe)'}</label>
+                  <input value={pixTitular} onChange={e => { setPixTitular(e.target.value); setMsgPix('') }}
+                    placeholder={pixPj ? 'Razão Social da empresa' : 'Pode ser você ou um familiar'}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-600">
+                  <input type="checkbox" checked={pixPj} style={{ accentColor: '#7B1E1E' }} onChange={e => { setPixPj(e.target.checked); setMsgPix('') }} />
+                  {"A conta é de empresa (CNPJ)"}
+                </label>
+                {pixPj && (
+                  <input value={pixCnpj} onChange={e => setPixCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
+                    placeholder="CNPJ (só números)" inputMode="numeric"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                )}
                 {msgPix && <p className="text-xs font-semibold text-red-600">{msgPix}</p>}
                 {pixInput.trim().length >= 3 && (
                   <div className="flex flex-col items-center pt-1">
