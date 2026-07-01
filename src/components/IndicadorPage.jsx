@@ -76,6 +76,7 @@ export default function IndicadorPage({ onVoltar }) {
   const [pixTipo, setPixTipo] = useState('')        // cpf | celular | outra | ''
   const [contatoCpf, setContatoCpf] = useState('')
   const [contatoCel, setContatoCel] = useState('')
+  const [contatoEmail, setContatoEmail] = useState('')
 
   const cpfDigits = soDigitos(cpf)
   const cpfOk = cpfDigits.length === 11 && validarCPF(cpfDigits)   // só avança com CPF válido
@@ -104,7 +105,7 @@ export default function IndicadorPage({ onVoltar }) {
     try {
       const t = token || localStorage.getItem('indicador_token') || ''
       const { data } = await supabase.rpc('contato_indicador', { p_codigo: codigo, p_token: t })
-      if (data && data.ok) { setContatoCpf(data.cpf || ''); setContatoCel(data.celular || '') }
+      if (data && data.ok) { setContatoCpf(data.cpf || ''); setContatoCel(data.celular || ''); setContatoEmail(data.email || '') }
     } catch (e) {}
   }
   useEffect(() => { if (etapa === 'painel' && codigo) { carregarPainel(codigo); carregarContato() } }, [etapa, codigo])
@@ -218,7 +219,7 @@ export default function IndicadorPage({ onVoltar }) {
     // Submodais reutilizam o PacienteIndicaModal (idempotente pelo CPF do indicador):
     // mesmos modais do paciente, mas SEM "ENTRAR" (indicador não faz avaliação clínica).
     if (indView === 'indicar' || indView === 'creditos') {
-      return <PacienteIndicaModal cpf={cpf} celular={contatoCel} view={indView} onFechar={() => setIndView('gate')} />
+      return <PacienteIndicaModal cpf={cpf} celular={contatoCel} email={contatoEmail} view={indView} onFechar={() => setIndView('gate')} />
     }
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6">
