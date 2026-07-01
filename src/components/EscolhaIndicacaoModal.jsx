@@ -57,16 +57,16 @@ export default function EscolhaIndicacaoModal({ cpf, medico, indicador, onConclu
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         <div className="bg-red-700 text-white px-5 py-4">
-          <h2 className="text-base font-bold">{"Quem indicou você ao Projeto OBA?"}</h2>
+          <h2 className="text-base font-bold">{"VOCÊ FOI INDICADO POR:"}</h2>
         </div>
         <div className="p-5 space-y-3">
-          <p className="text-sm text-gray-600 leading-relaxed">
+          <p className="text-sm leading-relaxed" style={{ color: '#7B1E1E', fontWeight: 600 }}>
             {doisLados
-              ? 'Você foi indicado por mais de uma pessoa. Marque de quem você aceita a indicação:'
+              ? 'Escolha quem deve receber os créditos pela indicação:'
               : 'Confirme quem indicou você ao projeto:'}
           </p>
           {medico && <Opcao tipo="medico" titulo={medico.nome} sub="médico" />}
-          {indicador && <Opcao tipo="indicador" titulo={indicador.nome} sub="indicador" />}
+          {indicador && <Opcao tipo="indicador" titulo={indicador.nome} sub="indicador (não-médico)" />}
           <div className="flex justify-center pt-2">
             <PlayButton onClick={confirmar} loading={busy} label="CONFIRMAR"
               ariaLabel="Confirmar indicação" ringColor="rgba(227,174,55,0.75)" />
