@@ -37,6 +37,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
   const [pixInput, setPixInput] = useState('')
   const [salvando, setSalvando] = useState(false)
   const [msgPix, setMsgPix] = useState('')
+  const [resCpf, setResCpf] = useState(''); const [resMsg, setResMsg] = useState(null); const [resBusy, setResBusy] = useState(false)  // RESERVAR um CPF
   const pixRef = useRef(null)
 
   const base = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://redfairy.bio'
@@ -96,7 +97,22 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
     try { await navigator.clipboard.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 2500) } catch (e) {}
   }
 
-  const checkCls = (on) => `flex items-center gap-2 cursor-pointer text-xs font-medium tracking-wide ${on ? 'text-gray-800' : 'text-gray-600'}`
+  async function reservarCpf() {
+    const d = String(resCpf || '').replace(/\D/g, '')
+    if (d.length !== 11) { setResMsg({ ok: false, txt: 'CPF inválido (11 dígitos).' }); return }
+    setResBusy(true); setResMsg(null)
+    try {
+      const { data } = await supabase.rpc('indicador_reservar_cpf', { p_codigo: codigo, p_cpf: d })
+      if (data && data.ok) {
+        setResMsg({ ok: true, txt: data.ja_cadastrado
+          ? 'Esse CPF já faz parte do Projeto. A reserva foi registrada mesmo assim.'
+          : 'CPF reservado! Quando essa pessoa se cadastrar e pagar, o crédito é seu.' })
+        setResCpf('')
+      } else setResMsg({ ok: false, txt: (data && data.erro) || 'Não foi possível reservar.' })
+    } catch (e) { setResMsg({ ok: false, txt: 'Erro de conexão. Tente de novo.' }) }
+    setResBusy(false)
+  }
+  const checkCls = (on) =>`flex items-center gap-2 cursor-pointer text-xs font-medium tracking-wide ${on ? 'text-gray-800' : 'text-gray-600'}`
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.95)' }}>
@@ -179,6 +195,20 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
                 <div className="flex flex-col items-center pt-1">
                   <PlayButton onClick={copiar} label={copiado ? 'LINK COPIADO ✓' : 'COPIAR LINK'} ariaLabel="Copiar link"
                     circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" labelColor="#7B1E1E" ringColor="rgba(250,204,21,0.7)" />
+                </div>
+                {/* RESERVAR um CPF (sem o link/QR) — espelho do RECOMENDAR do médico */}
+                <div className="w-full border-t border-gray-100 pt-3 text-left mt-1">
+                  <p className="text-xs font-bold text-gray-600 mb-1.5">{"Ou reserve um CPF (sem o link):"}</p>
+                  <div className="flex items-center gap-2">
+                    <input value={resCpf} onChange={e => { setResCpf(fmtCPF(e.target.value)); setResMsg(null) }}
+                      placeholder="000.000.000-00" inputMode="numeric" maxLength={14}
+                      className="flex-1 min-w-0 border border-gray-300 rounded-lg px-2 py-1.5 text-sm" />
+                    <button onClick={reservarCpf} disabled={resBusy}
+                      className="shrink-0 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50" style={{ background: '#6B7280' }}>
+                      {resBusy ? '...' : 'Reservar'}
+                    </button>
+                  </div>
+                  {resMsg && <p className="text-xs font-bold mt-1.5 leading-snug" style={{ color: resMsg.ok ? '#15803d' : '#b91c1c' }}>{resMsg.txt}</p>}
                 </div>
               </>
             )}
