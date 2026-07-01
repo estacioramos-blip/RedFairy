@@ -765,6 +765,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     (form.status_fibromialgia || []).includes("TENHO FIBROMIALGIA DIAGNOSTICADA") ||
     fibroDemais >= 5
   )
+  // Se o OBA abre JÁ com obstipação/fibromialgia (seedada da avaliação anterior na form),
+  // NÃO oferece a pesquisa ao abrir — ela só aparece quando o paciente MARCA durante ESTA
+  // avaliação. Sem isto, no ENTRAR (re-avaliação) a pesquisa pulava antes do OBA.
+  useEffect(() => {
+    if (gatilhoPesquisa) pesquisaOferecida.current = true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   useEffect(() => {
     if (gatilhoPesquisa && !pesquisaOferecida.current) {
       pesquisaOferecida.current = true
