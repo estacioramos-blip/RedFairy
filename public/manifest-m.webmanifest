@@ -1,0 +1,16 @@
+{
+  "name": "OBA · Médico",
+  "short_name": "OBA m",
+  "description": "Projeto OBA — médico (4DOC).",
+  "start_url": "/?modo=medico",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14100E",
+  "theme_color": "#14100E",
+  "icons": [
+    { "src": "/oba-fairy-m.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/oba-fairy-m.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/oba-fairy-m.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

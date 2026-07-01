@@ -1,0 +1,16 @@
+{
+  "name": "OBA · Indicador",
+  "short_name": "OBA i",
+  "description": "Projeto OBA — indicador.",
+  "start_url": "/?modo=indicador",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14100E",
+  "theme_color": "#14100E",
+  "icons": [
+    { "src": "/oba-fairy-i.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/oba-fairy-i.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/oba-fairy-i.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

@@ -11,6 +11,7 @@ import PlayButton from './components/PlayButton'
 import IndicadorPage from './components/IndicadorPage'
 import OBAEntradaPaciente from './components/OBAEntradaPaciente'
 import { ehDominioBariatrico } from './lib/dominio'
+import { setManifestFluxo } from './lib/manifestFluxo'
 export default function App() {
   // Modo inicial lido da URL JÁ no 1º render — evita o "flash" da landing (branca)
   // antes do useEffect trocar de tela (ex.: ?oba=1 -> tela escura do paciente).
@@ -82,6 +83,14 @@ export default function App() {
   })
   // (medico) toast "link de encaminhamento copiado" ao abrir pelo icone instalado (PWA).
   const [linkMedToast, setLinkMedToast] = useState(false)
+
+  // PWA por PAPEL: troca o icone/manifesto/titulo conforme o fluxo (p/m/i), pra o
+  // icone instalado sair com a letra do papel e abrir o fluxo certo.
+  useEffect(() => {
+    const l = modo === 'calculadora' ? 'm' : modo === 'indicador' ? 'i'
+            : (modo === 'paciente' || modo === 'oba-paciente' || modo === 'triagem-direta' || modo === 'login') ? 'p' : null
+    if (l) setManifestFluxo(l)
+  }, [modo])
 
   useEffect(() => {
     // Migração: apaga a marca ANTIGA de "Voltar" externo que ficou gravada no
