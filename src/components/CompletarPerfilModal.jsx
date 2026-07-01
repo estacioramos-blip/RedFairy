@@ -128,15 +128,18 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     setLoading(true)
     const { data, error } = await supabase
       .from('profiles')
-      .update({ nome: nomeT, celular: celDigits, email: emailT })
+      .update({ nome: nomeT, celular: celDigits })
       .eq('id', profile.id)
-      .select('id, nome, cpf, sexo, data_nascimento, celular, email, bariatrica, gestante, boas_vindas_vista')
+      .select('id, nome, cpf, sexo, data_nascimento, celular, bariatrica, gestante, boas_vindas_vista')
       .maybeSingle()
+    // E-mail: profiles.email pode não existir ainda (rodar migrate_profiles_email.sql). Update
+    // SEPARADO e tolerante — não quebra o salvar do perfil se a coluna faltar.
+    try { await supabase.from('profiles').update({ email: emailT }).eq('id', profile.id) } catch (e) {}
     setLoading(false)
     if (error) { setErro('Erro ao salvar. Tente novamente.'); return }
 
     try { localStorage.setItem('paciente_nome', nomeT) } catch (e) {}
-    if (onSalvo) onSalvo(data || { ...profile, nome: nomeT, celular: celDigits, email: emailT })
+    if (onSalvo) onSalvo({ ...(data || { ...profile, nome: nomeT, celular: celDigits }), email: emailT })
   }
 
   const fieldCls = (campo) =>
