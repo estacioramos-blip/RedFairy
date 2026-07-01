@@ -1778,7 +1778,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     )}
 
     {showIndica && profile && (
-      <PacienteIndicaModal cpf={profile.cpf} celular={profile.celular} view={indicaView}
+      <PacienteIndicaModal cpf={profile.cpf} celular={profile.celular} email={profile.email} view={indicaView}
         onFechar={() => { setShowIndica(false); if (voltarParaGate) { setVoltarParaGate(false); setShowEscolhaEntrarIndicar(true) } }} />
     )}
 

@@ -23,7 +23,7 @@ function fmtCPF(v) {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
 }
 
-export default function PacienteIndicaModal({ cpf, celular, view = 'indicar', onFechar }) {
+export default function PacienteIndicaModal({ cpf, celular, email, view = 'indicar', onFechar }) {
   const [codigo, setCodigo] = useState('')
   const [nome, setNome] = useState('')
   const [pixChave, setPixChave] = useState('')
@@ -43,6 +43,7 @@ export default function PacienteIndicaModal({ cpf, celular, view = 'indicar', on
   const link = codigo ? `${base}/?ref=${codigo}` : ''
   const cpfLimpo = String(cpf || '').replace(/\D/g, '')
   const celLimpo = String(celular || '').replace(/\D/g, '')
+  const emailLimpo = String(email || '').trim().toLowerCase()
 
   async function carregarPainel(cod) {
     try {
@@ -136,6 +137,12 @@ export default function PacienteIndicaModal({ cpf, celular, view = 'indicar', on
                       {"MEU CELULAR É O MEU PIX"}
                     </label>
                   )}
+                  {emailLimpo && (
+                    <label className={checkCls(pixTipo === 'email')}>
+                      <input type="checkbox" checked={pixTipo === 'email'} style={{ accentColor: '#7B1E1E' }} onChange={() => escolherPix('email', emailLimpo)} />
+                      {"MEU E-MAIL É O MEU PIX"}
+                    </label>
+                  )}
                 </div>
                 <div>
                   <input ref={pixRef} className="w-full border-2 border-yellow-300 bg-yellow-50 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-yellow-400"
@@ -177,7 +184,7 @@ export default function PacienteIndicaModal({ cpf, celular, view = 'indicar', on
             )}
 
             {/* VER MEUS CRÉDITOS — só os créditos + PIX (privado, sem QR) */}
-            {codigo && !precisaPix && view === 'creditos' && (
+            {codigo && view === 'creditos' && (
               <>
                 <p className="text-sm text-gray-600 leading-relaxed text-center">
                   {"Seus créditos por indicar outros bariátricos. Eles abatem documentos médicos e a sua anuidade."}
@@ -196,14 +203,18 @@ export default function PacienteIndicaModal({ cpf, celular, view = 'indicar', on
                   ))}
                 </div>
                 <p className="text-xs text-gray-400 text-center">{"Cada indicado que paga vale US$ "}{dados?.comissao_usd || 10}{"."}</p>
-                <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-left">
-                  <p className="text-[11px] text-gray-500">{"Você recebe em (PIX):"}</p>
-                  <p className="text-sm font-bold text-gray-700 break-all">{pixChave}</p>
-                  <button onClick={() => { setPixInput(pixChave); setPixTipo('outra'); setMsgPix(''); setMostrarTroca(true) }}
-                    className="text-xs font-bold text-gray-600 underline underline-offset-2 hover:text-gray-800 mt-1">
-                    {"Desejo trocar minha chave PIX"}
-                  </button>
-                </div>
+                {!precisaPix ? (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-left">
+                    <p className="text-[11px] text-gray-500">{"Você recebe em (PIX):"}</p>
+                    <p className="text-sm font-bold text-gray-700 break-all">{pixChave}</p>
+                    <button onClick={() => { setPixInput(pixChave); setPixTipo('outra'); setMsgPix(''); setMostrarTroca(true) }}
+                      className="text-xs font-bold text-gray-600 underline underline-offset-2 hover:text-gray-800 mt-1">
+                      {"Desejo trocar minha chave PIX"}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-gray-400 text-center">{"Cadastre a sua chave PIX (nos campos acima) para receber os créditos."}</p>
+                )}
               </>
             )}
           </div>
