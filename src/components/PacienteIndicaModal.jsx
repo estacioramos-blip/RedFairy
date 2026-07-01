@@ -184,7 +184,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
             {codigo && view !== 'creditos' && (
               <>
                 <p className="text-sm text-gray-600 leading-relaxed text-center">
-                  {"Mostre este "}<b>{"QR"}</b>{" ao bariátrico, ou copie o "}<b>{"LINK"}</b>{" e envie no WhatsApp/Telegram. Quando ele se cadastrar e pagar, você ganha crédito."}
+                  {"Mostre este "}<b>{"QR"}</b>{" ao bariátrico, ou copie o "}<b>{"LINK"}</b>{" e envie no WhatsApp/Telegram. Quando ele se cadastrar e pagar, você ganha crédito. Você também pode "}<b>{"RESERVAR"}</b>{" o CPF de outro bariátrico, aqui embaixo nesta tela. A qualquer momento que ele se cadastrar, você receberá os créditos."}
                 </p>
                 <div className="flex justify-center">
                   <div className="bg-white p-3 rounded-xl border-2 border-gray-300">
