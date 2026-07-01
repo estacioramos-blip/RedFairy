@@ -119,7 +119,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
             {!codigo && !erro && <p className="text-xs text-gray-400 text-center">Carregando…</p>}
 
             {/* Form de PIX — só a chave (1ª vez ou trocar) */}
-            {codigo && precisaPix && (
+            {codigo && precisaPix && view === 'creditos' && (
               <>
                 <p className="text-sm text-gray-600 leading-relaxed">
                   {mostrarTroca
@@ -165,7 +165,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
             )}
 
             {/* INDICAR — só QR + link + copiar (o que se mostra ao novo paciente) */}
-            {codigo && !precisaPix && view !== 'creditos' && (
+            {codigo && view !== 'creditos' && (
               <>
                 <p className="text-sm text-gray-600 leading-relaxed text-center">
                   {"Mostre este "}<b>{"QR"}</b>{" ao bariátrico, ou copie o "}<b>{"LINK"}</b>{" e envie no WhatsApp/Telegram. Quando ele se cadastrar e pagar, você ganha crédito."}
