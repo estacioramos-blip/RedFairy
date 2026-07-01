@@ -111,12 +111,9 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   }
 
   function onEmailChange(v) {
+    // (sem salto de cursor) o foco fica no e-mail; o usuário toca em CONFIRMO quando quiser.
+    // O salto automático roubava o foco e atrapalhava a digitação (ex.: a "@").
     setEmail(v.toLowerCase()); setErro('')
-    if (emailTimer.current) clearTimeout(emailTimer.current)
-    emailTimer.current = setTimeout(() => {
-      // 3s parado com e-mail válido → salta o foco para o botão PLAY (CONFIRMO)
-      if (/\S+@\S+\.\S+/.test((v || '').trim())) confirmarRef.current?.focus()
-    }, 3000)
   }
 
   async function handleSalvar() {
@@ -209,7 +206,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
             <div>
               <label className={labelCls} style={estiloLabel}>{"E-mail"}</label>
               <input
-                ref={emailRef} type="email" value={email}
+                ref={emailRef} type="email" value={email} inputMode="email"
                 onChange={e => onEmailChange(e.target.value)}
                 onFocus={() => setCampoAtivo('email')}
                 className={fieldCls('email')} style={{ textTransform: 'lowercase' }}
