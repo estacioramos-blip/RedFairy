@@ -88,7 +88,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const tudoOk = nomeOk && celOk && emailOk
 
   function onNomeChange(v) {
-    setNome(v.toUpperCase()); setErro('')
+    setNome(v.toUpperCase().replace(/[0-9]/g, '')); setErro('')
     if (nomeTimer.current) clearTimeout(nomeTimer.current)
     nomeTimer.current = setTimeout(() => {
       if ((v || '').trim().length >= 5) celRef.current?.focus()  // 3,5s parado → salta p/ celular
@@ -128,15 +128,15 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     setLoading(true)
     const { data, error } = await supabase
       .from('profiles')
-      .update({ nome: nomeT, celular: celDigits })
+      .update({ nome: nomeT, celular: celDigits, email: emailT })
       .eq('id', profile.id)
-      .select('id, nome, cpf, sexo, data_nascimento, celular, bariatrica, gestante, boas_vindas_vista')
+      .select('id, nome, cpf, sexo, data_nascimento, celular, email, bariatrica, gestante, boas_vindas_vista')
       .maybeSingle()
     setLoading(false)
     if (error) { setErro('Erro ao salvar. Tente novamente.'); return }
 
     try { localStorage.setItem('paciente_nome', nomeT) } catch (e) {}
-    if (onSalvo) onSalvo(data || { ...profile, nome: nomeT, celular: celDigits })
+    if (onSalvo) onSalvo(data || { ...profile, nome: nomeT, celular: celDigits, email: emailT })
   }
 
   const fieldCls = (campo) =>

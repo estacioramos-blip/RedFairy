@@ -239,7 +239,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
                     <p className="text-sm font-bold text-gray-700 break-all">{pixChave}</p>
                     <button onClick={() => { setPixInput(pixChave); setPixTipo('outra'); setMsgPix(''); setMostrarTroca(true) }}
                       className="text-xs font-bold text-gray-600 underline underline-offset-2 hover:text-gray-800 mt-1">
-                      {"Desejo trocar minha chave PIX"}
+                      {"QUERO TROCAR MINHA CHAVE PIX"}
                     </button>
                   </div>
                 ) : (

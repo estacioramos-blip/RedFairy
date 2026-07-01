@@ -524,7 +524,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
             {/* (a) Seta "Voltar" removida \u2014 o link "Nao quero fornecer esses dados" ja' faz isso. */}
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">Nome completo</label>
-              <input ref={refNomeCad} type="text" value={nome} onChange={e => setNome(e.target.value.toUpperCase())} style={{ textTransform: 'uppercase' }}
+              <input ref={refNomeCad} type="text" value={nome} onChange={e => setNome(e.target.value.toUpperCase().replace(/[0-9]/g, ''))} style={{ textTransform: 'uppercase' }}
                 className={inputAmarelo} autoComplete="off" />
             </div>
             <div>
