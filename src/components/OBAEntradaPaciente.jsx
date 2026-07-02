@@ -99,6 +99,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
         localStorage.setItem('rf_flag', 'bariatrica')
         // LOGIN de bariátrico já cadastrado → cai na BIFURCAÇÃO (hub), não na triagem.
         if (modo === 'login') localStorage.setItem('rf_abrir_nova', '1')
+        else localStorage.removeItem('rf_abrir_nova')   // cadastro NOVO: garante ir pra TRIAGEM (não pular por flag antigo)
       } catch (e) {}
       // Entrou por SOU BARIÁTRICO → marca o perfil como bariátrico JÁ no cadastro (fonte
       // confiável, não depende do rf_flag sobreviver até o dashboard). RLS off em profiles.
