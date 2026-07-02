@@ -1,9 +1,9 @@
 -- =============================================================================
--- migrate_limpar_teste.sql   (LIMPEZA de teste — PRESERVA o 6302/BA por inteiro)
+-- migrate_limpar_teste_4doc.sql   (LIMPEZA de teste + ZERA o 4DOC do 6302/BA)
 -- =============================================================================
--- Rodar no Supabase → SQL Editor. Apaga os dados de teste, PRESERVA o médico
--- 6302/BA (admin) COM os dados 4DOC dele (cep/cpf/pix/titular) — o onboarding 4DOC
--- NÃO reaparece. Use este quando for testar AVALIAR/ENCAMINHAR/RECOMENDAR (loga direto).
+-- Rodar no Supabase → SQL Editor. Igual ao migrate_limpar_teste.sql, MAS também
+-- limpa cep/cpf/pix/titular do médico 6302/BA (mantendo ele como admin) — assim o
+-- onboarding 4DOC + o titular do PIX REAPARECEM. Use este pra RE-TESTAR o 4DOC do médico.
 -- NÃO toca em config/preços, medicamentos, suplementos.
 -- =============================================================================
 
@@ -26,3 +26,9 @@ DELETE FROM public.opiniao_medica;
 DELETE FROM public.profiles;
 DELETE FROM public.indicadores;
 DELETE FROM public.medicos WHERE crm <> '6302/BA';
+
+-- Zera o 4DOC do 6302/BA (mantém CRM/nome/senha/admin) → onboarding 4DOC reaparece.
+UPDATE public.medicos
+   SET cep = NULL, cpf = NULL, pix_chave = NULL,
+       pix_titular = NULL, pix_titular_pj = false, pix_cnpj = NULL, usa_telegram = false
+ WHERE crm = '6302/BA';
