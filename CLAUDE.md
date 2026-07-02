@@ -69,7 +69,9 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
   - `valor_solicitacao_medica` = **"Valor da Solicitação de Exame"** — cobre TODAS as solicitações (lab, bioimagem, endoscopia, cardiológico, outros) **+ atestado pós-consulta**. Em uso no fluxo do médico (Calculator/ResultCard).
   - `valor_documento_medico` = **"Valor de Relatório"** — cobre **consulta/teleconsulta, discussão de caso, relatório específico** e documentos (prescrição/pedido). **Também é a fonte do CTA de teleconsulta do OBA** (OBAModal lê esta chave).
   - **`valor_teleconsulta` foi APOSENTADA** (unificada no `valor_documento_medico`) — ninguém mais lê. A linha pode continuar órfã no banco sem efeito. **NÃO reintroduzir** consulta/teleconsulta como valor separado.
-  - Comissões em **dólar digital** (moeda única, quantidade diferente): `comissao_usd_por_conversao` (médico **afiliado** 4DOC) e `comissao_usd_nao_afiliado` (**indicador não-médico** do OBA — lida por `fn_credita_medico`/`listar_creditos_indicador`/`admin_listar_indicadores`, com fallback para a antiga).
+  - Comissões em **dólar digital** (moeda única, quantidade diferente) — **semântica REPROPOSITADA em `migrate_medico_avaliar.sql` (jun/2026)**:
+    - `comissao_usd_por_conversao` (US$10) = **ENCAMINHAR do médico E conversão do INDICADOR** (os dois leem esta chave em `fn_credita_medico`/`listar_creditos_indicador`).
+    - `comissao_usd_nao_afiliado` (US$15) = **AVALIAR do médico** (avaliação simplificada, paga na hora — `creditos_avaliacao`). ⚠ O nome engana: NÃO é mais a comissão do indicador (era, até jun/2026 — não "corrigir" leituras baseando-se só no nome).
   - Outros: `valor_anuidade`, `cotacao_dolar`, `pix_chave`, etc. Editáveis em Admin → Configurações (RPC `salvar_config`).
 - Médico de teste: CRM 6302/BA (ESTÁCIO, afiliado).
 - Paciente de teste no banco: CPF 013.529.807-54 (sexo M, nasc. 10/10/1990).
