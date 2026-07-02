@@ -1313,15 +1313,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             )}
 
             {avaliacoes.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center text-gray-400 border">
-                <img src={logo} alt="RedFairy" className="w-12 h-12 object-contain mx-auto mb-3"
-                  style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.4))' }} />
-                <p>{"Nenhuma avalia\u00e7\u00e3o ainda."}</p>
-                <button onClick={() => setTela('nova')}
-                  className="mt-4 bg-red-700 text-white px-6 py-2 rounded-xl text-sm">
-                  {"Fazer primeira avalia\u00e7\u00e3o"}
-                </button>
-              </div>
+              !showBoasVindas && (
+                <div className="bg-white rounded-2xl p-6 text-center border">
+                  <p className="text-sm font-bold text-gray-500 tracking-wide">{"PRIMEIRA AVALIA\u00c7\u00c3O"}</p>
+                  <button onClick={() => setTela('nova')}
+                    className="mt-3 text-xs font-bold text-gray-500 underline underline-offset-2 hover:text-gray-700">
+                    {"Fazer minha avalia\u00e7\u00e3o"}
+                  </button>
+                </div>
+              )
             ) : avaliacoes.map(av => (
               <div key={av.id} className="bg-white rounded-2xl p-4 border shadow-sm flex items-center justify-between">
                 <div>
