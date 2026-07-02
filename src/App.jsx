@@ -213,7 +213,10 @@ export default function App() {
     // direto pro "novo hemograma" (passwordless). A flag rf_abrir_nova é consumida
     // pelo PatientDashboard. Se não há sessão (1ª vez no iPhone), cai na landing
     // p/ logar 1×, e a flag faz abrir o "novo hemograma" logo após.
-    if (fadaLaunch && !(pToken && pCpf) && params.get('oba') !== '1') {
+    // ÍCONES POR PAPEL (?modo=medico/indicador no start_url): lançamento standalone com
+    // ?modo= NÃO é o ícone da fada do paciente — sem o !modoParam, a reentrada passwordless
+    // do paciente SEQUESTRAVA o ícone M/I (abria o dashboard do paciente com AVALIAR).
+    if (fadaLaunch && !(pToken && pCpf) && params.get('oba') !== '1' && !modoParam) {
       try { localStorage.setItem('rf_abrir_nova', '1') } catch (e) {}
       // Ícone bariátrico que NÃO consegue re-entrar nunca pode cair na landing redfairy:
       // o fallback é a entrada bariátrica ('oba-paciente'), não 'home'.
