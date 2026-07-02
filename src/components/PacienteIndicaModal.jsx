@@ -54,7 +54,9 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
 
   async function carregarPainel(cod) {
     try {
-      const { data: pan } = await supabase.rpc('listar_creditos_indicador', { p_codigo: cod })
+      // Paciente-indicador autentica pela sessão de PACIENTE (o RPC aceita os dois tokens).
+      const t = (() => { try { return localStorage.getItem('paciente_token') || '' } catch (e) { return '' } })()
+      const { data: pan } = await supabase.rpc('listar_creditos_indicador', { p_codigo: cod, p_token: t })
       if (pan && pan.ok) setDados(pan)
     } catch (e) {}
   }

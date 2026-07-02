@@ -99,7 +99,9 @@ export default function IndicadorPage({ onVoltar }) {
 
   async function carregarPainel(cod) {
     try {
-      const { data } = await supabase.rpc('listar_creditos_indicador', { p_codigo: cod || codigo })
+      // Token-protegido: só o próprio indicador logado vê os créditos (o código é público no link).
+      const t = token || localStorage.getItem('indicador_token') || ''
+      const { data } = await supabase.rpc('listar_creditos_indicador', { p_codigo: cod || codigo, p_token: t })
       if (data && data.ok) setDados(data)
     } catch (e) {}
   }

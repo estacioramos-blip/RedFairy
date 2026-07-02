@@ -29,6 +29,7 @@ export default function App() {
       // direto numa aba nova (sem rf_voltar_url) → esse abre a landing própria.
       const temParamTela = params.get('oba') || params.get('modo') || params.get('from') ||
                            params.get('fada') || params.get('p') || params.get('ref') || params.get('ind') || params.get('bari') ||
+                           params.get('contato') ||   // ?contato=1 abre o modal CONTATO — sem isto o bounce engolia o link
                            params.get('reset')   // ?reset=1 NÃO pode dar bounce: precisa rodar o handler que limpa o localStorage
       let standalone = false
       try { standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
@@ -129,6 +130,7 @@ export default function App() {
          'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
          'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
          'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo',
+         'rf_medico_encaminhador','rf_abrir_contato',
          'rf_reentry_cpf','rf_reentry_token','oba_aberto'].forEach(k => localStorage.removeItem(k))
         // Rascunhos do OBA (oba_progresso_<cpf>) — por CPF, só limpam ao CONCLUIR. No teste,
         // o ?reset deve zerar TODOS, senão um CPF reusado "retoma" no relatório.
@@ -309,6 +311,10 @@ export default function App() {
       localStorage.removeItem('medico_is_admin')
       localStorage.removeItem('medico_token')
       localStorage.removeItem('rf_crm_prefill')
+      // Rascunhos do OBA do MÉDICO (oba_progresso_med_<cpf>): em computador compartilhado
+      // (clínica), o Dr. B não pode herdar o rascunho do Dr. A no mesmo CPF. Os rascunhos
+      // do PACIENTE (sem o med_) sobrevivem ao logout — retomada é feature.
+      Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_med_') === 0).forEach(k => localStorage.removeItem(k))
     } catch (e) {}
   }
 
@@ -337,6 +343,8 @@ export default function App() {
        'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
        'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
        'rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo','oba_aberto'].forEach(k => localStorage.removeItem(k))
+      // Rascunhos do OBA do MÉDICO: não sobrevivem ao "deslogar na landing" (PC compartilhado).
+      Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_med_') === 0).forEach(k => localStorage.removeItem(k))
     } catch (e) {}
     try { supabase.auth.signOut() } catch (e) {}
     setSession(null)

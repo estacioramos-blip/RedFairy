@@ -1425,7 +1425,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       // Logica de afiliados/banner SO se for medico logado (medicoCRM existe).
       // Paciente vindo da triagem pelo botao azul nao entra aqui.
       if (medicoCRM) {
-        const { count: totalAvals } = await supabase.from('avaliacoes').select('*', { count: 'exact', head: true }).eq('medico_crm', medicoCRM)
+        // Só avaliações COMPLETAS (ferritina preenchida): o "espelho" da triagem
+        // (ferritina=null) inflava a contagem e fechava o convite 4DOC cedo demais.
+        const { count: totalAvals } = await supabase.from('avaliacoes').select('*', { count: 'exact', head: true }).eq('medico_crm', medicoCRM).not('ferritina', 'is', null)
         const { data: medDados } = await supabase.from('medicos').select('cep, cpf, pix_chave').eq('crm', medicoCRM).maybeSingle()
         if (!medDados?.cep || !medDados?.cpf || !medDados?.pix_chave) {
           // Se o 4DOC ja foi oferecido (e declinado) nesta sessao, nao reabre o modal cheio:
