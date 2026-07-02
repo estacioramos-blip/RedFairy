@@ -161,6 +161,10 @@ export default function App() {
     } else if (modoParam === 'caixa') {
       // (CAIXA) tesouraria manual — rotina independente com senha própria.
       setModo('caixa')
+    } else if (modoParam === 'admin') {
+      // (ADMIN) porta do chapéu no rodapé do bariatrico.net — o gate mostra o
+      // card de login do ADMIN (AdminLogin) se não houver sessão de administrador.
+      setModo('admin')
     }
     // (4DOC) ?ref=CRM/UF — QR do MÉDICO. ?ind=INDxxxxxx — link/QR do INDICADOR.
     // Cada valor é validado pelo FORMATO e vai pra sua própria chave (antes o ?ref servia

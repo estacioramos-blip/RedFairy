@@ -450,5 +450,35 @@ class Component extends DCLogic {
     }, true);
   })();
 </script>
+<script>
+  // ACESSO RESTRITO (ADMIN GERAL / TESOUREIRO): chapéu dourado "nu" (sem selo/borda)
+  // num rodapé preto ABAIXO da dobra — o usuário só o vê rolando além do fim da tela.
+  // Clique → modal preto com as duas entradas (redfairy.bio/?modo=admin e ?modo=caixa).
+  (function(){
+    var rod = document.createElement('div');
+    rod.style.cssText = 'background:#14100E;display:flex;justify-content:center;align-items:center;padding:34px 0 40px;';
+    rod.innerHTML = '<img id="obaAdmHat" src="images/oba-logo.png" alt="" title="" ' +
+      'style="width:38px;height:38px;object-fit:contain;cursor:pointer;opacity:.8;transition:opacity .3s;">';
+    document.body.appendChild(rod);
+    var hat = document.getElementById('obaAdmHat');
+    hat.addEventListener('mouseenter', function(){ hat.style.opacity = '1'; });
+    hat.addEventListener('mouseleave', function(){ hat.style.opacity = '.8'; });
+    hat.addEventListener('click', function(){
+      var ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.96);display:flex;align-items:center;justify-content:center;font-family:Archivo,sans-serif;padding:16px;';
+      ov.innerHTML =
+        '<div style="background:#14100E;border:1px solid #3a322c;border-radius:18px;padding:30px 26px;width:min(92vw,340px);text-align:center;">' +
+          '<img src="images/oba-logo.png" alt="" style="width:46px;height:46px;object-fit:contain;margin-bottom:12px;">' +
+          '<p style="color:#E3AE37;font-weight:700;font-size:13px;letter-spacing:2px;margin:0 0 20px;">ACESSO RESTRITO</p>' +
+          '<a href="https://redfairy.bio/?modo=admin" style="display:block;background:#E3AE37;color:#14100E;font-weight:700;font-size:13px;letter-spacing:1px;padding:13px;border-radius:12px;text-decoration:none;margin-bottom:10px;">ADMIN GERAL</a>' +
+          '<a href="https://redfairy.bio/?modo=caixa" style="display:block;background:#2a241f;color:#E3AE37;font-weight:700;font-size:13px;letter-spacing:1px;padding:13px;border-radius:12px;text-decoration:none;border:1px solid #E3AE37;">TESOUREIRO</a>' +
+          '<button id="obaAdmFechar" style="margin-top:16px;background:none;border:none;color:#7a6f63;font-size:12px;cursor:pointer;">fechar</button>' +
+        '</div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+      document.getElementById('obaAdmFechar').addEventListener('click', function(){ ov.remove(); });
+    });
+  })();
+</script>
 </body>
 </html>

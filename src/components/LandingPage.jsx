@@ -6,7 +6,6 @@ import fatslim from '../assets/fatslim.png'
 import { ehDominioBariatrico } from '../lib/dominio'
 import laiseImg from '../assets/LAISE H.jpg'
 import wing1 from '../assets/wing1.png'
-import obaLogo from '../assets/oba-logo.png'
 import wing2 from '../assets/wing2.png'
 import wing3 from '../assets/wing3.png'
 import wing4 from '../assets/wing4.png'
@@ -2165,18 +2164,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           }
         `}</style>
 
-        {/* ADMIN: chapéu dourado num selo branco no rodapé direito do hero → login do
-            administrador (CRM+senha via AdminLogin, gate do modo 'admin' no App). */}
-        <button onClick={() => onModoAdmin && onModoAdmin()} aria-label="Acesso do administrador" title="Acesso do administrador"
-          style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 5, cursor: 'pointer',
-                   width: 42, height: 42, borderRadius: '50%', background: '#fff',
-                   border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
-                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                   opacity: 0.9, transition: 'opacity 0.3s, transform 0.3s' }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.transform = 'scale(1.08)' }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = 0.9; e.currentTarget.style.transform = 'scale(1)' }}>
-          <img src={obaLogo} alt="" style={{ width: 28, height: 28, objectFit: 'contain', display: 'block' }} />
-        </button>
       </section>
 
 
