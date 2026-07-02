@@ -1077,6 +1077,40 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           .update({ relatorio_oba: relSalvar, estado_clinico: est?.estado || null })
           .eq('id', rows[0].id)
       }
+
+      // (A1) Hemograma NOVO digitado no OBA também vira linha em `avaliacoes` — antes
+      // ficava só no jsonb do relatório: fora do gráfico histórico e o médico redigitava
+      // tudo a cada AVALIAR (a ultimaAval do paciente nunca se atualizava).
+      if (eritron?._recomputado) {
+        try {
+          const mi = eritron.inputs || {}
+          const numOrNull = (v) => (v === '' || v === null || v === undefined || !Number.isFinite(Number(v))) ? null : Number(v)
+          const dataCol = dataExames || new Date().toISOString().slice(0, 10)
+          const { data: prof } = await supabase.from('profiles').select('id').eq('cpf', cpfLimpo).maybeSingle()
+          const linha = {
+            cpf: cpfLimpo,
+            ...(prof?.id ? { user_id: prof.id } : {}),
+            data_coleta: dataCol,
+            hemoglobina: numOrNull(mi.hemoglobina),
+            vcm: numOrNull(mi.vcm),
+            rdw: numOrNull(mi.rdw),
+            ferritina: numOrNull(mi.ferritina),
+            sat_transf: numOrNull(mi.satTransf),
+            bariatrica: true,
+            diagnostico_label: eritron.label,
+            diagnostico_color: eritron.color,
+            concluida: true,
+            // medico_crm de propósito NÃO entra aqui: a coluna alimenta a atribuição de
+            // crédito (fn_credita_medico) — avaliar não é encaminhar.
+          }
+          // Mesma data já tem linha (ex.: completou Ferritina/Sat do MESMO hemograma,
+          // ou o espelho da triagem)? ATUALIZA em vez de duplicar.
+          const { data: exist } = await supabase.from('avaliacoes').select('id')
+            .eq('cpf', cpfLimpo).eq('data_coleta', dataCol).limit(1)
+          if (exist && exist.length > 0) await supabase.from('avaliacoes').update(linha).eq('id', exist[0].id)
+          else await supabase.from('avaliacoes').insert(linha)
+        } catch (e) { /* não bloqueia o relatório */ }
+      }
     }
   }
 
