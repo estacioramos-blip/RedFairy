@@ -85,7 +85,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const nomeOk = (nome || '').trim().length >= 5
   const celOk = celDigits.length >= 10 && dddOk
   const emailOk = /\S+@\S+\.\S+/.test((email || '').trim())
-  const tudoOk = nomeOk && celOk && emailOk
+  const tudoOk = nomeOk && celOk && (!(email || '').trim() || emailOk)   // e-mail OPCIONAL (só p/ PIX)
 
   function onNomeChange(v) {
     setNome(v.toUpperCase().replace(/[0-9]/g, '')); setErro('')
@@ -123,7 +123,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     if (celDigits.length < 10) { setErro('Celular inválido (com DDD).'); return }
     if (!dddOk) { setErro('DDD inválido. Verifique o código da sua região.'); return }
     const emailT = (email || '').trim().toLowerCase()
-    if (!emailOk) { setErro('Informe um e-mail válido.'); return }
+    if ((email || '').trim() && !emailOk) { setErro('E-mail inválido — ou deixe em branco.'); return }
 
     setLoading(true)
     const { data, error } = await supabase
@@ -208,6 +208,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
 
             <div>
               <label className={labelCls} style={estiloLabel}>{"E-mail"}</label>
+              <p className="text-xs text-gray-500 mb-1">{"Opcional — cadastre só se o seu PIX for o seu e-mail."}</p>
               <input
                 ref={emailRef} type="email" value={email} inputMode="email"
                 onChange={e => onEmailChange(e.target.value)}

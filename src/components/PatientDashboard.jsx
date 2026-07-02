@@ -238,7 +238,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       if (d > 0) await new Promise(r => setTimeout(r, d))
       const { data } = await supabase
         .from('profiles')
-        .select('id, nome, cpf, sexo, data_nascimento, celular, bariatrica, gestante, boas_vindas_vista, primeira_avaliacao_feita')
+        .select('id, nome, cpf, sexo, data_nascimento, celular, email, bariatrica, gestante, boas_vindas_vista, primeira_avaliacao_feita')
         .eq('id', session.user.id).maybeSingle()
       if (data) { prof = data; break }
     }
