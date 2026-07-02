@@ -11,6 +11,7 @@ import PlayButton from './components/PlayButton'
 import IndicadorPage from './components/IndicadorPage'
 import OBAEntradaPaciente from './components/OBAEntradaPaciente'
 import CaixaPage from './components/CaixaPage'
+import AdminLogin from './components/AdminLogin'
 import { ehDominioBariatrico } from './lib/dominio'
 import { setManifestFluxo } from './lib/manifestFluxo'
 export default function App() {
@@ -566,19 +567,10 @@ export default function App() {
   if (modo === 'admin') {
     const ehAdmin = (() => { try { return localStorage.getItem('medico_is_admin') === '1' } catch (e) { return false } })()
     if (!ehAdmin) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full text-center space-y-3">
-            <p style={{ fontSize: '2rem' }}>{"🔒"}</p>
-            <p className="font-bold text-gray-800">Acesso restrito</p>
-            <p className="text-sm text-gray-500">{"Esta área é exclusiva do administrador. Entre com a conta de administrador (médico) para acessar."}</p>
-            <button onClick={() => setModo('home')}
-              className="mt-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-xl text-sm transition-colors">
-              {"← Voltar"}
-            </button>
-          </div>
-        </div>
-      )
+      // Sem sessão de admin: card de LOGIN do ADMIN (CRM/UF + senha, só entra is_admin).
+      // Porta: ícone discreto no rodapé do hero da landing. onOk força re-render
+      // (landingKey) — o gate relê o localStorage e libera o painel.
+      return <AdminLogin onOk={() => setLandingKey(k => k + 1)} onVoltar={() => setModo('home')} />
     }
     return <AdminPage onVoltar={() => setModo('home')} />
   }

@@ -6,6 +6,7 @@ import fatslim from '../assets/fatslim.png'
 import { ehDominioBariatrico } from '../lib/dominio'
 import laiseImg from '../assets/LAISE H.jpg'
 import wing1 from '../assets/wing1.png'
+import obaLogo from '../assets/oba-logo.png'
 import wing2 from '../assets/wing2.png'
 import wing3 from '../assets/wing3.png'
 import wing4 from '../assets/wing4.png'
@@ -2163,6 +2164,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             .rf-marquee-track { gap: 1.6rem; padding-right: 1.6rem; }
           }
         `}</style>
+
+        {/* ADMIN: ícone discreto (sem letra) no rodapé direito do hero → login do
+            administrador (CRM+senha via AdminLogin, gate do modo 'admin' no App). */}
+        <button onClick={() => onModoAdmin && onModoAdmin()} aria-label="Acesso do administrador" title="Acesso do administrador"
+          style={{ position: 'absolute', right: 14, bottom: 10, zIndex: 3, background: 'none', border: 'none',
+                   padding: 4, cursor: 'pointer', opacity: 0.3, transition: 'opacity 0.3s' }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = 0.9 }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = 0.3 }}>
+          <img src={obaLogo} alt="" style={{ width: 30, height: 30, objectFit: 'contain', display: 'block' }} />
+        </button>
       </section>
 
 
