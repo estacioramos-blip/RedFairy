@@ -11,6 +11,34 @@
 
 ---
 
+## DIVISÃO DE TRABALHO — O QUE É SÓ SEU 🧑‍⚕️
+
+Pela regra da Parceria Tango (CLAUDE.md item 5), o agente já testa a parte
+**técnica** antes de entregar: build, lógica do engine, fluxo local no navegador,
+erros de console. Falha técnica nesses pontos é retrabalho do agente, não seu.
+
+O que o agente **NÃO consegue** testar — e por isso é o coração deste roteiro:
+
+1. **Dinheiro de verdade** — PIX real, "JÁ PAGUEI" com pagamento efetivo,
+   valores congelados no CAIXA *(passos 12, 24, 30-31)*.
+2. **Notificações externas** — o Telegram do ADM recebeu? O extrato está
+   apresentável no WhatsApp real? *(passos 24, 32)*.
+3. **Celular físico / PWA Android** — ícones instalados, reentrada
+   passwordless, bounce pro bariatrico.net *(Fase 6 inteira, passos 4 e 22)*.
+4. **Domínios de produção** — bariatrico.net e redfairy.bio no ar via Vercel,
+   com DNS e deploy reais *(passos 2, 10-11, 37)*.
+5. **Julgamento clínico** — o Estado Geral Clínico faz sentido médico? Os
+   textos do relatório BASELINE estão certos pro paciente? *(passos 12, 15)*.
+6. **Sensação visual no aparelho real** — splash, animações, legibilidade,
+   toque (o agente vê o DOM, não a experiência).
+7. **Fluxos entre dois aparelhos** — celular do paciente + desktop do médico
+   ao mesmo tempo *(passos 16, 22)*.
+
+Se algo quebrar num passo puramente técnico (botão não abre, erro na tela),
+anote e devolva pro agente — não perca tempo depurando.
+
+---
+
 ## FASE 0 — PREPARAÇÃO (desktop)
 
 1. **Limpar o banco de teste:** Supabase Dashboard → SQL Editor → rodar o bloco do
