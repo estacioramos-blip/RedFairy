@@ -93,7 +93,9 @@ export default function IndicadorPage({ onVoltar }) {
     } catch (e) {}
   }, [])
 
-  const link = codigo ? `${window.location.origin}/?ref=${codigo}` : ''
+  // ?ind= (param PRÓPRIO do indicador — ?ref é do médico) + ?oba=1: o bariátrico
+  // indicado cai direto na entrada do Projeto OBA, não na landing do RedFairy.
+  const link = codigo ? `${window.location.origin}/?oba=1&ind=${codigo}` : ''
 
   async function carregarPainel(cod) {
     try {

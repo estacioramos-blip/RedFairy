@@ -28,7 +28,7 @@ export default function App() {
       // (standalone, start_url=?fada=1, sem rf_voltar_url); (c) em redfairy.bio digitado
       // direto numa aba nova (sem rf_voltar_url) → esse abre a landing própria.
       const temParamTela = params.get('oba') || params.get('modo') || params.get('from') ||
-                           params.get('fada') || params.get('p') || params.get('ref') || params.get('bari') ||
+                           params.get('fada') || params.get('p') || params.get('ref') || params.get('ind') || params.get('bari') ||
                            params.get('reset')   // ?reset=1 NÃO pode dar bounce: precisa rodar o handler que limpa o localStorage
       let standalone = false
       try { standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true } catch (e) {}
@@ -45,7 +45,7 @@ export default function App() {
           ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
            'paciente_id','paciente_nome','paciente_login_at',  /* mantém paciente_cpf + paciente_token: reentrada passwordless do ÍCONE */
            'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
-           'rf_abrir_nova','rf_ref_encaminhador','oba_aberto'].forEach(k => localStorage.removeItem(k))
+           'rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo','oba_aberto'].forEach(k => localStorage.removeItem(k))
         } catch (e) {}
         window.location.replace(destinoBounce)
         return 'home'
@@ -128,7 +128,7 @@ export default function App() {
         ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
          'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
          'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
-         'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador',
+         'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo',
          'rf_reentry_cpf','rf_reentry_token','oba_aberto'].forEach(k => localStorage.removeItem(k))
         // Rascunhos do OBA (oba_progresso_<cpf>) — por CPF, só limpam ao CONCLUIR. No teste,
         // o ?reset deve zerar TODOS, senão um CPF reusado "retoma" no relatório.
@@ -155,11 +155,19 @@ export default function App() {
       setModo('indicador')
       setTimeout(() => setSaindo(false), 450)
     }
-    // (4DOC) ?ref=CRM/UF — paciente chegou pelo QR de encaminhamento do médico.
-    // Guarda o CRM p/ pré-preencher o card do encaminhador no cadastro.
+    // (4DOC) ?ref=CRM/UF — QR do MÉDICO. ?ind=INDxxxxxx — link/QR do INDICADOR.
+    // Cada valor é validado pelo FORMATO e vai pra sua própria chave (antes o ?ref servia
+    // aos dois papéis e o código do indicador vazava pro campo medico_crm). Links ANTIGOS
+    // de indicador (?ref=INDxxxxxx) continuam funcionando pelo mesmo teste de formato.
+    // Formato desconhecido é DESCARTADO (não polui a atribuição de crédito).
     const refParam = params.get('ref')
-    if (refParam) {
-      try { localStorage.setItem('rf_ref_encaminhador', decodeURIComponent(refParam).toUpperCase().trim()) } catch (e) {}
+    const indParam = params.get('ind')
+    if (refParam || indParam) {
+      try {
+        const val = decodeURIComponent(indParam || refParam).toUpperCase().trim()
+        if (/^IND[0-9A-F]{6}$/.test(val)) localStorage.setItem('rf_ind_codigo', val)          // indicador
+        else if (/^\d+\s*\/\s*[A-Z]{2}$/.test(val)) localStorage.setItem('rf_ref_encaminhador', val)  // médico
+      } catch (e) {}
     }
     // Reentra (passwordless) com a credencial guardada. Retorna true se logou.
     async function reentrarPacienteToken(rCpf, rTok) {
@@ -286,7 +294,7 @@ export default function App() {
     if (params.get('contato') === '1') { try { localStorage.setItem('rf_abrir_contato', '1') } catch (e) {} }
 
     // Limpa os parametros da URL sem reload (inclui o token, p/ não ficar visível)
-    if (modoParam || refParam || params.get('fada') || pToken || bariParam || params.get('from') || params.get('oba')) {
+    if (modoParam || refParam || indParam || params.get('fada') || pToken || bariParam || params.get('from') || params.get('oba')) {
       window.history.replaceState({}, '', window.location.pathname)
     }
   }, [])
@@ -328,7 +336,7 @@ export default function App() {
       ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
        'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
        'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
-       'rf_abrir_nova','rf_ref_encaminhador','oba_aberto'].forEach(k => localStorage.removeItem(k))
+       'rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo','oba_aberto'].forEach(k => localStorage.removeItem(k))
     } catch (e) {}
     try { supabase.auth.signOut() } catch (e) {}
     setSession(null)

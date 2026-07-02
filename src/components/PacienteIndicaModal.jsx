@@ -44,7 +44,9 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
   const pixRef = useRef(null)
 
   const base = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://redfairy.bio'
-  const link = codigo ? `${base}/?ref=${codigo}` : ''
+  // ?ind= (param PRÓPRIO do indicador — ?ref é do médico) + ?oba=1: o bariátrico
+  // indicado cai direto na entrada do Projeto OBA, não na landing do RedFairy.
+  const link = codigo ? `${base}/?oba=1&ind=${codigo}` : ''
   const cpfLimpo = String(cpf || '').replace(/\D/g, '')
   const celLimpo = String(celular || '').replace(/\D/g, '')
   const emailLimpo = String(email || '').trim().toLowerCase()

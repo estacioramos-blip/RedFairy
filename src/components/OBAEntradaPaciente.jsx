@@ -76,9 +76,13 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   async function concluir() {
     if (!podeConcluir || busy) return
     setErro('')
-    // Encaminhador (médico/indicador via ?ref) → preserva pra atribuição do crédito.
+    // Encaminhador MÉDICO (via ?ref) → preserva pra atribuição do crédito. Só formato
+    // CRM/UF entra aqui — código de indicador tem chave própria (rf_ind_codigo, abaixo).
     if (modo === 'cadastro') {
-      try { localStorage.setItem('rf_medico_encaminhador', localStorage.getItem('rf_ref_encaminhador') || '') } catch (e) {}
+      try {
+        const enc = localStorage.getItem('rf_ref_encaminhador') || ''
+        localStorage.setItem('rf_medico_encaminhador', /^\d+\s*\/\s*[A-Z]{2}$/.test(enc) ? enc : '')
+      } catch (e) {}
     }
     setBusy(true)
     const rpcName = modo === 'login' ? 'login_paciente' : 'register_paciente'
@@ -104,6 +108,17 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
       // Entrou por SOU BARIÁTRICO → marca o perfil como bariátrico JÁ no cadastro (fonte
       // confiável, não depende do rf_flag sobreviver até o dashboard). RLS off em profiles.
       try { if (data.id) await supabase.from('profiles').update({ bariatrica: true }).eq('id', data.id) } catch (e) {}
+      // INDICADOR (?ind=): cria a reserva PENDENTE no banco — entra na régua oficial
+      // (escolha "VOCÊ FOI INDICADO POR" com o rótulo certo + validade de 3 meses +
+      // crédito via confirmar_indicacao/fn_credita_medico). Vale no cadastro E no login
+      // (quem já tinha conta e clicou no link do indicador antes de pagar).
+      try {
+        const indCod = localStorage.getItem('rf_ind_codigo') || ''
+        if (/^IND[0-9A-F]{6}$/.test(indCod)) {
+          await supabase.rpc('indicador_reservar_cpf', { p_codigo: indCod, p_cpf: cpfDigits })
+          localStorage.removeItem('rf_ind_codigo')
+        }
+      } catch (e) {}
       onConcluir && onConcluir()
     } catch (e) { setBusy(false); setErro('ERRO DE CONEXÃO. TENTE NOVAMENTE.') }
   }

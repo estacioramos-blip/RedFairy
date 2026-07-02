@@ -1106,6 +1106,15 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       localStorage.setItem('paciente_login_at', Date.now().toString());
       if (resp.token) localStorage.setItem('paciente_token', resp.token);
     } catch (e) {}
+    // INDICADOR (?ind=): paciente chegou pelo link do indicador mas concluiu por aqui →
+    // cria a reserva PENDENTE no banco (mesma régua do fluxo OBA: rótulo certo, 3 meses).
+    try {
+      const indCod = localStorage.getItem('rf_ind_codigo') || '';
+      if (/^IND[0-9A-F]{6}$/.test(indCod)) {
+        await supabase.rpc('indicador_reservar_cpf', { p_codigo: indCod, p_cpf: cpfPacDigitos });
+        localStorage.removeItem('rf_ind_codigo');
+      }
+    } catch (e) {}
     setPacienteLogado(resp.nome || '');
     setPacienteLogadoFlag(true);
     // Bariátrico que faz LOGIN (já cadastrado) → cai na BIFURCAÇÃO (hub), não na triagem.
