@@ -15,12 +15,14 @@
 
 1. **Limpar o banco de teste:** Supabase Dashboard → SQL Editor → rodar o bloco do
    `migrate_limpar_teste.sql` (preserva o admin 6302/BA com 4DOC).
-2. **[NOVO] Acesso ao ADMIN pelo hero:** abrir `redfairy.bio` → no canto inferior
-   direito do hero há o **chapéu dourado OBA** discreto → clicar → card de login
-   do ADMIN → entrar com **6302/BA + senha** → painel abre. Testar também com uma
-   conta de médico comum: deve recusar ("Esta conta não é de administrador").
-   Já dentro do ADMIN → Configurações → conferir `cotacao_dolar` preenchida
-   (ex.: 5.50). *As baixas do CAIXA recusam sem cotação.*
+2. **[NOVO] Acesso restrito pelo rodapé do site:** abrir `bariatrico.net` →
+   **rolar até ABAIXO do fim da tela** → aparece o **chapéu dourado** sozinho no
+   rodapé preto → clicar → modal preto "ACESSO RESTRITO" com **ADMIN GERAL** e
+   **TESOUREIRO**. Entrar em ADMIN GERAL → card de login → **6302/BA + senha** →
+   painel abre. Testar também com conta de médico comum: deve recusar
+   ("Esta conta não é de administrador"). O botão TESOUREIRO leva ao CAIXA
+   (testado na Fase 5). Já dentro do ADMIN → Configurações → conferir
+   `cotacao_dolar` preenchida (ex.: 5.50). *As baixas do CAIXA recusam sem cotação.*
 3. **Conferir valores:** `comissao_usd_por_conversao` = 10 · `comissao_usd_nao_afiliado` = 15
    · `valor_anuidade` = 149.90.
 4. No celular Android, abrir `redfairy.bio/?reset=1` também (limpa o aparelho de teste).
