@@ -368,7 +368,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     if (!crmUF) { setCadErro("Informe a UF."); return }
     if (!UFS_VALIDAS.includes(crmUF)) { setCadErro("UF inv\u00e1lida."); return }
     if (celularDigits.length < 10) { setCadErro("Informe um celular v\u00e1lido com DDD."); return }
-    if (!email || !email.includes('@')) { setCadErro("Informe um e-mail v\u00e1lido."); return }
+    if (email && !email.includes('@')) { setCadErro("E-mail inv\u00e1lido \u2014 ou deixe em branco."); return }
     if (!ehMesmoMedico && (!senha || senha.length < 6)) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
     setCadLoading(true)
     // Médico já identificado em sessão anterior (cadastro mínimo pela caixa do
@@ -567,6 +567,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
+              <p className="text-xs text-gray-500 mb-1">{"Opcional — cadastre só se o seu PIX for o seu e-mail."}</p>
               <input ref={refEmailCad} type="email" value={email} onChange={e => setEmail(e.target.value.toLowerCase())}
                 placeholder="seu@email.com" className={inputAmarelo} autoComplete="off"
                 inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
@@ -803,7 +804,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   React.useEffect(() => { if (showAfiliados) jaOfereceu4DOCRef.current = true; }, [showAfiliados]);
   const [afiliadoEndereco, setAfiliadoEndereco] = useState('');
   const [afiliadoPix, setAfiliadoPix] = useState('');
-  const [afilTitular, setAfilTitular] = useState(medicoNome || ''); const [afilPj, setAfilPj] = useState(false); const [afilCnpj, setAfilCnpj] = useState('');  // titular do PIX (PF/PJ)
+  const [afilTitular, setAfilTitular] = useState(medicoNome || ''); const [afilPj, setAfilPj] = useState(false); const [afilCnpj, setAfilCnpj] = useState(''); const [afilFamiliar, setAfilFamiliar] = useState(false);  // titular do PIX (PF/familiar/PJ)
   const [afiliadoSalvando, setAfiliadoSalvando] = useState(false);
   const [afiliadoSalvo, setAfiliadoSalvo] = useState(false);
   const [afiliadoCEP, setAfiliadoCEP] = useState('');
@@ -955,6 +956,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     }
   }, [inputs.dataNascimento]);
   const [pixTipo, setPixTipo] = useState('');
+  // PIX titular: chave PRÓPRIA (cpf/telefone/email) ou vazia → titular TRAVADO no nome do médico.
+  // Só a chave "outra" (digitada) libera os checkboxes familiar/PJ que destravam o campo.
+  useEffect(() => {
+    if (pixTipo !== 'outra') { setAfilFamiliar(false); setAfilPj(false); setAfilTitular(medicoNome || ''); }
+  }, [pixTipo, medicoNome]);
   const [showConviteAfiliado, setShowConviteAfiliado] = useState(false);
   const [destinoAposConvite, setDestinoAposConvite] = useState(null);
   const [dadosVieramDaTriagem, setDadosVieramDaTriagem] = useState(false);
@@ -1050,8 +1056,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     // proximo destino (mesmo tick), depois que a query resolve.
     let completo = false;
     try {
-      const { data: md } = await supabase.from('medicos').select('nome, email').eq('crm', medicoCRM).maybeSingle();
-      completo = !!(md && md.nome && String(md.nome).trim() && md.email && String(md.email).trim());
+      const { data: md } = await supabase.from('medicos').select('nome').eq('crm', medicoCRM).maybeSingle();
+      completo = !!(md && md.nome && String(md.nome).trim());   // e-mail é opcional (só exige o nome)
     } catch (e) { completo = false; }
     // Medico ja cadastrado (nome+email completos) = veterano: NAO mostra "Estamos felizes",
     // vai direto pro Calculator (dados ja preenchidos pela triagem). O modal de boas-vindas
@@ -1896,23 +1902,36 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     </label>
                   </div>
                   <input ref={refAfilPix} type="text" value={afiliadoPix}
-                    onChange={e => { setAfiliadoPix(e.target.value); if (pixTipo) setPixTipo('outra'); }}
+                    onChange={e => { setAfiliadoPix(e.target.value); setPixTipo(e.target.value ? 'outra' : ''); }}
                     placeholder={"ou DIGITE outra chave PIX"}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                   />
-                  {/* Titular da conta PIX (pode ser um familiar) + PF/PJ */}
+                  {/* Titular do PIX: chave própria → travado no médico. Chave "outra" → familiar/PJ destravam. */}
+                  {pixTipo === 'outra' && (
+                    <div className="mt-3 space-y-1.5">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={afilFamiliar}
+                          onChange={e => { const v = e.target.checked; setAfilFamiliar(v); if (v) { setAfilPj(false); setAfilTitular(''); } else setAfilTitular(medicoNome || ''); }}
+                          style={{ accentColor: '#7B1E1E' }} />
+                        <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"O TITULAR DA CONTA É UM FAMILIAR"}</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={afilPj}
+                          onChange={e => { const v = e.target.checked; setAfilPj(v); if (v) { setAfilFamiliar(false); setAfilTitular(''); } else setAfilTitular(medicoNome || ''); }}
+                          style={{ accentColor: '#7B1E1E' }} />
+                        <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"O TITULAR DA CONTA É PESSOA JURÍDICA"}</span>
+                      </label>
+                    </div>
+                  )}
                   <label className="block text-[11px] font-bold text-gray-600 uppercase tracking-wide mt-3 mb-1">{afilPj ? 'Razão Social (titular)' : 'Nome do titular da conta (quem recebe)'}</label>
                   <input type="text" value={afilTitular} onChange={e => setAfilTitular(e.target.value)}
-                    placeholder={afilPj ? 'Razão Social da empresa' : 'Pode ser você ou um familiar'}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
-                  <label className="flex items-center gap-2 cursor-pointer mt-2">
-                    <input type="checkbox" checked={afilPj} onChange={e => setAfilPj(e.target.checked)} style={{ accentColor: '#7B1E1E' }} />
-                    <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"A conta é de empresa (CNPJ)"}</span>
-                  </label>
+                    readOnly={!afilFamiliar && !afilPj}
+                    placeholder={afilPj ? 'Razão Social da empresa' : (afilFamiliar ? 'Nome de quem recebe' : 'Você (titular)')}
+                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 ${(afilFamiliar || afilPj) ? 'border-red-500 bg-red-50 focus:ring-red-400' : 'border-gray-200 bg-gray-100 text-gray-500 focus:ring-gray-300'}`} />
                   {afilPj && (
                     <input type="text" value={afilCnpj} onChange={e => setAfilCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
-                      placeholder="CNPJ (só números)" inputMode="numeric"
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-red-400" />
+                      placeholder={"CNPJ (só números)"} inputMode="numeric"
+                      className="w-full border-2 border-red-500 bg-red-50 rounded-xl px-3 py-2 text-sm mt-2 focus:outline-none focus:ring-2 focus:ring-red-400" />
                   )}
                 </div>
               </div>

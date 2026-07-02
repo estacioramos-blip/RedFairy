@@ -39,7 +39,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
   const [msgPix, setMsgPix] = useState('')
   const [resCpf, setResCpf] = useState(''); const [resMsg, setResMsg] = useState(null); const [resBusy, setResBusy] = useState(false)  // RESERVAR um CPF
   // Titular da conta PIX (a chave pode ser de um familiar) + PJ/CNPJ + (indicador) nome/telefone.
-  const [pixTitular, setPixTitular] = useState(''); const [pixPj, setPixPj] = useState(false); const [pixCnpj, setPixCnpj] = useState('')
+  const [pixTitular, setPixTitular] = useState(''); const [pixPj, setPixPj] = useState(false); const [pixCnpj, setPixCnpj] = useState(''); const [pixFamiliar, setPixFamiliar] = useState(false)
   const [indNome, setIndNome] = useState(''); const [indTel, setIndTel] = useState('')
   const pixRef = useRef(null)
 
@@ -48,6 +48,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
   const cpfLimpo = String(cpf || '').replace(/\D/g, '')
   const celLimpo = String(celular || '').replace(/\D/g, '')
   const emailLimpo = String(email || '').trim().toLowerCase()
+  const ownNome = (indNome.trim() || nome || '').trim()   // nome próprio p/ o titular travado
 
   async function carregarPainel(cod) {
     try {
@@ -73,6 +74,12 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
     })()
     return () => { vivo = false }
   }, [cpfLimpo])
+
+  // PIX titular: chave PRÓPRIA (cpf/celular/email) ou vazia → titular TRAVADO no nome próprio.
+  // Só a chave "outra" libera os checkboxes familiar/PJ que destravam o campo.
+  useEffect(() => {
+    if (pixTipo !== 'outra') { setPixFamiliar(false); setPixPj(false); setPixTitular(ownNome) }
+  }, [pixTipo, ownNome])
 
   const precisaPix = !pixChave || mostrarTroca
 
@@ -175,7 +182,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
                 </div>
                 <div>
                   <input ref={pixRef} className="w-full border-2 border-yellow-300 bg-yellow-50 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-yellow-400"
-                    value={pixInput} onChange={e => { setPixInput(e.target.value); setPixTipo('outra'); setMsgPix('') }}
+                    value={pixInput} onChange={e => { setPixInput(e.target.value); setPixTipo(e.target.value ? 'outra' : ''); setMsgPix('') }}
                     placeholder="Digite ou cole outra chave PIX" />
                 </div>
                 {/* (indicador sem cadastro completo) nome + telefone */}
@@ -189,21 +196,32 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
                     placeholder="Seu telefone / WhatsApp (com DDD)" inputMode="numeric"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                 )}
-                {/* Titular da conta (a chave PIX pode ser de um familiar) */}
+                {/* Titular do PIX: chave própria → travado no nome. Chave "outra" → familiar/PJ destravam. */}
+                {pixTipo === 'outra' && (
+                  <div className="space-y-1">
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-600">
+                      <input type="checkbox" checked={pixFamiliar} style={{ accentColor: '#7B1E1E' }}
+                        onChange={e => { const v = e.target.checked; setPixFamiliar(v); if (v) { setPixPj(false); setPixTitular('') } else setPixTitular(ownNome); setMsgPix('') }} />
+                      {"O TITULAR DA CONTA É UM FAMILIAR"}
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-600">
+                      <input type="checkbox" checked={pixPj} style={{ accentColor: '#7B1E1E' }}
+                        onChange={e => { const v = e.target.checked; setPixPj(v); if (v) { setPixFamiliar(false); setPixTitular('') } else setPixTitular(ownNome); setMsgPix('') }} />
+                      {"O TITULAR DA CONTA É PESSOA JURÍDICA"}
+                    </label>
+                  </div>
+                )}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-600 mb-1">{pixPj ? 'Razão Social (titular da conta)' : 'Nome do titular da conta (quem recebe)'}</label>
                   <input value={pixTitular} onChange={e => { setPixTitular(e.target.value); setMsgPix('') }}
-                    placeholder={pixPj ? 'Razão Social da empresa' : 'Pode ser você ou um familiar'}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                    readOnly={!pixFamiliar && !pixPj}
+                    placeholder={pixPj ? 'Razão Social da empresa' : (pixFamiliar ? 'Nome de quem recebe' : 'Você (titular)')}
+                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none ${(pixFamiliar || pixPj) ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-100 text-gray-500'}`} />
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-600">
-                  <input type="checkbox" checked={pixPj} style={{ accentColor: '#7B1E1E' }} onChange={e => { setPixPj(e.target.checked); setMsgPix('') }} />
-                  {"A conta é de empresa (CNPJ)"}
-                </label>
                 {pixPj && (
                   <input value={pixCnpj} onChange={e => setPixCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
-                    placeholder="CNPJ (só números)" inputMode="numeric"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                    placeholder={"CNPJ (só números)"} inputMode="numeric"
+                    className="w-full border-2 border-red-500 bg-red-50 rounded-lg px-3 py-2 text-sm" />
                 )}
                 {msgPix && <p className="text-xs font-semibold text-red-600">{msgPix}</p>}
                 {pixInput.trim().length >= 3 && (
