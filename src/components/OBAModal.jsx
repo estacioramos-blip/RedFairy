@@ -1887,7 +1887,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </div>
           )}
 
-          {examesRedFairy && examesRedFairy.dataColeta && (
+          {examesRedFairy && examesRedFairy.dataColeta && !modoMedico && (
             <div style={{ background:'#EFF6FF', border:'1.5px solid #2563EB', borderRadius:10, padding:'0.9rem 1rem', marginBottom:'1rem' }}>
               <p style={{ color:'#1E3A8A', fontSize:'0.8rem', lineHeight:'1.5', marginBottom:'0.8rem' }}>
                 {"Se, na data em que voc\u00ea realizou o hemograma inicial, tamb\u00e9m fez alguns desses exames, pode inserir os resultados na plataforma. De todo modo, \u00e9 recomend\u00e1vel repetir ou complementar os exames em cerca de duas semanas, e, se desejar, podemos emitir a solicita\u00e7\u00e3o m\u00e9dica mediante o pagamento de uma pequena taxa. Isso costuma valer muito a pena, pois economiza tempo, reduz custos de deslocamento e evita a necessidade de uma nova consulta presencial apenas para esse fim. Se preferir, a plataforma tamb\u00e9m poder\u00e1 disponibilizar uma teleconsulta m\u00e9dica, especialmente caso os exames apresentem altera\u00e7\u00f5es mais significativas."}
