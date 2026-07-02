@@ -49,7 +49,7 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
       if (data && data.ok) {
         setCpfEncMsg({ ok: true, txt: data.ja_cadastrado
           ? 'Esse paciente já faz parte do Projeto. O encaminhamento foi registrado mesmo assim.'
-          : 'Encaminhamento registrado! Quando esse paciente se cadastrar e pagar, o crédito é seu.' })
+          : 'Encaminhamento registrado por 3 meses! Se esse paciente se cadastrar e pagar nesse prazo, o crédito é seu. Registrar de novo renova o prazo.' })
         setCpfEnc('')
       } else {
         setCpfEncMsg({ ok: false, txt: (data && data.erro) || 'Não foi possível registrar.' })

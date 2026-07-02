@@ -126,7 +126,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
       if (data && data.ok) {
         setResMsg({ ok: true, txt: data.ja_cadastrado
           ? 'Esse CPF já faz parte do Projeto. A reserva foi registrada mesmo assim.'
-          : 'CPF reservado! Quando essa pessoa se cadastrar e pagar, o crédito é seu.' })
+          : 'CPF reservado por 3 meses! Se essa pessoa se cadastrar e pagar nesse prazo, o crédito é seu. Reservar de novo renova o prazo.' })
         setResCpf('')
       } else setResMsg({ ok: false, txt: (data && data.erro) || 'Não foi possível reservar.' })
     } catch (e) { setResMsg({ ok: false, txt: 'Erro de conexão. Tente de novo.' }) }
@@ -242,7 +242,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
             {codigo && view !== 'creditos' && (
               <>
                 <p className="text-sm text-gray-600 leading-relaxed text-center">
-                  {"Mostre este "}<b>{"QR"}</b>{" ao bariátrico, ou copie o "}<b>{"LINK"}</b>{" e envie no WhatsApp/Telegram. Quando ele se cadastrar e pagar, você ganha crédito. Você também pode "}<b>{"RESERVAR"}</b>{" o CPF de outro bariátrico, aqui embaixo nesta tela. A qualquer momento que ele se cadastrar, você receberá os créditos."}
+                  {"Mostre este "}<b>{"QR"}</b>{" ao bariátrico, ou copie o "}<b>{"LINK"}</b>{" e envie no WhatsApp/Telegram. Quando ele se cadastrar e pagar, você ganha crédito. Você também pode "}<b>{"RESERVAR"}</b>{" o CPF de outro bariátrico, aqui embaixo nesta tela. A reserva vale por "}<b>{"3 meses"}</b>{" — se ele se cadastrar nesse prazo, você recebe os créditos (reservar de novo renova o prazo)."}
                 </p>
                 <div className="flex justify-center">
                   <div className="bg-white p-3 rounded-xl border-2 border-gray-300">
