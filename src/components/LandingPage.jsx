@@ -2165,14 +2165,17 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           }
         `}</style>
 
-        {/* ADMIN: ícone discreto (sem letra) no rodapé direito do hero → login do
+        {/* ADMIN: chapéu dourado num selo branco no rodapé direito do hero → login do
             administrador (CRM+senha via AdminLogin, gate do modo 'admin' no App). */}
         <button onClick={() => onModoAdmin && onModoAdmin()} aria-label="Acesso do administrador" title="Acesso do administrador"
-          style={{ position: 'absolute', right: 14, bottom: 10, zIndex: 3, background: 'none', border: 'none',
-                   padding: 4, cursor: 'pointer', opacity: 0.3, transition: 'opacity 0.3s' }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = 0.9 }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = 0.3 }}>
-          <img src={obaLogo} alt="" style={{ width: 30, height: 30, objectFit: 'contain', display: 'block' }} />
+          style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 5, cursor: 'pointer',
+                   width: 42, height: 42, borderRadius: '50%', background: '#fff',
+                   border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   opacity: 0.9, transition: 'opacity 0.3s, transform 0.3s' }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.transform = 'scale(1.08)' }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = 0.9; e.currentTarget.style.transform = 'scale(1)' }}>
+          <img src={obaLogo} alt="" style={{ width: 28, height: 28, objectFit: 'contain', display: 'block' }} />
         </button>
       </section>
 
