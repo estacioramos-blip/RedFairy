@@ -610,7 +610,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     supabase.from('config').select('valor').eq('chave', 'valor_anuidade').maybeSingle()
       .then(({ data }) => { const n = Number(data?.valor); if (Number.isFinite(n) && n > 0) setValorAnuidade(n); });
   }, []);
-  const anuidadeBRL = formatarBRL(valorAnuidade); // ex.: "149,90"
+  const anuidadeBRL = formatarBRL(valorAnuidade); // ex.: "200,00"
 
   // Controla qual modal de Termos esta aberto: null, 'medico', 'paciente'
   const [tcAberto, setTcAberto] = useState(null);

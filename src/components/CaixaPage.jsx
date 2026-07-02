@@ -297,7 +297,7 @@ function AbaEncontro({ rpc, toast }) {
   useEffect(() => { carregar() }, [])
   if (!dados) return <p className="text-sm text-gray-500">Carregando…</p>
   const pacs = dados.pacientes || []
-  const anuidade = Number(dados.valor_anuidade || 149.9)
+  const anuidade = Number(dados.valor_anuidade || 200)
   async function abater(cpf, tipo, valorSugerido) {
     let valor = valorSugerido
     if (tipo !== 'anuidade') {

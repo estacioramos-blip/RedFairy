@@ -804,7 +804,7 @@ function AbaConfig() {
       setValorDoc(docConfig?.valor || '');
       setComissaoUsdNaoAfiliado(comNaoAfilConfig?.valor || '10');
       setPixChave(pixConfig?.valor || '');
-      setValorAnuidade(anuConfig?.valor || '149.90');
+      setValorAnuidade(anuConfig?.valor || '200');
       setComissaoUsd(comConfig?.valor || '10');
       setCotacaoDolar(cotConfig?.valor || '');
       setTgToken(tgTokConfig?.valor || '');
@@ -872,7 +872,7 @@ function AbaConfig() {
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">{"Valor da Anuidade do Paciente (R$)"}</label>
             <input type="number" step="0.01" min="0" value={valorAnuidade}
-              onChange={e => setValorAnuidade(e.target.value)} placeholder="Ex: 149.90" className={inputClass} />
+              onChange={e => setValorAnuidade(e.target.value)} placeholder="Ex: 200.00" className={inputClass} />
             <p className="text-xs text-gray-400 mt-1">{"Exibido na landing e cobrado no Pix do cadastro do paciente. O c\u00f3digo Pix \u00e9 gerado automaticamente com este valor."}</p>
           </div>
 

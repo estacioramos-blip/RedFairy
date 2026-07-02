@@ -8,7 +8,7 @@ import PlayButton from './PlayButton'
 
 /**
  * PagamentoCadastroModal - exibido apos o paciente completar o perfil.
- * Cobra R$ 149,90 via PIX para ativar a assinatura anual.
+ * Cobra a anuidade (config.valor_anuidade, lida do Supabase) via PIX para ativar a assinatura anual.
  *
  * Fluxo:
  *   - Mostra QR code + copia-e-cola

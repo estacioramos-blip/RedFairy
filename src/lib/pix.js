@@ -15,7 +15,9 @@ const PIX_CIDADE = 'SAO PAULO';
 const PIX_CEP    = '05409000';
 const PIX_TXID   = 'MRltMfAMak4i2IRfy0kup';
 
-export const VALOR_ANUIDADE_PADRAO = 149.90;
+// Fallback apenas — a fonte da verdade é config.valor_anuidade no Supabase
+// (calculado manualmente no ADMIN a partir da cotação do dólar digital).
+export const VALOR_ANUIDADE_PADRAO = 200;
 
 // CRC16-CCITT (poly 0x1021, init 0xFFFF) — hex maiúsculo, 4 dígitos.
 function crc16(str) {
