@@ -831,7 +831,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   // AVALIAR: o médico digita o CPF (ou lê o QR) do paciente → abre o OBA Modal com os
   // dados dele (o médico faz a avaliação/OBA pelo paciente).
   const [avaliarFase, setAvaliarFase] = useState(null)        // null | 'cpf' | 'oba'
-  const [avaliarPaciente, setAvaliarPaciente] = useState(null)
+  // ATENÇÃO: não chamar este estado de "avaliarPaciente" — sombrearia a função do engine
+  // importada na linha 4 e quebraria o handleSubmit (avaliação completa manual).
+  const [pacienteAvaliar, setPacienteAvaliar] = useState(null)
   const [avaliarCpfInput, setAvaliarCpfInput] = useState('')
   const [avaliarErro, setAvaliarErro] = useState('')
   const [avaliarBusy, setAvaliarBusy] = useState(false)
@@ -849,7 +851,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         const { data: obaRows } = await supabase.from('oba_anamnese').select('*').eq('cpf', d).order('created_at', { ascending: false }).limit(1)
         anam = (obaRows && obaRows.length) ? obaRows[0] : null
       } catch (e) {}
-      setAvaliarPaciente({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam })
+      setPacienteAvaliar({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam })
       try { sessionStorage.setItem('rf_med_oba_cpf', d) } catch (e) {}   // p/ reabrir no refresh (mesma aba)
       setAvaliarFase('oba')
     } catch (e) { setAvaliarErro('Erro de conexão. Tente de novo.') }
@@ -1645,31 +1647,31 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
 
       {/* AVALIAR — passo 2: o OBA Modal direto (o OBA já traz eritron/anamnese do paciente;
           paciente novo → o OBA coleta o hemograma na etapa de exames). */}
-      {avaliarFase === 'oba' && avaliarPaciente && (
+      {avaliarFase === 'oba' && pacienteAvaliar && (
         <OBAModal
-          cpf={avaliarPaciente.cpf}
-          nome={avaliarPaciente.nome}
-          sexo={avaliarPaciente.sexo}
-          dataNascimento={avaliarPaciente.data_nascimento}
-          idade={avaliarPaciente.data_nascimento ? Math.floor((Date.now() - new Date(avaliarPaciente.data_nascimento)) / 31557600000) : 0}
+          cpf={pacienteAvaliar.cpf}
+          nome={pacienteAvaliar.nome}
+          sexo={pacienteAvaliar.sexo}
+          dataNascimento={pacienteAvaliar.data_nascimento}
+          idade={pacienteAvaliar.data_nascimento ? Math.floor((Date.now() - new Date(pacienteAvaliar.data_nascimento)) / 31557600000) : 0}
           dadosRedFairy={{}}
-          resultadoEritron={avaliarPaciente.ultimaAval
-            ? { label: avaliarPaciente.ultimaAval.diagnostico_label, color: avaliarPaciente.ultimaAval.diagnostico_color, inputs: { sexo: avaliarPaciente.sexo } }
+          resultadoEritron={pacienteAvaliar.ultimaAval
+            ? { label: pacienteAvaliar.ultimaAval.diagnostico_label, color: pacienteAvaliar.ultimaAval.diagnostico_color, inputs: { sexo: pacienteAvaliar.sexo } }
             : null}
-          examesRedFairy={avaliarPaciente.ultimaAval
-            ? { ferritina: avaliarPaciente.ultimaAval.ferritina, hemoglobina: avaliarPaciente.ultimaAval.hemoglobina, vcm: avaliarPaciente.ultimaAval.vcm, rdw: avaliarPaciente.ultimaAval.rdw, satTransf: avaliarPaciente.ultimaAval.sat_transf, dataColeta: avaliarPaciente.ultimaAval.data_coleta }
+          examesRedFairy={pacienteAvaliar.ultimaAval
+            ? { ferritina: pacienteAvaliar.ultimaAval.ferritina, hemoglobina: pacienteAvaliar.ultimaAval.hemoglobina, vcm: pacienteAvaliar.ultimaAval.vcm, rdw: pacienteAvaliar.ultimaAval.rdw, satTransf: pacienteAvaliar.ultimaAval.sat_transf, dataColeta: pacienteAvaliar.ultimaAval.data_coleta }
             : null}
-          anamneseAnterior={avaliarPaciente.anamneseAnterior}
-          coletarHemograma={!avaliarPaciente.ultimaAval}
+          anamneseAnterior={pacienteAvaliar.anamneseAnterior}
+          coletarHemograma={!pacienteAvaliar.ultimaAval}
           modoMedico={true}
-          onFechar={() => { try { sessionStorage.removeItem('rf_med_oba_cpf') } catch (e) {}; setAvaliarFase(null); setAvaliarPaciente(null) }}
+          onFechar={() => { try { sessionStorage.removeItem('rf_med_oba_cpf') } catch (e) {}; setAvaliarFase(null); setPacienteAvaliar(null) }}
           onConcluir={async () => {
             try {
               const tok = localStorage.getItem('medico_token') || ''
-              await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: avaliarPaciente.cpf, p_opiniao: '', p_sugestao: '' })
+              await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: pacienteAvaliar.cpf, p_opiniao: '', p_sugestao: '' })
             } catch (e) {}
             try { sessionStorage.removeItem('rf_med_oba_cpf') } catch (e) {}
-            setAvaliarFase(null); setAvaliarPaciente(null)
+            setAvaliarFase(null); setPacienteAvaliar(null)
           }}
         />
       )}
