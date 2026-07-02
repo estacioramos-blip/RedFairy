@@ -10,6 +10,7 @@ import TriagemDireta from './components/TriagemDireta'
 import PlayButton from './components/PlayButton'
 import IndicadorPage from './components/IndicadorPage'
 import OBAEntradaPaciente from './components/OBAEntradaPaciente'
+import CaixaPage from './components/CaixaPage'
 import { ehDominioBariatrico } from './lib/dominio'
 import { setManifestFluxo } from './lib/manifestFluxo'
 export default function App() {
@@ -130,7 +131,7 @@ export default function App() {
          'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
          'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
          'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo',
-         'rf_medico_encaminhador','rf_abrir_contato',
+         'rf_medico_encaminhador','rf_abrir_contato','caixa_token',
          'rf_reentry_cpf','rf_reentry_token','oba_aberto'].forEach(k => localStorage.removeItem(k))
         // Rascunhos do OBA (oba_progresso_<cpf>) — por CPF, só limpam ao CONCLUIR. No teste,
         // o ?reset deve zerar TODOS, senão um CPF reusado "retoma" no relatório.
@@ -156,6 +157,9 @@ export default function App() {
     } else if (modoParam === 'indicador') {
       setModo('indicador')
       setTimeout(() => setSaindo(false), 450)
+    } else if (modoParam === 'caixa') {
+      // (CAIXA) tesouraria manual — rotina independente com senha própria.
+      setModo('caixa')
     }
     // (4DOC) ?ref=CRM/UF — QR do MÉDICO. ?ind=INDxxxxxx — link/QR do INDICADOR.
     // Cada valor é validado pelo FORMATO e vai pra sua própria chave (antes o ?ref servia
@@ -553,6 +557,10 @@ export default function App() {
 
   if (modo === 'indicador') {
     return <IndicadorPage onVoltar={irVoltar} />
+  }
+
+  if (modo === 'caixa') {
+    return <CaixaPage onVoltar={() => setModo('home')} />
   }
 
   if (modo === 'admin') {
