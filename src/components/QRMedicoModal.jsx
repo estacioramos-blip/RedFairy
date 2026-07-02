@@ -86,16 +86,14 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
               size={216}
               level="H"
               bgColor="#ffffff"
-              fgColor="#7B1E1E"
+              fgColor="#000000"
             />
           </div>
           <p className="text-sm font-bold text-gray-800">{"CRM "}{crm}</p>
 
           <div className="w-full bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-left">
             <p className="text-xs text-amber-900 leading-relaxed">
-              {"Diga ao paciente: escaneie, cadastre-se e use só "}
-              <strong>{"DATA, HEMOGLOBINA, VCM e RDW"}</strong>
-              {" do hemograma."}
+              {"Informe ao paciente que entre no sistema, se "}<strong>{"CADASTRE"}</strong>{" e pague a "}<strong>{"ANUIDADE"}</strong>{" — e que é necessário no mínimo um "}<strong>{"HEMOGRAMA"}</strong>{" para começar uma auto-avaliação."}
             </p>
           </div>
 
