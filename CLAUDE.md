@@ -15,9 +15,13 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
 4. **Valide antes de entregar.** Rode o build/check apropriado antes de considerar pronto:
    - JSX: `npx esbuild --loader:.jsx=jsx --bundle=false ARQUIVO --outfile=/tmp/out.js` (ou `npm run build`)
    - JS puro: `node --check ARQUIVO`
-5. **Mostre o diff e peça confirmação antes de commitar.** Não commite automaticamente sem o OK do Estácio.
-6. **Commits descritivos** explicando o "o quê" e o "porquê".
-7. **Preserve compatibilidade.** Campos/arrays usados em vários lugares (ex.: `proximosExames`) não devem ser removidos sem checar todos os usos.
+5. **Teste antes do Estácio testar.** Antes de entregar qualquer mudança para teste manual do Estácio:
+   - Dispare o agente **`code-reviewer`** sobre os arquivos alterados (bugs, lógica clínica, armadilhas do projeto).
+   - Se a mudança tem superfície visível/executável (UI, fluxo, engine), rode a skill **`/verify`** para exercitar o fluxo afetado de ponta a ponta.
+   - Só entregue para o Estácio depois que o build passar e os problemas apontados forem corrigidos (ou explicitamente relatados). O teste do Estácio é clínico/visual — o técnico é responsabilidade do agente.
+6. **Mostre o diff e peça confirmação antes de commitar.** Não commite automaticamente sem o OK do Estácio.
+7. **Commits descritivos** explicando o "o quê" e o "porquê".
+8. **Preserve compatibilidade.** Campos/arrays usados em vários lugares (ex.: `proximosExames`) não devem ser removidos sem checar todos os usos.
 
 ---
 
