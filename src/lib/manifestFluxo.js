@@ -19,7 +19,16 @@ export function setManifestFluxo(letra) {
   if (!cfg || typeof document === 'undefined') return
   try {
     const m = document.querySelector('link[rel="manifest"]')
-    if (m && m.getAttribute('href') !== cfg.manifest) m.setAttribute('href', cfg.manifest)
+    if (m && m.getAttribute('href') !== cfg.manifest) {
+      m.setAttribute('href', cfg.manifest)
+      // O beforeinstallprompt já capturado ficou CONGELADO no manifesto antigo —
+      // instalaria o app do papel errado (ex.: OBA i dentro do fluxo do paciente).
+      // Descarta (global + cópias nos hooks); o Chrome redispara para o manifesto novo.
+      if (window.__rfInstall) {
+        window.__rfInstall = null
+        window.dispatchEvent(new Event('rf-install-invalidado'))
+      }
+    }
     const ai = document.querySelector('link[rel="apple-touch-icon"]')
     if (ai) ai.setAttribute('href', cfg.icon)
     const t = document.querySelector('meta[name="apple-mobile-web-app-title"]')

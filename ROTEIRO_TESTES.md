@@ -1,5 +1,11 @@
 # ROTEIRO DE TESTES — 3 FLUXOS + INTEGRAÇÕES (02/07/2026)
 
+> **STATUS (02/07, fim do dia):** ✅ passos 1-3 (Fase 0), 18 e 34.
+> O 34 ficou MELHOR que o previsto: fix `79c4462` — o ícone OBA i agora abre
+> **logado** (sessão restaurada; X/Voltar desloga e a volta pede só a senha).
+> 🔶 Fase 1 começada (faltam 7-9). Próxima sessão: fechar Fase 1 → Fase 2
+> inteira (pré-requisito das Fases 4 e 5) → 3 → 4 → 5 → 6.
+
 > Cobre tudo que mudou hoje: fix do AVALIAR do médico, `?ind=` do indicador,
 > reserva 3 meses, ícones PWA por papel, hemograma do OBA → avaliações,
 > comissão 1x na vida, mensagem honesta, e o CAIXA.
@@ -52,7 +58,7 @@ anote e devolva pro agente — não perca tempo depurando.
    (testado na Fase 5). Já dentro do ADMIN → Configurações → conferir
    `cotacao_dolar` preenchida (ex.: 5.50). *As baixas do CAIXA recusam sem cotação.*
 3. **Conferir valores:** `comissao_usd_por_conversao` = 10 · `comissao_usd_nao_afiliado` = 15
-   · `valor_anuidade` = 149.90.
+   · `valor_anuidade` = 200.
 4. No celular Android, abrir `redfairy.bio/?reset=1` também (limpa o aparelho de teste).
 
 ---
@@ -148,7 +154,7 @@ anote e devolva pro agente — não perca tempo depurando.
 31. **🤝 Encontro de Contas:** fazer o CPF-A (paciente-indicador) ter um crédito:
     repetir o ciclo — INDICAR do CPF-A gera link `?ind=`, cadastrar um 4º CPF por ele
     e pagar. Voltar ao CAIXA → o CPF-A aparece com saldo (1 crédito ≈ R$ 55).
-    - Testar **ABATER ANUIDADE** → deve estar **desabilitado** (saldo < R$ 149,90). ✅
+    - Testar **ABATER ANUIDADE** → deve estar **desabilitado** (saldo < R$ 200). ✅
     - **ABATER DOCUMENTO** → digitar R$ 20 → saldo cai R$ 20.
     - **PAGAR EXCEDENTE** → aceitar o valor sugerido → saldo zera.
 32. **🧾 Extratos:** gerar o extrato do **CPF-C** (indicador) → texto deve mostrar
@@ -162,8 +168,10 @@ anote e devolva pro agente — não perca tempo depurando.
 
 ## FASE 6 — ÍCONES PWA (Android)
 
-34. **[FIX do sequestro]** Tocar o ícone **"OBA i"** → deve abrir o **painel do
-    indicador pedindo CPF/senha** — NÃO mais a tela do paciente com AVALIAR. ✅
+34. **[FIX do sequestro + sessão]** Tocar o ícone **"OBA i"** → deve abrir o
+    **painel do indicador JÁ LOGADO** ("ENTRANDO..." rápido antes) — NÃO a tela
+    do paciente, NÃO pedir CPF. Após sair pelo X: o ícone pede **só a senha**
+    (CPF pré-preenchido). ✅ testado 02/07.
 35. Ícone **"OBA m"** → card de login do médico.
 36. Ícone **"OBA p"** (ou o da fada) → reentrada passwordless do paciente (CPF-A),
     caindo na bifurcação ENTRAR/INDICAR/VER.

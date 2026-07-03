@@ -60,6 +60,7 @@ export default function IndicadorPage({ onVoltar }) {
   const [iconeMarcado, setIconeMarcado] = useState(false)
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [iosInstr, setIosInstr] = useState(false)
+  const [instFalhou, setInstFalhou] = useState(false)
   const [mostrarQR, setMostrarQR] = useState(false)
   const [indView, setIndView] = useState('gate')   // 'gate' | 'indicar' | 'creditos' (sem ENTRAR)
   const { instalar } = useInstalarFada()
@@ -204,6 +205,12 @@ export default function IndicadorPage({ onVoltar }) {
     setToken(''); setPixVal(''); setPixMsg(''); setEtapa('cpf')
   }
 
+  // Saída do painel SEMPRE por navegação REAL pro bariatrico.net — nunca ficar
+  // preso na landing do redfairy (e a página nova recarrega o manifesto certo).
+  function irParaBariatrico() {
+    try { window.location.replace('https://bariatrico.net') } catch (e) { if (onVoltar) onVoltar() }
+  }
+
   function copiarLink() {
     try { navigator.clipboard.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 1800) } catch (e) {}
   }
@@ -212,10 +219,11 @@ export default function IndicadorPage({ onVoltar }) {
   async function aoInstalarIcone(e) {
     const marcado = e.target.checked
     setIconeMarcado(marcado)
-    if (!marcado) { setIosInstr(false); setLinkCopiado(false); return }
+    if (!marcado) { setIosInstr(false); setLinkCopiado(false); setInstFalhou(false); return }
     try { await navigator.clipboard.writeText(link); setLinkCopiado(true) } catch (er) {}
     const r = await instalar()
     if (r === 'ios') setIosInstr(true)
+    else if (r === 'indisponivel') setInstFalhou(true)   // prompt não disponível agora — avisa em vez de falhar mudo
   }
 
   async function preCadastrar() {
@@ -234,7 +242,7 @@ export default function IndicadorPage({ onVoltar }) {
   }
 
   const VoltarBtn = onVoltar ? (
-    <button onClick={() => { sair(); onVoltar(); }}
+    <button onClick={() => { sair(); irParaBariatrico(); }}
       className="absolute top-4 left-4 px-3 py-1 rounded-lg text-xs font-bold shadow transition-colors"
       style={{ backgroundColor: '#E3AE37', color: '#14100E' }}>
       Voltar
@@ -259,8 +267,9 @@ export default function IndicadorPage({ onVoltar }) {
       <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6">
         <div className="w-full max-w-sm mt-10">
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden relative">
-            {/* X fechar — círculo vinho (igual aos modais do paciente). */}
-            <button onClick={() => { sair(); if (onVoltar) onVoltar(); }} aria-label="Fechar"
+            {/* X fechar — sai pro bariatrico.net MANTENDO o login (como um app);
+                deslogar de verdade é pelo link SAIR E DESLOGAR abaixo. */}
+            <button onClick={irParaBariatrico} aria-label="Fechar"
               style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '12px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
               {"✕"}
             </button>
@@ -293,6 +302,13 @@ export default function IndicadorPage({ onVoltar }) {
                 </label>
                 {linkCopiado && <p className="text-[11px] mt-2 text-green-700 font-bold">{"✓ LINK copiado! Cole no WhatsApp, Telegram ou nas suas redes."}</p>}
                 {iosInstr && <p className="text-[11px] mt-1 text-gray-500 leading-snug">{"No iPhone: toque em Compartilhar (↑) e depois em \"Adicionar à Tela de Início\"."}</p>}
+                {instFalhou && <p className="text-[11px] mt-1 text-orange-600 font-bold leading-snug">{"Não deu pra instalar agora — feche e abra o link de novo, aí marque esta caixa."}</p>}
+                {/* Deslogar explícito (o X só fecha, mantendo o login). Mantém o CPF
+                    lembrado: a próxima entrada pede só a senha. */}
+                <button onClick={() => { sair(); irParaBariatrico() }}
+                  className="block mx-auto mt-4 text-[11px] font-bold tracking-widest text-gray-400 underline hover:text-gray-600">
+                  {"SAIR E DESLOGAR"}
+                </button>
               </div>
             </div>
           </div>

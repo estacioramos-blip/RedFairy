@@ -22,11 +22,16 @@ export function useInstalarFada() {
     if (ehIOS()) { setIos(true); return }
     if (window.__rfInstall) setPrompt(window.__rfInstall)
     const on = () => { if (window.__rfInstall) setPrompt(window.__rfInstall) }
+    // Troca de papel no meio da sessão (manifestFluxo) invalida o prompt antigo —
+    // ele instalaria o app do papel ERRADO. Solta a cópia local também.
+    const off = () => setPrompt(null)
     window.addEventListener('rf-installable', on)
     window.addEventListener('beforeinstallprompt', on)
+    window.addEventListener('rf-install-invalidado', off)
     return () => {
       window.removeEventListener('rf-installable', on)
       window.removeEventListener('beforeinstallprompt', on)
+      window.removeEventListener('rf-install-invalidado', off)
     }
   }, [])
 
