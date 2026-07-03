@@ -16,7 +16,8 @@
   html, body { margin: 0; padding: 0; }
   @keyframes obaKen { from { transform: scale(1.0); } to { transform: scale(1.10); } }
   @keyframes obaPan { 0% { transform: scale(1) translate(0%, 0%); } 100% { transform: scale(1.2) translate(-3%, -2%); } }
-  @keyframes obaPanComo { 0% { transform: scale(1.1) translate(0%, 0%); } 100% { transform: scale(1.28) translate(-3%, -2%); } }
+  /* Zoom ~25% mais próximo (pedido do Estácio): 1.1→1.38 / 1.28→1.6 */
+  @keyframes obaPanComo { 0% { transform: scale(1.38) translate(0%, 0%); } 100% { transform: scale(1.6) translate(-3%, -2%); } }
   @media (max-width: 760px) {
     #obaHeroImg { object-fit: contain !important; object-position: 50% 18% !important; }
     #obaComoImg { object-fit: contain !important; }
@@ -209,7 +210,7 @@
             <sc-if value="{{ comoMedico }}" hint-placeholder-val="{{ false }}">
               <span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(20px, 2.2vw, 25px); color: #E3AE37;">Quero encaminhar pacientes</span>
             </sc-if>
-            <p style="margin: 0; max-width: 56ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.66; white-space: pre-line; color: #F2ECE1;">{{ comoText }}</p>
+            <p style="margin: 0; max-width: 56ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.66; white-space: pre-line; color: #F2ECE1;">{{ comoTextA }} <img src="images/oba-logo.png" alt="ícone do Projeto OBA" style="display: inline-block; width: 30px; height: 30px; object-fit: contain; vertical-align: -9px; margin: 0 2px;" /> {{ comoTextB }}</p>
             <sc-if value="{{ comoMedico }}" hint-placeholder-val="{{ false }}">
               <span style="font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(20px, 2.2vw, 25px); color: #E3AE37;">Quero avaliar e prescrever pacientes</span>
               <p style="margin: 0; max-width: 56ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.66; color: #F2ECE1;">Se você tiver interesse em avaliar, fazer teleconsultas e prescrever pacientes do Projeto OBA®, marque o checkbox abaixo.</p>
@@ -241,12 +242,20 @@ class Component extends DCLogic {
   renderVals() {
     const e = this.state.entered;
     const s = this.state.settled;
+    // Cada mensagem é dividida em a/b: o ÍCONE do OBA (images/oba-logo.png, pequeno,
+    // inline) é renderizado ENTRE as duas partes, dentro do parágrafo do popup.
     const COMO = {
-      bariatrico: { t: 'Sou Bariátrico', m: 'Por um pequeno valor você faz a assinatura anual de uma plataforma inteligente que opera 24h por dia, 365 dias por ano, e que pode otimizar a sua vida. Prescrições médicas, solicitações de exames e teleconsultas com especialistas estarão ao seu alcance por valores baixíssimos.\n\nVocê também pode indicar outros pacientes bariátricos, gerando créditos para você, que serão usados para o pagamento de documentos médicos e para uma próxima anuidade. Para indicar um novo paciente você usará o ÍCONE instalado na tela do seu dispositivo. Indicando um número de pacientes cujo valor dos créditos supere as suas necessidades na plataforma, você receberá os valores na sua conta bancária.\n\nO Projeto OBA® foi criado para você viver melhor.' },
-      medico: { t: 'Sou Médico', m: 'Faça uma avaliação simplificada de um paciente na plataforma e você será integrado ao Programa 4DOC® Patrocinado de Médicos Afiliados, com duas formas de ganho: cada avaliação simplificada que você fizer gera 15 dólares digitais para você, e cada paciente que se cadastrar sob o seu CRM gera mais 10 dólares digitais. Com um ícone instalado na tela do seu celular, com um simples toque nele você abre um QR-CODE para encaminhar bariátricos ao Projeto. Venha, é CUSTO ZERO para você, só benefícios. E vida melhor para os pacientes.' },
-      conheco: { t: 'Conheço um Bariátrico', m: 'Cada bariátrico que você enviar e se cadastrar gera um crédito de 10 dólares digitais para você. Você pode encaminhar pacientes usando o seu CPF, ou um QR-CODE na tela do seu celular. O seu amigo ou conhecido bariátrico vai viver melhor, e vocês viverão mais felizes.' },
+      bariatrico: { t: 'Sou Bariátrico',
+        a: 'Por um pequeno valor você faz a assinatura anual de uma plataforma inteligente que opera 24h por dia, 365 dias por ano, e que pode otimizar a sua vida. Com limitações, até algumas orientações e prescrições médicas de urgência podem ser solicitadas e atendidas via teleconsulta no Projeto OBA®. Receitas e solicitações de exames com certificado digital, e acesso a especialistas estarão ao seu alcance por valores baixíssimos.\n\nAo se CADASTRAR, este ÍCONE',
+        b: 'será instalado na tela do seu celular. Ele permitirá a você entrar no sistema rapidamente.\n\nVocê também pode indicar outros pacientes bariátricos, gerando créditos para você, que serão usados para o pagamento de documentos médicos e para uma próxima anuidade. Se o número de pacientes indicados gerar créditos superiores ao que você gasta na plataforma, os valores serão creditados em sua conta bancária.\n\nPara indicar outros bariátricos você usará o mesmo ÍCONE na tela do seu dispositivo. Através dele você vai gerar um QR-CODE para que um paciente indicado acesse o sistema, ou você poderá enviar um link por WhatsApp ou Telegram, para que alguém distante possa acessar. Você também pode divulgar o link nas suas redes sociais, e pacientes que se cadastrem por este link também geram créditos para você.\n\nO Projeto OBA® foi criado para você viver melhor.' },
+      medico: { t: 'Sou Médico',
+        a: 'Ao se cadastrar no Projeto OBA® você será integrado ao Programa 4DOC® Patrocinado de Médicos Afiliados, e dois tipos de incentivo estarão à sua disposição.\n\nCada AVALIAÇÃO de um paciente feita por você, no seu celular, gera o equivalente a 15 dólares digitais, e cada paciente que você indicar, e se cadastrar, gera para você o equivalente a 10 dólares digitais.\n\nUm simples toque neste ÍCONE',
+        b: 'instalado na tela do seu celular permite a você ACESSAR, AVALIAR ou INDICAR pacientes.\n\nPara INDICAR pacientes você vai dispor de um QR-CODE na sua tela, ou você pode enviar um link via WhatsApp ou Telegram para pacientes distantes. Esse mesmo link pode ser usado em suas redes sociais, e pacientes que entrem no sistema através dele geram créditos para você.\n\nVenha, é CUSTO ZERO — só benefícios. E vida melhor para os pacientes.' },
+      conheco: { t: 'Conheço um Bariátrico',
+        a: 'Cada bariátrico que você enviar e se cadastrar gera um crédito equivalente a 10 dólares digitais para você. Ao se integrar ao Projeto OBA® este ícone',
+        b: 'será instalado na tela do seu celular. Ao tocar nele você vai dispor de um QR-CODE para ser acessado por outro paciente, e de um link que você pode enviar por WhatsApp ou Telegram para que alguém distante se cadastre no projeto. Esse mesmo link poderá ser disposto nas suas redes sociais, e quem se cadastrar a partir dele gera crédito para você.\n\nAmigos e conhecidos bariátricos vão viver melhor, e vocês viverão mais felizes.' },
     };
-    const comoCur = COMO[this.state.comoChoice] || { t: '', m: '' };
+    const comoCur = COMO[this.state.comoChoice] || { t: '', a: '', b: '' };
     const EASE = 'cubic-bezier(.2,.7,.2,1)';
     const hoverPart = 'background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease';
     const tr = (spec) => s ? 'none' : spec;
@@ -285,7 +294,8 @@ class Component extends DCLogic {
       comoMenu: this.state.comoPhase === 'menu',
       comoMsg: this.state.comoPhase === 'msg',
       comoTitle: comoCur.t,
-      comoText: comoCur.m,
+      comoTextA: comoCur.a,
+      comoTextB: comoCur.b,
       comoMedico: this.state.comoChoice === 'medico',
       openComo: (ev) => {
         if (ev) ev.preventDefault();
