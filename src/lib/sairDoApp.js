@@ -9,3 +9,15 @@ export function sairDoApp() {
   // Se o close foi bloqueado (aba de navegador), sai navegando.
   setTimeout(() => { try { window.location.replace('https://bariatrico.net') } catch (e) {} }, 180)
 }
+
+export function ehStandalone() {
+  try { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true } catch (e) { return false }
+}
+
+// X dos cards de ENTRADA (CPF/senha/login): pelo ÍCONE (standalone) "voltar" não
+// faz sentido — fecha o app. No navegador preserva o retorno original (onVoltar:
+// landing/bariatrico.net), com o sairDoApp de reserva.
+export function sairOuVoltar(onVoltar) {
+  if (!ehStandalone() && typeof onVoltar === 'function') { onVoltar(); return }
+  sairDoApp()
+}

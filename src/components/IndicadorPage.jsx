@@ -240,13 +240,14 @@ export default function IndicadorPage({ onVoltar }) {
     finally { setPreBusy(false) }
   }
 
-  const VoltarBtn = onVoltar ? (
-    <button onClick={() => { sair(); irParaBariatrico(); }}
-      className="absolute top-4 left-4 px-3 py-1 rounded-lg text-xs font-bold shadow transition-colors"
-      style={{ backgroundColor: '#E3AE37', color: '#14100E' }}>
-      Voltar
+  // X vinho no card (substitui o "Voltar" dourado): fecha o app (ícone) ou volta
+  // pro bariatrico.net (navegador). Não mexe na credencial lembrada.
+  const FecharBtn = (
+    <button onClick={irParaBariatrico} aria-label="Fechar"
+      style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '12px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+      {"✕"}
     </button>
-  ) : null
+  )
 
   const Cabecalho = (
     <div className="mb-5 text-center">
@@ -332,8 +333,8 @@ export default function IndicadorPage({ onVoltar }) {
   // ── ENTRADA (CPF → SENHA), igual ao paciente ─────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-6 relative">
-      {VoltarBtn}
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md relative">
+        {FecharBtn}
         {Cabecalho}
 
         {etapa === 'restaurando' && (

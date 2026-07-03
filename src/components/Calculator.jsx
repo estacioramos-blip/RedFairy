@@ -24,7 +24,7 @@ import obaFairyIcon from '../assets/oba-fairy-icon.png';
 import ohhhImg from '../assets/ohhh.png';
 import { QRCodeSVG } from 'qrcode.react';
 import { useInstalarFada } from '../lib/useInstalarFada';
-import { sairDoApp } from '../lib/sairDoApp';
+import { sairDoApp, sairOuVoltar } from '../lib/sairDoApp';
 import { ehDominioBariatrico } from '../lib/dominio';
 
 const IconPaciente = () => (
@@ -426,20 +426,13 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
 
   return (
     <div className="bg-gray-900 relative" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', overflowY: 'auto' }}>
-      {onVoltar && (
-        <button onClick={onVoltar}
-          className="absolute top-4 left-4 px-3 py-1 rounded-lg text-xs font-bold shadow transition-colors"
-          style={{ backgroundColor: '#E3AE37', color: '#14100E', zIndex: 30 }}>
-          {"\u2190 Voltar"}
-        </button>
-      )}
-      {onVoltar && (
-        <button onClick={onVoltar} aria-label="Fechar e sair"
-          className="absolute top-4 right-4"
-          style={{ width: 30, height: 30, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '13px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30, boxShadow: '0 1px 6px rgba(0,0,0,0.4)' }}>
-          {"\u2715"}
-        </button>
-      )}
+      {/* X vinho (o "Voltar" dourado foi removido): pelo \u00cdCONE fecha o app;
+          no navegador mant\u00e9m o retorno original (onVoltar). */}
+      <button onClick={() => sairOuVoltar(onVoltar)} aria-label="Fechar e sair"
+        className="absolute top-4 right-4"
+        style={{ width: 30, height: 30, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '13px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 30, boxShadow: '0 1px 6px rgba(0,0,0,0.4)' }}>
+        {"\u2715"}
+      </button>
       <div className="bg-white rounded-2xl shadow-lg w-full max-w-md" style={{ overflow: 'hidden', position: 'relative' }}
         onMouseEnter={() => setBgRevelado(true)} onMouseLeave={() => setBgRevelado(false)} onTouchStart={() => setBgRevelado(true)}>
         {/* (limpo) Fundo e splash da telefonista removidos — card de acesso limpo (padrão OBA). */}
@@ -461,9 +454,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
 
         {modo === 'login' && (
           <div className="space-y-3">
-            <button onClick={() => { setLoginErro(''); setCadErro(''); onVoltar?.() }} className="text-gray-400 hover:text-gray-600 text-xs font-medium">
-              {"\u2190 Voltar"}
-            </button>
+            {/* ("\u2190 Voltar" cinza removido \u2014 o X vinho do canto cobre a sa\u00edda.) */}
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00famero do CRM e UF"}</label>
               <div className="grid grid-cols-3 gap-2">

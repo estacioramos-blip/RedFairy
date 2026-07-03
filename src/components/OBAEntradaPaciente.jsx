@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import obaLogo from '../assets/oba-logo.png'
 import PlayButton from './PlayButton'
 import TermosModal from './TermosModal'
+import { sairOuVoltar } from '../lib/sairDoApp'
 
 // =============================================================================
 // OBAEntradaPaciente — tela PRÓPRIA do paciente bariátrico (vindo do bariatrico.net).
@@ -135,13 +136,15 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
     } catch (e) { setBusy(false); setErro('ERRO DE CONEXÃO. TENTE NOVAMENTE.') }
   }
 
-  const VoltarBtn = onVoltar ? (
-    <button onClick={onVoltar}
-      className="absolute top-4 left-4 px-3 py-1 rounded-lg text-xs font-bold shadow transition-colors"
-      style={{ backgroundColor: '#E3AE37', color: '#14100E' }}>
-      Voltar
+  // X vinho no card (substitui o "Voltar" dourado): pelo ÍCONE fecha o app
+  // ("voltar" não fazia sentido — devolvia uma aba sobreposta sem saída);
+  // no navegador mantém o retorno original (bariatrico.net/landing).
+  const FecharBtn = (
+    <button onClick={() => sairOuVoltar(onVoltar)} aria-label="Fechar"
+      style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '12px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+      {"✕"}
     </button>
-  ) : null
+  )
 
   const Cabecalho = (
     <div className="mb-3 text-center">
@@ -151,8 +154,8 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-start sm:items-center justify-center p-4 sm:p-6 pt-6 relative">
-      {VoltarBtn}
-      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md relative">
+        {FecharBtn}
         {Cabecalho}
 
         {fase === 'intro' && (
