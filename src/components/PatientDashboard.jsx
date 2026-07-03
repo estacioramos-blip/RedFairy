@@ -455,9 +455,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     } catch (e) { return false }  // silencioso — não atrapalha o dashboard
   }
 
-  // Logout COMPLETO (diferente do X, que mantém a reentrada): limpa também a credencial de
-  // reentrada (rf_reentry), pra outro paciente poder entrar no mesmo telefone — sobrescreve
-  // o ícone sem afetar nada no Supabase. Mantém rf_dom_bari (segue no contexto bariátrico).
+  // DESLOGAR (logout COMPLETO): apaga a credencial de reentrada INTEIRA (CPF + token) —
+  // "Retorna com CPF/SENHA". O SAIR/X é o oposto: mantém tudo e o ícone entra direto.
+  // Mantém rf_dom_bari (segue no contexto bariátrico).
   function sairEDeslogar() {
     try {
       ['paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
@@ -1768,9 +1768,18 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   ariaLabel="Ver meus créditos" circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" ringColor="rgba(250,204,21,0.65)" />
               </div>
             </div>
-            <div className="mt-5 pt-3 border-t border-gray-100 text-center">
-              <button onClick={sairEDeslogar} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR E DESLOGAR"}</button>
-              <p className="text-[10px] text-gray-400 mt-2 leading-snug">{"Para entrar sem LOGIN/SENHA, use o ÍCONE instalado no celular."}</p>
+            {/* Duas saídas com o efeito dito na cara: DESLOGAR apaga a credencial
+                ("Retorna com CPF/SENHA"); SAIR mantém tudo e o ícone entra direto
+                ("Retorna sem CPF/SENHA"). O X equivale ao SAIR. */}
+            <div className="mt-5 pt-3 border-t border-gray-100 flex items-start justify-center gap-8">
+              <div className="text-center">
+                <button onClick={sairEDeslogar} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"DESLOGAR"}</button>
+                <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"com"}</b>{" CPF/SENHA"}</p>
+              </div>
+              <div className="text-center">
+                <button onClick={() => { setShowEscolhaEntrarIndicar(false); if (onVoltar) onVoltar() }} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR"}</button>
+                <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"sem"}</b>{" CPF/SENHA"}</p>
+              </div>
             </div>
           </div>
         </div>

@@ -267,8 +267,8 @@ export default function IndicadorPage({ onVoltar }) {
       <div className="min-h-screen bg-gray-900 flex flex-col items-center p-6">
         <div className="w-full max-w-sm mt-10">
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden relative">
-            {/* X fechar — sai pro bariatrico.net MANTENDO o login (como um app);
-                deslogar de verdade é pelo link SAIR E DESLOGAR abaixo. */}
+            {/* X fechar — sai pro bariatrico.net MANTENDO o login (equivale ao SAIR);
+                deslogar de verdade é pelo botão DESLOGAR abaixo. */}
             <button onClick={irParaBariatrico} aria-label="Fechar"
               style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '12px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
               {"✕"}
@@ -303,12 +303,25 @@ export default function IndicadorPage({ onVoltar }) {
                 {linkCopiado && <p className="text-[11px] mt-2 text-green-700 font-bold">{"✓ LINK copiado! Cole no WhatsApp, Telegram ou nas suas redes."}</p>}
                 {iosInstr && <p className="text-[11px] mt-1 text-gray-500 leading-snug">{"No iPhone: toque em Compartilhar (↑) e depois em \"Adicionar à Tela de Início\"."}</p>}
                 {instFalhou && <p className="text-[11px] mt-1 text-orange-600 font-bold leading-snug">{"Não deu pra instalar agora — feche e abra o link de novo, aí marque esta caixa."}</p>}
-                {/* Deslogar explícito (o X só fecha, mantendo o login). Mantém o CPF
-                    lembrado: a próxima entrada pede só a senha. */}
-                <button onClick={() => { sair(); irParaBariatrico() }}
-                  className="block mx-auto mt-4 text-[11px] font-bold tracking-widest text-gray-400 underline hover:text-gray-600">
-                  {"SAIR E DESLOGAR"}
-                </button>
+                {/* Duas saídas com o efeito dito na cara (mesmo padrão do paciente):
+                    DESLOGAR apaga a credencial inteira; SAIR mantém o login e o
+                    ícone entra direto. O X equivale ao SAIR. */}
+                <div className="mt-4 flex items-start justify-center gap-8">
+                  <div className="text-center">
+                    <button onClick={() => { sair(); try { localStorage.removeItem('indicador_cpf') } catch (e) {}; irParaBariatrico() }}
+                      className="text-[11px] font-extrabold tracking-widest text-gray-500 uppercase hover:text-red-700">
+                      {"DESLOGAR"}
+                    </button>
+                    <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"com"}</b>{" CPF/SENHA"}</p>
+                  </div>
+                  <div className="text-center">
+                    <button onClick={irParaBariatrico}
+                      className="text-[11px] font-extrabold tracking-widest text-gray-500 uppercase hover:text-red-700">
+                      {"SAIR"}
+                    </button>
+                    <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"sem"}</b>{" CPF/SENHA"}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

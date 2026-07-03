@@ -1572,7 +1572,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       {cadastrado && menuMedico && !showAuthMedicoOverlay && (
         <div className="fixed inset-0 z-40 flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative my-4">
-            <button onClick={onVoltar} aria-label="Sair" style={{ position:'absolute', top:10, right:10, width:26, height:26, borderRadius:'50%', background:'#7B1E1E', color:'#fff', border:'2px solid #fff', cursor:'pointer', fontSize:'12px', fontWeight:700, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>{"✕"}</button>
+            {/* X = SAIR (mantém o login; o ícone OBA m reabre logado). Deslogar de
+                verdade é pelo botão DESLOGAR abaixo. Navegação REAL pro bariatrico.net —
+                onVoltar (irVoltar) limparia a credencial do médico. */}
+            <button onClick={() => { try { window.location.replace('https://bariatrico.net') } catch (e) { if (onVoltar) onVoltar() } }} aria-label="Sair" style={{ position:'absolute', top:10, right:10, width:26, height:26, borderRadius:'50%', background:'#7B1E1E', color:'#fff', border:'2px solid #fff', cursor:'pointer', fontSize:'12px', fontWeight:700, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>{"✕"}</button>
             <div className="p-5 pt-7">
               <img src={obaLogo} alt="Projeto OBA" className="h-24 object-contain mx-auto mb-1" />
               {(medicoNome || medicoCRM) && <p className="text-center text-[11px] text-gray-400 mb-4">{[medicoNome, medicoCRM].filter(Boolean).join('  ·  ')}</p>}
@@ -1610,8 +1613,18 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   <PlayButton onClick={() => setShowMeusCreditosMed(true)} ariaLabel="Ver créditos" />
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-gray-100 text-center">
-                <button onClick={() => { onLogout(); if (onVoltar) onVoltar(); }} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR E DESLOGAR"}</button>
+              {/* Duas saídas com o efeito dito na cara (padrão do paciente/indicador):
+                  DESLOGAR apaga a credencial ("Retorna com CRM/SENHA" — médico loga por
+                  CRM); SAIR mantém o login e o ícone entra direto. O X equivale ao SAIR. */}
+              <div className="mt-4 pt-3 border-t border-gray-100 flex items-start justify-center gap-8">
+                <div className="text-center">
+                  <button onClick={() => { onLogout(); if (onVoltar) onVoltar(); }} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"DESLOGAR"}</button>
+                  <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"com"}</b>{" CRM/SENHA"}</p>
+                </div>
+                <div className="text-center">
+                  <button onClick={() => { try { window.location.replace('https://bariatrico.net') } catch (e) { if (onVoltar) onVoltar() } }} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR"}</button>
+                  <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"sem"}</b>{" CRM/SENHA"}</p>
+                </div>
               </div>
             </div>
           </div>

@@ -144,8 +144,10 @@ export default function App() {
     }
     const modoParam = params.get('modo')
     if (modoParam === 'medico') {
-      // (bariatrico.net) abre o CARD DE LOGIN do médico (não o formulário direto).
-      try { localStorage.setItem('rf_open_login', '1') } catch (e) {}
+      // (bariatrico.net) abre o CARD DE LOGIN do médico (não o formulário direto) —
+      // MAS só quando não há médico logado: com credencial guardada (saiu pelo SAIR /
+      // ícone OBA m), reabre direto na bifurcação ("Retorna sem CRM/SENHA").
+      try { if (!localStorage.getItem('medico_crm')) localStorage.setItem('rf_open_login', '1') } catch (e) {}
       setCalcKey(k => k + 1)
       setModo('calculadora')
       // (a) some com a tela preta quando o card escuro ja deve estar montado.

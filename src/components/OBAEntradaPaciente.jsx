@@ -38,8 +38,14 @@ function formatarCPF(v) {
 }
 
 export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
-  const [fase, setFase] = useState('intro')     // intro | cpf | senha
-  const [cpf, setCpf] = useState('')
+  // CPF lembrado no aparelho (ícone/reentrada): quem já se cadastrou aqui não
+  // redigita o CPF — pula a intro, preenche e vai direto pedir a SENHA.
+  const cpfLembrado = (() => {
+    try { return soDigitos(localStorage.getItem('rf_reentry_cpf') || localStorage.getItem('paciente_cpf') || '') } catch (e) { return '' }
+  })()
+  const temCpfLembrado = cpfLembrado.length === 11 && validarCPF(cpfLembrado)
+  const [fase, setFase] = useState(temCpfLembrado ? 'cpf' : 'intro')     // intro | cpf | senha
+  const [cpf, setCpf] = useState(temCpfLembrado ? formatarCPF(cpfLembrado) : '')
   const [senha, setSenha] = useState('')
   const [showSenha, setShowSenha] = useState(false)
   const [modo, setModo] = useState(null)        // login | cadastro
@@ -53,6 +59,9 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   // nunca a landing do RedFairy. Só o ?reset limpa.
   useEffect(() => { try { localStorage.setItem('rf_flag', 'bariatrica'); localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }, [])
 
+  // CPF lembrado → avança sozinho pra tela de SENHA (lookup decide login x cadastro).
+  useEffect(() => { if (temCpfLembrado) avancarCpf() }, [])
+
   const cpfDigits = soDigitos(cpf)
   const cpfOk = cpfDigits.length === 11 && validarCPF(cpfDigits)   // só avança com CPF válido
   const cpfInvalido = cpfDigits.length === 11 && !validarCPF(cpfDigits)
@@ -64,9 +73,12 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
     setErro(''); setBusy(true)
     let existe = false
     try {
-      const { data } = await supabase.rpc('lookup_cpf_triagem', { cpf_input: cpfDigits })
+      const { data, error } = await supabase.rpc('lookup_cpf_triagem', { cpf_input: cpfDigits })
+      // Falha de REDE não pode virar "CPF não existe" — senão um paciente cadastrado
+      // cai em "CRIE A SUA SENHA" e trava no "CPF ja cadastrado". Mostra erro e para.
+      if (error) { setBusy(false); setErro('ERRO DE CONEXÃO. TENTE NOVAMENTE.'); return }
       existe = !!(data?.find?.(r => r.origem === 'profile'))
-    } catch (e) {}
+    } catch (e) { setBusy(false); setErro('ERRO DE CONEXÃO. TENTE NOVAMENTE.'); return }
     setBusy(false)
     setModo(existe ? 'login' : 'cadastro')
     setSenha(''); setAceitoTC(true)
