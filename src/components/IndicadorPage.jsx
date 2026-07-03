@@ -6,6 +6,7 @@ import obaFairyIcon from '../assets/oba-fairy-icon.png'
 import PlayButton from './PlayButton'
 import PacienteIndicaModal from './PacienteIndicaModal'
 import { useInstalarFada } from '../lib/useInstalarFada'
+import { sairDoApp } from '../lib/sairDoApp'
 
 // =============================================================================
 // IndicadorPage — 3º perfil (INDICADOR). Entrada igual à do paciente bariátrico:
@@ -205,11 +206,9 @@ export default function IndicadorPage({ onVoltar }) {
     setToken(''); setPixVal(''); setPixMsg(''); setEtapa('cpf')
   }
 
-  // Saída do painel SEMPRE por navegação REAL pro bariatrico.net — nunca ficar
-  // preso na landing do redfairy (e a página nova recarrega o manifesto certo).
-  function irParaBariatrico() {
-    try { window.location.replace('https://bariatrico.net') } catch (e) { if (onVoltar) onVoltar() }
-  }
+  // Saída do painel: fecha o app (PWA) ou navega pro bariatrico.net (navegador) —
+  // nunca ficar preso na landing do redfairy nem na aba sobreposta do PWA.
+  function irParaBariatrico() { sairDoApp() }
 
   function copiarLink() {
     try { navigator.clipboard.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 1800) } catch (e) {}

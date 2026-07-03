@@ -4,6 +4,7 @@ import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/d
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import { useInstalarFada } from '../lib/useInstalarFada'
+import { sairDoApp } from '../lib/sairDoApp'
 import { ehDominioBariatrico } from '../lib/dominio'
 import PlayButton from './PlayButton'
 import CompletarPerfilModal from './CompletarPerfilModal'
@@ -465,8 +466,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       // Rascunhos do OBA também (logout completo / trocar paciente) — senão um CPF reusado retoma.
       Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_') === 0).forEach(k => localStorage.removeItem(k))
     } catch (e) {}
-    setShowEscolhaEntrarIndicar(false)
-    if (onVoltar) onVoltar()
+    // Sai DO SITE de verdade (fecha o PWA / navega pro bariatrico.net) — não passa
+    // pelo irVoltar, que deixava o app numa landing/aba sobreposta sem saída.
+    sairDoApp()
   }
 
   // Reune triagens + avaliacoes do paciente logado e abre o modal de grafico.
@@ -1722,9 +1724,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     {showEscolhaEntrarIndicar && profile && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative">
-          {/* X fechar — círculo vinho, X branco. Fecha a bifurcação e SAI pra landing (desloga;
-              a credencial rf_reentry sobrevive, então o ícone reentra depois). */}
-          <button onClick={() => { setShowEscolhaEntrarIndicar(false); if (onVoltar) onVoltar() }} aria-label="Fechar"
+          {/* X fechar — equivale ao SAIR: sai do site mantendo a credencial
+              (o ícone reentra direto depois). */}
+          <button onClick={sairDoApp} aria-label="Fechar"
             style={{ position: 'absolute', top: 10, right: 10, width: 26, height: 26, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '12px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
             {"✕"}
           </button>
@@ -1777,7 +1779,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"com"}</b>{" CPF/SENHA"}</p>
               </div>
               <div className="text-center">
-                <button onClick={() => { setShowEscolhaEntrarIndicar(false); if (onVoltar) onVoltar() }} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR"}</button>
+                <button onClick={sairDoApp} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR"}</button>
                 <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"sem"}</b>{" CPF/SENHA"}</p>
               </div>
             </div>

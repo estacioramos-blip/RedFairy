@@ -87,6 +87,15 @@ export default function App() {
   // (medico) toast "link de encaminhamento copiado" ao abrir pelo icone instalado (PWA).
   const [linkMedToast, setLinkMedToast] = useState(false)
 
+  // Volta do bfcache (ex.: Android restaurando o app após o X da aba sobreposta ou o
+  // botão Voltar): o estado React volta CONGELADO — se a cortina preta ('saindo')
+  // estava ligada na hora da navegação, ficava preta pra sempre. Destrava aqui.
+  useEffect(() => {
+    const aoRestaurar = (e) => { if (e.persisted) setSaindo(false) }
+    window.addEventListener('pageshow', aoRestaurar)
+    return () => window.removeEventListener('pageshow', aoRestaurar)
+  }, [])
+
   // PWA por PAPEL: troca o icone/manifesto/titulo conforme o fluxo (p/m/i), pra o
   // icone instalado sair com a letra do papel e abrir o fluxo certo.
   useEffect(() => {

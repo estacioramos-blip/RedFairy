@@ -24,6 +24,7 @@ import obaFairyIcon from '../assets/oba-fairy-icon.png';
 import ohhhImg from '../assets/ohhh.png';
 import { QRCodeSVG } from 'qrcode.react';
 import { useInstalarFada } from '../lib/useInstalarFada';
+import { sairDoApp } from '../lib/sairDoApp';
 import { ehDominioBariatrico } from '../lib/dominio';
 
 const IconPaciente = () => (
@@ -1573,9 +1574,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed inset-0 z-40 flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden relative my-4">
             {/* X = SAIR (mantém o login; o ícone OBA m reabre logado). Deslogar de
-                verdade é pelo botão DESLOGAR abaixo. Navegação REAL pro bariatrico.net —
-                onVoltar (irVoltar) limparia a credencial do médico. */}
-            <button onClick={() => { try { window.location.replace('https://bariatrico.net') } catch (e) { if (onVoltar) onVoltar() } }} aria-label="Sair" style={{ position:'absolute', top:10, right:10, width:26, height:26, borderRadius:'50%', background:'#7B1E1E', color:'#fff', border:'2px solid #fff', cursor:'pointer', fontSize:'12px', fontWeight:700, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>{"✕"}</button>
+                verdade é pelo botão DESLOGAR abaixo. sairDoApp fecha o PWA ou navega
+                pro bariatrico.net — não passa pelo onVoltar, que limparia a credencial. */}
+            <button onClick={sairDoApp} aria-label="Sair" style={{ position:'absolute', top:10, right:10, width:26, height:26, borderRadius:'50%', background:'#7B1E1E', color:'#fff', border:'2px solid #fff', cursor:'pointer', fontSize:'12px', fontWeight:700, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center', zIndex:2 }}>{"✕"}</button>
             <div className="p-5 pt-7">
               <img src={obaLogo} alt="Projeto OBA" className="h-24 object-contain mx-auto mb-1" />
               {(medicoNome || medicoCRM) && <p className="text-center text-[11px] text-gray-400 mb-4">{[medicoNome, medicoCRM].filter(Boolean).join('  ·  ')}</p>}
@@ -1618,11 +1619,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   CRM); SAIR mantém o login e o ícone entra direto. O X equivale ao SAIR. */}
               <div className="mt-4 pt-3 border-t border-gray-100 flex items-start justify-center gap-8">
                 <div className="text-center">
-                  <button onClick={() => { onLogout(); if (onVoltar) onVoltar(); }} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"DESLOGAR"}</button>
+                  <button onClick={() => { onLogout(); sairDoApp(); }} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"DESLOGAR"}</button>
                   <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"com"}</b>{" CRM/SENHA"}</p>
                 </div>
                 <div className="text-center">
-                  <button onClick={() => { try { window.location.replace('https://bariatrico.net') } catch (e) { if (onVoltar) onVoltar() } }} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR"}</button>
+                  <button onClick={sairDoApp} className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider hover:text-red-700">{"SAIR"}</button>
                   <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"sem"}</b>{" CRM/SENHA"}</p>
                 </div>
               </div>
@@ -2680,10 +2681,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       {showFelicitacoes && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden my-4" style={{ position: 'relative' }}>
-            {/* (a) Fechar (canto sup. direito): sai DESLOGADO para a landing do bariatrico.net. */}
+            {/* (a) Fechar (canto sup. direito): sai DESLOGADO do app (sairDoApp fecha o
+                PWA ou navega pro bariatrico.net — nunca a aba sobreposta travada). */}
             <button onClick={() => {
                 try { ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill'].forEach(k => localStorage.removeItem(k)); } catch (e) {}
-                window.location.href = 'https://bariatrico.net';
+                sairDoApp();
               }}
               aria-label="Fechar"
               style={{ position: 'absolute', top: 6, right: 9, zIndex: 20, background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', lineHeight: 1, color: '#9ca3af' }}>
