@@ -2075,9 +2075,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 </span>
               </div>
             )}
+            {/* "Trocar médico" (não "Sair"): desloga de verdade — nome diferente do
+                SAIR da bifurcação, que mantém o login. */}
             <button onClick={() => setShowLogoutConfirm(true)}
               className="bg-gray-200 hover:bg-gray-300 text-red-800 rounded-lg px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors">
-              Sair
+              {"Trocar médico"}
             </button>
             <button onClick={() => setShowSobre(true)}
               className="bg-gray-200 hover:bg-gray-300 text-red-800 rounded-lg px-3 py-1 text-xs font-bold whitespace-nowrap transition-colors">
@@ -2095,7 +2097,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <p className="text-center text-sm text-gray-500">{"Voc\u00ea ser\u00e1 desconectado e voltar\u00e1 \u00e0 tela de login."}</p>
             <button onClick={() => { setShowLogoutConfirm(false); onLogout(); }}
               className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
-              Sim, sair
+              {"Sim, trocar"}
             </button>
             <button onClick={() => setShowLogoutConfirm(false)}
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm py-2 rounded-xl transition-colors">
