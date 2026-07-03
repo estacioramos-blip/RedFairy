@@ -130,7 +130,7 @@ export default function App() {
       try {
         ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
          'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
-         'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
+         'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix','indicador_cpf',
          'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo',
          'rf_medico_encaminhador','rf_abrir_contato','caixa_token',
          'rf_reentry_cpf','rf_reentry_token','oba_aberto'].forEach(k => localStorage.removeItem(k))
@@ -350,7 +350,7 @@ export default function App() {
     try {
       ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
        'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
-       'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
+       'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix','indicador_cpf',
        'rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo','oba_aberto'].forEach(k => localStorage.removeItem(k))
       // Rascunhos do OBA do MÉDICO: não sobrevivem ao "deslogar na landing" (PC compartilhado).
       Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_med_') === 0).forEach(k => localStorage.removeItem(k))

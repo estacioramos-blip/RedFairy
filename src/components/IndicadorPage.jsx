@@ -41,7 +41,10 @@ function formatarCPF(v) {
 }
 
 export default function IndicadorPage({ onVoltar }) {
-  const [etapa, setEtapa] = useState('cpf')   // cpf | senha | painel
+  // 'restaurando' = sessão salva sendo validada (ícone PWA reabrindo já logado)
+  const [etapa, setEtapa] = useState(() => {
+    try { return (localStorage.getItem('indicador_token') || localStorage.getItem('indicador_cpf')) ? 'restaurando' : 'cpf' } catch (e) { return 'cpf' }
+  })   // restaurando | cpf | senha | painel
   const [cpf, setCpf] = useState('')
   const [senha, setSenha] = useState('')
   const [showSenha, setShowSenha] = useState(false)
@@ -84,13 +87,39 @@ export default function IndicadorPage({ onVoltar }) {
   const senhaOk = senha.length >= 6
 
   useEffect(() => {
-    // (logout efemero) NAO restaura a sessao do indicador no refresh: limpa qualquer
-    // residuo e comeca no CPF. Assim o indicador desloga ao Voltar/fechar e tambem no
-    // Ctrl-Shift-R (antes a sessao ficava grudada no localStorage e nunca deslogava).
-    try {
-      ['indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix']
-        .forEach(k => localStorage.removeItem(k))
-    } catch (e) {}
+    // Restaura a sessão salva — o ícone PWA (start_url ?modo=indicador) deve abrir
+    // já logado. Token ainda válido → painel direto; token vencido mas CPF lembrado
+    // → só a senha (CPF já carregado). Deslogar de verdade é pelo X/Voltar (sair()).
+    let vivo = true
+    ;(async () => {
+      let cpfSalvo = '', cod = '', tok = ''
+      try {
+        cpfSalvo = localStorage.getItem('indicador_cpf') || ''
+        cod = localStorage.getItem('indicador_codigo') || ''
+        tok = localStorage.getItem('indicador_token') || ''
+      } catch (e) {}
+      if (cod && tok && cpfSalvo) {
+        try {
+          // Valida o token no banco (mesma RPC do painel) antes de considerar logado.
+          const { data } = await supabase.rpc('listar_creditos_indicador', { p_codigo: cod, p_token: tok })
+          if (!vivo) return
+          if (data && data.ok) {
+            setCpf(formatarCPF(cpfSalvo))
+            setCodigo(cod); setToken(tok); setDados(data)
+            try {
+              setNome(localStorage.getItem('indicador_nome') || '')
+              setPixVal(localStorage.getItem('indicador_pix') || '')
+            } catch (e) {}
+            setEtapa('painel')
+            return
+          }
+        } catch (e) {}
+      }
+      if (!vivo) return
+      if (cpfSalvo && validarCPF(cpfSalvo)) { setCpf(formatarCPF(cpfSalvo)); setModo('login'); setEtapa('senha') }
+      else setEtapa('cpf')
+    })()
+    return () => { vivo = false }
   }, [])
 
   // ?ind= (param PRÓPRIO do indicador — ?ref é do médico) + ?oba=1: o bariátrico
@@ -116,6 +145,7 @@ export default function IndicadorPage({ onVoltar }) {
 
   function salvarSessao(data) {
     try {
+      localStorage.setItem('indicador_cpf', cpfDigits)
       localStorage.setItem('indicador_id', data.id || '')
       localStorage.setItem('indicador_codigo', data.codigo || '')
       localStorage.setItem('indicador_nome', data.nome || '')
@@ -277,6 +307,10 @@ export default function IndicadorPage({ onVoltar }) {
       {VoltarBtn}
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
         {Cabecalho}
+
+        {etapa === 'restaurando' && (
+          <p className="text-center text-xs font-bold text-gray-400 tracking-widest animate-pulse py-4">{"ENTRANDO..."}</p>
+        )}
 
         {etapa === 'cpf' && (
           <>
