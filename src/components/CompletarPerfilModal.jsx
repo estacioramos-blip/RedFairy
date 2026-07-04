@@ -33,7 +33,10 @@ const DDDS_VALIDOS = new Set([
 ])
 
 function formatarCelular(v) {
-  const d = (v || '').replace(/\D/g, '').slice(0, 11)
+  let d = (v || '').replace(/\D/g, '')
+  // Autofill/colagem costuma trazer o +55 na frente (12-13 dígitos): remove o código do país.
+  if ((d.length === 12 || d.length === 13) && d.startsWith('55')) d = d.slice(2)
+  d = d.slice(0, 11)
   if (d.length === 0) return ''
   if (d.length <= 2) return `(${d}`
   if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
@@ -60,6 +63,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const celTimer = useRef(null)
   const emailTimer = useRef(null)
   const confirmarRef = useRef(null)
+  const ultimaTecla = useRef(0)   // p/ o vigia anti-autofill não brigar com a digitação
 
   useEffect(() => () => {
     if (nomeTimer.current) clearTimeout(nomeTimer.current)
@@ -70,6 +74,32 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   useEffect(() => {
     const t = setTimeout(() => { setSplashPerfil(false); nomeRef.current?.focus() }, 1200)
     return () => clearTimeout(t)
+  }, [])
+
+  // ANTI-AUTOFILL (Chrome desktop): o autofill escreve nos campos SEM disparar os
+  // eventos do React — a tela mostra tudo preenchido, mas o estado fica vazio e o
+  // botão CONFIRMO nunca aparece. Este vigia compara o valor visível (DOM) com o
+  // estado e adota o visível quando divergirem. O campo em foco só é pulado se
+  // houve digitação real no último 1,2s (autofill pode preencher até o campo
+  // focado, sem tecla). Transformações idempotentes = sem loop de re-render.
+  useEffect(() => {
+    const t = setInterval(() => {
+      const foco = document.activeElement
+      const digitando = Date.now() - ultimaTecla.current < 1200
+      if (nomeRef.current && !(digitando && foco === nomeRef.current)) {
+        const v = String(nomeRef.current.value || '').toUpperCase().replace(/[0-9]/g, '')
+        setNome(prev => (prev === v ? prev : v))
+      }
+      if (celRef.current && !(digitando && foco === celRef.current)) {
+        const v = formatarCelular(celRef.current.value)
+        setCelular(prev => (prev === v ? prev : v))
+      }
+      if (emailRef.current && !(digitando && foco === emailRef.current)) {
+        const v = String(emailRef.current.value || '').toLowerCase()
+        setEmail(prev => (prev === v ? prev : v))
+      }
+    }, 700)
+    return () => clearInterval(t)
   }, [])
 
   // Imagem dinâmica por sexo: homem → "ELE DIGITA"; mulher (ou desconhecido,
@@ -88,6 +118,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const tudoOk = nomeOk && celOk && (!(email || '').trim() || emailOk)   // e-mail OPCIONAL (só p/ PIX)
 
   function onNomeChange(v) {
+    ultimaTecla.current = Date.now()
     setNome(v.toUpperCase().replace(/[0-9]/g, '')); setErro('')
     if (nomeTimer.current) clearTimeout(nomeTimer.current)
     nomeTimer.current = setTimeout(() => {
@@ -96,6 +127,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   }
 
   function onCelChange(v) {
+    ultimaTecla.current = Date.now()
     const f = formatarCelular(v); setCelular(f); setErro('')
     const dig = f.replace(/\D/g, '')
     if (celTimer.current) clearTimeout(celTimer.current)
@@ -113,6 +145,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   function onEmailChange(v) {
     // (sem salto de cursor) o foco fica no e-mail; o usuário toca em CONFIRMO quando quiser.
     // O salto automático roubava o foco e atrapalhava a digitação (ex.: a "@").
+    ultimaTecla.current = Date.now()
     setEmail(v.toLowerCase()); setErro('')
   }
 
@@ -186,7 +219,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
             <div>
               <label className={labelCls}>{"Nome completo"}</label>
               <input
-                ref={nomeRef} type="text" value={nome}
+                ref={nomeRef} type="text" value={nome} autoComplete="name"
                 onChange={e => onNomeChange(e.target.value)}
                 onFocus={() => setCampoAtivo('nome')}
                 className={fieldCls('nome')} style={{ textTransform: 'uppercase' }}
@@ -196,7 +229,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
             <div>
               <label className={labelCls} style={estiloLabel}>{"Celular (WhatsApp)"}</label>
               <input
-                ref={celRef} type="text" value={celular}
+                ref={celRef} type="text" value={celular} autoComplete="tel"
                 onChange={e => onCelChange(e.target.value)}
                 onFocus={() => setCampoAtivo('celular')}
                 className={fieldCls('celular')} inputMode="numeric" maxLength={16}
@@ -210,7 +243,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
               <label className={labelCls} style={estiloLabel}>{"E-mail"}</label>
               <p className="text-xs text-gray-500 mb-1">{"Opcional — cadastre só se o seu PIX for o seu e-mail."}</p>
               <input
-                ref={emailRef} type="email" value={email} inputMode="email"
+                ref={emailRef} type="email" value={email} inputMode="email" autoComplete="email"
                 onChange={e => onEmailChange(e.target.value)}
                 onFocus={() => setCampoAtivo('email')}
                 className={fieldCls('email')} style={{ textTransform: 'lowercase' }}
@@ -232,6 +265,16 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
           {/* Rodapé: empurrado para baixo (área branca, abaixo da faixa da imagem).
               Botão PLAY à direita; "← Voltar" discreto e centralizado como única saída. */}
           <div style={{ marginTop: 'auto' }} className="pt-6 flex flex-col gap-3">
+            {!tudoOk && !splashPerfil && (
+              <p className="text-[11px] font-medium text-right leading-tight" style={{ color: '#ea580c' }}>
+                {"Para liberar o CONFIRMO: "}
+                {[
+                  !nomeOk && 'nome completo',
+                  !celOk && 'celular com DDD',
+                  !!(email || '').trim() && !emailOk && 'e-mail válido (ou apague)',
+                ].filter(Boolean).join(' + ')}
+              </p>
+            )}
             {tudoOk && (
               <div className="flex flex-col items-end">
                 <PlayButton
