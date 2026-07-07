@@ -2209,19 +2209,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>
             Data da cirurgia <span style={{ color:'#DC2626' }}>*</span>
-            <span style={{ color:'#9CA3AF', fontWeight:400, marginLeft:'0.4rem' }}>{"(ANO obrigat\u00f3rio \u2014 DIA e M\u00caS opcionais)"}</span>
+            <span style={{ color:'#9CA3AF', fontWeight:400, marginLeft:'0.4rem' }}>{"(ANO obrigat\u00f3rio \u2014 M\u00caS importante \u2014 DIA opcional)"}</span>
           </label>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1.5fr', gap:'0.5rem', marginBottom:'0.4rem' }}>
             <div>
-              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>DIA (opcional)</label>
+              <label style={{ fontSize:'0.7rem', color:'#16A34A', fontWeight:600 }}>DIA (opcional)</label>
               <input ref={refDia} style={inpA} onWheel={noWheel} type="number" min="1" max="31" placeholder="DD" value={form.cirurgia_dia} onChange={e => { sf('cirurgia_dia', e.target.value); saltoPorDigitos(e.target.value, refMes, 2) }} onFocus={() => agendarSalto(null)} />
             </div>
             <div>
-              <label style={{ fontSize:'0.7rem', color:'#9CA3AF', fontWeight:600 }}>{"M\u00caS (opcional)"}</label>
+              <label style={{ fontSize:'0.7rem', color:'#EA580C', fontWeight:600 }}>{"M\u00caS (importante)"}</label>
               <input ref={refMes} style={inpA} onWheel={noWheel} type="number" min="1" max="12" placeholder="MM" value={form.cirurgia_mes} onChange={e => { sf('cirurgia_mes', e.target.value); saltoPorDigitos(e.target.value, refAno, 2) }} onFocus={() => agendarSalto(null)} />
             </div>
             <div>
-              <label style={{ fontSize:'0.7rem', color:'#DC2626', fontWeight:700 }}>{"ANO \u2731"}</label>
+              <label style={{ fontSize:'0.7rem', color:'#DC2626', fontWeight:700 }}>{"ANO (obrigat\u00f3rio)"}</label>
               <input ref={refAno} style={{ ...inpA, borderColor: form.cirurgia_ano ? '#FACC15' : '#FCA5A5' }} onWheel={noWheel} type="number" min="2000" max="2030" placeholder="AAAA" value={form.cirurgia_ano} onChange={e => { sf('cirurgia_ano', e.target.value); agendarSalto(null) }} onFocus={() => agendarSalto(null)} />
               {/* ANO: após 4 dígitos o cursor NÃO salta (campos seguintes vêm por marcação). */}
             </div>
