@@ -69,6 +69,7 @@ const ALTO     = 'alto'
 // ── Tipo de cirurgia e seu grau de disabsorção ─────────────────────────────
 const DISAB = {
   'Y DE ROUX':              { grau: 3, nomeCurto: 'Y de Roux'        },
+  'MINI-BYPASS (OAGB)':     { grau: 3, nomeCurto: 'Mini-Bypass (OAGB)' },
   'FOBI-CAPELLA':           { grau: 3, nomeCurto: 'Fobi-Capella'     },
   'SLEEVE':                 { grau: 2, nomeCurto: 'Sleeve'           },
   'BANDA GÁSTRICA AJUSTÁVEL':{ grau: 1, nomeCurto: 'Banda Gástrica'  },
@@ -82,6 +83,9 @@ function normalizarCirurgia(tipo) {
   if (!tipo) return 'NÃO SEI'
   const t = tipo.toUpperCase()
   if (t.includes('FOBI') || t.includes('CAPELLA')) return 'FOBI-CAPELLA'
+  // MINI-BYPASS/OAGB ANTES de ROUX/BYPASS: seu rótulo contém "BYPASS" e seria
+  // capturado como Y de Roux; é uma cirurgia própria (mesmo grau 3 de disabsorção).
+  if (t.includes('MINI') || t.includes('OAGB')) return 'MINI-BYPASS (OAGB)'
   if (t.includes('ROUX') || t.includes('BYPASS')) return 'Y DE ROUX'
   if (t.includes('SLEEVE') || t.includes('GASTRECTOMIA') || t.includes('VERTICAL')) return 'SLEEVE'
   if (t.includes('BANDA')) return 'BANDA GÁSTRICA AJUSTÁVEL'
