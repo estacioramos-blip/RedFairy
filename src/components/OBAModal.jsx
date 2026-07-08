@@ -170,6 +170,23 @@ const HABITOS_SOCIAIS_OPS = [
   'TENHO UM HOBBY',
 ]
 
+// Infecções crônicas (checkbox) — algumas abrem sub-opções ao serem marcadas.
+const INFECCOES_CRONICAS_OPS = [
+  'HEPATITE B',
+  'HEPATITE C',
+  'HIV',
+  'HERPES SIMPLES',
+  'HERPES-ZÓSTER',
+  'DOENÇA DE LYME (BORRELIOSE)',
+  'HPV',
+  'PAPILOMATOSE DO LARINGE',
+  'MOLUSCO CONTAGIOSO',
+  'EPSTEIN-BARR',
+  'HTLV I/II',
+]
+const HERPES_ZOSTER_OPS = ['MAIS DE UM EPISÓDIO', 'USEI ACICLOVIR ORAL', 'TOMEI VACINA']
+const HPV_OPS = ['DOENÇA ATIVA', 'TOMEI VACINA | ESTOU MELHOR', 'RESOLVIDO']
+
 const COMPULSOES = [
   "DOCES", "COMIDA", "GELO", "\u00c1LCOOL", "JOGO", "COMPRAS", "TRABALHO", "CIGARRO / TABACO", "CANNABIS", "OUTRA"
 ]
@@ -540,6 +557,9 @@ const LIMITES_OBA = {
   'cea': { min:0, max:100 }
 }
 
+// Sub-bloco das infecções crônicas (aparece ao marcar a infecção).
+const SUB_INFEC_BOX = { marginTop:'0.4rem', marginBottom:'0.5rem', padding:'0.5rem 0.7rem', background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:8 }
+const SUB_INFEC_TIT = { fontSize:'0.72rem', fontWeight:800, color:'#334155', margin:'0 0 0.4rem', textTransform:'uppercase', letterSpacing:'0.3px' }
 const inp = { width:'100%', border:'1.5px solid #E5E7EB', borderRadius:8, padding:'0.65rem 0.9rem', fontSize:'0.92rem', outline:'none', fontFamily:'inherit', boxSizing:'border-box' }
 // Variante AMARELA (campos do fluxo seamless).
 const inpA = { ...inp, background:'#FEFCE8', border:'1.5px solid #FACC15' }
@@ -655,6 +675,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     compulsoes: [], medicamentos: [], emagrecedores: {},
     // Tipos de canabinoide em uso (sub-bloco do fibromiálgico; uso de negócio).
     cannabinoides_tipos: [],
+    // Infecções crônicas (checkbox) + sub-estados por infecção.
+    infeccoes_cronicas: [],
+    hepb_status: '', hepc_status: '', hiv_tratamento: false,
+    herpes_simples_aciclovir: false, herpes_zoster: [],
+    borreliose_status: '', hpv_estado: [], ebv_status: '', htlv_ativa: false,
    }
    // Retomada de progresso (localStorage) tem prioridade.
    if (salvo?.form) return { ...def, ...salvo.form }
@@ -1126,6 +1151,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       meta_kg:            form.meta_kg ? parseFloat(form.meta_kg) : null,
       projetos_vida:      form.projetos_vida,
       habitos_sociais:    form.habitos_sociais,
+      infeccoes_cronicas: form.infeccoes_cronicas,
       status_intestinal:  form.status_intestinal || null,
       status_fibromialgia: form.status_fibromialgia,
       calprotectina: form.calprotectina === '' ? null : Number(form.calprotectina),
@@ -2623,6 +2649,82 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 </>
               )}
             </>
+          )}
+
+          <SectionTitle>{"Infec\u00e7\u00f5es Cr\u00f4nicas"}</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {INFECCOES_CRONICAS_OPS.map(op => (
+              <CheckRow key={op} label={op} checked={form.infeccoes_cronicas.includes(op)} onClick={() => sf('infeccoes_cronicas', tog(form.infeccoes_cronicas, op))} />
+            ))}
+          </div>
+          {form.infeccoes_cronicas.includes('HEPATITE B') && (
+            <div style={SUB_INFEC_BOX}>
+              <p style={SUB_INFEC_TIT}>{"Hepatite B"}</p>
+              <RadioGroup options={['EM TRATAMENTO', 'RESOLVIDO']} value={form.hepb_status} cols={2} onChange={v => sf('hepb_status', form.hepb_status === v ? '' : v)} />
+            </div>
+          )}
+          {form.infeccoes_cronicas.includes('HEPATITE C') && (
+            <div style={SUB_INFEC_BOX}>
+              <p style={SUB_INFEC_TIT}>{"Hepatite C"}</p>
+              <RadioGroup options={['EM TRATAMENTO', 'RESOLVIDO']} value={form.hepc_status} cols={2} onChange={v => sf('hepc_status', form.hepc_status === v ? '' : v)} />
+            </div>
+          )}
+          {form.infeccoes_cronicas.includes('HIV') && (
+            <div style={SUB_INFEC_BOX}>
+              <p style={SUB_INFEC_TIT}>{"HIV"}</p>
+              {/* Marcar "em tratamento" aqui já marca hivTratamento (Medicamentos que
+                  Afetam o Eritron), que o motor lê p/ macrocitose. Add-only: desmarcar
+                  aqui não desmarca lá (o checkbox de lá segue independente). */}
+              <CheckRow label={"EM TRATAMENTO"} checked={form.hiv_tratamento}
+                onClick={() => setForm(p => {
+                  const novo = !p.hiv_tratamento
+                  return { ...p, hiv_tratamento: novo, ...(novo ? { hivTratamento: true } : {}) }
+                })} />
+            </div>
+          )}
+          {form.infeccoes_cronicas.includes('HERPES SIMPLES') && (
+            <div style={SUB_INFEC_BOX}>
+              <p style={SUB_INFEC_TIT}>{"Herpes Simples"}</p>
+              <CheckRow label={"USO ACICLOVIR ORAL"} checked={form.herpes_simples_aciclovir} onClick={() => sf('herpes_simples_aciclovir', !form.herpes_simples_aciclovir)} />
+            </div>
+          )}
+          {form.infeccoes_cronicas.includes('HERPES-Z\u00d3STER') && (
+            <div style={SUB_INFEC_BOX}>
+              <p style={SUB_INFEC_TIT}>{"Herpes-Z\u00f3ster"}</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+                {HERPES_ZOSTER_OPS.map(op => (
+                  <CheckRow key={op} label={op} checked={form.herpes_zoster.includes(op)} onClick={() => sf('herpes_zoster', tog(form.herpes_zoster, op))} />
+                ))}
+              </div>
+            </div>
+          )}
+          {form.infeccoes_cronicas.includes('DOEN\u00c7A DE LYME (BORRELIOSE)') && (
+            <div style={SUB_INFEC_BOX}>
+              <p style={SUB_INFEC_TIT}>{"Doen\u00e7a de Lyme (Borreliose)"}</p>
+              <RadioGroup options={['CR\u00d4NICA', 'RESOLVIDA']} value={form.borreliose_status} cols={2} onChange={v => sf('borreliose_status', form.borreliose_status === v ? '' : v)} />
+            </div>
+          )}
+          {form.infeccoes_cronicas.includes('HPV') && (
+            <div style={SUB_INFEC_BOX}>
+              <p style={SUB_INFEC_TIT}>{"HPV"}</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+                {HPV_OPS.map(op => (
+                  <CheckRow key={op} label={op} checked={form.hpv_estado.includes(op)} onClick={() => sf('hpv_estado', tog(form.hpv_estado, op))} />
+                ))}
+              </div>
+            </div>
+          )}
+          {form.infeccoes_cronicas.includes('EPSTEIN-BARR') && (
+            <div style={SUB_INFEC_BOX}>
+              <p style={SUB_INFEC_TIT}>{"Epstein-Barr"}</p>
+              <RadioGroup options={['CR\u00d4NICA', 'RESOLVIDA']} value={form.ebv_status} cols={2} onChange={v => sf('ebv_status', form.ebv_status === v ? '' : v)} />
+            </div>
+          )}
+          {form.infeccoes_cronicas.includes('HTLV I/II') && (
+            <div style={SUB_INFEC_BOX}>
+              <p style={SUB_INFEC_TIT}>{"HTLV I/II"}</p>
+              <CheckRow label={"DOEN\u00c7A ATIVA"} checked={form.htlv_ativa} onClick={() => sf('htlv_ativa', !form.htlv_ativa)} />
+            </div>
           )}
 
           <SectionTitle>{"Acompanhamento M\u00e9dico"}</SectionTitle>
