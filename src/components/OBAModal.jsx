@@ -170,6 +170,8 @@ const STATUS_INTESTINAL_OPS = [
   "INTESTINO IRRIT\u00c1VEL (DIARREIA FREQUENTE)",
 ]
 
+const INTOLERANCIAS_OPS = ['LACTOSE', 'GL\u00daTEN (N\u00c3O-CEL\u00cdACA)', 'CASE\u00cdNA', 'LEITE | DERIVADOS', 'CARNE (ALFA-GAL)']
+
 const STATUS_FIBROMIALGIA_OPS = [
   "TENHO FIBROMIALGIA DIAGNOSTICADA",
   "OBSTIPA\u00c7\u00c3O CR\u00d4NICA",
@@ -589,6 +591,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     status_cardiovascular: [], ecg: '', ecg_marcapasso: false,
     ecocardiograma: '', fracao_ejecao: '', angiotomografia_coronariana: false, score_calcio: '',
     status_dental: '', status_osseo: '', status_articular: [],
+    // Detalhe livre de dores (aparece só se marcou dor óssea/articular nas queixas).
+    dores_osseas_detalhe: '',
+    // Intolerâncias alimentares (múltipla escolha — seção após o Status Intestinal).
+    intolerancias_alimentares: [],
     // FAN (Fator Antinuclear / anticorpo anti-célula): '' | 'REAGENTE' | 'NÃO REAGENTE';
     // se REAGENTE, fan_titulo guarda o título ('1/80'…'1/640+'). Crítica no engine: depois.
     fan: '', fan_titulo: '',
@@ -619,7 +625,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
      if (snap && typeof snap === 'object') {
        // As QUEIXAS são perguntadas DE NOVO a cada ciclo (não pré-preenche): o valor
        // anterior fica no relatorio_oba da linha anterior, p/ a comparação de evolução.
-       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [] }
+       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '' }
      }
      return { ...def, ...imutaveis }
    }
@@ -932,6 +938,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [faseQueixa])
+
+  // Marcou dor óssea/articular como queixa (principal ou secundária)? → abre um campo
+  // livre no Status Ósseo|Articular p/ o paciente detalhar. Cobre "DORES NOS OSSOS" e
+  // "DORES NOS OSSOS OU ARTICULAÇÕES" (ambos começam igual).
+  const marcouDoresOsseas = [form.queixa_principal, ...(form.queixas_secundarias || [])]
+    .some(q => String(q || '').indexOf('DORES NOS OSSOS') === 0)
 
   const pesoAntes = parseFloat(form.peso_antes)
   const pesoMin   = parseFloat(form.peso_minimo_pos)
@@ -2783,6 +2795,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           ))}
 
           <SectionTitle>{"Status \u00d3sseo | Articular"}</SectionTitle>
+          {marcouDoresOsseas && (
+            <div style={{ marginBottom:'0.7rem' }}>
+              <p style={{ fontSize:'0.75rem', fontWeight:700, color:'#7B1E1E', margin:'0 0 0.35rem', lineHeight:1.4 }}>
+                {"Voc\u00ea informou dores, se sabe mais sobre isso informe aqui:"}
+              </p>
+              <input style={inp} type="text" placeholder={"Ex.: dor no quadril ao caminhar, piora \u00e0 noite\u2026"} value={form.dores_osseas_detalhe} onChange={e => sf('dores_osseas_detalhe', e.target.value)} />
+            </div>
+          )}
           <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:'0.4rem' }}>
             {["DENSITOMETRIA \u00d3SSEA NORMAL", 'OSTEOPENIA', 'OSTEOPOROSE', "N\u00c3O FIZ DENSITOMETRIA"].map(op => (
               <div key={op} onClick={() => sf('status_osseo', form.status_osseo === op ? '' : op)} style={{ display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.5rem 0.7rem', borderRadius:8, border:`1.5px solid ${form.status_osseo === op ? '#DC2626' : '#E5E7EB'}`, background: form.status_osseo === op ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', fontSize:'0.72rem', fontWeight: form.status_osseo === op ? 700 : 500, color: form.status_osseo === op ? '#7B1E1E' : '#374151' }}>
@@ -2936,6 +2956,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               </div>
             </div>
           )}
+
+          <SectionTitle>{"Intoler\u00e2ncias Alimentares"}</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {INTOLERANCIAS_OPS.map(op => (
+              <CheckRow key={op} label={op} checked={form.intolerancias_alimentares.includes(op)} onClick={() => sf('intolerancias_alimentares', tog(form.intolerancias_alimentares, op))} />
+            ))}
+          </div>
 
           <SectionTitle>{"Status Fibromi\u00e1lgico"}</SectionTitle>
           <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.5rem' }}>{"Marque os sintomas que apresenta com frequ\u00eancia:"}</p>
