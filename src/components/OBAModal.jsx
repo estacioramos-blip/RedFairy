@@ -186,6 +186,68 @@ const STATUS_FIBROMIALGIA_OPS = [
   "EM USO DE GABAPENTINA", "EM USO DE PREGABALINA",
 ]
 
+// QUEIXA PRINCIPAL + 3 SECUNDÁRIAS — queixas LEVES (não-emergenciais) mais comuns
+// por FASE pós-cirúrgica. NÃO entram aqui quadros de emergência (obstrução, sangramento
+// etc.), que exigem pronto atendimento e não uma anamnese de acompanhamento. As queixas
+// são registradas (no form_snapshot dentro de relatorio_oba) p/ acompanhar a evolução:
+// em avaliações futuras o OBA compara se a orientação/teleconsulta fez a queixa
+// melhorar/desaparecer. Fases: precoce (≤6m) · intermediária (>6m a 36m) · tardia (>36m).
+const QUEIXAS_POR_FASE = {
+  precoce: [
+    'NÁUSEAS OU VÔMITOS FREQUENTES',
+    'DIFICULDADE PARA ENGOLIR',
+    'SACIEDADE PRECOCE / EMPACHAMENTO',
+    'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
+    'AZIA / REFLUXO',
+    'DOR NA BOCA DO ESTÔMAGO',
+    'PRISÃO DE VENTRE',
+    'CANSAÇO / FADIGA',
+    'QUEDA DE CABELO',
+    'DIFICULDADE DE BEBER LÍQUIDOS',
+  ],
+  intermediaria: [
+    'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
+    'TREMOR / SUOR / TONTURA APÓS COMER',
+    'AZIA / REFLUXO PERSISTENTE',
+    'DIARREIA',
+    'PRISÃO DE VENTRE',
+    'CANSAÇO / FADIGA',
+    'QUEDA DE CABELO',
+    'FORMIGAMENTO / DORMÊNCIA',
+    'DORES NOS OSSOS OU ARTICULAÇÕES',
+    'CÓLICAS / DOR ABDOMINAL RECORRENTE',
+  ],
+  tardia: [
+    'CANSAÇO / FADIGA',
+    'QUEDA DE CABELO',
+    'FORMIGAMENTO / DORMÊNCIA',
+    'DORES NOS OSSOS',
+    'DIARREIA',
+    'AZIA / REFLUXO',
+    'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
+    'REGANHO DE PESO',
+    'UNHAS FRACAS / PELE SECA',
+    'PROBLEMAS DE MEMÓRIA OU CONCENTRAÇÃO',
+  ],
+}
+
+// Texto de contexto exibido no topo da seção, conforme a fase pós-operatória.
+const FASE_QUEIXA_LABEL = {
+  precoce: 'Fase inicial (até 6 meses): predominam sintomas digestivos da adaptação.',
+  intermediaria: 'Fase intermediária (6 meses a 3 anos): atenção a dumping, hipoglicemia e sinais de carência.',
+  tardia: 'Fase tardia (mais de 3 anos): atenção a carências crônicas, ossos e reganho de peso.',
+}
+
+// Estilo de linha selecionável (mesmo idioma visual do CheckRow/RadioGroup).
+function queixaRowStyle(active) {
+  return {
+    display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem',
+    borderRadius:8, border:`1.5px solid ${active ? '#DC2626' : '#E5E7EB'}`,
+    background: active ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem',
+    fontSize:'0.72rem', fontWeight: active ? 700 : 500, color: active ? '#7B1E1E' : '#374151',
+  }
+}
+
 // BUG #2 corrigido: removidos os duplicados antigos (hdl, ldl, vldl,
 // lipoproteina_a, apolipoproteina_b, colesterol_total v1, triglicerides v1)
 // Mantida a versao 2 alinhada com buildModLipidico no obaEngine.js
@@ -472,6 +534,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     cirurgia_dia: '', cirurgia_mes: '', cirurgia_ano: '',
     peso_antes: '', peso_minimo_pos: '', peso_atual: '',
     altura: '',
+    // Queixa principal (string) + até 3 secundárias (array) — por fase pós-op.
+    queixa_principal: '', queixas_secundarias: [],
     ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
     status_intestinal: '', status_fibromialgia: [], calprotectina: '', indican: '',
@@ -522,7 +586,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
      // ATUAL (medição nova). Sem snapshot (baselines antigos): só os imutáveis.
      const snap = A.relatorio_oba?.form_snapshot
      if (snap && typeof snap === 'object') {
-       return { ...def, ...snap, ...imutaveis, peso_atual: '' }
+       // As QUEIXAS são perguntadas DE NOVO a cada ciclo (não pré-preenche): o valor
+       // anterior fica no relatorio_oba da linha anterior, p/ a comparação de evolução.
+       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [] }
      }
      return { ...def, ...imutaveis }
    }
@@ -818,6 +884,23 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     return meses > 0 ? meses : 0
   }
   const mesesPos = calcMesesPos()
+  // Fase pós-operatória p/ a seção QUEIXA PRINCIPAL (dinâmica pelo tempo de cirurgia).
+  const faseQueixa = mesesPos == null ? null : mesesPos <= 6 ? 'precoce' : mesesPos <= 36 ? 'intermediaria' : 'tardia'
+  const queixasFase = faseQueixa ? QUEIXAS_POR_FASE[faseQueixa] : []
+  // Se o paciente corrigir o ANO e cair em OUTRA fase, higieniza as queixas que não
+  // existem na nova lista — senão ficariam "presas" (invisíveis, mas ocupando o teto
+  // de 3 e indo p/ o relatório misturadas). Só age quando a fase é conhecida.
+  useEffect(() => {
+    if (!faseQueixa) return
+    const validas = QUEIXAS_POR_FASE[faseQueixa]
+    setForm(p => {
+      const secLimpa = (p.queixas_secundarias || []).filter(q => validas.includes(q))
+      const prinLimpa = validas.includes(p.queixa_principal) ? p.queixa_principal : ''
+      if (secLimpa.length === (p.queixas_secundarias || []).length && prinLimpa === p.queixa_principal) return p
+      return { ...p, queixa_principal: prinLimpa, queixas_secundarias: secLimpa }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [faseQueixa])
 
   const pesoAntes = parseFloat(form.peso_antes)
   const pesoMin   = parseFloat(form.peso_minimo_pos)
@@ -831,6 +914,24 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const alturaM  = (!isNaN(alturaCm) && alturaCm > 0) ? alturaCm / 100 : null
   const imcAntes = (alturaM && !isNaN(pesoAntes)) ? pesoAntes / (alturaM * alturaM) : null
   const imcAtual = (alturaM && !isNaN(pesoAtual)) ? pesoAtual / (alturaM * alturaM) : null
+
+  // ── QUEIXAS (principal + até 3 secundárias) ───────────────────────────────
+  function escolherPrincipal(q) {
+    // Marca a principal e a remove das secundárias (se estava lá, evita duplicar).
+    setForm(p => ({ ...p, queixa_principal: q, queixas_secundarias: (p.queixas_secundarias || []).filter(x => x !== q) }))
+  }
+  function trocarPrincipal() {
+    // Volta a escolher a principal (mantém as secundárias já marcadas).
+    setForm(p => ({ ...p, queixa_principal: '' }))
+  }
+  function toggleQueixaSec(q) {
+    setForm(p => {
+      const cur = p.queixas_secundarias || []
+      if (cur.includes(q)) return { ...p, queixas_secundarias: cur.filter(x => x !== q) }
+      if (cur.length >= 3) return p   // teto de 3
+      return { ...p, queixas_secundarias: [...cur, q] }
+    })
+  }
 
   function toggleAtividade(val) {
     if (val === "SEDENT\u00c1RIO") sf('atividade_fisica', form.atividade_fisica.includes("SEDENT\u00c1RIO") ? [] : ["SEDENT\u00c1RIO"])
@@ -934,7 +1035,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
   async function salvarAnamnese() {
     setErro('')
-    if (!form.cirurgia_ano || !calcMesesPos()) {
+    if (!form.cirurgia_ano || calcMesesPos() === null) {
       setErro('Informe pelo menos o ANO da cirurgia.'); return
     }
     if (!form.tipo_cirurgia) {
@@ -2315,6 +2416,63 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <div style={{ marginTop:'0.8rem' }}>
             <CheckRow label={"FIZ PLASMA DE ARG\u00d4NIO"} checked={form.fez_plasma_argonio} onClick={() => sf('fez_plasma_argonio', !form.fez_plasma_argonio)} />
           </div>
+
+          {/* QUEIXA PRINCIPAL + SECUND\u00c1RIAS \u2014 din\u00e2mica pela FASE p\u00f3s-operat\u00f3ria (tempo de
+              cirurgia). Escolhe-se 1 principal; ao escolher, a lista some e surge a de
+              secund\u00e1rias (at\u00e9 3). Registradas p/ comparar a evolu\u00e7\u00e3o em avalia\u00e7\u00f5es futuras. */}
+          <SectionTitle>{"Queixa Principal"}</SectionTitle>
+          {!faseQueixa ? (
+            <div style={{ background:'#FEF9EC', border:'1px solid #FDE68A', borderRadius:8, padding:'0.7rem 0.9rem' }}>
+              <p style={{ fontSize:'0.78rem', color:'#92400E', fontWeight:600, margin:0, lineHeight:1.5 }}>
+                {"Informe o ANO da cirurgia (no in\u00edcio) para vermos as queixas mais comuns da sua fase p\u00f3s-operat\u00f3ria."}
+              </p>
+            </div>
+          ) : (
+            <>
+              <p style={{ fontSize:'0.72rem', color:'#6B7280', marginBottom:'0.6rem', lineHeight:1.5 }}>{FASE_QUEIXA_LABEL[faseQueixa]}</p>
+
+              {!form.queixa_principal ? (
+                <>
+                  <p style={{ fontSize:'0.72rem', color:'#374151', fontWeight:700, marginBottom:'0.4rem' }}>{"Qual \u00e9 a sua queixa PRINCIPAL hoje?"}</p>
+                  {queixasFase.map(q => (
+                    <div key={q} onClick={() => escolherPrincipal(q)} style={queixaRowStyle(false)}>
+                      <Radio16 active={false} />{gz(q, isFem)}
+                    </div>
+                  ))}
+                  <p style={{ fontSize:'0.68rem', color:'#9CA3AF', marginTop:'0.2rem' }}>{"Se n\u00e3o tiver queixas, pode seguir sem marcar."}</p>
+                </>
+              ) : (
+                <>
+                  <div style={{ ...queixaRowStyle(true), marginBottom:0, justifyContent:'space-between' }}>
+                    <span style={{ display:'flex', alignItems:'center', gap:'0.6rem' }}><Radio16 active={true} />{gz(form.queixa_principal, isFem)}</span>
+                    <button onClick={trocarPrincipal} style={{ background:'none', border:'none', color:'#DC2626', fontSize:'0.7rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit', textDecoration:'underline', flexShrink:0 }}>{"trocar"}</button>
+                  </div>
+
+                  <SectionTitle>{"Queixas Secund\u00e1rias"}</SectionTitle>
+                  <p style={{ fontSize:'0.72rem', color:'#6B7280', marginBottom:'0.4rem' }}>
+                    {"Marque at\u00e9 3 outras queixas que tamb\u00e9m incomodam ("}{(form.queixas_secundarias || []).length}{"/3)."}
+                  </p>
+                  {(() => {
+                    const cand = queixasFase.filter(q => q !== form.queixa_principal)
+                    const sel = form.queixas_secundarias || []
+                    // Com 3 marcadas, as demais somem (s\u00f3 as escolhidas ficam, ainda remov\u00edveis).
+                    const visiveis = sel.length >= 3 ? cand.filter(q => sel.includes(q)) : cand
+                    return visiveis.map(q => {
+                      const on = sel.includes(q)
+                      return (
+                        <div key={q} onClick={() => toggleQueixaSec(q)} style={queixaRowStyle(on)}>
+                          <input type="checkbox" readOnly checked={on} style={{ width:15, height:15, flexShrink:0 }} />{gz(q, isFem)}
+                        </div>
+                      )
+                    })
+                  })()}
+                  {(form.queixas_secundarias || []).length >= 3 && (
+                    <p style={{ fontSize:'0.68rem', color:'#9CA3AF', marginTop:'0.2rem' }}>{"3 queixas registradas. Toque em uma para remover e escolher outra."}</p>
+                  )}
+                </>
+              )}
+            </>
+          )}
 
           <SectionTitle>{"Acompanhamento M\u00e9dico"}</SectionTitle>
           <RadioGroup options={ACOMPANHAMENTO_OPS} value={form.acompanhamento} onChange={v => {
