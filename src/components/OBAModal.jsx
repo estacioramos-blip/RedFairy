@@ -114,7 +114,12 @@ const STATUS_ALERGICO_OPS = [
   'MEDICAMENTOSA',
 ]
 
-const ALERGIA_MEDICAMENTOSA_OPS = ['ASPIRINA', 'DIPIRONA', 'ANTI-INFLAMATÓRIOS', 'OUTRA']
+// Alergia MEDICAMENTOSA: sub-bloco do Status Alérgico (aparece ao marcar MEDICAMENTOSA).
+// Lista consolidada (penicilinas/cefalosporinas incluídas). 'OUTRA' abre campo livre.
+const ALERGIA_MEDICAMENTOSA_OPS = ['PENICILINAS', 'CEFALOSPORINAS', 'DIPIRONA', 'ANTI-INFLAMATÓRIOS', 'ASPIRINA', 'OUTRA']
+
+// Alergia ALIMENTAR: sub-bloco do Status Alérgico (aparece ao marcar ALIMENTAR). 'OUTRA' abre campo livre.
+const ALERGIAS_ALIMENTARES_OPS = ['OVO', 'CRUSTÁCEOS (CAMARÃO E OUTROS)', 'LEITE DE VACA', 'LEITE (TODOS)', 'CHOCOLATE', 'AMENDOIM', 'OUTRA']
 
 const STATUS_ARTICULAR_OPS = ['ARTRITE', 'ARTROSE', 'TENDINITE', 'PROBLEMAS DE COLUNA']
 
@@ -595,6 +600,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     dores_osseas_detalhe: '',
     // Intolerâncias alimentares (múltipla escolha — seção após o Status Intestinal).
     intolerancias_alimentares: [],
+    // Alergia ALIMENTAR detalhada (sub-bloco do Status Alérgico > ALIMENTAR). "OUTRA" abre
+    // campo livre. A alergia a medicamentos reusa alergia_medicamentosa/alergia_outra_texto.
+    alergias_alimentares: [], alergias_alimentares_outra: '',
     // FAN (Fator Antinuclear / anticorpo anti-célula): '' | 'REAGENTE' | 'NÃO REAGENTE';
     // se REAGENTE, fan_titulo guarda o título ('1/80'…'1/640+'). Crítica no engine: depois.
     fan: '', fan_titulo: '',
@@ -1039,6 +1047,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       status_alergico:    form.status_alergico,
       alergia_medicamentosa: form.alergia_medicamentosa,
       alergia_outra_texto: form.alergia_outra_texto || null,
+      alergias_alimentares: form.alergias_alimentares,
+      alergias_alimentares_outra: form.alergias_alimentares_outra || null,
       meta_peso:          form.meta_peso || null,
       meta_kg:            form.meta_kg ? parseFloat(form.meta_kg) : null,
       projetos_vida:      form.projetos_vida,
@@ -2773,6 +2783,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <CheckRow key={op} label={op} checked={form.status_alergico.includes(op)} onClick={() => sf('status_alergico', tog(form.status_alergico, op))} />
             ))}
           </div>
+          {form.status_alergico.includes('ALIMENTAR') && (
+            <div style={{ marginTop:'0.5rem', padding:'0.6rem', background:'#FEF3C7', borderRadius:8, border:'1px solid #FDE68A' }}>
+              <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#92400E', marginBottom:'0.5rem' }}>{"Alergia alimentar — marque quais:"}</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+                {ALERGIAS_ALIMENTARES_OPS.map(op => (
+                  <CheckRow key={op} label={op} checked={form.alergias_alimentares.includes(op)} onClick={() => sf('alergias_alimentares', tog(form.alergias_alimentares, op))} />
+                ))}
+              </div>
+              {form.alergias_alimentares.includes('OUTRA') && (
+                <input style={{ ...inp, marginTop:'0.5rem' }} type="text" placeholder={"Especifique a alergia alimentar"} value={form.alergias_alimentares_outra} onChange={e => sf('alergias_alimentares_outra', e.target.value)} />
+              )}
+            </div>
+          )}
           {form.status_alergico.includes('MEDICAMENTOSA') && (
             <div style={{ marginTop:'0.5rem', padding:'0.6rem', background:'#FEF3C7', borderRadius:8, border:'1px solid #FDE68A' }}>
               <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#92400E', marginBottom:'0.5rem' }}>{"Alergia medicamentosa — marque quais:"}</p>
@@ -3017,7 +3040,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             {PROJETOS.map(p => <CheckRow key={p} label={p} checked={form.projetos_vida.includes(p)} onClick={() => sf('projetos_vida', tog(form.projetos_vida, p))} />)}
           </div>
 
-          <SectionTitle>{"Compuls\u00f5es"}</SectionTitle>
+          <SectionTitle>{"Compuls\u00f5es | H\u00e1bitos Nocivos"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {COMPULSOES.map(c => <CheckRow key={c} label={c} checked={form.compulsoes.includes(c)} onClick={() => sf('compulsoes', tog(form.compulsoes, c))} />)}
           </div>
