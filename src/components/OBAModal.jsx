@@ -200,7 +200,7 @@ const QUEIXAS_POR_FASE = {
     'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
     'AZIA / REFLUXO',
     'DOR NA BOCA DO ESTÔMAGO',
-    'PRISÃO DE VENTRE',
+    'PRISÃO DE VENTRE (OBSTIPAÇÃO)',
     'CANSAÇO / FADIGA',
     'QUEDA DE CABELO',
     'DIFICULDADE DE BEBER LÍQUIDOS',
@@ -209,8 +209,8 @@ const QUEIXAS_POR_FASE = {
     'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
     'TREMOR / SUOR / TONTURA APÓS COMER',
     'AZIA / REFLUXO PERSISTENTE',
-    'DIARREIA',
-    'PRISÃO DE VENTRE',
+    'DIARREIA (INTESTINO IRRITÁVEL)',
+    'PRISÃO DE VENTRE (OBSTIPAÇÃO)',
     'CANSAÇO / FADIGA',
     'QUEDA DE CABELO',
     'FORMIGAMENTO / DORMÊNCIA',
@@ -222,7 +222,7 @@ const QUEIXAS_POR_FASE = {
     'QUEDA DE CABELO',
     'FORMIGAMENTO / DORMÊNCIA',
     'DORES NOS OSSOS',
-    'DIARREIA',
+    'DIARREIA (INTESTINO IRRITÁVEL)',
     'AZIA / REFLUXO',
     'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
     'REGANHO DE PESO',
@@ -246,6 +246,37 @@ function queixaRowStyle(active) {
     background: active ? '#FEF2F2' : '#FAFAFA', cursor:'pointer', marginBottom:'0.4rem',
     fontSize:'0.72rem', fontWeight: active ? 700 : 500, color: active ? '#7B1E1E' : '#374151',
   }
+}
+
+// Mapeamento QUEIXA intestinal -> STATUS INTESTINAL (+ FIBROMIÁLGICO p/ obstipação).
+// Marcar a queixa PROPAGA para os status; direção só queixa -> status (os radios do
+// Status Intestinal seguem disponíveis p/ marcação independente). O POPUP da pesquisa
+// dispara sozinho: o gatilho já observa status_intestinal (que aqui passa a ser setado),
+// então a pesquisa aparece no PRIMEIRO lugar em que a obstipação for marcada.
+const QUEIXA_OBSTIPACAO = 'PRISÃO DE VENTRE (OBSTIPAÇÃO)'
+const QUEIXA_DIARREIA   = 'DIARREIA (INTESTINO IRRITÁVEL)'
+const INTESTINAL_OBSTIPACAO = STATUS_INTESTINAL_OPS[1]   // "OBSTIPAÇÃO CRÔNICA (PRISÃO DE VENTRE)"
+const INTESTINAL_IRRITAVEL  = STATUS_INTESTINAL_OPS[2]   // "INTESTINO IRRITÁVEL (DIARREIA FREQUENTE)"
+const FIBRO_OBSTIPACAO      = STATUS_FIBROMIALGIA_OPS.find(o => o.indexOf('OBSTIPA') === 0)
+
+// Aplica a propagação da queixa intestinal sobre um estado 'p' do form (dentro de setForm).
+function aplicarSyncIntestinal(p, queixa) {
+  if (queixa === QUEIXA_OBSTIPACAO) {
+    const fibro = new Set(p.status_fibromialgia || [])
+    if (FIBRO_OBSTIPACAO) fibro.add(FIBRO_OBSTIPACAO)
+    return { ...p, status_intestinal: INTESTINAL_OBSTIPACAO, status_fibromialgia: Array.from(fibro) }
+  }
+  if (queixa === QUEIXA_DIARREIA) {
+    // Se estava em obstipação e passa p/ intestino irritável, desfaz a obstipação no
+    // fibromiálgico (paridade com o radio manual: eraObst && !ehObst). Preserva marcação
+    // independente (só remove quando o status ANTERIOR era obstipação).
+    const saiuDeObst = p.status_intestinal === INTESTINAL_OBSTIPACAO
+    const fibro = (saiuDeObst && FIBRO_OBSTIPACAO)
+      ? (p.status_fibromialgia || []).filter(x => x !== FIBRO_OBSTIPACAO)
+      : (p.status_fibromialgia || [])
+    return { ...p, status_intestinal: INTESTINAL_IRRITAVEL, status_fibromialgia: fibro }
+  }
+  return p
 }
 
 // BUG #2 corrigido: removidos os duplicados antigos (hdl, ldl, vldl,
@@ -918,7 +949,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // ── QUEIXAS (principal + até 3 secundárias) ───────────────────────────────
   function escolherPrincipal(q) {
     // Marca a principal e a remove das secundárias (se estava lá, evita duplicar).
-    setForm(p => ({ ...p, queixa_principal: q, queixas_secundarias: (p.queixas_secundarias || []).filter(x => x !== q) }))
+    // Queixa intestinal (obstipação/diarreia) propaga p/ o Status Intestinal.
+    setForm(p => aplicarSyncIntestinal({ ...p, queixa_principal: q, queixas_secundarias: (p.queixas_secundarias || []).filter(x => x !== q) }, q))
   }
   function trocarPrincipal() {
     // Volta a escolher a principal (mantém as secundárias já marcadas).
@@ -927,9 +959,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   function toggleQueixaSec(q) {
     setForm(p => {
       const cur = p.queixas_secundarias || []
-      if (cur.includes(q)) return { ...p, queixas_secundarias: cur.filter(x => x !== q) }
+      if (cur.includes(q)) return { ...p, queixas_secundarias: cur.filter(x => x !== q) }  // remover: não mexe no status
       if (cur.length >= 3) return p   // teto de 3
-      return { ...p, queixas_secundarias: [...cur, q] }
+      return aplicarSyncIntestinal({ ...p, queixas_secundarias: [...cur, q] }, q)  // marcar: propaga p/ status
     })
   }
 
