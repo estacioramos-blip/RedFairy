@@ -1891,8 +1891,13 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
   const temDesequilib   = sintomas.includes('DESEQUILÍBRIO')
   const temHumor        = sintomas.includes('VARIAÇÃO DO HUMOR')
   const temTermo        = sintomas.includes('SINTO FRIO OU CALOR EXCESSIVO')
+  const usaCannabis     = sintomas.includes('EM USO DE CANNABIS MEDICINAL')
 
-  const qtdSintomas = sintomas.filter(s => !s.includes('FIBROMIALGIA DIAGNOSTICADA')).length
+  // Só SINTOMAS contam para o nível/contagem clínica — os marcadores "EM USO DE ..."
+  // são medicação em uso, não sintoma, e ficam de fora (senão "usando cannabis" viraria
+  // "sintoma fibromiálgico"). O gatilho da tela (>3 checkbox) conta tudo à parte.
+  const sintomasClinicos = sintomas.filter(s => !s.includes('FIBROMIALGIA DIAGNOSTICADA') && s.indexOf('EM USO DE') !== 0)
+  const qtdSintomas = sintomasClinicos.length
 
   // B12, VitD, Zinco disponíveis para correlação
   const b12  = parseFloat(ex.vitamina_b12)
@@ -1907,8 +1912,14 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
     suger.push('AVALIAÇÃO COM REUMATOLOGISTA')
   } else if (qtdSintomas >= 2) {
     nivelGeral = LEVE
-    linhas.push(`${qtdSintomas} SINTOMAS FIBROMIÁLGICOS RELATADOS: A CONSTELAÇÃO DE SINTOMAS APRESENTADA (${sintomas.filter(s => !s.includes('FIBROMIALGIA DIAGNOSTICADA')).join(', ')}) É COMPATÍVEL COM SÍNDROME FIBROMIÁLGICA SECUNDÁRIA ÀS DEFICIÊNCIAS NUTRICIONAIS DO PÓS-BARIÁTRICO. PRIORIZAR A CORREÇÃO DAS DEFICIÊNCIAS ANTES DE DIAGNÓSTICO DEFINITIVO.`)
+    linhas.push(`${qtdSintomas} SINTOMAS FIBROMIÁLGICOS RELATADOS: A CONSTELAÇÃO DE SINTOMAS APRESENTADA (${sintomasClinicos.join(', ')}) É COMPATÍVEL COM SÍNDROME FIBROMIÁLGICA SECUNDÁRIA ÀS DEFICIÊNCIAS NUTRICIONAIS DO PÓS-BARIÁTRICO. PRIORIZAR A CORREÇÃO DAS DEFICIÊNCIAS ANTES DE DIAGNÓSTICO DEFINITIVO.`)
     alertas.push({ nivel: LEVE, texto: `${qtdSintomas} SINTOMAS FIBROMIÁLGICOS — INVESTIGAR DEFICIÊNCIAS NUTRICIONAIS COMO CAUSA PRIMÁRIA.` })
+  }
+
+  // Canabinoides (quando em uso): menção educativa no relatório (os TIPOS de canabinoide
+  // ficam só na anamnese, p/ uso de negócio — não entram aqui).
+  if (usaCannabis) {
+    linhas.push('OS CANABINÓIDES SÃO OS MEDICAMENTOS MAIS PODEROSOS PARA O TRATAMENTO DOS SINTOMAS DE FIBROMIALGIA, ENCEFALOMIELITE MIÁLGICA E FADIGA CRÔNICA (ME/CFS).')
   }
 
   // Correlações nutricionais específicas

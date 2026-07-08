@@ -153,6 +153,23 @@ const PROJETOS = [
   "PRETENDO AJUDAR OUTRAS PESSOAS",
 ]
 
+// Hábitos sociais / estilo de vida. Valor armazenado no MASCULINO (DOADOR); a exibição
+// vira DOADORA p/ mulher via gz(). Críticas no relatório: a definir com o Estácio.
+const HABITOS_SOCIAIS_OPS = [
+  'SOU DOADOR DE SANGUE',
+  'SOU DOADOR DE MEDULA ÓSSEA',
+  'AJUDO UM PROJETO SOCIAL',
+  'TENHO CACHORRO E PASSEIO COM ELE',
+  'TENHO GATO',
+  'TENHO PLANTAS EM CASA',
+  'MORO EM CASA',
+  'MORO EM APARTAMENTO',
+  'FAÇO ATIVIDADES AO AR LIVRE',
+  'TOMO SOL HABITUALMENTE',
+  'COSTUMO IR A PRAIA',
+  'TENHO UM HOBBY',
+]
+
 const COMPULSOES = [
   "DOCES", "COMIDA", "GELO", "\u00c1LCOOL", "JOGO", "COMPRAS", "TRABALHO", "CIGARRO / TABACO", "CANNABIS", "OUTRA"
 ]
@@ -165,6 +182,7 @@ const MEDICAMENTOS = [
   "REM\u00c9DIO PARA TIRE\u00d3IDE",
   "TOPIRAMATO", "FENTERMINA", "NALTREXONA", "BUPROPIONA", "ORLISTAT (XENICAL)",
   "DOMPERIDONA (MOTILIUM)", "BROMOPRIDA",
+  "PREGABALINA", "GABAPENTINA", "CANNABIS MEDICINAL",
 ]
 
 const EMAGRECEDORES = ['Ozempic', 'Rybelsus', 'Wegovy', 'Mounjaro', 'Saxenda', 'Victoza', 'Trulicity', 'Xultophi']
@@ -190,8 +208,25 @@ const STATUS_FIBROMIALGIA_OPS = [
   "DESEQUIL\u00cdBRIO",
   "VARIA\u00c7\u00c3O DO HUMOR",
   "SINTO FRIO OU CALOR EXCESSIVO",
-  "EM USO DE GABAPENTINA", "EM USO DE PREGABALINA",
+  "FADIGA",
+  "HIPERACUSIA",
+  "EM USO DE GABAPENTINA", "EM USO DE PREGABALINA", "EM USO DE CANNABIS MEDICINAL",
 ]
+
+// Sublabel (linha menor) de algumas opções do Status Fibromiálgico.
+const FIBRO_SUBLABEL = { 'HIPERACUSIA': 'SENSIBILIDADE AUMENTADA A SONS E RUÍDOS' }
+
+// Marcadores "EM USO DE ..." no fibromiálgico que espelham em MEDICAMENTOS EM USO
+// (marcar no fibro marca tambem o medicamento; direção só fibro -> medicamentos).
+const FIBRO_MED_SYNC = {
+  'EM USO DE GABAPENTINA': 'GABAPENTINA',
+  'EM USO DE PREGABALINA': 'PREGABALINA',
+  'EM USO DE CANNABIS MEDICINAL': 'CANNABIS MEDICINAL',
+}
+
+// Tipos de canabinoide (sub-bloco quando "EM USO DE CANNABIS MEDICINAL" é marcado).
+// Uso de negócio (parceria com fornecedores) — NÃO vai ao relatório clínico.
+const CANABINOIDES_OPS = ['CBD', 'CBD Full Spectrum', 'CBD + THC', 'THC', 'DELTA-8', 'DELTA-9']
 
 // QUEIXA PRINCIPAL + 3 SECUNDÁRIAS — queixas LEVES (não-emergenciais) mais comuns
 // por FASE pós-cirúrgica. NÃO entram aqui quadros de emergência (obstrução, sangramento
@@ -211,6 +246,8 @@ const QUEIXAS_POR_FASE = {
     'CANSAÇO / FADIGA',
     'QUEDA DE CABELO',
     'DIFICULDADE DE BEBER LÍQUIDOS',
+    'DEPRESSÃO',
+    'INSÔNIA',
   ],
   intermediaria: [
     'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
@@ -223,6 +260,8 @@ const QUEIXAS_POR_FASE = {
     'FORMIGAMENTO / DORMÊNCIA',
     'DORES NOS OSSOS OU ARTICULAÇÕES',
     'CÓLICAS / DOR ABDOMINAL RECORRENTE',
+    'DEPRESSÃO',
+    'INSÔNIA',
   ],
   tardia: [
     'CANSAÇO / FADIGA',
@@ -235,6 +274,8 @@ const QUEIXAS_POR_FASE = {
     'REGANHO DE PESO',
     'UNHAS FRACAS / PELE SECA',
     'PROBLEMAS DE MEMÓRIA OU CONCENTRAÇÃO',
+    'DEPRESSÃO',
+    'INSÔNIA',
   ],
 }
 
@@ -365,6 +406,7 @@ function gz(texto, isFem) {
     .replace(/HIPERTENSO/g, 'HIPERTENSA').replace(/CONTROLADO/g, 'CONTROLADA')
     .replace(/DIABÉTICO/g, 'DIABÉTICA').replace(/CURADO/g, 'CURADA')
     .replace(/SEDENTÁRIO/g, 'SEDENTÁRIA')
+    .replace(/DOADOR\b/g, 'DOADORA')
 }
 
 function RadioGroup({ options, value, onChange, disabledOptions = [], cols = 1, mapLabel = null }) {
@@ -560,6 +602,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [querPrescricaoB12, setQuerPrescricaoB12] = useState(false)  // protocolo B12/folato (macrocitose)
   const [querResultado, setQuerResultado] = useState(false)
   const [querFerroEV, setQuerFerroEV] = useState(false)  // 2ª oferta do ferro EV na conclusão
+  const [querCanabinoide, setQuerCanabinoide] = useState(false)  // teleconsulta c/ prescritor (>3 sintomas fibro)
   // Protocolo de reposição de FERRO ENDOVENOSO (Ganzoni) — modal compartilhado.
   const [showFerroEV, setShowFerroEV] = useState(false)
   // Popup da PESQUISA (tratamento simbiótico p/ obstipação/fibromialgia).
@@ -608,8 +651,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     fan: '', fan_titulo: '',
     teve_covid: false, vacina_covid: [],
     atividade_fisica: [], cirurgia_plastica: null,
-    meta_peso: '', meta_kg: '', projetos_vida: [],
+    meta_peso: '', meta_kg: '', projetos_vida: [], habitos_sociais: [],
     compulsoes: [], medicamentos: [], emagrecedores: {},
+    // Tipos de canabinoide em uso (sub-bloco do fibromiálgico; uso de negócio).
+    cannabinoides_tipos: [],
    }
    // Retomada de progresso (localStorage) tem prioridade.
    if (salvo?.form) return { ...def, ...salvo.form }
@@ -997,6 +1042,21 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     })
   }
 
+  // Toggle de um sintoma do fibromiálgico. Se for um marcador "EM USO DE ..." mapeado,
+  // ao MARCAR tambem marca o medicamento em MEDICAMENTOS EM USO (add-only; desmarcar
+  // no fibro não remove do medicamentos — os checkboxes de lá seguem independentes).
+  function toggleFibro(op) {
+    setForm(p => {
+      const novo = tog(p.status_fibromialgia, op)
+      const med = FIBRO_MED_SYNC[op]
+      const marcando = novo.includes(op)
+      const meds = (med && marcando && !(p.medicamentos || []).includes(med))
+        ? [...(p.medicamentos || []), med]
+        : p.medicamentos
+      return { ...p, status_fibromialgia: novo, medicamentos: meds }
+    })
+  }
+
   function toggleAtividade(val) {
     if (val === "SEDENT\u00c1RIO") sf('atividade_fisica', form.atividade_fisica.includes("SEDENT\u00c1RIO") ? [] : ["SEDENT\u00c1RIO"])
     else if (!form.atividade_fisica.includes("SEDENT\u00c1RIO")) sf('atividade_fisica', tog(form.atividade_fisica, val))
@@ -1065,6 +1125,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       meta_peso:          form.meta_peso || null,
       meta_kg:            form.meta_kg ? parseFloat(form.meta_kg) : null,
       projetos_vida:      form.projetos_vida,
+      habitos_sociais:    form.habitos_sociais,
       status_intestinal:  form.status_intestinal || null,
       status_fibromialgia: form.status_fibromialgia,
       calprotectina: form.calprotectina === '' ? null : Number(form.calprotectina),
@@ -1623,6 +1684,23 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       {"."}
                     </p>
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* CANABINOIDES — oferta de teleconsulta gratuita c/ médico prescritor (>3 sintomas fibro) */}
+            {(form.status_fibromialgia || []).length > 3 && (
+              <div style={{ background:'#F5F3FF', border:'2px solid #C4B5FD', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
+                <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#6D28D9', margin:'0 0 0.4rem' }}>{"CANABINOIDES MEDICINAIS"}</p>
+                <p style={{ fontSize:'0.8rem', color:'#5B21B6', lineHeight:1.5, margin:'0 0 0.7rem' }}>
+                  {"Cannabinóides Medicinais podem aliviar os seus sintomas. Se quiser mais informações marque o checkbox abaixo que podemos marcar uma teleconsulta gratuita com um médico prescritor desses produtos."}
+                </p>
+                <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                  <input type="checkbox" checked={querCanabinoide} onChange={e => setQuerCanabinoide(e.target.checked)} style={{ ...checkBox, accentColor:'#7C3AED' }} />
+                  <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#6D28D9' }}>{"QUERO UMA TELECONSULTA GRATUITA COM MÉDICO PRESCRITOR"}</span>
+                </label>
+                {querCanabinoide && (
+                  <button style={waBtn} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e gostaria de uma teleconsulta gratuita com um médico prescritor de canabinoides medicinais.')}>{"Falar no WhatsApp →"}</button>
                 )}
               </div>
             )}
@@ -3022,15 +3100,28 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             ))}
           </div>
 
-          <SectionTitle>{"Status Fibromi\u00e1lgico"}</SectionTitle>
+          <SectionTitle>{"Status Fibromi\u00e1lgico | ME/CFS"}</SectionTitle>
           <p style={{ fontSize:'0.75rem', color:'#6B7280', marginBottom:'0.5rem' }}>{"Marque os sintomas que apresenta com frequ\u00eancia:"}</p>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {STATUS_FIBROMIALGIA_OPS.map(op => (
-              <CheckRow key={op} label={op}
+              <CheckRow key={op}
+                label={FIBRO_SUBLABEL[op]
+                  ? <span>{op}<span style={{ display:'block', fontSize:'0.6rem', fontWeight:500, color:'#6B7280', lineHeight:1.15 }}>{FIBRO_SUBLABEL[op]}</span></span>
+                  : op}
                 checked={form.status_fibromialgia.includes(op)}
-                onClick={() => sf('status_fibromialgia', tog(form.status_fibromialgia, op))} />
+                onClick={() => toggleFibro(op)} />
             ))}
           </div>
+          {form.status_fibromialgia.includes('EM USO DE CANNABIS MEDICINAL') && (
+            <div style={{ marginTop:'0.5rem', padding:'0.6rem', background:'#F5F3FF', borderRadius:8, border:'1px solid #DDD6FE' }}>
+              <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#6D28D9', marginBottom:'0.5rem' }}>{"Qual canabinoide voc\u00ea usa?"}</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+                {CANABINOIDES_OPS.map(op => (
+                  <CheckRow key={op} label={op} checked={form.cannabinoides_tipos.includes(op)} onClick={() => sf('cannabinoides_tipos', tog(form.cannabinoides_tipos, op))} />
+                ))}
+              </div>
+            </div>
+          )}
 
           <SectionTitle>Status COVID-19</SectionTitle>
           <CheckRow label="TIVE COVID-19" checked={form.teve_covid} onClick={() => sf('teve_covid', !form.teve_covid)} />
@@ -3073,6 +3164,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           )}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {PROJETOS.map(p => <CheckRow key={p} label={p} checked={form.projetos_vida.includes(p)} onClick={() => sf('projetos_vida', tog(form.projetos_vida, p))} />)}
+          </div>
+
+          <SectionTitle>{"H\u00e1bitos Sociais | Estilo de Vida"}</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {HABITOS_SOCIAIS_OPS.map(op => (
+              <CheckRow key={op} label={gz(op, isFem)} checked={form.habitos_sociais.includes(op)} onClick={() => sf('habitos_sociais', tog(form.habitos_sociais, op))} />
+            ))}
           </div>
 
           <SectionTitle>{"Compuls\u00f5es | H\u00e1bitos Nocivos"}</SectionTitle>
