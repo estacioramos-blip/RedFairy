@@ -1777,9 +1777,17 @@ function buildModObstetrico(dados, alertas, suger) {
   }
 
   if (aborto) {
-    if (nivel === NORMAL) nivel = LEVE
-    linhas.push('HISTÓRICO DE ABORTAMENTO(S) ESPONTÂNEO(S): INVESTIGAR CAUSAS (TROMBOFILIA / SÍNDROME ANTIFOSFOLÍPIDE, DEFICIÊNCIAS NUTRICIONAIS), ESPECIALMENTE SE HOUVER HISTÓRICO DE TROMBOSE.')
+    // 1 abortamento = MODERADO (destaque, sem forçar CRÍTICO); 2+ (repetição) = GRAVE.
+    // Sem o número informado, assume ao menos 1 (MODERADO).
+    const numAbortos = parseInt(dados.abortamentos_numero) || 1
+    const repeticao = numAbortos >= 2
+    nivel = repeticao ? GRAVE : MODERADO
+    linhas.push(`HISTÓRICO DE ${numAbortos} ABORTAMENTO(S) ESPONTÂNEO(S): INFORMAÇÃO CRÍTICA. INVESTIGAR CAUSAS (TROMBOFILIA / SÍNDROME ANTIFOSFOLÍPIDE, DEFICIÊNCIAS NUTRICIONAIS), ESPECIALMENTE SE HOUVER HISTÓRICO DE TROMBOSE.`)
+    alertas.push({ nivel: repeticao ? GRAVE : MODERADO, texto: repeticao
+      ? 'ABORTAMENTOS ESPONTÂNEOS DE REPETIÇÃO (≥2) — INFORMAÇÃO CRÍTICA. INFORME O SEU OBSTETRA E MARQUE TELECONSULTA COM HEMATOLOGISTA.'
+      : 'ABORTAMENTO ESPONTÂNEO — INFORME O SEU OBSTETRA E CONSIDERE TELECONSULTA COM HEMATOLOGISTA.' })
     suger.push('AVALIAÇÃO PARA TROMBOFILIA (SE ABORTAMENTOS DE REPETIÇÃO)')
+    suger.push('TELECONSULTA COM HEMATOLOGISTA')
   }
 
   return { id: 'obstetrico', titulo: 'HISTÓRIA OBSTÉTRICA', nivel, linhas }

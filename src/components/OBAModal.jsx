@@ -579,7 +579,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     status_intestinal: '', status_fibromialgia: [], calprotectina: '', indican: '',
     // Sorologia ANTI-H.PYLORI (qualitativo): '' | 'REAGENTE' | 'NÃO REAGENTE'
     antiHp_igg: '', antiHp_igm: '',
-    gestacoes_previas: '', abortamentos_espontaneos: null,
+    gestacoes_previas: '', abortamentos_espontaneos: null, abortamentos_numero: '',
     indicacao_cirurgia: '',
     tipo_cirurgia: '',
     acompanhamento: '', especialistas: [],
@@ -1030,6 +1030,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       semanas_gestacao:   form.semanas_gestacao ? parseFloat(form.semanas_gestacao) : null,
       gestacoes_previas:  form.gestacoes_previas !== '' ? parseInt(form.gestacoes_previas) : null,
       abortamentos_espontaneos: form.abortamentos_espontaneos,
+      abortamentos_numero: form.abortamentos_numero ? parseInt(form.abortamentos_numero) : null,
       compulsoes:         form.compulsoes,
       medicamentos:       form.medicamentos,
       atividade_fisica:   form.atividade_fisica,
@@ -2617,12 +2618,21 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
               {form.gestacoes_previas !== '' && parseInt(form.gestacoes_previas) > 0 && (
                 <>
-                  <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Teve abortamentos espont\u00e2neos?"}</label>
+                  <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"Um ou mais abortamentos espont\u00e2neos?"}</label>
                   <RadioGroup
                     options={['SIM',"N\u00c3O"]}
                     value={form.abortamentos_espontaneos === true ? 'SIM' : form.abortamentos_espontaneos === false ? "N\u00c3O" : ''}
                     onChange={v => sf('abortamentos_espontaneos', v === 'SIM')}
                   />
+                  {form.abortamentos_espontaneos === true && (
+                    <>
+                      <label style={{ display:'block', fontSize:'0.72rem', fontWeight:700, color:'#374151', margin:'0.5rem 0 0.3rem' }}>{"Quantos abortamentos espont\u00e2neos?"}</label>
+                      <input style={{ ...inpA, maxWidth:120 }} onWheel={noWheel} type="number" min="1" max="20" step="1" placeholder={"1, 2, 3..."} value={form.abortamentos_numero} onChange={e => sf('abortamentos_numero', e.target.value)} />
+                      <p style={{ fontSize:'0.75rem', fontWeight:700, color:'#7B1E1E', margin:'0.5rem 0 0', lineHeight:1.45 }}>
+                        {"Essa informa\u00e7\u00e3o \u00e9 CR\u00cdTICA, informe a seu obstetra e marque teleconsulta com Hematologista."}
+                      </p>
+                    </>
+                  )}
                 </>
               )}
             </>
