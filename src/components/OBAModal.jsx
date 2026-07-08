@@ -953,6 +953,18 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const marcouDoresOsseas = [form.queixa_principal, ...(form.queixas_secundarias || [])]
     .some(q => String(q || '').indexOf('DORES NOS OSSOS') === 0)
 
+  // Data da avaliação (hoje) — topo da anamnese e relatórios. Mesmo formato do motor.
+  const hojeFmt = new Date().toLocaleDateString('pt-BR')
+
+  // Meses da cirurgia até ENGRAVIDAR (cirurgia → concepção): subtrai a idade gestacional
+  // atual do tempo pós-op. < 18 meses = recomendação crítica infringida. Sem semanas
+  // informadas, usa mesesPos (limite superior seguro). Espelha o cálculo do obaEngine.
+  const _semanasGest = parseInt(form.semanas_gestacao) || 0   // inteiro (espelha o parseInt do motor)
+  const mesesAoEngravidar = (mesesPos != null && form.status_gestacional === 'GRÁVIDA')
+    ? (_semanasGest > 0 ? Math.max(0, Math.round(mesesPos - _semanasGest / 4.345)) : mesesPos)
+    : null
+  const engravidouCedo = mesesAoEngravidar != null && mesesAoEngravidar < 18
+
   const pesoAntes = parseFloat(form.peso_antes)
   const pesoMin   = parseFloat(form.peso_minimo_pos)
   const pesoAtual = parseFloat(form.peso_atual)
@@ -1485,9 +1497,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <div style={{ position:'relative', zIndex:1, padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
             {SPLASH_CONCLUSAO_IMG && <div style={{ height:200 }} />}
 
-            <p style={{ fontSize:'1.1rem', fontWeight:900, color:'#7B1E1E', textAlign:'center', margin:'0 0 0.4rem' }}>
+            <p style={{ fontSize:'1.1rem', fontWeight:900, color:'#7B1E1E', textAlign:'center', margin:'0 0 0.2rem' }}>
               {"Primeira avaliação concluída!"}
             </p>
+            <p style={{ fontSize:'0.72rem', color:'#6B7280', textAlign:'center', fontWeight:700, margin:'0 0 0.6rem' }}>{"Avaliação de "}{hojeFmt}</p>
             <p style={{ fontSize:'0.85rem', color:'#374151', textAlign:'center', lineHeight:1.5, margin:'0 0 1.2rem' }}>
               {"Com base na sua avaliação, estas são as recomendações e opções para você:"}
             </p>
@@ -1732,9 +1745,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             ) : (
               <>
                 {/* T\u00edtulo de abertura do baseline */}
-                <p style={{ fontSize:'1.05rem', fontWeight:900, color:'#7B1E1E', textAlign:'center', margin:'0 0 1rem', lineHeight:1.35 }}>
+                <p style={{ fontSize:'1.05rem', fontWeight:900, color:'#7B1E1E', textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.35 }}>
                   {"AGORA TEMOS UM CONHECIMENTO CL\u00cdNICO SOBRE VOC\u00ca"}
                 </p>
+                <p style={{ fontSize:'0.72rem', color:'#6B7280', textAlign:'center', fontWeight:700, margin:'0 0 1rem' }}>{"Avalia\u00e7\u00e3o de "}{rel.dataAvaliacao}</p>
 
                 {/* ESTADO GERAL CL\u00cdNICO \u2014 hero */}
                 <div style={{ background: estadoInfo.fundo, border:`2px solid ${estadoInfo.borda}`, borderRadius:16, padding:'1.2rem 1.4rem', textAlign:'center' }}>
@@ -2314,6 +2328,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           {/* Identifica\u00e7\u00e3o do paciente (nome, nascimento, sexo, CPF) */}
           <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem 1rem' }}>
             <div style={{ gridColumn:'1 / -1' }}>
+              <p style={{ fontSize:'0.62rem', textTransform:'uppercase', letterSpacing:'1px', color:'#9CA3AF', fontWeight:700, margin:0 }}>{"Data da avaliação"}</p>
+              <p style={{ fontSize:'0.85rem', color:'#7B1E1E', fontWeight:800, margin:0 }}>{hojeFmt}</p>
+            </div>
+            <div style={{ gridColumn:'1 / -1' }}>
               <p style={{ fontSize:'0.62rem', textTransform:'uppercase', letterSpacing:'1px', color:'#9CA3AF', fontWeight:700, margin:0 }}>{"Nome"}</p>
               <p style={{ fontSize:'0.9rem', color:'#374151', fontWeight:700, margin:0 }}>{nome || "\u2014"}</p>
             </div>
@@ -2543,7 +2561,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             onClick={() => sf('semEspecialista', !form.semEspecialista)}
           />
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem', marginTop:'0.4rem' }}>
-            {ESPECIALISTAS.map(e => (
+            {/* Paciente masculino: sem GINECOLOGISTA/OBSTETRA na lista. */}
+            {(isFem ? ESPECIALISTAS : ESPECIALISTAS.filter(e => e !== 'GINECOLOGISTA' && e !== 'OBSTETRA')).map(e => (
               <CheckRow key={e} label={e}
                 checked={form.especialistas.includes(e)}
                 disabled={form.semEspecialista}
@@ -2589,6 +2608,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   />
                 </div>
               </div>
+
+              {engravidouCedo && (
+                <p style={{ fontSize:'0.75rem', fontWeight:700, color:'#DC2626', margin:'0.55rem 0 0', lineHeight:1.45 }}>
+                  {"Ao engravidar antes de 18 meses após a bariátrica você infringiu uma RECOMENDAÇÃO CRÍTICA. Alerte o seu obstetra sobre isso."}
+                </p>
+              )}
 
               {form.gestacoes_previas !== '' && parseInt(form.gestacoes_previas) > 0 && (
                 <>
