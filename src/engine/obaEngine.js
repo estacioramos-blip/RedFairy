@@ -166,6 +166,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modHabitos = buildModHabitos(dadosOBA)
   if (modHabitos) modulos.push(modHabitos)
 
+  // ── 12c. MÓDULO INFECÇÕES CRÔNICAS (módulo; HTLV ativo e EBV crônico geram alerta) ──
+  const modInfeccoes = buildModInfeccoes(dadosOBA, alertas)
+  if (modInfeccoes) modulos.push(modInfeccoes)
+
   // ── 13. MÓDULO GESTACIONAL ───────────────────────────────────────────────
   const modGest = buildModGestacional(dadosOBA, mesesPos, alertas, examesSuger)
   if (modGest) modulos.push(modGest)
@@ -1625,6 +1629,131 @@ function buildModHabitos(dados) {
 
   if (!linhas.length) return null
   return { id: 'habitos', titulo: 'HÁBITOS SOCIAIS E ESTILO DE VIDA', nivel, linhas }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO — INFECÇÕES CRÔNICAS
+// Em regra é só módulo; DUAS excecoes geram ALERTA (entram no Estado Geral):
+// HTLV I/II ativo (GRAVE) e Epstein-Barr crônico ativo (MODERADO). O nível do card
+// é o pior item. Os sub-estados (em tratamento/resolvido/crônica/ativa) vêm do form.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModInfeccoes(dados, alertas) {
+  const inf = dados.infeccoes_cronicas || []
+  if (!inf.length) return null
+  const has = (x) => inf.includes(x)
+
+  const RANK = { [GRAVE]: 3, [MODERADO]: 2, [LEVE]: 1, [NORMAL]: 0 }
+  let nivel = NORMAL
+  const bump = (n) => { if (RANK[n] > RANK[nivel]) nivel = n }
+
+  const linhas = []
+
+  // Nota geral (anemia de doença crônica confunde a leitura do eritron)
+  linhas.push('INFECÇÕES CRÔNICAS PODEM CAUSAR ANEMIA DE DOENÇA CRÔNICA (INFLAMATÓRIA), QUE ÀS VEZES MASCARA A DEFICIÊNCIA DE FERRO — IMPORTANTE INTERPRETAR O ERITRON NESSE CONTEXTO.')
+
+  if (has('HEPATITE B')) {
+    if (dados.hepb_status === 'RESOLVIDO') {
+      bump(LEVE)
+      linhas.push('HEPATITE B (RESOLVIDA): MANTENHA VIGILÂNCIA — PODE REATIVAR EM IMUNOSSUPRESSÃO.')
+    } else {
+      bump(MODERADO)
+      linhas.push('HEPATITE B' + (dados.hepb_status === 'EM TRATAMENTO' ? ' (EM TRATAMENTO)' : '') + ': MANTENHA O ACOMPANHAMENTO HEPATOLÓGICO E O ANTIVIRAL; MONITORE A FUNÇÃO HEPÁTICA E O HEMOGRAMA (A HEPATITE E ALGUNS ANTIVIRAIS AFETAM O ERITRON).')
+    }
+  }
+
+  if (has('HEPATITE C')) {
+    if (dados.hepc_status === 'RESOLVIDO') {
+      bump(LEVE)
+      linhas.push('HEPATITE C (RESOLVIDA/CURADA): MANTENHA O SEGUIMENTO.')
+    } else {
+      bump(MODERADO)
+      linhas.push('HEPATITE C' + (dados.hepc_status === 'EM TRATAMENTO' ? ' (EM TRATAMENTO)' : '') + ': A HEPATITE C HOJE É CURÁVEL COM ANTIVIRAIS DE AÇÃO DIRETA — GARANTA O TRATAMENTO. MONITORE FÍGADO E HEMOGRAMA (ASSOCIAÇÃO COM CRIOGLOBULINEMIA, CITOPENIAS E LINFOMA).')
+    }
+  }
+
+  if (has('HIV')) {
+    bump(MODERADO)
+    linhas.push('HIV' + (dados.hiv_tratamento ? ' (EM TRATAMENTO)' : '') + ': MANTENHA A TARV E A CARGA VIRAL INDETECTÁVEL. VÁRIOS ANTIRRETROVIRAIS CAUSAM MACROCITOSE/ANEMIA — CORRELACIONE COM O ERITRON E COM AS CARÊNCIAS DO BARIÁTRICO.')
+  }
+
+  if (has('HERPES SIMPLES')) {
+    bump(LEVE)
+    linhas.push('HERPES SIMPLES' + (dados.herpes_simples_aciclovir ? ' (ACICLOVIR SUPRESSIVO)' : '') + ': O ACICLOVIR SUPRESSIVO É ADEQUADO PARA RECORRÊNCIAS FREQUENTES; SEM IMPLICAÇÃO NUTRICIONAL RELEVANTE.')
+  }
+
+  if (has('HERPES-ZÓSTER')) {
+    const hz = dados.herpes_zoster || []
+    if (hz.includes('MAIS DE UM EPISÓDIO')) {
+      bump(MODERADO)
+      linhas.push('HERPES-ZÓSTER RECORRENTE (MAIS DE UM EPISÓDIO): INCOMUM — SUGERE IMUNIDADE COMPROMETIDA. INVESTIGAR CAUSAS (INCLUINDO HIV E NEOPLASIAS) E CORRELACIONAR COM DEFICIÊNCIAS DO BARIÁTRICO. VACINA (SHINGRIX) RECOMENDADA.')
+    } else {
+      bump(LEVE)
+      linhas.push('HERPES-ZÓSTER: ' + (hz.includes('TOMEI VACINA') ? 'VACINAÇÃO EM DIA. ' : 'CONSIDERAR A VACINA (SHINGRIX). ') + 'MANTENHA O ACOMPANHAMENTO.')
+    }
+  }
+
+  if (has('DOENÇA DE LYME (BORRELIOSE)')) {
+    if (dados.borreliose_status === 'CRÔNICA') {
+      bump(MODERADO)
+      linhas.push('DOENÇA DE LYME (BORRELIOSE) CRÔNICA: CURSA COM FADIGA E DORES QUE SE CONFUNDEM COM FIBROMIALGIA E COM AS CARÊNCIAS DO BARIÁTRICO — CORRELACIONE; SIGA COM INFECTOLOGISTA.')
+    } else {
+      bump(LEVE)
+      linhas.push('DOENÇA DE LYME (BORRELIOSE)' + (dados.borreliose_status === 'RESOLVIDA' ? ' (RESOLVIDA)' : '') + ': MANTENHA O SEGUIMENTO.')
+    }
+  }
+
+  if (has('HPV')) {
+    const hpv = dados.hpv_estado || []
+    if (hpv.includes('DOENÇA ATIVA')) {
+      bump(MODERADO)
+      linhas.push('HPV (DOENÇA ATIVA): EXIGE RASTREIO CONFORME O SÍTIO (COLPOCITOLOGIA ETC.) PELO RISCO ONCOLÓGICO. VACINA RECOMENDADA.')
+    } else {
+      bump(LEVE)
+      linhas.push('HPV' + (hpv.includes('RESOLVIDO') ? ' (RESOLVIDO)' : (hpv.includes('TOMEI VACINA | ESTOU MELHOR') ? ' (VACINADO / EM MELHORA)' : '')) + ': MANTENHA O RASTREIO PREVENTIVO.')
+    }
+  }
+
+  if (has('PAPILOMATOSE DO LARINGE')) {
+    bump(MODERADO)
+    linhas.push('PAPILOMATOSE DO LARINGE: REQUER ACOMPANHAMENTO COM OTORRINOLARINGOLOGISTA (RISCO DE OBSTRUÇÃO DE VIA AÉREA E DE TRANSFORMAÇÃO); RELACIONADA AO HPV.')
+  }
+
+  if (has('MOLUSCO CONTAGIOSO')) {
+    bump(LEVE)
+    linhas.push('MOLUSCO CONTAGIOSO: BENIGNO; SE EXTENSO OU PERSISTENTE NO ADULTO, INVESTIGAR IMUNIDADE (INCLUI HIV).')
+  }
+
+  if (has('EPSTEIN-BARR')) {
+    if (dados.ebv_status === 'CRÔNICA') {
+      bump(MODERADO)
+      linhas.push('EPSTEIN-BARR CRÔNICO ATIVO: RARO E RELEVANTE (ASSOCIAÇÃO COM SÍNDROMES LINFOPROLIFERATIVAS) — AVALIAÇÃO COM HEMATOLOGISTA/INFECTOLOGISTA.')
+      alertas.push({ nivel: MODERADO, texto: 'EPSTEIN-BARR CRÔNICO ATIVO — AVALIAÇÃO COM HEMATOLOGISTA/INFECTOLOGISTA (RISCO LINFOPROLIFERATIVO).' })
+    } else {
+      bump(LEVE)
+      linhas.push('EPSTEIN-BARR' + (dados.ebv_status === 'RESOLVIDA' ? ' (RESOLVIDA)' : '') + ': MONONUCLEOSE PRÉVIA — SEM IMPLICAÇÃO ATUAL.')
+    }
+  }
+
+  if (has('HTLV I/II')) {
+    if (dados.htlv_ativa) {
+      bump(GRAVE)
+      linhas.push('HTLV I/II (DOENÇA ATIVA): RELEVÂNCIA HEMATOLÓGICA DIRETA — ASSOCIAÇÃO COM LEUCEMIA/LINFOMA DE CÉLULAS T DO ADULTO E COM MIELOPATIA (HAM/TSP). SEGUIMENTO COM HEMATOLOGISTA E INFECTOLOGISTA. NÃO DOE SANGUE NEM ÓRGÃOS; ATENÇÃO À TRANSMISSÃO PELA AMAMENTAÇÃO.')
+      alertas.push({ nivel: GRAVE, texto: 'HTLV I/II ATIVO — AVALIAÇÃO HEMATOLÓGICA (RISCO DE LEUCEMIA/LINFOMA T E MIELOPATIA).' })
+    } else {
+      bump(MODERADO)
+      linhas.push('HTLV I/II: RELEVÂNCIA HEMATOLÓGICA — SEGUIMENTO COM HEMATOLOGISTA/INFECTOLOGISTA; NÃO DOAR SANGUE NEM ÓRGÃOS.')
+    }
+  }
+
+  // Cruzamento com os hábitos: doador de sangue + infecção transmissível
+  const doador = (dados.habitos_sociais || []).includes('SOU DOADOR DE SANGUE')
+  const transmissivel = has('HEPATITE B') || has('HEPATITE C') || has('HIV') || has('HTLV I/II')
+  if (doador && transmissivel) {
+    bump(MODERADO)
+    linhas.push('VOCÊ SE DECLAROU DOADOR DE SANGUE E TEM INFECÇÃO TRANSMISSÍVEL (HEPATITE B/C, HIV OU HTLV) — ESSAS CONDIÇÕES CONTRAINDICAM A DOAÇÃO DE SANGUE.')
+  }
+
+  return { id: 'infeccoes', titulo: 'INFECÇÕES CRÔNICAS', nivel, linhas }
 }
 
 function buildModComportamental(dados, alertas, suger) {
