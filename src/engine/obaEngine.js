@@ -2547,6 +2547,9 @@ export function classificarEstadoClinico(relatorio, contexto = {}) {
   const leves      = alertas.filter(a => a.nivel === LEVE).length
   const eritron    = String(contexto.eritronColor || '').toLowerCase()
   const temExames  = !!contexto.temExames
+  // Dúvidas do paciente NÃO mudam o nível (grave/ruim/...); só marcam o retrato como
+  // provisório (o algoritmo se ajusta quando as respostas forem esclarecidas).
+  const temDuvidas = !!contexto.temDuvidas
 
   let estado
   let motivo
@@ -2575,7 +2578,7 @@ export function classificarEstadoClinico(relatorio, contexto = {}) {
 
   return {
     estado,                       // 'CRITICO' | 'RUIM' | 'RAZOAVEL' | 'BOM' | 'OTIMO'
-    provisorio: !temExames,       // classificado só por anamnese + eritron mínimo
+    provisorio: !temExames || temDuvidas,   // sem exames OU com pontos em dúvida
     motivo,
     resumo: { graves, moderados, leves },
   }

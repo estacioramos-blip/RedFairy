@@ -265,6 +265,7 @@ const QUEIXAS_POR_FASE = {
     'DIFICULDADE DE BEBER LÍQUIDOS',
     'DEPRESSÃO',
     'INSÔNIA',
+    'IDEAÇÃO SUICIDA',
   ],
   intermediaria: [
     'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
@@ -279,6 +280,7 @@ const QUEIXAS_POR_FASE = {
     'CÓLICAS / DOR ABDOMINAL RECORRENTE',
     'DEPRESSÃO',
     'INSÔNIA',
+    'IDEAÇÃO SUICIDA',
   ],
   tardia: [
     'CANSAÇO / FADIGA',
@@ -293,6 +295,7 @@ const QUEIXAS_POR_FASE = {
     'PROBLEMAS DE MEMÓRIA OU CONCENTRAÇÃO',
     'DEPRESSÃO',
     'INSÔNIA',
+    'IDEAÇÃO SUICIDA',
   ],
 }
 
@@ -468,6 +471,32 @@ function SectionTitle({ children }) {
   </div>
 }
 
+// Seções onde cabe o checkbox "não tenho certeza" (exigem conhecimento médico p/
+// responder). O slug é a chave estável guardada em form.duvidas; o rótulo é o texto
+// exibido no relatório. NÃO muda o nível clínico — só marca o retrato como provisório.
+const DUVIDA_SECOES = {
+  infeccoes:      'Infecções Crônicas',
+  endocrino:      'Status Endócrino / Hormonal',
+  endoscopico:    'Status Endoscópico',
+  vascular:       'Status Vascular',
+  cardiovascular: 'Status Cardiovascular',
+  osseo:          'Status Ósseo | Articular',
+  neurologico:    'Status Neurológico',
+  fibromialgico:  'Status Fibromiálgico | ME/CFS',
+  exames:         'Exames laboratoriais',
+}
+
+// Checkbox discreto de "não tenho certeza, vou precisar de ajuda médica".
+function DuvidaCheck({ secao, duvidas, onToggle }) {
+  const on = (duvidas || []).includes(secao)
+  return (
+    <div onClick={() => onToggle(secao)} style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', marginTop:'0.55rem', marginBottom:'0.2rem', cursor:'pointer', userSelect:'none' }}>
+      <input type="checkbox" readOnly checked={on} style={{ width:14, height:14, marginTop:'0.1rem', flexShrink:0, accentColor:'#7B1E1E' }} />
+      <span style={{ fontSize:'0.68rem', fontStyle:'italic', lineHeight:1.35, color: on ? '#7B1E1E' : '#9CA3AF' }}>{"Não tenho muita certeza nessa resposta, vou precisar de ajuda médica."}</span>
+    </div>
+  )
+}
+
 function calcDias(dataStr) {
   if (!dataStr) return null
   const d = new Date(dataStr)
@@ -623,10 +652,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [querResultado, setQuerResultado] = useState(false)
   const [querFerroEV, setQuerFerroEV] = useState(false)  // 2ª oferta do ferro EV na conclusão
   const [querCanabinoide, setQuerCanabinoide] = useState(false)  // teleconsulta c/ prescritor (>3 sintomas fibro)
+  const [querTeleDuvida, setQuerTeleDuvida] = useState(false)  // teleconsulta p/ esclarecer os pontos em dúvida
   // Protocolo de reposição de FERRO ENDOVENOSO (Ganzoni) — modal compartilhado.
   const [showFerroEV, setShowFerroEV] = useState(false)
   // Popup da PESQUISA (tratamento simbiótico p/ obstipação/fibromialgia).
   const [showPesquisa, setShowPesquisa] = useState(false)
+  // Popup da 1ª dúvida ("não tenho certeza"). Não repete se o progresso já vinha com dúvidas.
+  const [showDuvidaPopup, setShowDuvidaPopup] = useState(false)
+  const duvidaPopupVisto = useRef((salvo?.form?.duvidas || []).length > 0)
   const [pesquisaAceita, setPesquisaAceita] = useState(false)
   const [pesquisaEnviado, setPesquisaEnviado] = useState(false)
 
@@ -680,6 +713,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     hepb_status: '', hepc_status: '', hiv_tratamento: false,
     herpes_simples_aciclovir: false, herpes_zoster: [],
     borreliose_status: '', hpv_estado: [], ebv_status: '', htlv_ativa: false,
+    // Seções que o paciente marcou como "não tenho certeza" (slugs de DUVIDA_SECOES).
+    duvidas: [],
    }
    // Retomada de progresso (localStorage) tem prioridade.
    if (salvo?.form) return { ...def, ...salvo.form }
@@ -1023,6 +1058,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const marcouDoresOsseas = [form.queixa_principal, ...(form.queixas_secundarias || [])]
     .some(q => String(q || '').indexOf('DORES NOS OSSOS') === 0)
 
+  // Marcou IDEAÇÃO SUICIDA (principal ou secundária) → mensagem de segurança imediata.
+  const marcouIdeacao = [form.queixa_principal, ...(form.queixas_secundarias || [])]
+    .includes('IDEAÇÃO SUICIDA')
+
   // Data da avaliação (hoje) — topo da anamnese e relatórios. Mesmo formato do motor.
   const hojeFmt = new Date().toLocaleDateString('pt-BR')
 
@@ -1080,6 +1119,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
         : p.medicamentos
       return { ...p, status_fibromialgia: novo, medicamentos: meds }
     })
+  }
+
+  // Marca/desmarca uma seção como "não tenho certeza". Na 1ª dúvida da sessão, popup.
+  function toggleDuvida(secao) {
+    const estava = (form.duvidas || []).includes(secao)
+    setForm(p => {
+      const cur = p.duvidas || []
+      return { ...p, duvidas: cur.includes(secao) ? cur.filter(x => x !== secao) : [...cur, secao] }
+    })
+    if (!estava && !duvidaPopupVisto.current) {
+      duvidaPopupVisto.current = true
+      setShowDuvidaPopup(true)
+    }
   }
 
   function toggleAtividade(val) {
@@ -1161,6 +1213,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       hpv_estado: form.hpv_estado,
       ebv_status: form.ebv_status || null,
       htlv_ativa: form.htlv_ativa,
+      duvidas: form.duvidas || [],
       status_intestinal:  form.status_intestinal || null,
       status_fibromialgia: form.status_fibromialgia,
       calprotectina: form.calprotectina === '' ? null : Number(form.calprotectina),
@@ -1300,7 +1353,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const eritron = eritronEfetivo(examesObj)
     const rel = avaliarOBA(eritron, dados, examesObj)
     const temExames = Object.values(examesObj || {}).some(v => v !== null && v !== undefined && v !== '')
-    const est = rel ? classificarEstadoClinico(rel, { eritronColor: eritron?.color, temExames }) : null
+    const est = rel ? classificarEstadoClinico(rel, { eritronColor: eritron?.color, temExames, temDuvidas: (form.duvidas || []).length > 0 }) : null
     setRelatorio(rel)
     setEstadoClinico(est)
     setEtapa('relatorio')
@@ -1467,6 +1520,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       <div>
         <h2 style={{ color:'#facc15', fontSize: titulo ? '1.02rem' : '1.2rem', fontWeight:800, margin:0, lineHeight:1.25 }}>{titulo || `${saudacao} ao Projeto OBA!`}</h2>
         <p style={{ color:'#FDE68A', fontSize:'0.7rem', textTransform:'uppercase', letterSpacing:'1.5px', marginTop:'0.2rem' }}>{sub}</p>
+      </div>
+    </div>
+  )
+
+  // Popup da 1ª dúvida (renderizado nas etapas anamnese e exames).
+  const duvidaPopupEl = showDuvidaPopup && (
+    <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1.5rem', boxSizing:'border-box' }} onClick={(e) => { e.stopPropagation(); setShowDuvidaPopup(false) }}>
+      <div style={{ position:'relative', background:'white', borderRadius:16, maxWidth:440, width:'100%', padding:'1.7rem 1.4rem 1.4rem', boxShadow:'0 20px 60px rgba(0,0,0,0.35)' }} onClick={e => e.stopPropagation()}>
+        <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.6rem' }}>{"Tudo bem ter dúvidas"}</p>
+        <p style={{ fontSize:'0.85rem', color:'#374151', lineHeight:1.55, margin:'0 0 1rem' }}>
+          {"Ok. Conclua como você puder. Registre os pontos de dúvida e depois solicite uma TELECONSULTA MÉDICA. Um relatório com as suas dúvidas ficará no sistema para que um profissional o ajude a deixar as suas informações mais precisas. Isso será importante para o algoritmo otimizar a sua vida, à medida em que as recomendações forem seguidas."}
+        </p>
+        <button onClick={() => setShowDuvidaPopup(false)} style={{ width:'100%', background:'#6B7280', color:'#facc15', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.9rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>{"ENTENDI"}</button>
       </div>
     </div>
   )
@@ -1871,7 +1937,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   {estadoClinico?.motivo && <p style={{ fontSize:'0.82rem', color:estadoInfo.cor, margin:0, lineHeight:1.5 }}>{estadoClinico.motivo}</p>}
                   {estadoClinico?.provisorio && (
                     <p style={{ fontSize:'0.72rem', color:'#92400E', background:'#FEFCE8', border:'1px solid #FDE68A', borderRadius:8, padding:'0.4rem 0.6rem', marginTop:'0.6rem', display:'inline-block' }}>
-                      {"\u26a0 Classifica\u00e7\u00e3o PROVIS\u00d3RIA \u2014 complete seus exames para um retrato preciso."}
+                      {(form.duvidas || []).length > 0
+                        ? "\u26a0 Classifica\u00e7\u00e3o PROVIS\u00d3RIA \u2014 h\u00e1 pontos que voc\u00ea marcou como d\u00favida; ela pode mudar ao esclarec\u00ea-los."
+                        : "\u26a0 Classifica\u00e7\u00e3o PROVIS\u00d3RIA \u2014 complete seus exames para um retrato preciso."}
                     </p>
                   )}
                 </div>
@@ -1967,6 +2035,38 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       </div>
                     </div>
                   </>
+                )}
+
+                {/* PONTOS EM D\u00daVIDA \u2014 o paciente marcou "n\u00e3o tenho certeza" nestas se\u00e7\u00f5es.
+                    Oferta pr\u00f3pria de teleconsulta de esclarecimento (independe do estado). */}
+                {(form.duvidas || []).length > 0 && (
+                  <div style={{ background:'#FFFBEB', border:'2px solid #FDE68A', borderRadius:12, padding:'1rem 1.1rem', marginTop:'1rem' }}>
+                    <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#92400E', margin:'0 0 0.4rem' }}>{"Pontos que voc\u00ea marcou como d\u00favida"}</p>
+                    <ul style={{ margin:'0 0 0.6rem', paddingLeft:'1.1rem' }}>
+                      {(form.duvidas || []).map(s => (
+                        <li key={s} style={{ fontSize:'0.78rem', color:'#78350F', lineHeight:1.5 }}>{DUVIDA_SECOES[s] || s}</li>
+                      ))}
+                    </ul>
+                    <p style={{ fontSize:'0.78rem', color:'#78350F', lineHeight:1.5, margin:'0 0 0.7rem' }}>
+                      {"Uma TELECONSULTA M\u00c9DICA pode esclarecer estes pontos e deixar as suas informa\u00e7\u00f5es mais precisas \u2014 quanto mais precisas, melhor o algoritmo otimiza a sua sa\u00fade."}
+                    </p>
+                    <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                      <input type="checkbox" checked={querTeleDuvida} onChange={e => setQuerTeleDuvida(e.target.checked)} style={{ width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#92400E', flexShrink:0 }} />
+                      <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#92400E' }}>{"QUERO UMA TELECONSULTA PARA ESCLARECER ESTES PONTOS"}</span>
+                    </label>
+                    {querTeleDuvida ? (
+                      <div style={{ marginTop:'0.7rem' }}>
+                        <p style={{ fontSize:'0.76rem', color:'#78350F', lineHeight:1.5, margin:'0 0 0.5rem' }}>
+                          {"Um relat\u00f3rio com estas d\u00favidas ficar\u00e1 no sistema para o profissional te ajudar durante a teleconsulta."}
+                        </p>
+                        <a href={`https://wa.me/5571997110804?text=${encodeURIComponent('Ol\u00e1! Conclu\u00ed minha avalia\u00e7\u00e3o OBA e gostaria de uma teleconsulta para esclarecer alguns pontos que marquei como d\u00favida.')}`} target="_blank" rel="noreferrer" style={{ display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none' }}>{"Falar no WhatsApp \u2192"}</a>
+                      </div>
+                    ) : (
+                      <p style={{ fontSize:'0.76rem', color:'#78350F', lineHeight:1.5, margin:'0.6rem 0 0' }}>
+                        {"Se preferir n\u00e3o fazer a teleconsulta agora, estes pontos ficam marcados para voc\u00ea esclarecer com o seu m\u00e9dico e depois voltar e EDITAR a anamnese."}
+                      </p>
+                    )}
+                  </div>
                 )}
 
                 {/* ALERTAS */}
@@ -2161,6 +2261,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
   if (etapa === 'exames') return (
     <div style={OV} onClick={pularExames}>
+      {duvidaPopupEl}
       <div style={CD} onClick={e => e.stopPropagation()}>
         <Header titulo={"Exames | OBA®"} sub={subPaciente} semFada />
         <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
@@ -2394,6 +2495,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             )
           })()}
 
+          <DuvidaCheck secao="exames" duvidas={form.duvidas} onToggle={toggleDuvida} />
+
           {/* Bot\u00e3o \u00fanico (gray piscante, \u25b6 vermelho, subtexto vinho "AVALIA\u00c7\u00c3O").
               salvarExames j\u00e1 cobre o caso de campos vazios (salva nulls e segue),
               ent\u00e3o substitui tanto o "concluir" quanto o antigo "pular". */}
@@ -2415,6 +2518,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
   return (
     <>
+      {duvidaPopupEl}
       {showPesquisa && (
         <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1.5rem', boxSizing:'border-box' }} onClick={() => setShowPesquisa(false)}>
           <div style={{ position:'relative', background:'white', borderRadius:16, maxWidth:440, width:'100%', padding:'1.7rem 1.4rem 1.4rem', boxShadow:'0 20px 60px rgba(0,0,0,0.35)' }} onClick={e => e.stopPropagation()}>
@@ -2660,6 +2764,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </>
           )}
 
+          {marcouIdeacao && (
+            <div style={{ background:'#FEF2F2', border:'2px solid #DC2626', borderRadius:12, padding:'0.9rem 1rem', margin:'0.4rem 0 0.2rem' }}>
+              <p style={{ fontSize:'0.82rem', fontWeight:800, color:'#991B1B', margin:'0 0 0.4rem' }}>{"VOC\u00ca N\u00c3O EST\u00c1 SOZINHO(A)."}</p>
+              <p style={{ fontSize:'0.8rem', color:'#7F1D1D', lineHeight:1.5, margin:0 }}>
+                {"Se voc\u00ea tem pensamentos de morte ou de se machucar, procure ajuda AGORA: "}
+                <strong>{"CVV 188"}</strong>{" (liga\u00e7\u00e3o gratuita, 24h) ou "}<strong>{"emerg\u00eancia 192"}</strong>{". Voc\u00ea tamb\u00e9m pode conversar pelo site cvv.org.br. Pedir ajuda \u00e9 um ato de coragem \u2014 vamos te apoiar."}
+              </p>
+              <a href="tel:188" style={{ display:'inline-block', marginTop:'0.6rem', background:'#DC2626', color:'#fff', fontWeight:800, fontSize:'0.82rem', padding:'0.55rem 1rem', borderRadius:10, textDecoration:'none' }}>{"Ligar para o CVV 188"}</a>
+            </div>
+          )}
+
           <SectionTitle>{"Infec\u00e7\u00f5es Cr\u00f4nicas"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {INFECCOES_CRONICAS_OPS.map(op => (
@@ -2735,6 +2850,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <CheckRow label={"DOEN\u00c7A ATIVA"} checked={form.htlv_ativa} onClick={() => sf('htlv_ativa', !form.htlv_ativa)} />
             </div>
           )}
+
+          <DuvidaCheck secao="infeccoes" duvidas={form.duvidas} onToggle={toggleDuvida} />
 
           <SectionTitle>{"Acompanhamento M\u00e9dico"}</SectionTitle>
           <RadioGroup options={ACOMPANHAMENTO_OPS} value={form.acompanhamento} onChange={v => {
@@ -2859,6 +2976,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             )}
           </div>
 
+          <DuvidaCheck secao="endocrino" duvidas={form.duvidas} onToggle={toggleDuvida} />
+
           <SectionTitle>{"Status Press\u00f3rico"}</SectionTitle>
           <RadioGroup options={STATUS_PRESSORICO_OPS} value={form.status_pressorico} onChange={v => sf('status_pressorico', v)} mapLabel={o => gz(o, isFem)} />
 
@@ -2895,6 +3014,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <CheckRow label={"OPEREI VARIZES DE ESÔFAGO"} checked={form.operou_varizes_esofago} onClick={() => sf('operou_varizes_esofago', !form.operou_varizes_esofago)} />
             </div>
           )}
+
+          <DuvidaCheck secao="endoscopico" duvidas={form.duvidas} onToggle={toggleDuvida} />
 
           <SectionTitle>Status Vascular</SectionTitle>
 
@@ -2935,6 +3056,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <div style={{ marginTop:'0.8rem' }}>
             <CheckRow label={"DOEN\u00c7A ARTERIAL PERIF\u00c9RICA"} checked={!!form.doenca_arterial_periferica} onClick={() => sf('doenca_arterial_periferica', !form.doenca_arterial_periferica)} />
           </div>
+
+          <DuvidaCheck secao="vascular" duvidas={form.duvidas} onToggle={toggleDuvida} />
 
           <SectionTitle>{"Status Cardiovascular"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
@@ -2980,6 +3103,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <span style={{ fontSize:'0.8rem', color:'#6B7280' }}>{"score de cálcio"}</span>
             </div>
           )}
+
+          <DuvidaCheck secao="cardiovascular" duvidas={form.duvidas} onToggle={toggleDuvida} />
 
           <SectionTitle>{"Status Respiratório"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
@@ -3086,6 +3211,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </>
           )}
 
+          <DuvidaCheck secao="osseo" duvidas={form.duvidas} onToggle={toggleDuvida} />
+
           <SectionTitle>{"Status Neurol\u00f3gico"}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:'0.4rem' }}>
             {STATUS_NEUROLOGICO_OPS.map(opt => {
@@ -3114,6 +3241,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               )
             })}
           </div>
+
+          <DuvidaCheck secao="neurologico" duvidas={form.duvidas} onToggle={toggleDuvida} />
 
           <SectionTitle>Status Intestinal</SectionTitle>
           <RadioGroup options={STATUS_INTESTINAL_OPS} value={form.status_intestinal} onChange={v => {
@@ -3233,6 +3362,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               </div>
             </div>
           )}
+
+          <DuvidaCheck secao="fibromialgico" duvidas={form.duvidas} onToggle={toggleDuvida} />
 
           <SectionTitle>Status COVID-19</SectionTitle>
           <CheckRow label="TIVE COVID-19" checked={form.teve_covid} onClick={() => sf('teve_covid', !form.teve_covid)} />
