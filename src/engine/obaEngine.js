@@ -162,6 +162,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modComport = buildModComportamental(dadosOBA, alertas, examesSuger)
   if (modComport) modulos.push(modComport)
 
+  // ── 12b. MÓDULO HÁBITOS SOCIAIS E ESTILO DE VIDA (só módulo — não gera alerta) ──
+  const modHabitos = buildModHabitos(dadosOBA)
+  if (modHabitos) modulos.push(modHabitos)
+
   // ── 13. MÓDULO GESTACIONAL ───────────────────────────────────────────────
   const modGest = buildModGestacional(dadosOBA, mesesPos, alertas, examesSuger)
   if (modGest) modulos.push(modGest)
@@ -1568,6 +1572,61 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
 // ─────────────────────────────────────────────────────────────────────────────
 // MÓDULO 12 — COMPORTAMENTAL E QUALIDADE DE VIDA
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO — HÁBITOS SOCIAIS E ESTILO DE VIDA
+// Só MÓDULO (não empurra alerta), logo NÃO altera o Estado Geral Clínico — a régua
+// (classificarEstadoClinico) conta apenas alertas. O nível aqui é só a cor do card:
+// doador de sangue = MODERADO; demais atenções = LEVE; só positivos = NORMAL (verde).
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModHabitos(dados) {
+  const h = dados.habitos_sociais || []
+  if (!h.length) return null
+  const has = (x) => h.includes(x)
+  const gestante = dados.status_gestacional === 'GRÁVIDA'
+
+  const RANK = { [GRAVE]: 3, [MODERADO]: 2, [LEVE]: 1, [NORMAL]: 0 }
+  let nivel = NORMAL
+  const bump = (n) => { if (RANK[n] > RANK[nivel]) nivel = n }
+
+  const linhas = []
+
+  // ── Pontos de atenção ──
+  if (has('SOU DOADOR DE SANGUE')) {
+    bump(MODERADO)
+    linhas.push('DOADOR DE SANGUE: CADA DOAÇÃO REMOVE 200-250 MG DE FERRO. NO BARIÁTRICO, QUE JÁ ABSORVE FERRO DE FORMA DEFICIENTE, ISSO PODE PRECIPITAR OU AGRAVAR ANEMIA FERROPÊNICA. SÓ DOE SANGUE COM AUTORIZAÇÃO MÉDICA E COM FERRITINA E HEMOGRAMA MONITORADOS.')
+  }
+  if (has('SOU DOADOR DE MEDULA ÓSSEA')) {
+    bump(LEVE)
+    linhas.push('DOADOR DE MEDULA ÓSSEA: SE FOR CONVOCADO, INFORME AO CENTRO COLETADOR A SUA CONDIÇÃO DE BARIÁTRICO. A COLETA DE MEDULA FRESCA (POR PUNÇÃO) PODE IMPOR PERDA DE FERRO ATÉ MAIOR QUE UMA DOAÇÃO DE SANGUE, PELO VOLUME E PELA CONCENTRAÇÃO CELULAR — EXIGE AVALIAÇÃO E PREPARO DO ESTOQUE DE FERRO.')
+  }
+  const temSol = has('TOMO SOL HABITUALMENTE') || has('FAÇO ATIVIDADES AO AR LIVRE') || has('COSTUMO IR A PRAIA')
+  if (has('MORO EM APARTAMENTO') && !temSol) {
+    bump(LEVE)
+    linhas.push('MORAR EM APARTAMENTO COM POUCA EXPOSIÇÃO SOLAR AUMENTA O RISCO DE DEFICIÊNCIA DE VITAMINA D, JÁ FREQUENTE NO BARIÁTRICO. REFORCE A SUPLEMENTAÇÃO E BUSQUE LUZ SOLAR REGULAR.')
+  }
+  if (has('TENHO GATO') && gestante) {
+    bump(LEVE)
+    linhas.push('CONVÍVIO COM GATO NA GESTAÇÃO: AO CONTRÁRIO DO MITO, O GATO NÃO É A PRINCIPAL FONTE DE TOXOPLASMOSE — VERDURAS MAL LAVADAS E CARNE MALCOZIDA OFERECEM RISCO MAIOR, SOBRETUDO EM PAÍSES EM DESENVOLVIMENTO. AINDA ASSIM, LAVE BEM AS MÃOS APÓS MANIPULAR A CAIXA DE AREIA E HIGIENIZE BEM OS ALIMENTOS.')
+  }
+
+  // ── Reforço positivo ──
+  const positivos = []
+  if (temSol) positivos.push('a exposição ao sol favorece a síntese de vitamina D (mantenha a fotoproteção)')
+  if (has('TENHO CACHORRO E PASSEIO COM ELE')) positivos.push('passear com o cão é gasto calórico e atividade física regular')
+  if (has('TENHO PLANTAS EM CASA') || has('MORO EM CASA') || has('FAÇO ATIVIDADES AO AR LIVRE') || has('COSTUMO IR A PRAIA') || has('TENHO CACHORRO E PASSEIO COM ELE') || has('TENHO GATO')) {
+    positivos.push('o contato com plantas, jardins, praças, praia e animais diversifica o microbioma (efeito probiótico natural)')
+  }
+  if (has('TENHO UM HOBBY') || has('AJUDO UM PROJETO SOCIAL')) {
+    positivos.push('hobby e engajamento social melhoram a saúde mental, a adesão ao acompanhamento e reduzem o risco de reganho de peso')
+  }
+  if (positivos.length) {
+    linhas.push('PONTOS POSITIVOS DO SEU ESTILO DE VIDA: ' + positivos.join('; ') + '.')
+  }
+
+  if (!linhas.length) return null
+  return { id: 'habitos', titulo: 'HÁBITOS SOCIAIS E ESTILO DE VIDA', nivel, linhas }
+}
+
 function buildModComportamental(dados, alertas, suger) {
   const linhas = []
   let nivelGeral = NORMAL
