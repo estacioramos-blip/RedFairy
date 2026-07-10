@@ -110,6 +110,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modulos     = []
   const examesSuger = []
 
+  // ── 0. IDEAÇÃO SUICIDA (queixa) — situação crítica, tem prioridade sobre tudo ──
+  const modIdeacao = buildModIdeacao(dadosOBA, alertas, examesSuger)
+  if (modIdeacao) modulos.push(modIdeacao)
+
   // ── 1. MÓDULO ERITRON BARIÁTRICO ────────────────────────────────────────
   const modEritron = buildModEritron(resultadoEritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir, alertas, examesSuger)
   modulos.push(modEritron)
@@ -1576,6 +1580,29 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
 // ─────────────────────────────────────────────────────────────────────────────
 // MÓDULO 12 — COMPORTAMENTAL E QUALIDADE DE VIDA
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO — IDEAÇÃO SUICIDA (queixa)
+// Situação crítica: alerta GRAVE (leva o Estado Geral a CRÍTICO) + módulo acolhedor
+// com recursos de crise e encaminhamento. Texto visível ao paciente — tom de apoio.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModIdeacao(dados, alertas, suger) {
+  const qs = [dados.queixa_principal, ...(dados.queixas_secundarias || [])]
+  if (!qs.includes('IDEAÇÃO SUICIDA')) return null
+  alertas.push({ nivel: GRAVE, texto: 'IDEAÇÃO SUICIDA RELATADA — SITUAÇÃO CRÍTICA. AJUDA IMEDIATA: CVV 188 (24H) / EMERGÊNCIA 192. ENCAMINHAMENTO URGENTE A PSIQUIATRA/PSICÓLOGO.' })
+  suger.push('AVALIAÇÃO PSIQUIÁTRICA URGENTE')
+  return {
+    id: 'ideacao',
+    titulo: 'SAÚDE MENTAL — IDEAÇÃO SUICIDA',
+    nivel: GRAVE,
+    linhas: [
+      'VOCÊ RELATOU PENSAMENTOS DE MORTE OU DE SE MACHUCAR — OBRIGADO PELA CORAGEM DE REGISTRAR. ISSO É LEVADO A SÉRIO E TEM TRATAMENTO.',
+      'NO PÓS-BARIÁTRICO O RISCO DE DEPRESSÃO E DE IDEAÇÃO SUICIDA É MAIOR — NÃO É FRAQUEZA, É UMA CONDIÇÃO QUE PRECISA DE CUIDADO.',
+      'PROCURE AJUDA AGORA SE PRECISAR: CVV 188 (LIGAÇÃO GRATUITA, 24H) OU EMERGÊNCIA 192. RECOMENDAMOS FORTEMENTE UMA AVALIAÇÃO COM PSIQUIATRA/PSICÓLOGO E UMA TELECONSULTA O QUANTO ANTES.',
+    ],
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MÓDULO — HÁBITOS SOCIAIS E ESTILO DE VIDA
 // Só MÓDULO (não empurra alerta), logo NÃO altera o Estado Geral Clínico — a régua

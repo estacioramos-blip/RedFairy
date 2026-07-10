@@ -1143,6 +1143,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     return {
       sexo,
       idade: idadeNum,
+      queixa_principal:   form.queixa_principal || null,
+      queixas_secundarias: form.queixas_secundarias || [],
       tipo_cirurgia:      form.tipo_cirurgia || "N\u00c3O SEI",
       meses_pos_cirurgia: mesesPos || 0,
       peso_antes:         pesoAntes || null,
