@@ -12,6 +12,7 @@ import IndicadorPage from './components/IndicadorPage'
 import OBAEntradaPaciente from './components/OBAEntradaPaciente'
 import CaixaPage from './components/CaixaPage'
 import AdminLogin from './components/AdminLogin'
+import RestritoLogin from './components/RestritoLogin'
 import { ehDominioBariatrico } from './lib/dominio'
 import { setManifestFluxo } from './lib/manifestFluxo'
 export default function App() {
@@ -172,6 +173,10 @@ export default function App() {
     } else if (modoParam === 'caixa') {
       // (CAIXA) tesouraria manual — rotina independente com senha própria.
       setModo('caixa')
+    } else if (modoParam === 'restrito') {
+      // (ACESSO RESTRITO) porta única do chapéu do rodapé: campo de senha (caixa) +
+      // entrada discreta do admin. NÃO revela o "tesoureiro".
+      setModo('restrito')
     } else if (modoParam === 'admin') {
       // (ADMIN) porta do chapéu no rodapé do bariatrico.net — o gate mostra o
       // card de login do ADMIN (AdminLogin) se não houver sessão de administrador.
@@ -577,6 +582,13 @@ export default function App() {
 
   if (modo === 'caixa') {
     return <CaixaPage onVoltar={() => setModo('home')} />
+  }
+
+  if (modo === 'restrito') {
+    return <RestritoLogin
+      onCaixa={() => setModo('caixa')}
+      onAdmin={() => setModo('admin')}
+      onVoltar={() => setModo('home')} />
   }
 
   if (modo === 'admin') {
