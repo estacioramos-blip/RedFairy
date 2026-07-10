@@ -100,6 +100,19 @@ const STATUS_HORMONAL_OPS = [
   'HIPERTIREOIDISMO',
 ]
 
+// Status Ginecológico (só sexo feminino). SANGRAMENTO MENSTRUAL e CÂNCER DE MAMA
+// abrem sub-opções (radio) ao serem marcados.
+const STATUS_GINECOLOGICO_OPS = [
+  'ENDOMETRIOSE',
+  'MIOMAS | MIOMATOSE',
+  'SANGRAMENTO MENSTRUAL',
+  'OVÁRIOS POLICÍSTICOS',
+  'CISTOS NAS MAMAS',
+  'CÂNCER DE MAMA',
+  'MOLA HIDATIFORME',
+]
+const SANGRAMENTO_MENSTRUAL_OPS = ['EXCESSIVO', 'PROLONGADO', 'EXCESSIVO E PROLONGADO']
+
 const STATUS_RESPIRATORIO_OPS = [
   'NORMAL',
   'RINITE | SINUSITE',
@@ -681,6 +694,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     acompanhamento: '', especialistas: [],
     status_gestacional: '', semanas_gestacao: '', temExamesMesmaData: false,
     status_glicemico: '', dumping: false, status_hormonal: [], status_pressorico: '', status_endoscopico: [], status_neurologico: [],
+    // Status ginecológico (só feminino) + sub-estados (sangramento / câncer de mama).
+    status_ginecologico: [], sangramento_menstrual_tipo: '', cancer_mama_status: '',
     status_respiratorio: [], status_alergico: [], alergia_medicamentosa: [], alergia_outra_texto: '',
     trombose: null, investigou_trombose: false,
     usou_anticoagulante: false, usa_anticoagulante: false,
@@ -1145,6 +1160,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       idade: idadeNum,
       queixa_principal:   form.queixa_principal || null,
       queixas_secundarias: form.queixas_secundarias || [],
+      status_ginecologico: form.status_ginecologico,
+      // Sub-respostas só valem se o checkbox pai estiver marcado (senão viram dado sujo).
+      sangramento_menstrual_tipo: form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_menstrual_tipo || null) : null,
+      cancer_mama_status: form.status_ginecologico.includes('CÂNCER DE MAMA') ? (form.cancer_mama_status || null) : null,
       tipo_cirurgia:      form.tipo_cirurgia || "N\u00c3O SEI",
       meses_pos_cirurgia: mesesPos || 0,
       peso_antes:         pesoAntes || null,
@@ -2979,6 +2998,27 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
 
           <DuvidaCheck secao="endocrino" duvidas={form.duvidas} onToggle={toggleDuvida} />
+
+          {isFem && (<>
+          <SectionTitle>{"Status Ginecol\u00f3gico"}</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_GINECOLOGICO_OPS.map(op => (
+              <CheckRow key={op} label={op} checked={form.status_ginecologico.includes(op)} onClick={() => sf('status_ginecologico', tog(form.status_ginecologico, op))} />
+            ))}
+          </div>
+          {form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && (
+            <div style={{ marginTop:'0.5rem' }}>
+              <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151', margin:'0 0 0.35rem' }}>{"Tipo de sangramento:"}</p>
+              <RadioGroup options={SANGRAMENTO_MENSTRUAL_OPS} value={form.sangramento_menstrual_tipo} cols={1} onChange={v => sf('sangramento_menstrual_tipo', form.sangramento_menstrual_tipo === v ? '' : v)} />
+            </div>
+          )}
+          {form.status_ginecologico.includes('C\u00c2NCER DE MAMA') && (
+            <div style={{ marginTop:'0.5rem' }}>
+              <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151', margin:'0 0 0.35rem' }}>{"C\u00e2ncer de mama:"}</p>
+              <RadioGroup options={['EM TRATAMENTO', 'RESOLVIDO']} value={form.cancer_mama_status} cols={2} onChange={v => sf('cancer_mama_status', form.cancer_mama_status === v ? '' : v)} />
+            </div>
+          )}
+          </>)}
 
           <SectionTitle>{"Status Press\u00f3rico"}</SectionTitle>
           <RadioGroup options={STATUS_PRESSORICO_OPS} value={form.status_pressorico} onChange={v => sf('status_pressorico', v)} mapLabel={o => gz(o, isFem)} />
