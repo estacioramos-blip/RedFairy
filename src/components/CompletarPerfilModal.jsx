@@ -32,6 +32,11 @@ const DDDS_VALIDOS = new Set([
   '91','92','93','94','95','96','97','98','99',
 ])
 
+function formatarCep(v) {
+  const d = (v || '').replace(/\D/g, '').slice(0, 8)
+  return d.length <= 5 ? d : `${d.slice(0, 5)}-${d.slice(5)}`
+}
+
 function formatarCelular(v) {
   let d = (v || '').replace(/\D/g, '')
   // Autofill/colagem costuma trazer o +55 na frente (12-13 dígitos): remove o código do país.
@@ -48,6 +53,20 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const [nome, setNome] = useState(profile?.nome || '')
   const [celular, setCelular] = useState(profile?.celular ? formatarCelular(profile.celular) : '')
   const [email, setEmail] = useState('')
+  // Fase 1 (emergência): endereço (preenchido pelo ViaCEP) + contato de emergência.
+  // Encorajados, não bloqueiam o CONFIRMO (tudoOk segue só nome/celular/e-mail).
+  const [cep, setCep] = useState('')
+  const [logradouro, setLogradouro] = useState('')
+  const [numero, setNumero] = useState('')
+  const [complemento, setComplemento] = useState('')
+  const [bairro, setBairro] = useState('')
+  const [cidade, setCidade] = useState('')
+  const [uf, setUf] = useState('')
+  const [cepBuscando, setCepBuscando] = useState(false)
+  const [cepErro, setCepErro] = useState('')
+  const [emergNome, setEmergNome] = useState('')
+  const [emergCelular, setEmergCelular] = useState('')
+  const [emergParentesco, setEmergParentesco] = useState('')
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
   const [campoAtivo, setCampoAtivo] = useState('nome')
@@ -63,6 +82,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const celTimer = useRef(null)
   const emailTimer = useRef(null)
   const confirmarRef = useRef(null)
+  const numeroRef = useRef(null)
   const ultimaTecla = useRef(0)   // p/ o vigia anti-autofill não brigar com a digitação
 
   useEffect(() => () => {
@@ -149,6 +169,27 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     setEmail(v.toLowerCase()); setErro('')
   }
 
+  // ViaCEP: ao completar 8 dígitos, preenche logradouro/bairro/cidade/UF automaticamente.
+  async function buscarCep(d) {
+    setCepBuscando(true); setCepErro('')
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${d}/json/`)
+      const j = await r.json()
+      if (j.erro) setCepErro('CEP não encontrado — preencha manualmente.')
+      else {
+        setLogradouro(j.logradouro || ''); setBairro(j.bairro || '')
+        setCidade(j.localidade || ''); setUf(j.uf || '')
+        setTimeout(() => numeroRef.current?.focus(), 50)
+      }
+    } catch (e) { setCepErro('Não deu para buscar o CEP agora — preencha manualmente.') }
+    setCepBuscando(false)
+  }
+  function onCepChange(v) {
+    const f = formatarCep(v); setCep(f); setCepErro('')
+    const d = f.replace(/\D/g, '')
+    if (d.length === 8) buscarCep(d)
+  }
+
   async function handleSalvar() {
     setErro('')
     const nomeT = (nome || '').trim()
@@ -168,6 +209,23 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     // E-mail: profiles.email pode não existir ainda (rodar migrate_profiles_email.sql). Update
     // SEPARADO e tolerante — não quebra o salvar do perfil se a coluna faltar.
     try { await supabase.from('profiles').update({ email: emailT }).eq('id', profile.id) } catch (e) {}
+    // Endereço + contato de emergência: colunas podem não existir ainda (rodar
+    // migrate_profiles_endereco_emergencia.sql). Update SEPARADO e tolerante — se as
+    // colunas faltarem, o erro é ignorado e o salvar do perfil (nome/celular) não quebra.
+    try {
+      await supabase.from('profiles').update({
+        cep: cep.replace(/\D/g, '') || null,
+        logradouro: logradouro.trim() || null,
+        numero: numero.trim() || null,
+        complemento: complemento.trim() || null,
+        bairro: bairro.trim() || null,
+        cidade: cidade.trim() || null,
+        uf: (uf || '').trim().toUpperCase() || null,
+        contato_emergencia_nome: emergNome.trim() || null,
+        contato_emergencia_celular: emergCelular.replace(/\D/g, '') || null,
+        contato_emergencia_parentesco: emergParentesco.trim() || null,
+      }).eq('id', profile.id)
+    } catch (e) {}
     setLoading(false)
     if (error) { setErro('Erro ao salvar. Tente novamente.'); return }
 
@@ -180,6 +238,8 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
       campoAtivo === campo ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white'
     }`
   const labelCls = "block text-xs font-semibold text-gray-600 mb-1"
+  // Inputs dos campos novos (endereço/emergência) — sem o realce seamless, borda simples.
+  const inpCls = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none border-2 border-gray-200 focus:border-yellow-400 bg-white"
   // (bariátrico) rótulos de Celular/E-mail em PRETO (a imagem de fundo é só um leve fundo).
   const estiloLabel = ehBari ? { color: '#000000' } : undefined
 
@@ -253,6 +313,44 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
               {email && !emailOk && (
                 <p className="text-xs mt-1" style={{ color: '#F97316' }}>{"Entre um e-mail válido"}</p>
               )}
+            </div>
+
+            {/* ENDEREÇO — importante para o socorro chegar em uma emergência. CEP → ViaCEP. */}
+            <div>
+              <label className={labelCls} style={estiloLabel}>{"Endereço"}</label>
+              <p className="text-xs text-gray-500 mb-1">{"Importante para o socorro chegar em uma emergência. Digite o CEP que preenchemos o resto."}</p>
+              <div className="flex gap-2">
+                <input type="text" value={cep} onChange={e => onCepChange(e.target.value)} inputMode="numeric" maxLength={9}
+                  className={inpCls + " flex-1"} placeholder={"CEP"} />
+                <input ref={numeroRef} type="text" value={numero} onChange={e => setNumero(e.target.value)} inputMode="numeric"
+                  className={inpCls + " w-24"} placeholder={"Número"} />
+              </div>
+              {cepBuscando && <p className="text-xs text-gray-500 mt-1">{"Buscando o CEP…"}</p>}
+              {cepErro && <p className="text-xs mt-1" style={{ color: '#F97316' }}>{cepErro}</p>}
+              {(logradouro || cidade) && (
+                <div className="mt-2 space-y-2">
+                  <input type="text" value={logradouro} onChange={e => setLogradouro(e.target.value)} className={inpCls} placeholder={"Rua / logradouro"} />
+                  <input type="text" value={complemento} onChange={e => setComplemento(e.target.value)} className={inpCls} placeholder={"Complemento (opcional)"} />
+                  <div className="flex gap-2">
+                    <input type="text" value={bairro} onChange={e => setBairro(e.target.value)} className={inpCls + " flex-1"} placeholder={"Bairro"} />
+                    <input type="text" value={cidade} onChange={e => setCidade(e.target.value)} className={inpCls + " flex-1"} placeholder={"Cidade"} />
+                    <input type="text" value={uf} onChange={e => setUf(e.target.value.toUpperCase().slice(0, 2))} className={inpCls + " w-16"} placeholder={"UF"} maxLength={2} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* CONTATO DE EMERGÊNCIA (nome + celular + parentesco) */}
+            <div>
+              <label className={labelCls} style={estiloLabel}>{"Contato de emergência"}</label>
+              <p className="text-[11px] text-gray-500 mb-1 leading-snug">{"CERTAS SITUAÇÕES CLÍNICAS PODEM INDICAR RISCO MAIOR: DOR AGUDA, DESFALECIMENTO, TONTURA, QUEDA, HEMORRAGIA... EXIGINDO ORIENTAÇÃO/INTERVENÇÃO DE URGÊNCIA. ACIONAR TRÊS VEZES O BOTÃO DE EMERGÊNCIA DEFLAGRARÁ AÇÕES DE PROTEÇÃO E CONTATO DE EMERGÊNCIA."}</p>
+              <div className="space-y-2">
+                <input type="text" value={emergNome} onChange={e => setEmergNome(e.target.value.toUpperCase())} className={inpCls} placeholder={"Nome do contato"} style={{ textTransform: 'uppercase' }} />
+                <div className="flex gap-2">
+                  <input type="text" value={emergCelular} onChange={e => setEmergCelular(formatarCelular(e.target.value))} inputMode="numeric" maxLength={16} className={inpCls + " flex-1"} placeholder={"Celular do contato"} />
+                  <input type="text" value={emergParentesco} onChange={e => setEmergParentesco(e.target.value)} className={inpCls + " w-32"} placeholder={"Parentesco"} />
+                </div>
+              </div>
             </div>
 
             {erro && (
