@@ -1595,10 +1595,12 @@ function buildModIdeacao(dados, alertas, suger) {
     id: 'ideacao',
     titulo: 'SAÚDE MENTAL — IDEAÇÃO SUICIDA',
     nivel: GRAVE,
+    // Texto de apoio em caixa NORMAL (de propósito) — tom acolhedor num tema sensível,
+    // destacado dos demais módulos (que são em caixa alta clínica).
     linhas: [
-      'VOCÊ RELATOU PENSAMENTOS DE MORTE OU DE SE MACHUCAR — OBRIGADO PELA CORAGEM DE REGISTRAR. ISSO É LEVADO A SÉRIO E TEM TRATAMENTO.',
-      'NO PÓS-BARIÁTRICO O RISCO DE DEPRESSÃO E DE IDEAÇÃO SUICIDA É MAIOR — NÃO É FRAQUEZA, É UMA CONDIÇÃO QUE PRECISA DE CUIDADO.',
-      'PROCURE AJUDA AGORA SE PRECISAR: CVV 188 (LIGAÇÃO GRATUITA, 24H) OU EMERGÊNCIA 192. RECOMENDAMOS FORTEMENTE UMA AVALIAÇÃO COM PSIQUIATRA/PSICÓLOGO E UMA TELECONSULTA O QUANTO ANTES.',
+      'Você relatou pensamentos de morte ou de se machucar — obrigado pela coragem de registrar. Isso é levado a sério e tem tratamento.',
+      'No pós-bariátrico, o risco de depressão e de ideação suicida é maior. Não é fraqueza: é uma condição que precisa de cuidado.',
+      'Procure ajuda agora se precisar: CVV 188 (ligação gratuita, 24h) ou emergência 192. Recomendamos fortemente uma avaliação com psiquiatra ou psicólogo e uma teleconsulta o quanto antes.',
     ],
   }
 }
