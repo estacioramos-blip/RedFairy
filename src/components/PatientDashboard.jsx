@@ -55,6 +55,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [saldoIndicadorBrl, setSaldoIndicadorBrl] = useState(0)
   // (icone do bariatrico) bifurcacao ao abrir pelo icone: Entrar x Indicar.
   const [showEscolhaEntrarIndicar, setShowEscolhaEntrarIndicar] = useState(false)
+  // BOTÃO DE EMERGÊNCIA (Fase 2): 3 toques para acionar. showEmergencia = tela aberta.
+  const [showEmergencia, setShowEmergencia] = useState(false)
+  const [emergToques, setEmergToques] = useState(0)
+  const emergTimerRef = useRef(null)
+  useEffect(() => () => { if (emergTimerRef.current) clearTimeout(emergTimerRef.current) }, [])
   const [querPedidoGratis, setQuerPedidoGratis] = useState(false)
   const [salvandoBoasVindas, setSalvandoBoasVindas] = useState(false)
   // "Instale a fadinha" (PWA) — checkbox dentro do card de boas-vindas.
@@ -239,7 +244,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       if (d > 0) await new Promise(r => setTimeout(r, d))
       const { data } = await supabase
         .from('profiles')
-        .select('id, nome, cpf, sexo, data_nascimento, celular, email, bariatrica, gestante, boas_vindas_vista, primeira_avaliacao_feita')
+        .select('*')   // '*' p/ trazer endereço/contato de emergência (Fase 2) sem quebrar se as colunas ainda não existirem
         .eq('id', session.user.id).maybeSingle()
       if (data) { prof = data; break }
     }
@@ -470,6 +475,41 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // pelo irVoltar, que deixava o app numa landing/aba sobreposta sem saída.
     sairDoApp()
   }
+
+  // ── BOTÃO DE EMERGÊNCIA ──────────────────────────────────────────────────
+  // 3 toques para acionar (evita disparo acidental). O 3º toque abre a tela e
+  // NOTIFICA (Telegram): ADM + médico plantonista (chat oculto na config).
+  async function dispararEmergencia() {
+    try {
+      const p = profile || {}
+      const endereco = [p.logradouro, p.numero, p.complemento, p.bairro, p.cidade, p.uf].filter(Boolean).join(', ')
+      const contato = [p.contato_emergencia_nome, p.contato_emergencia_parentesco ? `(${p.contato_emergencia_parentesco})` : null, p.contato_emergencia_celular].filter(Boolean).join(' ')
+      const msg = '🚨 EMERGÊNCIA ACIONADA — Projeto OBA\n' +
+        `Paciente: ${p.nome || '—'}\n` +
+        `CPF: ${fmtCPF(p.cpf)}\n` +
+        `Celular: ${p.celular || '—'}\n` +
+        `Endereço: ${endereco || '(não informado)'}` + (p.cep ? ` — CEP ${p.cep}` : '') + '\n' +
+        `Contato de emergência: ${contato || '(não informado)'}\n` +
+        `Data|Hora: ${new Date().toLocaleString('pt-BR')}`
+      try { await supabase.rpc('tg_enviar', { p_msg: msg }) } catch (e) {}
+      try { await supabase.rpc('tg_enviar_chave', { p_msg: msg, p_chave_chat: 'telegram_chat_plantonista' }) } catch (e) {}
+    } catch (e) {}
+  }
+  function tocarEmergencia() {
+    if (emergTimerRef.current) clearTimeout(emergTimerRef.current)
+    const novo = emergToques + 1
+    if (novo >= 3) {
+      setEmergToques(0)
+      dispararEmergencia()
+      setShowEmergencia(true)
+    } else {
+      setEmergToques(novo)
+      emergTimerRef.current = setTimeout(() => setEmergToques(0), 4500)  // reseta se parar
+    }
+  }
+  // Fase 3 (a fazer): piscar preto/vermelho quando houver IDEAÇÃO SUICIDA ativa nas
+  // queixas do paciente. Por ora sempre estático.
+  const piscaEmergencia = false
 
   // Reune triagens + avaliacoes do paciente logado e abre o modal de grafico.
   // Espelha handleBuscarHistorico do TriagemModal, mas usa profile.cpf direto
@@ -1735,6 +1775,29 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             {(profile.nome || profile.cpf) && (
               <p className="text-center text-[11px] text-gray-400 mb-4">{[profile.nome, fmtCPF(profile.cpf)].filter(Boolean).join('  ·  ')}</p>
             )}
+
+            {/* BOTÃO DE EMERGÊNCIA — círculo vermelho com cruz branca; 3 toques p/ acionar.
+                Pisca preto/vermelho quando houver ideação suicida ativa (Fase 3). */}
+            <style>{`@keyframes emergPisca{0%,49%{background:#DC2626;box-shadow:0 0 0 0 rgba(220,38,38,0.5);}50%,100%{background:#111827;box-shadow:0 0 0 6px rgba(17,24,39,0.18);}}.emerg-pisca{animation:emergPisca .7s steps(1,end) infinite;}`}</style>
+            <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border-2 border-red-200 bg-red-50 px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-base font-extrabold text-red-700 leading-tight">{"EMERGÊNCIA"}</p>
+                <p className="text-[11px] text-red-500 leading-snug">
+                  {emergToques === 0
+                    ? "Em caso de risco (queda, desfalecimento, hemorragia…), toque 3×."
+                    : emergToques === 1
+                      ? "CONFIRME COM MAIS DOIS TOQUES"
+                      : "MAIS UM TOQUE PARA ACIONAR"}
+                </p>
+              </div>
+              <button onClick={tocarEmergencia} aria-label="Acionar emergência"
+                className={piscaEmergencia ? 'emerg-pisca' : ''}
+                style={{ width: 54, height: 54, borderRadius: '50%', background: '#DC2626', border: '3px solid #fff', boxShadow: '0 2px 8px rgba(0,0,0,0.25)', flexShrink: 0, position: 'relative', cursor: 'pointer' }}>
+                <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 24, height: 7, background: '#fff', borderRadius: 2 }} />
+                <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 7, height: 24, background: '#fff', borderRadius: 2 }} />
+              </button>
+            </div>
+
             <div className="divide-y divide-gray-100">
               <div className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
@@ -1783,6 +1846,34 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 <p className="text-[10px] text-gray-400 mt-1 leading-snug">{"Retorna "}<b>{"sem"}</b>{" CPF/SENHA"}</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {showEmergencia && (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.96)' }}>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div style={{ background: '#DC2626', padding: '1rem 1.2rem', color: '#fff' }}>
+            <p style={{ fontWeight: 900, fontSize: '1.1rem', margin: 0 }}>{"EMERGÊNCIA ACIONADA"}</p>
+            <p style={{ fontSize: '0.78rem', opacity: 0.95, margin: '0.2rem 0 0' }}>{"A equipe do Projeto OBA foi avisada. Use os contatos abaixo agora."}</p>
+          </div>
+          <div className="p-5 flex flex-col gap-3">
+            <a href="tel:192" style={{ background: '#DC2626', color: '#fff', fontWeight: 800, textAlign: 'center', padding: '0.9rem', borderRadius: 12, textDecoration: 'none', fontSize: '1rem' }}>{"🚑 Ligar para o SAMU 192"}</a>
+            <a href="tel:188" style={{ background: '#7B1E1E', color: '#fff', fontWeight: 800, textAlign: 'center', padding: '0.9rem', borderRadius: 12, textDecoration: 'none', fontSize: '1rem' }}>{"💬 Ligar para o CVV 188"}</a>
+            {profile?.contato_emergencia_celular ? (
+              <>
+                <a href={`tel:${String(profile.contato_emergencia_celular).replace(/\D/g, '')}`} style={{ background: '#16a34a', color: '#fff', fontWeight: 800, textAlign: 'center', padding: '0.9rem', borderRadius: 12, textDecoration: 'none', fontSize: '0.95rem' }}>
+                  {"📞 Ligar para "}{profile.contato_emergencia_nome || 'meu contato de emergência'}
+                </a>
+                <a href={`https://wa.me/55${String(profile.contato_emergencia_celular).replace(/\D/g, '')}?text=${encodeURIComponent('Preciso de ajuda — estou em uma emergência.')}`} target="_blank" rel="noreferrer" style={{ background: '#25D366', color: '#fff', fontWeight: 800, textAlign: 'center', padding: '0.8rem', borderRadius: 12, textDecoration: 'none', fontSize: '0.9rem' }}>
+                  {"WhatsApp para o meu contato →"}
+                </a>
+              </>
+            ) : (
+              <p className="text-xs text-gray-500 text-center">{"Você ainda não cadastrou um contato de emergência — cadastre no seu perfil para acioná-lo aqui."}</p>
+            )}
+            <button onClick={() => setShowEmergencia(false)} className="mt-1 text-xs text-gray-400 hover:text-gray-600 font-medium text-center">{"Fechar"}</button>
           </div>
         </div>
       </div>
