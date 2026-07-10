@@ -507,9 +507,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       emergTimerRef.current = setTimeout(() => setEmergToques(0), 4500)  // reseta se parar
     }
   }
-  // Fase 3 (a fazer): piscar preto/vermelho quando houver IDEAÇÃO SUICIDA ativa nas
-  // queixas do paciente. Por ora sempre estático.
-  const piscaEmergencia = false
+  // Fase 3: pisca preto/vermelho quando a avaliação MAIS RECENTE do paciente marcou
+  // IDEAÇÃO SUICIDA como queixa (principal ou secundária). As queixas ficam no
+  // form_snapshot do relatorio_oba da última linha carregada em anamneseAnterior.
+  // Para quando uma avaliação futura não trouxer mais a queixa.
+  const piscaEmergencia = (() => {
+    const snap = anamneseAnterior?.relatorio_oba?.form_snapshot
+    if (!snap) return false
+    return [snap.queixa_principal, ...(snap.queixas_secundarias || [])].includes('IDEAÇÃO SUICIDA')
+  })()
 
   // Reune triagens + avaliacoes do paciente logado e abre o modal de grafico.
   // Espelha handleBuscarHistorico do TriagemModal, mas usa profile.cpf direto
