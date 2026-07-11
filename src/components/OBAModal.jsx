@@ -113,6 +113,17 @@ const STATUS_GINECOLOGICO_OPS = [
 ]
 const SANGRAMENTO_MENSTRUAL_OPS = ['EXCESSIVO', 'PROLONGADO', 'EXCESSIVO E PROLONGADO']
 
+// Status Prostático (masculino, idade >= 38). SEM SINTOMAS é EXCLUSIVO (limpa as outras,
+// padrão "ESTOU BEM" do cardiovascular). CÂNCER abre os tratamentos em CHECKBOX (múltiplos —
+// OPERADO + RADIOTERAPIA + CURADO podem coexistir).
+const STATUS_PROSTATICO_OPS = [
+  'SEM SINTOMAS',
+  'OK. AVALIADO POR MÉDICO',
+  'HIPERPLASIA BENIGNA',
+  'CÂNCER',
+]
+const PROSTATA_CANCER_OPS = ['EM TRATAMENTO', 'OPERADO', 'CURADO', 'RADIOTERAPIA']
+
 const STATUS_RESPIRATORIO_OPS = [
   'NORMAL',
   'RINITE | SINUSITE',
@@ -701,6 +712,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     status_glicemico: '', dumping: false, status_hormonal: [], status_pressorico: '', status_endoscopico: [], status_neurologico: [],
     // Status ginecológico (só feminino) + sub-estados (sangramento / câncer de mama).
     status_ginecologico: [], sangramento_menstrual_tipo: '', cancer_mama_status: '',
+    status_prostatico: [], prostata_cancer_tratamentos: [],
     status_respiratorio: [], status_alergico: [], alergia_medicamentosa: [], alergia_outra_texto: '',
     trombose: null, investigou_trombose: false,
     usou_anticoagulante: false, usa_anticoagulante: false,
@@ -1177,6 +1189,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       // Sub-respostas só valem se o checkbox pai estiver marcado (senão viram dado sujo).
       sangramento_menstrual_tipo: form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_menstrual_tipo || null) : null,
       cancer_mama_status: form.status_ginecologico.includes('CÂNCER DE MAMA') ? (form.cancer_mama_status || null) : null,
+      status_prostatico: form.status_prostatico,
+      prostata_cancer_tratamentos: form.status_prostatico.includes('CÂNCER') ? form.prostata_cancer_tratamentos : [],
       tipo_cirurgia:      form.tipo_cirurgia || "N\u00c3O SEI",
       meses_pos_cirurgia: mesesPos || 0,
       peso_antes:         pesoAntes || null,
@@ -3051,6 +3065,38 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             <div style={{ marginTop:'0.5rem' }}>
               <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.4rem' }}>{"C\u00e2ncer de mama"}</p>
               <RadioGroup options={['EM TRATAMENTO', 'RESOLVIDO']} value={form.cancer_mama_status} cols={2} onChange={v => sf('cancer_mama_status', form.cancer_mama_status === v ? '' : v)} />
+            </div>
+          )}
+          </>)}
+
+          {!isFem && idadeNum >= 38 && (<>
+          <SectionTitle>{"Status Prost\u00e1tico"}</SectionTitle>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+            {STATUS_PROSTATICO_OPS.map(op => {
+              const semMarcado = form.status_prostatico.includes('SEM SINTOMAS')
+              const marcada = form.status_prostatico.includes(op)
+              return (
+                <CheckRow key={op} label={op} checked={marcada}
+                  onClick={() => {
+                    if (op === 'SEM SINTOMAS') {
+                      sf('status_prostatico', marcada ? [] : ['SEM SINTOMAS'])
+                    } else {
+                      // Marcar qualquer outra limpa o "SEM SINTOMAS" (exclusivo).
+                      const sem = form.status_prostatico.filter(x => x !== op && x !== 'SEM SINTOMAS')
+                      sf('status_prostatico', marcada ? sem : [...sem, op])
+                    }
+                  }} />
+              )
+            })}
+          </div>
+          {form.status_prostatico.includes('C\u00c2NCER') && (
+            <div style={{ marginTop:'0.5rem' }}>
+              <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.4rem' }}>{"C\u00e2ncer de pr\u00f3stata"}</p>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
+                {PROSTATA_CANCER_OPS.map(op => (
+                  <CheckRow key={op} label={op} checked={form.prostata_cancer_tratamentos.includes(op)} onClick={() => sf('prostata_cancer_tratamentos', tog(form.prostata_cancer_tratamentos, op))} />
+                ))}
+              </div>
             </div>
           )}
           </>)}
