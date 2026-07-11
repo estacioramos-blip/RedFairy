@@ -1338,76 +1338,24 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     const res = mostrarExamesExtras ? avaliarPaciente(inputsNumericos) : triagemEritron(inputsNumericos);
 
     let obaResult = null;
-    const obaDisponivel = dadosOBAColetados || dadosOBARef.current;
-    if (inputs.bariatrica && obaDisponivel) {
-      let dadosOBA = null;
-      let examesOBA = null;
-      if (obaDisponivel) {
-        dadosOBA  = obaDisponivel.dadosOBA;
-        examesOBA = obaDisponivel.examesOBA;
+    if (inputs.bariatrica) {
+      // (b) FASE 1: o M\u00c9DICO v\u00ea o relat\u00f3rio COMPLETO que o paciente j\u00e1 gerou e est\u00e1 salvo
+      // (oba_anamnese.relatorio_oba), com as travas novas (idea\u00e7\u00e3o, HTLV...) \u2014 N\u00c3O recalcula
+      // com um recorte parcial de campos (o que antes deixava o relat\u00f3rio do m\u00e9dico "limpo").
+      // Se o m\u00e9dico coletar/editar a anamnese pelo OBAModal (dadosOBAColetados, Fase 2), a\u00ed
+      // sim recalcula com o que ele preencheu.
+      const obaColetado = dadosOBAColetados || dadosOBARef.current;
+      if (obaColetado) {
+        obaResult = avaliarOBA(res, obaColetado.dadosOBA, obaColetado.examesOBA);
       } else if (inputs.cpf.trim()) {
         const cpfLimpo = inputs.cpf.replace(/\D/g, '');
-        const { data: obaRow } = await supabase.from('oba_anamnese').select('*').eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1).single();
-        if (obaRow) {
-          dadosOBA = {
-            sexo: obaRow.sexo, idade: inputs.idade,
-            tipo_cirurgia: obaRow.tipo_cirurgia,
-            meses_pos_cirurgia: obaRow.meses_pos_cirurgia,
-            peso_antes: obaRow.peso_antes, peso_atual: obaRow.peso_atual,
-            peso_minimo_pos: obaRow.peso_minimo_pos,
-            ganhou_peso_apos: obaRow.ganhou_peso_apos,
-            fez_plasma_argonio: obaRow.fez_plasma_argonio,
-            status_glicemico: obaRow.status_glicemico,
-            status_pressorico: obaRow.status_pressorico,
-            status_osseo: obaRow.status_osseo,
-            status_dental: obaRow.status_dental,
-            status_gestacional: obaRow.status_gestacional,
-            semanas_gestacao: obaRow.semanas_gestacao,
-            compulsoes: obaRow.compulsoes || [],
-            medicamentos: obaRow.medicamentos || [],
-            atividade_fisica: obaRow.atividade_fisica || [],
-            emagrecedores: obaRow.emagrecedores || {},
-            trombose: obaRow.trombose,
-            investigou_trombose: obaRow.investigou_trombose,
-            usa_anticoagulante: obaRow.usa_anticoagulante,
-            usou_anticoagulante: obaRow.usou_anticoagulante,
-            varizes: obaRow.varizes, varizes_grau: obaRow.varizes_grau,
-            varizes_esofago: obaRow.varizes_esofago,
-            operou_varizes_esofago: obaRow.operou_varizes_esofago,
-            meta_peso: obaRow.meta_peso, meta_kg: obaRow.meta_kg,
-            projetos_vida: obaRow.projetos_vida || [],
-          };
-          examesOBA = {
-            vitamina_b12: obaRow.vitamina_b12, vitamina_d: obaRow.vitamina_d,
-            zinco: obaRow.zinco, vitamina_a: obaRow.vitamina_a,
-            vitamina_e: obaRow.vitamina_e, tiamina: obaRow.tiamina,
-            selenio: obaRow.selenio, folatos: obaRow.folatos,
-            hb_glicada: obaRow.hb_glicada, glicemia: obaRow.glicemia,
-            insulina: obaRow.insulina, triglicerides: obaRow.triglicerides,
-            ast: obaRow.ast, alt: obaRow.alt, gama_gt: obaRow.gama_gt,
-            creatinina: obaRow.creatinina, acido_urico: obaRow.acido_urico,
-            tsh: obaRow.tsh, testosterona: obaRow.testosterona,
-            estradiol: obaRow.estradiol, psa_total: obaRow.psa_total,
-            ca199: obaRow.ca199, cea: obaRow.cea,
-          };
-        }
+        const { data: obaRow } = await supabase
+          .from('oba_anamnese').select('relatorio_oba, estado_clinico')
+          .eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        // O relatorio_oba salvo J\u00c1 \u00e9 a sa\u00edda do avaliarOBA (modulos/alertas/tipoCirurgia/\u2026),
+        // completo \u2014 o ResultCard l\u00ea exatamente esses campos. Usa direto.
+        if (obaRow?.relatorio_oba) obaResult = { ...obaRow.relatorio_oba, _estadoClinico: obaRow.estado_clinico || null };
       }
-      if (!dadosOBA) {
-        dadosOBA = {
-          sexo: inputs.sexo, idade: inputs.idade,
-          tipo_cirurgia: "N\u00c3O SEI", meses_pos_cirurgia: 0,
-          status_gestacional: inputs.gestante ? "GR\u00c1VIDA" : null,
-          compulsoes: inputs.alcoolista ? ["\u00c1LCOOL"] : [],
-          medicamentos: [
-            ...(inputs.vitaminaB12 ? ['VIT. B12 SUBLINGUAL'] : []),
-            ...(inputs.ferro_oral  ? ['FERRO ORAL']          : []),
-            ...(inputs.ferro_injetavel ? ["FERRO INJET\u00c1VEL"] : []),
-          ],
-          atividade_fisica: [], emagrecedores: {},
-        };
-        examesOBA = {};
-      }
-      obaResult = avaliarOBA(res, dadosOBA, examesOBA);
     }
 
     setResultado({ ...res, _inputs: inputsNumericos, _oba: obaResult, _medicoDados: medicoDados });
