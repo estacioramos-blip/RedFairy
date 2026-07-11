@@ -776,6 +776,7 @@ function AbaConfig() {
   const [cotacaoDolar, setCotacaoDolar] = useState('');
   const [tgToken, setTgToken] = useState('');
   const [tgChat, setTgChat] = useState('');
+  const [tgChatPlantonista, setTgChatPlantonista] = useState('');
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState('');
@@ -800,6 +801,8 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'telegram_bot_token').maybeSingle();
       const { data: tgChatConfig } = await supabase
         .from('config').select('valor').eq('chave', 'telegram_chat_id').maybeSingle();
+      const { data: tgPlantConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'telegram_chat_plantonista').maybeSingle();
       setValor(valConfig?.valor || '');
       setValorDoc(docConfig?.valor || '');
       setComissaoUsdNaoAfiliado(comNaoAfilConfig?.valor || '10');
@@ -809,6 +812,7 @@ function AbaConfig() {
       setCotacaoDolar(cotConfig?.valor || '');
       setTgToken(tgTokConfig?.valor || '');
       setTgChat(tgChatConfig?.valor || '');
+      setTgChatPlantonista(tgPlantConfig?.valor || '');
       setLoading(false);
     }
     carregar();
@@ -827,6 +831,7 @@ function AbaConfig() {
       { p_chave: 'cotacao_dolar',            p_valor: cotacaoDolar,  p_descricao: "Cotação USD->BRL para converter a comissão dos médicos em reais" },
       { p_chave: 'telegram_bot_token',       p_valor: tgToken,       p_descricao: "Token do Bot do Telegram para notificações da ADM" },
       { p_chave: 'telegram_chat_id',         p_valor: tgChat,        p_descricao: "Chat ID do Telegram que recebe as notificações da ADM" },
+      { p_chave: 'telegram_chat_plantonista', p_valor: tgChatPlantonista, p_descricao: "Chat ID do Telegram do médico plantonista (recebe os acionamentos do botão de emergência)" },
     ];
     for (const it of itens) {
       const { data, error } = await supabase.rpc('salvar_config', { ...cred, ...it });
@@ -916,6 +921,12 @@ function AbaConfig() {
                 <input type="text" value={tgChat}
                   onChange={e => setTgChat(e.target.value)} placeholder="Ex: 987654321" className={inputClass} />
                 <p className="text-xs text-gray-400 mt-1">{"ID do chat que recebe as mensagens (seu, ou de um grupo). Use o @userinfobot para descobrir o seu."}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Chat ID do plantonista (emergência)"}</label>
+                <input type="text" value={tgChatPlantonista}
+                  onChange={e => setTgChatPlantonista(e.target.value)} placeholder="Ex: 123456789" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"Chat do Telegram do médico plantonista — recebe os acionamentos do botão de emergência. Deixe vazio para não notificar."}</p>
               </div>
             </div>
           </div>
