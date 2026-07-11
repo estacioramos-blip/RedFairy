@@ -829,13 +829,21 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [avaliarCpfInput, setAvaliarCpfInput] = useState('')
   const [avaliarErro, setAvaliarErro] = useState('')
   const [avaliarBusy, setAvaliarBusy] = useState(false)
-  async function carregarPacienteAvaliar(cpfArg) {
+  // REVISÃO (Passo 3): quando true, o mesmo OBAModal do AVALIAR abre em modo revisão
+  // (restaura TUDO da anamnese do paciente, inclusive dúvidas; save não-destrutivo).
+  const [avaliarRevisao, setAvaliarRevisao] = useState(false)
+  async function carregarPacienteAvaliar(cpfArg, revisao = false) {
     const d = String(cpfArg || avaliarCpfInput || '').replace(/\D/g, '')
     if (d.length !== 11) { setAvaliarErro('CPF inválido'); return }
     setAvaliarBusy(true); setAvaliarErro('')
     try {
       const { data: prof } = await supabase.from('profiles').select('cpf, nome, sexo, data_nascimento, bariatrica').eq('cpf', d).maybeSingle()
-      if (!prof) { setAvaliarErro('Paciente não cadastrado. Peça que se cadastre primeiro.'); setAvaliarBusy(false); return }
+      if (!prof) {
+        setAvaliarErro('Paciente não cadastrado. Peça que se cadastre primeiro.'); setAvaliarBusy(false)
+        // Na REVISÃO não há tela de CPF onde o erro apareça — avisa direto.
+        if (revisao) { try { window.alert('Paciente não encontrado no cadastro. Não é possível revisar a anamnese.') } catch (e) {} }
+        return
+      }
       // Traz o que o paciente já tem: última avaliação (eritron) + última anamnese do OBA.
       const { data: avals } = await supabase.from('avaliacoes').select('*').eq('cpf', d).order('data_coleta', { ascending: false }).limit(1)
       let anam = null
@@ -844,7 +852,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         anam = (obaRows && obaRows.length) ? obaRows[0] : null
       } catch (e) {}
       setPacienteAvaliar({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam })
-      try { sessionStorage.setItem('rf_med_oba_cpf', d) } catch (e) {}   // p/ reabrir no refresh (mesma aba)
+      setAvaliarRevisao(!!revisao)
+      try {
+        sessionStorage.setItem('rf_med_oba_cpf', d)   // p/ reabrir no refresh (mesma aba)
+        if (revisao) sessionStorage.setItem('rf_med_oba_rev', '1'); else sessionStorage.removeItem('rf_med_oba_rev')
+      } catch (e) {}
       setAvaliarFase('oba')
     } catch (e) { setAvaliarErro('Erro de conexão. Tente de novo.') }
     setAvaliarBusy(false)
@@ -853,8 +865,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   React.useEffect(() => {
     if (!cadastrado) return
     let cpf = ''
-    try { cpf = sessionStorage.getItem('rf_med_oba_cpf') || '' } catch (e) {}
-    if (cpf.length === 11) carregarPacienteAvaliar(cpf)
+    let rev = false
+    try { cpf = sessionStorage.getItem('rf_med_oba_cpf') || ''; rev = sessionStorage.getItem('rf_med_oba_rev') === '1' } catch (e) {}
+    if (cpf.length === 11) carregarPacienteAvaliar(cpf, rev)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cadastrado])
   const [fada4docMarcada, setFada4docMarcada] = useState(false);
@@ -1619,14 +1632,37 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           anamneseAnterior={pacienteAvaliar.anamneseAnterior}
           coletarHemograma={!pacienteAvaliar.ultimaAval}
           modoMedico={true}
-          onFechar={() => { try { sessionStorage.removeItem('rf_med_oba_cpf') } catch (e) {}; setAvaliarFase(null); setPacienteAvaliar(null) }}
+          modoRevisao={avaliarRevisao}
+          onFechar={() => { try { sessionStorage.removeItem('rf_med_oba_cpf'); sessionStorage.removeItem('rf_med_oba_rev') } catch (e) {}; setAvaliarFase(null); setPacienteAvaliar(null); setAvaliarRevisao(false) }}
           onConcluir={async () => {
-            try {
-              const tok = localStorage.getItem('medico_token') || ''
-              await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: pacienteAvaliar.cpf, p_opiniao: '', p_sugestao: '' })
-            } catch (e) {}
-            try { sessionStorage.removeItem('rf_med_oba_cpf') } catch (e) {}
-            setAvaliarFase(null); setPacienteAvaliar(null)
+            const eraRevisao = avaliarRevisao
+            const cpfRev = pacienteAvaliar?.cpf || inputs.cpf
+            // REVISÃO não gera crédito de avaliação (o médico só corrigiu a anamnese);
+            // o AVALIAR normal, sim (medico_avaliar_paciente).
+            if (!eraRevisao) {
+              try {
+                const tok = localStorage.getItem('medico_token') || ''
+                await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: pacienteAvaliar.cpf, p_opiniao: '', p_sugestao: '' })
+              } catch (e) {}
+            }
+            try { sessionStorage.removeItem('rf_med_oba_cpf'); sessionStorage.removeItem('rf_med_oba_rev') } catch (e) {}
+            setAvaliarFase(null); setPacienteAvaliar(null); setAvaliarRevisao(false)
+            // Revisão: o card do médico (ResultCard) já está aberto (resultado != null), então
+            // o form clássico com #btn-avaliar-paciente está DESMONTADO — re-clicar seria no-op.
+            // Recarregamos o relatório recém-salvo (última linha do CPF) direto no card.
+            if (eraRevisao) {
+              const cpfLimpo = String(cpfRev || '').replace(/\D/g, '')
+              if (cpfLimpo) {
+                try {
+                  const { data: obaRow } = await supabase
+                    .from('oba_anamnese').select('relatorio_oba, estado_clinico')
+                    .eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1).maybeSingle()
+                  if (obaRow?.relatorio_oba) {
+                    setResultado(prev => prev ? { ...prev, _oba: { ...obaRow.relatorio_oba, _estadoClinico: obaRow.estado_clinico || null } } : prev)
+                  }
+                } catch (e) {}
+              }
+            }
           }}
         />
       )}
@@ -2462,6 +2498,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               medicoDados={medicoDados}
               onVoltar={medicoCRM ? onVoltar : undefined}
               onNovaAvaliacao={() => { setResultado(null); setCopiado(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              onRevisarAnamnese={medicoCRM ? (cpfArg) => carregarPacienteAvaliar(cpfArg || inputs.cpf, true) : undefined}
             />
             {/* (4DOC) Médico logado + avaliação completa SALVA (com CPF) → botão da fada
                 que abre o QR de encaminhamento. Como exige a avaliação completa salva, a

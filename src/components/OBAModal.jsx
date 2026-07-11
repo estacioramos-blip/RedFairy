@@ -615,7 +615,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #6B7280, #4B5563)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, coletarHemograma = false, modoMedico = false }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, coletarHemograma = false, modoMedico = false, modoRevisao = false }) {
   // FOLLOW-UP: avaliação de RETORNO de um bariátrico que já fez o baseline.
   // anamneseAnterior = última linha de oba_anamnese. Nesse modo, os campos
   // IMUTÁVEIS (data/tipo/indicação da cirurgia, peso antes, altura) são
@@ -624,7 +624,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // PERSISTÊNCIA DO PROGRESSO — o paciente NÃO pode perder o que marcou se sair
   // temporariamente da aba ou recarregar. Snapshot em localStorage por CPF,
   // restaurado no mount; limpo só ao CONCLUIR (ao fechar mantemos p/ retomar).
-  const STORAGE_KEY = 'oba_progresso_' + (modoMedico ? 'med_' : '') + String(cpf || 'anon').replace(/\D/g, '')
+  const STORAGE_KEY = 'oba_progresso_' + (modoMedico ? 'med_' : '') + (modoRevisao ? 'rev_' : '') + String(cpf || 'anon').replace(/\D/g, '')
   const salvo = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') } catch (e) { return null } })()
   const limparProgresso = () => { try { localStorage.removeItem(STORAGE_KEY) } catch (e) {} }
 
@@ -751,8 +751,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
      // ATUAL (medição nova). Sem snapshot (baselines antigos): só os imutáveis.
      const snap = A.relatorio_oba?.form_snapshot
      if (snap && typeof snap === 'object') {
-       // As QUEIXAS são perguntadas DE NOVO a cada ciclo (não pré-preenche): o valor
-       // anterior fica no relatorio_oba da linha anterior, p/ a comparação de evolução.
+       // REVISÃO MÉDICA (modoRevisao): o médico corrige a MESMA anamnese — restaura
+       // TUDO como está (queixas, dúvidas, peso), para ele ver exatamente o que o
+       // paciente respondeu e ajustar ponto a ponto (inclusive resolver as dúvidas).
+       if (modoRevisao) return { ...def, ...snap, ...imutaveis }
+       // FOLLOW-UP (novo ciclo): as QUEIXAS são perguntadas DE NOVO a cada ciclo (não
+       // pré-preenche): o valor anterior fica no relatorio_oba da linha anterior, p/ a
+       // comparação de evolução. As dúvidas também zeram (novo retrato).
        return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '', duvidas: [] }
      }
      return { ...def, ...imutaveis }
@@ -1410,6 +1415,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               ferritina: eritron.inputs.ferritina, satTransf: eritron.inputs.satTransf,
               label: eritron.label, color: eritron.color, data: dataExames || null,
             } } : {}),
+        }
+        // REVISÃO MÉDICA (Passo 3): NÃO destrói o retrato original do paciente. Preserva
+        // (uma única vez, na 1ª revisão) o relatório + estado clínico do paciente sob
+        // _paciente_original — "guarda os dois". Nas revisões seguintes mantém o original
+        // já preservado. Marca a linha como revisada por médico (o selo por item é o Passo 4).
+        if (modoRevisao) {
+          const orig = anamneseAnterior?.relatorio_oba || null
+          relSalvar._paciente_original = orig?._paciente_original || {
+            relatorio: orig,
+            estado: anamneseAnterior?.estado_clinico || null,
+          }
+          relSalvar._revisado_por_medico = true
+          relSalvar._revisao_data = new Date().toISOString()
         }
         await supabase.from('oba_anamnese')
           .update({ relatorio_oba: relSalvar, estado_clinico: est?.estado || null })

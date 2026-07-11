@@ -414,7 +414,7 @@ function AchadosParalelosSection({ achados }) {
   );
 }
 
-function OBASection({ oba, modoPaciente = false }) {
+function OBASection({ oba, modoPaciente = false, cpf, onRevisar }) {
   const [expandido, setExpandido] = useState(null);
 
   const alertasGraves = oba.alertas?.filter(a => a.nivel === 'grave') || [];
@@ -465,6 +465,20 @@ function OBASection({ oba, modoPaciente = false }) {
               ))}
             </ul>
           </div>
+        </div>
+      )}
+
+      {!modoPaciente && onRevisar && (
+        <div className="px-4 pt-3">
+          <button
+            onClick={() => onRevisar(cpf)}
+            className="w-full flex items-center justify-center gap-2 bg-purple-700 hover:bg-purple-800 text-white font-bold text-sm px-4 py-3 rounded-xl shadow-md transition-colors">
+            <span style={{ fontSize: '1.05rem' }}>{"📝"}</span>
+            <span>{"REVISAR ANAMNESE"}</span>
+          </button>
+          <p className="text-[11px] text-center text-purple-700 mt-1.5 leading-snug px-2">
+            {"Abre a anamnese do paciente pré-preenchida para você corrigir os pontos em consulta/teleconsulta. O original do paciente é preservado."}
+          </p>
         </div>
       )}
 
@@ -905,7 +919,7 @@ function DocumentoMedicoPanel({ resultado }) {
 }
 
 
-export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, mostrarPainelMedico = true, medicoNome, medicoCRM, medicoDados, onVoltar, onNovaAvaliacao, mostrarOptInExames = false, optInExamesEnviado = false, onOptInExames }) {
+export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente = false, mostrarPainelMedico = true, medicoNome, medicoCRM, medicoDados, onVoltar, onNovaAvaliacao, mostrarOptInExames = false, optInExamesEnviado = false, onOptInExames, onRevisarAnamnese }) {
   const [showFerroEV, setShowFerroEV] = useState(false);
   const [showSangria, setShowSangria] = useState(false);
 
@@ -1390,7 +1404,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
       <AchadosParalelosSection achados={resultado.achadosParalelos} />
 
-      {oba && <OBASection oba={oba} modoPaciente={modoPaciente} />}
+      {oba && <OBASection oba={oba} modoPaciente={modoPaciente} cpf={resultado._inputs?.cpf} onRevisar={onRevisarAnamnese} />}
 
       {!modoPaciente && mostrarPainelMedico && (
         <PainelMedico
