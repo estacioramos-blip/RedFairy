@@ -230,7 +230,22 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     if (error) { setErro('Erro ao salvar. Tente novamente.'); return }
 
     try { localStorage.setItem('paciente_nome', nomeT) } catch (e) {}
-    if (onSalvo) onSalvo({ ...(data || { ...profile, nome: nomeT, celular: celDigits }), email: emailT })
+    // Devolve o perfil COMPLETO (endereço/contato de emergência que acabaram de ser salvos),
+    // p/ o dashboard não ficar com um profile parcial na mesma sessão.
+    if (onSalvo) onSalvo({
+      ...(data || { ...profile, nome: nomeT, celular: celDigits }),
+      email: emailT,
+      cep: cep.replace(/\D/g, '') || null,
+      logradouro: logradouro.trim() || null,
+      numero: numero.trim() || null,
+      complemento: complemento.trim() || null,
+      bairro: bairro.trim() || null,
+      cidade: cidade.trim() || null,
+      uf: (uf || '').trim().toUpperCase() || null,
+      contato_emergencia_nome: emergNome.trim() || null,
+      contato_emergencia_celular: emergCelular.replace(/\D/g, '') || null,
+      contato_emergencia_parentesco: emergParentesco.trim() || null,
+    })
   }
 
   const fieldCls = (campo) =>

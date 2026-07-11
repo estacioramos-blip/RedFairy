@@ -244,7 +244,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       if (d > 0) await new Promise(r => setTimeout(r, d))
       const { data } = await supabase
         .from('profiles')
-        .select('*')   // '*' p/ trazer endereço/contato de emergência (Fase 2) sem quebrar se as colunas ainda não existirem
+        // Lista EXPLÍCITA (nunca '*': profiles tem senha_klipbit/session_token_hash — hashes
+        // de auth que não podem ir ao cliente). Inclui endereço/contato de emergência (Fase 2).
+        .select('id, nome, cpf, sexo, data_nascimento, celular, email, bariatrica, gestante, boas_vindas_vista, primeira_avaliacao_feita, cep, logradouro, numero, complemento, bairro, cidade, uf, contato_emergencia_nome, contato_emergencia_celular, contato_emergencia_parentesco')
         .eq('id', session.user.id).maybeSingle()
       if (data) { prof = data; break }
     }
@@ -492,7 +494,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         `Contato de emergência: ${contato || '(não informado)'}\n` +
         `Data|Hora: ${new Date().toLocaleString('pt-BR')}`
       try { await supabase.rpc('tg_enviar', { p_msg: msg }) } catch (e) {}
-      try { await supabase.rpc('tg_enviar_chave', { p_msg: msg, p_chave_chat: 'telegram_chat_plantonista' }) } catch (e) {}
+      try { await supabase.rpc('tg_enviar_plantonista', { p_msg: msg }) } catch (e) {}
     } catch (e) {}
   }
   function tocarEmergencia() {

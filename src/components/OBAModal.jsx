@@ -753,7 +753,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
      if (snap && typeof snap === 'object') {
        // As QUEIXAS são perguntadas DE NOVO a cada ciclo (não pré-preenche): o valor
        // anterior fica no relatorio_oba da linha anterior, p/ a comparação de evolução.
-       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '' }
+       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '', duvidas: [] }
      }
      return { ...def, ...imutaveis }
    }
