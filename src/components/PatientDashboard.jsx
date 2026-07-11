@@ -76,11 +76,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     else if (r === 'instalado') { setFadaInstrIOS(false); setFadaInstaladaPopup(true) }  // Android: confirma na tela
   }
   // No mobile a imagem fica atrás dos cards; deixa a foto + saudação aparecerem
-  // sozinhas por 2,5s antes de revelar os cards (paciente vê a imagem primeiro).
+  // sozinhas por 1,25s antes de revelar os cards (paciente vê a imagem primeiro).
   const [cardsBV, setCardsBV] = useState(false)
   useEffect(() => {
     if (!showBoasVindas) { setCardsBV(false); return }
-    const t = setTimeout(() => setCardsBV(true), 2500)
+    const t = setTimeout(() => setCardsBV(true), 1250)
     return () => clearTimeout(t)
   }, [showBoasVindas])
   const [mostrarDespedida, setMostrarDespedida] = useState(false)

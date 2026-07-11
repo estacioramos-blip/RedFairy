@@ -480,7 +480,7 @@ export default function TriagemResultadoModal({
             const hbInterp = isNaN(hb) ? traco : (hb < hbMin ? setaDn : hb > hbMax ? setaUp : 'NORMAL');
             const vcmInterp = isNaN(vcm) ? traco : (vcm < 80 ? setaDn : vcm > 100 ? setaUp : 'NORMAL');
             const rdwInterp = isNaN(rdw) ? traco : (rdw > 15 ? 'AMPLIADO' : 'NORMAL');
-            const cell = 'px-2 py-1.5 text-xs';
+            const cell = 'px-2 py-1 text-xs';
             const corInterp = (txt) => {
               if (txt === 'NORMAL') return 'text-gray-700';
               if (txt === traco) return 'text-gray-400';
