@@ -205,6 +205,10 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           </div>
         </div>
 
+        <p className="text-[11px] font-semibold text-center mb-3 -mt-1" style={{ color: '#7B1E1E' }}>
+          {"Valor Promocional | Pode ser alterado a qualquer momento."}
+        </p>
+
         {valorLiquido > 0 ? (<>
         {/* QR Code */}
         <div className="flex flex-col items-center bg-white border border-gray-200 rounded-xl p-3 mb-3">
@@ -221,7 +225,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
 
         {/* Copia-e-cola */}
         <div className="mb-3">
-          <label className="block text-xs font-semibold text-gray-600 mb-1">
+          <label className="block text-xs font-semibold text-gray-600 mb-1 text-center">
             {"Ou copie o c\u00f3digo PIX:"}
           </label>
           <div className="flex gap-2">
@@ -319,6 +323,9 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
             <p className="text-[11px] font-bold text-gray-700 leading-relaxed mt-4">
               <span className="text-red-700">{"OBSERVAÇÃO:"}</span>
               {" As solicitações são separadas porque destinam-se a diferentes serviços, mas cada solicitação pode conter um ou mais exames. O valor é cobrado por documento."}
+            </p>
+            <p className="text-[11px] font-semibold leading-relaxed mt-3" style={{ color: '#7B1E1E' }}>
+              {"Esses valores podem ser alterados sem aviso prévio."}
             </p>
           </div>
         </div>
