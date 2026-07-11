@@ -709,7 +709,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // Status Vascular ARTERIAL (round 3)
     doppler_carotidas: '', estenose_maxima: '', doenca_arterial_periferica: null,
     // Status Cardiovascular (round 3)
-    status_cardiovascular: [], ecg: '', ecg_marcapasso: false,
+    status_cardiovascular: [], ecg: '', ecg_marcapasso: false, ecg_arritmia: false,
     ecocardiograma: '', fracao_ejecao: '', angiotomografia_coronariana: false, score_calcio: '',
     status_dental: '', status_osseo: '', status_articular: [],
     // Detalhe livre de dores (aparece só se marcou dor óssea/articular nas queixas).
@@ -1218,6 +1218,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       status_cardiovascular: form.status_cardiovascular,
       ecg:                form.ecg || null,
       ecg_marcapasso:     form.ecg_marcapasso,
+      ecg_arritmia:       form.ecg_arritmia,
       ecocardiograma:     form.ecocardiograma || null,
       fracao_ejecao:      form.fracao_ejecao ? parseFloat(form.fracao_ejecao) : null,
       angiotomografia_coronariana: form.angiotomografia_coronariana,
@@ -3146,7 +3147,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', marginTop:'0.8rem' }}>{"ECG"}</label>
           <RadioGroup options={["NORMAL | RITMO SINUSAL", 'ALTERADO']} value={form.ecg} onChange={v => sf('ecg', v)} cols={2} />
-          <div style={{ marginTop:'0.4rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem', marginTop:'0.4rem' }}>
+            <CheckRow label={"TENHO ARRITMIA"} checked={form.ecg_arritmia} onClick={() => sf('ecg_arritmia', !form.ecg_arritmia)} />
             <CheckRow label={"USO MARCAPASSO"} checked={form.ecg_marcapasso} onClick={() => sf('ecg_marcapasso', !form.ecg_marcapasso)} />
           </div>
 
