@@ -66,9 +66,10 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
   }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
       style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-y-auto"
+        style={{ maxHeight: '92vh' }}
         onClick={e => e.stopPropagation()}>
         <div className="px-6 py-4 flex items-center gap-3" style={{ background: '#6B7280' }}>
           <img src={obaLogo} alt="Projeto OBA" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />

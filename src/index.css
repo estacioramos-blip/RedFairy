@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Rede de seguranca contra rolagem horizontal no mobile: se algum elemento estourar a
+   largura, a pagina NAO ganha scroll lateral (o usuario nao "escorrega" pra fora da tela).
+   A LandingPage ja fazia isso localmente; aqui vale p/ Calculator/Dashboard/Admin/Caixa. */
+html, body { overflow-x: hidden; }
+
 /* Esconde os "visores" NATIVOS de senha/autofill do navegador (revelador do Edge e a
    chave de autofill do iOS Safari), que apareciam DUPLICADOS junto do nosso olho 👁. */
 input::-ms-reveal,
