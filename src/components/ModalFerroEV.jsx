@@ -36,7 +36,7 @@ export default function ModalFerroEV({ onClose, hbAtual, sexo, gestante, semanas
   const deficit = Math.max(hbAlvo - Number(hbAtual), 0).toFixed(1);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onClose}>
+      style={{ background: 'rgba(0,0,0,0.95)' }}>
       <style>{`@keyframes rfFerroOu { 0%,100%{opacity:1;} 50%{opacity:0.25;} } .rf-ferro-ou{ animation: rfFerroOu 1s ease-in-out infinite; }`}</style>
       <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-y-auto"
         style={{ maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>

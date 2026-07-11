@@ -283,8 +283,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
       {/* Popup ATENÇÃO — custos do trabalho médico (valores de config). */}
       {mostrarCustos && (
         <div
-          className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-[70]"
-          onClick={() => setMostrarCustos(false)}>
+          className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-[70]">
           <div
             className="bg-white border-2 border-gray-300 rounded-2xl max-w-md w-full p-5 shadow-xl max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}>

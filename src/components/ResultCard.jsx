@@ -69,7 +69,7 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante, pesoInicial }) {
   const deficit = Math.max(hbAlvo - Number(hbAtual), 0).toFixed(1);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onClose}>
+      style={{ background: 'rgba(0,0,0,0.95)' }}>
       <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-y-auto"
         style={{ maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
         <div className="bg-red-700 text-white px-6 py-4 rounded-t-2xl">
@@ -191,7 +191,7 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onClose}>
+      style={{ background: 'rgba(0,0,0,0.95)' }}>
       <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl overflow-y-auto"
         style={{ maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
         <div className="bg-red-800 text-white px-6 py-4 rounded-t-2xl">

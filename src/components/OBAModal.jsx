@@ -1570,7 +1570,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
   // Popup da 1ª dúvida (renderizado nas etapas anamnese e exames).
   const duvidaPopupEl = showDuvidaPopup && (
-    <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1.5rem', boxSizing:'border-box' }} onClick={(e) => { e.stopPropagation(); setShowDuvidaPopup(false) }}>
+    <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1.5rem', boxSizing:'border-box' }}>
       <div style={{ position:'relative', background:'white', borderRadius:16, maxWidth:440, width:'100%', padding:'1.7rem 1.4rem 1.4rem', boxShadow:'0 20px 60px rgba(0,0,0,0.35)' }} onClick={e => e.stopPropagation()}>
         <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.6rem' }}>{"Tudo bem ter dúvidas"}</p>
         <p style={{ fontSize:'0.85rem', color:'#374151', lineHeight:1.55, margin:'0 0 1rem' }}>
@@ -2564,7 +2564,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     <>
       {duvidaPopupEl}
       {showPesquisa && (
-        <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1.5rem', boxSizing:'border-box' }} onClick={() => setShowPesquisa(false)}>
+        <div style={{ position:'fixed', inset:0, zIndex:1100, background:'rgba(0,0,0,0.95)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1.5rem', boxSizing:'border-box' }}>
           <div style={{ position:'relative', background:'white', borderRadius:16, maxWidth:440, width:'100%', padding:'1.7rem 1.4rem 1.4rem', boxShadow:'0 20px 60px rgba(0,0,0,0.35)' }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setShowPesquisa(false)} aria-label="Fechar" style={{ position:'absolute', top:12, right:12, width:30, height:30, borderRadius:'50%', background:'#7B1E1E', color:'white', border:'none', fontSize:'1.05rem', fontWeight:800, cursor:'pointer', lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center' }}>{"\u00d7"}</button>
             <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.6rem' }}>{"Pesquisa M\u00e9dica"}</p>
