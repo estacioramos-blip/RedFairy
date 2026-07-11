@@ -445,8 +445,13 @@ function gz(texto, isFem) {
 function RadioGroup({ options, value, onChange, disabledOptions = [], cols = 1, mapLabel = null }) {
   const items = options.map(op => {
     const disabled = disabledOptions.includes(op)
+    // Clicar na opção JÁ selecionada DESMARCA (volta ao vazio ''). Radio HTML não
+    // permite desmarcar; aqui o paciente precisa poder LIMPAR uma resposta (ex.: marcou
+    // por engano um item que abre sub-itens). Passa '' (sentinela de "não respondido",
+    // igual ao valor inicial de todos os campos de radio) — nunca null, p/ não quebrar
+    // leituras com .includes()/.indexOf() e ser compatível com handlers `=== v ? '' : v`.
     return (
-      <div key={op} onClick={() => !disabled && onChange(op)} style={{
+      <div key={op} onClick={() => !disabled && onChange(value === op ? '' : op)} style={{
         display:'flex', alignItems:'center', gap:'0.6rem', padding:'0.5rem 0.8rem',
         borderRadius:8, border:`1.5px solid ${value === op ? '#DC2626' : '#E5E7EB'}`,
         background: disabled ? '#F3F4F6' : value === op ? '#FEF2F2' : '#FAFAFA',
