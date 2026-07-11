@@ -505,7 +505,7 @@ function DuvidaCheck({ secao, duvidas, onToggle }) {
   return (
     <div onClick={() => onToggle(secao)} style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', marginTop:'0.55rem', marginBottom:'0.2rem', cursor:'pointer', userSelect:'none' }}>
       <input type="checkbox" readOnly checked={on} style={{ width:14, height:14, marginTop:'0.1rem', flexShrink:0, accentColor:'#7B1E1E' }} />
-      <span style={{ fontSize:'0.68rem', fontStyle:'italic', lineHeight:1.35, color: on ? '#7B1E1E' : '#9CA3AF' }}>{"Não tenho muita certeza nessa resposta, vou precisar de ajuda médica."}</span>
+      <span style={{ fontSize:'0.68rem', fontStyle:'italic', lineHeight:1.35, fontWeight: on ? 700 : 500, color:'#7B1E1E' }}>{"Não tenho muita certeza nessa resposta, vou precisar de ajuda médica."}</span>
     </div>
   )
 }
