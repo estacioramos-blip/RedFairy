@@ -3031,13 +3031,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
           {form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && (
             <div style={{ marginTop:'0.5rem' }}>
-              <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151', margin:'0 0 0.35rem' }}>{"Tipo de sangramento:"}</p>
+              <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.4rem' }}>{"Tipo de sangramento"}</p>
               <RadioGroup options={SANGRAMENTO_MENSTRUAL_OPS} value={form.sangramento_menstrual_tipo} cols={1} onChange={v => sf('sangramento_menstrual_tipo', form.sangramento_menstrual_tipo === v ? '' : v)} />
             </div>
           )}
           {form.status_ginecologico.includes('C\u00c2NCER DE MAMA') && (
             <div style={{ marginTop:'0.5rem' }}>
-              <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#374151', margin:'0 0 0.35rem' }}>{"C\u00e2ncer de mama:"}</p>
+              <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.4rem' }}>{"C\u00e2ncer de mama"}</p>
               <RadioGroup options={['EM TRATAMENTO', 'RESOLVIDO']} value={form.cancer_mama_status} cols={2} onChange={v => sf('cancer_mama_status', form.cancer_mama_status === v ? '' : v)} />
             </div>
           )}
