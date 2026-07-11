@@ -67,6 +67,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const [emergNome, setEmergNome] = useState('')
   const [emergCelular, setEmergCelular] = useState('')
   const [emergParentesco, setEmergParentesco] = useState('')
+  const [semEmergencia, setSemEmergencia] = useState(false)
   const [erro, setErro] = useState('')
   const [loading, setLoading] = useState(false)
   const [campoAtivo, setCampoAtivo] = useState('nome')
@@ -83,6 +84,8 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const emailTimer = useRef(null)
   const confirmarRef = useRef(null)
   const numeroRef = useRef(null)
+  const cepRef = useRef(null)
+  const parentescoRef = useRef(null)
   const ultimaTecla = useRef(0)   // p/ o vigia anti-autofill não brigar com a digitação
 
   useEffect(() => () => {
@@ -163,10 +166,17 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   }
 
   function onEmailChange(v) {
-    // (sem salto de cursor) o foco fica no e-mail; o usuário toca em CONFIRMO quando quiser.
-    // O salto automático roubava o foco e atrapalhava a digitação (ex.: a "@").
     ultimaTecla.current = Date.now()
     setEmail(v.toLowerCase()); setErro('')
+    // Salto p/ o próximo campo (CEP) quando o e-mail estiver VÁLIDO e o paciente pausar
+    // 3,5s. O debounce + checagem de validade evita roubar o foco no meio da digitação
+    // (ex.: logo após o "@", que era o motivo de o salto ter sido removido antes).
+    if (emailTimer.current) clearTimeout(emailTimer.current)
+    emailTimer.current = setTimeout(() => {
+      if (/\S+@\S+\.\S+/.test((v || '').trim()) && document.activeElement === emailRef.current) {
+        cepRef.current?.focus()
+      }
+    }, 3500)
   }
 
   // ViaCEP: ao completar 8 dígitos, preenche logradouro/bairro/cidade/UF automaticamente.
@@ -254,7 +264,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     }`
   const labelCls = "block text-xs font-semibold text-gray-600 mb-1"
   // Inputs dos campos novos (endereço/emergência) — sem o realce seamless, borda simples.
-  const inpCls = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none border-2 border-gray-200 focus:border-yellow-400 bg-white"
+  const inpCls = "w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none border-2 border-gray-200 focus:border-yellow-400 bg-white focus:bg-yellow-50"
   // (bariátrico) rótulos de Celular/E-mail em PRETO (a imagem de fundo é só um leve fundo).
   const estiloLabel = ehBari ? { color: '#000000' } : undefined
 
@@ -316,7 +326,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
 
             <div>
               <label className={labelCls} style={estiloLabel}>{"E-mail"}</label>
-              <p className="text-xs text-gray-500 mb-1">{"Opcional — cadastre só se o seu PIX for o seu e-mail."}</p>
+              <p className="text-xs text-gray-900 mb-1">{"Opcional — cadastre só se o seu PIX for o seu e-mail."}</p>
               <input
                 ref={emailRef} type="email" value={email} inputMode="email" autoComplete="email"
                 onChange={e => onEmailChange(e.target.value)}
@@ -333,23 +343,23 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
             {/* ENDEREÇO — importante para o socorro chegar em uma emergência. CEP → ViaCEP. */}
             <div>
               <label className={labelCls} style={estiloLabel}>{"Endereço"}</label>
-              <p className="text-xs text-gray-500 mb-1">{"Importante para o socorro chegar em uma emergência. Digite o CEP que preenchemos o resto."}</p>
+              <p className="text-xs text-gray-900 mb-1">{"Importante para o socorro chegar em uma emergência. Digite o CEP que preenchemos o resto."}</p>
               <div className="flex gap-2">
-                <input type="text" value={cep} onChange={e => onCepChange(e.target.value)} inputMode="numeric" maxLength={9}
-                  className={inpCls + " flex-1"} placeholder={"CEP"} />
-                <input ref={numeroRef} type="text" value={numero} onChange={e => setNumero(e.target.value)} inputMode="numeric"
-                  className={inpCls + " w-24"} placeholder={"Número"} />
+                <input ref={cepRef} type="text" value={cep} onChange={e => onCepChange(e.target.value)} inputMode="numeric" maxLength={9}
+                  className={inpCls} style={{ flex: '1 1 0' }} placeholder={"CEP"} />
+                <input ref={numeroRef} type="text" value={numero} onChange={e => setNumero(e.target.value)} inputMode="numeric" maxLength={5}
+                  className={inpCls} style={{ flex: '0 0 4.75rem' }} placeholder={"Nº"} />
               </div>
-              {cepBuscando && <p className="text-xs text-gray-500 mt-1">{"Buscando o CEP…"}</p>}
-              {cepErro && <p className="text-xs mt-1" style={{ color: '#F97316' }}>{cepErro}</p>}
+              {cepBuscando && <p className="text-xs text-gray-900 mt-1">{"Buscando o CEP…"}</p>}
+              {cepErro && <p className="text-xs mt-1 font-semibold" style={{ color: '#B91C1C' }}>{cepErro}</p>}
               {(logradouro || cidade) && (
                 <div className="mt-2 space-y-2">
                   <input type="text" value={logradouro} onChange={e => setLogradouro(e.target.value)} className={inpCls} placeholder={"Rua / logradouro"} />
                   <input type="text" value={complemento} onChange={e => setComplemento(e.target.value)} className={inpCls} placeholder={"Complemento (opcional)"} />
                   <div className="flex gap-2">
-                    <input type="text" value={bairro} onChange={e => setBairro(e.target.value)} className={inpCls + " flex-1"} placeholder={"Bairro"} />
-                    <input type="text" value={cidade} onChange={e => setCidade(e.target.value)} className={inpCls + " flex-1"} placeholder={"Cidade"} />
-                    <input type="text" value={uf} onChange={e => setUf(e.target.value.toUpperCase().slice(0, 2))} className={inpCls + " w-16"} placeholder={"UF"} maxLength={2} />
+                    <input type="text" value={bairro} onChange={e => setBairro(e.target.value)} className={inpCls} style={{ flex: '1 1 0' }} placeholder={"Bairro"} />
+                    <input type="text" value={cidade} onChange={e => setCidade(e.target.value)} className={inpCls} style={{ flex: '1 1 0' }} placeholder={"Cidade"} />
+                    <input type="text" value={uf} onChange={e => setUf(e.target.value.toUpperCase().slice(0, 2))} className={inpCls} style={{ flex: '0 0 3.5rem' }} placeholder={"UF"} maxLength={2} />
                   </div>
                 </div>
               )}
@@ -358,14 +368,24 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
             {/* CONTATO DE EMERGÊNCIA (nome + celular + parentesco) */}
             <div>
               <label className={labelCls} style={estiloLabel}>{"Contato de emergência"}</label>
-              <p className="text-[11px] text-gray-500 mb-1 leading-snug">{"CERTAS SITUAÇÕES CLÍNICAS PODEM INDICAR RISCO MAIOR: DOR AGUDA, DESFALECIMENTO, TONTURA, QUEDA, HEMORRAGIA... EXIGINDO ORIENTAÇÃO/INTERVENÇÃO DE URGÊNCIA. ACIONAR TRÊS VEZES O BOTÃO DE EMERGÊNCIA DEFLAGRARÁ AÇÕES DE PROTEÇÃO E CONTATO DE EMERGÊNCIA."}</p>
-              <div className="space-y-2">
-                <input type="text" value={emergNome} onChange={e => setEmergNome(e.target.value.toUpperCase())} className={inpCls} placeholder={"Nome do contato"} style={{ textTransform: 'uppercase' }} />
-                <div className="flex gap-2">
-                  <input type="text" value={emergCelular} onChange={e => setEmergCelular(formatarCelular(e.target.value))} inputMode="numeric" maxLength={16} className={inpCls + " flex-1"} placeholder={"Celular do contato"} />
-                  <input type="text" value={emergParentesco} onChange={e => setEmergParentesco(e.target.value)} className={inpCls + " w-32"} placeholder={"Parentesco"} />
+              <p className="text-[11px] mb-1 leading-snug" style={{ color: '#7B1E1E' }}>{"Certas situações clínicas podem indicar risco maior: dor aguda, desfalecimento, tontura, queda, hemorragia… exigindo orientação ou intervenção de urgência. Acionar três vezes o botão de emergência deflagrará ações de proteção e o contato de emergência."}</p>
+              {!semEmergencia && (
+                <div className="space-y-2">
+                  <input type="text" value={emergNome} onChange={e => setEmergNome(e.target.value.toUpperCase())} className={inpCls} placeholder={"Nome do contato"} style={{ textTransform: 'uppercase' }} />
+                  <div className="flex gap-2">
+                    <input type="text" value={emergCelular}
+                      onChange={e => { const f = formatarCelular(e.target.value); setEmergCelular(f); if (f.replace(/\D/g, '').length === 11) parentescoRef.current?.focus() }}
+                      inputMode="numeric" maxLength={16} className={inpCls} style={{ flex: '1 1 0' }} placeholder={"Celular do contato"} />
+                    <input ref={parentescoRef} type="text" value={emergParentesco} onChange={e => setEmergParentesco(e.target.value)} className={inpCls} style={{ flex: '0 0 8rem' }} placeholder={"Parentesco"} />
+                  </div>
                 </div>
-              </div>
+              )}
+              <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                <input type="checkbox" checked={semEmergencia}
+                  onChange={e => { const on = e.target.checked; setSemEmergencia(on); if (on) { setEmergNome(''); setEmergCelular(''); setEmergParentesco('') } }}
+                  className="w-4 h-4 flex-shrink-0 accent-yellow-500" />
+                <span className="text-xs" style={{ color: '#7B1E1E' }}>{"Não quero informar um contato de emergência"}</span>
+              </label>
             </div>
 
             {erro && (
