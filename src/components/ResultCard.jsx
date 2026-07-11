@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import HistoricoChartModal from './HistoricoChartModal';
 import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
+import { DUVIDA_SECOES } from './OBAModal';
 
 const colorScheme = {
   green:  { bg: 'bg-green-50',  border: 'border-green-400',  badge: 'bg-green-600',  text: 'text-green-800'  },
@@ -413,11 +414,15 @@ function AchadosParalelosSection({ achados }) {
   );
 }
 
-function OBASection({ oba }) {
+function OBASection({ oba, modoPaciente = false }) {
   const [expandido, setExpandido] = useState(null);
 
   const alertasGraves = oba.alertas?.filter(a => a.nivel === 'grave') || [];
   const alertasMod    = oba.alertas?.filter(a => a.nivel === 'moderado') || [];
+  // Pontos que o PACIENTE marcou como "não tenho certeza, preciso de ajuda médica"
+  // (ficam no form_snapshot dentro do relatorio_oba salvo). É a "notificação" que o
+  // médico recebe ao digitar o CPF: o retrato está PROVISÓRIO nesses itens.
+  const duvidas = oba.form_snapshot?.duvidas || [];
 
   return (
     <div className="mt-6 rounded-2xl border-2 border-purple-300 bg-purple-50 shadow-lg overflow-hidden">
@@ -441,6 +446,27 @@ function OBASection({ oba }) {
           </div>
         </div>
       </div>
+
+      {!modoPaciente && duvidas.length > 0 && (
+        <div className="px-4 pt-4">
+          <div className="bg-amber-100 border-2 border-amber-400 rounded-xl px-4 py-3">
+            <p className="text-amber-900 text-sm font-black uppercase tracking-wide mb-1">
+              {"⚠️ Relatório de dúvidas deste paciente"}
+            </p>
+            <p className="text-amber-800 text-xs leading-snug mb-2">
+              {"Relatório PROVISÓRIO — o paciente marcou os pontos abaixo como “não tenho certeza, preciso de ajuda médica”. Revise-os na consulta/teleconsulta."}
+            </p>
+            <ul className="space-y-1">
+              {duvidas.map((s) => (
+                <li key={s} className="flex items-start gap-2 text-amber-900 text-sm font-semibold">
+                  <span className="text-amber-500 mt-0.5 flex-shrink-0">{"•"}</span>
+                  <span>{DUVIDA_SECOES[s] || s}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       {(alertasGraves.length > 0 || alertasMod.length > 0) && (
         <div className="px-4 pt-4 space-y-2">
@@ -1364,7 +1390,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
       <AchadosParalelosSection achados={resultado.achadosParalelos} />
 
-      {oba && <OBASection oba={oba} />}
+      {oba && <OBASection oba={oba} modoPaciente={modoPaciente} />}
 
       {!modoPaciente && mostrarPainelMedico && (
         <PainelMedico

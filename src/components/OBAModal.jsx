@@ -487,7 +487,7 @@ function SectionTitle({ children }) {
 // Seções onde cabe o checkbox "não tenho certeza" (exigem conhecimento médico p/
 // responder). O slug é a chave estável guardada em form.duvidas; o rótulo é o texto
 // exibido no relatório. NÃO muda o nível clínico — só marca o retrato como provisório.
-const DUVIDA_SECOES = {
+export const DUVIDA_SECOES = {
   infeccoes:      'Infecções Crônicas',
   endocrino:      'Status Endócrino / Hormonal',
   endoscopico:    'Status Endoscópico',
