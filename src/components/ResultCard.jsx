@@ -423,6 +423,8 @@ function OBASection({ oba, modoPaciente = false, cpf, onRevisar }) {
   // (ficam no form_snapshot dentro do relatorio_oba salvo). É a "notificação" que o
   // médico recebe ao digitar o CPF: o retrato está PROVISÓRIO nesses itens.
   const duvidas = oba.form_snapshot?.duvidas || [];
+  // Texto livre que o paciente escreveu no fim da anamnese ("outra condição de saúde").
+  const outraCondicao = (oba.form_snapshot?.outra_condicao || '').trim();
 
   return (
     <div className="mt-6 rounded-2xl border-2 border-purple-300 bg-purple-50 shadow-lg overflow-hidden">
@@ -464,6 +466,20 @@ function OBASection({ oba, modoPaciente = false, cpf, onRevisar }) {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {!modoPaciente && outraCondicao && (
+        <div className="px-4 pt-4">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl px-4 py-3">
+            <p className="text-blue-900 text-sm font-black uppercase tracking-wide mb-1">
+              {"Condição informada pelo paciente"}
+            </p>
+            <p className="text-blue-800 text-xs leading-snug mb-2">
+              {"O paciente descreveu uma condição não coberta pela anamnese. Recomendamos teleconsulta para avaliá-la."}
+            </p>
+            <p className="text-gray-900 text-sm bg-white border border-blue-100 rounded-lg px-3 py-2 whitespace-pre-wrap">{outraCondicao}</p>
           </div>
         </div>
       )}

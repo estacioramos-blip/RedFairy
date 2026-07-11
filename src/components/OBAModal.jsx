@@ -735,6 +735,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     borreliose_status: '', hpv_estado: [], ebv_status: '', htlv_ativa: false,
     // Seções que o paciente marcou como "não tenho certeza" (slugs de DUVIDA_SECOES).
     duvidas: [],
+    // Texto livre: condição de saúde não abordada pela anamnese. Vai p/ o relatório num
+    // card recomendando teleconsulta (o sistema é hardcoded e não classifica texto livre).
+    outra_condicao: '',
    }
    // Retomada de progresso (localStorage) tem prioridade.
    if (salvo?.form) return { ...def, ...salvo.form }
@@ -763,7 +766,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
        // FOLLOW-UP (novo ciclo): as QUEIXAS são perguntadas DE NOVO a cada ciclo (não
        // pré-preenche): o valor anterior fica no relatorio_oba da linha anterior, p/ a
        // comparação de evolução. As dúvidas também zeram (novo retrato).
-       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '', duvidas: [] }
+       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '', duvidas: [], outra_condicao: '' }
      }
      return { ...def, ...imutaveis }
    }
@@ -2111,6 +2114,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                         {"Se preferir n\u00e3o fazer a teleconsulta agora, estes pontos ficam marcados para voc\u00ea esclarecer com o seu m\u00e9dico e depois voltar e EDITAR a anamnese."}
                       </p>
                     )}
+                  </div>
+                )}
+
+                {(form.outra_condicao || '').trim() && (
+                  <div style={{ background:'#EFF6FF', border:'2px solid #BFDBFE', borderRadius:12, padding:'1rem 1.1rem', marginTop:'1rem' }}>
+                    <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#1E40AF', margin:'0 0 0.5rem' }}>{"Condi\u00e7\u00e3o informada por voc\u00ea"}</p>
+                    <p style={{ fontSize:'0.8rem', color:'#1E3A8A', lineHeight:1.5, margin:'0 0 0.6rem' }}>{"Voc\u00ea informou a condi\u00e7\u00e3o cl\u00ednica abaixo. Recomendamos uma Teleconsulta m\u00e9dica para que seja melhor avaliada."}</p>
+                    <p style={{ fontSize:'0.82rem', color:'#111827', lineHeight:1.5, margin:0, whiteSpace:'pre-wrap', background:'white', border:'1px solid #DBEAFE', borderRadius:8, padding:'0.6rem 0.7rem' }}>{form.outra_condicao}</p>
                   </div>
                 )}
 
@@ -3533,6 +3544,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               </div>
             </div>
           ))}
+
+          <SectionTitle>{"Outra Condição de Saúde"}</SectionTitle>
+          <label style={{ display:'block', fontSize:'0.78rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', lineHeight:1.4 }}>{"Descreva aqui algum problema de saúde que você tem e não foi abordado:"}</label>
+          <textarea value={form.outra_condicao} onChange={e => sf('outra_condicao', e.target.value)}
+            rows={3} maxLength={500}
+            style={{ width:'100%', boxSizing:'border-box', borderRadius:8, border:'2px solid #E5E7EB', padding:'0.6rem 0.7rem', fontSize:'0.85rem', fontFamily:'inherit', resize:'vertical', color:'#374151' }}
+            placeholder={"Opcional"} />
 
           {erro && <p style={{ color:'#DC2626', fontSize:'0.85rem', marginTop:'0.8rem' }}>{erro}</p>}
 
