@@ -464,6 +464,19 @@ export function avaliarPaciente(inputs) {
     });
   }
 
+  // Regra 4: MICROCITOSE (VCM 60-74) com FERRITINA e SATURACAO normais/altas — o ferro
+  // adequado afasta a ferropenia como causa da microcitose, apontando TALASSEMIA ou outra
+  // HEMOGLOBINOPATIA (ex.: Hb C homozigotica). Vale COM OU SEM uso de ferro. Cortes
+  // (confirmados pelo Estacio): VCM 60-74; ferritina >= 30 (nao baixa); satTransf >= 20%.
+  const _vcmMic = Number(inputs.vcm);
+  if (_vcmMic >= 60 && _vcmMic <= 74 && Number(inputs.ferritina) >= 30 && Number(inputs.satTransf) >= 20) {
+    if (!proximosExames.some(e => /ELETROFORESE/i.test(String(e)))) proximosExames.push('ELETROFORESE DE HEMOGLOBINAS');
+    comentarios.push({
+      titulo: 'MICROCITOSE COM FERRO NORMAL — INVESTIGAR TALASSEMIA / HEMOGLOBINOPATIA',
+      texto: `MICROCITOSE (VCM ${inputs.vcm}) COM FERRITINA E SATURAÇÃO DA TRANSFERRINA NORMAIS OU ELEVADAS: o ferro adequado torna a deficiência de ferro improvável como causa da microcitose — o padrão sugere TALASSEMIA (traço talassêmico) OU OUTRA HEMOGLOBINOPATIA (ex.: HEMOGLOBINA C HOMOZIGÓTICA). RECOMENDA-SE ELETROFORESE DE HEMOGLOBINAS. Na BETA-TALASSEMIA (MINOR OU INTERMÉDIA) a HEMOGLOBINA A2 está AUMENTADA; na ALFA-TALASSEMIA a A2 é NORMAL. ATENÇÃO: uma eletroforese NORMAL NÃO EXCLUI a alfa-talassemia, que costuma ser silenciosa — a confirmação exige estudo molecular/DNA. DIFERENCIAIS: INFLAMAÇÃO OU DOENÇA CRÔNICA (a ferritina é reagente de fase aguda e pode subir) — a saturação normal ajuda a afastar; um RDW normal (microcitose homogênea) reforça a talassemia. Se houve uso recente de ferro (últimos ~40 dias), os índices de ferro podem refletir o tratamento, mas a suspeita de talassemia/hemoglobinopatia permanece de qualquer forma.`
+    });
+  }
+
   // ── Separacao LAB vs IMAGEM ────────────────────────────────────────────
   // Lista oficial de palavras-chave de exames de imagem (case-insensitive).
   // Qualquer exame que casar com um destes padroes vai pro array de IMAGEM;

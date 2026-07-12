@@ -245,6 +245,18 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
     examesSuger.push('COOMBS DIRETO (TESTE DE ANTIGLOBULINA DIRETO)')
   }
 
+  // ── MICROCITOSE (VCM 60-74) com FERRITINA e SATURAÇÃO normais/altas — o ferro
+  //    adequado afasta a ferropenia; suspeitar TALASSEMIA ou outra HEMOGLOBINOPATIA.
+  //    Vale com ou sem uso de ferro. VCM/ferritina/sat do eritron, com fallback p/ os
+  //    valores relançados no OBA (coleta de novo hemograma na etapa de exames). ──
+  const _vcmTal = Number(resultadoEritron?.inputs?.vcm ?? examesOBA?.vcm_novo)
+  const _ferTal = Number(resultadoEritron?.inputs?.ferritina ?? examesOBA?.ferritina_novo ?? examesOBA?.ferritina_oba)
+  const _satTal = Number(resultadoEritron?.inputs?.satTransf ?? examesOBA?.sat_novo)
+  if (_vcmTal >= 60 && _vcmTal <= 74 && _ferTal >= 30 && _satTal >= 20) {
+    examesSuger.push('ELETROFORESE DE HEMOGLOBINAS')
+    alertas.push({ nivel: MODERADO, texto: `MICROCITOSE (VCM ${_vcmTal}) COM FERRITINA E SATURAÇÃO DA TRANSFERRINA NORMAIS OU ELEVADAS — O FERRO ADEQUADO TORNA A FERROPENIA IMPROVÁVEL COMO CAUSA. SUSPEITAR DE TALASSEMIA (TRAÇO) OU OUTRA HEMOGLOBINOPATIA (EX.: HEMOGLOBINA C HOMOZIGÓTICA). SOLICITAR ELETROFORESE DE HEMOGLOBINAS: A HEMOGLOBINA A2 ESTÁ AUMENTADA NA BETA-TALASSEMIA (MINOR OU INTERMÉDIA) E NORMAL NA ALFA-TALASSEMIA. ATENÇÃO: ELETROFORESE NORMAL NÃO EXCLUI A ALFA-TALASSEMIA (SILENCIOSA — CONFIRMAR POR ESTUDO MOLECULAR/DNA). DIFERENCIAL: INFLAMAÇÃO OU DOENÇA CRÔNICA (A FERRITINA É REAGENTE DE FASE AGUDA); UM RDW NORMAL REFORÇA A TALASSEMIA.` })
+  }
+
   // ── Ordenar alertas por prioridade ──────────────────────────────────────
   const prioridade = { [GRAVE]: 0, [MODERADO]: 1, [LEVE]: 2 }
   alertas.sort((a, b) => prioridade[a.nivel] - prioridade[b.nivel])
