@@ -1376,6 +1376,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       gestacoes_previas: form.gestacoes_previas !== '' ? parseInt(form.gestacoes_previas) : null,
       abortamentos_espontaneos: form.abortamentos_espontaneos,
       indicacao_cirurgia: form.indicacao_cirurgia || null,
+      // Grava o RETRATO COMPLETO do form já ao salvar a anamnese (não só no relatório).
+      // Sem isso, se o paciente avança para exames e SAI antes do relatório, esta linha
+      // fica sem form_snapshot e o próximo follow-up restaura tudo VAZIO (só a cirurgia,
+      // que vem de colunas próprias). O gerarRelatorio depois sobrescreve com o relatório
+      // completo (que também carrega o form_snapshot).
+      relatorio_oba: { form_snapshot: form },
     }
 
     await supabase.from('oba_anamnese').insert(dadosAnamnese)
