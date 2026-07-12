@@ -2746,12 +2746,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           <SectionTitle>Status Ponderal</SectionTitle>
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem 0.8rem' }}>
-            {!modoFollowUp && (
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso antes da cirurgia (kg)</label>
-              <input ref={refPesoAntes} style={inpA} onWheel={noWheel} type="number" min="0" max="220" placeholder="Ex: 120" value={form.peso_antes} onChange={e => { sf('peso_antes', e.target.value); saltoPorDigitos(e.target.value, refPesoMin, 3, true) }} onFocus={() => agendarSalto(null)} onBlur={handlePesoAntesBlur} />
+              {modoFollowUp ? (
+                <input style={{ ...inpA, background:'#F3F4F6', color:'#6B7280' }} type="number" value={form.peso_antes} readOnly />
+              ) : (
+                <input ref={refPesoAntes} style={inpA} onWheel={noWheel} type="number" min="0" max="220" placeholder="Ex: 120" value={form.peso_antes} onChange={e => { sf('peso_antes', e.target.value); saltoPorDigitos(e.target.value, refPesoMin, 3, true) }} onFocus={() => agendarSalto(null)} onBlur={handlePesoAntesBlur} />
+              )}
             </div>
-            )}
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"Menor peso p\u00f3s (kg)"}</label>
               <input ref={refPesoMin} style={inpA} onWheel={noWheel} type="number" min="0" max="220" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => { sf('peso_minimo_pos', e.target.value); saltoPorDigitos(e.target.value, refPesoAtual, 3, true) }} onFocus={() => agendarSalto(null)} onBlur={handlePesoMinBlur} />
@@ -2762,7 +2764,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </div>
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Altura (cm)</label>
-              <input ref={refAltura} style={inpA} onWheel={noWheel} type="number" step="1" placeholder="Ex: 165" value={form.altura} onChange={e => { sf('altura', e.target.value) }} onFocus={() => agendarSalto(null)} />
+              {modoFollowUp ? (
+                <input style={{ ...inpA, background:'#F3F4F6', color:'#6B7280' }} type="number" value={form.altura} readOnly />
+              ) : (
+                <input ref={refAltura} style={inpA} onWheel={noWheel} type="number" step="1" placeholder="Ex: 165" value={form.altura} onChange={e => { sf('altura', e.target.value) }} onFocus={() => agendarSalto(null)} />
+              )}
             </div>
           </div>
           {alertaPeso && (
