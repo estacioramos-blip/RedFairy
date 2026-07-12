@@ -27,10 +27,18 @@ export function detectarAchadosParalelos(inputs) {
   const hbNormalMax = sexo === 'M' ? 17.5 : 15.5;
   const hbNormal = hemoglobina >= hbNormalMin && hemoglobina <= hbNormalMax;
 
+  // SOBRECARGA DE FERRO — os achados 1 (ferritina>=1000), 7 (sat>50) e 9 (trifeta
+  // Hb+ferritina+sat) diziam quase a mesma coisa e disparavam JUNTOS (3 caixas iguais).
+  // Prioridade: 9 (trifeta) > 1 (ferritina>=1000) > 7 (sat>50) > 2 (400-999). Guardas abaixo
+  // garantem que so UM dispare por paciente.
+  const _limiarHbAltaFe = sexo === 'M' ? 17.5 : 16.5;
+  const _limiarFerrFe   = sexo === 'M' ? 500  : 400;
+  const _trifetaFerro   = hemoglobina >= _limiarHbAltaFe && ferritina >= _limiarFerrFe && satTransf > 50;
+
   // ─────────────────────────────────────────────────────────────
   // ACHADO 1 — SIDEROSE SEVERA (Ferritina >= 1000)
   // ─────────────────────────────────────────────────────────────
-  if (ferritina >= 1000) {
+  if (ferritina >= 1000 && !_trifetaFerro) {
     let texto = `Ferritina de ${ferritina} ng/mL caracteriza SIDEROSE SEVERA (sobrecarga marcada de ferro). `;
 
     if (usaFerro) {
@@ -53,7 +61,7 @@ export function detectarAchadosParalelos(inputs) {
   // ─────────────────────────────────────────────────────────────
   // ACHADO 2 — HIPERFERRITINEMIA MODERADA (400-999) com Hb normal
   // ─────────────────────────────────────────────────────────────
-  else if (ferritina >= 400 && ferritina < 1000 && hbNormal) {
+  else if (ferritina >= 400 && ferritina < 1000 && hbNormal && satTransf <= 50) {
     let texto = `Ferritina de ${ferritina} ng/mL (400-999) indica HIPERFERRITINEMIA MODERADA. `;
 
     if (satTransf <= 45) {
@@ -213,7 +221,7 @@ export function detectarAchadosParalelos(inputs) {
   // Ferro ORAL raramente causa sobrecarga (regulado pela hepcidina).
   // Ferro INJETAVEL bypassa essa regulacao.
   // ─────────────────────────────────────────────────────────────
-  if (satTransf > 50) {
+  if (satTransf > 50 && !_trifetaFerro && ferritina < 1000) {
     const satMuitoAlta = satTransf > 70;
     const ferritinaMuitoAlta = ferritina >= 1000;
 
