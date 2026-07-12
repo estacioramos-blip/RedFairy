@@ -171,7 +171,7 @@ export const femaleMatrix = [
     label: "SAUDÁVEL COMPENSADA",
     color: "green",
     conditions: {
-      ferritina:   { min: 25,  max: 150  },
+      ferritina:   { min: 25,  max: 300  },
       hemoglobina: { min: 12.0,max: 15.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
@@ -666,31 +666,6 @@ export const femaleMatrix = [
     comentarioFerro: "A DOSE DE FERRO FOI INSUFICIENTE PARA IMPEDIR A ANEMIA, PORTANTO, NÃO HÁ RESERVA. CUIDADO AO REPOR FERRO, ESPECIALMENTE SE PARENTERAL: O EXCESSO É NOCIVO.",
     proximosExames: ["HEMOGRAMA","RETICULÓCITOS","FERRITINA","SATURAÇÃO DA TRANSFERRINA","VITAMINA B12","LDH","FAN","ANTI-FATOR INTRÍNSECO","ANTI CÉLULA-PARIETAL","HAPTOGLOBINA","COOMBS DIRETO","GRUPO SANGUÍNEO / Rh","BILIRRUBINAS","AST/ALT","CREATININA","ENDOSCOPIA DIGESTIVA","COLONOSCOPIA DE ROTINA","CEA","CA 15.3","CA 125"],
   },
-  // ─── ID 24 — VEGETARIANA GRAVE SEM SUPORTE ─────────────────────────────────
-  {
-    id: 24,
-    label: "VEGETARIANA GRAVE SEM SUPORTE, OU COM SUPORTE RUIM E COMORBIDADES",
-    color: "red",
-    conditions: {
-      ferritina:   { min: 0,   max: 24   },
-      hemoglobina: { min: 3.0, max: 6.9  },
-      vcm:         { min: 0,   max: 79   },
-      rdw:         { min: 16.1,max: 999  },
-      satTransf:   { min: 0,   max: 19   },
-      bariatrica:  false,
-      vegetariano: true,
-      perda:       false,
-      alcoolista:  false,
-      transfundido: false,
-    },
-    diagnostico: "ANEMIA SEVERA, MICROCÍTICA COM ANISOCITOSE POR DIETA INSUFICIENTE EM FERRO É PROVAVELMENTE TAMBÉM POR DÉFICIT DE VITAMINA B12 DECORRENTE DE DIETA PROLONGADA E INSUFICIENTE NESSES NUTRIENTES.\nHÁ IMPORTANTE IMPACTO NEGATIVO NA PRODUÇÃO DE HEMOGLOBINA E HEMÁCIAS.\nESSE PADRÃO DE ANEMIA EXIGE INTERVENÇÃO MÉDICA IMEDIATA.\nANEMIA DESSA MAGNITUDE PODE DEMANDAR TRANSFUSÕES.",
-    recomendacaoAge1: "AVALIAÇÃO URGENTE COM HEMATOLOGISTA.\nPODERÁ SER NECESSÁRIO HOSPITALIZAR E ATÉ TRANSFUNDIR.\nVEGETARIANA DEVE SER AVALIADA POR MÉDICO ANTES DE DOAR SANGUE.",
-    recomendacaoAge2: "AVALIAÇÃO URGENTE COM HEMATOLOGISTA.\nPODERÁ SER NECESSÁRIO HOSPITALIZAR E ATÉ TRANSFUNDIR.\nNESSA FAIXA ETÁRIA, ANEMIA DESSA MAGNITUDE É INCAPACITANTE.\nVEGETARIANA DEVE SER AVALIADA POR MÉDICO ANTES DE DOAR SANGUE.",
-    comentarioAspirina: "ASPIRINA PRODUZ PEQUENA PERDA CRÔNICA DE SANGUE EM MUITAS USUÁRIAS. PODE REDUZIR A RESERVA DE FERRO E AGRAVAR A ANEMIA. CONSIDERE REVER A PRESCRIÇÃO.",
-    comentarioB12: "A REPOSIÇÃO DA VITAMINA B12 POR VIA ORAL É OBRIGATÓRIA PARA VEGETARIANAS. QUALQUER DOSE TERÁ SIDO BENÉFICA. A DOSAGEM NO SANGUE PODE SER USADA PARA AJUSTES.",
-    comentarioFerro: "A DOSE DE FERRO FOI INSUFICIENTE PARA IMPEDIR A ANEMIA, PORTANTO, NÃO HÁ RESERVA. CUIDADO AO REPOR FERRO, ESPECIALMENTE SE PARENTERAL: O EXCESSO É NOCIVO.",
-    proximosExames: ["HEMOGRAMA","RETICULÓCITOS","FERRITINA","SATURAÇÃO DA TRANSFERRINA","VITAMINA B12","SANGUE NAS FEZES","LDH","FAN","ANTI-FATOR INTRÍNSECO","ANTI CÉLULA-PARIETAL","HAPTOGLOBINA","COOMBS DIRETO","GRUPO SANGUÍNEO / Rh","BILIRRUBINAS","AST/ALT","CREATININA","IMUNOFIXAÇÃO DAS PROTEÍNAS","ENDOSCOPIA DIGESTIVA","COLONOSCOPIA DE ROTINA","CEA","CA 15.3","CA 125"],
-  },
   // ─── ID 25 — BARIÁTRICA COM SUPORTE ADEQUADO ───────────────────────────────
   {
     id: 25,
@@ -948,7 +923,7 @@ export const femaleMatrix = [
     color: "red",
     conditions: {
       ferritina:   { min: 0,   max: 24   },
-      hemoglobina: { min: 8.0, max: 11.9 },
+      hemoglobina: { min: 8.0, max: 9.9  },
       vcm:         { min: 0,   max: 79   },
       rdw:         { min: 15.1,max: 999  },
       satTransf:   { min: 0,   max: 50   },
