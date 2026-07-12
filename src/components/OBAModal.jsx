@@ -383,6 +383,7 @@ const EXAMES_BASE = [
   { key: 'vitamina_b12',   label: 'Vitamina B12',             unit: 'pg/mL',  ref: "200\u2013900" },
   { key: 'vitamina_d',     label: 'Vitamina D', sublabel: '25-OH', unit: 'ng/mL',  ref: "30\u2013100 (bari: >30)" },
   { key: 'tsh',            label: 'TSH',                      unit: 'mUI/L',  ref: "0,4\u20134,5" },
+  { key: 't4_livre',       label: 'T4 Livre',                 unit: 'ng/dL',  ref: "0,7\u20131,8" },
   { key: 'hb_glicada',     label: 'Hb Glicada',               unit: '%',      ref: '<5,7%' },
   { key: 'glicemia',       label: 'Glicemia (jejum)',          unit: 'mg/dL',  ref: "70\u201399" },
   { key: 'insulina',       label: 'Insulina (jejum)',          unit: "\u00b5UI/mL", ref: "2\u201315" },
@@ -414,6 +415,7 @@ const EXAMES_BASE = [
   { key: 'vitamina_k',     label: 'Vitamina K',                unit: 'ng/mL',  ref: "0,2\u20133,2" },
   { key: 'niacina',        label: 'Vitamina B3', sublabel: '(Niacina)', unit: "\u00b5g/mL",  ref: "0,5\u20138,9" },
   { key: 'testosterona',   label: 'Testosterona Total',        unit: 'ng/dL',  ref: "H: 300\u20131.000 / F: 15\u201370" },
+  { key: 'prolactina',     label: 'Prolactina',                unit: 'ng/mL',  ref: "H: <15 / F: <25" },
   { key: 'ige_total',      label: 'IgE Total',                 unit: 'UI/mL',  ref: "<100" },
 ]
 
@@ -804,7 +806,21 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
   const examesExtras = idadeNum >= 40 ? (isFem ? EXAMES_MULHER_40 : EXAMES_HOMEM_40) : []
   const exames45 = idadeNum >= 45 ? EXAMES_45 : []  // proteína/albumina/globulina (ambos os sexos)
-  const todosExames = [...EXAMES_BASE, ...exames45, ...examesExtras]
+  // Exames ginecológicos CONDICIONAIS (mulher): dependem da idade + do Status Ginecológico.
+  const examesGineco = (() => {
+    if (!isFem) return []
+    const g = form.status_ginecologico || []
+    const out = []
+    if (idadeNum >= 12 && idadeNum <= 50) out.push({ key: 'beta_hcg', label: 'Beta-hCG', unit: 'mUI/mL', ref: '<5' })
+    // CA 125 (ovário): mulher >= 40 OU sangramento menstrual / mola / mioma / endometriose / menopausa.
+    if (idadeNum >= 40 || g.includes('SANGRAMENTO MENSTRUAL') || g.includes('MOLA HIDATIFORME') || g.includes('MIOMAS | MIOMATOSE') || g.includes('ENDOMETRIOSE') || g.includes('MENOPAUSA'))
+      out.push({ key: 'ca125', label: 'CA 125', unit: 'U/mL', ref: '<35' })
+    // CA 15.3 (mama): câncer de mama / cistos nas mamas OU >= 40.
+    if (g.includes('CÂNCER DE MAMA') || g.includes('CISTOS NAS MAMAS') || idadeNum >= 40)
+      out.push({ key: 'ca153', label: 'CA 15.3', unit: 'U/mL', ref: '<30' })
+    return out
+  })()
+  const todosExames = [...EXAMES_BASE, ...exames45, ...examesExtras, ...examesGineco]
 
   const [exames, setExames] = useState(salvo?.exames || Object.fromEntries(todosExames.map(e => [e.key, ''])))
 
@@ -3038,7 +3054,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             {STATUS_HORMONAL_OPS.map(op => (
               <CheckRow key={op} label={op} checked={form.status_hormonal.includes(op)} onClick={() => sf('status_hormonal', tog(form.status_hormonal, op))} />
             ))}
-            {isFem && idadeNum >= 45 && ['MENOPAUSA', 'REPOSI\u00c7\u00c3O HORMONAL'].map(op => (
+            {isFem && idadeNum >= 45 && ['REPOSI\u00c7\u00c3O HORMONAL'].map(op => (
               <CheckRow key={op} label={op} checked={form.status_hormonal.includes(op)} onClick={() => sf('status_hormonal', tog(form.status_hormonal, op))} />
             ))}
             {!isFem && (
@@ -3054,6 +3070,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             {STATUS_GINECOLOGICO_OPS.map(op => (
               <CheckRow key={op} label={op} checked={form.status_ginecologico.includes(op)} onClick={() => sf('status_ginecologico', tog(form.status_ginecologico, op))} />
             ))}
+            {idadeNum >= 35 && (
+              <CheckRow label={"MENOPAUSA"} checked={form.status_ginecologico.includes('MENOPAUSA')} onClick={() => sf('status_ginecologico', tog(form.status_ginecologico, 'MENOPAUSA'))} />
+            )}
           </div>
           {form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && (
             <div style={{ marginTop:'0.5rem' }}>

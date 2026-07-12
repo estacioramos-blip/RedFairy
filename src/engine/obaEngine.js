@@ -234,6 +234,17 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
     }
   }
 
+  // ── COOMBS DIRETO (teste de antiglobulina direto) — exame SUGERIDO quando há
+  //    ANEMIA (eritron), ARTRITE ou FAN REAGENTE. Rastreia componente hemolítico/
+  //    autoimune. Não gera alerta, só entra na lista de exames complementares. ──
+  const _labelEritron = resultadoEritron?.label || ''
+  const _temAnemia    = /ANEMIA|ANÊMIC/i.test(_labelEritron) || resultadoEritron?.color === 'red'
+  const _temArtrite   = (dadosOBA.status_articular || []).includes('ARTRITE')
+  const _fanReagente  = dadosOBA.fan === 'REAGENTE'
+  if (_temAnemia || _temArtrite || _fanReagente) {
+    examesSuger.push('COOMBS DIRETO (TESTE DE ANTIGLOBULINA DIRETO)')
+  }
+
   // ── Ordenar alertas por prioridade ──────────────────────────────────────
   const prioridade = { [GRAVE]: 0, [MODERADO]: 1, [LEVE]: 2 }
   alertas.sort((a, b) => prioridade[a.nivel] - prioridade[b.nivel])
