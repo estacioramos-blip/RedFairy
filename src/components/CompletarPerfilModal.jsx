@@ -138,6 +138,9 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
   const nomeOk = (nome || '').trim().length >= 5
   const celOk = celDigits.length >= 10 && dddOk
   const emailOk = /\S+@\S+\.\S+/.test((email || '').trim())
+  // Celular do contato de emergência: valida o DDD contra a lista oficial (como o principal).
+  const emergCelDigits = (emergCelular || '').replace(/\D/g, '')
+  const emergDddInvalido = emergCelDigits.length >= 2 && !DDDS_VALIDOS.has(emergCelDigits.slice(0, 2))
   const tudoOk = nomeOk && celOk && (!(email || '').trim() || emailOk)   // e-mail OPCIONAL (só p/ PIX)
 
   function onNomeChange(v) {
@@ -368,7 +371,7 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
             {/* CONTATO DE EMERGÊNCIA (nome + celular + parentesco) */}
             <div>
               <label className={labelCls} style={estiloLabel}>{"Contato de emergência"}</label>
-              <p className="text-[11px] mb-1 leading-snug" style={{ color: '#7B1E1E' }}>{"Certas situações clínicas podem indicar risco maior: dor aguda, desfalecimento, tontura, queda, hemorragia… exigindo orientação ou intervenção de urgência. Acionar três vezes o botão de emergência deflagrará ações de proteção e o contato de emergência."}</p>
+              <p className="text-[11px] font-bold mb-1 leading-snug" style={{ color: '#7B1E1E' }}>{"Certas situações clínicas podem indicar risco maior: dor aguda, desfalecimento, tontura, queda, hemorragia… exigindo orientação ou intervenção de urgência. Acionar três vezes o botão de emergência deflagrará ações de proteção e o contato de emergência."}</p>
               {!semEmergencia && (
                 <div className="space-y-2">
                   <input type="text" value={emergNome} onChange={e => setEmergNome(e.target.value.toUpperCase())} className={inpCls} placeholder={"Nome do contato"} style={{ textTransform: 'uppercase' }} />
@@ -376,8 +379,9 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
                     <input type="text" value={emergCelular}
                       onChange={e => { const f = formatarCelular(e.target.value); setEmergCelular(f); if (f.replace(/\D/g, '').length === 11) parentescoRef.current?.focus() }}
                       inputMode="numeric" maxLength={16} className={inpCls} style={{ flex: '1 1 0' }} placeholder={"Celular do contato"} />
-                    <input ref={parentescoRef} type="text" value={emergParentesco} onChange={e => setEmergParentesco(e.target.value)} className={inpCls} style={{ flex: '0 0 8rem' }} placeholder={"Parentesco"} />
+                    <input ref={parentescoRef} type="text" value={emergParentesco} onChange={e => setEmergParentesco(e.target.value.toUpperCase())} className={inpCls} style={{ flex: '0 0 8rem', textTransform: 'uppercase' }} placeholder={"Parentesco"} />
                   </div>
+                  {emergDddInvalido && <p className="text-xs font-semibold" style={{ color: '#B91C1C' }}>{"DDD inválido — verifique o código da região do contato."}</p>}
                 </div>
               )}
               <label className="flex items-center gap-2 mt-2 cursor-pointer">
