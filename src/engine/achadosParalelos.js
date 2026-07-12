@@ -85,7 +85,12 @@ export function detectarAchadosParalelos(inputs) {
   // ─────────────────────────────────────────────────────────────
   // ACHADO 3 — MICROCITOSE SEM ANEMIA (VCM < 80, Hb normal)
   // ─────────────────────────────────────────────────────────────
-  if (vcm < 80 && hbNormal) {
+  // Quando a Regra 4 do decisionEngine cobre (VCM 60-74, ferritina >=30, sat >=20), o FERRO
+  // NORMAL já explica a microcitose (talassemia/hemoglobinopatia detalhada no comentário
+  // completo — HbA2/alfa/DNA). Este achado é SUPRIMIDO inteiro para não repetir nem
+  // contradizer (o ramo "RDW alto → sideropenia" não cabe se o ferro está normal).
+  const _regra4CobreTal = vcm >= 60 && vcm <= 74 && ferritina >= 30 && satTransf >= 20;
+  if (vcm < 80 && hbNormal && !_regra4CobreTal) {
     let texto = `VCM de ${vcm} fL caracteriza MICROCITOSE, mas sem anemia (Hb normal). `;
 
     if (rdw <= 15) {

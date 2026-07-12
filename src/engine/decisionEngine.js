@@ -110,6 +110,51 @@ function interpretarMacrocitose(inputs) {
   return linhas.length ? { linhas, exames } : null
 }
 
+// Regras pos-matching baseadas SO nos INPUTS (nao dependem da entrada casada). Muta
+// proximosExames/comentarios. Vale tanto p/ match quanto p/ FALLBACK (senao os casos
+// que caem no fallback — ex.: traco talassemico — perdiam essas recomendacoes).
+function aplicarRegrasPosMatching(inputs, proximosExames, comentarios, resultado) {
+  // Regra 1: Sat > 50% E Ferritina > 1000 -> RNM do abdome com protocolo de ferro.
+  if (Number(inputs.satTransf) > 50 && Number(inputs.ferritina) > 1000) {
+    if (!proximosExames.some(e => /RESSON/i.test(String(e)))) proximosExames.push('RESSONANCIA NUCLEAR MAGNETICA DO ABDOME SUPERIOR COM PROTOCOLO DE FERRO');
+  }
+  // Regra 2: bariatrica feminina 45+ -> densitometria ossea.
+  if (inputs.bariatrica && inputs.sexo === 'F' && Number(inputs.idade) >= 45) {
+    if (!proximosExames.some(e => /DENSITOMETR/i.test(String(e)))) proximosExames.push('DENSITOMETRIA OSSEA');
+  }
+  // Regra 3: macrocitose (VCM > 100) -> interpreta B12/folato + exames.
+  const macro = interpretarMacrocitose(inputs);
+  if (macro) {
+    comentarios.push({ titulo: 'MACROCITOSE — INVESTIGAÇÃO', texto: macro.linhas.join(' ') });
+    macro.exames.forEach(ex => { if (!proximosExames.some(e => String(e).toUpperCase() === ex.toUpperCase())) proximosExames.push(ex); });
+  }
+  // Regra 4: microcitose (VCM 60-74) com ferro normal/alto -> talassemia/hemoglobinopatia.
+  const vcm = Number(inputs.vcm);
+  if (vcm >= 60 && vcm <= 74 && Number(inputs.ferritina) >= 30 && Number(inputs.satTransf) >= 20) {
+    if (!proximosExames.some(e => /ELETROFORESE/i.test(String(e)))) proximosExames.push('ELETROFORESE DE HEMOGLOBINAS');
+    // Se a entrada casada JÁ é talassemia/hemoglobinopatia (ex.: id 61), o diagnóstico já
+    // cobre o tema — não repetir o comentário (o exame acima já foi garantido/deduplicado).
+    const _jaCobreTal = resultado && /TALASSEMIA|HEMOGLOBINOPATIA/i.test((resultado.label || '') + ' ' + (resultado.diagnostico || ''));
+    if (!_jaCobreTal) comentarios.push({
+      titulo: 'MICROCITOSE COM FERRO NORMAL — INVESTIGAR TALASSEMIA / HEMOGLOBINOPATIA',
+      texto: `MICROCITOSE (VCM ${inputs.vcm}) COM FERRITINA E SATURAÇÃO DA TRANSFERRINA NORMAIS OU ELEVADAS: o ferro adequado torna a deficiência de ferro improvável como causa da microcitose — o padrão sugere TALASSEMIA (traço talassêmico) OU OUTRA HEMOGLOBINOPATIA (ex.: HEMOGLOBINA C HOMOZIGÓTICA). RECOMENDA-SE ELETROFORESE DE HEMOGLOBINAS. Na BETA-TALASSEMIA (MINOR OU INTERMÉDIA) a HEMOGLOBINA A2 está AUMENTADA; na ALFA-TALASSEMIA a A2 é NORMAL. ATENÇÃO: uma eletroforese NORMAL NÃO EXCLUI a alfa-talassemia, que costuma ser silenciosa — a confirmação exige estudo molecular/DNA. DIFERENCIAIS: INFLAMAÇÃO OU DOENÇA CRÔNICA (a ferritina é reagente de fase aguda e pode subir) — a saturação normal ajuda a afastar; um RDW normal (microcitose homogênea) reforça a talassemia. Se houve uso recente de ferro (últimos ~40 dias), os índices de ferro podem refletir o tratamento, mas a suspeita de talassemia/hemoglobinopatia permanece de qualquer forma.`
+    });
+  }
+}
+
+// Separa a lista de exames em LAB / IMAGEM / ENDOSCOPIA / BIOIMAGEM (usado no match e no fallback).
+function splitExames(proximosExames) {
+  const PADROES_IMAGEM = /ULTRASSON|COLONOSCOP|ENDOSCOP|RESSON|RNM|DENSITOMETR/i;
+  const PADROES_ENDOSCOPIA = /COLONOSCOP|ENDOSCOP/i;
+  const imagem = proximosExames.filter(e => PADROES_IMAGEM.test(String(e)));
+  const lab = proximosExames.filter(e => !PADROES_IMAGEM.test(String(e)));
+  return {
+    imagem, lab,
+    endoscopia: imagem.filter(e => PADROES_ENDOSCOPIA.test(String(e))),
+    bioimagem: imagem.filter(e => !PADROES_ENDOSCOPIA.test(String(e))),
+  };
+}
+
 export function avaliarPaciente(inputs) {
   // CORREÇÃO: ajuste gestante simplificado — sem alteração artificial de Hb
   // A OMS define anemia na gestação como Hb < 11.0 g/dL
@@ -295,8 +340,19 @@ export function avaliarPaciente(inputs) {
   }
 
   if (!resultado) {
-    // Fallback clínico — gera resposta útil quando não há match nas matrizes
+    // Fallback clínico — resposta útil quando não há match nas matrizes. As regras baseadas
+    // nos INPUTS (talassemia, macrocitose, RNM, densitometria) e os ACHADOS PARALELOS valem
+    // AQUI TAMBÉM — senão casos que caem no fallback (ex.: traço talassêmico) perderiam essas
+    // recomendações. Herda também os comentários de histórico clínico (flags) já montados.
     const fallback = gerarFallbackClinico(inputsAjustados);
+    fallback.comentarios = comentarios;
+    aplicarRegrasPosMatching(inputsAjustados, fallback.proximosExames, fallback.comentarios);
+    fallback.achadosParalelos = detectarAchadosParalelos(inputsAjustados);
+    const sp = splitExames(fallback.proximosExames);
+    fallback.proximosExamesLab = sp.lab;
+    fallback.proximosExamesImagem = sp.imagem;
+    fallback.proximosExamesEndoscopia = sp.endoscopia;
+    fallback.proximosExamesBioimagem = sp.bioimagem;
     fallback.diasDesdeColeta = calcularDias(inputs.dataColeta);
     fallback.fraseData = getFraseData(fallback.diasDesdeColeta);
     return fallback;
@@ -434,65 +490,12 @@ export function avaliarPaciente(inputs) {
   // Comeca com o array original da matriz (clonado pra nao mutar).
   let proximosExames = Array.isArray(resultado.proximosExames) ? [...resultado.proximosExames] : [];
 
-  // Regra 1: Saturacao da Transferrina > 50% E Ferritina > 1000 ng/mL
-  //   -> sugerir RNM do Abdome Superior com Protocolo de Ferro (avaliar sobrecarga
-  //   hepatica de ferro / sideremia / hemocromatose).
-  if (Number(inputs.satTransf) > 50 && Number(inputs.ferritina) > 1000) {
-    const rnm = 'RESSONANCIA NUCLEAR MAGNETICA DO ABDOME SUPERIOR COM PROTOCOLO DE FERRO';
-    if (!proximosExames.some(e => /RESSON/i.test(String(e)))) {
-      proximosExames.push(rnm);
-    }
-  }
+  // Regras pos-matching baseadas nos INPUTS (RNM, densitometria, macrocitose, talassemia)
+  // — extraidas p/ helper e aplicadas tambem no fallback.
+  aplicarRegrasPosMatching(inputs, proximosExames, comentarios, resultado);
 
-  // Regra 2: Paciente bariatrica feminina com 45+ anos -> Densitometria Ossea
-  //   (a cirurgia bariatrica reduz absorcao de calcio e vit D; mulher 45+ tem risco
-  //   adicional de osteoporose pos-menopausa).
-  if (inputs.bariatrica && inputs.sexo === 'F' && Number(inputs.idade) >= 45) {
-    const den = 'DENSITOMETRIA OSSEA';
-    if (!proximosExames.some(e => /DENSITOMETR/i.test(String(e)))) {
-      proximosExames.push(den);
-    }
-  }
-
-  // Regra 3: MACROCITOSE (VCM > 100) — interpreta B12/Folato (ou recomenda dosá-los)
-  // e adiciona o comentário + exames à lista. Cortes confirmados pelo Dr. Ramos.
-  const macro = interpretarMacrocitose(inputs);
-  if (macro) {
-    comentarios.push({ titulo: 'MACROCITOSE — INVESTIGAÇÃO', texto: macro.linhas.join(' ') });
-    macro.exames.forEach(ex => {
-      if (!proximosExames.some(e => String(e).toUpperCase() === ex.toUpperCase())) proximosExames.push(ex);
-    });
-  }
-
-  // Regra 4: MICROCITOSE (VCM 60-74) com FERRITINA e SATURACAO normais/altas — o ferro
-  // adequado afasta a ferropenia como causa da microcitose, apontando TALASSEMIA ou outra
-  // HEMOGLOBINOPATIA (ex.: Hb C homozigotica). Vale COM OU SEM uso de ferro. Cortes
-  // (confirmados pelo Estacio): VCM 60-74; ferritina >= 30 (nao baixa); satTransf >= 20%.
-  const _vcmMic = Number(inputs.vcm);
-  if (_vcmMic >= 60 && _vcmMic <= 74 && Number(inputs.ferritina) >= 30 && Number(inputs.satTransf) >= 20) {
-    if (!proximosExames.some(e => /ELETROFORESE/i.test(String(e)))) proximosExames.push('ELETROFORESE DE HEMOGLOBINAS');
-    comentarios.push({
-      titulo: 'MICROCITOSE COM FERRO NORMAL — INVESTIGAR TALASSEMIA / HEMOGLOBINOPATIA',
-      texto: `MICROCITOSE (VCM ${inputs.vcm}) COM FERRITINA E SATURAÇÃO DA TRANSFERRINA NORMAIS OU ELEVADAS: o ferro adequado torna a deficiência de ferro improvável como causa da microcitose — o padrão sugere TALASSEMIA (traço talassêmico) OU OUTRA HEMOGLOBINOPATIA (ex.: HEMOGLOBINA C HOMOZIGÓTICA). RECOMENDA-SE ELETROFORESE DE HEMOGLOBINAS. Na BETA-TALASSEMIA (MINOR OU INTERMÉDIA) a HEMOGLOBINA A2 está AUMENTADA; na ALFA-TALASSEMIA a A2 é NORMAL. ATENÇÃO: uma eletroforese NORMAL NÃO EXCLUI a alfa-talassemia, que costuma ser silenciosa — a confirmação exige estudo molecular/DNA. DIFERENCIAIS: INFLAMAÇÃO OU DOENÇA CRÔNICA (a ferritina é reagente de fase aguda e pode subir) — a saturação normal ajuda a afastar; um RDW normal (microcitose homogênea) reforça a talassemia. Se houve uso recente de ferro (últimos ~40 dias), os índices de ferro podem refletir o tratamento, mas a suspeita de talassemia/hemoglobinopatia permanece de qualquer forma.`
-    });
-  }
-
-  // ── Separacao LAB vs IMAGEM ────────────────────────────────────────────
-  // Lista oficial de palavras-chave de exames de imagem (case-insensitive).
-  // Qualquer exame que casar com um destes padroes vai pro array de IMAGEM;
-  // o resto fica em LAB.
-  const PADROES_IMAGEM = /ULTRASSON|COLONOSCOP|ENDOSCOP|RESSON|RNM|DENSITOMETR/i;
-  const proximosExamesImagem = proximosExames.filter(e => PADROES_IMAGEM.test(String(e)));
-  const proximosExamesLab = proximosExames.filter(e => !PADROES_IMAGEM.test(String(e)));
-
-  // ── Sub-split do grupo IMAGEM: ENDOSCOPIA vs BIOIMAGEM ──────────────────
-  // Exames endoscopicos (colonoscopia / endoscopia digestiva alta) sao feitos em
-  // servico de endoscopia; os de bioimagem (ultrassonografias, ressonancia, densito-
-  // metria) num servico de imagem/radiologia. Por isso geram pedidos separados.
-  // proximosExamesImagem fica preservado (uniao dos dois) por compatibilidade.
-  const PADROES_ENDOSCOPIA = /COLONOSCOP|ENDOSCOP/i;
-  const proximosExamesEndoscopia = proximosExamesImagem.filter(e => PADROES_ENDOSCOPIA.test(String(e)));
-  const proximosExamesBioimagem = proximosExamesImagem.filter(e => !PADROES_ENDOSCOPIA.test(String(e)));
+  // Split LAB / IMAGEM / ENDOSCOPIA / BIOIMAGEM.
+  const { imagem: proximosExamesImagem, lab: proximosExamesLab, endoscopia: proximosExamesEndoscopia, bioimagem: proximosExamesBioimagem } = splitExames(proximosExames);
 
   return {
     encontrado: true,
