@@ -406,6 +406,16 @@ export function avaliarPaciente(inputs) {
     );
   }
 
+  // ── Frase dinâmica: autorização de doação para 16-17 anos ──────────────
+  // Removida do texto FIXO das matrizes (era boilerplate em ~20 entradas femininas,
+  // 0 masculinas). Agora só aparece quando o paciente TEM 16 ou 17 anos E a recomendação
+  // realmente fala de doação de sangue (não injeta fora de contexto).
+  const _idade1617 = parseInt(inputs.idade) || 0;
+  if ((_idade1617 === 16 || _idade1617 === 17) && recomendacaoFinal && /DOA[RÇ]/i.test(recomendacaoFinal)) {
+    recomendacaoFinal = recomendacaoFinal.trimEnd() +
+      ' ENTRE 16 E 17 ANOS DE IDADE É PRECISO AUTORIZAÇÃO DOS RESPONSÁVEIS LEGAIS PARA DOAR SANGUE.';
+  }
+
 
   // ── Modificador G-6-PD pós-matching ────────────────────────────────────
   let g6pdAlerta = null
