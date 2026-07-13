@@ -314,7 +314,7 @@ export default function TriagemResultadoModal({
           <div className="p-6 space-y-5">
             <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 text-center">
               <p className="text-sm font-bold text-red-900 leading-relaxed">
-                {"S\u00c3O POSS\u00cdVEIS DUAS AVALIA\u00c7\u00d5ES GRATUITAS POR CPF."}
+                {"\u00c9 POSS\u00cdVEL UMA AVALIA\u00c7\u00c3O GRATUITA POR CPF."}
                 <br />
                 {"PARA NOVA AVALIA\u00c7\u00c3O O PACIENTE DEVE ESTAR INSCRITO."}
               </p>

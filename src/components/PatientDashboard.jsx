@@ -25,6 +25,14 @@ function fmtCPF(v) {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
 }
 
+// GATE ÚNICO do paywall (Fase 2). É 1 avaliação CONCLUÍDA grátis por CPF (a 1ª); da 2ª
+// em diante, sem assinatura ativa, cai no pagamento. Esta é a ÚNICA definição da
+// regra — todos os pontos (render do formulário, efeito-porteiro e navegação) a chamam,
+// para não haver condição duplicada/divergente. Assinante nunca é bloqueado.
+function precisaPaywallNova(nConcluidas, temAssinatura) {
+  return !temAssinatura && Number(nConcluidas) >= 1
+}
+
 // Classes Tailwind por cor dos cards de checkbox (paridade com o CheckboxCard do
 // formulário do médico). Mantido fora do componente p/ não recriar a cada render.
 const CORES_CARD = {
@@ -89,8 +97,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   // Pedido grátis: "um por paciente". Governa o card opt-in dos exames sugeridos.
   const [jaTemPedidoGratis, setJaTemPedidoGratis] = useState(false)
   const [pedidoExamesEnviado, setPedidoExamesEnviado] = useState(false)
-  // Tem assinatura ativa? (Fase 2) Sem assinatura = modo grátis: 1ª avaliação grátis,
-  // paywall na 2ª. Bariátrico paga na 1ª (obrigatório).
+  // Tem assinatura ativa? (Fase 2) Sem assinatura = modo grátis: 1 avaliação grátis
+  // (a 1ª), paywall na 2ª. Bariátrico paga na 1ª (obrigatório).
   const [temAssinatura, setTemAssinatura] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showSobre, setShowSobre] = useState(false)
@@ -169,6 +177,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       }
     } catch (e) {}
   }, [profile])
+
+  // PORTEIRO ÚNICO do paywall: qualquer caminho que leve ao formulário 'nova' (botão,
+  // retorno, atalho do ÍCONE, ou algum futuro) passa por aqui. Se o paciente já esgotou
+  // a avaliação grátis e não tem assinatura, o formulário NUNCA é usado — abre o
+  // pagamento e devolve ao histórico. Só age após o carregamento (temAssinatura/avaliacoes
+  // já definidos), pra não piscar o paywall num assinante enquanto os dados chegam.
+  useEffect(() => {
+    if (loading) return
+    if (tela !== 'nova') return
+    const nConc = (avaliacoes || []).filter(a => a.concluida === true).length
+    if (precisaPaywallNova(nConc, temAssinatura)) {
+      setShowPagamento(true)
+      setTela('historico')
+    }
+  }, [loading, tela, avaliacoes, temAssinatura])
 
   // (Removido) Antes, ter >=1 avaliação destravava Ferritina/Saturação direto e
   // escondia o botão azul "aprofundar". Isso quebrava o primeiro acesso: o paciente
@@ -264,7 +287,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // Sessão bariátrica → marca rf_dom_bari (persistente) p/ a saída/F5 (inclusive pelo
     // ÍCONE em redfairy.bio) ir pro bariatrico.net, nunca a landing do RedFairy.
     if (ehBariatrico) { try { localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }
-    // Assinatura ativa? Governa o alerta de anuidade E o paywall da 2ª avaliação.
+    // Assinatura ativa? Governa o alerta de anuidade E o paywall (da 2ª avaliação).
     let temAssinAtiva = false
     try {
       const { data: assinAtiva } = await supabase
@@ -412,8 +435,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             // preciso); só o NÃO-bariátrico vai direto ao formulário 'nova'.
             if (!ehBariatrico) {
               setTela('nova'); setResultado(null)
-              // 3ª avaliação em diante (2 concluídas), sem assinatura → paywall ANTES.
-              if (!temAssinAtiva && nConcluidas >= 2) setShowPagamento(true)
+              // 2ª avaliação em diante (1 concluída), sem assinatura → paywall ANTES
+              // (evita o flash do formulário; o porteiro central garante o resto).
+              if (precisaPaywallNova(nConcluidas, temAssinAtiva)) setShowPagamento(true)
             }
           }
         } else if (inicial && !pendente && (avals || []).length) {
@@ -425,7 +449,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // OBA; e a triagem já cria 1 avaliação, que faria parecer "retorno"). Ele fica no
           // histórico e a boas-vindas/OBA conduz. Não-bariátrico mantém o comportamento.
           if (!ehBariatrico) { setTela('nova'); setResultado(null) }
-          if (!ehBariatrico && !temAssinAtiva && nConcluidas >= 2) setShowPagamento(true)
+          if (!ehBariatrico && precisaPaywallNova(nConcluidas, temAssinAtiva)) setShowPagamento(true)
         }
       } else {
         setEntradaPendente(false)
@@ -732,8 +756,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       } else {
         await supabase.from('avaliacoes').insert(dados)
       }
-      // 1ª avaliação concluída: marca no perfil. Isso (a) quebra o loop do
-      // "Continuando a sua primeira avaliação" e (b) é a base do paywall da 2ª.
+      // 1ª avaliação concluída: marca no perfil. Isso quebra o loop do
+      // "Continuando a sua primeira avaliação". (A contagem que rege o paywall da 2ª
+      // usa avaliacoes.concluida; ver precisaPaywallNova.)
       if (!profile?.primeira_avaliacao_feita) {
         try {
           await supabase.from('profiles').update({ primeira_avaliacao_feita: true }).eq('id', session.user.id)
@@ -757,12 +782,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     }
   }
 
-  // (Fase 2) Ir pra nova avaliação. São 2 avaliações grátis por CPF (a 1ª e a 2ª).
-  // A partir da 3ª, sem assinatura, abre o PAYWALL (pagamento da anuidade) antes.
+  // (Fase 2) Ir pra nova avaliação. É 1 avaliação grátis por CPF (a 1ª).
+  // A partir da 2ª, sem assinatura, abre o PAYWALL (pagamento da anuidade) antes.
   // Quem tem assinatura segue sempre direto ao formulário.
   function irNovaAvaliacao() {
     const nConc = (avaliacoes || []).filter(a => a.concluida === true).length
-    if (!temAssinatura && nConc >= 2) {
+    if (precisaPaywallNova(nConc, temAssinatura)) {
       setShowPagamento(true)
     } else {
       setTela('nova'); setResultado(null)
@@ -998,6 +1023,13 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const mostrarAlertaHpylori = diasHpylori !== null && diasHpylori <= 15 && !alertaHpyloriFechado
   // Fluxo bariátrico (OBA): header cinza + texto amarelo, "Projeto OBA®", sem fadinha, botões dourados.
   const ehBari = inputs.bariatrica || profile?.bariatrica
+
+  // Bloqueio da 2ª avaliação (mesma regra do porteiro) — usado no render pra o formulário
+  // 'nova' nem pintar quando o paciente está sem avaliação grátis e sem assinatura.
+  const bloqueiaNovaAvaliacao = precisaPaywallNova(
+    (avaliacoes || []).filter(a => a.concluida === true).length,
+    temAssinatura,
+  )
 
   return (
     <>
@@ -1318,7 +1350,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                   <p className="text-xs text-white leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica || temAssinatura)
                       ? <>{"Agora voc\u00ea tem acesso \u00e0 plataforma por "}<span style={{ color: '#facc15' }}>{"um ano"}</span>{"."}</>
-                      : <span style={{ color: '#93c5fd' }}>{"Voc\u00ea poder\u00e1 fazer duas avalia\u00e7\u00f5es gratuitas."}</span>}
+                      : <span style={{ color: '#93c5fd' }}>{"Voc\u00ea poder\u00e1 fazer uma avalia\u00e7\u00e3o gratuita."}</span>}
                   </p>
                   <p className="text-xs text-white leading-relaxed mb-2 font-bold">
                     {(inputs.bariatrica || profile?.bariatrica)
@@ -1396,7 +1428,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           </div>
         )}
 
-        {tela === 'nova' && (
+        {tela === 'nova' && !bloqueiaNovaAvaliacao && (
           <div className="bg-white rounded-2xl border shadow-sm p-6 space-y-5">
             <h2 className="font-semibold text-gray-700">
               {(() => {
@@ -1407,11 +1439,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 return "Vamos ent\u00e3o concluir a sua " + ord + " avalia\u00e7\u00e3o"
               })()}
             </h2>
-            {/* 2\u00aa avalia\u00e7\u00e3o = \u00faltima gr\u00e1tis: aviso vinho. Some quando j\u00e1 \u00e9 assinante
-                ou na 3\u00aa+ (avaliacoes.length>=2, que cai no paywall antes do form). */}
-            {!temAssinatura && (avaliacoes || []).filter(a => a.concluida === true).length === 1 && (
+            {/* 1\u00aa avalia\u00e7\u00e3o = \u00fanica gr\u00e1tis: aviso vinho j\u00e1 nela. Some quando j\u00e1 \u00e9 assinante
+                (e o n\u00e3o-assinante nem chega \u00e0 2\u00aa: cai no paywall antes do form). */}
+            {!temAssinatura && (avaliacoes || []).filter(a => a.concluida === true).length === 0 && (
               <p className="text-sm font-bold -mt-3" style={{ color: '#9D174D' }}>
-                {"ATEN\u00c7\u00c3O: Essa \u00e9 a sua \u00faltima avalia\u00e7\u00e3o gratuita."}
+                {"ATEN\u00c7\u00c3O: Essa \u00e9 a sua \u00fanica avalia\u00e7\u00e3o gratuita."}
               </p>
             )}
             {/* 3\u00aa avalia\u00e7\u00e3o em diante: j\u00e1 h\u00e1 hist\u00f3rico (2+ pontos) \u2014 link p/ o gr\u00e1fico
@@ -1732,7 +1764,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           setShowCompletarPerfil(false)
           setProfile(novoProfile)
           // Bariátrico paga na 1ª (obrigatório → OBA). Não-bariátrico: 1ª grátis,
-          // vai direto às boas-vindas (paywall só aparece na 2ª avaliação).
+          // vai direto às boas-vindas (o paywall só aparece na 2ª avaliação).
           const ehBari = !!(novoProfile?.bariatrica || inputs.bariatrica || ehDominioBariatrico())
           if (ehBari) {
             // (escolha) se há um INDICADOR reservando este CPF, o paciente escolhe de quem
