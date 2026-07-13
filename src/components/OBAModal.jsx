@@ -3086,6 +3086,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <CheckRow label={"MENOPAUSA"} checked={form.status_ginecologico.includes('MENOPAUSA')} onClick={() => sf('status_ginecologico', tog(form.status_ginecologico, 'MENOPAUSA'))} />
             )}
           </div>
+          {form.status_gestacional === "GRÁVIDA" && form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && (
+            <div style={{ marginTop:'0.6rem', background:'#FEF2F2', border:'2px solid #DC2626', borderRadius:10, padding:'0.7rem 0.9rem' }}>
+              <p style={{ fontSize:'0.82rem', fontWeight:800, color:'#B91C1C', margin:0, lineHeight:1.45 }}>
+                {"⚠️ Gestantes não menstruam. Se você está grávida e apresenta sangramento, procure uma unidade de emergência imediatamente."}
+              </p>
+            </div>
+          )}
           {form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && (
             <div style={{ marginTop:'0.5rem' }}>
               <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.4rem' }}>{"Tipo de sangramento"}</p>
