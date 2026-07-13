@@ -307,7 +307,7 @@ class Component extends DCLogic {
         this.setState({ comoOpen: true, comoPhase: 'image', comoChoice: null });
         this._tComo = setTimeout(() => {
           if (this.state.comoOpen && this.state.comoPhase === 'image') this.setState({ comoPhase: 'menu' });
-        }, 3000);
+        }, 1500);
       },
       selectBari: () => this.setState({ comoPhase: 'msg', comoChoice: 'bariatrico' }),
       selectMed: () => this.setState({ comoPhase: 'msg', comoChoice: 'medico' }),
