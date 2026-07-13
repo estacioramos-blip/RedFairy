@@ -129,7 +129,11 @@ function aplicarRegrasPosMatching(inputs, proximosExames, comentarios, resultado
   // Regra 3: macrocitose (VCM > 100) -> interpreta B12/folato + exames.
   const macro = interpretarMacrocitose(inputs);
   if (macro) {
-    comentarios.push({ titulo: 'MACROCITOSE — INVESTIGAÇÃO', texto: macro.linhas.join(' ') });
+    // O comentario so aparece quando ha VALORES de B12/folato para interpretar (contribuicao
+    // UNICA da regra — interpretacao graduada). Sem valores, o texto de causas fica por conta
+    // do achado paralelo (macrocitose sem/com anemia), evitando repetir "dosar B12/folato".
+    const _temValoresMacro = Number(inputs.b12_valor) > 0 || Number(inputs.folato_valor) > 0;
+    if (_temValoresMacro) comentarios.push({ titulo: 'MACROCITOSE — INVESTIGAÇÃO', texto: macro.linhas.join(' ') });
     macro.exames.forEach(ex => { if (!proximosExames.some(e => String(e).toUpperCase() === ex.toUpperCase())) proximosExames.push(ex); });
   }
   // Regra 4: microcitose (VCM 60-74) com ferro normal/alto -> talassemia/hemoglobinopatia.
@@ -315,8 +319,11 @@ export function avaliarPaciente(inputs) {
   }
 
   // ── Histórico clínico — condições de base ──────────────────────────────
-  if (inputs.testosterona) {
-    comentarios.push({ titulo: 'TESTOSTERONA / ANABOLIZANTE', texto: 'O USO EXÓGENO DE TESTOSTERONA OU ANABOLIZANTES ESTIMULA A ERITROPOESE E PODE PRODUZIR ERITROCITOSE (HEMOGLOBINA E HEMATÓCRITO ELEVADOS), AUMENTANDO O RISCO DE TROMBOSE, AVC E INFARTO. SE A HEMOGLOBINA ESTIVER ELEVADA, A TESTOSTERONA EXÓGENA É A CAUSA MAIS PROVÁVEL. SANGRIAS PERIÓDICAS PODEM SER NECESSÁRIAS. MONITORAR HEMOGRAMA, HEMATÓCRITO E PSA A CADA 3-6 MESES.' });
+  // Quando a Hb está ELEVADA, o achado paralelo "eritrocitose por testosterona" (mais
+  // específico ao dado) é o dono do texto — aqui o comentário só aparece com Hb normal
+  // (contexto de que a testosterona pode elevar o eritron), evitando repetição.
+  if (inputs.testosterona && !(Number(inputs.hemoglobina) > (inputs.sexo === 'M' ? 17.5 : 15.5))) {
+    comentarios.push({ titulo: 'TESTOSTERONA / ANABOLIZANTE', texto: 'O USO EXÓGENO DE TESTOSTERONA OU ANABOLIZANTES ESTIMULA A ERITROPOESE E PODE PRODUZIR ERITROCITOSE (HEMOGLOBINA E HEMATÓCRITO ELEVADOS), AUMENTANDO O RISCO DE TROMBOSE, AVC E INFARTO. SE A HEMOGLOBINA SE ELEVAR, A TESTOSTERONA EXÓGENA É A CAUSA MAIS PROVÁVEL. MONITORAR HEMOGRAMA, HEMATÓCRITO E PSA A CADA 3-6 MESES.' });
   }
   if (inputs.anemiaPrevia) {
     comentarios.push({ titulo: 'ANEMIA CRÔNICA / PRÉVIA', texto: 'O HISTÓRICO DE ANEMIA CRÔNICA OU PRÉVIA É RELEVANTE PARA CONTEXTUALIZAR O RESULTADO ATUAL. SE O ERITRON ESTÁ COMPENSADO, A CAUSA FOI TRATADA OU CONTROLADA. SE HÁ ANEMIA PERSISTENTE, INVESTIGAR SE A CAUSA ORIGINAL FOI ADEQUADAMENTE TRATADA OU SE HÁ NOVA CAUSA SOBREPOSTA.' });
@@ -484,7 +491,7 @@ export function avaliarPaciente(inputs) {
     if (idsHemoliticos.includes(resultado.id)) {
       g6pdAlerta = 'DEFICIÊNCIA DE G-6-PD: O PADRÃO LABORATORIAL ATUAL É COMPATÍVEL COM CRISE HEMOLÍTICA. A G-6-PD É A CAUSA MAIS PROVÁVEL. IDENTIFICAR E ELIMINAR O GATILHO (MEDICAMENTO, INFECÇÃO OU ALIMENTO). MONITORAR LDH, BILIRRUBINAS E RETICULÓCITOS.'
     } else if (['green', 'yellow'].includes(resultado.color)) {
-      g6pdAlerta = 'DEFICIÊNCIA DE G-6-PD: O ERITRON ESTÁ COMPENSADO NO MOMENTO, MAS O RISCO DE CRISE HEMOLÍTICA PERMANECE. EVITAR MEDICAMENTOS OXIDANTES (PRIMAQUINA, DAPSONA, NITROFURANTOÍNA, SULFAS) E INGESTÃO DE FAVA.'
+      g6pdAlerta = 'DEFICIÊNCIA DE G-6-PD: O ERITRON ESTÁ COMPENSADO NO MOMENTO, MAS O RISCO DE CRISE HEMOLÍTICA PERMANECE — EVITE OS GATILHOS OXIDANTES (MEDICAMENTOS, INFECÇÕES E FAVA).'
     }
   }
 
