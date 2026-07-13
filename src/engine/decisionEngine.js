@@ -114,6 +114,10 @@ function interpretarMacrocitose(inputs) {
 // proximosExames/comentarios. Vale tanto p/ match quanto p/ FALLBACK (senao os casos
 // que caem no fallback — ex.: traco talassemico — perdiam essas recomendacoes).
 function aplicarRegrasPosMatching(inputs, proximosExames, comentarios, resultado) {
+  // TODO paciente: garantir HEMOGRAMA nos proximos exames (reavaliacao do eritron). Vai
+  // no inicio da lista; dedup evita repetir quando a entrada ja pede hemograma.
+  if (!proximosExames.some(e => /HEMOGRAMA/i.test(String(e)))) proximosExames.unshift('HEMOGRAMA');
+
   // Regra 1: Sat > 50% E Ferritina > 1000 -> RNM do abdome com protocolo de ferro.
   if (Number(inputs.satTransf) > 50 && Number(inputs.ferritina) > 1000) {
     if (!proximosExames.some(e => /RESSON/i.test(String(e)))) proximosExames.push('RESSONANCIA NUCLEAR MAGNETICA DO ABDOME SUPERIOR COM PROTOCOLO DE FERRO');
