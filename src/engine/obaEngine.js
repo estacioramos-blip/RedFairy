@@ -110,6 +110,15 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modulos     = []
   const examesSuger = []
 
+  // TODO paciente OBA: garantir HEMOGRAMA nos exames complementares (reavaliacao do eritron).
+  if (!examesSuger.some(e => /HEMOGRAMA/i.test(e))) examesSuger.push('HEMOGRAMA')
+
+  // GESTANTE + SANGRAMENTO MENSTRUAL: contradicao clinica -> sangramento na gravidez e'
+  // emergencia. Alerta GRAVE no relatorio (o aviso inline na anamnese ja avisa na hora).
+  if (dadosOBA.status_gestacional === 'GRÁVIDA' && (dadosOBA.status_ginecologico || []).includes('SANGRAMENTO MENSTRUAL')) {
+    alertas.push({ nivel: GRAVE, texto: 'GESTANTES NÃO MENSTRUAM. SE VOCÊ ESTÁ GRÁVIDA E APRESENTA SANGRAMENTO, PROCURE UMA UNIDADE DE EMERGÊNCIA IMEDIATAMENTE.' })
+  }
+
   // ── 0. IDEAÇÃO SUICIDA (queixa) — situação crítica, tem prioridade sobre tudo ──
   const modIdeacao = buildModIdeacao(dadosOBA, alertas, examesSuger)
   if (modIdeacao) modulos.push(modIdeacao)
