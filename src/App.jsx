@@ -279,7 +279,7 @@ export default function App() {
     // já entrar bariátrico (→ OBA). Em dev, ?bari=1/0 liga/desliga (persiste).
     const bariParam = params.get('bari')
     if (bariParam === '1') { try { localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }
-    if (bariParam === '0') { try { localStorage.removeItem('rf_dom_bari'); localStorage.removeItem('rf_voltar_url'); sessionStorage.removeItem('rf_voltar_url') } catch (e) {}; setVoltarExterno('') }
+    if (bariParam === '0') { try { localStorage.removeItem('rf_dom_bari'); localStorage.removeItem('rf_flag'); localStorage.removeItem('rf_voltar_url'); sessionStorage.removeItem('rf_voltar_url') } catch (e) {}; setVoltarExterno('') }
     if (ehDominioBariatrico()) { try { localStorage.setItem('rf_flag', 'bariatrica') } catch (e) {} }
 
     // (bariatrico.net) Veio do site externo? O "Voltar" destas telas (e o F5 — ver o

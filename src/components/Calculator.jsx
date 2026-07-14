@@ -438,7 +438,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
         {/* (limpo) Fundo e splash da telefonista removidos — card de acesso limpo (padrão OBA). */}
         {/* Header OBA: logo OBA (sem faixa) + subt\u00edtulo do modo. */}
         <div style={{ position: 'relative', zIndex: 10, background: '#fff', padding: '16px 14px 10px', textAlign: 'center' }}>
-          <img src={obaLogo} alt="Projeto OBA\u00ae" style={{ height: 128, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
+          <img src={obaLogo} alt={"Projeto OBA\u00ae"} style={{ height: 128, objectFit: 'contain', display: 'block', margin: '0 auto' }} />
           <p className="text-gray-500 text-sm" style={{ margin: '4px 0 0' }}>
             {modo === 'login' ? "Acesso M\u00e9dico" : "Primeiro Acesso M\u00e9dico"}
           </p>
@@ -2278,7 +2278,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <button
                   type="button"
                   onClick={() => setMostrarExamesExtras(true)}
-                  aria-label="Liberar campos de Ferritina e Satura\u00e7\u00e3o da Transferrina"
+                  aria-label={"Liberar campos de Ferritina e Satura\u00e7\u00e3o da Transferrina"}
                   className="rf-play-blue flex-shrink-0 w-12 h-12 rounded-full bg-gray-300 hover:bg-gray-400 flex items-center justify-center transition-colors">
                   <span style={{ color: '#2563eb', fontSize: '1.3rem', lineHeight: 1 }}>{"\u25b6"}</span>
                 </button>
@@ -2698,7 +2698,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   <PlayButton
                     onClick={() => { setShowFelicitacoes(false); setMenuMedico(true); }}
                     label="INICIAR"
-                    ariaLabel="Iniciar investiga\u00e7\u00e3o"
+                    ariaLabel={"Iniciar investiga\u00e7\u00e3o"}
                     ringColor="rgba(227,174,55,0.75)"
                   />
                 </div>

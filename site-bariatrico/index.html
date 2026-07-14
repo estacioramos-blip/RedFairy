@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projeto OBA® — Cuidado do paciente bariátrico</title>
+<meta name="description" content="Projeto OBA®: plataforma inteligente de acompanhamento e triagem para pacientes bariátricos. Faça sua avaliação, receba orientações e cuide da sua saúde.">
+<link rel="icon" href="images/oba-logo.png">
+<link rel="apple-touch-icon" href="images/oba-logo.png">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -358,8 +362,12 @@ class Component extends DCLogic {
     }
     function fechar(){ var m=document.getElementById('prescritorModal'); if(m) m.remove(); aberto=false; var c=document.getElementById('prescritorChk'); if(c) c.checked=false; }
     function renderRqe(checked){
-      var d=document.getElementById('pRqe'); d.innerHTML='';
-      checked.forEach(function(cb){ d.innerHTML+='<div style="margin-top:8px;"><label style="display:block;font-size:12px;font-weight:600;color:#e7e0d6;margin-bottom:2px;">RQE — '+cb.value+'</label><input class="prqe" data-esp="'+cb.value+'" type="text" autocomplete="off" style="width:100%;border:1.5px solid #E3AE37;border-radius:8px;padding:8px 10px;font-size:14px;box-sizing:border-box;background:#fef9c3;color:#1e3a8a;font-weight:600;"></div>'; });
+      var d=document.getElementById('pRqe');
+      // preserva os RQE ja digitados (por especialidade) antes de reconstruir os campos
+      var atuais={};
+      Array.prototype.slice.call(d.querySelectorAll('.prqe')).forEach(function(inp){ atuais[inp.getAttribute('data-esp')]=inp.value; });
+      d.innerHTML='';
+      checked.forEach(function(cb){ var v=(atuais[cb.value]||'').replace(/"/g,'&quot;'); d.innerHTML+='<div style="margin-top:8px;"><label style="display:block;font-size:12px;font-weight:600;color:#e7e0d6;margin-bottom:2px;">RQE — '+cb.value+'</label><input class="prqe" data-esp="'+cb.value+'" value="'+v+'" type="text" autocomplete="off" style="width:100%;border:1.5px solid #E3AE37;border-radius:8px;padding:8px 10px;font-size:14px;box-sizing:border-box;background:#fef9c3;color:#1e3a8a;font-weight:600;"></div>'; });
     }
     function onEsp(e){
       var checked=Array.prototype.slice.call(document.querySelectorAll('.pesp:checked'));

@@ -2397,7 +2397,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
             <span style={{ color:'#000', fontWeight:800, fontSize:'1.15rem', fontFamily:"'DM Sans', sans-serif", letterSpacing:'0.01em' }}>
               {"Projeto OBA"}<sup style={{ fontSize:'0.5em', fontWeight:600, verticalAlign:'super', marginLeft:'1px' }}>{"\u00ae"}</sup>
             </span>
-            <a href="#oba" className="rf-comprimido comp-pat comp-wide comp-w-saiba" aria-label="Projeto OBA \u2014 Saiba mais" style={{ textDecoration:'none' }}>
+            <a href="#oba" className="rf-comprimido comp-pat comp-wide comp-w-saiba" aria-label={"Projeto OBA \u2014 Saiba mais"} style={{ textDecoration:'none' }}>
               <span className="comp-pill" />
               <span className="comp-label">{"SAIBA MAIS"}</span>
             </a>
@@ -2435,7 +2435,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
           </div>
           <div className="como-tabs-wrap reveal">
             <div className="como-tabs" style={{ gap:'0.8rem' }}>
-              <button className={`rf-comprimido comp-medico comp-wide comp-w-tab${activeTab === 'medico' ? '' : ' is-off'}`} onClick={() => setActiveTab('medico')} aria-label="Para M\u00e9dicos">
+              <button className={`rf-comprimido comp-medico comp-wide comp-w-tab${activeTab === 'medico' ? '' : ' is-off'}`} onClick={() => setActiveTab('medico')} aria-label={"Para M\u00e9dicos"}>
                 <span className="comp-pill" />
                 <span className="comp-label" style={{ color:'#000' }}>{"M\u00c9DICOS"}</span>
               </button>
@@ -2699,7 +2699,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <span style={{ color:'#fff', fontWeight:800, fontSize:'1.15rem', fontFamily:"'DM Sans', sans-serif", letterSpacing:'0.01em' }}>
                   {"Sou Bari\u00e1trico"}
                 </span>
-                <button className="rf-comprimido comp-pat comp-wide comp-w-comecar" aria-label="Sou Bari\u00e1trico \u2014 Come\u00e7ar"
+                <button className="rf-comprimido comp-pat comp-wide comp-w-comecar" aria-label={"Sou Bari\u00e1trico \u2014 Come\u00e7ar"}
                   onClick={iniciarFluxoOBA}>
                   <span className="comp-pill" />
                   <span className="comp-label" style={{ color:'#E8720C' }}>{"COME\u00c7AR"}</span>
@@ -2739,7 +2739,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
                 <li>{"Orienta\u00e7\u00f5es fundamentadas"}</li>
                 <li>{"Programa 4DOC de benef\u00edcios para afiliados"}</li>
               </ul>
-              <button className="rf-comprimido comp-medico" aria-label="Entrar como M\u00e9dico"
+              <button className="rf-comprimido comp-medico" aria-label={"Entrar como M\u00e9dico"}
                 onClick={() => {
                   if (medicoLogado) { entrarLogadoDireto(); return; }
                   irPara('medico');

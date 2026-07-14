@@ -1355,6 +1355,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       status_pressorico: form.status_pressorico || null,
       status_endoscopico: form.status_endoscopico.length > 0 ? form.status_endoscopico : null,
       status_neurologico: form.status_neurologico.length > 0 ? form.status_neurologico : null,
+      // Secoes INTESTINAL/FIBROMIALGIA (colunas proprias; antes so viviam no form_snapshot jsonb).
+      status_intestinal: form.status_intestinal || null,
+      status_fibromialgia: (form.status_fibromialgia || []).length > 0 ? form.status_fibromialgia : null,
+      calprotectina: form.calprotectina === '' ? null : Number(form.calprotectina),
+      indican: form.indican || null,
       trombose: form.trombose,
       investigou_trombose: form.trombose ? form.investigou_trombose : null,
       usou_anticoagulante: form.trombose ? form.usou_anticoagulante : null,
@@ -2602,7 +2607,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               label={"AVALIA\u00c7\u00c3O"}
               playColor="#DC2626"
               ringColor="rgba(220,38,38,0.5)"
-              ariaLabel="Ir para a avalia\u00e7\u00e3o"
+              ariaLabel={"Ir para a avalia\u00e7\u00e3o"}
             />
           </div>
         </div>
@@ -3647,7 +3652,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               loading={loading}
               label={"AVAN\u00c7AR PARA EXAMES"}
               hint={"Voc\u00ea vai precisar dos seus exames mais recentes"}
-              ariaLabel="Avan\u00e7ar para os exames"
+              ariaLabel={"Avan\u00e7ar para os exames"}
             />
           </div>
           <button style={btnS} onClick={onFechar}>{"\u2190 Voltar"}</button>
