@@ -476,6 +476,17 @@ export default function App() {
     setTimeout(() => setSaindo(false), 80)
   }
 
+  // Ferramentas de OPERADOR (Admin/Caixa) fazem parte do lancamento BARIATRICO: o
+  // Voltar desloga TODOS os papeis e volta pro bariatrico.net (nunca a landing do
+  // RedFairy) — importante tambem por seguranca (o caixa_token nao pode sobreviver
+  // numa transicao SPA). Honra a URL externa de origem (rf_voltar_url) se houver.
+  function irVoltarOperador() {
+    setSaindo(true)
+    limparTodasSessoes()
+    const dest = voltarExterno || 'https://bariatrico.net'
+    setTimeout(() => { window.location.href = dest }, 40)
+  }
+
   function handleLogoClick() {
     const next = adminClicks + 1
     setAdminClicks(next)
@@ -584,7 +595,7 @@ export default function App() {
   }
 
   if (modo === 'caixa') {
-    return <CaixaPage onVoltar={() => setModo('home')} />
+    return <CaixaPage onVoltar={irVoltarOperador} />
   }
 
   if (modo === 'restrito') {
@@ -602,7 +613,7 @@ export default function App() {
       // (landingKey) — o gate relê o localStorage e libera o painel.
       return <AdminLogin onOk={() => setLandingKey(k => k + 1)} onVoltar={() => setModo('home')} />
     }
-    return <AdminPage onVoltar={() => { limparAuthMedico(); setModo('home') }} />
+    return <AdminPage onVoltar={irVoltarOperador} />
   }
 if (modo === 'home') {
   return (
