@@ -96,6 +96,7 @@ export default function CaixaPage({ onVoltar }) {
   const TABS = [
     { id: 'entradas', t: '📥 Entradas' },
     { id: 'apagar',   t: '📤 A Pagar' },
+    { id: 'assinaturas', t: '🔒 Assinaturas' },
     { id: 'encontro', t: '🤝 Encontro de Contas' },
     { id: 'extratos', t: '🧾 Extratos' },
     { id: 'nf',       t: '🗂️ Notas Fiscais' },
@@ -127,6 +128,7 @@ export default function CaixaPage({ onVoltar }) {
       <div className="p-4 max-w-5xl">
         {aba === 'entradas' && <AbaEntradas rpc={rpc} toast={toast} />}
         {aba === 'apagar'   && <AbaAPagar rpc={rpc} toast={toast} />}
+        {aba === 'assinaturas' && <AbaAssinaturas rpc={rpc} toast={toast} />}
         {aba === 'encontro' && <AbaEncontro rpc={rpc} toast={toast} />}
         {aba === 'extratos' && <AbaExtratos rpc={rpc} toast={toast} />}
         {aba === 'nf'       && <AbaNF rpc={rpc} />}
@@ -288,6 +290,55 @@ function AbaAPagar({ rpc, toast }) {
     </div>
     <p className="text-[11px] text-gray-400">{"Pacientes que indicam não aparecem aqui — o crédito deles vai pro ENCONTRO DE CONTAS (abate anuidade/documentos; excedente é pago)."}</p>
   </>)
+}
+
+// ── 🔒 ASSINATURAS (bloqueio manual "na confiança") ───────────────────────────
+function AbaAssinaturas({ rpc, toast }) {
+  const [dados, setDados] = useState(null)
+  const carregar = async () => { try { setDados(await rpc('caixa_assinaturas', {})) } catch (e) { toast(false, e.message) } }
+  useEffect(() => { carregar() }, [])
+  if (!dados) return <p className="text-sm text-gray-500">Carregando…</p>
+  const lista = dados.assinaturas || []
+  async function toggle(a) {
+    const bloquear = a.status === 'ativa'
+    const quem = a.nome || fmtCPF(a.cpf) || 'este paciente'
+    const txt = bloquear
+      ? `BLOQUEAR a assinatura de ${quem}?\n\nEle volta a precisar pagar (cai no paywall). Use quando o PIX NÃO foi recebido.`
+      : `REATIVAR a assinatura de ${quem}?`
+    if (!window.confirm(txt)) return
+    try {
+      const d = await rpc('caixa_bloquear_assinatura', { p_id: a.id, p_bloquear: bloquear })
+      if (d?.ok) { toast(true, bloquear ? 'Assinatura bloqueada.' : 'Assinatura reativada.'); carregar() }
+      else toast(false, d?.erro || 'Falha.')
+    } catch (e) { toast(false, e.message) }
+  }
+  return (
+    <div className="bg-white rounded-2xl shadow p-4">
+      <h2 className="font-extrabold text-sm mb-1" style={{ color: DARK }}>{"ASSINATURAS "}<span className="text-gray-400 font-normal">({lista.length})</span></h2>
+      <p className="text-[11px] text-gray-400 mb-3">{"O paciente vira assinante \"na confiança\" ao clicar JÁ PAGUEI. Concilie com os PIX recebidos e BLOQUEIE quem não pagou — ele volta ao paywall. REATIVAR desfaz."}</p>
+      {lista.length === 0 ? <p className="text-xs text-gray-400">Nenhuma assinatura.</p> : lista.map(a => {
+        const ativa = a.status === 'ativa'
+        return (
+          <div key={a.id} className="flex items-center gap-3 flex-wrap border-t border-gray-100 py-2 text-xs">
+            <div className="flex-1 min-w-[180px]">
+              <p className="font-bold">{a.nome || '(sem nome)'} <span className="text-gray-400 font-normal">· {fmtCPF(a.cpf)}</span></p>
+              <p className="text-gray-500">
+                {"Desde "}{fmtData(a.data_inicio)}{" · Vence "}{fmtData(a.data_fim)}{" · "}
+                {a.valor_pago != null ? <b>{fmtBRL(a.valor_pago)}</b> : <span className="text-amber-600 font-bold">{"sem valor"}</span>}
+              </p>
+            </div>
+            <span className="px-2 py-0.5 rounded-full font-bold" style={ativa ? { background: '#dcfce7', color: '#15803d' } : { background: '#fee2e2', color: '#b91c1c' }}>
+              {ativa ? 'ATIVA' : 'BLOQUEADA'}
+            </span>
+            <button onClick={() => toggle(a)} className="font-bold px-3 py-2 rounded-xl text-xs"
+              style={ativa ? { background: '#fee2e2', color: '#b91c1c' } : { background: GOLD, color: DARK }}>
+              {ativa ? 'BLOQUEAR' : 'REATIVAR'}
+            </button>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 // ── 🤝 ENCONTRO DE CONTAS ─────────────────────────────────────────────────────

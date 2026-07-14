@@ -228,13 +228,11 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
         celular: celular.replace(/\D/g, ''),
       })
 
-      const dataFim = new Date()
-      dataFim.setFullYear(dataFim.getFullYear() + 1)
-      await supabase.from('assinaturas').insert({
-        user_id: data.user.id,
-        status: 'ativa',
-        data_fim: dataFim.toISOString(),
-      })
+      // NAO cria assinatura aqui. O cadastro apenas cria a conta; o paciente tem 1
+      // avaliacao gratuita e so' vira ASSINANTE quando clica "JA PAGUEI" no paywall
+      // (PagamentoCadastroModal, que grava valor_pago). Antes, este insert dava 1 ano
+      // "ativo" de graca a todo mundo -> furava o paywall. O tesoureiro bloqueia
+      // manualmente (Caixa > Assinaturas) quem clicou pagou mas nao pagou de fato.
 
       if (avaliacoesPendentes > 0) {
         await supabase.from('avaliacoes')
