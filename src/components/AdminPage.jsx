@@ -488,6 +488,65 @@ function AbaPacientes() {
           })}
         </div>
       )}
+
+      <LimparPacienteCard />
+    </div>
+  );
+}
+
+// Ferramenta de TESTE: apaga TODOS os dados de um paciente a partir do CPF (RPC
+// admin_limpar_paciente). Irreversivel; protegida por dupla confirmacao.
+function LimparPacienteCard() {
+  const [cpf, setCpf] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState(null);
+  const [erro, setErro] = useState('');
+  const digits = cpf.replace(/\D/g, '');
+
+  async function limpar() {
+    setErro(''); setRes(null);
+    if (digits.length !== 11) { setErro('Digite um CPF com 11 dígitos.'); return; }
+    if (!window.confirm(`APAGAR DEFINITIVAMENTE todos os dados do CPF ${formatarCPF(digits)}?\n\nRemove profile, triagens, avaliações, OBA, assinatura, documentos, créditos ligados a esse CPF e a conta de login. NÃO dá pra desfazer.`)) return;
+    if (!window.confirm('Tem certeza? Esta ação é IRREVERSÍVEL.')) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_limpar_paciente', { ...credAdmin(), p_cpf: digits });
+      if (error) setErro(error.message);
+      else if (!data?.ok) setErro(data?.erro || 'Falha.');
+      else { setRes(data); setCpf(''); }
+    } catch (e) { setErro(e.message); }
+    setBusy(false);
+  }
+
+  const apagados = res ? Object.entries(res.apagados || {}).filter(([, n]) => Number(n) > 0) : [];
+  const total = apagados.reduce((s, [, n]) => s + Number(n), 0);
+
+  return (
+    <div className="bg-white rounded-2xl border-2 border-red-200 shadow-sm p-4">
+      <h3 className="text-sm font-bold text-red-700 mb-1">{"🧨 Limpar dados de um paciente (teste)"}</h3>
+      <p className="text-xs text-gray-500 mb-3">{"Apaga TUDO desse CPF em todas as tabelas + a conta de login (libera novo cadastro). Irreversível. Não funciona para CPF de médico."}</p>
+      <div className="flex gap-2 flex-wrap items-center">
+        <input type="text" value={cpf} onChange={e => setCpf(e.target.value)} inputMode="numeric"
+          placeholder={"CPF (só números)"} maxLength={14}
+          className="flex-1 min-w-[160px] border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+        <button onClick={limpar} disabled={busy || digits.length !== 11}
+          className="bg-red-600 hover:bg-red-700 disabled:opacity-40 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors">
+          {busy ? "Apagando…" : "APAGAR TUDO"}
+        </button>
+      </div>
+      {erro && <p className="text-xs text-red-600 font-bold mt-2">{erro}</p>}
+      {res && (
+        <div className="mt-3 text-xs text-gray-600 bg-gray-50 rounded-lg p-3">
+          <p className="font-bold text-green-700 mb-1">
+            {"✓ CPF "}{formatarCPF(res.cpf)}{" apagado — "}{total}{" registro(s) em "}{apagados.length}{" tabela(s). Login: "}{res.auth_removida ? 'conta removida' : 'conta NÃO removida (apague em Auth do Supabase)'}{"."}
+          </p>
+          {apagados.length > 0 && (
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+              {apagados.map(([t, n]) => (<span key={t}>{t}: <b>{n}</b></span>))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
