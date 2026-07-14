@@ -367,6 +367,7 @@ export default function App() {
       ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
        'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
        'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix','indicador_cpf',
+       'caixa_token',
        'rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo','oba_aberto'].forEach(k => localStorage.removeItem(k))
       // Rascunhos do OBA do MÉDICO: não sobrevivem ao "deslogar na landing" (PC compartilhado).
       Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_med_') === 0).forEach(k => localStorage.removeItem(k))
@@ -375,9 +376,11 @@ export default function App() {
     setSession(null)
   }
 
-  // logoff automatico por inatividade
-  function fazerLogoffMedico() {
-    limparAuthMedico()
+  // logoff automatico por INATIVIDADE: limpa TODOS os papeis (medico/paciente/caixa/
+  // indicador), nao so o medico. Em dispositivo compartilhado (clinica) o proximo
+  // usuario nao pode herdar a sessao de quem ficou ocioso.
+  function fazerLogoffInatividade() {
+    limparTodasSessoes()
     setShowInatividade(false)
     setLandingKey(k => k + 1)
     setModo('home')
@@ -413,10 +416,10 @@ export default function App() {
       if (naLanding) {
         let logado = false
         try { logado = !!localStorage.getItem('medico_crm') } catch (e) {}
-        if (logado) fazerLogoffMedico()
+        if (logado) fazerLogoffInatividade()
       } else {
         setShowInatividade(true)
-        tGraca = setTimeout(() => { fazerLogoffMedico() }, 30 * 1000)
+        tGraca = setTimeout(() => { fazerLogoffInatividade() }, 30 * 1000)
       }
     }
     const resetar = () => {
@@ -599,7 +602,7 @@ export default function App() {
       // (landingKey) — o gate relê o localStorage e libera o painel.
       return <AdminLogin onOk={() => setLandingKey(k => k + 1)} onVoltar={() => setModo('home')} />
     }
-    return <AdminPage onVoltar={() => setModo('home')} />
+    return <AdminPage onVoltar={() => { limparAuthMedico(); setModo('home') }} />
   }
 if (modo === 'home') {
   return (

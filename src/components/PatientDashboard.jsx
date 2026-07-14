@@ -1416,7 +1416,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                       av.vcm != null && `VCM: ${av.vcm}`,
                       av.rdw != null && `RDW: ${av.rdw}`,
                       av.ferritina != null && `Ferritina: ${av.ferritina}`,
-                      av.sat_transferrina != null && `Sat.Transf: ${av.sat_transferrina}`,
+                      av.sat_transf != null && `Sat.Transf: ${av.sat_transf}`,
                     ].filter(Boolean).join(' | ')}
                   </p>
                 </div>

@@ -200,6 +200,20 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
     if (!celular || celular.replace(/\D/g, '').length < 10) {
       setErro("Informe um celular v\u00e1lido com DDD."); return
     }
+    // Valida nome + data de nascimento ANTES de criar a conta. Sem isso, uma data em
+    // branco/invalida gerava profiles.insert com data_nascimento='' (rejeitado pelo
+    // Postgres) -> conta de auth criada mas SEM profile -> login futuro travava em signOut.
+    if (!nome || nome.trim().length < 2) { setErro("Informe o seu nome."); return }
+    // Aceita os DOIS formatos: DD/MM/AAAA (digitado manualmente) e YYYY-MM-DD (ISO,
+    // que vem preenchido da triagem em dadosVemDaTriagem — read-only, nao editavel).
+    const _dn = String(dataNascimento || '').trim()
+    let _d, _m, _a
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(_dn)) { [_d, _m, _a] = _dn.split('/').map(Number) }
+    else if (/^\d{4}-\d{2}-\d{2}$/.test(_dn)) { [_a, _m, _d] = _dn.split('-').map(Number) }
+    const _dt = _a != null ? new Date(_a, _m - 1, _d) : null
+    const _dnOk = !!_dt && _dt.getFullYear() === _a && _dt.getMonth() === _m - 1 && _dt.getDate() === _d && _a >= 1900 && _dt <= new Date()
+    if (!_dnOk) { setErro("Informe uma data de nascimento válida (DD/MM/AAAA)."); return }
+
     setLoading(true)
     setErro('')
 
@@ -219,7 +233,7 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
         ? `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`
         : dataNascimento
 
-      await supabase.from('profiles').insert({
+      const { error: perr } = await supabase.from('profiles').insert({
         id: data.user.id,
         nome,
         sexo,
@@ -227,6 +241,9 @@ export default function AuthPage({ onVoltar, onDemoEntrar, cpfInicial = '', etap
         cpf: cpfLimpo,
         celular: celular.replace(/\D/g, ''),
       })
+      // Nao seguir em silencio se o profile falhar: senao a conta de auth fica orfa
+      // (sem profile) e o proximo login trava em signOut.
+      if (perr) { setErro("Não foi possível concluir o cadastro. Tente novamente ou contate o suporte."); setLoading(false); return }
 
       // NAO cria assinatura aqui. O cadastro apenas cria a conta; o paciente tem 1
       // avaliacao gratuita e so' vira ASSINANTE quando clica "JA PAGUEI" no paywall
