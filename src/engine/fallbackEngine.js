@@ -180,7 +180,10 @@ function detectarDiscrepancias(inputs) {
 // FUNÇÃO PRINCIPAL DE FALLBACK
 // ─────────────────────────────────────────────────────────────────────────────
 export function gerarFallbackClinico(inputs) {
-  const hb = inputs.hemoglobina
+  // Hb como NUMERO (era string crua): sem isso, hb.toFixed(1) abaixo quebrava o motor
+  // (tela branca) para qualquer paciente sem match na matriz e com Hb anormal. NaN
+  // (vazio/nulo) cai como NORMAL nas comparacoes e nunca chega ao toFixed.
+  const hb = parseFloat(inputs.hemoglobina)
   const sexo = inputs.sexo
   const gestante = !!inputs.gestante
 
@@ -227,10 +230,10 @@ export function gerarFallbackClinico(inputs) {
   let diagnostico = ''
 
   if (hbStatus === 'BAIXA') {
-    diagnostico = 'HEMOGLOBINA BAIXA (' + hb.toFixed(1) + ' g/dL) — anemia ' +
+    diagnostico = 'HEMOGLOBINA BAIXA (' + (Number.isFinite(hb) ? hb.toFixed(1) : '—') + ' g/dL) — anemia ' +
                   (gravidade ? gravidade.toLowerCase() : '') + '.'
   } else if (hbStatus === 'ALTA') {
-    diagnostico = 'HEMOGLOBINA ELEVADA (' + hb.toFixed(1) + ' g/dL) — eritrocitose ' +
+    diagnostico = 'HEMOGLOBINA ELEVADA (' + (Number.isFinite(hb) ? hb.toFixed(1) : '—') + ' g/dL) — eritrocitose ' +
                   (gravidade ? gravidade.toLowerCase() : '') + '.'
   } else {
     diagnostico = 'Hemoglobina dentro da faixa de normalidade, mas há discrepâncias ' +

@@ -175,7 +175,13 @@ export function avaliarPaciente(inputs) {
     ? inputsAjustados.idade >= 41
     : inputsAjustados.idade >= 40;
 
-  const resultado = matrix.find(item => matchesConditions(item, inputsAjustados));
+  // CLONA a entrada casada. O codigo abaixo reatribui resultado.diagnostico/
+  // recomendacaoAge1/Age2 (limparNova, frase 16-17, placeholders T3/T4) e `resultado`
+  // e' REFERENCIA a constante da matriz (maleMatrix/femaleMatrix, viva entre chamadas).
+  // Sem clonar, essas edicoes de texto CONTAMINAM a matriz para os proximos pacientes
+  // da sessao. Clone raso basta: proximosExames e' copiado a parte (mais abaixo).
+  const _entradaMatriz = matrix.find(item => matchesConditions(item, inputsAjustados));
+  const resultado = _entradaMatriz ? { ..._entradaMatriz } : _entradaMatriz;
 
   // Fix palavra 'NOVA': se paciente NAO tem historico de perda/sangria,
   // a palavra 'NOVA' antes de DOACAO/SANGRIA pressupoe antecedente inexistente.

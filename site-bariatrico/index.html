@@ -102,7 +102,7 @@
         <footer style="text-align: center; margin-top: 16px; opacity: {{ o }}; transition: {{ trFoot }};">
           <p style="margin: 0 0 4px; font-size: 11px; letter-spacing: 0.06em; color: rgba(247,241,231,0.62);">Uma Startup Médica&nbsp;&nbsp;·&nbsp;&nbsp;Projeto de A D Vieira</p>
           <p style="margin: 0 0 3px; font-size: 10.5px; letter-spacing: 0.05em; color: rgba(247,241,231,0.42);">Consultoria CYTOMICA&nbsp;&nbsp;|&nbsp;&nbsp;algoritmo licenciado de RedFairy®</p>
-          <p style="margin: 0; font-size: 10.5px; letter-spacing: 0.05em; color: rgba(247,241,231,0.42);">Resp. Técnico: E F Ramos, CRM 6303|BA · RQE 5643 · 5830 · 27847</p>
+          <p style="margin: 0; font-size: 10.5px; letter-spacing: 0.05em; color: rgba(247,241,231,0.42);">Resp. Técnico: E F Ramos, CRM 6302|BA · RQE 5643 · 5830 · 27847</p>
         </footer>
       </sc-if>
     </div>
@@ -328,11 +328,19 @@ class Component extends DCLogic {
   document.addEventListener('click', function (e) {
     var a = e.target && e.target.closest && e.target.closest('a[href]');
     if (a && /redfairy\.bio/.test(a.getAttribute('href') || '')) {
+      if (document.getElementById('rf-nav-cover')) return;
       var o = document.createElement('div');
+      o.id = 'rf-nav-cover';
       o.style.cssText = 'position:fixed;inset:0;background:#000;z-index:2147483647';
       document.body.appendChild(o);
     }
   }, true);
+  /* Ao VOLTAR pro site (botao voltar / restauracao do bfcache) ou se a navegacao
+     for cancelada, remove o preto — senao a tela fica 100% preta. */
+  window.addEventListener('pageshow', function () {
+    var o = document.getElementById('rf-nav-cover');
+    if (o) o.remove();
+  });
 </script>
 <script>
   /* Mini-cadastro de MÉDICO PRESCRITOR (colaborador). Abre ao marcar #prescritorChk

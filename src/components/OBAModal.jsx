@@ -1534,11 +1534,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
         .limit(1)
 
       if (rows && rows.length > 0) {
-        await supabase.from('oba_anamnese').update({
+        const { error: errExames } = await supabase.from('oba_anamnese').update({
           data_exames: dataExames || null,
           dias_exames: diasExames,
           ...Object.fromEntries(todosExames.map(e => [e.key, examesObj[e.key] !== undefined ? examesObj[e.key] : null]))
         }).eq('id', rows[0].id)
+        // NAO falhar em silencio: se uma coluna de exame nao existir, o Postgres rejeita
+        // o update INTEIRO e nenhum exame e gravado. Loga para nao passar despercebido.
+        if (errExames) console.error('OBA: falha ao gravar exames em oba_anamnese —', errExames.message)
       }
     }
 
