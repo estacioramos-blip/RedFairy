@@ -246,7 +246,7 @@ export const femaleMatrix = [
     label: "SIGNIFICATIVO EXCESSO DE FERRO E/OU DOENÇA INFLAMATÓRIA OU CRÔNICA",
     color: "orange",
     conditions: {
-      ferritina:   { min: 401, max: 900  },
+      ferritina:   { min: 401, max: 800  },
       hemoglobina: { min: 12.0,max: 15.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
