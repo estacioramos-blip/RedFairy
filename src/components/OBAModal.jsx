@@ -526,6 +526,7 @@ export const DUVIDA_SECOES = {
   osseo:          'Status Ósseo | Articular',
   neurologico:    'Status Neurológico',
   fibromialgico:  'Status Fibromiálgico | ME/CFS',
+  ginecologico:   'Status Ginecológico',
   prostatico:     'Status Prostático',
   exames:         'Exames laboratoriais',
 }
@@ -3182,6 +3183,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <RadioGroup options={['EM TRATAMENTO', 'RESOLVIDO']} value={form.cancer_mama_status} cols={2} onChange={v => sf('cancer_mama_status', form.cancer_mama_status === v ? '' : v)} />
             </div>
           )}
+          <DuvidaCheck secao="ginecologico" duvidas={form.duvidas} onToggle={toggleDuvida} />
           </>)}
 
           {!isFem && idadeNum >= 38 && (<>
