@@ -208,6 +208,11 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   if (modLipidico) modulos.push(modLipidico)
   if (modLeucos) modulos.push(modLeucos)
 
+  // ── 15b. MÓDULO CARDIOVASCULAR (história DECLARADA — vizinho do lipidograma,
+  //         que calcula o risco pelos EXAMES; aqui é o que a paciente relata) ──
+  const modCardio = buildModCardiovascular(dadosOBA, resultadoEritron, examesOBA, alertas, examesSuger)
+  if (modCardio) modulos.push(modCardio)
+
   // ── 16. MÓDULO STATUS INTESTINAL ─────────────────────────────────────────
   const modIntestinal = buildModIntestinal(dadosOBA, alertas, examesSuger)
   if (modIntestinal) modulos.push(modIntestinal)
@@ -2314,6 +2319,166 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
     need.betaHcg = true
     need.prioritaria = true
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO — CARDIOVASCULAR (declarado na anamnese)
+// Crítica SIMPLIFICADA por decisão do Dr. Ramos (jul/2026): reconhecer os achados
+// e DIRECIONAR PARA AVALIAÇÃO CARDIOLÓGICA — não tentar interpretar cada número
+// (fração de ejeção, score de cálcio, grau de estenose) dentro do OBA.
+//
+// Três eixos que ele pediu para considerar:
+//   1. SOBREPESO PREGRESSO — todo bariátrico teve sobrecarga cardíaca e pulmonar;
+//      é contexto universal (linha sem alerta, para não virar ruído em massa).
+//   2. DISLIPIDEMIA / ATEROSCLEROSE — fatores de risco. O RISCO POR LIPÍDIOS JÁ É
+//      CALCULADO em buildModLipidico (score + alerta próprio); aqui só se conecta
+//      com a doença aterosclerótica DECLARADA (carótidas, arterial periférica).
+//   3. ANGINA / ANGIOPLASTIA / REVASCULARIZAÇÃO — doença coronariana estabelecida,
+//      não pode ser negligenciada → GRAVE.
+// ─────────────────────────────────────────────────────────────────────────────
+// Fração de ejeção: cortes de consenso (ESC/AHA) — ≤40 reduzida, 41-49 levemente
+// reduzida, ≥50 preservada. Faixa PLAUSÍVEL para não interpretar erro de digitação
+// (quem digita "0.55" querendo 55% não pode disparar um alerta GRAVE falso).
+const FE_REDUZIDA = 40
+const FE_LEVE_REDUZIDA = 49
+const FE_MIN_PLAUSIVEL = 10
+const FE_MAX_PLAUSIVEL = 80
+
+function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, suger) {
+  const cv = dados.status_cardiovascular || []
+  const temCv = (x) => cv.includes(x)
+
+  const RANK = { [GRAVE]: 3, [MODERADO]: 2, [LEVE]: 1, [NORMAL]: 0 }
+  let nivel = NORMAL
+  const bump = (n) => { if (RANK[n] > RANK[nivel]) nivel = n }
+  const linhas = []
+  let precisaCardio = false
+
+  // ── 1. Contexto universal: sobrepeso pregresso ─────────────────────────────
+  const imcAntes = Number(dados.imc_antes)
+  if (Number.isFinite(imcAntes) && imcAntes >= 35) {
+    bump(LEVE)
+    linhas.push(`SEU IMC ANTES DA CIRURGIA ERA ${imcAntes.toFixed(1)}: A OBESIDADE IMPÔS ANOS DE SOBRECARGA AO CORAÇÃO E AOS PULMÕES (HIPERTROFIA DO VENTRÍCULO, MAIOR TRABALHO CARDÍACO, APNEIA DO SONO E MENOR CAPACIDADE RESPIRATÓRIA). A CIRURGIA REDUZ ESSA CARGA E MELHORA MUITO O PROGNÓSTICO, MAS O QUE JÁ FOI IMPOSTO AO CORAÇÃO NÃO SE APAGA SOZINHO — O SOBREPESO PREGRESSO CONTINUA SENDO FATOR DE RISCO E JUSTIFICA ACOMPANHAMENTO CARDIOLÓGICO PERIÓDICO MESMO QUE VOCÊ ESTEJA SE SENTINDO BEM.`)
+  }
+
+  // ── 2. Doença coronariana estabelecida — o eixo que não pode ser negligenciado ──
+  const coronarianas = []
+  if (temCv('TENHO ANGINA')) coronarianas.push('ANGINA')
+  if (temCv('FIZ CATETERISMO + ANGIOPLASTIA')) coronarianas.push('ANGIOPLASTIA (CATETERISMO)')
+  if (temCv('FIZ CIRURGIA | REVASCULARIZAÇÃO')) coronarianas.push('CIRURGIA DE REVASCULARIZAÇÃO')
+  if (coronarianas.length) {
+    bump(GRAVE)
+    precisaCardio = true
+    linhas.push(`${coronarianas.join(' + ')}: VOCÊ TEM DOENÇA CORONARIANA ESTABELECIDA — ISSO NÃO PODE SER NEGLIGENCIADO E MUDA A PRIORIDADE DE TUDO O QUE VEM A SEGUIR. MANTENHA O ACOMPANHAMENTO CARDIOLÓGICO REGULAR E A MEDICAÇÃO EM DIA.`)
+    if (temCv('TENHO ANGINA')) {
+      linhas.push('A ANGINA É UM SINTOMA ATIVO: DOR OU APERTO NO PEITO QUE PIORA COM ESFORÇO OU NÃO PASSA EM REPOUSO EXIGE ATENDIMENTO DE EMERGÊNCIA IMEDIATO (192) — NÃO ESPERE A PRÓXIMA CONSULTA.')
+    }
+    linhas.push('DOIS PONTOS QUE LIGAM O SEU CORAÇÃO À BARIÁTRICA: (1) A ANEMIA SOBRECARREGA O CORAÇÃO E PIORA A ANGINA — CORRIGIR O ERITRON É PARTE DO SEU CUIDADO CARDÍACO; (2) A ABSORÇÃO DE MEDICAMENTOS ORAIS ESTÁ REDUZIDA APÓS A CIRURGIA — INFORME O SEU CARDIOLOGISTA QUE VOCÊ É BARIÁTRICO(A) PARA QUE ELE REAVALIE AS DOSES.')
+    alertas.push({ nivel: GRAVE, texto: `${coronarianas.join(' + ')} — DOENÇA CORONARIANA ESTABELECIDA. ACOMPANHAMENTO CARDIOLÓGICO REGULAR; A ANEMIA AGRAVA A ISQUEMIA E A ABSORÇÃO DE MEDICAMENTOS ORAIS ESTÁ REDUZIDA NO PÓS-BARIÁTRICO (REAVALIAR DOSES).` })
+  }
+
+  // ── 3. Aterosclerose declarada em outros territórios ───────────────────────
+  const ateros = []
+  if (dados.doppler_carotidas === 'ANORMAL') {
+    const est = Number(dados.estenose_maxima)
+    ateros.push(Number.isFinite(est) && est > 0 ? `DOPPLER DE CARÓTIDAS ANORMAL (ESTENOSE MÁXIMA ${est}%)` : 'DOPPLER DE CARÓTIDAS ANORMAL')
+  }
+  if (dados.doenca_arterial_periferica) ateros.push('DOENÇA ARTERIAL PERIFÉRICA')
+  if (ateros.length) {
+    bump(GRAVE)
+    precisaCardio = true
+    linhas.push(`${ateros.join(' + ')}: A ATEROSCLEROSE NÃO É UMA DOENÇA DE UM VASO SÓ — QUEM TEM PLACA NA CARÓTIDA OU NAS PERNAS TEM RISCO AUMENTADO NAS CORONÁRIAS E NO CÉREBRO TAMBÉM. ISSO PEDE AVALIAÇÃO CARDIOLÓGICA E CONTROLE RIGOROSO DOS FATORES DE RISCO (LÍPIDES, PRESSÃO, GLICEMIA E TABAGISMO).`)
+    alertas.push({ nivel: GRAVE, texto: `${ateros.join(' + ')} — DOENÇA ATEROSCLERÓTICA ESTABELECIDA (RISCO SISTÊMICO, NÃO LOCAL). AVALIAÇÃO CARDIOLÓGICA E CONTROLE DOS FATORES DE RISCO.` })
+  }
+
+  // ── 4. Exames cardíacos alterados — reconhecer e encaminhar, sem interpretar ──
+  // Number(null) é 0 — distinguir "não informada" de um "0" digitado, senão o zero
+  // escaparia sem crítica E sem aviso de valor implausível.
+  const feInformada = dados.fracao_ejecao !== null && dados.fracao_ejecao !== undefined && dados.fracao_ejecao !== ''
+  const fe = Number(dados.fracao_ejecao)
+  const fePlausivel = feInformada && Number.isFinite(fe) && fe >= FE_MIN_PLAUSIVEL && fe <= FE_MAX_PLAUSIVEL
+  const feBaixa = fePlausivel && fe <= FE_LEVE_REDUZIDA
+
+  const alterados = []
+  if (dados.ecg === 'ALTERADO') alterados.push('ECG ALTERADO')
+  if (dados.ecg_arritmia) alterados.push('ARRITMIA')
+  if (dados.ecocardiograma === 'ANORMAL') {
+    // FE baixa tem crítica PRÓPRIA abaixo — aqui só entra como achado a esclarecer
+    // se a fração estiver preservada (eco anormal por outro motivo) ou não informada.
+    if (!feBaixa) {
+      alterados.push(Number.isFinite(fe) && fe > 0 ? `ECOCARDIOGRAMA ANORMAL (FRAÇÃO DE EJEÇÃO ${fe}%)` : 'ECOCARDIOGRAMA ANORMAL')
+    }
+  }
+  if (dados.angiotomografia_coronariana) {
+    // Sem o score, o exame não pode sumir do relatório: ela declarou que fez.
+    const sc = Number(dados.score_calcio)
+    alterados.push(Number.isFinite(sc) && sc > 0
+      ? `ANGIOTOMOGRAFIA CORONARIANA COM SCORE DE CÁLCIO ${sc}`
+      : 'ANGIOTOMOGRAFIA CORONARIANA REALIZADA (SCORE DE CÁLCIO NÃO INFORMADO — LEVE O LAUDO)')
+  }
+  if (alterados.length) {
+    bump(MODERADO)
+    precisaCardio = true
+    linhas.push(`ACHADOS QUE VOCÊ REGISTROU: ${alterados.join('; ')}. ESTES EXAMES PRECISAM SER INTERPRETADOS POR UM CARDIOLOGISTA, COM OS LAUDOS EM MÃOS E NO SEU CONTEXTO CLÍNICO — ESTA AVALIAÇÃO NÃO SUBSTITUI ISSO. LEVE OS EXAMES NA CONSULTA.`)
+    alertas.push({ nivel: MODERADO, texto: `ACHADOS CARDIOVASCULARES A ESCLARECER (${alterados.join('; ')}) — AVALIAÇÃO CARDIOLÓGICA COM OS LAUDOS.` })
+  }
+
+  // ── 4b. FRAÇÃO DE EJEÇÃO BAIXA — crítica própria (Dr. Ramos, jul/2026) ─────
+  // Exceção deliberada ao "simplificada": a FE reduzida não é só mais um exame a
+  // esclarecer, é insuficiência cardíaca — e conecta DIRETO com o eixo do OBA:
+  // na IC o corte de ferropenia é OUTRO (ferritina <100, ou 100-299 com sat <20%),
+  // muito acima dos 25 do obaCutoffs, e ferro EV melhora sintomas e internação
+  // MESMO SEM ANEMIA. Uma paciente com FE 35 e ferritina 60 passa "normal" pela
+  // nossa régua e é carente pela régua cardíaca — é isso que este bloco pega.
+  if (feBaixa) {
+    const reduzida = fe <= FE_REDUZIDA
+    bump(reduzida ? GRAVE : MODERADO)
+    precisaCardio = true
+    linhas.push(`FRAÇÃO DE EJEÇÃO ${fe}% — ${reduzida ? 'REDUZIDA' : 'LEVEMENTE REDUZIDA'} (O NORMAL É 50% OU MAIS): ${reduzida
+      ? 'ISSO CARACTERIZA INSUFICIÊNCIA CARDÍACA COM FRAÇÃO DE EJEÇÃO REDUZIDA — O CORAÇÃO ESTÁ BOMBEANDO MENOS SANGUE DO QUE DEVERIA A CADA BATIDA. É UMA CONDIÇÃO SÉRIA, MAS COM TRATAMENTO BEM ESTABELECIDO QUE MUDA O PROGNÓSTICO. ACOMPANHAMENTO CARDIOLÓGICO REGULAR É INDISPENSÁVEL — NÃO ADIE.'
+      : 'É UMA REDUÇÃO DISCRETA, MAS MERECE ACOMPANHAMENTO CARDIOLÓGICO PARA DEFINIR A CAUSA E EVITAR PROGRESSÃO.'}`)
+    linhas.push('COM O CORAÇÃO BOMBEANDO MENOS, A ANEMIA PESA MUITO MAIS: PARA COMPENSAR A FALTA DE OXIGÊNIO NO SANGUE, O CORAÇÃO PRECISA TRABALHAR AINDA MAIS — JUSTAMENTE O QUE ELE NÃO PODE FAZER. CORRIGIR O SEU FERRO E A SUA ANEMIA É PARTE DO TRATAMENTO CARDÍACO, NÃO UM ASSUNTO SEPARADO.')
+
+    // Ferropenia pela régua da INSUFICIÊNCIA CARDÍACA (≠ da régua geral do OBA).
+    const ferrCv = Number(resultadoEritron?.inputs?.ferritina ?? examesOBA?.ferritina_novo ?? examesOBA?.ferritina_oba)
+    const satCv  = Number(resultadoEritron?.inputs?.satTransf ?? examesOBA?.sat_novo)
+    const ferrConhecida = Number.isFinite(ferrCv) && ferrCv > 0
+    const carenteIC = ferrConhecida && (ferrCv < 100 || (ferrCv < 300 && Number.isFinite(satCv) && satCv > 0 && satCv < 20))
+    if (carenteIC) {
+      // O nível ACOMPANHA a gravidade da FE (não escala por cima): a carência de
+      // ferro é um achado a tratar, não uma emergência — FE levemente reduzida com
+      // ferritina 80 não faz um paciente CRÍTICO.
+      linhas.push(`ATENÇÃO — A SUA FERRITINA (${ferrCv} ng/mL${Number.isFinite(satCv) && satCv > 0 ? `, SATURAÇÃO ${satCv}%` : ''}) PODE ESTAR "NORMAL" PARA A POPULAÇÃO GERAL E AINDA ASSIM SER INSUFICIENTE PARA VOCÊ: NA INSUFICIÊNCIA CARDÍACA CONSIDERA-SE DEFICIÊNCIA DE FERRO COM FERRITINA ABAIXO DE 100, OU ENTRE 100 E 299 COM SATURAÇÃO DA TRANSFERRINA ABAIXO DE 20%. A REPOSIÇÃO DE FERRO ENDOVENOSO NESSE CENÁRIO MELHORA OS SINTOMAS E REDUZ INTERNAÇÕES MESMO QUANDO NÃO HÁ ANEMIA. LEVE ESTA INFORMAÇÃO AO SEU CARDIOLOGISTA — NO PÓS-BARIÁTRICO, A VIA ORAL AINDA POR CIMA ABSORVE MAL.`)
+      suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA (CRITÉRIO DA INSUFICIÊNCIA CARDÍACA: ALVO DE FERRITINA ≥ 100)')
+    } else if (!ferrConhecida) {
+      linhas.push('DOSE A FERRITINA E A SATURAÇÃO DA TRANSFERRINA: NA INSUFICIÊNCIA CARDÍACA O ALVO DE FERRO É MAIS EXIGENTE QUE O DA POPULAÇÃO GERAL (FERRITINA ABAIXO DE 100 JÁ É CONSIDERADA DEFICIÊNCIA), E A REPOSIÇÃO ENDOVENOSA TRAZ BENEFÍCIO MESMO SEM ANEMIA.')
+      suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA (CRITÉRIO DA INSUFICIÊNCIA CARDÍACA: ALVO DE FERRITINA ≥ 100)')
+    }
+
+    // UM alerta só para o achado (FE), com o ferro embutido quando houver. Dois pushes
+    // aqui inflavam a contagem de `classificarEstadoClinico` (que conta alertas, sem
+    // dedup): 1 achado virava 2 moderados e jogava a paciente de RAZOÁVEL p/ RUIM.
+    alertas.push({ nivel: reduzida ? GRAVE : MODERADO, texto:
+      `FRAÇÃO DE EJEÇÃO ${fe}% (${reduzida ? 'REDUZIDA — INSUFICIÊNCIA CARDÍACA' : 'LEVEMENTE REDUZIDA'}) — ACOMPANHAMENTO CARDIOLÓGICO. A ANEMIA DESCOMPENSA O CORAÇÃO QUE JÁ BOMBEIA MENOS: CORRIGIR O ERITRON É PARTE DO TRATAMENTO CARDÍACO.` +
+      (carenteIC ? ` FERRITINA ${ferrCv} ng/mL É DEFICIÊNCIA PELO CRITÉRIO DA INSUFICIÊNCIA CARDÍACA (<100, OU 100-299 COM SAT <20%), AINDA QUE ACIMA DO CORTE GERAL — FERRO ENDOVENOSO MELHORA SINTOMAS E INTERNAÇÕES MESMO SEM ANEMIA; DISCUTIR COM O CARDIOLOGISTA.` : '') })
+  } else if (feInformada && !fePlausivel) {
+    // Valor fora da faixa plausível (ex.: "0.55" em vez de 55): não interpretar.
+    linhas.push(`A FRAÇÃO DE EJEÇÃO REGISTRADA (${fe}) ESTÁ FORA DA FAIXA ESPERADA E NÃO FOI INTERPRETADA — CONFIRA O VALOR NO LAUDO DO ECOCARDIOGRAMA (É UMA PORCENTAGEM, EM GERAL ENTRE 20% E 70%).`)
+  }
+
+  // ── 5. Marcapasso × ressonância (segurança) ────────────────────────────────
+  // O motor pode sugerir RNM com protocolo de ferro (Sat>50 e Ferritina>1000).
+  // Marcapasso é contraindicação/cautela para ressonância — não deixar passar.
+  if (dados.ecg_marcapasso) {
+    bump(MODERADO)
+    precisaCardio = true
+    linhas.push('VOCÊ USA MARCAPASSO: INFORME ISSO ANTES DE QUALQUER RESSONÂNCIA MAGNÉTICA — INCLUSIVE A RESSONÂNCIA COM PROTOCOLO DE FERRO, QUE ESTA PLATAFORMA PODE VIR A SUGERIR SE A SUA FERRITINA E A SATURAÇÃO ESTIVEREM MUITO ALTAS. MUITOS MARCAPASSOS MODERNOS SÃO COMPATÍVEIS COM RESSONÂNCIA, MAS SÓ O SEU CARDIOLOGISTA E O SERVIÇO DE IMAGEM PODEM LIBERAR O EXAME, COM O APARELHO PROGRAMADO PARA ISSO. LEVE SEMPRE A CARTEIRINHA DO SEU DISPOSITIVO.')
+    alertas.push({ nivel: MODERADO, texto: 'PORTADOR(A) DE MARCAPASSO — CONFIRMAR COMPATIBILIDADE ANTES DE QUALQUER RESSONÂNCIA (INCLUSIVE A DE PROTOCOLO DE FERRO). LIBERAÇÃO PELO CARDIOLOGISTA E PELO SERVIÇO DE IMAGEM.' })
+  }
+
+  if (!linhas.length) return null
+  if (precisaCardio) suger.push('AVALIAÇÃO CARDIOLÓGICA')
+  return { id: 'cardiovascular', titulo: 'SAÚDE CARDIOVASCULAR', nivel, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
