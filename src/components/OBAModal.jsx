@@ -1723,6 +1723,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const teleRecomendada = estado === 'CRITICO' || estado === 'RUIM' || form.usou_anticoagulante
     // H. pylori: achado endoscópico OU sorologia IgM reagente (infecção ativa).
     const temHpylori = (form.status_endoscopico || []).includes('H. PYLORI') || form.antiHp_igm === 'REAGENTE'
+    // SEGURANÇA: o esquema padrão de erradicação usa AMOXICILINA (penicilina). Se a
+    // paciente declarou alergia a penicilinas, a oferta de receita não pode sair às
+    // cegas — o aviso aparece na caixa e a alergia VAI JUNTO na mensagem do WhatsApp.
+    const alergiaPenicilina = (form.alergia_medicamentosa || []).includes('PENICILINAS')
     // Protocolo de reposição de B12 + folato (macrocitose): bariátrico (sempre, no OBA)
     // com VCM > 105 e/ou Hb ≤ 9 — sinal de deficiência de B12 comprometendo o eritron.
     const vcmB12 = Number(examesRedFairy?.vcm ?? resultadoEritron?.inputs?.vcm ?? 0)
@@ -1813,6 +1817,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                     <strong>{"Repita o exame após 6 meses."}</strong>{" Vamos te lembrar na época."}
                   </p>
                 </div>
+                {alergiaPenicilina && (
+                  <div style={{ background:'#FEF2F2', border:'2px solid #DC2626', borderRadius:8, padding:'0.6rem 0.8rem', margin:'0 0 0.7rem' }}>
+                    <p style={{ fontSize:'0.78rem', color:'#B91C1C', lineHeight:1.5, margin:0, fontWeight:700 }}>
+                      {"⚠️ Você declarou ALERGIA A PENICILINAS. O tratamento padrão do H. pylori usa amoxicilina, que é uma penicilina — "}
+                      <strong>{"está contraindicado para você."}</strong>
+                      {" Há esquemas alternativos eficazes sem penicilina. Sua alergia será informada ao médico junto com o pedido, mas "}
+                      <strong>{"repita a informação na conversa"}</strong>{" e nunca inicie o tratamento sem que ela tenha sido considerada."}
+                    </p>
+                  </div>
+                )}
                 <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
                   <input type="checkbox" checked={querPrescricao} onChange={e => setQuerPrescricao(e.target.checked)} style={checkBox} />
                   <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#9A3412' }}>{"SOLICITAR A RECEITA DO TRATAMENTO"}</span>
@@ -1823,7 +1837,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   {" pela prescrição médica com assinatura digital."}
                 </p>
                 {querPrescricao && (
-                  <button style={waBtn} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e desejo solicitar a prescrição do tratamento para H. pylori.')}>{"Solicitar no WhatsApp →"}</button>
+                  <button style={waBtn} onClick={() => abrirWhats(alergiaPenicilina
+                    ? 'Olá! Concluí minha avaliação OBA e desejo solicitar a prescrição do tratamento para H. pylori. ATENÇÃO: sou ALÉRGICO(A) A PENICILINAS — o esquema padrão com amoxicilina está contraindicado; preciso de um esquema alternativo sem penicilina.'
+                    : 'Olá! Concluí minha avaliação OBA e desejo solicitar a prescrição do tratamento para H. pylori.')}>{"Solicitar no WhatsApp →"}</button>
                 )}
               </div>
             )}

@@ -424,6 +424,9 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
   const achados = lista.filter(s => s && s !== 'NORMAL')
   const igmReag = dadosOBA.anti_hp_igm === 'REAGENTE'
   const iggReag = dadosOBA.anti_hp_igg === 'REAGENTE'
+  const alergias = Array.isArray(dadosOBA.alergia_medicamentosa) ? dadosOBA.alergia_medicamentosa : []
+  const alergiaPenicilina = alergias.includes('PENICILINAS')
+  const alergiaCefalosporina = alergias.includes('CEFALOSPORINAS')
   if (achados.length === 0 && !igmReag && !iggReag) return null
 
   const ordem = { [NORMAL]: 0, [LEVE]: 1, [MODERADO]: 2, [GRAVE]: 3 }
@@ -451,6 +454,22 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
       : 'H. PYLORI — verificar se foi tratada; se não, erradicar. Sorologia não confirma cura (anticorpos persistem).' })
     suger.push('PESQUISA DE H. PYLORI POR ANTÍGENO FECAL OU TESTE RESPIRATÓRIO DA UREIA (confirmar status / controle pós-tratamento)')
     bump(MODERADO)
+
+    // SEGURANÇA — ALERGIA A PENICILINAS × ERRADICAÇÃO DO H. PYLORI:
+    // o esquema padrão (IBP + AMOXICILINA + claritromicina) usa amoxicilina, que É
+    // penicilina. A plataforma OFERECE a receita da erradicação na conclusão do OBA
+    // (OBAModal), então esse cruzamento não é informativo — é barreira de segurança.
+    // Lê o array cru de propósito (sem exigir status_alergico='MEDICAMENTOSA'): um
+    // aviso a mais custa uma conferência do prescritor; um a menos custa anafilaxia.
+    if (alergiaPenicilina) {
+      linhas.push('⚠ ATENÇÃO — VOCÊ DECLAROU ALERGIA A PENICILINAS: O ESQUEMA PADRÃO DE ERRADICAÇÃO DO H. PYLORI USA AMOXICILINA, QUE É UMA PENICILINA — ESTÁ CONTRAINDICADO PARA VOCÊ. EXISTEM ESQUEMAS ALTERNATIVOS EFICAZES SEM PENICILINA (POR EXEMPLO, O ESQUEMA QUÁDRUPLO COM BISMUTO: IBP + BISMUTO + TETRACICLINA + METRONIDAZOL). NÃO ACEITE NEM INICIE NENHUMA RECEITA DE ERRADICAÇÃO SEM QUE O MÉDICO SAIBA DESSA ALERGIA — INFORME-A SEMPRE, EM TODA CONSULTA.')
+      alertas.push({ nivel: GRAVE, texto: 'ALERGIA A PENICILINAS + H. PYLORI A ERRADICAR — O ESQUEMA PADRÃO (COM AMOXICILINA) É CONTRAINDICADO. EXIGIR ESQUEMA ALTERNATIVO SEM PENICILINA (EX.: QUÁDRUPLO COM BISMUTO). INFORME A ALERGIA AO MÉDICO PRESCRITOR.' })
+      bump(GRAVE)
+    } else if (alergiaCefalosporina) {
+      // Reatividade cruzada penicilina×cefalosporina existe, mas é baixa (~1-2%) e
+      // NÃO contraindica a amoxicilina por si — por isso é nota, não bloqueio.
+      linhas.push('VOCÊ DECLAROU ALERGIA A CEFALOSPORINAS: O ESQUEMA PADRÃO DE ERRADICAÇÃO DO H. PYLORI USA AMOXICILINA (PENICILINA). A REATIVIDADE CRUZADA ENTRE CEFALOSPORINAS E PENICILINAS É BAIXA E NÃO CONTRAINDICA O ESQUEMA POR SI, MAS INFORME ESSA ALERGIA AO MÉDICO PRESCRITOR ANTES DE INICIAR O TRATAMENTO.')
+    }
   }
   if (has('BARRETT')) {
     linhas.push('BARRETT: LESÃO PRÉ-MALIGNA — EXIGE VIGILÂNCIA ENDOSCÓPICA PERIÓDICA COM GASTROENTEROLOGISTA.')
