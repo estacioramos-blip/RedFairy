@@ -2133,7 +2133,11 @@ function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger
     need.motivos.push('SANGRAMENTO PÓS-MENOPAUSA')
     need.usTransvaginal = true
   } else if (sangramento) {
-    buildSecaoSangramento(dados, { somaFerro, textoFerro }, linhas, alertas, need, bump)
+    // Endometriose/miomas são causa estrutural de perda menstrual: se ela já os
+    // declarou, a seção do sangramento NÃO manda "investigar a causa" (a seção B
+    // logo abaixo diria que a causa já está identificada — soaria contraditório).
+    const causaConhecida = tem('ENDOMETRIOSE') || tem('MIOMAS | MIOMATOSE')
+    buildSecaoSangramento(dados, { somaFerro, textoFerro, causaConhecida }, linhas, alertas, need, bump)
   }
 
   // ── (B) DEMAIS ACHADOS ─────────────────────────────────────────────────────
@@ -2155,7 +2159,7 @@ function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger
 
 // (A) Régua do TEMPO — só chamada quando há sangramento menstrual de fato
 // (não grávida, não pós-menopausa).
-function buildSecaoSangramento(dados, { somaFerro, textoFerro }, linhas, alertas, need, bump) {
+function buildSecaoSangramento(dados, { somaFerro, textoFerro, causaConhecida }, linhas, alertas, need, bump) {
   const tipo = dados.sangramento_menstrual_tipo || ''
   const duracao = dados.sangramento_duracao || ''
   const persistencia = dados.sangramento_persistencia || ''
@@ -2188,7 +2192,10 @@ function buildSecaoSangramento(dados, { somaFerro, textoFerro }, linhas, alertas
 
   // O TEMPO é o que agrava: perda persistente drena o estoque mês após mês.
   if (persistente) {
-    linhas.push(`ESTE PADRÃO PERSISTE HÁ ${persistencia === 'MAIS DE 8 MESES' ? 'MAIS DE 8 MESES' : '4 A 8 MESES'}: PERDA CONTINUADA DE FERRO POR VÁRIOS CICLOS SEGUIDOS — MESMO UM FLUXO SÓ MODERADAMENTE AUMENTADO, MANTIDO POR MESES, ESGOTA A RESERVA. AVALIAÇÃO GINECOLÓGICA É NECESSÁRIA PARA INVESTIGAR A CAUSA (MIOMAS, ADENOMIOSE, PÓLIPOS, DISTÚRBIO DE COAGULAÇÃO) E TRATAR — CONTROLAR O SANGRAMENTO É PARTE DO TRATAMENTO DA ANEMIA, NÃO APENAS REPOR FERRO.`)
+    const quanto = persistencia === 'MAIS DE 8 MESES' ? 'MAIS DE 8 MESES' : '4 A 8 MESES'
+    linhas.push(`ESTE PADRÃO PERSISTE HÁ ${quanto}: PERDA CONTINUADA DE FERRO POR VÁRIOS CICLOS SEGUIDOS — MESMO UM FLUXO SÓ MODERADAMENTE AUMENTADO, MANTIDO POR MESES, ESGOTA A RESERVA. ${causaConhecida
+      ? 'A AVALIAÇÃO GINECOLÓGICA AQUI É PARA TRATAR A CAUSA QUE VOCÊ JÁ CONHECE (VEJA ABAIXO) — CONTROLAR O SANGRAMENTO É PARTE DO TRATAMENTO DA ANEMIA, NÃO APENAS REPOR FERRO.'
+      : 'AVALIAÇÃO GINECOLÓGICA É NECESSÁRIA PARA INVESTIGAR A CAUSA (MIOMAS, ADENOMIOSE, PÓLIPOS, DISTÚRBIO DE COAGULAÇÃO) E TRATAR — CONTROLAR O SANGRAMENTO É PARTE DO TRATAMENTO DA ANEMIA, NÃO APENAS REPOR FERRO.'}`)
   } else if (recente) {
     linhas.push('PADRÃO RECENTE (MENOS DE 4 MESES): AINDA ASSIM MERECE INVESTIGAÇÃO — MUDANÇA RECENTE NO PADRÃO MENSTRUAL TEM CAUSA (HORMONAL, ESTRUTURAL OU MEDICAMENTOSA) E, NO BARIÁTRICO, NÃO HÁ FOLGA DE FERRO PARA ABSORVER MESES DE PERDA ATÉ "VER NO QUE DÁ".')
   } else {
@@ -2217,7 +2224,9 @@ function buildSecaoSangramento(dados, { somaFerro, textoFerro }, linhas, alertas
     ? `${comoTexto} COM REPERCUSSÃO NO FERRO — AVALIAÇÃO GINECOLÓGICA PARA TRATAR A CAUSA DA PERDA; SÓ REPOR FERRO NÃO RESOLVE.`
     : `${comoTexto} — PERDA DE FERRO QUE SOMA À DISABSORÇÃO BARIÁTRICA. AVALIAÇÃO GINECOLÓGICA E MONITORAMENTO DA FERRITINA.` })
 
-  need.motivos.push('INVESTIGAR A CAUSA DO SANGRAMENTO')
+  // Com causa conhecida, o motivo do exame vem da seção B ("acompanhamento de
+  // endometriose/miomas") — pedir "investigar a causa" ao lado seria redundante.
+  if (!causaConhecida) need.motivos.push('INVESTIGAR A CAUSA DO SANGRAMENTO')
   need.usPelvico = true
 }
 
@@ -2259,14 +2268,20 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
 
   // SOP: eixo metabólico, não hemorrágico — o vínculo com o bariátrico é a
   // resistência insulínica (e o reganho de peso), não a perda de ferro.
+  // Alerta LEVE (não só a cor do card): sem ele o achado não aparecia no topo do
+  // card do médico, que lista os alertas. LEVE não escala sozinho o Estado Geral
+  // (a régua só sobe p/ RAZOÁVEL com ≥3 leves).
   if (tem('OVÁRIOS POLICÍSTICOS')) {
     bump(LEVE)
     linhas.push('OVÁRIOS POLICÍSTICOS (SOP): ASSOCIADA À RESISTÊNCIA INSULÍNICA E AO GANHO DE PESO — A CIRURGIA BARIÁTRICA COSTUMA MELHORAR A SOP E PODE RESTAURAR A FERTILIDADE (ATENÇÃO À CONTRACEPÇÃO NOS PRIMEIROS 18 MESES, QUANDO A GESTAÇÃO É DESACONSELHADA). A ANOVULAÇÃO DA SOP TAMBÉM CAUSA CICLOS IRREGULARES E, ÀS VEZES, SANGRAMENTO AUMENTADO. MANTENHA ACOMPANHAMENTO GINECOLÓGICO E CONTROLE METABÓLICO.')
+    alertas.push({ nivel: LEVE, texto: 'OVÁRIOS POLICÍSTICOS (SOP) — RESISTÊNCIA INSULÍNICA; A CIRURGIA PODE RESTAURAR A FERTILIDADE (ATENÇÃO À CONTRACEPÇÃO NOS PRIMEIROS 18 MESES). ACOMPANHAMENTO GINECOLÓGICO E METABÓLICO.' })
+    need.motivos.push('ACOMPANHAMENTO DE SOP')
   }
 
   if (tem('CISTOS NAS MAMAS')) {
     bump(LEVE)
     linhas.push('CISTOS NAS MAMAS: NA GRANDE MAIORIA DAS VEZES SÃO BENIGNOS. MANTENHA O RASTREIO MAMOGRÁFICO/ULTRASSONOGRÁFICO NA PERIODICIDADE ORIENTADA PELO SEU GINECOLOGISTA.')
+    alertas.push({ nivel: LEVE, texto: 'CISTOS NAS MAMAS — EM REGRA BENIGNOS; MANTER O RASTREIO MAMOGRÁFICO/ULTRASSONOGRÁFICO NA PERIODICIDADE ORIENTADA.' })
   }
 
   if (tem('CÂNCER DE MAMA')) {
@@ -2275,9 +2290,19 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
       bump(GRAVE)
       linhas.push('CÂNCER DE MAMA EM TRATAMENTO: A QUIMIOTERAPIA DEPRIME A MEDULA ÓSSEA (ANEMIA, LEUCOPENIA, PLAQUETOPENIA) E ESSE EFEITO SE SOMA ÀS CARÊNCIAS DO PÓS-BARIÁTRICO — O SEU ERITRON PRECISA SER LIDO NESSE CONTEXTO, E O HEMOGRAMA MONITORADO DE PERTO. INFORME AO ONCOLOGISTA QUE VOCÊ É BARIÁTRICA: A ABSORÇÃO DE MEDICAMENTOS ORAIS E DE NUTRIENTES ESTÁ REDUZIDA. NÃO INICIE REPOSIÇÃO DE FERRO POR CONTA PRÓPRIA DURANTE O TRATAMENTO ONCOLÓGICO — ALINHE COM A EQUIPE.')
       alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE MAMA EM TRATAMENTO — QUIMIOTERAPIA DEPRIME A MEDULA E SOMA-SE ÀS CARÊNCIAS BARIÁTRICAS. LER O ERITRON NESSE CONTEXTO; ALINHAR REPOSIÇÃO COM O ONCOLOGISTA.' })
-    } else {
+    } else if (st === 'RESOLVIDO') {
       bump(MODERADO)
-      linhas.push(`CÂNCER DE MAMA${st === 'RESOLVIDO' ? ' (RESOLVIDO)' : ''}: MANTENHA O SEGUIMENTO ONCOLÓGICO E O RASTREIO. SE VOCÊ USA OU USOU TAMOXIFENO, SAIBA QUE ELE AUMENTA O RISCO DE ESPESSAMENTO E DE CÂNCER DO ENDOMÉTRIO E TAMBÉM DE TROMBOSE — QUALQUER SANGRAMENTO VAGINAL ANORMAL DEVE SER INVESTIGADO SEM DEMORA.`)
+      linhas.push('CÂNCER DE MAMA (RESOLVIDO): MANTENHA O SEGUIMENTO ONCOLÓGICO E O RASTREIO. SE VOCÊ USA OU USOU TAMOXIFENO, SAIBA QUE ELE AUMENTA O RISCO DE ESPESSAMENTO E DE CÂNCER DO ENDOMÉTRIO E TAMBÉM DE TROMBOSE — QUALQUER SANGRAMENTO VAGINAL ANORMAL DEVE SER INVESTIGADO SEM DEMORA.')
+      // Alerta MODERADO: antes o card ficava moderado mas NADA entrava no Estado
+      // Geral nem no topo do card do médico — assimetria com endometriose/miomas,
+      // que já alertavam no mesmo nível.
+      alertas.push({ nivel: MODERADO, texto: 'CÂNCER DE MAMA (RESOLVIDO) — MANTER SEGUIMENTO ONCOLÓGICO E RASTREIO. SE USOU/USA TAMOXIFENO: RISCO DE CÂNCER DE ENDOMÉTRIO E DE TROMBOSE — INVESTIGAR QUALQUER SANGRAMENTO VAGINAL ANORMAL.' })
+    } else {
+      // Status não respondido (o rádio não é obrigatório). Em tratamento e resolvido
+      // pedem condutas MUITO diferentes — não presumir qual é: pedir o dado.
+      bump(MODERADO)
+      linhas.push('CÂNCER DE MAMA: VOCÊ NÃO INFORMOU SE O TRATAMENTO ESTÁ EM CURSO OU JÁ FOI CONCLUÍDO — ESSA INFORMAÇÃO MUDA A LEITURA DO SEU ERITRON (A QUIMIOTERAPIA DEPRIME A MEDULA ÓSSEA E ESSE EFEITO SE SOMA ÀS CARÊNCIAS DO PÓS-BARIÁTRICO). INFORME-A NA PRÓXIMA AVALIAÇÃO OU NA TELECONSULTA. DE TODA FORMA: MANTENHA O SEGUIMENTO ONCOLÓGICO E O RASTREIO, E SE USA OU USOU TAMOXIFENO, SAIBA QUE ELE AUMENTA O RISCO DE CÂNCER DO ENDOMÉTRIO E DE TROMBOSE — QUALQUER SANGRAMENTO VAGINAL ANORMAL DEVE SER INVESTIGADO SEM DEMORA.')
+      alertas.push({ nivel: MODERADO, texto: 'CÂNCER DE MAMA — STATUS (EM TRATAMENTO / RESOLVIDO) NÃO INFORMADO. CONFIRMAR: SE HÁ QUIMIOTERAPIA EM CURSO, O ERITRON PRECISA SER LIDO NESSE CONTEXTO.' })
     }
   }
 
@@ -2285,7 +2310,7 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
     bump(GRAVE)
     linhas.push('MOLA HIDATIFORME: DOENÇA TROFOBLÁSTICA GESTACIONAL — EXIGE SEGUIMENTO COM BETA-HCG SERIADO ATÉ A NEGATIVAÇÃO E POR TODO O PERÍODO ORIENTADO PELO SEU MÉDICO, PELO RISCO DE NEOPLASIA TROFOBLÁSTICA (CORIOCARCINOMA). ENQUANTO O SEGUIMENTO ESTIVER EM CURSO, A GESTAÇÃO É CONTRAINDICADA (UMA NOVA GRAVIDEZ ELEVA O BETA-HCG E IMPEDE A INTERPRETAÇÃO DO CONTROLE). CONFIRME COM O SEU GINECOLOGISTA SE O SEU SEGUIMENTO FOI CONCLUÍDO.')
     alertas.push({ nivel: GRAVE, texto: 'MOLA HIDATIFORME — CONFIRMAR SE O SEGUIMENTO COM BETA-HCG SERIADO FOI CONCLUÍDO (RISCO DE NEOPLASIA TROFOBLÁSTICA). GESTAÇÃO CONTRAINDICADA ENQUANTO EM SEGUIMENTO.' })
-    need.motivos.push('SEGUIMENTO DE DOENÇA TROFOBLÁSTICA (MOLA)')
+    need.motivos.push('SEGUIMENTO DE DOENÇA TROFOBLÁSTICA')
     need.betaHcg = true
     need.prioritaria = true
   }
