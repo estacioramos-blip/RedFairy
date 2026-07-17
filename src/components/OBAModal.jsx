@@ -112,6 +112,14 @@ const STATUS_GINECOLOGICO_OPS = [
   'MOLA HIDATIFORME',
 ]
 const SANGRAMENTO_MENSTRUAL_OPS = ['EXCESSIVO', 'PROLONGADO', 'EXCESSIVO E PROLONGADO']
+// Fator TEMPO do sangramento. A perda de ferro é intensidade × duração × persistência ×
+// frequência — o tipo sozinho (auto-avaliação) não distingue quem sangra muito há 2 meses
+// de quem sangra muito há 2 anos. Quem decide a gravidade é a PERSISTÊNCIA (Dr. Ramos):
+// corte em 4 meses; as faixas abaixo saíram do rascunho <3/3-6/6-12/>12 escalado por 4/6.
+const SANGRAMENTO_DURACAO_OPS = ['ATÉ 7 DIAS', 'DE 8 A 10 DIAS', 'MAIS DE 10 DIAS']
+const SANGRAMENTO_PERSISTENCIA_OPS = ['MENOS DE 2 MESES', 'DE 2 A 4 MESES', 'DE 4 A 8 MESES', 'MAIS DE 8 MESES']
+// Intervalo entre menstruações: < 21 dias = mais ciclos por ano = mais ferro perdido.
+const SANGRAMENTO_FREQUENCIA_OPS = ['MENOS DE 21 DIAS', 'DE 21 A 35 DIAS', 'MAIS DE 35 DIAS', 'IRREGULAR']
 
 // Status Prostático (masculino, idade >= 38). SEM SINTOMAS é EXCLUSIVO (limpa as outras,
 // padrão "ESTOU BEM" do cardiovascular). CÂNCER abre os tratamentos em CHECKBOX (múltiplos —
@@ -178,7 +186,7 @@ const PROJETOS = [
 ]
 
 // Hábitos sociais / estilo de vida. Valor armazenado no MASCULINO (DOADOR); a exibição
-// vira DOADORA p/ mulher via gz(). Críticas no relatório: a definir com o Estácio.
+// vira DOADORA p/ mulher via gz(). Críticas no relatório: buildModHabitos (obaEngine).
 const HABITOS_SOCIAIS_OPS = [
   'SOU DOADOR DE SANGUE',
   'SOU DOADOR DE MEDULA ÓSSEA',
@@ -714,6 +722,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     status_glicemico: '', dumping: false, status_hormonal: [], status_pressorico: '', status_endoscopico: [], status_neurologico: [],
     // Status ginecológico (só feminino) + sub-estados (sangramento / câncer de mama).
     status_ginecologico: [], sangramento_menstrual_tipo: '', cancer_mama_status: '',
+    sangramento_duracao: '', sangramento_persistencia: '', sangramento_frequencia: '',
     status_prostatico: [], prostata_cancer_tratamentos: [],
     status_respiratorio: [], status_alergico: [], alergia_medicamentosa: [], alergia_outra_texto: '',
     trombose: null, investigou_trombose: false,
@@ -1204,6 +1213,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       status_ginecologico: form.status_ginecologico,
       // Sub-respostas só valem se o checkbox pai estiver marcado (senão viram dado sujo).
       sangramento_menstrual_tipo: form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_menstrual_tipo || null) : null,
+      sangramento_duracao:      form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_duracao || null) : null,
+      sangramento_persistencia: form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_persistencia || null) : null,
+      sangramento_frequencia:   form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_frequencia || null) : null,
       cancer_mama_status: form.status_ginecologico.includes('CÂNCER DE MAMA') ? (form.cancer_mama_status || null) : null,
       status_prostatico: form.status_prostatico,
       prostata_cancer_tratamentos: form.status_prostatico.includes('CÂNCER') ? form.prostata_cancer_tratamentos : [],
@@ -3105,6 +3117,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             <div style={{ marginTop:'0.5rem' }}>
               <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.4rem' }}>{"Tipo de sangramento"}</p>
               <RadioGroup options={SANGRAMENTO_MENSTRUAL_OPS} value={form.sangramento_menstrual_tipo} cols={1} onChange={v => sf('sangramento_menstrual_tipo', form.sangramento_menstrual_tipo === v ? '' : v)} />
+              {/* O TEMPO é o que define a gravidade — sem ele o tipo acima não diz quanto
+                  ferro se perdeu. Ver a régua em buildModGinecologico (obaEngine). */}
+              <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.7rem 0 0.4rem' }}>{"Quantos dias dura a menstruação?"}</p>
+              <RadioGroup options={SANGRAMENTO_DURACAO_OPS} value={form.sangramento_duracao} cols={1} onChange={v => sf('sangramento_duracao', form.sangramento_duracao === v ? '' : v)} />
+              <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.7rem 0 0.4rem' }}>{"Há quanto tempo é assim?"}</p>
+              <RadioGroup options={SANGRAMENTO_PERSISTENCIA_OPS} value={form.sangramento_persistencia} cols={1} onChange={v => sf('sangramento_persistencia', form.sangramento_persistencia === v ? '' : v)} />
+              <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0.7rem 0 0.4rem' }}>{"De quanto em quanto tempo vem a menstruação?"}</p>
+              <RadioGroup options={SANGRAMENTO_FREQUENCIA_OPS} value={form.sangramento_frequencia} cols={1} onChange={v => sf('sangramento_frequencia', form.sangramento_frequencia === v ? '' : v)} />
             </div>
           )}
           {form.status_ginecologico.includes('C\u00c2NCER DE MAMA') && (

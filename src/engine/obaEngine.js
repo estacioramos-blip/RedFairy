@@ -191,6 +191,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modObst = buildModObstetrico(dadosOBA, alertas, examesSuger)
   if (modObst) modulos.push(modObst)
 
+  // ── 13c. MÓDULO GINECOLÓGICO (por ora só o SANGRAMENTO MENSTRUAL) ─────────
+  const modGineco = buildModGinecologico(dadosOBA, resultadoEritron, examesOBA, alertas, examesSuger)
+  if (modGineco) modulos.push(modGineco)
+
   // ── 14. MÓDULO ACOMPANHAMENTO ────────────────────────────────────────────
   const modAcomp = buildModAcompanhamento(dadosOBA, alertas)
   if (modAcomp) modulos.push(modAcomp)
@@ -2040,6 +2044,109 @@ function buildModObstetrico(dados, alertas, suger) {
   }
 
   return { id: 'obstetrico', titulo: 'HISTÓRIA OBSTÉTRICA', nivel, linhas }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO — GINECOLÓGICO
+// Por ora cobre SÓ o SANGRAMENTO MENSTRUAL: é a perda de ferro que soma à
+// disabsorção bariátrica (eixo central do algoritmo). Os demais campos do Status
+// Ginecológico (endometriose, miomas, SOP, cistos/câncer de mama, mola) ainda NÃO
+// geram crítica — entram aqui quando o Dr. Ramos definir os textos.
+//
+// RÉGUA (Dr. Ramos, jul/2026): a perda de ferro é intensidade × duração ×
+// persistência × frequência — quem decide o CRÍTICO é o TEMPO, não o tipo.
+//   ≥1 fator de perda (fluxo intenso | duração >7 dias | ciclos <21 dias)
+//     PERSISTINDO há ≥4 meses                → GRAVE (Estado Geral → CRÍTICO)
+//   ≥2 fatores com persistência NÃO informada → GRAVE (conservador — não rebaixar
+//     o que a régua antiga já tratava como grave só porque falta o dado)
+//   qualquer outro caso (inclusive intenso mas RECENTE, <4 meses) → MODERADO
+//   + anemia OU ferritina baixa → escala (MODERADO vira GRAVE)
+// As strings abaixo têm que bater 1:1 com as *_OPS do OBAModal.
+// ─────────────────────────────────────────────────────────────────────────────
+const GINECO_DURACAO_LONGA = ['DE 8 A 10 DIAS', 'MAIS DE 10 DIAS']
+const GINECO_PERSISTENTE   = ['DE 4 A 8 MESES', 'MAIS DE 8 MESES']
+const GINECO_RECENTE       = ['MENOS DE 2 MESES', 'DE 2 A 4 MESES']
+const GINECO_CICLO_CURTO   = 'MENOS DE 21 DIAS'
+
+function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger) {
+  if ((dados.sexo || 'F') !== 'F') return null
+  if (!(dados.status_ginecologico || []).includes('SANGRAMENTO MENSTRUAL')) return null
+  // GRÁVIDA + sangramento já vira alerta GRAVE de emergência no topo do avaliarOBA
+  // (não é menstruação). Criticar "perda menstrual" aqui seria contraditório.
+  if (dados.status_gestacional === 'GRÁVIDA') return null
+
+  const tipo = dados.sangramento_menstrual_tipo || ''
+  const duracao = dados.sangramento_duracao || ''
+  const persistencia = dados.sangramento_persistencia || ''
+  const frequencia = dados.sangramento_frequencia || ''
+
+  // Fatores de perda (quanto ferro sai por ciclo × quantos ciclos por ano)
+  const fatores = []
+  if (tipo.includes('EXCESSIVO')) fatores.push('FLUXO INTENSO')
+  if (tipo.includes('PROLONGADO') || GINECO_DURACAO_LONGA.includes(duracao)) fatores.push('DURAÇÃO AUMENTADA')
+  if (frequencia === GINECO_CICLO_CURTO) fatores.push('CICLOS CURTOS (MAIS MENSTRUAÇÕES POR ANO)')
+
+  const persistente = GINECO_PERSISTENTE.includes(persistencia)
+  const recente     = GINECO_RECENTE.includes(persistencia)
+
+  let nivel = MODERADO
+  if (fatores.length >= 1 && persistente) nivel = GRAVE
+  else if (fatores.length >= 2 && !recente) nivel = GRAVE
+
+  // Cruzamento com o ferro (mesma cadeia de fallback do resto do motor: eritron
+  // primeiro, depois os valores relançados na etapa de exames do OBA).
+  const ferr = Number(resultadoEritron?.inputs?.ferritina ?? examesOBA?.ferritina_novo ?? examesOBA?.ferritina_oba)
+  const ferrBaixa = Number.isFinite(ferr) && ferr > 0 && ferr < OBA_CUTOFFS.ferritina_oba.min
+  const temAnemia = /ANEMIA|ANÊMIC/i.test(resultadoEritron?.label || '') || resultadoEritron?.color === 'red'
+  const somaFerro = ferrBaixa || temAnemia
+  if (somaFerro && nivel === MODERADO) nivel = GRAVE
+
+  const linhas = []
+  // "NÃO INFORMADAS" só quando NADA foi respondido — com respostas dadas (ainda que
+  // sem fator de perda), dizer "não informadas" contradiz as linhas seguintes.
+  const nadaInformado = !tipo && !duracao && !persistencia && !frequencia
+  const comoTexto = fatores.length
+    ? `SANGRAMENTO MENSTRUAL COM ${fatores.join(' + ')}`
+    : nadaInformado
+      ? 'SANGRAMENTO MENSTRUAL (CARACTERÍSTICAS NÃO INFORMADAS — CONSIDERADO RELEVANTE ATÉ ESCLARECIMENTO)'
+      : 'SANGRAMENTO MENSTRUAL RELATADO (SEM FATOR DE PERDA AUMENTADA IDENTIFICADO NAS RESPOSTAS)'
+  linhas.push(`${comoTexto}: A PERDA DE SANGUE PELA MENSTRUAÇÃO É A PRINCIPAL CAUSA DE FERROPENIA NA MULHER EM IDADE FÉRTIL. NO BARIÁTRICO, ELA SE SOMA À DISABSORÇÃO: A CIRURGIA REDUZ A ABSORÇÃO DE FERRO JUSTAMENTE ENQUANTO A MENSTRUAÇÃO O CONSOME. AS DUAS CAUSAS JUNTAS EXPLICAM ANEMIA QUE NÃO RESPONDE À SUPLEMENTAÇÃO ORAL HABITUAL.`)
+
+  // O TEMPO é o que agrava: perda persistente drena o estoque mês após mês.
+  if (persistente) {
+    linhas.push(`ESTE PADRÃO PERSISTE HÁ ${persistencia === 'MAIS DE 8 MESES' ? 'MAIS DE 8 MESES' : '4 A 8 MESES'}: PERDA CONTINUADA DE FERRO POR VÁRIOS CICLOS SEGUIDOS — MESMO UM FLUXO SÓ MODERADAMENTE AUMENTADO, MANTIDO POR MESES, ESGOTA A RESERVA. AVALIAÇÃO GINECOLÓGICA É NECESSÁRIA PARA INVESTIGAR A CAUSA (MIOMAS, ADENOMIOSE, PÓLIPOS, DISTÚRBIO DE COAGULAÇÃO) E TRATAR — CONTROLAR O SANGRAMENTO É PARTE DO TRATAMENTO DA ANEMIA, NÃO APENAS REPOR FERRO.`)
+  } else if (recente) {
+    linhas.push('PADRÃO RECENTE (MENOS DE 4 MESES): AINDA ASSIM MERECE INVESTIGAÇÃO — MUDANÇA RECENTE NO PADRÃO MENSTRUAL TEM CAUSA (HORMONAL, ESTRUTURAL OU MEDICAMENTOSA) E, NO BARIÁTRICO, NÃO HÁ FOLGA DE FERRO PARA ABSORVER MESES DE PERDA ATÉ "VER NO QUE DÁ".')
+  } else {
+    linhas.push('HÁ QUANTO TEMPO ESSE PADRÃO PERSISTE NÃO FOI INFORMADO — ESSA É A INFORMAÇÃO QUE DEFINE A GRAVIDADE. OBSERVE E REGISTRE: SE JÁ DURA 4 MESES OU MAIS, TRATE COMO PRIORIDADE.')
+  }
+
+  if (frequencia === GINECO_CICLO_CURTO) {
+    linhas.push('CICLOS COM MENOS DE 21 DIAS: MAIS MENSTRUAÇÕES POR ANO SIGNIFICA MAIS FERRO PERDIDO NO ANO, MESMO QUE CADA CICLO PAREÇA NORMAL. CICLOS CURTOS TAMBÉM PEDEM AVALIAÇÃO HORMONAL.')
+  } else if (frequencia === 'IRREGULAR') {
+    // Não é fator de perda na régua (não muda o nível), mas o dado não pode sumir:
+    // a paciente respondeu e o relatório precisa ecoar.
+    linhas.push('CICLOS IRREGULARES: A IRREGULARIDADE MENSTRUAL NÃO AUMENTA POR SI A PERDA DE FERRO, MAS TEM CAUSA (HORMONAL, SOP, PERIMENOPAUSA) — INCLUA NA AVALIAÇÃO GINECOLÓGICA.')
+  }
+
+  if (duracao === 'MAIS DE 10 DIAS') {
+    linhas.push('MENSTRUAÇÃO COM MAIS DE 10 DIAS DE DURAÇÃO É SEMPRE ANORMAL — INVESTIGAÇÃO GINECOLÓGICA INDEPENDENTE DO FLUXO.')
+  }
+
+  if (somaFerro) {
+    linhas.push(`ESTE SANGRAMENTO JÁ SE REFLETE NO SEU FERRO (${temAnemia ? 'ANEMIA NO ERITRON' : `FERRITINA ${ferr} ng/mL, ABAIXO DE ${OBA_CUTOFFS.ferritina_oba.min}`}) — OS DOIS ACHADOS SE EXPLICAM. A REPOSIÇÃO DE FERRO TENDE A FALHAR ENQUANTO A PERDA CONTINUAR; TRATE A CAUSA DO SANGRAMENTO EM PARALELO. SE A VIA ORAL NÃO CORRIGIR, DISCUTA FERRO PARENTERAL (A ABSORÇÃO ORAL É LIMITADA NO PÓS-BARIÁTRICO).`)
+  } else {
+    linhas.push('MESMO SEM ANEMIA AGORA, MANTENHA FERRITINA E HEMOGRAMA MONITORADOS — NO BARIÁTRICO COM PERDA MENSTRUAL, O ESTOQUE DE FERRO SE ESGOTA ANTES DE A HEMOGLOBINA CAIR.')
+  }
+
+  alertas.push({ nivel, texto: somaFerro
+    ? `${comoTexto} COM REPERCUSSÃO NO FERRO — AVALIAÇÃO GINECOLÓGICA PARA TRATAR A CAUSA DA PERDA; SÓ REPOR FERRO NÃO RESOLVE.`
+    : `${comoTexto} — PERDA DE FERRO QUE SOMA À DISABSORÇÃO BARIÁTRICA. AVALIAÇÃO GINECOLÓGICA E MONITORAMENTO DA FERRITINA.` })
+
+  suger.push('AVALIAÇÃO GINECOLÓGICA (INVESTIGAR A CAUSA DO SANGRAMENTO)')
+  suger.push('ULTRASSONOGRAFIA PÉLVICA')
+
+  return { id: 'ginecologico', titulo: 'SAÚDE GINECOLÓGICA', nivel, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
