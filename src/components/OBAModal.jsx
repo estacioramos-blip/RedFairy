@@ -130,7 +130,11 @@ const STATUS_PROSTATICO_OPS = [
   'HIPERPLASIA BENIGNA',
   'CÂNCER',
 ]
-const PROSTATA_CANCER_OPS = ['EM TRATAMENTO', 'OPERADO', 'CURADO', 'RADIOTERAPIA']
+// 'EM TRATAMENTO' foi DESMEMBRADO (Dr. Ramos, jul/2026): era genérico demais e o motor
+// tinha de assumir bloqueio hormonal (o cenário mais comum) para decidir a gravidade.
+// O tipo de tratamento muda a leitura do ERITRON — a privação de androgênio causa anemia
+// e perda óssea por si; a quimioterapia deprime a medula; a vigilância ativa, nenhum dos dois.
+const PROSTATA_CANCER_OPS = ['EM TRATAMENTO HORMONAL (BLOQUEIO)', 'EM QUIMIOTERAPIA', 'EM VIGILÂNCIA ATIVA', 'OPERADO', 'RADIOTERAPIA', 'CURADO']
 
 const STATUS_RESPIRATORIO_OPS = [
   'NORMAL',
@@ -522,6 +526,7 @@ export const DUVIDA_SECOES = {
   osseo:          'Status Ósseo | Articular',
   neurologico:    'Status Neurológico',
   fibromialgico:  'Status Fibromiálgico | ME/CFS',
+  prostatico:     'Status Prostático',
   exames:         'Exames laboratoriais',
 }
 
@@ -3209,6 +3214,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               </div>
             </div>
           )}
+          <DuvidaCheck secao="prostatico" duvidas={form.duvidas} onToggle={toggleDuvida} />
           </>)}
 
           <SectionTitle>{"Status Press\u00f3rico"}</SectionTitle>

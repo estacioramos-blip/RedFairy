@@ -219,6 +219,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modResp = buildModRespiratorio(dadosOBA, examesOBA, alertas, examesSuger)
   if (modResp) modulos.push(modResp)
 
+  // ── 15d. MÓDULO SAÚDE PROSTÁTICA (declarada; o PSA é lido no oncológico) ──
+  const modProst = buildModProstatico(dadosOBA, alertas, examesSuger)
+  if (modProst) modulos.push(modProst)
+
   // ── 16. MÓDULO STATUS INTESTINAL ─────────────────────────────────────────
   const modIntestinal = buildModIntestinal(dadosOBA, alertas, examesSuger)
   if (modIntestinal) modulos.push(modIntestinal)
@@ -1734,21 +1738,52 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
   const estr  = parseFloat(ex.estradiol)
 
   if (sexo === 'M' && idade >= 40) {
+    // O corte "normal < 4" NÃO vale para todo homem. Quem fez PROSTATECTOMIA não tem
+    // próstata para produzir PSA: o alvo é indetectável, e ≥0.2 é recidiva bioquímica.
+    // Sem ler o status declarado, o motor dizia "PSA DENTRO DA NORMALIDADE" para um
+    // operado com PSA 2 — falsa segurança em paciente oncológico.
+    const trats = Array.isArray(dados.prostata_cancer_tratamentos) ? dados.prostata_cancer_tratamentos : []
+    const temCaProstata = (dados.status_prostatico || []).includes('CÂNCER')
+    const operado = temCaProstata && trats.includes('OPERADO')
+    const radioterapia = temCaProstata && trats.includes('RADIOTERAPIA')
+
     if (!isNaN(psa)) {
       temAlgo = true
       linhas.push(`PSA TOTAL: ${psa} ng/mL`)
-      if (psa > REF.psa.alto) {
+      if (operado) {
+        if (psa >= 0.2) {
+          nivelGeral = GRAVE
+          linhas.push(`PSA ${psa} ng/mL DEPOIS DA CIRURGIA DE PRÓSTATA: ATENÇÃO — ESTE VALOR NÃO PODE SER LIDO PELA TABELA NORMAL. QUEM RETIROU A PRÓSTATA NÃO TEM DE ONDE PRODUZIR PSA, ENTÃO O ESPERADO É QUE ELE SEJA INDETECTÁVEL. QUALQUER VALOR A PARTIR DE 0,2 CARACTERIZA RECIDIVA BIOQUÍMICA E EXIGE AVALIAÇÃO UROLÓGICA/ONCOLÓGICA SEM DEMORA — MESMO PARECENDO "BAIXO" NUMA TABELA COMUM.`)
+          alertas.push({ nivel: GRAVE, texto: `PSA ${psa} ng/mL EM PACIENTE PROSTATECTOMIZADO — RECIDIVA BIOQUÍMICA (O ALVO É INDETECTÁVEL, ≥0,2 JÁ É RECIDIVA). AVALIAÇÃO UROLÓGICA/ONCOLÓGICA SEM DEMORA. NÃO LER PELO CORTE DE 4 ng/mL.` })
+          suger.push('AVALIAÇÃO COM UROLOGISTA/ONCOLOGISTA (RECIDIVA BIOQUÍMICA PÓS-PROSTATECTOMIA)')
+        } else {
+          linhas.push(`PSA ${psa} ng/mL DEPOIS DA CIRURGIA DE PRÓSTATA: INDETECTÁVEL OU MUITO BAIXO, QUE É EXATAMENTE O ESPERADO PARA QUEM RETIROU A PRÓSTATA. MANTENHA O SEGUIMENTO NA PERIODICIDADE COMBINADA COM O SEU UROLOGISTA — O QUE IMPORTA AQUI É A TENDÊNCIA AO LONGO DO TEMPO, NÃO UM VALOR ISOLADO.`)
+        }
+      } else if (radioterapia) {
+        // Critério de Phoenix (nadir + 2) exige o nadir, que não coletamos — não dá
+        // para decidir aqui; o que NÃO se pode é aplicar o corte de 4.
+        linhas.push(`PSA ${psa} ng/mL APÓS RADIOTERAPIA DE PRÓSTATA: ESTE VALOR NÃO DEVE SER LIDO PELA TABELA COMUM (< 4). DEPOIS DA RADIOTERAPIA A PRÓSTATA CONTINUA NO LUGAR E O PSA NÃO ZERA — O CONTROLE É FEITO COMPARANDO COM O SEU MENOR VALOR JÁ ATINGIDO (O "NADIR"): UMA SUBIDA DE 2 PONTOS ACIMA DELE INDICA RECIDIVA. LEVE O HISTÓRICO DOS SEUS PSAs AO UROLOGISTA — SEM OS VALORES ANTERIORES, NENHUM PSA ISOLADO DIZ SE ESTÁ TUDO BEM.`)
+        if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+        alertas.push({ nivel: MODERADO, texto: `PSA ${psa} ng/mL APÓS RADIOTERAPIA — NÃO APLICAR O CORTE DE 4. O CONTROLE É PELO NADIR + 2 (CRITÉRIO DE PHOENIX): LEVAR O HISTÓRICO DE PSAs AO UROLOGISTA.` })
+        suger.push('AVALIAÇÃO COM UROLOGISTA (SEGUIMENTO PÓS-RADIOTERAPIA — LEVAR HISTÓRICO DE PSA)')
+      } else if (psa > REF.psa.alto) {
         nivelGeral = GRAVE
-        linhas.push('PSA MUITO ELEVADO (> 10 ng/mL): RISCO AUMENTADO DE CÂNCER DE PRÓSTATA. AVALIAÇÃO UROLÓGICA URGENTE COM BIÓPSIA.')
-        alertas.push({ nivel: GRAVE, texto: `PSA MUITO ELEVADO: ${psa} ng/mL — AVALIAÇÃO UROLÓGICA URGENTE.` })
+        // Com câncer JÁ diagnosticado, mandar "biópsia" é fora de lugar: ele não
+        // precisa de diagnóstico, precisa que a equipe dele veja este valor.
+        linhas.push(temCaProstata
+          ? 'PSA MUITO ELEVADO (> 10 ng/mL) COM CÂNCER DE PRÓSTATA JÁ DIAGNOSTICADO: ESTE VALOR PRECISA CHEGAR À SUA EQUIPE ONCOLÓGICA/UROLÓGICA SEM DEMORA — PODE INDICAR DOENÇA EM ATIVIDADE OU PROGRESSÃO.'
+          : 'PSA MUITO ELEVADO (> 10 ng/mL): RISCO AUMENTADO DE CÂNCER DE PRÓSTATA. AVALIAÇÃO UROLÓGICA URGENTE COM BIÓPSIA.')
+        alertas.push({ nivel: GRAVE, texto: `PSA MUITO ELEVADO: ${psa} ng/mL — AVALIAÇÃO UROLÓGICA URGENTE.${temCaProstata ? ' CÂNCER JÁ DIAGNOSTICADO: LEVAR À EQUIPE (POSSÍVEL ATIVIDADE/PROGRESSÃO).' : ''}` })
         suger.push('AVALIAÇÃO COM UROLOGISTA')
-        suger.push('PSA LIVRE / PSA TOTAL RATIO')
+        if (!temCaProstata) suger.push('PSA LIVRE / PSA TOTAL RATIO')
       } else if (psa > REF.psa.normal) {
         if (nivelGeral !== GRAVE) nivelGeral = MODERADO
-        linhas.push('PSA ELEVADO (4–10 ng/mL): ZONA CINZENTA. AVALIAÇÃO COM UROLOGISTA E CONSIDERAR PSA LIVRE, RESSONÂNCIA DE PRÓSTATA E BIÓPSIA.')
+        linhas.push(temCaProstata
+          ? 'PSA ENTRE 4 E 10 ng/mL COM CÂNCER DE PRÓSTATA JÁ DIAGNOSTICADO: LEVE ESTE VALOR AO SEU UROLOGISTA/ONCOLOGISTA — EM QUEM JÁ TEM O DIAGNÓSTICO, O QUE IMPORTA É A COMPARAÇÃO COM OS SEUS EXAMES ANTERIORES, NÃO A TABELA.'
+          : 'PSA ELEVADO (4–10 ng/mL): ZONA CINZENTA. AVALIAÇÃO COM UROLOGISTA E CONSIDERAR PSA LIVRE, RESSONÂNCIA DE PRÓSTATA E BIÓPSIA.')
         alertas.push({ nivel: MODERADO, texto: `PSA ELEVADO: ${psa} ng/mL — AVALIAÇÃO UROLÓGICA NECESSÁRIA.` })
         suger.push('AVALIAÇÃO COM UROLOGISTA')
-        suger.push('PSA LIVRE')
+        if (!temCaProstata) suger.push('PSA LIVRE')
       } else {
         linhas.push('PSA DENTRO DA NORMALIDADE.')
       }
@@ -2512,6 +2547,110 @@ function pacienteFuma(dados) {
   const resp = Array.isArray(dados.status_respiratorio) ? dados.status_respiratorio : []
   const comp = Array.isArray(dados.compulsoes) ? dados.compulsoes : []
   return resp.includes('TABAGISTA | DPOC') || comp.includes('CIGARRO / TABACO')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO — SAÚDE PROSTÁTICA (declarada na anamnese)
+// O `status_prostatico` e os `prostata_cancer_tratamentos` eram órfãos. O PSA (exame)
+// é criticado no módulo oncológico — que agora também lê estes campos para não usar
+// o corte de 4 ng/mL em quem operou (o alvo lá é indetectável) ou irradiou.
+// Aqui ficam as implicações do que ele DECLARA — e o cruzamento que motivou a frente:
+// reposição de testosterona é contraindicada no câncer de próstata em atividade.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModProstatico(dados, alertas, suger) {
+  if ((dados.sexo || 'F') !== 'M') return null
+  const prost = Array.isArray(dados.status_prostatico) ? dados.status_prostatico : []
+  if (!prost.length) return null
+  const tem = (x) => prost.includes(x)
+  const trats = Array.isArray(dados.prostata_cancer_tratamentos) ? dados.prostata_cancer_tratamentos : []
+
+  const RANK = { [GRAVE]: 3, [MODERADO]: 2, [LEVE]: 1, [NORMAL]: 0 }
+  let nivel = NORMAL
+  const bump = (n) => { if (RANK[n] > RANK[nivel]) nivel = n }
+  const linhas = []
+
+  if (tem('CÂNCER')) {
+    // 'EM TRATAMENTO' foi desmembrado (Dr. Ramos): agora o motor SABE qual é o
+    // tratamento em vez de assumir bloqueio hormonal. Isso importa porque cada um
+    // bate diferente no eritron — e o eritron é o eixo deste app.
+    const hormonal = trats.includes('EM TRATAMENTO HORMONAL (BLOQUEIO)')
+    const quimio = trats.includes('EM QUIMIOTERAPIA')
+    const vigilancia = trats.includes('EM VIGILÂNCIA ATIVA')
+    const emTratamento = hormonal || quimio
+    const curado = trats.includes('CURADO')
+    const operado = trats.includes('OPERADO')
+    const radio = trats.includes('RADIOTERAPIA')
+
+    bump(emTratamento ? GRAVE : MODERADO)
+    const comoTrat = trats.length ? ` (${trats.join(', ')})` : ' (TRATAMENTO NÃO INFORMADO)'
+    linhas.push(`CÂNCER DE PRÓSTATA${comoTrat}: MANTENHA O SEGUIMENTO UROLÓGICO/ONCOLÓGICO. INFORME À SUA EQUIPE QUE VOCÊ É BARIÁTRICO — A ABSORÇÃO DE MEDICAMENTOS ORAIS ESTÁ REDUZIDA E ISSO PODE AFETAR AS DOSES.`)
+
+    // ── SEGURANÇA: testosterona × câncer de próstata ──
+    // A plataforma coleta 'REPOSIÇÃO DE TESTOSTERONA' (status_hormonal) e critica no
+    // módulo hormonal. Sem este cruzamento, os dois viviam no mesmo relatório sem
+    // ninguém conectar — e a testosterona alimenta o tumor androgênio-dependente.
+    // Os alertas desta seção NÃO são consolidados de propósito (diferente da FE e da
+    // TRT, onde a soma inflava o estado): aqui a régua já satura em GRAVE com um só,
+    // e os três pedem AÇÕES distintas — revisar a reposição, tratar o efeito do
+    // bloqueio hormonal, escalar o PSA à equipe. Consolidar perderia conduta.
+    if ((dados.status_hormonal || []).includes('REPOSIÇÃO DE TESTOSTERONA')) {
+      bump(GRAVE)
+      linhas.push('⚠ ATENÇÃO — VOCÊ DECLAROU CÂNCER DE PRÓSTATA E REPOSIÇÃO DE TESTOSTERONA AO MESMO TEMPO. O CÂNCER DE PRÓSTATA É, EM REGRA, ALIMENTADO PELA TESTOSTERONA: TANTO É ASSIM QUE UM DOS TRATAMENTOS CONSISTE JUSTAMENTE EM BLOQUEAR ESSE HORMÔNIO. REPOR TESTOSTERONA NESSE CONTEXTO É UMA DECISÃO DELICADA, QUE SÓ PODE SER TOMADA PELO UROLOGISTA/ONCOLOGISTA QUE ACOMPANHA O SEU CASO — E QUE PRECISA SABER DAS DUAS COISAS. NÃO SUSPENDA NADA POR CONTA PRÓPRIA: LEVE ESTA INFORMAÇÃO A ELE COM PRIORIDADE.')
+      alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA + REPOSIÇÃO DE TESTOSTERONA DECLARADOS JUNTOS — O TUMOR PROSTÁTICO É ANDROGÊNIO-DEPENDENTE (O BLOQUEIO HORMONAL É TRATAMENTO). CONFIRMAR COM O UROLOGISTA/ONCOLOGISTA SE A REPOSIÇÃO ESTÁ MESMO INDICADA. NÃO SUSPENDER POR CONTA PRÓPRIA.' })
+      suger.push('AVALIAÇÃO COM UROLOGISTA/ONCOLOGISTA (REPOSIÇÃO DE TESTOSTERONA EM CÂNCER DE PRÓSTATA)')
+    }
+
+    // Bloqueio hormonal (privação de androgênio): bate nos DOIS eixos deste app.
+    if (hormonal) {
+      linhas.push('O SEU TRATAMENTO É O BLOQUEIO HORMONAL (PRIVAÇÃO DE ANDROGÊNIO), E ELE SOMA DOIS EFEITOS AO SEU CONTEXTO BARIÁTRICO. O PRIMEIRO É NO SANGUE: O BLOQUEIO CAUSA ANEMIA POR SI — ENTÃO A SUA ANEMIA PODE TER DUAS CAUSAS SOMADAS, E CORRIGIR SÓ O FERRO PODE NÃO RESOLVER TUDO. O SEGUNDO É NO OSSO: ELE ACELERA A PERDA DE MASSA ÓSSEA, QUE JÁ É UM PONTO FRÁGIL DEPOIS DA CIRURGIA — OS DOIS JUNTOS PEDEM DENSITOMETRIA E ATENÇÃO REDOBRADA A CÁLCIO E VITAMINA D.')
+      alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA EM BLOQUEIO HORMONAL — CAUSA ANEMIA (SOMA-SE À CARÊNCIA BARIÁTRICA) E ACELERA A PERDA ÓSSEA (SOMA-SE À DA CIRURGIA). LER O ERITRON NESSE CONTEXTO; DENSITOMETRIA E ATENÇÃO A CÁLCIO/VIT. D.' })
+      suger.push('DENSITOMETRIA ÓSSEA')
+    }
+
+    if (quimio) {
+      linhas.push('VOCÊ ESTÁ EM QUIMIOTERAPIA: ELA DEPRIME A MEDULA ÓSSEA (ANEMIA, QUEDA DE LEUCÓCITOS E DE PLAQUETAS), E ESSE EFEITO SE SOMA ÀS CARÊNCIAS DO PÓS-BARIÁTRICO — O SEU HEMOGRAMA PRECISA SER LIDO NESSE CONTEXTO E MONITORADO DE PERTO PELA SUA EQUIPE. NÃO INICIE REPOSIÇÃO DE FERRO POR CONTA PRÓPRIA DURANTE O TRATAMENTO: ALINHE COM O ONCOLOGISTA.')
+      alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA EM QUIMIOTERAPIA — DEPRIME A MEDULA E SOMA-SE ÀS CARÊNCIAS BARIÁTRICAS. LER O ERITRON NESSE CONTEXTO; ALINHAR QUALQUER REPOSIÇÃO COM O ONCOLOGISTA.' })
+    }
+
+    if (vigilancia && !emTratamento) {
+      linhas.push('VOCÊ ESTÁ EM VIGILÂNCIA ATIVA: ISSO SIGNIFICA ACOMPANHAR DE PERTO SEM TRATAR AGORA — UMA CONDUTA LEGÍTIMA E BEM ESTABELECIDA PARA TUMORES DE BAIXO RISCO. O QUE ELA EXIGE DE VOCÊ É DISCIPLINA COM O CALENDÁRIO: PSA E CONSULTAS NA PERIODICIDADE COMBINADA. A BOA NOTÍCIA PARA O SEU CASO É QUE, SEM BLOQUEIO HORMONAL NEM QUIMIOTERAPIA, O SEU ERITRON NÃO SOFRE INTERFERÊNCIA DO TRATAMENTO — O QUE APARECER NO HEMOGRAMA É DA CIRURGIA OU DE OUTRA CAUSA, E DEVE SER INVESTIGADO COMO TAL.')
+    }
+
+    if (radio) {
+      linhas.push('RADIOTERAPIA DE PRÓSTATA: A IRRADIAÇÃO DA PELVE PODE CAUSAR, ANOS DEPOIS, UMA INFLAMAÇÃO CRÔNICA DO RETO (PROCTITE ACTÍNICA) QUE SANGRA POUCO E DE FORMA CONTÍNUA. NO BARIÁTRICO ISSO É PARTICULARMENTE TRAIÇOEIRO: É MAIS UMA FONTE DE PERDA DE FERRO SOMADA À ABSORÇÃO JÁ REDUZIDA. SE VOCÊ NOTA SANGUE NAS FEZES OU TEM ANEMIA QUE NÃO MELHORA COM FERRO, INVESTIGUE ISSO — NÃO ASSUMA QUE É SÓ DA CIRURGIA.')
+      suger.push('SANGUE OCULTO NAS FEZES')
+    }
+
+    if (operado) {
+      // A remissão ao card oncológico só vale se ele existir: o bloco do PSA lá é
+      // fechado por idade >= 40 (l.~1740), enquanto ESTA seção abre aos 38 na tela.
+      // Sem a guarda, o homem de 38-39 seria mandado a um card inexistente.
+      const temCardOncol = Number(dados.idade) >= 40
+      linhas.push(`CIRURGIA DE PRÓSTATA REALIZADA: O SEU PSA PASSA A SER LIDO DE OUTRA FORMA${temCardOncol ? ' — VEJA O CARD DE RASTREAMENTO ONCOLÓGICO' : ''}. SEM PRÓSTATA NÃO HÁ DE ONDE PRODUZIR PSA, ENTÃO O ALVO É INDETECTÁVEL, E NÃO "ABAIXO DE 4": A PARTIR DE 0,2 JÁ SE FALA EM RECIDIVA. LEVE ISSO AO SEU UROLOGISTA.`)
+    }
+
+    if (curado && !emTratamento) {
+      linhas.push('VOCÊ MARCOU O CÂNCER COMO CURADO: ÓTIMO — MANTENHA MESMO ASSIM O SEGUIMENTO COM PSA NA PERIODICIDADE COMBINADA COM O UROLOGISTA. É A TENDÊNCIA DO PSA AO LONGO DO TEMPO QUE MOSTRA UMA RECIDIVA PRECOCE, E ELA APARECE ANTES DE QUALQUER SINTOMA.')
+    }
+    if (!trats.length) {
+      linhas.push('VOCÊ NÃO INFORMOU QUAL FOI (OU É) O SEU TRATAMENTO. ESSA INFORMAÇÃO MUDA A LEITURA DO SEU PSA E DO SEU HEMOGRAMA — INFORME-A NA PRÓXIMA AVALIAÇÃO.')
+    }
+  }
+
+  if (tem('HIPERPLASIA BENIGNA')) {
+    bump(LEVE)
+    linhas.push('HIPERPLASIA BENIGNA DA PRÓSTATA: CONDIÇÃO COMUM COM A IDADE E NÃO É CÂNCER. DOIS PONTOS ÚTEIS: ELA PODE ELEVAR O PSA SEM QUE HAJA TUMOR (POR ISSO O VALOR SEMPRE SE INTERPRETA COM O UROLOGISTA, NUNCA SOZINHO); E SE VOCÊ USA FINASTERIDA OU DUTASTERIDA, SAIBA QUE ESSES REMÉDIOS REDUZEM O PSA PELA METADE — O SEU UROLOGISTA PRECISA SABER PARA DOBRAR O VALOR NA HORA DE INTERPRETAR, SENÃO UM PSA "NORMAL" PODE ESCONDER UM PROBLEMA.')
+    alertas.push({ nivel: LEVE, texto: 'HIPERPLASIA BENIGNA DA PRÓSTATA — ELEVA O PSA SEM TUMOR; E FINASTERIDA/DUTASTERIDA REDUZEM O PSA PELA METADE (INFORMAR AO UROLOGISTA PARA A CORRETA INTERPRETAÇÃO).' })
+  }
+
+  if (tem('OK. AVALIADO POR MÉDICO') && !tem('CÂNCER') && !tem('HIPERPLASIA BENIGNA')) {
+    // Sem bump: o nível já nasce NORMAL e não há nada a agravar — é reforço positivo.
+    linhas.push('PRÓSTATA JÁ AVALIADA POR MÉDICO E SEM ACHADOS: MANTENHA O RASTREIO NA PERIODICIDADE ORIENTADA PELO SEU UROLOGISTA.')
+  }
+
+  if (!linhas.length) return null
+  if (tem('CÂNCER') || tem('HIPERPLASIA BENIGNA')) suger.push('AVALIAÇÃO COM UROLOGISTA')
+  return { id: 'prostatico', titulo: 'SAÚDE PROSTÁTICA', nivel, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
