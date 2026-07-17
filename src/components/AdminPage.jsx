@@ -856,12 +856,10 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'comissao_usd_por_conversao').maybeSingle();
       const { data: cotConfig } = await supabase
         .from('config').select('valor').eq('chave', 'cotacao_dolar').maybeSingle();
-      const { data: tgTokConfig } = await supabase
-        .from('config').select('valor').eq('chave', 'telegram_bot_token').maybeSingle();
-      const { data: tgChatConfig } = await supabase
-        .from('config').select('valor').eq('chave', 'telegram_chat_id').maybeSingle();
-      const { data: tgPlantConfig } = await supabase
-        .from('config').select('valor').eq('chave', 'telegram_chat_plantonista').maybeSingle();
+      // As chaves telegram_* deixaram de ser legíveis por anon (segredo backend-only,
+      // migrate_fix_config_segredos.sql). O Admin as lê por RPC (token_admin_ok).
+      const { data: tg } = await supabase.rpc('admin_ler_config_telegram', credAdmin());
+      const tgCfg = (tg && tg.ok && tg.config) ? tg.config : {};
       setValor(valConfig?.valor || '');
       setValorDoc(docConfig?.valor || '');
       setComissaoUsdNaoAfiliado(comNaoAfilConfig?.valor || '10');
@@ -869,9 +867,9 @@ function AbaConfig() {
       setValorAnuidade(anuConfig?.valor || '200');
       setComissaoUsd(comConfig?.valor || '10');
       setCotacaoDolar(cotConfig?.valor || '');
-      setTgToken(tgTokConfig?.valor || '');
-      setTgChat(tgChatConfig?.valor || '');
-      setTgChatPlantonista(tgPlantConfig?.valor || '');
+      setTgToken(tgCfg.telegram_bot_token || '');
+      setTgChat(tgCfg.telegram_chat_id || '');
+      setTgChatPlantonista(tgCfg.telegram_chat_plantonista || '');
       setLoading(false);
     }
     carregar();
