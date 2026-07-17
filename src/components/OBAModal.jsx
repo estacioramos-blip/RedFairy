@@ -1655,18 +1655,57 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // (botão abaixo do módulo ERITRON) e na conclusão (2ª oferta + prescrição).
   // resultadoEritron só traz { label, color, inputs }, então o contexto ferropênico
   // vem de: ferritina < 30, label microcítico, ou o motor do OBA sugerindo ferro EV.
+  // RÉGUA DO PROTOCOLO DE FERRO EV (Dr. Ramos, jul/2026): a FERRITINA baixa ISOLADA
+  // não basta — ela sobe com inflamação e engana. A ferropenia precisa estar
+  // CONFIRMADA por um de dois caminhos:
+  //   (1) ferritina baixa + SATURAÇÃO DA TRANSFERRINA baixa; ou
+  //   (2) ferritina baixa + MICROCITOSE + RDW AMPLIADO (a tríade clássica — o eritron
+  //       já mostra o efeito da falta de ferro, não precisa da saturação p/ confirmar).
+  // Sem nenhum dos dois: não oferece — pede a saturação e a reavaliação (`faltaSat`).
+  // Confirmada, oferece MESMO COM O ERITRON VERDE (que, por definição, é o eritron sem
+  // microcitose nem RDW alto): no bariátrico a ferropenia sem anemia é indicação
+  // legítima, porque a via oral absorve mal. A fórmula de Ganzoni já prevê esse caso —
+  // `calcularDeficitFerroGanzoni` zera a parcela da Hb quando ela está no alvo e repõe
+  // só a reserva (500 mg).
+  const FERRITINA_BAIXA = 30
+  const SAT_BAIXA = 20
+  // Cortes do próprio motor, não inventados: achadosParalelos.js:104 nomeia
+  // "MICROCITOSE (VCM < 80)" e :136 usa RDW > 15 para a ANISOCITOSE.
+  const VCM_MICROCITOSE = 80
+  const RDW_AMPLIADO = 15
   const ferroEV = (() => {
     // (b) Prefere os valores RELANÇADOS (nova data) sobre os da triagem.
     const hb = Number(exames.hb_novo || examesRedFairy?.hemoglobina || resultadoEritron?.inputs?.hemoglobina || 0)
     const ferritina = Number(exames.ferritina_novo || examesRedFairy?.ferritina || resultadoEritron?.inputs?.ferritina || 0)
+    const sat = Number(exames.sat_novo || examesRedFairy?.satTransf || resultadoEritron?.inputs?.satTransf || 0)
+    const vcm = Number(exames.vcm_novo || examesRedFairy?.vcm || resultadoEritron?.inputs?.vcm || 0)
+    const rdw = Number(exames.rdw_novo || examesRedFairy?.rdw || resultadoEritron?.inputs?.rdw || 0)
     const gestante = form.status_gestacional === "GRÁVIDA"
-    const hbAlvo = isFem ? (gestante ? 11.5 : 12.0) : 13.5
     const label = String(resultadoEritron?.label || '').toUpperCase()
     const obaSugere = (relatorio?.examesComplementares || []).some(e => /FERRO ENDOVENOSO/i.test(e))
       || (relatorio?.alertas || []).some(a => /FERRO ENDOVENOSO/i.test(a?.texto || ''))
-    const contexto = (ferritina > 0 && ferritina < 30) || /MICROCIT|FERRO|SIDEROP/.test(label) || obaSugere
-    const precisa = hb > 0 && (hbAlvo - hb) > 0 && resultadoEritron?.color !== 'green' && contexto
-    return { precisa, hb, gestante }
+
+    const ferritinaBaixa = ferritina > 0 && ferritina < FERRITINA_BAIXA
+    const satConhecida = sat > 0
+    const satBaixa = satConhecida && sat < SAT_BAIXA
+    // Caminho 2: a tríade clássica da ferropenia (o eritron já denuncia).
+    const microcitose = vcm > 0 && vcm < VCM_MICROCITOSE
+    const rdwAmpliado = rdw > 0 && rdw > RDW_AMPLIADO
+    const triade = ferritinaBaixa && microcitose && rdwAmpliado
+
+    const confirmada = ferritinaBaixa && (satBaixa || triade)
+    // O eritron já ter fechado o diagnóstico (o matching usa ferritina E saturação)
+    // ou o motor do OBA já ter sugerido ferro EV também valem como confirmação.
+    const jaDiagnosticada = /MICROCIT|FERRO|SIDEROP/.test(label) || obaSugere
+
+    const precisa = hb > 0 && (confirmada || jaDiagnosticada)
+    // Ferritina baixa sem saturação E sem a tríade: não oferecer — pedir o que falta.
+    const faltaSat = hb > 0 && !precisa && ferritinaBaixa && !satConhecida
+    // Já em uso de ferro: o quadro pode ser DIMÓRFICO (RDW alarga pela resposta, não
+    // pela carência) e a Ganzoni não desconta o que já foi reposto. Não bloqueia a
+    // oferta — avisa quem vai decidir a dose.
+    const jaUsaFerro = (form.medicamentos || []).some(m => /FERRO ORAL|FERRO INJET/i.test(m))
+    return { precisa, faltaSat, jaUsaFerro, hb, ferritina, sat, gestante }
   })()
 
   // Texto do protocolo de ferro EV p/ compartilhar no WhatsApp do paciente.
@@ -1887,6 +1926,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               </div>
             )}
 
+            {/* FERRITINA BAIXA SEM SATURAÇÃO — não oferece o protocolo; pede o exame
+                que falta (Dr. Ramos: a ferritina isolada não confirma a ferropenia). */}
+            {ferroEV.faltaSat && (
+              <div style={{ background:'#FFFBEB', border:'2px solid #FDE68A', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
+                <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#92400E', margin:'0 0 0.4rem' }}>{"FALTA UM EXAME PARA CONFIRMAR O SEU FERRO"}</p>
+                <p style={{ fontSize:'0.8rem', color:'#92400E', lineHeight:1.5, margin:0 }}>
+                  {"A sua ferritina está baixa ("}<strong>{ferroEV.ferritina}{" ng/mL"}</strong>{"), mas ela sozinha não fecha o diagnóstico: a ferritina também sobe com inflamação e pode enganar. Para confirmar a falta de ferro é preciso a "}
+                  <strong>{"SATURAÇÃO DA TRANSFERRINA"}</strong>
+                  {". Faça esse exame e volte para reavaliar — se ela também estiver baixa, o protocolo de reposição de ferro endovenoso passa a ser indicado para você."}
+                </p>
+              </div>
+            )}
+
             {/* FERRO ENDOVENOSO — 2ª oferta (reabrir protocolo + prescrição + copiar p/ WhatsApp do paciente) */}
             {ferroEV.precisa && (
               <div style={{ background:'#FFF1F2', border:'2px solid #FDA4AF', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
@@ -1894,6 +1946,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 <p style={{ fontSize:'0.8rem', color:'#9F1239', lineHeight:1.5, margin:'0 0 0.7rem' }}>
                   {"No bariátrico, o ferro oral é mal absorvido — a reposição por via endovenosa é a indicada. Você pode rever o protocolo completo, solicitar a prescrição médica ou levar o resumo para o seu WhatsApp."}
                 </p>
+                {ferroEV.jaUsaFerro && (
+                  <div style={{ background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:8, padding:'0.6rem 0.8rem', margin:'0 0 0.7rem' }}>
+                    <p style={{ fontSize:'0.76rem', color:'#92400E', lineHeight:1.5, margin:0 }}>
+                      {"⚠ Você já está em uso de ferro. Isso muda a leitura e o cálculo: o seu sangue pode ter duas populações de hemácias ao mesmo tempo (as antigas, pequenas, e as novas, já normais), e a dose calculada aqui "}
+                      <strong>{"não desconta o ferro que você já recebeu"}</strong>
+                      {". Leve ao médico o que já foi usado — dose, via e há quanto tempo — para ele ajustar. Repor a mais também faz mal."}
+                    </p>
+                  </div>
+                )}
                 <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
                   <input type="checkbox" checked={querFerroEV} onChange={e => setQuerFerroEV(e.target.checked)} style={{ ...checkBox, accentColor:'#E11D48' }} />
                   <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#9F1239' }}>{"COPIAR O PROTOCOLO DE REPOSIÇÃO DE FERRO ENDOVENOSO"}</span>
@@ -1975,13 +2036,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const estadoInfo = ESTADO_UI[estadoClinico?.estado] || ESTADO_UI.RAZOAVEL
     const BG_BAND = { position:'absolute', top:0, left:0, right:0, height:360, pointerEvents:'none' }
 
-    // Gatilho do PROTOCOLO DE FERRO ENDOVENOSO. ATENÇÃO: resultadoEritron carrega só
-    // { label, color, inputs } (sem diagnostico/recomendacao), por isso o contexto
-    // ferropênico é detectado por: FERRITINA BAIXA (< 30), label MICROCÍTICO (marca
-    // da ferropenia) ou o motor do OBA sugerindo ferro EV. Gate: Hb abaixo do alvo
-    // (por sexo/gestante) e sem sobrecarga (color verde). O bariátrico absorve mal o
-    // ferro oral → ferro EV é a via de escolha.
-    // Gatilho/dados vêm de `ferroEV` (fonte única definida acima — vale p/ relatório e conclusão).
+    // Gatilho do PROTOCOLO DE FERRO ENDOVENOSO — fonte única em `ferroEV` (definido
+    // acima, vale p/ relatório e conclusão). A ferropenia precisa estar CONFIRMADA
+    // por ferritina < 30 E saturação < 20% (a ferritina isolada engana: sobe com
+    // inflamação), ou já diagnosticada pelo eritron/motor. Nem a Hb no alvo nem o
+    // eritron verde bloqueiam: no bariátrico a ferropenia SEM anemia é indicação
+    // legítima (a via oral absorve mal). Sem a saturação → `ferroEV.faltaSat`, que
+    // pede o exame em vez de oferecer o protocolo.
     const precisaFerroEV = ferroEV.precisa
 
     // (passo 2) COMPARAÇÃO com a avaliação anterior (follow-up): estado clínico,
@@ -2252,6 +2313,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                           ))}
                         </div>
                       </div>
+                      {/* FERRITINA BAIXA SEM SATURAÇÃO: em vez do protocolo, pede o
+                          exame que confirma (a ferritina isolada sobe com inflamação). */}
+                      {/ERITRON/i.test(m.titulo || '') && ferroEV.faltaSat && (
+                        <div style={{ marginBottom:'0.8rem', background:'#FFFBEB', border:'2px solid #FDE68A', borderRadius:12, padding:'0.8rem 0.9rem' }}>
+                          <p style={{ fontSize:'0.78rem', fontWeight:800, color:'#92400E', margin:'0 0 0.3rem' }}>{"FALTA A SATURAÇÃO DA TRANSFERRINA"}</p>
+                          <p style={{ fontSize:'0.76rem', color:'#92400E', lineHeight:1.5, margin:0 }}>
+                            {"Sua ferritina está baixa ("}{ferroEV.ferritina}{" ng/mL), mas ela sozinha não confirma a falta de ferro — sobe com inflamação e engana. Faça a SATURAÇÃO DA TRANSFERRINA e volte para reavaliar: se ela também estiver baixa, indicamos o protocolo de reposição endovenosa."}
+                          </p>
+                        </div>
+                      )}
                       {/* PROTOCOLO DE FERRO ENDOVENOSO logo abaixo do módulo ERITRON */}
                       {/ERITRON/i.test(m.titulo || '') && precisaFerroEV && (
                         <button onClick={() => setShowFerroEV(true)}

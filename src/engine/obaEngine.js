@@ -262,6 +262,24 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
     }
   }
 
+  // ── FERRO EM USO + RDW ALARGADO: quadro possivelmente DIMÓRFICO ──────────
+  // Levantado pelo Dr. Ramos (jul/2026). Num sistema ferropênico que RECEBEU ferro,
+  // convivem duas populações de hemácias — as velhas, microcíticas, e as novas,
+  // normais. O RDW alarga por causa DISSO: é a assinatura da RESPOSTA, não
+  // necessariamente da carência ativa. Ler esse RDW como ferropenia pura leva a
+  // repor ferro em quem já está respondendo.
+  // O sistema sabe SE usa ferro (medicamentos), mas não HÁ QUANTO TEMPO nem QUE
+  // DOSE — sem isso não dá para estimar a reação hematopoética, então o motor não
+  // conclui: sinaliza e manda medir a resposta (reticulócitos).
+  const _usaFerroOralDim = (dadosOBA.medicamentos || []).some(m => /FERRO ORAL/i.test(m))
+  const _usaFerroEVDim   = (dadosOBA.medicamentos || []).some(m => /FERRO INJET|FERRO VENOSO/i.test(m))
+  const _usaFerroDim     = _usaFerroOralDim || _usaFerroEVDim
+  const _rdwDim = Number(resultadoEritron?.inputs?.rdw ?? examesOBA?.rdw_novo)
+  if (_usaFerroDim && Number.isFinite(_rdwDim) && _rdwDim > 15) {
+    alertas.push({ nivel: MODERADO, texto: `RDW ALARGADO (${_rdwDim}%) EM PACIENTE JÁ EM USO DE FERRO — QUADRO POSSIVELMENTE DIMÓRFICO: O ALARGAMENTO PODE SER A RESPOSTA AO TRATAMENTO (HEMÁCIAS NOVAS NORMAIS CONVIVENDO COM AS ANTIGAS MICROCÍTICAS), NÃO CARÊNCIA ATIVA. NÃO LER COMO FERROPENIA PURA: SOLICITAR RETICULÓCITOS PARA MEDIR A RESPOSTA E CONSIDERAR A DOSE JÁ REPOSTA ANTES DE CALCULAR NOVA DOSE (A FÓRMULA DE GANZONI NÃO DESCONTA O QUE JÁ ENTROU).` })
+    examesSuger.push('RETICULÓCITOS (MEDIR A RESPOSTA AO FERRO JÁ EM USO)')
+  }
+
   // ── COOMBS DIRETO (teste de antiglobulina direto) — exame SUGERIDO quando há
   //    ANEMIA (eritron), ARTRITE ou FAN REAGENTE. Rastreia componente hemolítico/
   //    autoimune. Não gera alerta, só entra na lista de exames complementares. ──
