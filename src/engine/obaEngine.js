@@ -213,6 +213,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modCardio = buildModCardiovascular(dadosOBA, resultadoEritron, examesOBA, alertas, examesSuger)
   if (modCardio) modulos.push(modCardio)
 
+  // ── 15c. MÓDULO RESPIRATÓRIO / TABAGISMO ────────────────────────────────
+  const modResp = buildModRespiratorio(dadosOBA, examesOBA, alertas, examesSuger)
+  if (modResp) modulos.push(modResp)
+
   // ── 16. MÓDULO STATUS INTESTINAL ─────────────────────────────────────────
   const modIntestinal = buildModIntestinal(dadosOBA, alertas, examesSuger)
   if (modIntestinal) modulos.push(modIntestinal)
@@ -1873,6 +1877,25 @@ function buildModComportamental(dados, alertas, suger) {
     suger.push('AVALIAÇÃO COM PSIQUIATRA (compulsão por álcool)')
   }
 
+  // CANNABIS como COMPULSÃO — era órfã (este módulo tratava álcool/doces/comida/gelo/
+  // compras/jogo, nunca cannabis nem cigarro). MODERADO por decisão do Dr. Ramos, mesmo
+  // peso do tabagismo. Cuidado: cannabis MEDICINAL é outra coisa e a plataforma até
+  // oferece prescritor (status_fibromialgia) — o texto separa uso de perda de controle.
+  if (compulsoes.includes('CANNABIS')) {
+    temAlgo = true
+    if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+    const usaMedicinal = (dados.status_fibromialgia || []).includes('EM USO DE CANNABIS MEDICINAL')
+    linhas.push('COMPULSÃO POR CANNABIS: NO PÓS-BARIÁTRICO, ISSO PODE SER TRANSFERÊNCIA DE ADIÇÃO — O MESMO MECANISMO DO ÁLCOOL, EM QUE O COMPORTAMENTO COMPULSIVO COM A COMIDA MIGRA PARA OUTRA SUBSTÂNCIA. AVALIAÇÃO COM PSIQUIATRA/PSICÓLOGO.')
+    linhas.push('DOIS PONTOS ESPECÍFICOS DO SEU CASO: (1) A CANNABIS AUMENTA O APETITE — É FATOR DE RISCO DIRETO PARA REGANHO DE PESO; (2) SE VOCÊ TEM VÔMITOS CÍCLICOS OU NÁUSEAS QUE VÃO E VOLTAM, SAIBA QUE O USO CRÔNICO PODE CAUSAR A SÍNDROME DE HIPEREMESE CANABINOIDE — QUE NO BARIÁTRICO É FACILMENTE CONFUNDIDA COM DUMPING OU COM ESTENOSE DA ANASTOMOSE, E LEVA A INVESTIGAÇÃO E TRATAMENTO ERRADOS. INFORME O SEU MÉDICO SOBRE O USO.')
+    if (usaMedicinal) {
+      // Evita a contradição com a linha "os canabinóides são os medicamentos mais
+      // poderosos..." do módulo fibromiálgico, que ela lê no mesmo relatório.
+      linhas.push('VOCÊ TAMBÉM REGISTROU USO DE CANNABIS MEDICINAL: AS DUAS COISAS NÃO SE ANULAM. O CANABINOIDE PRESCRITO E ACOMPANHADO TEM PAPEL TERAPÊUTICO RECONHECIDO (VEJA O CARD DO STATUS FIBROMIÁLGICO) — O QUE ESTÁ EM QUESTÃO AQUI NÃO É A SUBSTÂNCIA, É A PERDA DE CONTROLE SOBRE O USO. LEVE ESSE PONTO AO MÉDICO QUE ACOMPANHA A SUA PRESCRIÇÃO: DOSE, VIA E FINALIDADE PRECISAM SER REVISTAS COM ELE, NÃO AJUSTADAS POR CONTA PRÓPRIA.')
+    }
+    alertas.push({ nivel: MODERADO, texto: `COMPULSÃO POR CANNABIS no pós-bariátrico (possível transferência de adição) — aumenta o apetite (risco de reganho) e o uso crônico pode causar hiperemese canabinoide, confundível com dumping/estenose.${usaMedicinal ? ' Paciente também em uso MEDICINAL: revisar dose/finalidade com o prescritor (o problema é a perda de controle, não a substância).' : ''}` })
+    suger.push('AVALIAÇÃO COM PSIQUIATRA (compulsão por cannabis)')
+  }
+
   if (compulsoes.includes('DOCES') || compulsoes.includes('COMIDA')) {
     temAlgo = true
     if (nivelGeral !== GRAVE) nivelGeral = MODERADO
@@ -2321,6 +2344,93 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
   }
 }
 
+// O fumo entra por DUAS portas da anamnese. Helper único para que qualquer módulo
+// possa perguntar "esta paciente fuma?" — o cardiovascular usa isso para deixar de
+// citar tabagismo genericamente na crítica da aterosclerose.
+function pacienteFuma(dados) {
+  const resp = Array.isArray(dados.status_respiratorio) ? dados.status_respiratorio : []
+  const comp = Array.isArray(dados.compulsoes) ? dados.compulsoes : []
+  return resp.includes('TABAGISTA | DPOC') || comp.includes('CIGARRO / TABACO')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO — RESPIRATÓRIO / TABAGISMO
+// O fumo era coletado em DOIS lugares e ignorado nos dois: 'TABAGISTA | DPOC'
+// (status_respiratorio) e 'CIGARRO / TABACO' (compulsoes — buildModComportamental
+// só trata álcool/doces/comida/gelo/compras/jogo). Aqui os dois viram UM achado.
+// Antes disso o motor já FALAVA de tabagismo sem saber se a paciente fuma: a
+// crítica do CEA elevado ("tabagismo também eleva CEA") e a da aterosclerose.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModRespiratorio(dados, examesOBA, alertas, suger) {
+  const resp = Array.isArray(dados.status_respiratorio) ? dados.status_respiratorio : []
+  const comp = Array.isArray(dados.compulsoes) ? dados.compulsoes : []
+  const temResp = (x) => resp.includes(x)
+
+  const tabagista = pacienteFuma(dados)
+  const compulsaoCigarro = comp.includes('CIGARRO / TABACO')
+
+  const RANK = { [GRAVE]: 3, [MODERADO]: 2, [LEVE]: 1, [NORMAL]: 0 }
+  let nivel = NORMAL
+  const bump = (n) => { if (RANK[n] > RANK[nivel]) nivel = n }
+  const linhas = []
+
+  if (tabagista) {
+    // MODERADO por decisão do Dr. Ramos (jul/2026): o risco do cigarro é CRÔNICO, não
+    // agudo. Como GRAVE, todo fumante viraria CRÍTICO sozinho (a régua faz graves>=1 →
+    // CRÍTICO) — e fumar é comum: gastaria o rótulo e diluiria o alarme dos casos
+    // realmente agudos. Quem fuma E tem outro achado sobe pela régua naturalmente.
+    bump(MODERADO)
+    linhas.push('TABAGISMO: É O FATOR DE RISCO EVITÁVEL MAIS IMPORTANTE QUE VOCÊ PODE TRATAR HOJE. NO PÓS-BARIÁTRICO ELE PESA AINDA MAIS: O CIGARRO MULTIPLICA O RISCO DE ÚLCERA NA ANASTOMOSE (A EMENDA CIRÚRGICA), QUE PODE SANGRAR, PERFURAR E EXIGIR NOVA CIRURGIA. É A COMPLICAÇÃO TARDIA MAIS ASSOCIADA AO FUMO NESSE GRUPO.')
+    linhas.push('O CIGARRO TAMBÉM ATACA O SEU FERRO POR DOIS CAMINHOS: A ÚLCERA E A GASTRITE SANGRAM DE FORMA OCULTA E CRÔNICA, E O MONÓXIDO DE CARBONO OCUPA O LUGAR DO OXIGÊNIO NA HEMOGLOBINA — O QUE PODE MASCARAR UMA ANEMIA, PORQUE O CORPO PRODUZ MAIS GLÓBULOS PARA COMPENSAR E A HEMOGLOBINA "PARECE" MELHOR DO QUE A SUA OXIGENAÇÃO REAL.')
+    linhas.push('SOMANDO: TABAGISMO É FATOR DE RISCO PARA ATEROSCLEROSE, INFARTO, AVC E PARA VÁRIOS CÂNCERES (PULMÃO, ESÔFAGO, ESTÔMAGO, BEXIGA). PARAR DE FUMAR TEM BENEFÍCIO EM QUALQUER IDADE E EM QUALQUER TEMPO DE CIRURGIA — PEÇA AJUDA, EXISTE TRATAMENTO (O SUS OFERECE O PROGRAMA DE CESSAÇÃO GRATUITO).')
+    // O checkbox junta TABAGISTA e DPOC numa opção só: quem tem DPOC e JÁ PAROU
+    // receberia uma ordem de parar de fumar deslocada. Enquanto o dado for ambíguo,
+    // o texto cobre os dois cenários em vez de presumir fumo ativo.
+    if (temResp('TABAGISTA | DPOC')) {
+      linhas.push('SE VOCÊ JÁ PAROU DE FUMAR E MARCOU ESSA OPÇÃO POR CAUSA DO DPOC: PARABÉNS, A DECISÃO MAIS IMPORTANTE JÁ FOI TOMADA. O DPOC AINDA ASSIM PEDE ACOMPANHAMENTO PNEUMOLÓGICO, VACINAÇÃO EM DIA (GRIPE E PNEUMOCOCO) E ATENÇÃO AO CORTICOIDE ORAL REPETIDO, QUE PREJUDICA O OSSO — JÁ FRÁGIL NO PÓS-BARIÁTRICO.')
+      suger.push('AVALIAÇÃO PNEUMOLÓGICA')
+    }
+    alertas.push({ nivel: MODERADO, texto: 'TABAGISMO NO PÓS-BARIÁTRICO — RISCO MUITO AUMENTADO DE ÚLCERA DE ANASTOMOSE (SANGRAMENTO/PERFURAÇÃO) E DE SANGRIA OCULTA QUE AGRAVA A FERROPENIA; O CO MASCARA A ANEMIA. FATOR DE RISCO EVITÁVEL — ENCAMINHAR PARA CESSAÇÃO DO TABAGISMO.' })
+    suger.push('AVALIAÇÃO PARA CESSAÇÃO DO TABAGISMO')
+    suger.push('SANGUE OCULTO NAS FEZES')
+
+    if (compulsaoCigarro) {
+      linhas.push('VOCÊ MARCOU O CIGARRO COMO COMPULSÃO: NO PÓS-BARIÁTRICO ISSO PODE SER TRANSFERÊNCIA DE ADIÇÃO (O COMPORTAMENTO COMPULSIVO COM A COMIDA MIGRA PARA OUTRA SUBSTÂNCIA) — O MESMO MECANISMO DO ÁLCOOL. TRATAR SÓ A NICOTINA SEM OLHAR O COMPORTAMENTO TENDE A FALHAR: AVALIAÇÃO COM PSIQUIATRA/PSICÓLOGO JUNTO COM A CESSAÇÃO.')
+      suger.push('AVALIAÇÃO COM PSIQUIATRA (compulsão por cigarro — transferência de adição)')
+    }
+
+    // O CEA já é explicado no módulo oncológico (que cita tabagismo genericamente,
+    // sem saber se ela fuma). Aqui só se acrescenta o que ELE não pode dizer — sem
+    // repetir o valor nem a explicação, que a paciente já leu no card de lá.
+    // Corte DIMÓRFICO, o mesmo do oncológico (l.1620): M 5 / F 3.8. O gate de idade
+    // também é o de lá (l.1608): sem ele, um CEA em <40 remeteria a um card que não
+    // existe. Hoje inalcançável (a UI só oferece CEA a partir dos 40), mas a remissão
+    // não pode depender de um detalhe da tela para não mentir.
+    const cea = Number(examesOBA?.cea)
+    const limCea = dados.sexo === 'M' ? 5 : 3.8
+    if (Number(dados.idade) >= 40 && Number.isFinite(cea) && cea > limCea) {
+      linhas.push('SOBRE O SEU CEA ELEVADO (VEJA O CARD DE RASTREAMENTO ONCOLÓGICO): O CIGARRO REALMENTE ELEVA ESSE MARCADOR, MAS NÃO USE ISSO COMO EXPLICAÇÃO PARA DEIXAR DE INVESTIGAR — SÓ O ONCOLOGISTA PODE CONCLUIR QUE A CAUSA É BENIGNA, DEPOIS DE AFASTAR AS OUTRAS.')
+    }
+  }
+
+  if (temResp('ASMA | BRONCOESPASMOS')) {
+    bump(LEVE)
+    linhas.push('ASMA / BRONCOESPASMOS: A PERDA DE PESO COSTUMA MELHORAR MUITO O CONTROLE DA ASMA. SE VOCÊ USA CORTICOIDE ORAL COM FREQUÊNCIA, INFORME AO SEU MÉDICO — O USO REPETIDO PREJUDICA O OSSO, QUE JÁ É UM PONTO FRÁGIL NO PÓS-BARIÁTRICO. MANTENHA O ACOMPANHAMENTO PNEUMOLÓGICO E A VACINAÇÃO EM DIA.')
+    alertas.push({ nivel: LEVE, texto: 'ASMA / BRONCOESPASMOS — A PERDA DE PESO TENDE A MELHORAR O CONTROLE; ATENÇÃO AO CORTICOIDE ORAL REPETIDO (RISCO ÓSSEO SOMADO AO DO PÓS-BARIÁTRICO).' })
+  }
+
+  if (temResp('RINITE | SINUSITE')) {
+    bump(LEVE)
+    linhas.push('RINITE / SINUSITE: CONDIÇÃO COMUM E EM GERAL BENIGNA. SE HÁ ALERGIA ENVOLVIDA, O CONTROLE AMBIENTAL AJUDA. A RESPIRAÇÃO PELA BOCA QUE ELA CAUSA PIORA O RONCO E A QUALIDADE DO SONO — RELEVANTE SE VOCÊ TAMBÉM TEM APNEIA.')
+    // Alerta LEVE pelo mesmo motivo de SOP/cistos (f5352d0): sem ele o achado não
+    // aparece no topo do card do médico, que lista os alertas.
+    alertas.push({ nivel: LEVE, texto: 'RINITE / SINUSITE — EM GERAL BENIGNA; A RESPIRAÇÃO BUCAL PIORA RONCO E SONO (RELEVANTE SE HOUVER APNEIA).' })
+  }
+
+  if (!linhas.length) return null
+  return { id: 'respiratorio', titulo: 'SAÚDE RESPIRATÓRIA', nivel, linhas }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MÓDULO — CARDIOVASCULAR (declarado na anamnese)
 // Crítica SIMPLIFICADA por decisão do Dr. Ramos (jul/2026): reconhecer os achados
@@ -2387,7 +2497,10 @@ function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, sug
   if (ateros.length) {
     bump(GRAVE)
     precisaCardio = true
-    linhas.push(`${ateros.join(' + ')}: A ATEROSCLEROSE NÃO É UMA DOENÇA DE UM VASO SÓ — QUEM TEM PLACA NA CARÓTIDA OU NAS PERNAS TEM RISCO AUMENTADO NAS CORONÁRIAS E NO CÉREBRO TAMBÉM. ISSO PEDE AVALIAÇÃO CARDIOLÓGICA E CONTROLE RIGOROSO DOS FATORES DE RISCO (LÍPIDES, PRESSÃO, GLICEMIA E TABAGISMO).`)
+    // Agora o motor SABE se ela fuma (pacienteFuma) — não citar tabagismo às cegas
+    // numa lista genérica de fatores de risco: ou é o fator dela, ou não se menciona.
+    const fuma = pacienteFuma(dados)
+    linhas.push(`${ateros.join(' + ')}: A ATEROSCLEROSE NÃO É UMA DOENÇA DE UM VASO SÓ — QUEM TEM PLACA NA CARÓTIDA OU NAS PERNAS TEM RISCO AUMENTADO NAS CORONÁRIAS E NO CÉREBRO TAMBÉM. ISSO PEDE AVALIAÇÃO CARDIOLÓGICA E CONTROLE RIGOROSO DOS FATORES DE RISCO (LÍPIDES, PRESSÃO E GLICEMIA).${fuma ? ' E, NO SEU CASO, O FATOR MAIS URGENTE É O CIGARRO: FUMAR COM ATEROSCLEROSE JÁ INSTALADA ACELERA A PLACA E MULTIPLICA O RISCO DE INFARTO E AVC — VEJA O CARD DE SAÚDE RESPIRATÓRIA.' : ''}`)
     alertas.push({ nivel: GRAVE, texto: `${ateros.join(' + ')} — DOENÇA ATEROSCLERÓTICA ESTABELECIDA (RISCO SISTÊMICO, NÃO LOCAL). AVALIAÇÃO CARDIOLÓGICA E CONTROLE DOS FATORES DE RISCO.` })
   }
 
