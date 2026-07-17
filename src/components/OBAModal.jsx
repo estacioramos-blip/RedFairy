@@ -1719,6 +1719,90 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     '— Projeto OBA®',
   ].join('\n')
 
+  // TELECONSULTA CONSOLIDADA (Dr. Ramos, jul/2026): antes, até 6 caixas diferentes
+  // pediam teleconsulta na mesma avaliação, mais ~30 "AVALIAÇÃO COM [especialista]"
+  // espalhadas. Agora UM card único junta os MOTIVOS clínicos + os ESPECIALISTAS
+  // (extraídos das recomendações 'avaliacao' do relatório). Canabinoide grátis e
+  // teleconsulta de dúvida ficam SEPARADOS (natureza própria).
+  const tele = (() => {
+    const estado = estadoClinico?.estado
+    const motivos = []
+    if (estado === 'CRITICO' || estado === 'RUIM') motivos.push('seu estado clínico atual merece atenção médica próxima')
+    // Endometriose NÃO entra como motivo: o encaminhamento "AVALIAÇÃO GINECOLÓGICA
+    // (ACOMPANHAMENTO DE ENDOMETRIOSE)" já entra na lista de especialistas — seria a
+    // mesma coisa em duas listas do mesmo card (a repetição que se quer eliminar).
+    // Só quando INTERROMPEU (usou e não usa mais) — mesmo gatilho do motor
+    // (obaEngine ~l.1305). Quem ainda usa não "interrompeu"; afirmar isso seria falso.
+    if (form.usou_anticoagulante && !form.usa_anticoagulante) motivos.push('trombose prévia com o anticoagulante já interrompido — risco de novo evento')
+    // Condição em texto livre: se ela informou algo que a anamnese não cobre, entra
+    // como motivo (senão o card não aparece e a caixa "condição informada" ficava
+    // recomendando teleconsulta por fora — achado da revisão).
+    if ((form.outra_condicao || '').trim()) motivos.push('uma condição de saúde que você informou e que merece avaliação médica')
+    // Especialistas: as recomendações 'avaliacao' que são ENCAMINHAMENTO A ESPECIALISTA.
+    // Exclui "AVALIAÇÃO PARA X" (trombofilia/cessação/ferro EV) e POLISSONOGRAFIA — que
+    // são exame/procedimento, não médico, e ficam na seção Recomendações.
+    const naoEspecialista = (e) => /^AVALIA[ÇC][ÃA]O PARA |POLISSONOGRAFIA/i.test(String(e).trim())
+    const especialistas = [...new Set((relatorio?.examesComplementares || [])
+      .filter(e => categoriaRecomendacao(e) === 'avaliacao' && !naoEspecialista(e)))]
+    const recomendada = motivos.length > 0 || especialistas.length > 0
+    return { recomendada, motivos, especialistas }
+  })()
+
+  // Mensagem única do WhatsApp com os motivos e os especialistas.
+  const msgTeleconsulta = (() => {
+    const partes = ['Olá! Concluí minha avaliação OBA e desejo marcar uma teleconsulta médica.']
+    if (tele.especialistas.length) partes.push('Avaliações sugeridas: ' + tele.especialistas.join('; ') + '.')
+    return partes.join(' ')
+  })()
+
+  // Card único de teleconsulta — usado nas etapas relatorio e conclusao.
+  function CardTeleconsulta() {
+    if (!tele.recomendada) return null
+    // Estilos locais: checkBox/waBtn originais viviam só no bloco da etapa 'conclusao',
+    // fora do escopo desta função (o code-reviewer pegou o ReferenceError).
+    const checkBox = { width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#2563EB', flexShrink:0 }
+    const waBtn = { display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none', cursor:'pointer', border:'none', fontFamily:'inherit', marginTop:'0.7rem' }
+    return (
+      <div style={{ background:'#EFF6FF', border:'2px solid #93C5FD', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
+        <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#1E40AF', margin:'0 0 0.4rem' }}>{"RECOMENDAMOS TELECONSULTA MÉDICA"}</p>
+        {tele.motivos.length > 0 && (
+          <>
+            <p style={{ fontSize:'0.8rem', color:'#1D4ED8', lineHeight:1.5, margin:'0 0 0.3rem' }}>{"Sua avaliação indica conversar com um médico, por:"}</p>
+            <ul style={{ margin:'0 0 0.6rem', paddingLeft:'1.1rem' }}>
+              {tele.motivos.map((m, i) => (
+                <li key={i} style={{ fontSize:'0.78rem', color:'#1D4ED8', lineHeight:1.5 }}>{m}</li>
+              ))}
+            </ul>
+          </>
+        )}
+        {tele.especialistas.length > 0 && (
+          <>
+            <p style={{ fontSize:'0.8rem', color:'#1D4ED8', lineHeight:1.5, margin:'0 0 0.3rem', fontWeight:700 }}>{tele.especialistas.length > 1 ? "Especialistas sugeridos pela sua avaliação:" : "Especialista sugerido pela sua avaliação:"}</p>
+            <ul style={{ margin:'0 0 0.6rem', paddingLeft:'1.1rem' }}>
+              {tele.especialistas.map((e, i) => (
+                <li key={i} style={{ fontSize:'0.78rem', color:'#1D4ED8', lineHeight:1.5 }}>{e}</li>
+              ))}
+            </ul>
+            <p style={{ fontSize:'0.74rem', color:'#3B82F6', lineHeight:1.5, margin:'0 0 0.7rem', fontStyle:'italic' }}>{"Uma única teleconsulta pode organizar esses encaminhamentos — o médico avalia e direciona."}</p>
+          </>
+        )}
+        <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+          <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={{ ...checkBox, accentColor:'#2563EB' }} />
+          <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#1E40AF' }}>{"SIM, DESEJO MARCAR UMA TELECONSULTA"}</span>
+        </label>
+        {querTeleconsulta && (
+          <div style={{ marginTop:'0.8rem', background:'white', border:'1px solid #BFDBFE', borderRadius:10, padding:'0.8rem 0.9rem' }}>
+            <p style={{ fontSize:'0.8rem', color:'#374151', margin:0 }}>
+              {"Valor da teleconsulta: "}
+              <strong style={{ color:'#7B1E1E' }}>{valorTeleconsulta != null ? `R$ ${valorTeleconsulta}` : "a confirmar"}</strong>
+            </p>
+            <button style={waBtn} onClick={() => abrirWhats(msgTeleconsulta)}>{"Falar no WhatsApp →"}</button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // Gera o PDF do protocolo de ferro EV (jsPDF carregado sob demanda p/ não pesar
   // o bundle inicial). Calcula a dose real pela fórmula de Ganzoni p/ o paciente.
   async function baixarPdfFerro() {
@@ -1764,12 +1848,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   }
 
   if (etapa === 'conclusao') {
-    const estado = estadoClinico?.estado
-    // Endometriose recomenda teleconsulta INDEPENDENTE do estado (Dr. Ramos, jul/2026):
-    // é doença crônica, dolorosa e causa de ferropenia — merece conversa médica mesmo
-    // quando o resto da avaliação está bem.
-    const temEndometriose = (form.status_ginecologico || []).includes('ENDOMETRIOSE')
-    const teleRecomendada = estado === 'CRITICO' || estado === 'RUIM' || form.usou_anticoagulante || temEndometriose
+    // A recomendação de teleconsulta agora é CONSOLIDADA no componente CardTeleconsulta
+    // (helper `tele`, escopo do componente) — não há mais gatilho local aqui.
     // H. pylori: achado endoscópico OU sorologia IgM reagente (infecção ativa).
     const temHpylori = (form.status_endoscopico || []).includes('H. PYLORI') || form.antiHp_igm === 'REAGENTE'
     // SEGURANÇA: o esquema padrão de erradicação usa AMOXICILINA (penicilina). Se a
@@ -1831,31 +1911,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             {/* TELECONSULTA — se CRÍTICO/RUIM, usou anticoagulante ou tem endometriose.
                 O motivo exibido segue essa mesma ordem: cada paciente lê a razão DELA
                 (antes o "senão" afirmava trombose para todo mundo que não era CRÍTICO/RUIM). */}
-            {teleRecomendada && (
-              <div style={{ background:'#EFF6FF', border:'2px solid #93C5FD', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
-                <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#1E40AF', margin:'0 0 0.4rem' }}>{"RECOMENDAMOS TELECONSULTA MÉDICA"}</p>
-                <p style={{ fontSize:'0.8rem', color:'#1D4ED8', lineHeight:1.5, margin:'0 0 0.7rem' }}>
-                  {(estado === 'CRITICO' || estado === 'RUIM')
-                    ? "Seu estado clínico atual merece avaliação médica próxima."
-                    : form.usou_anticoagulante
-                      ? "Seu histórico (trombose com anticoagulante já interrompido) recomenda avaliação o quanto antes."
-                      : "A endometriose é uma condição crônica que causa dor e perda de ferro — no pós-bariátrico, os dois efeitos se somam. Vale uma conversa médica mesmo com o resto da sua avaliação bem."}
-                </p>
-                <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
-                  <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={{ ...checkBox, accentColor:'#2563EB' }} />
-                  <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#1E40AF' }}>{"SIM, DESEJO MARCAR UMA TELECONSULTA"}</span>
-                </label>
-                {querTeleconsulta && (
-                  <div style={{ marginTop:'0.8rem', background:'white', border:'1px solid #BFDBFE', borderRadius:10, padding:'0.8rem 0.9rem' }}>
-                    <p style={{ fontSize:'0.8rem', color:'#374151', margin:0 }}>
-                      {"Valor da teleconsulta: "}
-                      <strong style={{ color:'#7B1E1E' }}>{valorTeleconsulta != null ? `R$ ${valorTeleconsulta}` : "a confirmar"}</strong>
-                    </p>
-                    <button style={waBtn} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e desejo marcar uma teleconsulta médica.')}>{"Falar no WhatsApp →"}</button>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* TELECONSULTA CONSOLIDADA — card único (motivos + especialistas). */}
+            <CardTeleconsulta />
 
             {/* H. PYLORI — prescrição do tratamento */}
             {temHpylori && (
@@ -2155,39 +2212,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   })}
                 </div>
 
-                {/* CTA TELECONSULTA — estado RUIM/CRÍTICO ou ENDOMETRIOSE (que recomenda
-                    teleconsulta independente do estado; ver o CTA gêmeo da conclusão). */}
-                {(estadoClinico?.estado === 'RUIM' || estadoClinico?.estado === 'CRITICO' || (form.status_ginecologico || []).includes('ENDOMETRIOSE')) && (
-                  <div style={{ background:'#FEF2F2', border:'2px solid #FCA5A5', borderRadius:12, padding:'1rem 1.1rem', marginTop:'1rem' }}>
-                    <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#991B1B', margin:'0 0 0.4rem' }}>
-                      {"Recomendamos uma TELECONSULTA MÉDICA"}
-                    </p>
-                    <p style={{ fontSize:'0.8rem', color:'#7F1D1D', lineHeight:1.5, margin:'0 0 0.7rem' }}>
-                      {(estadoClinico?.estado === 'RUIM' || estadoClinico?.estado === 'CRITICO')
-                        ? "Seu estado clínico atual merece atenção próxima. A plataforma oferece teleconsulta médica via WhatsApp para discutir seus resultados e as condutas."
-                        : "Você informou ENDOMETRIOSE — condição crônica que causa dor e perda de ferro, e que no pós-bariátrico merece acompanhamento próprio. A plataforma oferece teleconsulta médica via WhatsApp para discutir as condutas."}
-                    </p>
-                    <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
-                      <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={{ width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#DC2626' }} />
-                      <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#991B1B' }}>{"SIM, DESEJO MARCAR UMA TELECONSULTA"}</span>
-                    </label>
-                    {querTeleconsulta && (
-                      <div style={{ marginTop:'0.8rem', background:'white', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 0.9rem' }}>
-                        <p style={{ fontSize:'0.8rem', color:'#374151', margin:'0 0 0.6rem' }}>
-                          {"Valor da teleconsulta: "}
-                          <strong style={{ color:'#7B1E1E' }}>{valorTeleconsulta != null ? `R$ ${valorTeleconsulta}` : "a confirmar"}</strong>
-                        </p>
-                        <a
-                          href={`https://wa.me/5571997110804?text=${encodeURIComponent('Olá! Concluí minha avaliação OBA e desejo marcar uma teleconsulta médica.')}`}
-                          target="_blank" rel="noreferrer"
-                          style={{ display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none' }}
-                        >
-                          {"Falar no WhatsApp →"}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* TELECONSULTA CONSOLIDADA — card único (motivos + especialistas).
+                    Mesmo componente da conclusão; substitui os 2 CTAs gêmeos antigos. */}
+                <div style={{ marginTop:'1rem' }}><CardTeleconsulta /></div>
 
                 {/* Linha-resumo da cirurgia */}
                 <div style={{ display:'flex', flexWrap:'wrap', gap:'0.5rem', marginTop:'1rem' }}>
@@ -2273,7 +2300,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 {(form.outra_condicao || '').trim() && (
                   <div style={{ background:'#EFF6FF', border:'2px solid #BFDBFE', borderRadius:12, padding:'1rem 1.1rem', marginTop:'1rem' }}>
                     <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#1E40AF', margin:'0 0 0.5rem' }}>{"Condi\u00e7\u00e3o informada por voc\u00ea"}</p>
-                    <p style={{ fontSize:'0.8rem', color:'#1E3A8A', lineHeight:1.5, margin:'0 0 0.6rem' }}>{"Voc\u00ea informou a condi\u00e7\u00e3o cl\u00ednica abaixo. Recomendamos uma Teleconsulta m\u00e9dica para que seja melhor avaliada."}</p>
+                    {/* Recomenda\u00e7\u00e3o de teleconsulta consolidada no card \u00fanico (esta condi\u00e7\u00e3o
+                        j\u00e1 entra como motivo l\u00e1) \u2014 aqui s\u00f3 se registra o que ela escreveu. */}
+                    <p style={{ fontSize:'0.8rem', color:'#1E3A8A', lineHeight:1.5, margin:'0 0 0.6rem' }}>{"Voc\u00ea informou a condi\u00e7\u00e3o cl\u00ednica abaixo \u2014 ela est\u00e1 inclu\u00edda na recomenda\u00e7\u00e3o de teleconsulta acima."}</p>
                     <p style={{ fontSize:'0.82rem', color:'#111827', lineHeight:1.5, margin:0, whiteSpace:'pre-wrap', background:'white', border:'1px solid #DBEAFE', borderRadius:8, padding:'0.6rem 0.7rem' }}>{form.outra_condicao}</p>
                   </div>
                 )}
@@ -2339,6 +2368,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   const grupos = {}
                   rel.examesComplementares.forEach(ex => {
                     const c = categoriaRecomendacao(ex)
+                    // Encaminhamentos a ESPECIALISTA migraram para o card único de
+                    // TELECONSULTA (consolidação Dr. Ramos). "AVALIAÇÃO PARA X" e
+                    // POLISSONOGRAFIA NÃO são especialista — ficam aqui.
+                    if (c === 'avaliacao' && !/^AVALIA[ÇC][ÃA]O PARA |POLISSONOGRAFIA/i.test(String(ex).trim())) return
                     ;(grupos[c] = grupos[c] || []).push(ex)
                   })
                   return (
@@ -3160,7 +3193,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       <label style={{ display:'block', fontSize:'0.72rem', fontWeight:700, color:'#374151', margin:'0.5rem 0 0.3rem' }}>{"Quantos abortamentos espont\u00e2neos?"}</label>
                       <input style={{ ...inpA, maxWidth:120 }} onWheel={noWheel} type="number" min="1" max="20" step="1" placeholder={"1, 2, 3..."} value={form.abortamentos_numero} onChange={e => sf('abortamentos_numero', e.target.value)} />
                       <p style={{ fontSize:'0.75rem', fontWeight:700, color:'#7B1E1E', margin:'0.5rem 0 0', lineHeight:1.45 }}>
-                        {"Essa informa\u00e7\u00e3o \u00e9 CR\u00cdTICA, informe a seu obstetra e marque teleconsulta com Hematologista."}
+                        {"Essa informa\u00e7\u00e3o \u00e9 CR\u00cdTICA, informe a seu obstetra; indicada avalia\u00e7\u00e3o com Hematologista."}
                       </p>
                     </>
                   )}

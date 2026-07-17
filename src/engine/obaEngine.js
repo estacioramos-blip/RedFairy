@@ -416,13 +416,13 @@ function buildModIndicacao(dadosOBA, alertas) {
     nivel = MODERADO
     alertas.push({ nivel: MODERADO, texto: 'CIRURGIA POR HEMOCROMATOSE: contexto de ferro invertido — suplementação de ferro contraindicada.' })
   } else if (indic.includes('METÁBOLICA') || indic.includes('METABÓLICA') || indic.includes('DIABETES')) {
-    linhas.push('É IMPORTANTE AVALIAR QUANTO DO OBJETIVO DA CIRURGIA FOI ATINGIDO, COMPARANDO OS EXAMES ANTERIORES AO PROCEDIMENTO COM OS POSTERIORES. ORGANIZE OS EXAMES PRÉ E PÓS-CIRÚRGICOS POR DATA E MARQUE UMA TELECONSULTA MÉDICA VIA PLATAFORMA PARA SER ADEQUADAMENTE ORIENTADO. SE OS EXAMES TÊM MAIS DE 90 DIAS, SOLICITE AO MÉDICO O PEDIDO PARA NOVOS EXAMES.')
+    linhas.push('É IMPORTANTE AVALIAR QUANTO DO OBJETIVO DA CIRURGIA FOI ATINGIDO, COMPARANDO OS EXAMES ANTERIORES AO PROCEDIMENTO COM OS POSTERIORES. ORGANIZE OS EXAMES PRÉ E PÓS-CIRÚRGICOS POR DATA PARA SER ADEQUADAMENTE ORIENTADO NA AVALIAÇÃO MÉDICA. SE OS EXAMES TÊM MAIS DE 90 DIAS, SOLICITE AO MÉDICO O PEDIDO PARA NOVOS EXAMES.')
     nivel = LEVE
-    alertas.push({ nivel: LEVE, texto: 'INDICAÇÃO METABÓLICA/DIABETES: avaliar quanto do objetivo da cirurgia foi atingido — comparar exames pré e pós e marcar teleconsulta.' })
+    alertas.push({ nivel: LEVE, texto: 'INDICAÇÃO METABÓLICA/DIABETES: avaliar quanto do objetivo da cirurgia foi atingido — comparar exames pré e pós na avaliação médica.' })
   } else if (indic.includes('GASTRECTOMIA')) {
-    linhas.push('CIRURGIA POR GASTRECTOMIA DE OUTRA CAUSA: É FUNDAMENTAL MARCAR UMA TELECONSULTA VIA PLATAFORMA PARA QUE UM MÉDICO REVISE OS EXAMES E INVESTIGUE A ENFERMIDADE QUE LEVOU À CIRURGIA, CONSIDERADA A POSSIBILIDADE DE RECIDIVA E EVENTUAL PERDA DE CONTROLE SOBRE A DOENÇA.')
+    linhas.push('CIRURGIA POR GASTRECTOMIA DE OUTRA CAUSA: É FUNDAMENTAL QUE UM MÉDICO REVISE OS EXAMES E INVESTIGUE A ENFERMIDADE QUE LEVOU À CIRURGIA, CONSIDERADA A POSSIBILIDADE DE RECIDIVA E EVENTUAL PERDA DE CONTROLE SOBRE A DOENÇA.')
     nivel = MODERADO
-    alertas.push({ nivel: MODERADO, texto: 'GASTRECTOMIA POR OUTRA CAUSA: revisar exames e investigar recidiva da doença de base — marcar teleconsulta.' })
+    alertas.push({ nivel: MODERADO, texto: 'GASTRECTOMIA POR OUTRA CAUSA: revisar exames e investigar recidiva da doença de base — avaliação médica indicada.' })
   } else {
     return null
   }
@@ -1303,8 +1303,8 @@ function buildModVascular(dados, alertas, suger) {
       linhas.push('SEM USO ATUAL DE ANTICOAGULANTE: AVALIAR SE HÁ INDICAÇÃO DE PROFILAXIA OU TRATAMENTO ANTICOAGULANTE.')
     }
     if (usouAnticoa && !usaAnticoa) {
-      linhas.push('MESMO QUE VOCÊ TENHA INTERROMPIDO O ANTICOAGULANTE COM ORIENTAÇÃO MÉDICA, VOCÊ PODE ESTAR EM RISCO DE NOVA TROMBOSE: RECOMENDO UMA TELECONSULTA O MAIS RÁPIDO POSSÍVEL.')
-      alertas.push({ nivel: MODERADO, texto: 'TROMBOSE PRÉVIA COM ANTICOAGULANTE JÁ INTERROMPIDO — risco de nova trombose; recomenda-se TELECONSULTA o quanto antes.' })
+      linhas.push('MESMO QUE VOCÊ TENHA INTERROMPIDO O ANTICOAGULANTE COM ORIENTAÇÃO MÉDICA, VOCÊ PODE ESTAR EM RISCO DE NOVA TROMBOSE: ISSO MERECE AVALIAÇÃO MÉDICA O MAIS RÁPIDO POSSÍVEL.')
+      alertas.push({ nivel: MODERADO, texto: 'TROMBOSE PRÉVIA COM ANTICOAGULANTE JÁ INTERROMPIDO — risco de nova trombose; avaliação médica o quanto antes.' })
     }
     linhas.push('NA INVESTIGAÇÃO DA TROMBOSE COM HEMATOLOGISTA, O D-DÍMERO PODE AUXILIAR (POR EXEMPLO, NA DEFINIÇÃO DA DURAÇÃO DA ANTICOAGULAÇÃO E NA AVALIAÇÃO DE TROMBOFILIA). HISTÓRICO DE COVID-19 REFORÇA ESSA INVESTIGAÇÃO.')
     suger.push('D-DÍMERO (NA AVALIAÇÃO COM HEMATOLOGISTA)')
@@ -1914,7 +1914,7 @@ function buildModIdeacao(dados, alertas, suger) {
     linhas: [
       'Você relatou pensamentos de morte ou de se machucar — obrigado pela coragem de registrar. Isso é levado a sério e tem tratamento.',
       'No pós-bariátrico, o risco de depressão e de ideação suicida é maior. Não é fraqueza: é uma condição que precisa de cuidado.',
-      'Procure ajuda agora se precisar: CVV 188 (ligação gratuita, 24h) ou emergência 192. Recomendamos fortemente uma avaliação com psiquiatra ou psicólogo e uma teleconsulta o quanto antes.',
+      'Procure ajuda agora se precisar: CVV 188 (ligação gratuita, 24h) ou emergência 192. Recomendamos fortemente uma avaliação com psiquiatra ou psicólogo o quanto antes.',
     ],
   }
 }
@@ -2334,10 +2334,10 @@ function buildModObstetrico(dados, alertas, suger) {
     nivel = repeticao ? GRAVE : MODERADO
     linhas.push(`HISTÓRICO DE ${numAbortos} ABORTAMENTO(S) ESPONTÂNEO(S): INFORMAÇÃO CRÍTICA. INVESTIGAR CAUSAS (TROMBOFILIA / SÍNDROME ANTIFOSFOLÍPIDE, DEFICIÊNCIAS NUTRICIONAIS), ESPECIALMENTE SE HOUVER HISTÓRICO DE TROMBOSE.`)
     alertas.push({ nivel: repeticao ? GRAVE : MODERADO, texto: repeticao
-      ? 'ABORTAMENTOS ESPONTÂNEOS DE REPETIÇÃO (≥2) — INFORMAÇÃO CRÍTICA. INFORME O SEU OBSTETRA E MARQUE TELECONSULTA COM HEMATOLOGISTA.'
-      : 'ABORTAMENTO ESPONTÂNEO — INFORME O SEU OBSTETRA E CONSIDERE TELECONSULTA COM HEMATOLOGISTA.' })
+      ? 'ABORTAMENTOS ESPONTÂNEOS DE REPETIÇÃO (≥2) — INFORMAÇÃO CRÍTICA. INFORME O SEU OBSTETRA; INDICADA AVALIAÇÃO COM HEMATOLOGISTA.'
+      : 'ABORTAMENTO ESPONTÂNEO — INFORME O SEU OBSTETRA; CONSIDERE AVALIAÇÃO COM HEMATOLOGISTA.' })
     suger.push('AVALIAÇÃO PARA TROMBOFILIA (SE ABORTAMENTOS DE REPETIÇÃO)')
-    suger.push('TELECONSULTA COM HEMATOLOGISTA')
+    suger.push('AVALIAÇÃO COM HEMATOLOGISTA')   // era 'TELECONSULTA COM...' — caía no card errado (não casa ^AVALIA)
   }
 
   return { id: 'obstetrico', titulo: 'HISTÓRIA OBSTÉTRICA', nivel, linhas }
@@ -2541,7 +2541,7 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
       // Teleconsulta independe do estado (Dr. Ramos): a endometriose merece conversa
       // médica mesmo com o resto da avaliação bem. O CTA vive no OBAModal; a linha
       // aqui garante que o relatório SALVO carregue a recomendação.
-      linhas.push('RECOMENDAMOS UMA TELECONSULTA MÉDICA PARA DISCUTIR A ENDOMETRIOSE NO SEU CONTEXTO BARIÁTRICO — MESMO QUE O RESTO DA SUA AVALIAÇÃO ESTEJA BEM. O CONTROLE DA DOENÇA E O DA SUA ANEMIA ANDAM JUNTOS.')
+      linhas.push('A ENDOMETRIOSE MERECE ACOMPANHAMENTO MÉDICO NO SEU CONTEXTO BARIÁTRICO — MESMO QUE O RESTO DA SUA AVALIAÇÃO ESTEJA BEM. O CONTROLE DA DOENÇA E O DA SUA ANEMIA ANDAM JUNTOS.')
     }
     // Só alerta próprio quando NÃO há sangramento — se há, o alerta do sangramento
     // (seção A) já carrega "a causa provável foi identificada" (dedup da auditoria).
@@ -2587,7 +2587,7 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
       // Status não respondido (o rádio não é obrigatório). Em tratamento e resolvido
       // pedem condutas MUITO diferentes — não presumir qual é: pedir o dado.
       bump(MODERADO)
-      linhas.push('CÂNCER DE MAMA: VOCÊ NÃO INFORMOU SE O TRATAMENTO ESTÁ EM CURSO OU JÁ FOI CONCLUÍDO — ESSA INFORMAÇÃO MUDA A LEITURA DO SEU ERITRON (A QUIMIOTERAPIA DEPRIME A MEDULA ÓSSEA E ESSE EFEITO SE SOMA ÀS CARÊNCIAS DO PÓS-BARIÁTRICO). INFORME-A NA PRÓXIMA AVALIAÇÃO OU NA TELECONSULTA. DE TODA FORMA: MANTENHA O SEGUIMENTO ONCOLÓGICO E O RASTREIO, E SE USA OU USOU TAMOXIFENO, SAIBA QUE ELE AUMENTA O RISCO DE CÂNCER DO ENDOMÉTRIO E DE TROMBOSE — QUALQUER SANGRAMENTO VAGINAL ANORMAL DEVE SER INVESTIGADO SEM DEMORA.')
+      linhas.push('CÂNCER DE MAMA: VOCÊ NÃO INFORMOU SE O TRATAMENTO ESTÁ EM CURSO OU JÁ FOI CONCLUÍDO — ESSA INFORMAÇÃO MUDA A LEITURA DO SEU ERITRON (A QUIMIOTERAPIA DEPRIME A MEDULA ÓSSEA E ESSE EFEITO SE SOMA ÀS CARÊNCIAS DO PÓS-BARIÁTRICO). INFORME-A NA SUA PRÓXIMA AVALIAÇÃO OBA OU AO SEU MÉDICO. DE TODA FORMA: MANTENHA O SEGUIMENTO ONCOLÓGICO E O RASTREIO, E SE USA OU USOU TAMOXIFENO, SAIBA QUE ELE AUMENTA O RISCO DE CÂNCER DO ENDOMÉTRIO E DE TROMBOSE — QUALQUER SANGRAMENTO VAGINAL ANORMAL DEVE SER INVESTIGADO SEM DEMORA.')
       alertas.push({ nivel: MODERADO, texto: 'CÂNCER DE MAMA — STATUS (EM TRATAMENTO / RESOLVIDO) NÃO INFORMADO. CONFIRMAR: SE HÁ QUIMIOTERAPIA EM CURSO, O ERITRON PRECISA SER LIDO NESSE CONTEXTO.' })
     }
   }
