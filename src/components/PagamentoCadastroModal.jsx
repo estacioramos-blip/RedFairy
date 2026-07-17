@@ -110,9 +110,12 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
     // (abatimento) consome os créditos usados no desconto desta anuidade.
     if (desconto > 0) {
       try {
+        // A3 (auditoria jul/2026): aplicar_abatimento agora exige o token do paciente
+        // (antes o GRANT anon deixava qualquer um queimar créditos de qualquer CPF).
         await supabase.rpc('aplicar_abatimento', {
           p_cpf: String(profile?.cpf || '').replace(/\D/g, ''),
           p_anuidade_brl: valor,
+          p_token: localStorage.getItem('paciente_token') || '',
         })
       } catch (e) {}
     }

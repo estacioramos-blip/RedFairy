@@ -1,5 +1,14 @@
 -- =============================================================================
--- migrate_fallback_anuidade_200.sql
+-- ⛔ OBSOLETO — NÃO RODAR (auditoria jul/2026, achado A5).
+-- =============================================================================
+-- Este arquivo recria caixa_a_pagar numa versão ANTERIOR ao fix da cotação travada
+-- (migrate_caixa_travar_cotacao_paciente.sql, commit 4290d6f) E ao fix do crédito em
+-- dobro (migrate_fix_tesouraria_creditos.sql). Rodá-lo hoje REVERTE silenciosamente
+-- essas duas correções — o bug do saldo re-flutuante (#6) e o crédito em dobro (A1)
+-- voltam. O fallback da anuidade (149.90 → 200) que este arquivo trazia já está
+-- embutido nas versões atuais. NÃO EXECUTE — mantido só como registro histórico.
+-- =============================================================================
+-- migrate_fallback_anuidade_200.sql  [conteúdo original abaixo, NÃO rodar]
 -- =============================================================================
 -- Atualiza o fallback da anuidade dentro de caixa_a_pagar: 149.90 → 200.
 -- OPCIONAL/sem pressa: o valor vivo vem de config.valor_anuidade (= "200");
