@@ -227,6 +227,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modAlerg = buildModAlergico(dadosOBA, alertas, examesSuger)
   if (modAlerg) modulos.push(modAlerg)
 
+  // ── 15f. MÓDULO STATUS ARTICULAR + FAN (artrite→autoimune/eritron; título) ──
+  const modArtic = buildModArticular(dadosOBA, resultadoEritron, alertas, examesSuger)
+  if (modArtic) modulos.push(modArtic)
+
   // ── 16. MÓDULO STATUS INTESTINAL ─────────────────────────────────────────
   const modIntestinal = buildModIntestinal(dadosOBA, alertas, examesSuger)
   if (modIntestinal) modulos.push(modIntestinal)
@@ -2569,6 +2573,96 @@ function pacienteFuma(dados) {
   const resp = Array.isArray(dados.status_respiratorio) ? dados.status_respiratorio : []
   const comp = Array.isArray(dados.compulsoes) ? dados.compulsoes : []
   return resp.includes('TABAGISTA | DPOC') || comp.includes('CIGARRO / TABACO')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO — STATUS ARTICULAR + FAN
+// status_articular (ARTRITE/ARTROSE/TENDINITE/PROBLEMAS DE COLUNA) era órfão — só
+// ARTRITE e FAN REAGENTE disparavam o COOMBS (sugestão de exame, l.288). O FAN
+// reagente também já cruza com o Hashimoto (módulo hormonal). Aqui: crítica da
+// seção + graduação do FAN pelo TÍTULO (era ignorado).
+//   ARTRITE = inflamatória/autoimune → anemia de doença crônica (mascara ferro) +
+//     o eixo autoimune (FAN). ARTROSE/TENDINITE/COLUNA = mecânica → dor, mobilidade,
+//     e a armadilha do AINE (sangra, agrava ferropenia).
+// TÍTULO do FAN: 1/80 é comum e pouco específico (até em saudáveis); ≥1/320 é
+// significativo; 1/640+ reforça bastante a suspeita de doença autoimune.
+// ─────────────────────────────────────────────────────────────────────────────
+const FAN_TITULO_FORTE = ['1/320', '1/640+']
+
+function buildModArticular(dados, resultadoEritron, alertas, suger) {
+  const art = Array.isArray(dados.status_articular) ? dados.status_articular : []
+  const fanReagente = dados.fan === 'REAGENTE'
+  if (!art.length && !fanReagente) return null
+  const tem = (x) => art.includes(x)
+
+  const RANK = { [GRAVE]: 3, [MODERADO]: 2, [LEVE]: 1, [NORMAL]: 0 }
+  let nivel = NORMAL
+  const bump = (n) => { if (RANK[n] > RANK[nivel]) nivel = n }
+  const linhas = []
+
+  const temAnemia = /ANEMIA|ANÊMIC/i.test(resultadoEritron?.label || '') || resultadoEritron?.color === 'red'
+  const temArtrite = tem('ARTRITE')
+  const fanForte = fanReagente && FAN_TITULO_FORTE.includes(dados.fan_titulo || '')
+
+  // ── ARTRITE — eixo inflamatório/autoimune (o que toca o eritron) ───────────
+  if (temArtrite) {
+    bump(MODERADO)
+    linhas.push('ARTRITE: DIFERENTE DA ARTROSE (QUE É DESGASTE), A ARTRITE É INFLAMAÇÃO DA ARTICULAÇÃO E MUITAS VEZES TEM FUNDO AUTOIMUNE (ARTRITE REUMATOIDE, LÚPUS). ISSO IMPORTA PARA O SEU SANGUE: A INFLAMAÇÃO CRÔNICA CAUSA A "ANEMIA DE DOENÇA CRÔNICA", QUE PODE MASCARAR A FALTA DE FERRO — A FERRITINA SOBE COM A INFLAMAÇÃO E PARECE NORMAL MESMO COM O ESTOQUE VAZIO. NO SEU CASO, A SATURAÇÃO DA TRANSFERRINA VALE MAIS QUE A FERRITINA PARA JULGAR O FERRO.')
+    suger.push('SATURAÇÃO DA TRANSFERRINA (A FERRITINA ENGANA NA INFLAMAÇÃO)')
+    suger.push('PCR E VHS (ATIVIDADE INFLAMATÓRIA)')
+    if (temAnemia) {
+      bump(GRAVE)
+      linhas.push('VOCÊ TEM ARTRITE E ANEMIA AO MESMO TEMPO: SÃO DOIS PROCESSOS QUE SE MISTURAM (A CARÊNCIA DE FERRO DA CIRURGIA E A INFLAMAÇÃO DA ARTRITE). SEPARAR AS DUAS CAUSAS EXIGE UM HEMATOLOGISTA — NÃO É PARA TRATAR SÓ COM FERRO SEM ENTENDER O QUANTO CADA UMA PESA.')
+      alertas.push({ nivel: GRAVE, texto: 'ARTRITE + ANEMIA — QUADRO MISTO (FERROPENIA BARIÁTRICA + ANEMIA DE DOENÇA CRÔNICA). AVALIAÇÃO HEMATOLÓGICA; A SATURAÇÃO DA TRANSFERRINA DISTINGUE MELHOR QUE A FERRITINA.' })
+    } else if (!fanForte) {
+      // O alerta da artrite sem anemia sai aqui — MAS se há FAN forte, ele é
+      // consolidado no bloco do FAN abaixo (o FAN reforça, não duplica).
+      alertas.push({ nivel: MODERADO, texto: 'ARTRITE (INFLAMATÓRIA/AUTOIMUNE) — A INFLAMAÇÃO CRÔNICA CAUSA ANEMIA DE DOENÇA CRÔNICA E ELEVA A FERRITINA (MASCARA A FERROPENIA). USAR A SATURAÇÃO DA TRANSFERRINA PARA JULGAR O FERRO.' })
+    }
+    suger.push('AVALIAÇÃO COM REUMATOLOGISTA')
+  }
+
+  // ── FAN + TÍTULO — graduação da suspeita autoimune ─────────────────────────
+  // Consolidação (Dr. Ramos): FAN alto + artrite são o MESMO quadro autoimune visto
+  // por dois ângulos — o FAN reforça o alerta da artrite, não cria um segundo (2
+  // moderados jogariam o estado a RUIM sozinhos). Só empurra alerta próprio quando
+  // NÃO há artrite empurrando o dela. O alerta da artrite sem anemia sai aqui, já
+  // fundido com o texto do FAN quando ele é forte.
+  if (fanReagente) {
+    const titulo = dados.fan_titulo || ''
+    const forte = FAN_TITULO_FORTE.includes(titulo)
+    if (forte) {
+      bump(MODERADO)
+      linhas.push(`FAN REAGENTE COM TÍTULO ${titulo}: ESTE É UM TÍTULO ALTO, QUE REFORÇA A SUSPEITA DE DOENÇA AUTOIMUNE (COMO LÚPUS OU ARTRITE REUMATOIDE) E PEDE INVESTIGAÇÃO REUMATOLÓGICA. AUTOIMUNIDADE E O SEU CONTEXTO BARIÁTRICO SE SOMAM NA LEITURA DO SANGUE — LEVE ESTE RESULTADO AO MÉDICO.`)
+      // Sem anemia: um alerta MODERADO cobre o quadro autoimune (artrite + FAN
+      // juntos, se houver artrite). Com anemia, o GRAVE da artrite já domina.
+      if (!temAnemia) {
+        alertas.push({ nivel: MODERADO, texto: `${temArtrite ? 'ARTRITE + ' : ''}FAN REAGENTE ${titulo} (TÍTULO ALTO) — ${temArtrite ? 'QUADRO AUTOIMUNE (A INFLAMAÇÃO CAUSA ANEMIA DE DOENÇA CRÔNICA E MASCARA A FERROPENIA; USAR A SATURAÇÃO). ' : ''}REFORÇA A SUSPEITA DE DOENÇA AUTOIMUNE — AVALIAÇÃO REUMATOLÓGICA.` })
+      }
+      suger.push('AVALIAÇÃO COM REUMATOLOGISTA')
+      suger.push('ANTI-DNA, ANTI-ENA E COMPLEMENTO (C3/C4) SE INDICADO PELO REUMATOLOGISTA')
+    } else if (titulo === '1/160') {
+      bump(LEVE)
+      linhas.push('FAN REAGENTE COM TÍTULO 1/160: É UM TÍTULO INTERMEDIÁRIO — PODE TER SIGNIFICADO OU NÃO, DEPENDENDO DOS SEUS SINTOMAS. NÃO É PARA ALARMAR, MAS TAMBÉM NÃO É PARA IGNORAR: LEVE AO MÉDICO PARA ELE DECIDIR SE VALE INVESTIGAR.')
+    } else {
+      // 1/80 ou título não informado.
+      linhas.push(`FAN REAGENTE${titulo ? ` COM TÍTULO ${titulo}` : ''}: ${titulo === '1/80' ? 'ESTE É UM TÍTULO BAIXO, MUITO COMUM E POUCO ESPECÍFICO — APARECE ATÉ EM PESSOAS SAUDÁVEIS. ' : ''}O FAN SOZINHO NÃO FAZ DIAGNÓSTICO: ELE SÓ TEM VALOR JUNTO COM SINTOMAS. INFORME-O AO MÉDICO PARA QUE ELE DECIDA SE HÁ O QUE INVESTIGAR.`)
+      bump(LEVE)
+    }
+  }
+
+  // ── ARTROSE / TENDINITE / COLUNA — eixo mecânico ───────────────────────────
+  const mecanicas = []
+  if (tem('ARTROSE')) mecanicas.push('ARTROSE')
+  if (tem('TENDINITE')) mecanicas.push('TENDINITE')
+  if (tem('PROBLEMAS DE COLUNA')) mecanicas.push('PROBLEMAS DE COLUNA')
+  if (mecanicas.length) {
+    bump(LEVE)
+    linhas.push(`${mecanicas.join(', ')}: SÃO CONDIÇÕES MECÂNICAS (DE DESGASTE OU ESFORÇO), NÃO INFLAMATÓRIAS — NÃO MEXEM NO SEU SANGUE. DOIS PONTOS ÚTEIS NO PÓS-BARIÁTRICO: (1) A PERDA DE PESO ALIVIA A CARGA SOBRE JOELHOS, QUADRIS E COLUNA, ENTÃO A TENDÊNCIA É MELHORAR; (2) EVITE ANTI-INFLAMATÓRIOS (AINEs) PARA A DOR — ELES CAUSAM ÚLCERA E SANGRAMENTO, QUE AGRAVAM A FALTA DE FERRO. PEÇA AO MÉDICO ANALGÉSICOS SEGUROS E CONSIDERE FISIOTERAPIA E FORTALECIMENTO MUSCULAR.`)
+  }
+
+  if (!linhas.length) return null
+  return { id: 'articular', titulo: 'SAÚDE ARTICULAR', nivel, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
