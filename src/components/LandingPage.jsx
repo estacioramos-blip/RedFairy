@@ -469,7 +469,7 @@ function rfMatch(matrix, inp) {
 
 const rfMatrix = [
   { id:3,  label:"SAUD\u00c1VEL", color:'green',
-    conditions:{ ferritina:{min:25,max:150}, hemoglobina:{min:12.0,max:17.5}, vcm:{min:75,max:100}, rdw:{min:11.5,max:15.5}, satTransf:{min:20,max:50}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
+    conditions:{ ferritina:{min:25,max:150}, hemoglobina:{min:12.0,max:17.5}, vcm:{min:80,max:100}, rdw:{min:11.5,max:15}, satTransf:{min:20,max:50}, bariatrica:false, vegetariano:false, perda:false, alcoolista:false, transfundido:false },
     diag:"Produ\u00e7\u00e3o normal de hemoglobina e c\u00e9lulas vermelhas, com boa reserva de ferro. Sem indica\u00e7\u00e3o de anemia ou siderose.",
     rec:"Avalia\u00e7\u00e3o m\u00e9dica preventiva semestral. Se a ferritina for \u2265 100 ng/mL, voc\u00ea pode ser candidato a doa\u00e7\u00f5es de sangue." },
   { id:10, label:'SIDEROPENIA INCIPIENTE SEM ANEMIA', color:'yellow',
@@ -1262,7 +1262,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
   }
 
   const rfMatrix2 = [
-    { id:3,  label:'Eritron Saudavel',           color:'#16A34A', diag:"Produ\u00e7\u00e3o normal de hemoglobina e c\u00e9lulas vermelhas, com boa reserva de ferro.",           rec:"Avalia\u00e7\u00e3o m\u00e9dica preventiva semestral.",                                       c:{ f:{a:25,b:150},   h:{a:12,b:17.5}, v:{a:75,b:100}, r:{a:11.5,b:15.5}, s:{a:20,b:50}  } },
+    { id:3,  label:'Eritron Saudavel',           color:'#16A34A', diag:"Produ\u00e7\u00e3o normal de hemoglobina e c\u00e9lulas vermelhas, com boa reserva de ferro.",           rec:"Avalia\u00e7\u00e3o m\u00e9dica preventiva semestral.",                                       c:{ f:{a:25,b:150},   h:{a:12,b:17.5}, v:{a:80,b:100}, r:{a:11.5,b:15}, s:{a:20,b:50}  } },
     { id:10, label:'Sideropenia sem Anemia',     color:'#CA8A04', diag:"Hemoglobina normal, mas com deple\u00e7\u00e3o incipiente de ferro.",                              rec:"Procure hematologista. Investigue a causa.",                                   c:{ f:{a:0,b:24},     h:{a:12,b:17.5}, v:{a:75,b:100}, r:{a:15.1,b:999}, s:{a:0,b:50}   } },
     { id:11, label:'Anemia Ferropriva Moderada', color:'#EA580C', diag:"Defici\u00eancia de ferro com impacto sobre a produ\u00e7\u00e3o de hemoglobina \u2014 anemia moderada.",    rec:"Avalia\u00e7\u00e3o com hematologista. Reposi\u00e7\u00e3o de ferro conforme avalia\u00e7\u00e3o.",          c:{ f:{a:0,b:24},     h:{a:10,b:11.9}, v:{a:0,b:79},   r:{a:15.1,b:999}, s:{a:0,b:50}   } },
     { id:12, label:'Anemia Ferropriva Importante',color:'#DC2626', diag:"Anemia ferropriva importante. Exige interven\u00e7\u00e3o m\u00e9dica imediata.",                       rec:"Avalia\u00e7\u00e3o urgente. Ferro endovenoso indicado.",                               c:{ f:{a:0,b:24},     h:{a:7,b:9.9},   v:{a:0,b:79},   r:{a:15.1,b:999}, s:{a:0,b:19}   } },

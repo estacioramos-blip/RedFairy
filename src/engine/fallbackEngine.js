@@ -212,8 +212,10 @@ export function gerarFallbackClinico(inputs) {
     label = 'HEMOGLOBINA BAIXA' + (gravidade ? ' ' + gravidade : '')
   } else if (hbStatus === 'ALTA') {
     label = 'HEMOGLOBINA ELEVADA' + (gravidade ? ' ' + gravidade : '')
-  } else {
+  } else if (discrepancias.length > 0) {
     label = 'PARÂMETROS LABORATORIAIS DISCREPANTES'
+  } else {
+    label = 'COMBINAÇÃO LABORATORIAL ATÍPICA'
   }
 
   // Sempre marca como CRÍTICO se há Hb anormal OU discrepâncias
@@ -235,9 +237,13 @@ export function gerarFallbackClinico(inputs) {
   } else if (hbStatus === 'ALTA') {
     diagnostico = 'HEMOGLOBINA ELEVADA (' + (Number.isFinite(hb) ? hb.toFixed(1) : '—') + ' g/dL) — eritrocitose ' +
                   (gravidade ? gravidade.toLowerCase() : '') + '.'
-  } else {
+  } else if (discrepancias.length > 0) {
     diagnostico = 'Hemoglobina dentro da faixa de normalidade, mas há discrepâncias ' +
                   'entre os demais parâmetros laboratoriais.'
+  } else {
+    diagnostico = 'Hemoglobina dentro da faixa de normalidade. A combinação dos demais ' +
+                  'parâmetros não foi reconhecida automaticamente pelo algoritmo; ' +
+                  'recomenda-se avaliação clínica para esclarecer.'
   }
 
   if (discrepancias.length > 0) {
@@ -253,12 +259,16 @@ export function gerarFallbackClinico(inputs) {
                        'diagnóstico automático preciso, mas indica achados que requerem ' +
                        'avaliação clínica direcionada.'
 
+  // Cor: só vermelho quando há achado real (Hb anormal OU discrepância detectada).
+  // Combinação atípica sem nada anormal → amarelo (evita alarme falso e texto impreciso).
+  const color = (hbStatus === 'NORMAL' && discrepancias.length === 0) ? 'yellow' : 'red'
+
   // Retorna objeto compatível com ResultCard
   // Inclui TODOS os campos que ResultCard.jsx pode acessar para evitar TypeError
   return {
     encontrado: true,
     label,
-    color: 'red',
+    color,
     diagnostico,
     recomendacao,
     recomendacaoAge1: recomendacao,

@@ -8,8 +8,8 @@ export const maleMatrix = [
     conditions: {
       ferritina:   { min: 24,  max: 150  },
       hemoglobina: { min: 13.0,max: 17.5 },
-      vcm:         { min: 75,  max: 100  },
-      rdw:         { min: 11.5,max: 16   },
+      vcm:         { min: 80,  max: 100  },
+      rdw:         { min: 11.5,max: 15   },
       satTransf:   { min: 20,  max: 50   },
       bariatrica:  false,
       vegetariano: false,
