@@ -223,6 +223,10 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modProst = buildModProstatico(dadosOBA, alertas, examesSuger)
   if (modProst) modulos.push(modProst)
 
+  // ── 15e. MÓDULO STATUS ALÉRGICO (eixo forte: alimentar × nutrição) ───────
+  const modAlerg = buildModAlergico(dadosOBA, alertas, examesSuger)
+  if (modAlerg) modulos.push(modAlerg)
+
   // ── 16. MÓDULO STATUS INTESTINAL ─────────────────────────────────────────
   const modIntestinal = buildModIntestinal(dadosOBA, alertas, examesSuger)
   if (modIntestinal) modulos.push(modIntestinal)
@@ -2565,6 +2569,111 @@ function pacienteFuma(dados) {
   const resp = Array.isArray(dados.status_respiratorio) ? dados.status_respiratorio : []
   const comp = Array.isArray(dados.compulsoes) ? dados.compulsoes : []
   return resp.includes('TABAGISTA | DPOC') || comp.includes('CIGARRO / TABACO')
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULO — STATUS ALÉRGICO
+// status_alergico (RESPIRATÓRIA/DERMATITE/ALIMENTAR/MEDICAMENTOSA) + as sublistas
+// eram órfãos (só PENICILINAS/CEFALOSPORINAS eram lidas, no cruzamento com H. pylori
+// do módulo endoscópico — NÃO repetir aqui). O eixo forte é a ALERGIA ALIMENTAR:
+// restrição somada à disabsorção bariátrica = risco nutricional dobrado, e cada
+// alimento tira um nutriente específico (leite→cálcio/osso, ovo/leite→proteína).
+// ─────────────────────────────────────────────────────────────────────────────
+function buildModAlergico(dados, alertas, suger) {
+  const st = Array.isArray(dados.status_alergico) ? dados.status_alergico : []
+  if (!st.length) return null
+  const tem = (x) => st.includes(x)
+  const alim = Array.isArray(dados.alergias_alimentares) ? dados.alergias_alimentares : []
+  const med = Array.isArray(dados.alergia_medicamentosa) ? dados.alergia_medicamentosa : []
+  const temAlim = (x) => alim.includes(x)
+  const temMed = (x) => med.includes(x)
+
+  const RANK = { [GRAVE]: 3, [MODERADO]: 2, [LEVE]: 1, [NORMAL]: 0 }
+  let nivel = NORMAL
+  const bump = (n) => { if (RANK[n] > RANK[nivel]) nivel = n }
+  const linhas = []
+
+  // ── ALIMENTAR — o eixo nutricional (o ponto forte da seção) ────────────────
+  if (tem('ALIMENTAR')) {
+    bump(LEVE)
+    const nomes = alim.filter(a => a !== 'OUTRA')
+    const outra = (dados.alergias_alimentares_outra || '').trim()
+    const listaTxt = [...nomes, ...(outra ? [outra.toUpperCase()] : [])].join(', ') || 'NÃO ESPECIFICADA(S)'
+    linhas.push(`ALERGIA ALIMENTAR (${listaTxt}): NO PÓS-BARIÁTRICO ISSO PESA MAIS DO QUE NA POPULAÇÃO GERAL — VOCÊ JÁ ABSORVE MENOS PELA CIRURGIA, E CADA ALIMENTO QUE PRECISA CORTAR ESTREITA AINDA MAIS AS SUAS FONTES DE NUTRIENTES. NÃO BASTA EVITAR O ALIMENTO: É PRECISO REPOR, POR OUTRA VIA, O QUE ELE FORNECERIA.`)
+
+    // Leite → cálcio e vitamina D → osso (já frágil no bariátrico).
+    const semLeite = temAlim('LEITE (TODOS)') || temAlim('LEITE DE VACA')
+    if (semLeite) {
+      bump(MODERADO)
+      linhas.push('SEM LEITE E DERIVADOS: O LATICÍNIO É A PRINCIPAL FONTE DE CÁLCIO DA DIETA. NO BARIÁTRICO, QUE JÁ PERDE MASSA ÓSSEA, CORTAR O LEITE SEM COMPENSAR É FATOR DE RISCO DIRETO PARA OSTEOPOROSE. GARANTA CÁLCIO (DE PREFERÊNCIA CITRATO, MELHOR ABSORVIDO APÓS A CIRURGIA) E VITAMINA D, E MONITORE O OSSO.')
+      // Strings idênticas às dos outros módulos (vitD/ósseo) p/ o dedup por Set pegar.
+      suger.push('CÁLCIO SÉRICO E URINÁRIO')
+      suger.push('VITAMINA D 25-OH')
+      // O módulo ósseo já sugere densitometria com sufixo próprio ("(SE NÃO RECENTE)"
+      // / "(ANUAL)") que o dedup por Set NÃO reconhece como a mesma — só empurrar a
+      // nossa quando o ósseo não vai empurrar a dele, senão aparecem duas.
+      const osseoDecl = dados.status_osseo || ''
+      if (!/OSTEOPOROSE|OSTEOPENIA/.test(osseoDecl)) suger.push('DENSITOMETRIA ÓSSEA')
+      alertas.push({ nivel: MODERADO, texto: 'ALERGIA A LEITE + BARIÁTRICO — PERDA DA PRINCIPAL FONTE DE CÁLCIO NUM PACIENTE QUE JÁ PERDE OSSO. GARANTIR CÁLCIO (CITRATO) E VIT. D; DENSITOMETRIA.' })
+    }
+
+    // Proteína: ovo, leite e (se vier no campo livre) carne/peixe são fontes-chave.
+    const fontesProteina = []
+    if (temAlim('OVO')) fontesProteina.push('OVO')
+    if (semLeite) fontesProteina.push('LEITE')
+    if (/CARNE|FRANGO|PEIXE|BOI|SOJA/i.test(outra)) fontesProteina.push('PROTEÍNA ANIMAL DECLARADA')
+    if (fontesProteina.length) {
+      bump(MODERADO)
+      linhas.push(`ATENÇÃO À PROTEÍNA: OS ALIMENTOS QUE VOCÊ EVITA (${fontesProteina.join(', ')}) SÃO FONTES IMPORTANTES DE PROTEÍNA. BATER A META PROTEICA JÁ É UM DESAFIO DEPOIS DA CIRURGIA — COM ESSA RESTRIÇÃO, FICA MAIS DIFÍCIL. TRABALHE COM O NUTRICIONISTA FONTES ALTERNATIVAS (E, SE PRECISAR, SUPLEMENTO PROTEICO ADEQUADO À SUA ALERGIA) E ACOMPANHE A ALBUMINA.`)
+      suger.push('ALBUMINA SÉRICA (MONITORAMENTO PROTEICO)')
+    }
+
+    // Crustáceos/frutos do mar: menos nutricional, mais risco de reação grave.
+    if (temAlim('CRUSTÁCEOS (CAMARÃO E OUTROS)')) {
+      linhas.push('ALERGIA A CRUSTÁCEOS: COSTUMA SER VITALÍCIA E PODE CAUSAR REAÇÕES GRAVES (ANAFILAXIA). NÃO É UM PROBLEMA NUTRICIONAL RELEVANTE (HÁ OUTRAS FONTES), MAS INFORME-A SEMPRE — INCLUSIVE ANTES DE EXAMES COM CONTRASTE IODADO, POR PRECAUÇÃO.')
+    }
+
+    if (!nomes.length && !outra) {
+      linhas.push('VOCÊ MARCOU ALERGIA ALIMENTAR MAS NÃO ESPECIFICOU QUAL — INFORME NA PRÓXIMA AVALIAÇÃO, PORQUE O ALIMENTO EVITADO DEFINE QUAL NUTRIENTE PRECISA SER REPOSTO.')
+    }
+
+    suger.push('ACOMPANHAMENTO NUTRICIONAL (RESTRIÇÃO ALIMENTAR NO PÓS-BARIÁTRICO)')
+  }
+
+  // ── MEDICAMENTOSA — o resto (penicilina/cefalosporina são tratadas no H. pylori) ──
+  if (tem('MEDICAMENTOSA')) {
+    bump(LEVE)
+    // AINEs e aspirina: a alergia aqui é PROTETORA — são causa de úlcera e sangria
+    // oculta (fonte de ferropenia). Reforçar que não devem ser usados.
+    const semAINE = temMed('ANTI-INFLAMATÓRIOS') || temMed('ASPIRINA')
+    if (semAINE) {
+      linhas.push('ALERGIA A ANTI-INFLAMATÓRIOS / ASPIRINA: AQUI A ALERGIA ATÉ JOGA A SEU FAVOR — ESSES REMÉDIOS SÃO CAUSA COMUM DE ÚLCERA E DE SANGRAMENTO DIGESTIVO OCULTO, QUE AGRAVA A FALTA DE FERRO NO BARIÁTRICO. NÃO OS USE E MANTENHA ESSA ALERGIA REGISTRADA EM TODA CONSULTA. PARA DOR OU FEBRE, PEÇA AO MÉDICO UMA ALTERNATIVA SEGURA PARA VOCÊ.')
+    }
+    if (temMed('DIPIRONA')) {
+      linhas.push('ALERGIA A DIPIRONA: A DIPIRONA PODE, RARAMENTE, CAUSAR QUEDA GRAVE DOS GLÓBULOS BRANCOS (AGRANULOCITOSE) — MAIS UM MOTIVO PARA EVITÁ-LA NO SEU CASO. INFORME ESSA ALERGIA SEMPRE E TENHA COM O SEU MÉDICO UMA OPÇÃO ALTERNATIVA PARA DOR E FEBRE.')
+    }
+    const outroMed = (dados.alergia_outra_texto || '').trim()
+    if (temMed('OUTRA') && outroMed) {
+      linhas.push(`ALERGIA MEDICAMENTOSA A "${outroMed.toUpperCase()}": MANTENHA-A REGISTRADA E INFORME EM TODA CONSULTA E ANTES DE QUALQUER PRESCRIÇÃO — INCLUSIVE AS QUE ESTA PLATAFORMA POSSA OFERECER.`)
+    }
+    // Só empurra um alerta se há substância concreta a evitar (não pela categoria solta).
+    if (semAINE || temMed('DIPIRONA') || (temMed('OUTRA') && outroMed)) {
+      alertas.push({ nivel: LEVE, texto: `ALERGIA MEDICAMENTOSA DECLARADA (${med.filter(m => m !== 'PENICILINAS' && m !== 'CEFALOSPORINAS').join(', ') || 'ver anamnese'}) — CONSIDERAR ANTES DE QUALQUER PRESCRIÇÃO. ${semAINE ? 'AINEs/ASPIRINA JÁ SÃO DESACONSELHADOS NO BARIÁTRICO (SANGRAMENTO).' : ''}`.trim() })
+    }
+  }
+
+  // ── RESPIRATÓRIA / DERMATITE — ligação fraca, crítica enxuta ───────────────
+  if (tem('RESPIRATÓRIA')) {
+    bump(LEVE)
+    linhas.push('ALERGIA RESPIRATÓRIA: SE VOCÊ USA CORTICOIDE ORAL COM FREQUÊNCIA PARA CONTROLÁ-LA, INFORME AO MÉDICO — O CORTICOIDE ORAL REPETIDO PREJUDICA O OSSO, QUE JÁ É FRÁGIL NO PÓS-BARIÁTRICO. O CONTROLE AMBIENTAL E OS SPRAYS NASAIS REDUZEM ESSA NECESSIDADE.')
+  }
+  if (tem('DERMATITE')) {
+    bump(LEVE)
+    linhas.push('DERMATITE / ALERGIA DE PELE: EM GERAL BENIGNA. SE ELA PIOROU DEPOIS DA CIRURGIA OU VEM COM QUEDA DE CABELO E UNHAS FRACAS, PODE HAVER UM COMPONENTE NUTRICIONAL POR TRÁS (ZINCO, BIOTINA, ÁCIDOS GRAXOS) — VALE COMENTAR COM O NUTRICIONISTA.')
+  }
+
+  if (!linhas.length) return null
+  return { id: 'alergico', titulo: 'STATUS ALÉRGICO', nivel, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
