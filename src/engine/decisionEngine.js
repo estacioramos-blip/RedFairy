@@ -375,6 +375,8 @@ export function avaliarPaciente(inputs) {
     // A frase de hipermenorreia vale AQUI TAMBÉM — sem ela, a paciente que caía no
     // fallback justamente POR ter marcado hipermenorreia perdia o comentário sobre isso.
     fallback.fraseHipermenorreia = fraseHiper;
+    // Mesmo motivo do match normal (l.525): o obaEngine lê resultadoEritron.inputs.
+    fallback.inputs = inputsAjustados;
     return fallback;
   }
 
@@ -522,6 +524,12 @@ export function avaliarPaciente(inputs) {
     id: resultado.id,
     label: resultado.label,
     color: resultado.color,
+    // inputs: os labs numéricos do eritron. SEM esta chave, o obaEngine (que lê
+    // resultadoEritron.inputs.{ferritina,satTransf,vcm,rdw,hemoglobina}) ficava cego
+    // no fluxo do médico (Calculator passa este retorno cru a avaliarOBA) — talassemia,
+    // dimórfico, ferritina do ginecológico, ferropenia da IC e mascaramento pela
+    // testosterona não disparavam a menos que o médico relançasse o hemograma no OBA.
+    inputs: inputsAjustados,
     diagnostico: diagnosticoFinal,
     recomendacao: recomendacaoFinal,
     comentarios,
@@ -643,6 +651,7 @@ export function triagemEritron(inputs) {
       diasDesdeColeta: dias,
       obsoleto: dias > 730,
       _inputs: inputs,
+      inputs,   // o obaEngine lê resultadoEritron.inputs (VCM/RDW/Hb da triagem parcial)
     };
   }
 

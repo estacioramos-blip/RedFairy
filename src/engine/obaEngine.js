@@ -868,7 +868,12 @@ function buildModGlico(ex, dados, alertas, suger) {
     } else if (gli >= REF.glicemia.preD) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('GLICEMIA ELEVADA (126–199 mg/dL): COMPATÍVEL COM DIABETES NÃO CONTROLADO OU EM REMISSÃO INCOMPLETA. INVESTIGAR COM HBA1C E INSULINEMIA.')
-      alertas.push({ nivel: MODERADO, texto: `GLICEMIA AUMENTADA: ${gli} mg/dL — AVALIAR COM HBA1C.` })
+      // Dedup (auditoria): glicemia e HbA1c descrevem o MESMO diabetes. Se a HbA1c
+      // (marcador crônico, melhor) já vai alertar diabetes, não empurrar um 2º
+      // moderado do mesmo eixo (2 moderados = estado RUIM). O texto/linha fica; só
+      // o alerta é suprimido quando a HbA1c o cobre.
+      const hbaCobre = !isNaN(hba) && hba >= REF.hbA1c.diabetes
+      if (!hbaCobre) alertas.push({ nivel: MODERADO, texto: `GLICEMIA AUMENTADA: ${gli} mg/dL — AVALIAR COM HBA1C.` })
     } else if (gli >= REF.glicemia.otimo) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('GLICEMIA LIMÍTROFE (100–125 mg/dL): PRÉ-DIABETES OU RESISTÊNCIA INSULÍNICA. AVALIAR HBA1C E INSULINEMIA EM JEJUM.')
@@ -1025,12 +1030,16 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
     }
   }
 
-  // Creatinina
+  // Creatinina. `creAlertou` deixa a ureia (mesmo eixo renal) NÃO empurrar um 2º
+  // alerta quando a creatinina já falou (dedup da auditoria — a ureia alta com
+  // creatinina alta é o MESMO quadro; a linha da ureia manda "correlacionar").
+  let creAlertou = false
   if (!isNaN(cre)) {
     temAlgo = true
     linhas.push(`CREATININA: ${cre} mg/dL`)
     if (cre > limCre * 2) {
       nivelGeral = GRAVE
+      creAlertou = true
       linhas.push('CREATININA MUITO ELEVADA: INSUFICIÊNCIA RENAL SIGNIFICATIVA. AVALIAÇÃO COM NEFROLOGISTA URGENTE. AJUSTAR DOSES DE MEDICAMENTOS DE EXCREÇÃO RENAL.')
       alertas.push({ nivel: GRAVE, texto: `CREATININA MUITO ALTA: ${cre} mg/dL — AVALIAÇÃO NEFROLÓGICA URGENTE.` })
       suger.push('TAXA DE FILTRAÇÃO GLOMERULAR (TFG)')
@@ -1039,6 +1048,7 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
       suger.push('AVALIAÇÃO COM NEFROLOGISTA')
     } else if (cre > limCre) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
+      creAlertou = true
       linhas.push('CREATININA ACIMA DO LIMITE SUPERIOR: MONITORAR FUNÇÃO RENAL. HIDRATAÇÃO ADEQUADA É FUNDAMENTAL NO BARIÁTRICO.')
       alertas.push({ nivel: LEVE, texto: `CREATININA ELEVADA: ${cre} mg/dL — MONITORAR.` })
     } else {
@@ -1067,7 +1077,8 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
     if (ure > 100) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('UREIA MUITO ELEVADA (> 100 mg/dL): avaliar função renal, desidratação ou sangramento gastrointestinal. Correlacionar com a creatinina.')
-      alertas.push({ nivel: MODERADO, texto: `UREIA MUITO ELEVADA: ${ure} mg/dL.` })
+      // Só alerta próprio se a creatinina NÃO alertou — senão é o mesmo eixo renal.
+      if (!creAlertou) alertas.push({ nivel: MODERADO, texto: `UREIA MUITO ELEVADA: ${ure} mg/dL.` })
     } else if (ure > 40) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('UREIA ELEVADA (> 40 mg/dL): no bariátrico, causas comuns são desidratação e dieta hiperproteica; correlacionar com a creatinina e a hidratação.')
@@ -1436,11 +1447,20 @@ function buildModOsseo(dados, ex, alertas, suger) {
   const vitDBaixa   = !isNaN(vitD) && vitD < 30
   const vitDCritica = !isNaN(vitD) && vitD < 20
 
+  // CASCATA MINERAL (hipomagnesemia + hipocalcemia + hiperpara secundário) é UMA
+  // fisiopatologia só — a deficiência de vit.D/cálcio no bariátrico. As linhas
+  // educativas de cada componente ficam; a COR do card sobe por componente; mas o
+  // ALERTA é UM só no fim (dedup da auditoria: 3 pushes jogavam o estado a RUIM/
+  // CRÍTICO sozinhos). Hiperpara PRIMÁRIO (cálcio alto) é entidade DIFERENTE → alerta
+  // próprio. Reaproveita o padrão da FE/TRT/articular.
+  const cascata = []          // componentes da cascata da deficiência
+  let cascataGrave = false
+
   // Magnésio — pré-requisito para a ação do PTH e da vitamina D
   if (!isNaN(mg)) {
     if (mg < cMg.min) {
       linhas.push(`MAGNÉSIO BAIXO (${mg} MG/DL): A HIPOMAGNESEMIA É FREQUENTE NO BARIÁTRICO E PREJUDICA A SECREÇÃO E A AÇÃO DO PTH, ALÉM DA ATIVAÇÃO DA VITAMINA D. CORRIGIR O MAGNÉSIO É PRÉ-REQUISITO PARA QUE A REPOSIÇÃO DE CÁLCIO E VITAMINA D FUNCIONE.`)
-      alertas.push({ nivel: MODERADO, texto: 'HIPOMAGNESEMIA — CORRIGIR ANTES DE OTIMIZAR CÁLCIO E VITAMINA D.' })
+      cascata.push('HIPOMAGNESEMIA')
       subirNivel(MODERADO)
     } else if (mg > cMg.max) {
       linhas.push(`MAGNÉSIO ELEVADO (${mg} MG/DL): INVESTIGAR FUNÇÃO RENAL E EXCESSO DE SUPLEMENTAÇÃO.`)
@@ -1454,7 +1474,7 @@ function buildModOsseo(dados, ex, alertas, suger) {
     if (ca < cCa.min) {
       caBaixo = true
       linhas.push(`CÁLCIO IÔNICO BAIXO (${ca} MMOL/L): HIPOCALCEMIA. NO BARIÁTRICO, COMUMENTE SECUNDÁRIA À DEFICIÊNCIA DE VITAMINA D E À MÁ ABSORÇÃO. REPOR CITRATO DE CÁLCIO E CORRIGIR VITAMINA D E MAGNÉSIO.`)
-      alertas.push({ nivel: MODERADO, texto: 'HIPOCALCEMIA — REPOSIÇÃO DE CÁLCIO (CITRATO) E CORREÇÃO DE VITAMINA D.' })
+      cascata.push('HIPOCALCEMIA')
       subirNivel(MODERADO)
     } else if (ca > cCa.max) {
       linhas.push(`CÁLCIO IÔNICO ELEVADO (${ca} MMOL/L): INVESTIGAR HIPERPARATIREOIDISMO PRIMÁRIO OU EXCESSO DE SUPLEMENTAÇÃO DE CÁLCIO E VITAMINA D.`)
@@ -1466,13 +1486,15 @@ function buildModOsseo(dados, ex, alertas, suger) {
   if (!isNaN(pth)) {
     if (pth > cPth.max) {
       if (!isNaN(ca) && ca > cCa.max) {
+        // Entidade DIFERENTE da cascata da deficiência — alerta próprio.
         linhas.push(`PTH ELEVADO (${pth} PG/ML) COM CÁLCIO ALTO: PADRÃO SUGESTIVO DE HIPERPARATIREOIDISMO PRIMÁRIO. INVESTIGAÇÃO ENDOCRINOLÓGICA INDICADA.`)
         alertas.push({ nivel: GRAVE, texto: 'PTH E CÁLCIO ELEVADOS — INVESTIGAR HIPERPARATIREOIDISMO PRIMÁRIO.' })
         subirNivel(GRAVE)
       } else {
         const grave = vitDCritica || caBaixo
         linhas.push(`PTH ELEVADO (${pth} PG/ML) COM CÁLCIO NORMAL OU BAIXO: HIPERPARATIREOIDISMO SECUNDÁRIO — RESPOSTA CLÁSSICA À DEFICIÊNCIA DE VITAMINA D E CÁLCIO NO BARIÁTRICO, COM ESTÍMULO CONTÍNUO À REABSORÇÃO ÓSSEA. OTIMIZAR VITAMINA D (META ≥ 30 NG/ML), CITRATO DE CÁLCIO E MAGNÉSIO; REAVALIAR O PTH APÓS A CORREÇÃO.`)
-        alertas.push({ nivel: grave ? GRAVE : MODERADO, texto: 'HIPERPARATIREOIDISMO SECUNDÁRIO — OTIMIZAR VITAMINA D, CÁLCIO E MAGNÉSIO.' })
+        cascata.push('HIPERPARATIREOIDISMO SECUNDÁRIO')
+        if (grave) cascataGrave = true
         subirNivel(grave ? GRAVE : MODERADO)
         suger.push('PTH INTACTO (REAVALIAR APÓS CORREÇÃO)')
       }
@@ -1483,6 +1505,12 @@ function buildModOsseo(dados, ex, alertas, suger) {
   } else if (vitDBaixa) {
     // Vitamina D baixa sem PTH medido → dosar para flagrar hiperparatireoidismo secundário
     suger.push('PTH INTACTO')
+  }
+
+  // UM alerta para toda a cascata da deficiência (não um por componente).
+  if (cascata.length) {
+    alertas.push({ nivel: cascataGrave ? GRAVE : MODERADO, texto:
+      `CASCATA ÓSSEO-MINERAL DA DEFICIÊNCIA (${cascata.join(' + ')}) — UMA MESMA CAUSA (DEFICIÊNCIA DE VITAMINA D E CÁLCIO NO BARIÁTRICO). CORRIGIR NA ORDEM: MAGNÉSIO PRIMEIRO, DEPOIS CITRATO DE CÁLCIO E VITAMINA D (META ≥ 30 NG/ML); REAVALIAR O PTH APÓS A CORREÇÃO.` })
   }
 
   if (linhas.length === 0) return null
@@ -2470,9 +2498,13 @@ function buildSecaoSangramento(dados, { somaFerro, textoFerro, causaConhecida },
     linhas.push('MESMO SEM ANEMIA AGORA, MANTENHA FERRITINA E HEMOGRAMA MONITORADOS — NO BARIÁTRICO COM PERDA MENSTRUAL, O ESTOQUE DE FERRO SE ESGOTA ANTES DE A HEMOGLOBINA CAIR.')
   }
 
-  alertas.push({ nivel, texto: somaFerro
+  // Dedup (auditoria): sangramento + endometriose/miomas é UMA história (a doença é
+  // a causa do sangramento). Este alerta carrega tudo quando a causa é conhecida; o
+  // alerta da seção B (achados) é suprimido nesse caso — senão 2 alertas do mesmo eixo.
+  const sufixoCausa = causaConhecida ? ' A CAUSA PROVÁVEL JÁ FOI IDENTIFICADA (VER CARD) — TRATAR A DOENÇA DE BASE É PARTE DO TRATAMENTO DA ANEMIA.' : ''
+  alertas.push({ nivel, texto: (somaFerro
     ? `${comoTexto} COM REPERCUSSÃO NO FERRO — AVALIAÇÃO GINECOLÓGICA PARA TRATAR A CAUSA DA PERDA; SÓ REPOR FERRO NÃO RESOLVE.`
-    : `${comoTexto} — PERDA DE FERRO QUE SOMA À DISABSORÇÃO BARIÁTRICA. AVALIAÇÃO GINECOLÓGICA E MONITORAMENTO DA FERRITINA.` })
+    : `${comoTexto} — PERDA DE FERRO QUE SOMA À DISABSORÇÃO BARIÁTRICA. AVALIAÇÃO GINECOLÓGICA E MONITORAMENTO DA FERRITINA.`) + sufixoCausa })
 
   // Com causa conhecida, o motivo do exame vem da seção B ("acompanhamento de
   // endometriose/miomas") — pedir "investigar a causa" ao lado seria redundante.
@@ -2511,7 +2543,11 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
       // aqui garante que o relatório SALVO carregue a recomendação.
       linhas.push('RECOMENDAMOS UMA TELECONSULTA MÉDICA PARA DISCUTIR A ENDOMETRIOSE NO SEU CONTEXTO BARIÁTRICO — MESMO QUE O RESTO DA SUA AVALIAÇÃO ESTEJA BEM. O CONTROLE DA DOENÇA E O DA SUA ANEMIA ANDAM JUNTOS.')
     }
-    alertas.push({ nivel: nivelS, texto: `${nomes}${somaFerro ? ' COM REPERCUSSÃO NO FERRO' : ''} — CAUSA DE PERDA MENSTRUAL QUE SOMA À DISABSORÇÃO BARIÁTRICA. ACOMPANHAMENTO GINECOLÓGICO; TRATAR A DOENÇA DE BASE É PARTE DO TRATAMENTO DA ANEMIA.` })
+    // Só alerta próprio quando NÃO há sangramento — se há, o alerta do sangramento
+    // (seção A) já carrega "a causa provável foi identificada" (dedup da auditoria).
+    if (!sangramento) {
+      alertas.push({ nivel: nivelS, texto: `${nomes}${somaFerro ? ' COM REPERCUSSÃO NO FERRO' : ''} — CAUSA DE PERDA MENSTRUAL QUE SOMA À DISABSORÇÃO BARIÁTRICA. ACOMPANHAMENTO GINECOLÓGICO; TRATAR A DOENÇA DE BASE É PARTE DO TRATAMENTO DA ANEMIA.` })
+    }
     need.motivos.push(`ACOMPANHAMENTO DE ${nomes}`)
     need.usPelvico = true
   }
@@ -3054,7 +3090,15 @@ function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, sug
     bump(MODERADO)
     precisaCardio = true
     linhas.push(`ACHADOS QUE VOCÊ REGISTROU: ${alterados.join('; ')}. ESTES EXAMES PRECISAM SER INTERPRETADOS POR UM CARDIOLOGISTA, COM OS LAUDOS EM MÃOS E NO SEU CONTEXTO CLÍNICO — ESTA AVALIAÇÃO NÃO SUBSTITUI ISSO. LEVE OS EXAMES NA CONSULTA.`)
-    alertas.push({ nivel: MODERADO, texto: `ACHADOS CARDIOVASCULARES A ESCLARECER (${alterados.join('; ')}) — AVALIAÇÃO CARDIOLÓGICA COM OS LAUDOS.` })
+    // Dedup (auditoria): ECG alterado e arritmia são ESPERADOS em quem usa marcapasso.
+    // Se os achados forem SÓ esses e há marcapasso, o alerta do marcapasso (abaixo) já
+    // manda ao cardiologista — não empurrar um 2º moderado do mesmo eixo. Eco/score
+    // alterados são achados independentes e mantêm o alerta.
+    const soExplicavelPeloMarcapasso = dados.ecg_marcapasso &&
+      alterados.every(a => a === 'ECG ALTERADO' || a === 'ARRITMIA')
+    if (!soExplicavelPeloMarcapasso) {
+      alertas.push({ nivel: MODERADO, texto: `ACHADOS CARDIOVASCULARES A ESCLARECER (${alterados.join('; ')}) — AVALIAÇÃO CARDIOLÓGICA COM OS LAUDOS.` })
+    }
   }
 
   // ── 4b. FRAÇÃO DE EJEÇÃO BAIXA — crítica própria (Dr. Ramos, jul/2026) ─────
