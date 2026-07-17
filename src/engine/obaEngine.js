@@ -164,7 +164,9 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   if (modOsseo) modulos.push(modOsseo)
 
   // ── 10. MÓDULO HORMONAL ─────────────────────────────────────────────────
-  const modHormonal = buildModHormonal(examesOBA, dadosOBA, sexo, idade, alertas, examesSuger)
+  // resultadoEritron entra aqui por causa da REPOSIÇÃO DE TESTOSTERONA: ela eleva a
+  // hemoglobina (eritrocitose) e pode MASCARAR a anemia do bariátrico.
+  const modHormonal = buildModHormonal(examesOBA, dadosOBA, sexo, idade, alertas, examesSuger, resultadoEritron)
   if (modHormonal) modulos.push(modHormonal)
 
   // ── 11. MÓDULO ONCOLÓGICO ────────────────────────────────────────────────
@@ -1465,8 +1467,11 @@ function buildModOsseo(dados, ex, alertas, suger) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MÓDULO 10 — HORMONAL
+// Movido por EXAMES (TSH/testosterona/estradiol) + a flag `tiroxina`. O
+// `status_hormonal` (a doença DECLARADA) era órfão — o motor sabia que a paciente
+// toma o remédio e não sabia do que ela tem. Ligado em jul/2026.
 // ─────────────────────────────────────────────────────────────────────────────
-function buildModHormonal(ex, dados, sexo, idade, alertas, suger) {
+function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritron) {
   const linhas = []
   let nivelGeral = NORMAL
   let temAlgo = false
@@ -1474,6 +1479,139 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger) {
   const tsh  = parseFloat(ex.tsh)
   const testo = parseFloat(ex.testosterona)
   const estr  = parseFloat(ex.estradiol)
+
+  // ── Doença DECLARADA (status_hormonal) ────────────────────────────────────
+  const hormonal = Array.isArray(dados.status_hormonal) ? dados.status_hormonal : []
+  const temHashimoto = hormonal.includes('TIREOIDITE (HASHIMOTO)')
+  const declaraHipo  = hormonal.includes('HIPOTIREOIDISMO') || temHashimoto
+  const declaraHiper = hormonal.includes('HIPERTIREOIDISMO')
+  const usaTiroxinaDecl = dados.tiroxina || false
+  // Nem 'REPOSIÇÃO HORMONAL' nem 'REPOSIÇÃO DE TESTOSTERONA' estão em
+  // STATUS_HORMONAL_OPS: são injetadas na tela por sexo/idade (OBAModal ~l.3119 e
+  // ~l.3123) e caem no mesmo array — igual à MENOPAUSA no ginecológico.
+  const fazTRH = hormonal.includes('REPOSIÇÃO HORMONAL')
+  const fazTRT = hormonal.includes('REPOSIÇÃO DE TESTOSTERONA')
+
+  if (declaraHipo) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    linhas.push(`VOCÊ DECLAROU ${temHashimoto ? 'TIREOIDITE DE HASHIMOTO' : 'HIPOTIREOIDISMO'}: NO PÓS-BARIÁTRICO ISSO EXIGE UMA ATENÇÃO QUE MUITA GENTE NÃO SABE — A CIRURGIA ALTERA A ABSORÇÃO DA LEVOTIROXINA, E A DOSE QUE FUNCIONAVA ANTES PODE NÃO SERVIR MAIS. O CONTROLE PRECISA SER REFEITO APÓS A CIRURGIA E A CADA MUDANÇA IMPORTANTE DE PESO.`)
+    // "cálcio" genérico de propósito: outro módulo manda trocar carbonato por CITRATO
+    // no bariátrico — dizer "carbonato" aqui faria quem seguiu aquela orientação achar
+    // que o citrato não interfere. Interfere igual.
+    linhas.push('DUAS COISAS QUE ATRAPALHAM A ABSORÇÃO DA LEVOTIROXINA E SÃO COMUNS NO BARIÁTRICO: O CÁLCIO (CITRATO OU CARBONATO, TANTO FAZ) E O FERRO. TOME A LEVOTIROXINA EM JEJUM E DEIXE UM INTERVALO DE PELO MENOS 4 HORAS PARA O CÁLCIO E PARA O FERRO — SE VOCÊ TOMA TUDO JUNTO DE MANHÃ, ESTÁ PERDENDO PARTE DOS TRÊS.')
+    if (isNaN(tsh)) suger.push('TSH (CONTROLE DO HIPOTIREOIDISMO DECLARADO)')
+
+    if (!usaTiroxinaDecl) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('VOCÊ DECLAROU HIPOTIREOIDISMO MAS NÃO MARCOU LEVOTIROXINA (TIROXINA) ENTRE OS SEUS MEDICAMENTOS. SE VOCÊ USA, VOLTE E MARQUE — ISSO MUDA A LEITURA DO SEU CASO. SE REALMENTE NÃO USA, CONFIRME COM O ENDOCRINOLOGISTA SE A REPOSIÇÃO ESTÁ INDICADA: O HIPOTIREOIDISMO NÃO TRATADO DIFICULTA A PERDA DE PESO, AGRAVA A ANEMIA E O CANSAÇO QUE VOCÊ PODE ESTAR ATRIBUINDO SÓ À CIRURGIA.')
+      // Só alerta se o TSH NÃO for alertar por conta própria mais abaixo: com TSH
+      // elevado dosado, o alerta de lá já diz "hipotireoidismo — avaliar" e este
+      // seria um 2º moderado pelo MESMO diagnóstico (2 moderados = estado RUIM).
+      if (!(!isNaN(tsh) && tsh > REF.tsh.hipotireoidismo)) {
+        alertas.push({ nivel: MODERADO, texto: 'HIPOTIREOIDISMO DECLARADO SEM LEVOTIROXINA REGISTRADA — CONFIRMAR SE HÁ REPOSIÇÃO EM CURSO. NÃO TRATADO, DIFICULTA A PERDA DE PESO E AGRAVA ANEMIA E FADIGA.' })
+      }
+    }
+  }
+
+  // Hashimoto é AUTOIMUNE — e é aqui que mora o achado que o bariátrico esconde.
+  if (temHashimoto) {
+    temAlgo = true
+    const b12Hash = parseFloat(ex.vitamina_b12)
+    const b12Baixa = !isNaN(b12Hash) && b12Hash < REF.b12.baixo
+    linhas.push('A TIREOIDITE DE HASHIMOTO É UMA DOENÇA AUTOIMUNE, E DOENÇAS AUTOIMUNES ANDAM EM GRUPO: QUEM TEM HASHIMOTO TEM MAIS CHANCE DE TER TAMBÉM GASTRITE ATRÓFICA AUTOIMUNE (QUE CAUSA ANEMIA PERNICIOSA) E DOENÇA CELÍACA. AS DUAS PREJUDICAM A ABSORÇÃO — E NO SEU CASO SERIAM SOMADAS À DA CIRURGIA.')
+    if (b12Baixa) {
+      // NÃO consolidar com o alerta do módulo de B12 (que já diz "B12 baixa,
+      // reponha"). Decisão do Dr. Ramos (jul/2026): este é um achado DISTINTO —
+      // gera investigação própria (anti-fator intrínseco, anti-célula parietal) e
+      // conduta diferente (parenteral vitalício + vigilância gástrica). Os 2
+      // moderados levando o estado a RUIM aqui são resultado clínico, não a
+      // armadilha de contagem que assombra o resto do arquivo.
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push(`ATENÇÃO — A SUA VITAMINA B12 ESTÁ BAIXA (${b12Hash} pg/mL) E VOCÊ TEM HASHIMOTO: NÃO ATRIBUA ISSO AUTOMATICAMENTE À CIRURGIA. A COMBINAÇÃO DAS DUAS COISAS LEVANTA A SUSPEITA DE GASTRITE ATRÓFICA AUTOIMUNE / ANEMIA PERNICIOSA, QUE É UMA CAUSA DIFERENTE, VITALÍCIA, E QUE EXIGE VIGILÂNCIA PRÓPRIA DO ESTÔMAGO. VALE INVESTIGAR COM ANTICORPOS ANTI-CÉLULA PARIETAL E ANTI-FATOR INTRÍNSECO E COM A GASTRINA SÉRICA — O TRATAMENTO É PARENTERAL E PARA A VIDA TODA.`)
+      alertas.push({ nivel: MODERADO, texto: `HASHIMOTO + B12 BAIXA (${b12Hash} pg/mL) — NÃO ATRIBUIR SÓ À CIRURGIA: INVESTIGAR GASTRITE ATRÓFICA AUTOIMUNE / ANEMIA PERNICIOSA (ANTI-CÉLULA PARIETAL, ANTI-FATOR INTRÍNSECO, GASTRINA). CAUSA VITALÍCIA, COM VIGILÂNCIA GÁSTRICA PRÓPRIA.` })
+      suger.push('ANTICORPO ANTI-CÉLULA PARIETAL')
+      suger.push('ANTICORPO ANTI-FATOR INTRÍNSECO')
+      suger.push('GASTRINA SÉRICA')
+    }
+    if (dados.fan === 'REAGENTE') {
+      linhas.push('O SEU FAN REAGENTE COMBINA COM O CONTEXTO AUTOIMUNE DO HASHIMOTO — LEVE OS DOIS JUNTOS AO SEU MÉDICO; ISOLADAMENTE CADA UM DIZ MENOS DO QUE OS DOIS SOMADOS.')
+    }
+    suger.push('ANTI-TPO')
+  }
+
+  // TERAPIA DE REPOSIÇÃO HORMONAL — cruzamento de SEGURANÇA com o histórico de
+  // trombose: o estrogênio ORAL aumenta o risco de tromboembolismo; a via
+  // transdérmica não passa pelo fígado e é a preferida nesse cenário.
+  if (fazTRH) {
+    temAlgo = true
+    const teveTrombose = !!dados.trombose
+    if (teveTrombose) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('ATENÇÃO — VOCÊ FAZ REPOSIÇÃO HORMONAL E TEM HISTÓRICO DE TROMBOSE: O ESTROGÊNIO POR VIA ORAL AUMENTA O RISCO DE UM NOVO EVENTO TROMBÓTICO, PORQUE PASSA PELO FÍGADO E ALTERA A COAGULAÇÃO. ISSO NÃO SIGNIFICA PARAR NADA POR CONTA PRÓPRIA — SIGNIFICA LEVAR ESSA COMBINAÇÃO AO SEU MÉDICO COM PRIORIDADE. A VIA TRANSDÉRMICA (ADESIVO OU GEL) NÃO TEM ESSE EFEITO DE PRIMEIRA PASSAGEM E COSTUMA SER A PREFERIDA PARA QUEM JÁ TROMBOSOU.')
+      alertas.push({ nivel: MODERADO, texto: 'REPOSIÇÃO HORMONAL + HISTÓRICO DE TROMBOSE — O ESTROGÊNIO ORAL ELEVA O RISCO DE NOVO EVENTO. REVER VIA (TRANSDÉRMICA NÃO TEM 1ª PASSAGEM HEPÁTICA) E INDICAÇÃO COM O MÉDICO. NÃO SUSPENDER POR CONTA PRÓPRIA.' })
+    } else {
+      if (nivelGeral === NORMAL) nivelGeral = LEVE
+      linhas.push('VOCÊ FAZ REPOSIÇÃO HORMONAL: NO PÓS-BARIÁTRICO ELA TEM UM BENEFÍCIO EXTRA — PROTEGE O OSSO, QUE JÁ PERDE MASSA POR CONTA DA CIRURGIA. MANTENHA O ACOMPANHAMENTO E INFORME AO SEU MÉDICO QUALQUER HISTÓRICO DE TROMBOSE, SEU OU DA FAMÍLIA, PORQUE ISSO MUDA A VIA RECOMENDADA (ORAL × ADESIVO/GEL).')
+    }
+  }
+
+  // REPOSIÇÃO DE TESTOSTERONA (homem) — é o achado hormonal mais HEMATOLÓGICO que
+  // existe aqui: a testosterona exógena estimula a eritropoese, eleva a hemoglobina
+  // (eritrocitose) e, com isso, pode MASCARAR a anemia/ferropenia do bariátrico —
+  // mesma lógica do CO no fumante. E há o ponto que só o contexto bariátrico dá: a
+  // obesidade CAUSA hipogonadismo (o tecido adiposo aromatiza testosterona em
+  // estrogênio); perdendo peso, a produção própria costuma voltar — e a dose que
+  // era necessária antes pode ficar excessiva depois.
+  if (fazTRT) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    const hb = Number(resultadoEritron?.inputs?.hemoglobina ?? ex?.hb_novo)
+    // MESMO corte do motor principal p/ ESTE achado: achadosParalelos.js:27/148 usa
+    // hbNormalMax (M 17.5 / F 15.5) e marca "eritrocitose secundária a testosterona"
+    // em vermelho. Um corte próprio aqui (era 18) fazia o Hb 17.8 sair vermelho na
+    // triagem e leve no OBA — o mesmo dado com duas leituras.
+    const hbMax = sexo === 'M' ? 17.5 : 15.5
+    const hbAlta = Number.isFinite(hb) && hb > hbMax
+
+    linhas.push('VOCÊ FAZ REPOSIÇÃO DE TESTOSTERONA: ISSO PRECISA SER LIDO JUNTO COM O SEU HEMOGRAMA, PORQUE A TESTOSTERONA ESTIMULA A MEDULA A PRODUZIR MAIS GLÓBULOS VERMELHOS. O EFEITO TEM DOIS LADOS NO SEU CASO. O PRIMEIRO: A HEMOGLOBINA PODE SUBIR DEMAIS (ERITROCITOSE), ENGROSSANDO O SANGUE E AUMENTANDO O RISCO DE TROMBOSE — POR ISSO O HEMATÓCRITO PRECISA SER MONITORADO NA REPOSIÇÃO, E NÃO SÓ A TESTOSTERONA.')
+    linhas.push('O SEGUNDO LADO É O QUE MAIS IMPORTA AQUI: A TESTOSTERONA PODE MASCARAR A SUA ANEMIA. ELA EMPURRA A HEMOGLOBINA PARA CIMA MESMO COM O FERRO BAIXO — ENTÃO UM HEMOGRAMA "NORMAL" NÃO GARANTE QUE O SEU FERRO ESTEJA BOM. NO SEU CASO, A FERRITINA E A SATURAÇÃO DA TRANSFERRINA VALEM MAIS QUE A HEMOGLOBINA PARA DIZER COMO ESTÁ O SEU ESTOQUE DE FERRO.')
+    linhas.push('E UM PONTO QUE POUCA GENTE LEVANTA: A PRÓPRIA OBESIDADE CAUSA TESTOSTERONA BAIXA — A GORDURA CORPORAL CONVERTE TESTOSTERONA EM ESTROGÊNIO. COM A PERDA DE PESO DA CIRURGIA, A SUA PRODUÇÃO NATURAL TENDE A MELHORAR, E A DOSE QUE VOCÊ PRECISAVA ANTES PODE ESTAR SOBRANDO AGORA. VALE REAVALIAR A INDICAÇÃO E A DOSE COM O ENDOCRINOLOGISTA/UROLOGISTA — SE VOCÊ PRETENDE TER FILHOS, ISSO É AINDA MAIS IMPORTANTE: A TESTOSTERONA DE FORA DESLIGA A PRODUÇÃO DE ESPERMATOZOIDES.')
+    suger.push('HEMATÓCRITO (MONITORAMENTO DA REPOSIÇÃO DE TESTOSTERONA)')
+    suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA (A TESTOSTERONA MASCARA A ANEMIA)')
+
+    if (hbAlta) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push(`A SUA HEMOGLOBINA JÁ ESTÁ ALTA (${hb} g/dL) EM USO DE TESTOSTERONA: ISSO É O EFEITO ESPERADO DA MEDICAÇÃO LEVADO LONGE DEMAIS. LEVE ESTE RESULTADO AO MÉDICO QUE PRESCREVEU — A CONDUTA HABITUAL É REDUZIR A DOSE OU ESPAÇAR AS APLICAÇÕES, E O HEMATÓCRITO GUIA ESSA DECISÃO. NÃO INTERROMPA POR CONTA PRÓPRIA.`)
+    }
+    if (dados.trombose) {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('ATENÇÃO — VOCÊ TEM HISTÓRICO DE TROMBOSE E FAZ REPOSIÇÃO DE TESTOSTERONA: A ERITROCITOSE QUE ELA PODE CAUSAR SOMA-SE AO SEU RISCO TROMBÓTICO. ESSA COMBINAÇÃO PRECISA SER DISCUTIDA COM O SEU MÉDICO COM PRIORIDADE — NÃO SUSPENDA NADA POR CONTA PRÓPRIA.')
+    }
+
+    // UM alerta para o contexto TRT (não um por sub-achado). Empurrar 3 — eritrocitose,
+    // trombose e dose excessiva — somava 3 moderados de UM único contexto clínico e
+    // jogava o estado p/ RUIM sozinho. Mesma armadilha já corrigida na FE (l.~2700).
+    const trtFatos = []
+    if (hbAlta) trtFatos.push(`HEMOGLOBINA ${hb} g/dL (ACIMA DE ${hbMax}) — ERITROCITOSE INDUZIDA: REVER DOSE/INTERVALO COM O PRESCRITOR`)
+    if (dados.trombose) trtFatos.push('HISTÓRICO DE TROMBOSE: A ERITROCITOSE SOMA-SE AO RISCO TROMBÓTICO')
+    // A dosagem da testosterona é criticada mais abaixo (bloco do exame), mas o FATO
+    // entra aqui: fora/dentro do alvo em reposição é o MESMO contexto clínico, não
+    // um segundo achado. Lá, com fazTRT, o bloco só escreve linha — não alerta.
+    if (!isNaN(testo) && testo > 900) trtFatos.push(`TESTOSTERONA ${testo} ng/dL — DOSE EXCESSIVA (ALIMENTA A ERITROCITOSE)`)
+    else if (!isNaN(testo) && testo < REF.testoM.baixo) trtFatos.push(`TESTOSTERONA ${testo} ng/dL APESAR DA REPOSIÇÃO — REVER DOSE/INTERVALO E CONFERIR O MOMENTO DA COLETA NO CICLO`)
+    const trtGrave = hbAlta || dados.trombose || (!isNaN(testo) && (testo > 900 || testo < REF.testoM.baixo))
+    alertas.push({ nivel: trtGrave ? MODERADO : LEVE, texto:
+      `REPOSIÇÃO DE TESTOSTERONA — MONITORAR HEMATÓCRITO E NÃO USAR A HEMOGLOBINA PARA AVALIAR O FERRO (ELA MASCARA A ANEMIA: USAR FERRITINA/SATURAÇÃO). REAVALIAR INDICAÇÃO E DOSE APÓS A PERDA DE PESO (A OBESIDADE CAUSAVA PARTE DO HIPOGONADISMO).${trtFatos.length ? ' ' + trtFatos.join('. ') + '.' : ''}` })
+  }
+
+  if (declaraHiper) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    linhas.push('VOCÊ DECLAROU HIPERTIREOIDISMO: DUAS ARMADILHAS NO PÓS-BARIÁTRICO. A PRIMEIRA É CONFUNDIR O EMAGRECIMENTO DA TIREOIDE ACELERADA COM O SUCESSO DA CIRURGIA — SÃO COISAS DIFERENTES E A PRIMEIRA PRECISA DE TRATAMENTO. A SEGUNDA É O OSSO: O EXCESSO DE HORMÔNIO TIREOIDIANO ACELERA A PERDA DE MASSA ÓSSEA, QUE JÁ É UM PONTO FRÁGIL DEPOIS DA CIRURGIA — OS DOIS EFEITOS SE SOMAM. MANTENHA O ACOMPANHAMENTO ENDOCRINOLÓGICO.')
+    alertas.push({ nivel: LEVE, texto: 'HIPERTIREOIDISMO DECLARADO — O EMAGRECIMENTO PODE NÃO SER SÓ DA CIRURGIA; E A PERDA ÓSSEA SOMA-SE À DO PÓS-BARIÁTRICO. ACOMPANHAMENTO ENDOCRINOLÓGICO.' })
+    if (isNaN(tsh)) suger.push('TSH (CONTROLE DO HIPERTIREOIDISMO DECLARADO)')
+  }
 
   // TSH
   if (!isNaN(tsh)) {
@@ -1523,13 +1661,28 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger) {
     linhas.push(`TESTOSTERONA TOTAL: ${testo} ng/dL`)
     if (testo < REF.testoM.baixo) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
-      linhas.push('TESTOSTERONA BAIXA (HIPOGONADISMO MASCULINO): CAUSA FREQUENTE EM BARIÁTRICOS. PODE RESULTAR DE DEFICIÊNCIA DE ZINCO, VITAMINA D E OBESIDADE RESIDUAL. SUPLEMENTAÇÃO DE TESTOSTERONA PODE AGRAVAR ERITROCITOSE E HAS — AVALIAÇÃO COM UROLOGISTA OU ENDOCRINOLOGISTA.')
-      alertas.push({ nivel: MODERADO, texto: `TESTOSTERONA BAIXA: ${testo} ng/dL — AVALIAR HIPOGONADISMO.` })
-      suger.push('LH, FSH, PROLACTINA')
+      if (fazTRT) {
+        // Quem JÁ repõe não precisa "avaliar suplementação" — o achado é que a
+        // reposição não está alcançando o alvo. SEM alerta próprio: o fato já foi
+        // embutido no alerta único do contexto TRT (acima).
+        linhas.push('TESTOSTERONA BAIXA APESAR DA REPOSIÇÃO: A DOSE OU O INTERVALO PODEM NÃO ESTAR ADEQUADOS — OU A COLETA FOI FEITA NO FIM DO CICLO (O NÍVEL CAI ANTES DA PRÓXIMA APLICAÇÃO). LEVE O RESULTADO AO PRESCRITOR E CONFIRME EM QUE MOMENTO DO CICLO O SANGUE FOI COLHIDO — ISSO MUDA A INTERPRETAÇÃO.')
+      } else {
+        linhas.push('TESTOSTERONA BAIXA (HIPOGONADISMO MASCULINO): CAUSA FREQUENTE EM BARIÁTRICOS. PODE RESULTAR DE DEFICIÊNCIA DE ZINCO, VITAMINA D E OBESIDADE RESIDUAL. SUPLEMENTAÇÃO DE TESTOSTERONA PODE AGRAVAR ERITROCITOSE E HAS — AVALIAÇÃO COM UROLOGISTA OU ENDOCRINOLOGISTA.')
+        alertas.push({ nivel: MODERADO, texto: `TESTOSTERONA BAIXA: ${testo} ng/dL — AVALIAR HIPOGONADISMO.` })
+        suger.push('LH, FSH, PROLACTINA')
+      }
     } else if (testo > 900) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
-      linhas.push('TESTOSTERONA ELEVADA (> 900 ng/dL): VERIFICAR USO DE ANABOLIZANTES OU TESTOSTERONA EXÓGENA. PODE PRODUZIR ERITROCITOSE.')
-      alertas.push({ nivel: LEVE, texto: 'TESTOSTERONA ELEVADA — VERIFICAR USO DE ANABOLIZANTES.' })
+      if (fazTRT) {
+        // Não faz sentido "verificar uso de testosterona exógena" em quem já declarou
+        // que repõe: aqui o achado é dose excessiva. SEM alerta próprio — o fato já
+        // está no alerta único do contexto TRT (acima).
+        linhas.push('TESTOSTERONA ACIMA DE 900 ng/dL EM USO DE REPOSIÇÃO: A DOSE ESTÁ ALTA. ISSO AUMENTA O RISCO DE ERITROCITOSE (SANGUE MAIS ESPESSO) — REVER DOSE E INTERVALO COM O PRESCRITOR, DE PREFERÊNCIA COM O HEMATÓCRITO EM MÃOS.')
+        if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      } else {
+        linhas.push('TESTOSTERONA ELEVADA (> 900 ng/dL): VERIFICAR USO DE ANABOLIZANTES OU TESTOSTERONA EXÓGENA. PODE PRODUZIR ERITROCITOSE.')
+        alertas.push({ nivel: LEVE, texto: 'TESTOSTERONA ELEVADA — VERIFICAR USO DE ANABOLIZANTES.' })
+      }
     } else {
       linhas.push('TESTOSTERONA DENTRO DA FAIXA NORMAL MASCULINA.')
     }
@@ -1541,9 +1694,17 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger) {
     linhas.push(`ESTRADIOL: ${estr} pg/mL`)
     if (estr < REF.estradiolF.baixo && idade >= 40) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
-      linhas.push('ESTRADIOL BAIXO EM MULHER ≥ 40 ANOS: COMPATÍVEL COM MENOPAUSA OU INSUFICIÊNCIA OVARIANA. AVALIAR INDICAÇÃO DE TERAPIA HORMONAL — IMPORTANTE PARA PREVENÇÃO DA OSTEOPOROSE NO CONTEXTO BARIÁTRICO.')
-      alertas.push({ nivel: LEVE, texto: 'ESTRADIOL BAIXO — AVALIAR INDICAÇÃO DE TERAPIA HORMONAL NA MENOPAUSA.' })
-      suger.push('FSH, LH (SE NÃO MENOPAUSA CONFIRMADA)')
+      if (fazTRH) {
+        // Quem JÁ faz reposição não precisa "avaliar a indicação" — o achado aqui é
+        // outro: a reposição não está alcançando o alvo (e no bariátrico a absorção
+        // do comprimido é uma causa provável disso).
+        linhas.push('ESTRADIOL BAIXO EM QUEM JÁ FAZ REPOSIÇÃO HORMONAL: A DOSE PODE NÃO ESTAR SENDO SUFICIENTE OU NÃO ESTAR SENDO BEM ABSORVIDA — E NO PÓS-BARIÁTRICO A ABSORÇÃO DO COMPRIMIDO É UMA CAUSA PROVÁVEL. LEVE ESTE RESULTADO AO SEU MÉDICO PARA REVER DOSE E VIA (O ADESIVO OU GEL NÃO DEPENDEM DO INTESTINO).')
+        alertas.push({ nivel: LEVE, texto: 'ESTRADIOL BAIXO APESAR DA REPOSIÇÃO HORMONAL — REVER DOSE E VIA (A ABSORÇÃO ORAL É REDUZIDA NO PÓS-BARIÁTRICO; VIA TRANSDÉRMICA NÃO DEPENDE DO INTESTINO).' })
+      } else {
+        linhas.push('ESTRADIOL BAIXO EM MULHER ≥ 40 ANOS: COMPATÍVEL COM MENOPAUSA OU INSUFICIÊNCIA OVARIANA. AVALIAR INDICAÇÃO DE TERAPIA HORMONAL — IMPORTANTE PARA PREVENÇÃO DA OSTEOPOROSE NO CONTEXTO BARIÁTRICO.')
+        alertas.push({ nivel: LEVE, texto: 'ESTRADIOL BAIXO — AVALIAR INDICAÇÃO DE TERAPIA HORMONAL NA MENOPAUSA.' })
+        suger.push('FSH, LH (SE NÃO MENOPAUSA CONFIRMADA)')
+      }
     } else {
       linhas.push('ESTRADIOL DENTRO DO ESPERADO.')
     }
