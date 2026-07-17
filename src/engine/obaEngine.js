@@ -2075,6 +2075,33 @@ function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger
   // (não é menstruação). Criticar "perda menstrual" aqui seria contraditório.
   if (dados.status_gestacional === 'GRÁVIDA') return null
 
+  // Cruzamento com o ferro (mesma cadeia de fallback do resto do motor: eritron
+  // primeiro, depois os valores relançados na etapa de exames do OBA). Calculado
+  // antes dos ramos porque menopausa E régua do tempo usam.
+  const ferr = Number(resultadoEritron?.inputs?.ferritina ?? examesOBA?.ferritina_novo ?? examesOBA?.ferritina_oba)
+  const ferrBaixa = Number.isFinite(ferr) && ferr > 0 && ferr < OBA_CUTOFFS.ferritina_oba.min
+  const temAnemia = /ANEMIA|ANÊMIC/i.test(resultadoEritron?.label || '') || resultadoEritron?.color === 'red'
+  const somaFerro = ferrBaixa || temAnemia
+
+  // MENOPAUSA + SANGRAMENTO: também não é menstruação — sangramento pós-menopausa
+  // é red flag de câncer de endométrio. Substitui a régua do tempo inteira: aqui a
+  // gravidade não depende de intensidade nem de persistência — QUALQUER sangramento
+  // após a menopausa exige investigação. GRAVE sempre (leva o Estado a CRÍTICO).
+  if ((dados.status_ginecologico || []).includes('MENOPAUSA')) {
+    const linhas = [
+      'VOCÊ MARCOU MENOPAUSA E SANGRAMENTO AO MESMO TEMPO. SANGRAMENTO DEPOIS DA MENOPAUSA NÃO É MENSTRUAÇÃO — É UM SINAL DE ALERTA QUE EXIGE INVESTIGAÇÃO GINECOLÓGICA PRIORITÁRIA, PRINCIPALMENTE PARA DESCARTAR CÂNCER DE ENDOMÉTRIO. NA MAIORIA DOS CASOS A CAUSA É BENIGNA (ATROFIA, PÓLIPO, EFEITO DE TERAPIA HORMONAL), MAS ISSO SÓ A INVESTIGAÇÃO PODE DIZER — NÃO ADIE.',
+      'A INVESTIGAÇÃO COMEÇA PELA ULTRASSONOGRAFIA TRANSVAGINAL (MEDIDA DA ESPESSURA DO ENDOMÉTRIO); CONFORME O RESULTADO, HISTEROSCOPIA COM BIÓPSIA.',
+      'SE VOCÊ AINDA ESTÁ NA TRANSIÇÃO PARA A MENOPAUSA (MENSTRUAÇÕES ESPAÇANDO, MAS AINDA OCORRENDO), INFORME AO GINECOLOGISTA HÁ QUANTO TEMPO ESTÁ SEM MENSTRUAR — SANGRAMENTO SÓ É "PÓS-MENOPAUSA" APÓS 12 MESES SEM CICLOS, MAS A IRREGULARIDADE DA TRANSIÇÃO TAMBÉM MERECE AVALIAÇÃO.',
+    ]
+    if (somaFerro) {
+      linhas.push(`ESTE SANGRAMENTO JÁ SE REFLETE NO SEU FERRO (${temAnemia ? 'ANEMIA NO ERITRON' : `FERRITINA ${ferr} ng/mL, ABAIXO DE ${OBA_CUTOFFS.ferritina_oba.min}`}) — TRATE A REPOSIÇÃO EM PARALELO À INVESTIGAÇÃO GINECOLÓGICA, SEM ESPERAR POR ELA. NO PÓS-BARIÁTRICO A VIA ORAL É LIMITADA; DISCUTA FERRO PARENTERAL.`)
+    }
+    alertas.push({ nivel: GRAVE, texto: 'SANGRAMENTO APÓS A MENOPAUSA — INVESTIGAÇÃO GINECOLÓGICA PRIORITÁRIA PARA DESCARTAR CÂNCER DE ENDOMÉTRIO. ULTRASSONOGRAFIA TRANSVAGINAL INDICADA.' })
+    suger.push('AVALIAÇÃO GINECOLÓGICA PRIORITÁRIA (SANGRAMENTO PÓS-MENOPAUSA)')
+    suger.push('ULTRASSONOGRAFIA PÉLVICA TRANSVAGINAL (ESPESSURA DO ENDOMÉTRIO)')
+    return { id: 'ginecologico', titulo: 'SAÚDE GINECOLÓGICA', nivel: GRAVE, linhas }
+  }
+
   const tipo = dados.sangramento_menstrual_tipo || ''
   const duracao = dados.sangramento_duracao || ''
   const persistencia = dados.sangramento_persistencia || ''
@@ -2092,13 +2119,6 @@ function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger
   let nivel = MODERADO
   if (fatores.length >= 1 && persistente) nivel = GRAVE
   else if (fatores.length >= 2 && !recente) nivel = GRAVE
-
-  // Cruzamento com o ferro (mesma cadeia de fallback do resto do motor: eritron
-  // primeiro, depois os valores relançados na etapa de exames do OBA).
-  const ferr = Number(resultadoEritron?.inputs?.ferritina ?? examesOBA?.ferritina_novo ?? examesOBA?.ferritina_oba)
-  const ferrBaixa = Number.isFinite(ferr) && ferr > 0 && ferr < OBA_CUTOFFS.ferritina_oba.min
-  const temAnemia = /ANEMIA|ANÊMIC/i.test(resultadoEritron?.label || '') || resultadoEritron?.color === 'red'
-  const somaFerro = ferrBaixa || temAnemia
   if (somaFerro && nivel === MODERADO) nivel = GRAVE
 
   const linhas = []

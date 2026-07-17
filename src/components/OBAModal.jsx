@@ -1212,10 +1212,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       queixas_secundarias: form.queixas_secundarias || [],
       status_ginecologico: form.status_ginecologico,
       // Sub-respostas só valem se o checkbox pai estiver marcado (senão viram dado sujo).
-      sangramento_menstrual_tipo: form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_menstrual_tipo || null) : null,
-      sangramento_duracao:      form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_duracao || null) : null,
-      sangramento_persistencia: form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_persistencia || null) : null,
-      sangramento_frequencia:   form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') ? (form.sangramento_frequencia || null) : null,
+      // Padrão menstrual: só vale com SANGRAMENTO marcado E SEM MENOPAUSA — com
+      // menopausa as perguntas somem da tela e o motor ignora (red flag próprio);
+      // enviar respostas antigas presas no form viraria dado morto no snapshot.
+      sangramento_menstrual_tipo: form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && !form.status_ginecologico.includes('MENOPAUSA') ? (form.sangramento_menstrual_tipo || null) : null,
+      sangramento_duracao:      form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && !form.status_ginecologico.includes('MENOPAUSA') ? (form.sangramento_duracao || null) : null,
+      sangramento_persistencia: form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && !form.status_ginecologico.includes('MENOPAUSA') ? (form.sangramento_persistencia || null) : null,
+      sangramento_frequencia:   form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && !form.status_ginecologico.includes('MENOPAUSA') ? (form.sangramento_frequencia || null) : null,
       cancer_mama_status: form.status_ginecologico.includes('CÂNCER DE MAMA') ? (form.cancer_mama_status || null) : null,
       status_prostatico: form.status_prostatico,
       prostata_cancer_tratamentos: form.status_prostatico.includes('CÂNCER') ? form.prostata_cancer_tratamentos : [],
@@ -3102,7 +3105,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             {STATUS_GINECOLOGICO_OPS.map(op => (
               <CheckRow key={op} label={op} checked={form.status_ginecologico.includes(op)} onClick={() => sf('status_ginecologico', tog(form.status_ginecologico, op))} />
             ))}
-            {idadeNum >= 35 && (
+            {/* Corte em 32 (era 35; Dr. Ramos, jul/2026): falência ovariana precoce
+                existe antes dos 35 — sem o checkbox, o red flag de sangramento
+                pós-menopausa (buildModGinecologico) ficava inalcançável p/ elas. */}
+            {idadeNum >= 32 && (
               <CheckRow label={"MENOPAUSA"} checked={form.status_ginecologico.includes('MENOPAUSA')} onClick={() => sf('status_ginecologico', tog(form.status_ginecologico, 'MENOPAUSA'))} />
             )}
           </div>
@@ -3113,7 +3119,18 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               </p>
             </div>
           )}
-          {form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && (
+          {form.status_gestacional !== "GRÁVIDA" && form.status_ginecologico.includes('MENOPAUSA') && form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && (
+            <div style={{ marginTop:'0.6rem', background:'#FEF2F2', border:'2px solid #DC2626', borderRadius:10, padding:'0.7rem 0.9rem' }}>
+              <p style={{ fontSize:'0.82rem', fontWeight:800, color:'#B91C1C', margin:0, lineHeight:1.45 }}>
+                {"⚠️ Sangramento depois da menopausa não é menstruação — precisa de investigação ginecológica prioritária. O relatório vai detalhar."}
+              </p>
+            </div>
+          )}
+          {/* Com MENOPAUSA marcada as perguntas de padrão menstrual somem: o motor as
+              ignora nesse ramo (sangramento pós-menopausa é red flag independente de
+              intensidade/tempo — ver buildModGinecologico) e perguntar "quantos dias
+              dura a menstruação" a quem não menstrua seria incoerente. */}
+          {form.status_ginecologico.includes('SANGRAMENTO MENSTRUAL') && !form.status_ginecologico.includes('MENOPAUSA') && (
             <div style={{ marginTop:'0.5rem' }}>
               <p style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', margin:'0 0 0.4rem' }}>{"Tipo de sangramento"}</p>
               <RadioGroup options={SANGRAMENTO_MENSTRUAL_OPS} value={form.sangramento_menstrual_tipo} cols={1} onChange={v => sf('sangramento_menstrual_tipo', form.sangramento_menstrual_tipo === v ? '' : v)} />
