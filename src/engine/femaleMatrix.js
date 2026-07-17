@@ -2382,7 +2382,10 @@ export const femaleMatrix = [
       bariatrica:  true,
       vegetariano: false,
       perda:       false,
-      hipermenorreia: false,
+      // hipermenorreia de propósito NÃO declarada: quando era `false`, marcar a flag
+      // EXPULSAVA a paciente da entrada e a jogava no fallback genérico (vermelho,
+      // só HEMOGRAMA) — a mulher com MAIS perda de ferro recebia o pior relatório.
+      // A perda menstrual é comentada pela fraseHipermenorreia por cima deste match.
       alcoolista:  false,
       transfundido: false,
       gestante:    false,
@@ -2408,7 +2411,9 @@ export const femaleMatrix = [
       bariatrica:  true,
       vegetariano: false,
       perda:       false,
-      hipermenorreia: false,
+      // hipermenorreia não declarada — mesma razão da entrada 115. Gestante não
+      // menstrua: sangramento na gestação é emergência (alerta próprio no OBA),
+      // não motivo para jogar a paciente no fallback genérico.
       alcoolista:  false,
       transfundido: false,
       gestante:    true,

@@ -372,6 +372,9 @@ export function avaliarPaciente(inputs) {
     fallback.proximosExamesBioimagem = sp.bioimagem;
     fallback.diasDesdeColeta = calcularDias(inputs.dataColeta);
     fallback.fraseData = getFraseData(fallback.diasDesdeColeta);
+    // A frase de hipermenorreia vale AQUI TAMBÉM — sem ela, a paciente que caía no
+    // fallback justamente POR ter marcado hipermenorreia perdia o comentário sobre isso.
+    fallback.fraseHipermenorreia = fraseHiper;
     return fallback;
   }
 
