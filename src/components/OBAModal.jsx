@@ -1720,7 +1720,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
   if (etapa === 'conclusao') {
     const estado = estadoClinico?.estado
-    const teleRecomendada = estado === 'CRITICO' || estado === 'RUIM' || form.usou_anticoagulante
+    // Endometriose recomenda teleconsulta INDEPENDENTE do estado (Dr. Ramos, jul/2026):
+    // é doença crônica, dolorosa e causa de ferropenia — merece conversa médica mesmo
+    // quando o resto da avaliação está bem.
+    const temEndometriose = (form.status_ginecologico || []).includes('ENDOMETRIOSE')
+    const teleRecomendada = estado === 'CRITICO' || estado === 'RUIM' || form.usou_anticoagulante || temEndometriose
     // H. pylori: achado endoscópico OU sorologia IgM reagente (infecção ativa).
     const temHpylori = (form.status_endoscopico || []).includes('H. PYLORI') || form.antiHp_igm === 'REAGENTE'
     // SEGURANÇA: o esquema padrão de erradicação usa AMOXICILINA (penicilina). Se a
@@ -1779,14 +1783,18 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               {"Com base na sua avaliação, estas são as recomendações e opções para você:"}
             </p>
 
-            {/* TELECONSULTA — se CRÍTICO/RUIM ou usou anticoagulante */}
+            {/* TELECONSULTA — se CRÍTICO/RUIM, usou anticoagulante ou tem endometriose.
+                O motivo exibido segue essa mesma ordem: cada paciente lê a razão DELA
+                (antes o "senão" afirmava trombose para todo mundo que não era CRÍTICO/RUIM). */}
             {teleRecomendada && (
               <div style={{ background:'#EFF6FF', border:'2px solid #93C5FD', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
                 <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#1E40AF', margin:'0 0 0.4rem' }}>{"RECOMENDAMOS TELECONSULTA MÉDICA"}</p>
                 <p style={{ fontSize:'0.8rem', color:'#1D4ED8', lineHeight:1.5, margin:'0 0 0.7rem' }}>
                   {(estado === 'CRITICO' || estado === 'RUIM')
                     ? "Seu estado clínico atual merece avaliação médica próxima."
-                    : "Seu histórico (trombose com anticoagulante já interrompido) recomenda avaliação o quanto antes."}
+                    : form.usou_anticoagulante
+                      ? "Seu histórico (trombose com anticoagulante já interrompido) recomenda avaliação o quanto antes."
+                      : "A endometriose é uma condição crônica que causa dor e perda de ferro — no pós-bariátrico, os dois efeitos se somam. Vale uma conversa médica mesmo com o resto da sua avaliação bem."}
                 </p>
                 <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
                   <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={{ ...checkBox, accentColor:'#2563EB' }} />
@@ -2080,14 +2088,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   })}
                 </div>
 
-                {/* CTA TELECONSULTA — só para estado RUIM ou CRÍTICO */}
-                {(estadoClinico?.estado === 'RUIM' || estadoClinico?.estado === 'CRITICO') && (
+                {/* CTA TELECONSULTA — estado RUIM/CRÍTICO ou ENDOMETRIOSE (que recomenda
+                    teleconsulta independente do estado; ver o CTA gêmeo da conclusão). */}
+                {(estadoClinico?.estado === 'RUIM' || estadoClinico?.estado === 'CRITICO' || (form.status_ginecologico || []).includes('ENDOMETRIOSE')) && (
                   <div style={{ background:'#FEF2F2', border:'2px solid #FCA5A5', borderRadius:12, padding:'1rem 1.1rem', marginTop:'1rem' }}>
                     <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#991B1B', margin:'0 0 0.4rem' }}>
                       {"Recomendamos uma TELECONSULTA MÉDICA"}
                     </p>
                     <p style={{ fontSize:'0.8rem', color:'#7F1D1D', lineHeight:1.5, margin:'0 0 0.7rem' }}>
-                      {"Seu estado clínico atual merece atenção próxima. A plataforma oferece teleconsulta médica via WhatsApp para discutir seus resultados e as condutas."}
+                      {(estadoClinico?.estado === 'RUIM' || estadoClinico?.estado === 'CRITICO')
+                        ? "Seu estado clínico atual merece atenção próxima. A plataforma oferece teleconsulta médica via WhatsApp para discutir seus resultados e as condutas."
+                        : "Você informou ENDOMETRIOSE — condição crônica que causa dor e perda de ferro, e que no pós-bariátrico merece acompanhamento próprio. A plataforma oferece teleconsulta médica via WhatsApp para discutir as condutas."}
                     </p>
                     <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
                       <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={{ width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#DC2626' }} />

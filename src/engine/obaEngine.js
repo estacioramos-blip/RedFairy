@@ -2067,19 +2067,21 @@ function buildModObstetrico(dados, alertas, suger) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MÓDULO — GINECOLÓGICO
-// Por ora cobre SÓ o SANGRAMENTO MENSTRUAL: é a perda de ferro que soma à
-// disabsorção bariátrica (eixo central do algoritmo). Os demais campos do Status
-// Ginecológico (endometriose, miomas, SOP, cistos/câncer de mama, mola) ainda NÃO
-// geram crítica — entram aqui quando o Dr. Ramos definir os textos.
+// Duas partes: (A) SANGRAMENTO MENSTRUAL — a perda de ferro que soma à disabsorção
+// bariátrica, eixo central do algoritmo; (B) os demais achados do Status
+// Ginecológico (endometriose, miomas, SOP, cistos/câncer de mama, mola), que em
+// grande parte são CAUSA do sangramento de (A) — por isso convivem no mesmo card.
 //
-// RÉGUA (Dr. Ramos, jul/2026): a perda de ferro é intensidade × duração ×
-// persistência × frequência — quem decide o CRÍTICO é o TEMPO, não o tipo.
+// RÉGUA DO SANGRAMENTO (Dr. Ramos, jul/2026): a perda de ferro é intensidade ×
+// duração × persistência × frequência — quem decide o CRÍTICO é o TEMPO, não o tipo.
 //   ≥1 fator de perda (fluxo intenso | duração >7 dias | ciclos <21 dias)
 //     PERSISTINDO há ≥4 meses                → GRAVE (Estado Geral → CRÍTICO)
 //   ≥2 fatores com persistência NÃO informada → GRAVE (conservador — não rebaixar
 //     o que a régua antiga já tratava como grave só porque falta o dado)
 //   qualquer outro caso (inclusive intenso mas RECENTE, <4 meses) → MODERADO
 //   + anemia OU ferritina baixa → escala (MODERADO vira GRAVE)
+// Dois ramos SUBSTITUEM essa régua (não é menstruação): GRÁVIDA (emergência, alerta
+// próprio no topo do avaliarOBA) e MENOPAUSA (red flag de endométrio, GRAVE sempre).
 // As strings abaixo têm que bater 1:1 com as *_OPS do OBAModal.
 // ─────────────────────────────────────────────────────────────────────────────
 const GINECO_DURACAO_LONGA = ['DE 8 A 10 DIAS', 'MAIS DE 10 DIAS']
@@ -2089,38 +2091,71 @@ const GINECO_CICLO_CURTO   = 'MENOS DE 21 DIAS'
 
 function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger) {
   if ((dados.sexo || 'F') !== 'F') return null
-  if (!(dados.status_ginecologico || []).includes('SANGRAMENTO MENSTRUAL')) return null
-  // GRÁVIDA + sangramento já vira alerta GRAVE de emergência no topo do avaliarOBA
-  // (não é menstruação). Criticar "perda menstrual" aqui seria contraditório.
-  if (dados.status_gestacional === 'GRÁVIDA') return null
+  const gin = dados.status_ginecologico || []
+  if (!gin.length) return null
+  const tem = (x) => gin.includes(x)
+
+  const RANK = { [GRAVE]: 3, [MODERADO]: 2, [LEVE]: 1, [NORMAL]: 0 }
+  let nivel = NORMAL
+  const bump = (n) => { if (RANK[n] > RANK[nivel]) nivel = n }
+  const linhas = []
 
   // Cruzamento com o ferro (mesma cadeia de fallback do resto do motor: eritron
-  // primeiro, depois os valores relançados na etapa de exames do OBA). Calculado
-  // antes dos ramos porque menopausa E régua do tempo usam.
+  // primeiro, depois os valores relançados na etapa de exames do OBA).
   const ferr = Number(resultadoEritron?.inputs?.ferritina ?? examesOBA?.ferritina_novo ?? examesOBA?.ferritina_oba)
   const ferrBaixa = Number.isFinite(ferr) && ferr > 0 && ferr < OBA_CUTOFFS.ferritina_oba.min
   const temAnemia = /ANEMIA|ANÊMIC/i.test(resultadoEritron?.label || '') || resultadoEritron?.color === 'red'
   const somaFerro = ferrBaixa || temAnemia
+  const textoFerro = temAnemia ? 'ANEMIA NO ERITRON' : `FERRITINA ${ferr} ng/mL, ABAIXO DE ${OBA_CUTOFFS.ferritina_oba.min}`
 
-  // MENOPAUSA + SANGRAMENTO: também não é menstruação — sangramento pós-menopausa
-  // é red flag de câncer de endométrio. Substitui a régua do tempo inteira: aqui a
-  // gravidade não depende de intensidade nem de persistência — QUALQUER sangramento
-  // após a menopausa exige investigação. GRAVE sempre (leva o Estado a CRÍTICO).
-  if ((dados.status_ginecologico || []).includes('MENOPAUSA')) {
-    const linhas = [
-      'VOCÊ MARCOU MENOPAUSA E SANGRAMENTO AO MESMO TEMPO. SANGRAMENTO DEPOIS DA MENOPAUSA NÃO É MENSTRUAÇÃO — É UM SINAL DE ALERTA QUE EXIGE INVESTIGAÇÃO GINECOLÓGICA PRIORITÁRIA, PRINCIPALMENTE PARA DESCARTAR CÂNCER DE ENDOMÉTRIO. NA MAIORIA DOS CASOS A CAUSA É BENIGNA (ATROFIA, PÓLIPO, EFEITO DE TERAPIA HORMONAL), MAS ISSO SÓ A INVESTIGAÇÃO PODE DIZER — NÃO ADIE.',
-      'A INVESTIGAÇÃO COMEÇA PELA ULTRASSONOGRAFIA TRANSVAGINAL (MEDIDA DA ESPESSURA DO ENDOMÉTRIO); CONFORME O RESULTADO, HISTEROSCOPIA COM BIÓPSIA.',
-      'SE VOCÊ AINDA ESTÁ NA TRANSIÇÃO PARA A MENOPAUSA (MENSTRUAÇÕES ESPAÇANDO, MAS AINDA OCORRENDO), INFORME AO GINECOLOGISTA HÁ QUANTO TEMPO ESTÁ SEM MENSTRUAR — SANGRAMENTO SÓ É "PÓS-MENOPAUSA" APÓS 12 MESES SEM CICLOS, MAS A IRREGULARIDADE DA TRANSIÇÃO TAMBÉM MERECE AVALIAÇÃO.',
-    ]
+  // Exames: as seções só REGISTRAM o que precisam; a consolidação é feita uma vez no
+  // fim. Empurrar direto de cada seção gerava até 4 linhas ginecológicas quase
+  // iguais no mesmo relatório ("por que dois ultrassons pélvicos?").
+  const need = { motivos: [], usPelvico: false, usTransvaginal: false, betaHcg: false, prioritaria: false }
+
+  // ── (A) SANGRAMENTO ────────────────────────────────────────────────────────
+  // Grávida: o alerta de emergência do topo do avaliarOBA já cobre; falar de perda
+  // menstrual aqui seria contraditório. Os achados de (B) seguem normalmente.
+  const sangramento = tem('SANGRAMENTO MENSTRUAL') && dados.status_gestacional !== 'GRÁVIDA'
+
+  if (sangramento && tem('MENOPAUSA')) {
+    // Sangramento pós-menopausa: red flag de câncer de endométrio. A gravidade não
+    // depende de intensidade nem de persistência — GRAVE sempre.
+    bump(GRAVE)
+    linhas.push('VOCÊ MARCOU MENOPAUSA E SANGRAMENTO AO MESMO TEMPO. SANGRAMENTO DEPOIS DA MENOPAUSA NÃO É MENSTRUAÇÃO — É UM SINAL DE ALERTA QUE EXIGE INVESTIGAÇÃO GINECOLÓGICA PRIORITÁRIA, PRINCIPALMENTE PARA DESCARTAR CÂNCER DE ENDOMÉTRIO. NA MAIORIA DOS CASOS A CAUSA É BENIGNA (ATROFIA, PÓLIPO, EFEITO DE TERAPIA HORMONAL), MAS ISSO SÓ A INVESTIGAÇÃO PODE DIZER — NÃO ADIE.')
+    linhas.push('A INVESTIGAÇÃO COMEÇA PELA ULTRASSONOGRAFIA TRANSVAGINAL (MEDIDA DA ESPESSURA DO ENDOMÉTRIO); CONFORME O RESULTADO, HISTEROSCOPIA COM BIÓPSIA.')
+    linhas.push('SE VOCÊ AINDA ESTÁ NA TRANSIÇÃO PARA A MENOPAUSA (MENSTRUAÇÕES ESPAÇANDO, MAS AINDA OCORRENDO), INFORME AO GINECOLOGISTA HÁ QUANTO TEMPO ESTÁ SEM MENSTRUAR — SANGRAMENTO SÓ É "PÓS-MENOPAUSA" APÓS 12 MESES SEM CICLOS, MAS A IRREGULARIDADE DA TRANSIÇÃO TAMBÉM MERECE AVALIAÇÃO.')
     if (somaFerro) {
-      linhas.push(`ESTE SANGRAMENTO JÁ SE REFLETE NO SEU FERRO (${temAnemia ? 'ANEMIA NO ERITRON' : `FERRITINA ${ferr} ng/mL, ABAIXO DE ${OBA_CUTOFFS.ferritina_oba.min}`}) — TRATE A REPOSIÇÃO EM PARALELO À INVESTIGAÇÃO GINECOLÓGICA, SEM ESPERAR POR ELA. NO PÓS-BARIÁTRICO A VIA ORAL É LIMITADA; DISCUTA FERRO PARENTERAL.`)
+      linhas.push(`ESTE SANGRAMENTO JÁ SE REFLETE NO SEU FERRO (${textoFerro}) — TRATE A REPOSIÇÃO EM PARALELO À INVESTIGAÇÃO GINECOLÓGICA, SEM ESPERAR POR ELA. NO PÓS-BARIÁTRICO A VIA ORAL É LIMITADA; DISCUTA FERRO PARENTERAL.`)
     }
     alertas.push({ nivel: GRAVE, texto: 'SANGRAMENTO APÓS A MENOPAUSA — INVESTIGAÇÃO GINECOLÓGICA PRIORITÁRIA PARA DESCARTAR CÂNCER DE ENDOMÉTRIO. ULTRASSONOGRAFIA TRANSVAGINAL INDICADA.' })
-    suger.push('AVALIAÇÃO GINECOLÓGICA PRIORITÁRIA (SANGRAMENTO PÓS-MENOPAUSA)')
-    suger.push('ULTRASSONOGRAFIA PÉLVICA TRANSVAGINAL (ESPESSURA DO ENDOMÉTRIO)')
-    return { id: 'ginecologico', titulo: 'SAÚDE GINECOLÓGICA', nivel: GRAVE, linhas }
+    need.prioritaria = true
+    need.motivos.push('SANGRAMENTO PÓS-MENOPAUSA')
+    need.usTransvaginal = true
+  } else if (sangramento) {
+    buildSecaoSangramento(dados, { somaFerro, textoFerro }, linhas, alertas, need, bump)
   }
 
+  // ── (B) DEMAIS ACHADOS ─────────────────────────────────────────────────────
+  buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, alertas, need, bump)
+
+  if (!linhas.length) return null
+
+  // Consolidação dos exames: uma linha de avaliação ginecológica (com todos os
+  // motivos) e UM ultrassom — o transvaginal é mais específico e cobre o pélvico.
+  if (need.motivos.length) {
+    suger.push(`AVALIAÇÃO GINECOLÓGICA${need.prioritaria ? ' PRIORITÁRIA' : ''} (${need.motivos.join('; ')})`)
+  }
+  if (need.usTransvaginal) suger.push('ULTRASSONOGRAFIA PÉLVICA TRANSVAGINAL (ESPESSURA DO ENDOMÉTRIO)')
+  else if (need.usPelvico) suger.push('ULTRASSONOGRAFIA PÉLVICA')
+  if (need.betaHcg) suger.push('BETA-HCG QUANTITATIVO SERIADO (CONTROLE DE MOLA HIDATIFORME — REPETIR CONFORME ORIENTAÇÃO MÉDICA)')
+
+  return { id: 'ginecologico', titulo: 'SAÚDE GINECOLÓGICA', nivel, linhas }
+}
+
+// (A) Régua do TEMPO — só chamada quando há sangramento menstrual de fato
+// (não grávida, não pós-menopausa).
+function buildSecaoSangramento(dados, { somaFerro, textoFerro }, linhas, alertas, need, bump) {
   const tipo = dados.sangramento_menstrual_tipo || ''
   const duracao = dados.sangramento_duracao || ''
   const persistencia = dados.sangramento_persistencia || ''
@@ -2139,8 +2174,8 @@ function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger
   if (fatores.length >= 1 && persistente) nivel = GRAVE
   else if (fatores.length >= 2 && !recente) nivel = GRAVE
   if (somaFerro && nivel === MODERADO) nivel = GRAVE
+  bump(nivel)
 
-  const linhas = []
   // "NÃO INFORMADAS" só quando NADA foi respondido — com respostas dadas (ainda que
   // sem fator de perda), dizer "não informadas" contradiz as linhas seguintes.
   const nadaInformado = !tipo && !duracao && !persistencia && !frequencia
@@ -2173,7 +2208,7 @@ function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger
   }
 
   if (somaFerro) {
-    linhas.push(`ESTE SANGRAMENTO JÁ SE REFLETE NO SEU FERRO (${temAnemia ? 'ANEMIA NO ERITRON' : `FERRITINA ${ferr} ng/mL, ABAIXO DE ${OBA_CUTOFFS.ferritina_oba.min}`}) — OS DOIS ACHADOS SE EXPLICAM. A REPOSIÇÃO DE FERRO TENDE A FALHAR ENQUANTO A PERDA CONTINUAR; TRATE A CAUSA DO SANGRAMENTO EM PARALELO. SE A VIA ORAL NÃO CORRIGIR, DISCUTA FERRO PARENTERAL (A ABSORÇÃO ORAL É LIMITADA NO PÓS-BARIÁTRICO).`)
+    linhas.push(`ESTE SANGRAMENTO JÁ SE REFLETE NO SEU FERRO (${textoFerro}) — OS DOIS ACHADOS SE EXPLICAM. A REPOSIÇÃO DE FERRO TENDE A FALHAR ENQUANTO A PERDA CONTINUAR; TRATE A CAUSA DO SANGRAMENTO EM PARALELO. SE A VIA ORAL NÃO CORRIGIR, DISCUTA FERRO PARENTERAL (A ABSORÇÃO ORAL É LIMITADA NO PÓS-BARIÁTRICO).`)
   } else {
     linhas.push('MESMO SEM ANEMIA AGORA, MANTENHA FERRITINA E HEMOGRAMA MONITORADOS — NO BARIÁTRICO COM PERDA MENSTRUAL, O ESTOQUE DE FERRO SE ESGOTA ANTES DE A HEMOGLOBINA CAIR.')
   }
@@ -2182,10 +2217,78 @@ function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger
     ? `${comoTexto} COM REPERCUSSÃO NO FERRO — AVALIAÇÃO GINECOLÓGICA PARA TRATAR A CAUSA DA PERDA; SÓ REPOR FERRO NÃO RESOLVE.`
     : `${comoTexto} — PERDA DE FERRO QUE SOMA À DISABSORÇÃO BARIÁTRICA. AVALIAÇÃO GINECOLÓGICA E MONITORAMENTO DA FERRITINA.` })
 
-  suger.push('AVALIAÇÃO GINECOLÓGICA (INVESTIGAR A CAUSA DO SANGRAMENTO)')
-  suger.push('ULTRASSONOGRAFIA PÉLVICA')
+  need.motivos.push('INVESTIGAR A CAUSA DO SANGRAMENTO')
+  need.usPelvico = true
+}
 
-  return { id: 'ginecologico', titulo: 'SAÚDE GINECOLÓGICA', nivel, linhas }
+// ─────────────────────────────────────────────────────────────────────────────
+// (B) DEMAIS ACHADOS DO STATUS GINECOLÓGICO
+// Vários são CAUSA do sangramento de (A) — quando os dois aparecem, o texto conecta
+// ("a causa provável do seu sangramento pode estar identificada") em vez de repetir
+// "investigue a causa". Níveis: MOLA e CÂNCER DE MAMA em tratamento = GRAVE; achados
+// que sangram (endometriose/miomas) = MODERADO, ou GRAVE se já há repercussão no
+// ferro; SOP/cistos = LEVE. Régua a revisar com o Dr. Ramos.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, alertas, need, bump) {
+  const gin = dados.status_ginecologico || []
+  const tem = (x) => gin.includes(x)
+
+  // Endometriose e miomas: as duas causas estruturais clássicas de perda menstrual.
+  const sangrantes = []
+  if (tem('ENDOMETRIOSE')) sangrantes.push('ENDOMETRIOSE')
+  if (tem('MIOMAS | MIOMATOSE')) sangrantes.push('MIOMAS')
+  if (sangrantes.length) {
+    const nivelS = somaFerro ? GRAVE : MODERADO
+    bump(nivelS)
+    const nomes = sangrantes.join(' E ')
+    linhas.push(`${nomes}: CAUSA FREQUENTE DE SANGRAMENTO AUMENTADO E DE FERROPENIA NA MULHER. NO BARIÁTRICO O EFEITO É DOBRADO — A PERDA PELO ÚTERO SOMA-SE À ABSORÇÃO REDUZIDA PELA CIRURGIA. SEM CONTROLAR A DOENÇA DE BASE, A REPOSIÇÃO DE FERRO SERÁ SEMPRE INSUFICIENTE: TRATAR ${sangrantes.length > 1 ? 'ESSAS CONDIÇÕES' : 'ESSA CONDIÇÃO'} É PARTE DO TRATAMENTO DA ANEMIA.`)
+    if (sangramento) {
+      linhas.push(`A CAUSA PROVÁVEL DO SEU SANGRAMENTO PODE JÁ ESTAR IDENTIFICADA (${nomes}) — LEVE ESSA INFORMAÇÃO AO GINECOLOGISTA JUNTO COM O PADRÃO QUE VOCÊ DESCREVEU AQUI.`)
+    }
+    if (tem('ENDOMETRIOSE')) {
+      linhas.push('A ENDOMETRIOSE TAMBÉM CURSA COM DOR PÉLVICA E FADIGA QUE SE CONFUNDEM COM AS CARÊNCIAS DO PÓS-BARIÁTRICO — NÃO ATRIBUA TUDO À CIRURGIA SEM AVALIAR.')
+      // Teleconsulta independe do estado (Dr. Ramos): a endometriose merece conversa
+      // médica mesmo com o resto da avaliação bem. O CTA vive no OBAModal; a linha
+      // aqui garante que o relatório SALVO carregue a recomendação.
+      linhas.push('RECOMENDAMOS UMA TELECONSULTA MÉDICA PARA DISCUTIR A ENDOMETRIOSE NO SEU CONTEXTO BARIÁTRICO — MESMO QUE O RESTO DA SUA AVALIAÇÃO ESTEJA BEM. O CONTROLE DA DOENÇA E O DA SUA ANEMIA ANDAM JUNTOS.')
+    }
+    alertas.push({ nivel: nivelS, texto: `${nomes}${somaFerro ? ' COM REPERCUSSÃO NO FERRO' : ''} — CAUSA DE PERDA MENSTRUAL QUE SOMA À DISABSORÇÃO BARIÁTRICA. ACOMPANHAMENTO GINECOLÓGICO; TRATAR A DOENÇA DE BASE É PARTE DO TRATAMENTO DA ANEMIA.` })
+    need.motivos.push(`ACOMPANHAMENTO DE ${nomes}`)
+    need.usPelvico = true
+  }
+
+  // SOP: eixo metabólico, não hemorrágico — o vínculo com o bariátrico é a
+  // resistência insulínica (e o reganho de peso), não a perda de ferro.
+  if (tem('OVÁRIOS POLICÍSTICOS')) {
+    bump(LEVE)
+    linhas.push('OVÁRIOS POLICÍSTICOS (SOP): ASSOCIADA À RESISTÊNCIA INSULÍNICA E AO GANHO DE PESO — A CIRURGIA BARIÁTRICA COSTUMA MELHORAR A SOP E PODE RESTAURAR A FERTILIDADE (ATENÇÃO À CONTRACEPÇÃO NOS PRIMEIROS 18 MESES, QUANDO A GESTAÇÃO É DESACONSELHADA). A ANOVULAÇÃO DA SOP TAMBÉM CAUSA CICLOS IRREGULARES E, ÀS VEZES, SANGRAMENTO AUMENTADO. MANTENHA ACOMPANHAMENTO GINECOLÓGICO E CONTROLE METABÓLICO.')
+  }
+
+  if (tem('CISTOS NAS MAMAS')) {
+    bump(LEVE)
+    linhas.push('CISTOS NAS MAMAS: NA GRANDE MAIORIA DAS VEZES SÃO BENIGNOS. MANTENHA O RASTREIO MAMOGRÁFICO/ULTRASSONOGRÁFICO NA PERIODICIDADE ORIENTADA PELO SEU GINECOLOGISTA.')
+  }
+
+  if (tem('CÂNCER DE MAMA')) {
+    const st = dados.cancer_mama_status || ''
+    if (st === 'EM TRATAMENTO') {
+      bump(GRAVE)
+      linhas.push('CÂNCER DE MAMA EM TRATAMENTO: A QUIMIOTERAPIA DEPRIME A MEDULA ÓSSEA (ANEMIA, LEUCOPENIA, PLAQUETOPENIA) E ESSE EFEITO SE SOMA ÀS CARÊNCIAS DO PÓS-BARIÁTRICO — O SEU ERITRON PRECISA SER LIDO NESSE CONTEXTO, E O HEMOGRAMA MONITORADO DE PERTO. INFORME AO ONCOLOGISTA QUE VOCÊ É BARIÁTRICA: A ABSORÇÃO DE MEDICAMENTOS ORAIS E DE NUTRIENTES ESTÁ REDUZIDA. NÃO INICIE REPOSIÇÃO DE FERRO POR CONTA PRÓPRIA DURANTE O TRATAMENTO ONCOLÓGICO — ALINHE COM A EQUIPE.')
+      alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE MAMA EM TRATAMENTO — QUIMIOTERAPIA DEPRIME A MEDULA E SOMA-SE ÀS CARÊNCIAS BARIÁTRICAS. LER O ERITRON NESSE CONTEXTO; ALINHAR REPOSIÇÃO COM O ONCOLOGISTA.' })
+    } else {
+      bump(MODERADO)
+      linhas.push(`CÂNCER DE MAMA${st === 'RESOLVIDO' ? ' (RESOLVIDO)' : ''}: MANTENHA O SEGUIMENTO ONCOLÓGICO E O RASTREIO. SE VOCÊ USA OU USOU TAMOXIFENO, SAIBA QUE ELE AUMENTA O RISCO DE ESPESSAMENTO E DE CÂNCER DO ENDOMÉTRIO E TAMBÉM DE TROMBOSE — QUALQUER SANGRAMENTO VAGINAL ANORMAL DEVE SER INVESTIGADO SEM DEMORA.`)
+    }
+  }
+
+  if (tem('MOLA HIDATIFORME')) {
+    bump(GRAVE)
+    linhas.push('MOLA HIDATIFORME: DOENÇA TROFOBLÁSTICA GESTACIONAL — EXIGE SEGUIMENTO COM BETA-HCG SERIADO ATÉ A NEGATIVAÇÃO E POR TODO O PERÍODO ORIENTADO PELO SEU MÉDICO, PELO RISCO DE NEOPLASIA TROFOBLÁSTICA (CORIOCARCINOMA). ENQUANTO O SEGUIMENTO ESTIVER EM CURSO, A GESTAÇÃO É CONTRAINDICADA (UMA NOVA GRAVIDEZ ELEVA O BETA-HCG E IMPEDE A INTERPRETAÇÃO DO CONTROLE). CONFIRME COM O SEU GINECOLOGISTA SE O SEU SEGUIMENTO FOI CONCLUÍDO.')
+    alertas.push({ nivel: GRAVE, texto: 'MOLA HIDATIFORME — CONFIRMAR SE O SEGUIMENTO COM BETA-HCG SERIADO FOI CONCLUÍDO (RISCO DE NEOPLASIA TROFOBLÁSTICA). GESTAÇÃO CONTRAINDICADA ENQUANTO EM SEGUIMENTO.' })
+    need.motivos.push('SEGUIMENTO DE DOENÇA TROFOBLÁSTICA (MOLA)')
+    need.betaHcg = true
+    need.prioritaria = true
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
