@@ -61,7 +61,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   useEffect(() => { try { localStorage.setItem('rf_flag', 'bariatrica'); localStorage.setItem('rf_dom_bari', '1') } catch (e) {} }, [])
 
   // CPF lembrado → avança sozinho pra tela de SENHA (lookup decide login x cadastro).
-  useEffect(() => { if (temCpfLembrado) avancarCpf() }, [])
+  useEffect(() => { if (temCpfLembrado) avancarCpf(true) }, [])
 
   const cpfDigits = soDigitos(cpf)
   const cpfOk = cpfDigits.length === 11 && validarCPF(cpfDigits)   // só avança com CPF válido
@@ -69,7 +69,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
   const senhaOk = senha.length >= 6
   const podeConcluir = cpfOk && senhaOk && (modo !== 'cadastro' || aceitoTC)
 
-  async function avancarCpf() {
+  async function avancarCpf(auto) {
     if (!cpfOk || busy) return
     setErro(''); setBusy(true)
     let existe = false
@@ -81,6 +81,20 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
       existe = !!(data?.find?.(r => r.origem === 'profile'))
     } catch (e) { setBusy(false); setErro('ERRO DE CONEXÃO. TENTE NOVAMENTE.'); return }
     setBusy(false)
+    // AUTO-avanço (auto === true) veio de um CPF LEMBRADO no aparelho — não digitado agora.
+    // Se esse CPF não existe mais (conta apagada no banco / dispositivo compartilhado), a
+    // lembrança está MORTA: não apresenta "CRIE SUA SENHA" com o CPF fantasma. Limpa as
+    // credenciais lembradas e volta a pedir o CPF do zero (visitante novo). CPF digitado
+    // manualmente que não existe segue para cadastro normalmente (paciente novo real).
+    if (auto === true && !existe) {
+      try {
+        localStorage.removeItem('rf_reentry_cpf')
+        localStorage.removeItem('rf_reentry_token')
+        localStorage.removeItem('paciente_cpf')
+      } catch (e) {}
+      setCpf(''); setModo(null); setFase('intro')
+      return
+    }
     setModo(existe ? 'login' : 'cadastro')
     setSenha(''); setAceitoTC(true)
     setFase('senha')
@@ -182,7 +196,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
             {cpfInvalido && !erro && <p className="text-center text-red-600 text-xs font-bold mt-2">CPF inválido</p>}
             {cpfOk && (
               <div className="flex justify-end mt-3">
-                <PlayButton onClick={avancarCpf} loading={busy} ariaLabel="Continuar"
+                <PlayButton onClick={() => avancarCpf()} loading={busy} ariaLabel="Continuar"
                   playColor="#E3AE37" labelColor="#000000" ringColor="rgba(227,174,55,0.65)" />
               </div>
             )}
