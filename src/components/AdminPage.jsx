@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
@@ -382,19 +382,19 @@ function AbaPacientes() {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState('');
   const [pacienteSelecionado, setPacienteSelecionado] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    async function carregar() {
-      const { data } = await supabase
-        .from('avaliacoes')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      setAvaliacoes(data || []);
-      setLoading(false);
-    }
-    carregar();
+  const carregar = useCallback(async () => {
+    const { data } = await supabase
+      .from('avaliacoes')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    setAvaliacoes(data || []);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { carregar(); }, [carregar]);
 
   const porCpf = {};
   avaliacoes.forEach(av => {
@@ -430,7 +430,7 @@ function AbaPacientes() {
 
   return (
     <div className="space-y-4">
-      <FunilPacientes />
+      <FunilPacientes key={refreshKey} />
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <input
           type="text"
@@ -489,14 +489,14 @@ function AbaPacientes() {
         </div>
       )}
 
-      <LimparPacienteCard />
+      <LimparPacienteCard onLimpou={() => { setPacienteSelecionado(null); carregar(); setRefreshKey(k => k + 1); }} />
     </div>
   );
 }
 
 // Ferramenta de TESTE: apaga TODOS os dados de um paciente a partir do CPF (RPC
 // admin_limpar_paciente). Irreversivel; protegida por dupla confirmacao.
-function LimparPacienteCard() {
+function LimparPacienteCard({ onLimpou }) {
   const [cpf, setCpf] = useState('');
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState(null);
@@ -513,7 +513,7 @@ function LimparPacienteCard() {
       const { data, error } = await supabase.rpc('admin_limpar_paciente', { ...credAdmin(), p_cpf: digits });
       if (error) setErro(error.message);
       else if (!data?.ok) setErro(data?.erro || 'Falha.');
-      else { setRes(data); setCpf(''); }
+      else { setRes(data); setCpf(''); onLimpou?.(); }
     } catch (e) { setErro(e.message); }
     setBusy(false);
   }
