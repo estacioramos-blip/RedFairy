@@ -575,6 +575,16 @@ function categoriaRecomendacao(item) {
   return 'laboratorio'
 }
 
+// Ordem de prioridade das teleconsultas no card consolidado: o HEMATOLOGISTA quase sempre
+// é a mais importante (plataforma de triagem hematológica); depois as marcadas "URGENTE"
+// (psiquiátrica/oncológica/nefrológica); o resto na ordem em que o motor sugeriu. Sort estável.
+function prioridadeTele(label) {
+  const s = String(label).toUpperCase()
+  if (/HEMATOL/.test(s)) return 0
+  if (/URGENTE|SUIC[ÍI]/.test(s)) return 1
+  return 2
+}
+
 // Ordem + estilo dos cards de RECOMENDAÇÕES.
 const CATS_RECOMENDACAO = [
   { key:'laboratorio', titulo:'EXAMES LABORATORIAIS',                          fundo:'#F0F9FF', borda:'#BAE6FD', texto:'#0369A1' },
@@ -583,6 +593,10 @@ const CATS_RECOMENDACAO = [
   { key:'endoscopia',  titulo:'EXAMES ENDOSCÓPICOS',                           fundo:'#FFF7ED', borda:'#FED7AA', texto:'#9A3412' },
   { key:'outros',      titulo:'OUTROS RECURSOS DIAGNÓSTICOS',                  fundo:'#FEFCE8', borda:'#FDE68A', texto:'#92400E' },
 ]
+
+// Serviços que geram PEDIDO DE EXAME (um documento por serviço, feitos em locais
+// diferentes). Exclui 'avaliacao' — encaminhamento a especialista é teleconsulta.
+const CATS_PEDIDO = CATS_RECOMENDACAO.filter(c => c.key !== 'avaliacao')
 
 // BUG #3 corrigido: removidas as chaves duplicadas vitamina_d e triglicerides
 // (cada uma aparecia 2x). Mantida apenas uma versao de cada.
@@ -687,7 +701,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [bgRel, setBgRel] = useState(false)
   // Teleconsulta (CTA quando estado RUIM/CRÍTICO). valorTeleconsulta vem da config.
   const [valorTeleconsulta, setValorTeleconsulta] = useState(null)
-  const [querTeleconsulta, setQuerTeleconsulta] = useState(salvo?.querTeleconsulta || false)
+  // Valor do PEDIDO DE EXAME (por serviço) — config.valor_solicitacao_medica. Um pedido por
+  // serviço (lab/bioimagem/endoscopia/outros), mesmo custo (revisão médica + assinatura digital).
+  const [valorSolicitacao, setValorSolicitacao] = useState(null)
+  // Teleconsultas que o paciente MARCOU (paga CADA UMA separadamente). Começa vazio: ele
+  // escolhe ativamente as que quer/pode arcar. Persistido no rascunho do OBA (array).
+  const [teleOn, setTeleOn] = useState(() => { try { return new Set(Array.isArray(salvo?.teleOn) ? salvo.teleOn : []) } catch (e) { return new Set() } })
+  // Exames MARCADOS para solicitar. Cada SERVIÇO (lab/bioimagem/endoscopia/outros) com ≥1
+  // marcado = 1 pedido (mesmo custo). Começa vazio; persistido no rascunho do OBA (array).
+  const [exOn, setExOn] = useState(() => { try { return new Set(Array.isArray(salvo?.exOn) ? salvo.exOn : []) } catch (e) { return new Set() } })
   // Modal de conclusão da 1ª avaliação (etapa 'conclusao').
   const [splashConcl, setSplashConcl] = useState(false)
   const [bgConcl, setBgConcl] = useState(false)
@@ -888,11 +910,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // valor_teleconsulta foi aposentada — ambos os CTAs leem documento_medico.
   useEffect(() => {
     let ativo = true
-    supabase.from('config').select('valor').eq('chave', 'valor_documento_medico').maybeSingle()
+    supabase.from('config').select('chave, valor').in('chave', ['valor_documento_medico', 'valor_solicitacao_medica'])
       .then(({ data }) => {
-        if (!ativo || data?.valor == null) return
-        setValorPrescricao(data.valor)
-        setValorTeleconsulta(data.valor)
+        if (!ativo || !Array.isArray(data)) return
+        const doc = data.find(r => r.chave === 'valor_documento_medico')?.valor
+        const sol = data.find(r => r.chave === 'valor_solicitacao_medica')?.valor
+        if (doc != null) { setValorPrescricao(doc); setValorTeleconsulta(doc) }
+        if (sol != null) setValorSolicitacao(sol)
       })
     return () => { ativo = false }
   }, [])
@@ -908,9 +932,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // Persiste o progresso a cada mudança (etapa/respostas/exames/relatório).
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ etapa, form, exames, dataExames, relatorio, estadoClinico, querTeleconsulta }))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn: [...teleOn], exOn: [...exOn] }))
     } catch (e) {}
-  }, [etapa, form, exames, dataExames, relatorio, estadoClinico, querTeleconsulta])
+  }, [etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn, exOn])
 
   //  Handlers
   const PESO_ANTES_MAX = 220  // (a) teto do peso antes da cirurgia
@@ -1744,27 +1768,34 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const naoEspecialista = (e) => /^AVALIA[ÇC][ÃA]O PARA |POLISSONOGRAFIA/i.test(String(e).trim())
     const especialistas = [...new Set((relatorio?.examesComplementares || [])
       .filter(e => categoriaRecomendacao(e) === 'avaliacao' && !naoEspecialista(e)))]
+      // Ordena por prioridade (hematologista → urgentes → resto), mantendo a ordem do
+      // motor dentro de cada faixa (sort estável via índice original).
+      .map((e, i) => ({ e, i })).sort((a, b) => prioridadeTele(a.e) - prioridadeTele(b.e) || a.i - b.i).map(x => x.e)
     const recomendada = motivos.length > 0 || especialistas.length > 0
     return { recomendada, motivos, especialistas }
   })()
 
-  // Mensagem única do WhatsApp com os motivos e os especialistas.
-  const msgTeleconsulta = (() => {
-    const partes = ['Olá! Concluí minha avaliação OBA e desejo marcar uma teleconsulta médica.']
-    if (tele.especialistas.length) partes.push('Avaliações sugeridas: ' + tele.especialistas.join('; ') + '.')
-    return partes.join(' ')
-  })()
+  // Itens de teleconsulta selecionáveis (1 checkbox + 1 preço cada). Se não há especialista
+  // específico mas há motivos gerais (estado clínico / condição informada), oferece uma
+  // teleconsulta clínica única em vez de deixar o card sem opção marcável.
+  const teleItens = tele.especialistas.length
+    ? tele.especialistas
+    : (tele.motivos.length ? ['TELECONSULTA MÉDICA (AVALIAÇÃO CLÍNICA)'] : [])
 
-  // Card único de teleconsulta — usado nas etapas relatorio e conclusao.
+  // Card único de teleconsulta — usado nas etapas relatorio e conclusao. Uma linha (checkbox
+  // + preço) por teleconsulta: o paciente marca só as que quer/pode pagar; total soma na base.
   function CardTeleconsulta() {
-    if (!tele.recomendada) return null
-    // Estilos locais: checkBox/waBtn originais viviam só no bloco da etapa 'conclusao',
-    // fora do escopo desta função (o code-reviewer pegou o ReferenceError).
-    const checkBox = { width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#2563EB', flexShrink:0 }
-    const waBtn = { display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none', cursor:'pointer', border:'none', fontFamily:'inherit', marginTop:'0.7rem' }
+    if (!tele.recomendada || teleItens.length === 0) return null
+    const checkBox = { width:'1.15rem', height:'1.15rem', marginTop:'0.05rem', accentColor:'#2563EB', flexShrink:0 }
+    const waBtn = { display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none', cursor:'pointer', border:'none', fontFamily:'inherit' }
+    const toggle = (item) => setTeleOn(prev => { const n = new Set(prev); if (n.has(item)) n.delete(item); else n.add(item); return n })
+    const selecionadas = teleItens.filter(x => teleOn.has(x))
+    const temPreco = valorTeleconsulta != null
+    const total = temPreco ? selecionadas.length * Number(valorTeleconsulta) : null
+    const msg = ['Olá! Concluí minha avaliação OBA e desejo marcar teleconsulta(s):', ...selecionadas.map(s => '• ' + s)].join('\n')
     return (
       <div style={{ background:'#EFF6FF', border:'2px solid #93C5FD', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
-        <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#1E40AF', margin:'0 0 0.4rem' }}>{"RECOMENDAMOS TELECONSULTA MÉDICA"}</p>
+        <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#1E40AF', margin:'0 0 0.4rem' }}>{"TELECONSULTAS RECOMENDADAS"}</p>
         {tele.motivos.length > 0 && (
           <>
             <p style={{ fontSize:'0.8rem', color:'#1D4ED8', lineHeight:1.5, margin:'0 0 0.3rem' }}>{"Sua avaliação indica conversar com um médico, por:"}</p>
@@ -1775,30 +1806,111 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </ul>
           </>
         )}
-        {tele.especialistas.length > 0 && (
-          <>
-            <p style={{ fontSize:'0.8rem', color:'#1D4ED8', lineHeight:1.5, margin:'0 0 0.3rem', fontWeight:700 }}>{tele.especialistas.length > 1 ? "Especialistas sugeridos pela sua avaliação:" : "Especialista sugerido pela sua avaliação:"}</p>
-            <ul style={{ margin:'0 0 0.6rem', paddingLeft:'1.1rem' }}>
-              {tele.especialistas.map((e, i) => (
-                <li key={i} style={{ fontSize:'0.78rem', color:'#1D4ED8', lineHeight:1.5 }}>{e}</li>
-              ))}
-            </ul>
-            <p style={{ fontSize:'0.74rem', color:'#3B82F6', lineHeight:1.5, margin:'0 0 0.7rem', fontStyle:'italic' }}>{"Uma única teleconsulta pode organizar esses encaminhamentos — o médico avalia e direciona."}</p>
-          </>
-        )}
-        <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
-          <input type="checkbox" checked={querTeleconsulta} onChange={e => setQuerTeleconsulta(e.target.checked)} style={{ ...checkBox, accentColor:'#2563EB' }} />
-          <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#1E40AF' }}>{"SIM, DESEJO MARCAR UMA TELECONSULTA"}</span>
-        </label>
-        {querTeleconsulta && (
-          <div style={{ marginTop:'0.8rem', background:'white', border:'1px solid #BFDBFE', borderRadius:10, padding:'0.8rem 0.9rem' }}>
-            <p style={{ fontSize:'0.8rem', color:'#374151', margin:0 }}>
-              {"Valor da teleconsulta: "}
-              <strong style={{ color:'#7B1E1E' }}>{valorTeleconsulta != null ? `R$ ${valorTeleconsulta}` : "a confirmar"}</strong>
-            </p>
-            <button style={waBtn} onClick={() => abrirWhats(msgTeleconsulta)}>{"Falar no WhatsApp →"}</button>
-          </div>
-        )}
+        <p style={{ fontSize:'0.78rem', color:'#1D4ED8', lineHeight:1.5, margin:'0 0 0.6rem' }}>{"Marque as teleconsultas que deseja realizar. Cada uma é agendada e paga separadamente — escolha só as que puder fazer agora."}</p>
+        <div style={{ display:'flex', flexDirection:'column', gap:'0.45rem' }}>
+          {teleItens.map((item, i) => {
+            const on = teleOn.has(item)
+            const prioritaria = prioridadeTele(item) === 0
+            return (
+              <label key={i} style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:'0.6rem', cursor:'pointer', userSelect:'none', background:'white', border:`1px solid ${on ? '#2563EB' : '#BFDBFE'}`, borderRadius:10, padding:'0.55rem 0.7rem' }}>
+                <span style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', flex:1, minWidth:0 }}>
+                  <input type="checkbox" checked={on} onChange={() => toggle(item)} style={checkBox} />
+                  <span style={{ fontSize:'0.8rem', fontWeight:700, color:'#1E3A8A', lineHeight:1.4 }}>
+                    {item}
+                    {prioritaria && <span style={{ display:'inline-block', marginLeft:'0.4rem', fontSize:'0.66rem', fontWeight:800, color:'#B45309', background:'#FEF3C7', border:'1px solid #FCD34D', borderRadius:6, padding:'0.05rem 0.35rem', whiteSpace:'nowrap' }}>{"★ MAIS INDICADA"}</span>}
+                  </span>
+                </span>
+                <span style={{ fontSize:'0.78rem', fontWeight:800, color:'#7B1E1E', whiteSpace:'nowrap' }}>{temPreco ? `R$ ${valorTeleconsulta}` : 'a confirmar'}</span>
+              </label>
+            )
+          })}
+        </div>
+        <div style={{ marginTop:'0.85rem', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'0.6rem', flexWrap:'wrap' }}>
+          <span style={{ fontSize:'0.82rem', color:'#374151' }}>
+            {selecionadas.length === 0
+              ? "Nenhuma teleconsulta marcada."
+              : <>{"Total: "}<strong style={{ color:'#7B1E1E' }}>{temPreco ? `R$ ${total}` : 'a confirmar'}</strong>{` · ${selecionadas.length} teleconsulta${selecionadas.length > 1 ? 's' : ''}`}</>}
+          </span>
+          {selecionadas.length > 0 && (
+            <button style={waBtn} onClick={() => abrirWhats(msg)}>{"Marcar no WhatsApp →"}</button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Card de PEDIDOS DE EXAMES — 1 pedido por SERVIÇO (lab/bioimagem/endoscopia/outros),
+  // pois são feitos em locais diferentes. O paciente marca os exames; cada serviço com ≥1
+  // marcado gera 1 pedido de mesmo custo (valor_solicitacao_medica). Envia compactado à ADM.
+  function CardPedidosExames() {
+    const todos = [...new Set(relatorio?.examesComplementares || [])]   // dedup defensivo
+    const grupos = {}
+    todos.forEach(ex => {
+      const c = categoriaRecomendacao(ex)
+      if (c === 'avaliacao') {
+        // A POLISSONOGRAFIA (apneia do sono) é exame → vira pedido no serviço OUTROS.
+        // Especialistas vão no card de teleconsulta; os "AVALIAÇÃO PARA X" (encaminhamentos/
+        // diretrizes) seguem só como texto informativo em Recomendações.
+        if (/POLISSONOGRAFIA/i.test(ex)) (grupos.outros = grupos.outros || []).push(ex)
+        return
+      }
+      ;(grupos[c] = grupos[c] || []).push(ex)
+    })
+    // Itens por serviço (descarta item idêntico ao título do serviço — defensivo).
+    const porServico = CATS_PEDIDO
+      .map(c => ({ c, itens: (grupos[c.key] || []).filter(ex => String(ex).trim().toUpperCase() !== c.titulo.trim().toUpperCase()) }))
+      .filter(s => s.itens.length > 0)
+    if (porServico.length === 0) return null
+    const checkBox = { width:'1.15rem', height:'1.15rem', marginTop:'0.05rem', flexShrink:0 }
+    const waBtn = { display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, border:'none', cursor:'pointer', fontFamily:'inherit' }
+    const toggle = (ex) => setExOn(prev => { const n = new Set(prev); if (n.has(ex)) n.delete(ex); else n.add(ex); return n })
+    const servicosMarcados = porServico.filter(s => s.itens.some(ex => exOn.has(ex)))
+    const nPedidos = servicosMarcados.length
+    const temPreco = valorSolicitacao != null
+    const total = temPreco ? nPedidos * Number(valorSolicitacao) : null
+    const msg = (() => {
+      const partes = ['Olá! Concluí minha avaliação OBA e desejo solicitar os seguintes pedidos de exames:', '']
+      servicosMarcados.forEach(s => partes.push(s.c.titulo + ': ' + s.itens.filter(ex => exOn.has(ex)).join('; ')))
+      partes.push('')
+      partes.push(temPreco ? `Total: R$ ${total} (${nPedidos} pedido${nPedidos > 1 ? 's' : ''}).` : `${nPedidos} pedido(s).`)
+      return partes.join('\n')
+    })()
+    return (
+      <div style={{ background:'#F8FAFC', border:'2px solid #CBD5E1', borderRadius:12, padding:'1rem 1.1rem', marginBottom:'0.9rem' }}>
+        <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#0F172A', margin:'0 0 0.4rem' }}>{"SOLICITAR PEDIDOS DE EXAMES"}</p>
+        <p style={{ fontSize:'0.78rem', color:'#475569', lineHeight:1.5, margin:'0 0 0.7rem' }}>{"Cada serviço é um pedido separado (feitos em locais diferentes). Marque os exames que deseja. Cada pedido custa "}<strong style={{ color:'#7B1E1E' }}>{temPreco ? `R$ ${valorSolicitacao}` : "a confirmar"}</strong>{" — o médico revisa e assina digitalmente."}</p>
+        <div style={{ display:'flex', flexDirection:'column', gap:'0.7rem' }}>
+          {porServico.map(({ c, itens }) => {
+            const marc = itens.some(ex => exOn.has(ex))
+            return (
+              <div key={c.key} style={{ background:c.fundo, border:`1px solid ${c.borda}`, borderRadius:10, padding:'0.7rem 0.8rem' }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'0.5rem', marginBottom:'0.5rem' }}>
+                  <span style={{ fontSize:'0.68rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:c.texto }}>{c.titulo}</span>
+                  {marc && <span style={{ fontSize:'0.62rem', fontWeight:800, color:'white', background:c.texto, borderRadius:6, padding:'0.15rem 0.4rem', whiteSpace:'nowrap' }}>{temPreco ? `1 PEDIDO · R$ ${valorSolicitacao}` : "1 PEDIDO"}</span>}
+                </div>
+                <div style={{ display:'flex', flexDirection:'column', gap:'0.35rem' }}>
+                  {itens.map((ex, i) => {
+                    const on = exOn.has(ex)
+                    return (
+                      <label key={i} style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none', background:'white', border:`1px solid ${on ? c.texto : c.borda}`, borderRadius:8, padding:'0.45rem 0.6rem' }}>
+                        <input type="checkbox" checked={on} onChange={() => toggle(ex)} style={{ ...checkBox, accentColor:c.texto }} />
+                        <span style={{ fontSize:'0.74rem', fontWeight:600, color:'#374151', lineHeight:1.4 }}>{ex}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ marginTop:'0.85rem', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'0.6rem', flexWrap:'wrap' }}>
+          <span style={{ fontSize:'0.82rem', color:'#374151' }}>
+            {nPedidos === 0
+              ? "Nenhum pedido marcado."
+              : <>{"Total: "}<strong style={{ color:'#7B1E1E' }}>{temPreco ? `R$ ${total}` : 'a confirmar'}</strong>{` · ${nPedidos} pedido${nPedidos > 1 ? 's' : ''}`}</>}
+          </span>
+          {nPedidos > 0 && <button style={waBtn} onClick={() => abrirWhats(msg)}>{"Solicitar no WhatsApp →"}</button>}
+        </div>
       </div>
     )
   }
@@ -1913,6 +2025,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 (antes o "senão" afirmava trombose para todo mundo que não era CRÍTICO/RUIM). */}
             {/* TELECONSULTA CONSOLIDADA — card único (motivos + especialistas). */}
             <CardTeleconsulta />
+
+            {/* PEDIDOS DE EXAMES — 1 pedido por serviço, enviado compactado à ADM. */}
+            <CardPedidosExames />
 
             {/* H. PYLORI — prescrição do tratamento */}
             {temHpylori && (
