@@ -368,6 +368,14 @@ function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir,
     linhas.push('O ERITRON ESTÁ GRAVEMENTE COMPROMETIDO. A COMBINAÇÃO DE SÍNDROME DISABSORTIVA BARIÁTRICA COM SUPLEMENTAÇÃO INSUFICIENTE OU AUSENTE PRODUZIU ANEMIA SIGNIFICATIVA. INTERVENÇÃO MÉDICA URGENTE É NECESSÁRIA.')
   }
 
+  // Anemia moderada a grave (eritron laranja/vermelho) no bariátrico MERECE avaliação
+  // hematológica. Antes só havia o texto "intervenção urgente" — o hematologista não era
+  // sugerido, então sumia do card de teleconsulta. Entra como especialista (o card já o
+  // prioriza no topo, selo ★). Ferropenia flagrante, dimórfico, hemólise etc. caem aqui.
+  if (color === 'orange' || color === 'red') {
+    examesSuger.push('AVALIAÇÃO COM HEMATOLOGISTA')
+  }
+
   // HIV/ARV — macrocitose e anemia
   if (dadosOBA.hivTratamento) {
     linhas.push('TRATAMENTO PARA HIV/ARV: ANTIRRETROVIRAIS (ESPECIALMENTE AZT/ZIDOVUDINA) PODEM CAUSAR MACROCITOSE E ANEMIA. NO BARIÁTRICO, ESSE EFEITO SE SOMA À SÍNDROME DISABSORTIVA. MONITORAR HEMOGRAMA COM ATENÇÃO AO VCM E RETICULÓCITOS. COMUNICAR AO INFECTOLOGISTA O CONTEXTO BARIÁTRICO.')
@@ -3164,6 +3172,10 @@ function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, sug
 // ─────────────────────────────────────────────────────────────────────────────
 function buildModIntestinal(dados, alertas, suger) {
   const intestinal = dados.status_intestinal || ''
+  // Dor abdominal é uma QUEIXA própria no checklist ('CÓLICAS / DOR ABDOMINAL RECORRENTE').
+  // Sem ela marcada, a obstipação isolada NÃO justifica encaminhar ao cirurgião.
+  const queixas = [dados.queixa_principal, ...(dados.queixas_secundarias || [])]
+  const temDorAbdominal = queixas.includes('CÓLICAS / DOR ABDOMINAL RECORRENTE')
 
   const linhas = []
   let nivelGeral = NORMAL
@@ -3184,10 +3196,14 @@ function buildModIntestinal(dados, alertas, suger) {
       suger.push('AVALIAÇÃO PARA FERRO ENDOVENOSO (SUBSTITUIÇÃO DO FERRO ORAL)')
     }
 
-    // Alerta cirúrgico
+    // Alerta cirúrgico — o texto educativo sai sempre (ensina o "se doer, procure"), mas o
+    // ALERTA e o encaminhamento ao CIRURGIÃO só quando há DOR ABDOMINAL de fato marcada.
+    // Antes eram incondicionais: obstipação sozinha já pedia cirurgião (falso-positivo).
     linhas.push('ATENÇÃO IMPORTANTE: OBSTIPAÇÃO CRÔNICA NO BARIÁTRICO PODE MASCARAR SUBOCLUSÃO INTESTINAL POR BRIDA OU HÉRNIA INTERNA — COMPLICAÇÕES CIRÚRGICAS TARDIAS QUE PODEM SER GRAVES. SE HOUVER DOR ABDOMINAL ASSOCIADA À OBSTIPAÇÃO, PROCURE AVALIAÇÃO CIRÚRGICA COM URGÊNCIA.')
-    alertas.push({ nivel: LEVE, texto: 'OBSTIPAÇÃO + DOR ABDOMINAL: DESCARTAR HÉRNIA INTERNA OU BRIDA — AVALIAÇÃO CIRÚRGICA.' })
-    suger.push('AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO (SE DOR ABDOMINAL ASSOCIADA)')
+    if (temDorAbdominal) {
+      alertas.push({ nivel: LEVE, texto: 'OBSTIPAÇÃO + DOR ABDOMINAL: DESCARTAR HÉRNIA INTERNA OU BRIDA — AVALIAÇÃO CIRÚRGICA.' })
+      suger.push('AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO (OBSTIPAÇÃO COM DOR ABDOMINAL — DESCARTAR SUBOCLUSÃO)')
+    }
     suger.push('TESTE RESPIRATÓRIO PARA SIBO (SUPERCRESCIMENTO BACTERIANO)')
 
   } else if (intestinal === 'INTESTINO IRRITÁVEL (DIARREIA FREQUENTE)') {

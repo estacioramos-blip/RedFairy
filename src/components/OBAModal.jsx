@@ -1976,6 +1976,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const BG_BAND = { position:'absolute', top:0, left:0, right:0, height:360, pointerEvents:'none' }
     const checkBox = { width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#DC2626', flexShrink:0 }
     const waBtn = { display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, textDecoration:'none', cursor:'pointer', border:'none', fontFamily:'inherit', marginTop:'0.7rem' }
+    // Ferro EV: se o paciente marcou a teleconsulta com HEMATOLOGISTA, é ele quem avalia e
+    // prescreve o ferro EV — não precisa da receita avulsa. Só oferece a prescrição se NÃO marcou.
+    const hematoMarcado = [...teleOn].some(t => /HEMATOL/i.test(String(t)))
     return (
       <>
       {showFerroEV && (
@@ -2137,10 +2140,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       style={{ ...waBtn, background:'#9F1239', marginTop:0 }}
                       onClick={() => setShowFerroEV(true)}
                     >{"Ver o protocolo completo (cálculo da dose) →"}</button>
-                    <button
-                      style={{ ...waBtn, marginTop:0 }}
-                      onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e desejo solicitar a prescrição médica do protocolo de reposição de Ferro Endovenoso.')}
-                    >{"Solicitar a prescrição médica digital →"}</button>
+                    {!hematoMarcado && (
+                      <button
+                        style={{ ...waBtn, marginTop:0 }}
+                        onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e desejo solicitar a prescrição médica do protocolo de reposição de Ferro Endovenoso.')}
+                      >{"Solicitar a prescrição médica digital →"}</button>
+                    )}
                     <button
                       style={{ ...waBtn, background:'#25D366', marginTop:0 }}
                       onClick={() => { try { window.open('https://wa.me/?text=' + encodeURIComponent(protocoloFerroTexto), '_blank') } catch (e) {} }}
@@ -2149,11 +2154,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       style={{ ...waBtn, background:'#475569', marginTop:0 }}
                       onClick={baixarPdfFerro}
                     >{"Baixar o protocolo em PDF ⬇"}</button>
-                    <p style={{ fontSize:'0.72rem', color:'#9F1239', margin:'0.2rem 0 0', lineHeight:1.5 }}>
-                      {"A prescrição com assinatura digital sai por "}
-                      <strong>{valorPrescricao != null ? `R$ ${valorPrescricao}` : "(valor a confirmar)"}</strong>
-                      {"."}
-                    </p>
+                    {hematoMarcado ? (
+                      <p style={{ fontSize:'0.72rem', color:'#9F1239', margin:'0.2rem 0 0', lineHeight:1.5 }}>
+                        {"Você marcou a teleconsulta com hematologista — é ele quem vai avaliar e prescrever o ferro endovenoso. Não é preciso solicitar a prescrição avulsa aqui."}
+                      </p>
+                    ) : (
+                      <p style={{ fontSize:'0.72rem', color:'#9F1239', margin:'0.2rem 0 0', lineHeight:1.5 }}>
+                        {"A prescrição com assinatura digital sai por "}
+                        <strong>{valorPrescricao != null ? `R$ ${valorPrescricao}` : "(valor a confirmar)"}</strong>
+                        {"."}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
