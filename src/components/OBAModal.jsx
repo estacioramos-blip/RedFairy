@@ -1766,8 +1766,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // Exclui "AVALIAÇÃO PARA X" (trombofilia/cessação/ferro EV) e POLISSONOGRAFIA — que
     // são exame/procedimento, não médico, e ficam na seção Recomendações.
     const naoEspecialista = (e) => /^AVALIA[ÇC][ÃA]O PARA |POLISSONOGRAFIA/i.test(String(e).trim())
-    const especialistas = [...new Set((relatorio?.examesComplementares || [])
-      .filter(e => categoriaRecomendacao(e) === 'avaliacao' && !naoEspecialista(e)))]
+    // Dedup por ESPECIALISTA (mesmo tipo de médico), ignorando o motivo entre parênteses:
+    // evita 2 linhas do mesmo especialista (ex.: 'HEMATOLOGISTA' do eritron + 'HEMATOLOGISTA
+    // (inversão albumina/globulina)') que sairiam com 2 selos ★ e poderiam ser marcadas 2×,
+    // cobrando em dobro a MESMA visita. Mantém a variante mais informativa (a com o parêntese).
+    const baseEsp = (e) => String(e).replace(/\s*\(.*$/, '').trim().toUpperCase()
+    const mapEsp = new Map()
+    for (const e of (relatorio?.examesComplementares || [])) {
+      if (categoriaRecomendacao(e) !== 'avaliacao' || naoEspecialista(e)) continue
+      const k = baseEsp(e)
+      const atual = mapEsp.get(k)
+      if (!atual || String(e).length > String(atual).length) mapEsp.set(k, e)
+    }
+    const especialistas = [...mapEsp.values()]
       // Ordena por prioridade (hematologista → urgentes → resto), mantendo a ordem do
       // motor dentro de cada faixa (sort estável via índice original).
       .map((e, i) => ({ e, i })).sort((a, b) => prioridadeTele(a.e) - prioridadeTele(b.e) || a.i - b.i).map(x => x.e)
