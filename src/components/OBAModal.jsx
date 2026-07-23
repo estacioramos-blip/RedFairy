@@ -598,6 +598,16 @@ const CATS_RECOMENDACAO = [
 // diferentes). Exclui 'avaliacao' — encaminhamento a especialista é teleconsulta.
 const CATS_PEDIDO = CATS_RECOMENDACAO.filter(c => c.key !== 'avaliacao')
 
+// Painel-base do bariátrico = exames de LABORATÓRIO FUNDAMENTAIS (regra por palavra-chave,
+// proposta ao Dr. Ramos). Só se aplica ao laboratório; todo exame de lab que NÃO casa aqui
+// é RECOMENDÁVEL. ⚠ EDITÁVEL: acrescentar/remover palavras nesta regex muda a classificação.
+const RE_EXAME_FUNDAMENTAL = /HEMOGRAMA|FERRITINA|SATURA[ÇC][ÃA]O DA TRANSFERRINA|VITAMINA B12|B12|FOLATO|VITAMINA D|C[ÁA]LCIO|PTH|MAGN[ÉE]SIO|ZINCO|ALBUMINA|GLICEMIA EM JEJUM|HEMOGLOBINA GLICADA|HBA1C|TSH/i
+const ehExameFundamental = (e) => RE_EXAME_FUNDAMENTAL.test(String(e))
+// Cores dos blocos fundamentais/recomendáveis (relatório e card de pedidos):
+// FUNDAMENTAIS = pink com contorno vinho; RECOMENDÁVEIS = amarelo.
+const COR_FUND = { fundo:'#FDF2F8', borda:'#9F1239', texto:'#9F1239' }
+const COR_RECO = { fundo:'#FEFCE8', borda:'#EAB308', texto:'#92400E' }
+
 // BUG #3 corrigido: removidas as chaves duplicadas vitamina_d e triglicerides
 // (cada uma aparecia 2x). Mantida apenas uma versao de cada.
 const LIMITES_OBA = {
@@ -1875,6 +1885,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const checkBox = { width:'1.15rem', height:'1.15rem', marginTop:'0.05rem', flexShrink:0 }
     const waBtn = { display:'inline-block', background:'#16a34a', color:'white', fontWeight:800, fontSize:'0.82rem', padding:'0.6rem 1rem', borderRadius:10, border:'none', cursor:'pointer', fontFamily:'inherit' }
     const toggle = (ex) => setExOn(prev => { const n = new Set(prev); if (n.has(ex)) n.delete(ex); else n.add(ex); return n })
+    // Pacote (laboratório): liga/desliga TODOS os exames do pacote de uma vez. Mantém o modelo
+    // exOn por-exame — a contagem de pedido (1 por serviço) e a mensagem seguem inalteradas.
+    const togglePacote = (lista, ligar) => setExOn(prev => { const n = new Set(prev); lista.forEach(e => ligar ? n.add(e) : n.delete(e)); return n })
     const servicosMarcados = porServico.filter(s => s.itens.some(ex => exOn.has(ex)))
     const nPedidos = servicosMarcados.length
     const temPreco = valorSolicitacao != null
@@ -1893,12 +1906,46 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
         <div style={{ display:'flex', flexDirection:'column', gap:'0.7rem' }}>
           {porServico.map(({ c, itens }) => {
             const marc = itens.some(ex => exOn.has(ex))
+            const isLab = c.key === 'laboratorio'
+            const header = (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'0.5rem', marginBottom:'0.5rem' }}>
+                <span style={{ fontSize:'0.68rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:isLab ? '#334155' : c.texto }}>{c.titulo}</span>
+                {marc && <span style={{ fontSize:'0.62rem', fontWeight:800, color:'white', background:isLab ? '#334155' : c.texto, borderRadius:6, padding:'0.15rem 0.4rem', whiteSpace:'nowrap' }}>{temPreco ? `1 PEDIDO · R$ ${valorSolicitacao}` : "1 PEDIDO"}</span>}
+              </div>
+            )
+            // LABORATÓRIO: pacotes (fundamentais/recomendáveis), não checkbox por exame. Marcar
+            // qualquer pacote = 1 pedido de lab; marcar os dois = os exames saem juntos, 1 pedido só.
+            if (isLab) {
+              const pacotes = [
+                { lista: itens.filter(ehExameFundamental),        cor: COR_FUND, nome: 'Exames fundamentais' },
+                { lista: itens.filter(e => !ehExameFundamental(e)), cor: COR_RECO, nome: 'Exames recomendáveis' },
+              ].filter(p => p.lista.length > 0)
+              return (
+                <div key={c.key} style={{ background:'#FFFFFF', border:'1px solid #E2E8F0', borderRadius:10, padding:'0.7rem 0.8rem' }}>
+                  {header}
+                  <p style={{ fontSize:'0.72rem', color:'#64748B', margin:'0 0 0.55rem', lineHeight:1.45 }}>{"Um único pedido de laboratório. Marque o pacote que deseja — você pode fazer só os fundamentais."}</p>
+                  <div style={{ display:'flex', flexDirection:'column', gap:'0.55rem' }}>
+                    {pacotes.map((p, pi) => {
+                      const pacoteOn = p.lista.every(e => exOn.has(e))
+                      return (
+                        <div key={pi} style={{ background:p.cor.fundo, border:`1.5px solid ${p.cor.borda}`, borderRadius:8, padding:'0.55rem 0.7rem' }}>
+                          <label style={{ display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
+                            <input type="checkbox" checked={pacoteOn} onChange={() => togglePacote(p.lista, !pacoteOn)} style={{ ...checkBox, accentColor:p.cor.borda, marginTop:0 }} />
+                            <span style={{ fontSize:'0.76rem', fontWeight:800, color:p.cor.texto }}>{p.nome}{` (${p.lista.length})`}</span>
+                          </label>
+                          <ul style={{ margin:'0.35rem 0 0', paddingLeft:'1.7rem' }}>
+                            {p.lista.map((ex, i) => <li key={i} style={{ fontSize:'0.71rem', color:'#374151', lineHeight:1.45 }}>{ex}</li>)}
+                          </ul>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            }
             return (
               <div key={c.key} style={{ background:c.fundo, border:`1px solid ${c.borda}`, borderRadius:10, padding:'0.7rem 0.8rem' }}>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'0.5rem', marginBottom:'0.5rem' }}>
-                  <span style={{ fontSize:'0.68rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:c.texto }}>{c.titulo}</span>
-                  {marc && <span style={{ fontSize:'0.62rem', fontWeight:800, color:'white', background:c.texto, borderRadius:6, padding:'0.15rem 0.4rem', whiteSpace:'nowrap' }}>{temPreco ? `1 PEDIDO · R$ ${valorSolicitacao}` : "1 PEDIDO"}</span>}
-                </div>
+                {header}
                 <div style={{ display:'flex', flexDirection:'column', gap:'0.35rem' }}>
                   {itens.map((ex, i) => {
                     const on = exOn.has(ex)
@@ -2518,18 +2565,38 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                         // n\u00e3o repete itens id\u00eanticos ao t\u00edtulo (caso do MAPA, cujo
                         // t\u00edtulo j\u00e1 \u00e9 a pr\u00f3pria recomenda\u00e7\u00e3o).
                         const itens = grupos[c.key].filter(ex => String(ex).trim().toUpperCase() !== c.titulo.trim().toUpperCase())
+                        const bullets = (lista, cor) => lista.map((ex, i) => (
+                          <p key={i} style={{ display:'flex', gap:'0.35rem', fontSize:'0.68rem', color:cor, fontWeight:600, lineHeight:1.5, margin: i < lista.length - 1 ? '0 0 0.3rem' : 0 }}>
+                            <span aria-hidden="true">{"\u2022"}</span><span style={{ flex:1 }}>{ex}</span>
+                          </p>
+                        ))
+                        // LABORAT\u00d3RIO: divide em FUNDAMENTAIS (pink/vinho) e RECOMEND\u00c1VEIS (amarelo).
+                        if (c.key === 'laboratorio' && itens.length > 0) {
+                          const blocos = [
+                            { lista: itens.filter(ehExameFundamental),         cor: COR_FUND, nome: 'FUNDAMENTAIS' },
+                            { lista: itens.filter(e => !ehExameFundamental(e)), cor: COR_RECO, nome: 'RECOMEND\u00c1VEIS' },
+                          ].filter(b => b.lista.length > 0)
+                          return (
+                            <div key={c.key} style={{ marginBottom:'0.7rem' }}>
+                              <p style={{ fontSize:'0.68rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:'#334155', margin:'0 0 0.3rem' }}>{c.titulo}</p>
+                              <div style={{ display:'flex', flexDirection:'column', gap:'0.5rem' }}>
+                                {blocos.map((b, bi) => (
+                                  <div key={bi} style={{ background:b.cor.fundo, border:`1.5px solid ${b.cor.borda}`, borderRadius:10, padding:'0.6rem 0.9rem' }}>
+                                    <p style={{ fontSize:'0.62rem', fontWeight:800, letterSpacing:'0.5px', color:b.cor.texto, margin:'0 0 0.35rem' }}>{b.nome}</p>
+                                    {bullets(b.lista, b.cor.texto)}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        }
                         return (
                           <div key={c.key} style={{ marginBottom:'0.7rem' }}>
                             {/* (d) t\u00edtulo FORA do card */}
                             <p style={{ fontSize:'0.68rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:c.texto, margin:'0 0 0.3rem' }}>{c.titulo}</p>
                             {itens.length > 0 && (
                               <div style={{ background:c.fundo, border:`1px solid ${c.borda}`, borderRadius:10, padding:'0.7rem 1rem' }}>
-                                {itens.map((ex, i) => (
-                                  // bullet em coluna pr\u00f3pria \u2192 o texto que quebra alinha abaixo, ap\u00f3s o ponto (indenta\u00e7\u00e3o pendente).
-                                  <p key={i} style={{ display:'flex', gap:'0.35rem', fontSize:'0.68rem', color:c.texto, fontWeight:600, lineHeight:1.5, margin: i < itens.length - 1 ? '0 0 0.3rem' : 0 }}>
-                                    <span aria-hidden="true">{"\u2022"}</span><span style={{ flex:1 }}>{ex}</span>
-                                  </p>
-                                ))}
+                                {bullets(itens, c.texto)}
                               </div>
                             )}
                           </div>
