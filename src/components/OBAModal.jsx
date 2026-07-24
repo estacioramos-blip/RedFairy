@@ -601,7 +601,7 @@ const CATS_PEDIDO = CATS_RECOMENDACAO.filter(c => c.key !== 'avaliacao')
 // Painel-base do bariátrico = exames de LABORATÓRIO FUNDAMENTAIS (regra por palavra-chave,
 // proposta ao Dr. Ramos). Só se aplica ao laboratório; todo exame de lab que NÃO casa aqui
 // é RECOMENDÁVEL. ⚠ EDITÁVEL: acrescentar/remover palavras nesta regex muda a classificação.
-const RE_EXAME_FUNDAMENTAL = /HEMOGRAMA|FERRITINA|SATURA[ÇC][ÃA]O DA TRANSFERRINA|VITAMINA B12|B12|FOLATO|VITAMINA D|C[ÁA]LCIO|PTH|MAGN[ÉE]SIO|ZINCO|ALBUMINA|GLICEMIA EM JEJUM|HEMOGLOBINA GLICADA|HBA1C|TSH/i
+const RE_EXAME_FUNDAMENTAL = /HEMOGRAMA|FERRITINA|SATURA[ÇC][ÃA]O DA TRANSFERRINA|VITAMINA B12|B12|FOLATO|VITAMINA D|C[ÁA]LCIO|F[ÓO]SFORO|PTH|MAGN[ÉE]SIO|ZINCO|ALBUMINA|GLICEMIA EM JEJUM|HEMOGLOBINA GLICADA|HBA1C|TSH/i
 const ehExameFundamental = (e) => RE_EXAME_FUNDAMENTAL.test(String(e))
 // Cores dos blocos fundamentais/recomendáveis (relatório e card de pedidos):
 // FUNDAMENTAIS = pink com contorno vinho; RECOMENDÁVEIS = amarelo.

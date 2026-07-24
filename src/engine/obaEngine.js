@@ -110,8 +110,11 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modulos     = []
   const examesSuger = []
 
-  // TODO paciente OBA: garantir HEMOGRAMA nos exames complementares (reavaliacao do eritron).
+  // TODO paciente OBA: HEMOGRAMA e FÓSFORO SÉRICO sempre. O fósforo é obrigatório porque a
+  // reposição de FERRO ENDOVENOSO (comum no bariátrico) pode causar HIPOFOSFATEMIA — é preciso
+  // conhecer o fósforo basal antes/durante a reposição. Fica no painel fundamental.
   if (!examesSuger.some(e => /HEMOGRAMA/i.test(e))) examesSuger.push('HEMOGRAMA')
+  if (!examesSuger.some(e => /F[ÓO]SFORO/i.test(e))) examesSuger.push('FÓSFORO SÉRICO')
 
   // GESTANTE + SANGRAMENTO MENSTRUAL: contradicao clinica -> sangramento na gravidez e'
   // emergencia. Alerta GRAVE no relatorio (o aviso inline na anamnese ja avisa na hora).
