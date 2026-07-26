@@ -8,6 +8,8 @@ import PlayButton from './PlayButton'
 import ModalFerroEV from './ModalFerroEV'
 import { calcularDeficitFerroGanzoni } from '../engine/ferroProtocol'
 import { avaliarPaciente, triagemEritron } from '../engine/decisionEngine'
+import { cicloFromRow, compararCiclos } from '../engine/obaComparador'
+import OBAComparativoCard from './OBAComparativoCard'
 
 // Imagem landscape do splash do relatório OBA — A DEFINIR (será horizontal,
 // ocupando a largura do modal, parcialmente sobreposta pelo conteúdo).
@@ -671,7 +673,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #6B7280, #4B5563)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, coletarHemograma = false, modoMedico = false, modoRevisao = false }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, anamneseBaseline = null, coletarHemograma = false, modoMedico = false, modoRevisao = false }) {
   // FOLLOW-UP: avaliação de RETORNO de um bariátrico que já fez o baseline.
   // anamneseAnterior = última linha de oba_anamnese. Nesse modo, os campos
   // IMUTÁVEIS (data/tipo/indicação da cirurgia, peso antes, altura) são
@@ -2286,29 +2288,25 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // pede o exame em vez de oferecer o protocolo.
     const precisaFerroEV = ferroEV.precisa
 
-    // (passo 2) COMPARAÇÃO com a avaliação anterior (follow-up): estado clínico,
-    // peso e nível do eritron. Ordens p/ decidir melhora (+1) / piora (-1) / igual (0).
-    const cmp = (() => {
-      if (!modoFollowUp || !anamneseAnterior) return null
-      const ordemEstado = ['CRITICO', 'RUIM', 'RAZOAVEL', 'BOM', 'OTIMO']      // pior → melhor
-      const ordemNivel  = ['grave', 'moderado', 'leve', 'normal']             // pior → melhor
-      const estAnt = anamneseAnterior.estado_clinico || null
-      const estAtu = estadoClinico?.estado || null
-      const ie1 = ordemEstado.indexOf(estAnt), ie2 = ordemEstado.indexOf(estAtu)
-      const estadoDelta = (ie1 >= 0 && ie2 >= 0) ? Math.sign(ie2 - ie1) : null
-      const pesoAnt = anamneseAnterior.peso_atual != null ? Number(anamneseAnterior.peso_atual) : null
-      const pesoDelta = (pesoAnt != null && pesoAtual) ? +(pesoAtual - pesoAnt).toFixed(1) : null
-      const nivAnt = (anamneseAnterior.relatorio_oba?.modulos || []).find(m => /ERITRON/i.test(m?.titulo || ''))?.nivel || null
-      const nivAtu = (rel?.modulos || []).find(m => /ERITRON/i.test(m?.titulo || ''))?.nivel || null
-      const in1 = ordemNivel.indexOf(nivAnt), in2 = ordemNivel.indexOf(nivAtu)
-      const eritronDelta = (in1 >= 0 && in2 >= 0) ? Math.sign(in2 - in1) : null
-      const dataAnt = anamneseAnterior.data_exames || (anamneseAnterior.created_at ? String(anamneseAnterior.created_at).slice(0, 10) : null)
-      const dataAntFmt = dataAnt ? String(dataAnt).split('-').reverse().join('/') : null
-      const temAlgo = estAnt || pesoAnt != null || nivAnt
-      return temAlgo ? { estAnt, estAtu, estadoDelta, pesoAnt, pesoDelta, nivAnt, nivAtu, eritronDelta, dataAntFmt } : null
-    })()
-    // Cor/seta por delta: +1 melhora (verde ↑), -1 piora (vermelho ↓), 0 igual (cinza →).
-    const setaCmp = (d) => d == null ? { txt: '—', cor: '#6B7280' } : d > 0 ? { txt: '↑ melhorou', cor: '#16A34A' } : d < 0 ? { txt: '↓ piorou', cor: '#DC2626' } : { txt: '→ estável', cor: '#6B7280' }
+    // (passo 2) COMPARAÇÃO LONGITUDINAL — motor obaComparador.js. cicloAtualVivo é
+    // construído a partir do estado já em memória (mesma forma de um "row" de
+    // oba_anamnese, reaproveitando cicloFromRow em vez de duplicar a lógica de IMC).
+    // Compara sempre contra os DOIS (decisão do Dr. Ramos): anterior (N-1) e baseline
+    // (1ª avaliação) — se coincidirem (só 2 ciclos existem), oculta a duplicata.
+    const cicloAtualVivo = cicloFromRow({
+      data_exames: dataExames || null,
+      created_at: new Date().toISOString(),
+      estado_clinico: estadoClinico?.estado || null,
+      peso_atual: pesoAtual || null,
+      relatorio_oba: {
+        modulos: rel?.modulos, alertas: rel?.alertas, examesComplementares: rel?.examesComplementares,
+        form_snapshot: form,
+      },
+    })
+    const diffAnterior = (modoFollowUp && anamneseAnterior)
+      ? compararCiclos(cicloAtualVivo, cicloFromRow(anamneseAnterior)) : null
+    const diffBaseline = (modoFollowUp && anamneseBaseline && anamneseBaseline.id !== anamneseAnterior?.id)
+      ? compararCiclos(cicloAtualVivo, cicloFromRow(anamneseBaseline)) : null
 
     return (
       <>
@@ -2415,37 +2413,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   ))}
                 </div>
 
-                {/* (passo 2) EVOLU\u00c7\u00c3O desde a \u00faltima avalia\u00e7\u00e3o (s\u00f3 no follow-up) */}
-                {cmp && (
+                {/* (passo 2) EVOLU\u00c7\u00c3O LONGITUDINAL (s\u00f3 no follow-up) \u2014 vs anterior e vs
+                    baseline; oculta a 2\u00aa se coincidir com a 1\u00aa (s\u00f3 2 ciclos existem). */}
+                {(diffAnterior || diffBaseline) && (
                   <>
-                    <SectionTitle>{"Evolu\u00e7\u00e3o desde a \u00faltima avalia\u00e7\u00e3o"}</SectionTitle>
-                    {cmp.dataAntFmt && (
-                      <p style={{ fontSize:'0.72rem', color:'#6B7280', margin:'0 0 0.5rem' }}>{"Comparado com "}{cmp.dataAntFmt}{":"}</p>
-                    )}
-                    <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)', gap:'0.4rem' }}>
-                      {/* Estado cl\u00ednico */}
-                      <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.5rem 0.6rem' }}>
-                        <p style={{ fontSize:'0.6rem', color:'#9CA3AF', fontWeight:700, textTransform:'uppercase', margin:'0 0 0.2rem' }}>{"Estado cl\u00ednico"}</p>
-                        <p style={{ fontSize:'0.74rem', color:'#374151', fontWeight:700, margin:0 }}>{cmp.estAnt || '\u2014'}{" \u2192 "}{cmp.estAtu || '\u2014'}</p>
-                        <p style={{ fontSize:'0.66rem', fontWeight:800, color:setaCmp(cmp.estadoDelta).cor, margin:'0.15rem 0 0' }}>{setaCmp(cmp.estadoDelta).txt}</p>
-                      </div>
-                      {/* Peso atual */}
-                      <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.5rem 0.6rem' }}>
-                        <p style={{ fontSize:'0.6rem', color:'#9CA3AF', fontWeight:700, textTransform:'uppercase', margin:'0 0 0.2rem' }}>{"Peso atual"}</p>
-                        <p style={{ fontSize:'0.74rem', color:'#374151', fontWeight:700, margin:0 }}>
-                          {cmp.pesoAnt != null ? `${cmp.pesoAnt} \u2192 ` : ''}{pesoAtual ? `${pesoAtual} kg` : '\u2014'}
-                        </p>
-                        <p style={{ fontSize:'0.66rem', fontWeight:800, color: cmp.pesoDelta == null ? '#6B7280' : cmp.pesoDelta < 0 ? '#16A34A' : cmp.pesoDelta > 0 ? '#DC2626' : '#6B7280', margin:'0.15rem 0 0' }}>
-                          {cmp.pesoDelta == null ? '\u2014' : cmp.pesoDelta === 0 ? '\u2192 est\u00e1vel' : `${cmp.pesoDelta > 0 ? '\u2191 +' : '\u2193 '}${Math.abs(cmp.pesoDelta)} kg`}
-                        </p>
-                      </div>
-                      {/* Eritron */}
-                      <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:8, padding:'0.5rem 0.6rem' }}>
-                        <p style={{ fontSize:'0.6rem', color:'#9CA3AF', fontWeight:700, textTransform:'uppercase', margin:'0 0 0.2rem' }}>{"Eritron"}</p>
-                        <p style={{ fontSize:'0.74rem', color:'#374151', fontWeight:700, margin:0 }}>{(cmp.nivAnt || '\u2014')}{" \u2192 "}{(cmp.nivAtu || '\u2014')}</p>
-                        <p style={{ fontSize:'0.66rem', fontWeight:800, color:setaCmp(cmp.eritronDelta).cor, margin:'0.15rem 0 0' }}>{setaCmp(cmp.eritronDelta).txt}</p>
-                      </div>
-                    </div>
+                    <SectionTitle>{"Evolu\u00e7\u00e3o"}</SectionTitle>
+                    <OBAComparativoCard diff={diffAnterior} titulo={"Desde a \u00faltima avalia\u00e7\u00e3o"} />
+                    <OBAComparativoCard diff={diffBaseline} titulo={"Desde a avalia\u00e7\u00e3o inicial (baseline)"} />
                   </>
                 )}
 
