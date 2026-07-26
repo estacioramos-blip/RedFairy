@@ -138,7 +138,22 @@ function compararModulos(cicloAtual, cicloReferencia) {
   return out
 }
 
-function contarResumo(modulos) {
+// -----------------------------------------------------------------------------
+// Dimensão: EXAMES SUGERIDOS (examesComplementares) — diff de CONJUNTO por nome
+// (strings já deduplicadas pelo motor, ver sweep de dedup do obaEngine.js).
+// NOVOS = pedido apareceu agora; RESOLVIDOS = pedido sumiu (feito ou não é mais
+// necessário); MANTIDOS = segue pendente nos dois ciclos.
+// -----------------------------------------------------------------------------
+function compararExamesSugeridos(cicloAtual, cicloReferencia) {
+  const ref = new Set(cicloReferencia.relatorio.examesComplementares || [])
+  const atu = new Set(cicloAtual.relatorio.examesComplementares || [])
+  const novos = [...atu].filter(x => !ref.has(x))
+  const resolvidos = [...ref].filter(x => !atu.has(x))
+  const mantidos = [...atu].filter(x => ref.has(x))
+  return { novos, resolvidos, mantidos }
+}
+
+function contarResumo(modulos, examesSugeridos) {
   const r = { melhoraram: 0, pioraram: 0, estaveis: 0, novos: 0, resolvidos: 0 }
   for (const m of modulos) {
     if (m.status === STATUS.MELHOROU) r.melhoraram++
@@ -147,27 +162,33 @@ function contarResumo(modulos) {
     else if (m.status === STATUS.NOVO) r.novos++
     else if (m.status === STATUS.RESOLVIDO) r.resolvidos++
   }
+  if (examesSugeridos) {
+    r.novos += examesSugeridos.novos.length
+    r.resolvidos += examesSugeridos.resolvidos.length
+  }
   return r
 }
 
 // -----------------------------------------------------------------------------
 // Diff PAR-A-PAR entre dois ciclos canônicos. Chamada 2x pelo consumidor (uma
 // vez vs anterior, uma vez vs baseline) — não sabe de "anterior"/"baseline",
-// só compara A vs B. Fase 0: cobre estado + módulos + peso/IMC. Fases seguintes
-// adicionam `exames`, `categoricos` e `examesSugeridos` ao objeto de saída.
+// só compara A vs B. Fase 0: estado + módulos + peso/IMC. Fase 2: exames
+// sugeridos. Fases seguintes adicionam `exames` (numéricos) e `categoricos`.
 // -----------------------------------------------------------------------------
 export function compararCiclos(cicloAtual, cicloReferencia, opts = {}) {
   if (!cicloAtual || !cicloReferencia) return null
   const modulos = compararModulos(cicloAtual, cicloReferencia)
+  const examesSugeridos = compararExamesSugeridos(cicloAtual, cicloReferencia)
   return {
     meta: {
       dataAtual: cicloAtual.data,
       dataReferencia: cicloReferencia.data,
       diasEntre: diasEntreDatas(cicloReferencia.data, cicloAtual.data),
     },
-    resumo: contarResumo(modulos),
+    resumo: contarResumo(modulos, examesSugeridos),
     estado: compararEstado(cicloAtual, cicloReferencia),
     ponderal: compararPonderal(cicloAtual, cicloReferencia, opts),
     modulos,
+    examesSugeridos,
   }
 }

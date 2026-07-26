@@ -1,8 +1,9 @@
 // =============================================================================
 // OBAComparativoCard — exibe o diff produzido por obaComparador.compararCiclos.
-// Fase 1: estado clínico global, módulos (por id) e peso/IMC. Fases seguintes
-// (exames laboratoriais, status categóricos, exames sugeridos) só adicionam
-// seções aqui quando `diff` trouxer essas chaves — nada a mudar na estrutura.
+// Fase 1: estado clínico global, módulos (por id) e peso/IMC. Fase 2: exames
+// sugeridos (novos/resolvidos/mantidos). Fases seguintes (exames laboratoriais,
+// status categóricos) só adicionam seções aqui quando `diff` trouxer essas
+// chaves — nada a mudar na estrutura.
 // =============================================================================
 
 const SETA = {
@@ -30,7 +31,7 @@ const setaStyle = (cor) => ({ fontSize: '0.66rem', fontWeight: 800, color: cor, 
 
 export default function OBAComparativoCard({ diff, titulo }) {
   if (!diff) return null
-  const { meta, resumo, estado, ponderal, modulos } = diff
+  const { meta, resumo, estado, ponderal, modulos, examesSugeridos } = diff
   const dataRefFmt = formatarDataISO(meta.dataReferencia)
 
   const chips = [
@@ -43,6 +44,7 @@ export default function OBAComparativoCard({ diff, titulo }) {
   const modulosMudaram = (modulos || [])
     .filter(m => m.status !== 'ESTAVEL')
     .sort((a, b) => (PRIORIDADE[a.status] ?? 9) - (PRIORIDADE[b.status] ?? 9))
+  const temSecaoExames = !!examesSugeridos && (examesSugeridos.novos.length > 0 || examesSugeridos.resolvidos.length > 0 || examesSugeridos.mantidos.length > 0)
 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: 12, padding: '0.9rem 1rem', marginBottom: '0.9rem' }}>
@@ -83,13 +85,38 @@ export default function OBAComparativoCard({ diff, titulo }) {
       </div>
 
       {modulosMudaram.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: temSecaoExames ? '0.6rem' : 0 }}>
           {modulosMudaram.map(m => (
             <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
               <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600 }}>{m.titulo}</span>
               <span style={{ fontSize: '0.68rem', fontWeight: 800, color: seta(m.status).cor, whiteSpace: 'nowrap' }}>{seta(m.status).txt}</span>
             </div>
           ))}
+        </div>
+      )}
+
+      {temSecaoExames && (
+        <div>
+          <p style={labelStyle}>{"Exames sugeridos"}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            {examesSugeridos.novos.map((nome, i) => (
+              <div key={'novo-' + i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
+                <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600 }}>{nome}</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 800, color: seta('NOVO').cor, whiteSpace: 'nowrap' }}>{seta('NOVO').txt}</span>
+              </div>
+            ))}
+            {examesSugeridos.resolvidos.map((nome, i) => (
+              <div key={'resolvido-' + i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
+                <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600 }}>{nome}</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 800, color: seta('RESOLVIDO').cor, whiteSpace: 'nowrap' }}>{seta('RESOLVIDO').txt}</span>
+              </div>
+            ))}
+          </div>
+          {examesSugeridos.mantidos.length > 0 && (
+            <p style={{ fontSize: '0.68rem', color: '#6B7280', margin: '0.35rem 0 0' }}>
+              {"Ainda pendente"}{examesSugeridos.mantidos.length > 1 ? 's' : ''}{": "}{examesSugeridos.mantidos.join(' • ')}
+            </p>
+          )}
         </div>
       )}
     </div>
