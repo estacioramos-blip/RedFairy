@@ -1834,7 +1834,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
         linhas.push(`PSA ${psa} ng/mL APÓS RADIOTERAPIA DE PRÓSTATA: ESTE VALOR NÃO DEVE SER LIDO PELA TABELA COMUM (< 4). DEPOIS DA RADIOTERAPIA A PRÓSTATA CONTINUA NO LUGAR E O PSA NÃO ZERA — O CONTROLE É FEITO COMPARANDO COM O SEU MENOR VALOR JÁ ATINGIDO (O "NADIR"): UMA SUBIDA DE 2 PONTOS ACIMA DELE INDICA RECIDIVA. LEVE O HISTÓRICO DOS SEUS PSAs AO UROLOGISTA — SEM OS VALORES ANTERIORES, NENHUM PSA ISOLADO DIZ SE ESTÁ TUDO BEM.`)
         if (nivelGeral !== GRAVE) nivelGeral = MODERADO
         alertas.push({ nivel: MODERADO, texto: `PSA ${psa} ng/mL APÓS RADIOTERAPIA — NÃO APLICAR O CORTE DE 4. O CONTROLE É PELO NADIR + 2 (CRITÉRIO DE PHOENIX): LEVAR O HISTÓRICO DE PSAs AO UROLOGISTA.` })
-        suger.push('AVALIAÇÃO COM UROLOGISTA (SEGUIMENTO PÓS-RADIOTERAPIA — LEVAR HISTÓRICO DE PSA)')
+        suger.push('AVALIAÇÃO COM UROLOGISTA')
       } else if (psa > REF.psa.alto) {
         nivelGeral = GRAVE
         // Com câncer JÁ diagnosticado, mandar "biópsia" é fora de lugar: ele não
@@ -2876,7 +2876,11 @@ function buildModProstatico(dados, alertas, suger) {
     if (hormonal) {
       linhas.push('O SEU TRATAMENTO É O BLOQUEIO HORMONAL (PRIVAÇÃO DE ANDROGÊNIO), E ELE SOMA DOIS EFEITOS AO SEU CONTEXTO BARIÁTRICO. O PRIMEIRO É NO SANGUE: O BLOQUEIO CAUSA ANEMIA POR SI — ENTÃO A SUA ANEMIA PODE TER DUAS CAUSAS SOMADAS, E CORRIGIR SÓ O FERRO PODE NÃO RESOLVER TUDO. O SEGUNDO É NO OSSO: ELE ACELERA A PERDA DE MASSA ÓSSEA, QUE JÁ É UM PONTO FRÁGIL DEPOIS DA CIRURGIA — OS DOIS JUNTOS PEDEM DENSITOMETRIA E ATENÇÃO REDOBRADA A CÁLCIO E VITAMINA D.')
       alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA EM BLOQUEIO HORMONAL — CAUSA ANEMIA (SOMA-SE À CARÊNCIA BARIÁTRICA) E ACELERA A PERDA ÓSSEA (SOMA-SE À DA CIRURGIA). LER O ERITRON NESSE CONTEXTO; DENSITOMETRIA E ATENÇÃO A CÁLCIO/VIT. D.' })
-      suger.push('DENSITOMETRIA ÓSSEA')
+      // O módulo ósseo já sugere densitometria com sufixo próprio ("(SE NÃO RECENTE)"/
+      // "(ANUAL)") quando status_osseo é OSTEOPOROSE/OSTEOPENIA — o dedup por Set não
+      // reconhece como a mesma. Mesma guarda já usada no módulo alérgico (~l.2761).
+      const osseoDeclProst = dados.status_osseo || ''
+      if (!/OSTEOPOROSE|OSTEOPENIA/.test(osseoDeclProst)) suger.push('DENSITOMETRIA ÓSSEA')
     }
 
     if (quimio) {
@@ -3319,7 +3323,7 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
     if (!isNaN(vitD) && vitD < 30) {
       linhas.push(`  → VITAMINA D ATUAL: ${vitD} ng/mL — ABAIXO DA META. A CORREÇÃO PODE MELHORAR SIGNIFICATIVAMENTE AS DORES.`)
     }
-    suger.push('MAGNÉSIO SÉRICO (CORRELAÇÃO COM DORES E CÃIBRAS)')
+    suger.push('MAGNÉSIO SÉRICO')
   }
 
   if (temInsonia) {
@@ -3367,7 +3371,7 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
 
   if (temDiagnostico || qtdSintomas >= 2) {
     suger.push('MAGNÉSIO SÉRICO')
-    suger.push('AVALIAÇÃO COM REUMATOLOGISTA (SE SINTOMAS PERSISTIREM APÓS CORREÇÃO NUTRICIONAL)')
+    suger.push('AVALIAÇÃO COM REUMATOLOGISTA')
   }
 
   return {
