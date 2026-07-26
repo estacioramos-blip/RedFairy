@@ -106,6 +106,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [obaColetarHemograma, setObaColetarHemograma] = useState(false)  // re-entrada (ENTRAR): o hemograma é digitado DENTRO do OBA (etapa exames), sem a página 'nova'
   const [precisaOBA, setPrecisaOBA] = useState(false)  // bariátrico sem anamnese OBA → banner persistente
   const [anamneseAnterior, setAnamneseAnterior] = useState(null)  // última oba_anamnese → OBA em modo follow-up
+  const [anamneseBaseline, setAnamneseBaseline] = useState(null)  // 1ª oba_anamnese do CPF → comparação longitudinal vs baseline
   const [eritronAnterior, setEritronAnterior] = useState(null)    // avaliação eritron anterior → comparação no resultado
   // Vencimento da anuidade (assinaturas.data_fim da assinatura ativa) p/ alerta 15/5 dias.
   const [vencimentoAnuidade, setVencimentoAnuidade] = useState(null)
@@ -376,14 +377,18 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // FOLLOW-UP (frente 2): se o bariátrico JÁ fez o baseline (existe linha em
     // oba_anamnese), carregamos a última p/ o OBA abrir em modo follow-up (esconde
     // imutáveis). Se não houver baseline, fica null → OBA abre normal (1ª vez).
+    // Busca TODAS as linhas (ascendente) — volume por paciente é baixo (poucos ciclos)
+    // — para derivar a ÚLTIMA (anterior, follow-up) e a PRIMEIRA (baseline, comparação
+    // longitudinal). Ver src/engine/obaComparador.js.
     if (prof.cpf && (prof.bariatrica || (avals || []).some(a => a.bariatrica))) {
       try {
         const cpfLimpo = String(prof.cpf).replace(/\D/g, '')
         const { data: obaRows } = await supabase
           .from('oba_anamnese').select('*')
-          .eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1)
-        setAnamneseAnterior(obaRows && obaRows.length ? obaRows[0] : null)
-      } catch (e) { setAnamneseAnterior(null) }
+          .eq('cpf', cpfLimpo).order('created_at', { ascending: true })
+        setAnamneseBaseline(obaRows && obaRows.length ? obaRows[0] : null)
+        setAnamneseAnterior(obaRows && obaRows.length ? obaRows[obaRows.length - 1] : null)
+      } catch (e) { console.error('Falha ao carregar histórico OBA:', e); setAnamneseAnterior(null); setAnamneseBaseline(null) }
     }
     // HEMOGRAMA DE ENTRADA (só na carga inicial): a triagem que o paciente fez antes
     // de pagar fica na tabela `triagens` (com data_coleta). Se essa entrada ainda NÃO
@@ -1200,6 +1205,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 : null
           }
           anamneseAnterior={anamneseAnterior}
+          anamneseBaseline={anamneseBaseline}
           coletarHemograma={obaColetarHemograma}
           onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false); setShowEscolhaEntrarIndicar(true) }}
           onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false); setPrecisaOBA(false); if (onVoltar) onVoltar() }}

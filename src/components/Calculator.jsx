@@ -846,12 +846,15 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       }
       // Traz o que o paciente já tem: última avaliação (eritron) + última anamnese do OBA.
       const { data: avals } = await supabase.from('avaliacoes').select('*').eq('cpf', d).order('data_coleta', { ascending: false }).limit(1)
-      let anam = null
+      // Busca TODAS as linhas (ascendente) — deriva a ÚLTIMA (anterior, follow-up) e a
+      // PRIMEIRA (baseline, comparação longitudinal). Ver src/engine/obaComparador.js.
+      let anam = null, anamBaseline = null
       try {
-        const { data: obaRows } = await supabase.from('oba_anamnese').select('*').eq('cpf', d).order('created_at', { ascending: false }).limit(1)
-        anam = (obaRows && obaRows.length) ? obaRows[0] : null
-      } catch (e) {}
-      setPacienteAvaliar({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam })
+        const { data: obaRows } = await supabase.from('oba_anamnese').select('*').eq('cpf', d).order('created_at', { ascending: true })
+        anamBaseline = (obaRows && obaRows.length) ? obaRows[0] : null
+        anam = (obaRows && obaRows.length) ? obaRows[obaRows.length - 1] : null
+      } catch (e) { console.error('Falha ao carregar histórico OBA:', e) }
+      setPacienteAvaliar({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam, anamneseBaseline: anamBaseline })
       setAvaliarRevisao(!!revisao)
       try {
         sessionStorage.setItem('rf_med_oba_cpf', d)   // p/ reabrir no refresh (mesma aba)
@@ -1630,6 +1633,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             ? { ferritina: pacienteAvaliar.ultimaAval.ferritina, hemoglobina: pacienteAvaliar.ultimaAval.hemoglobina, vcm: pacienteAvaliar.ultimaAval.vcm, rdw: pacienteAvaliar.ultimaAval.rdw, satTransf: pacienteAvaliar.ultimaAval.sat_transf, dataColeta: pacienteAvaliar.ultimaAval.data_coleta }
             : null}
           anamneseAnterior={pacienteAvaliar.anamneseAnterior}
+          anamneseBaseline={pacienteAvaliar.anamneseBaseline}
           coletarHemograma={!pacienteAvaliar.ultimaAval}
           modoMedico={true}
           modoRevisao={avaliarRevisao}
