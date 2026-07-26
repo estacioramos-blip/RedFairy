@@ -526,7 +526,7 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
   if (has('BARRETT')) {
     linhas.push('BARRETT: LESÃO PRÉ-MALIGNA — EXIGE VIGILÂNCIA ENDOSCÓPICA PERIÓDICA COM GASTROENTEROLOGISTA.')
     alertas.push({ nivel: MODERADO, texto: 'ESÔFAGO DE BARRETT: lesão pré-maligna — vigilância endoscópica periódica.' })
-    suger.push('ENDOSCOPIA DIGESTIVA ALTA (VIGILÂNCIA DE BARRETT)')
+    suger.push('ENDOSCOPIA DIGESTIVA ALTA')
     bump(MODERADO)
   }
   if (has('GASTRITE')) {
@@ -969,7 +969,7 @@ function buildModGlico(ex, dados, alertas, suger) {
     linhas.push('A INTERVENÇÃO MÉDICA É NECESSÁRIA PARA REDUZIR ESSE RISCO — NÃO POSTERGUE A AVALIAÇÃO ESPECIALIZADA.')
     alertas.push({ nivel: MODERADO, texto: 'DUMPING RELATADO: AJUSTAR DIETA E AVALIAR COM ESPECIALISTA — intervenção médica reduz o risco.' })
     suger.push('AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO OU NUTRÓLOGO ESPECIALIZADO')
-    suger.push('GLICEMIA PÓS-PRANDIAL 1H E 2H (PESQUISA DE HIPOGLICEMIA REATIVA)')
+    suger.push('GLICEMIA PÓS-PRANDIAL 1H E 2H')
     suger.push('TESTE DE TOLERÂNCIA À GLICOSE 75G (DUMPING TARDIO)')
   }
 
@@ -1341,7 +1341,7 @@ function buildModVascular(dados, alertas, suger) {
     suger.push('IMUNOFLUORESCÊNCIA PARA S. MANSONI')
     if (opeVarizes) {
       linhas.push('JÁ OPEROU VARIZES DE ESÔFAGO: SEGUIMENTO ENDOSCÓPICO PERIÓDICO OBRIGATÓRIO.')
-      suger.push('ENDOSCOPIA DIGESTIVA ALTA (CONTROLE)')
+      suger.push('ENDOSCOPIA DIGESTIVA ALTA')
     }
   }
 
@@ -1507,7 +1507,7 @@ function buildModOsseo(dados, ex, alertas, suger) {
         cascata.push('HIPERPARATIREOIDISMO SECUNDÁRIO')
         if (grave) cascataGrave = true
         subirNivel(grave ? GRAVE : MODERADO)
-        suger.push('PTH INTACTO (REAVALIAR APÓS CORREÇÃO)')
+        suger.push('PTH INTACTO')
       }
     } else if (pth < cPth.min) {
       linhas.push(`PTH BAIXO (${pth} PG/ML): AVALIAR HIPERCALCEMIA, HIPOPARATIREOIDISMO OU EXCESSO DE VITAMINA D E CÁLCIO.`)
@@ -1569,7 +1569,11 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
     // no bariátrico — dizer "carbonato" aqui faria quem seguiu aquela orientação achar
     // que o citrato não interfere. Interfere igual.
     linhas.push('DUAS COISAS QUE ATRAPALHAM A ABSORÇÃO DA LEVOTIROXINA E SÃO COMUNS NO BARIÁTRICO: O CÁLCIO (CITRATO OU CARBONATO, TANTO FAZ) E O FERRO. TOME A LEVOTIROXINA EM JEJUM E DEIXE UM INTERVALO DE PELO MENOS 4 HORAS PARA O CÁLCIO E PARA O FERRO — SE VOCÊ TOMA TUDO JUNTO DE MANHÃ, ESTÁ PERDENDO PARTE DOS TRÊS.')
-    if (isNaN(tsh)) suger.push('TSH (CONTROLE DO HIPOTIREOIDISMO DECLARADO)')
+    // Item plano (sem parêntese): o motivo já está na linha acima. Variantes com texto
+    // diferente (aqui/hiper/tiroxina) não se fundiam no dedup (que é por string exata) —
+    // TSH aparecia 2-3x no pedido de laboratório. Mantendo 'TSH' puro em todos os pontos,
+    // o dedup natural (Set) colapsa em 1 item só.
+    if (isNaN(tsh)) suger.push('TSH')
 
     if (!usaTiroxinaDecl) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
@@ -1647,7 +1651,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
     linhas.push('O SEGUNDO LADO É O QUE MAIS IMPORTA AQUI: A TESTOSTERONA PODE MASCARAR A SUA ANEMIA. ELA EMPURRA A HEMOGLOBINA PARA CIMA MESMO COM O FERRO BAIXO — ENTÃO UM HEMOGRAMA "NORMAL" NÃO GARANTE QUE O SEU FERRO ESTEJA BOM. NO SEU CASO, A FERRITINA E A SATURAÇÃO DA TRANSFERRINA VALEM MAIS QUE A HEMOGLOBINA PARA DIZER COMO ESTÁ O SEU ESTOQUE DE FERRO.')
     linhas.push('E UM PONTO QUE POUCA GENTE LEVANTA: A PRÓPRIA OBESIDADE CAUSA TESTOSTERONA BAIXA — A GORDURA CORPORAL CONVERTE TESTOSTERONA EM ESTROGÊNIO. COM A PERDA DE PESO DA CIRURGIA, A SUA PRODUÇÃO NATURAL TENDE A MELHORAR, E A DOSE QUE VOCÊ PRECISAVA ANTES PODE ESTAR SOBRANDO AGORA. VALE REAVALIAR A INDICAÇÃO E A DOSE COM O ENDOCRINOLOGISTA/UROLOGISTA — SE VOCÊ PRETENDE TER FILHOS, ISSO É AINDA MAIS IMPORTANTE: A TESTOSTERONA DE FORA DESLIGA A PRODUÇÃO DE ESPERMATOZOIDES.')
     suger.push('HEMATÓCRITO (MONITORAMENTO DA REPOSIÇÃO DE TESTOSTERONA)')
-    suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA (A TESTOSTERONA MASCARA A ANEMIA)')
+    suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA')
 
     if (hbAlta) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
@@ -1679,7 +1683,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     linhas.push('VOCÊ DECLAROU HIPERTIREOIDISMO: DUAS ARMADILHAS NO PÓS-BARIÁTRICO. A PRIMEIRA É CONFUNDIR O EMAGRECIMENTO DA TIREOIDE ACELERADA COM O SUCESSO DA CIRURGIA — SÃO COISAS DIFERENTES E A PRIMEIRA PRECISA DE TRATAMENTO. A SEGUNDA É O OSSO: O EXCESSO DE HORMÔNIO TIREOIDIANO ACELERA A PERDA DE MASSA ÓSSEA, QUE JÁ É UM PONTO FRÁGIL DEPOIS DA CIRURGIA — OS DOIS EFEITOS SE SOMAM. MANTENHA O ACOMPANHAMENTO ENDOCRINOLÓGICO.')
     alertas.push({ nivel: LEVE, texto: 'HIPERTIREOIDISMO DECLARADO — O EMAGRECIMENTO PODE NÃO SER SÓ DA CIRURGIA; E A PERDA ÓSSEA SOMA-SE À DO PÓS-BARIÁTRICO. ACOMPANHAMENTO ENDOCRINOLÓGICO.' })
-    if (isNaN(tsh)) suger.push('TSH (CONTROLE DO HIPERTIREOIDISMO DECLARADO)')
+    if (isNaN(tsh)) suger.push('TSH')
   }
 
   // TSH
@@ -1719,7 +1723,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
       }
     } else {
       linhas.push('EM USO DE TIROXINA SEM TSH DOSADO: SOLICITAR TSH PARA AJUSTE DE DOSE. NO BARIÁTRICO, A ABSORÇÃO PODE VARIAR E A DOSE PRÉ-CIRURGIA PODE SER INSUFICIENTE.')
-      suger.push('TSH (AJUSTE DE DOSE DE TIROXINA)')
+      suger.push('TSH')
       alertas.push({ nivel: LEVE, texto: 'TIROXINA EM USO — SOLICITAR TSH PARA CONTROLE.' })
     }
   }
@@ -3138,10 +3142,10 @@ function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, sug
       // ferro é um achado a tratar, não uma emergência — FE levemente reduzida com
       // ferritina 80 não faz um paciente CRÍTICO.
       linhas.push(`ATENÇÃO — A SUA FERRITINA (${ferrCv} ng/mL${Number.isFinite(satCv) && satCv > 0 ? `, SATURAÇÃO ${satCv}%` : ''}) PODE ESTAR "NORMAL" PARA A POPULAÇÃO GERAL E AINDA ASSIM SER INSUFICIENTE PARA VOCÊ: NA INSUFICIÊNCIA CARDÍACA CONSIDERA-SE DEFICIÊNCIA DE FERRO COM FERRITINA ABAIXO DE 100, OU ENTRE 100 E 299 COM SATURAÇÃO DA TRANSFERRINA ABAIXO DE 20%. A REPOSIÇÃO DE FERRO ENDOVENOSO NESSE CENÁRIO MELHORA OS SINTOMAS E REDUZ INTERNAÇÕES MESMO QUANDO NÃO HÁ ANEMIA. LEVE ESTA INFORMAÇÃO AO SEU CARDIOLOGISTA — NO PÓS-BARIÁTRICO, A VIA ORAL AINDA POR CIMA ABSORVE MAL.`)
-      suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA (CRITÉRIO DA INSUFICIÊNCIA CARDÍACA: ALVO DE FERRITINA ≥ 100)')
+      suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA')
     } else if (!ferrConhecida) {
       linhas.push('DOSE A FERRITINA E A SATURAÇÃO DA TRANSFERRINA: NA INSUFICIÊNCIA CARDÍACA O ALVO DE FERRO É MAIS EXIGENTE QUE O DA POPULAÇÃO GERAL (FERRITINA ABAIXO DE 100 JÁ É CONSIDERADA DEFICIÊNCIA), E A REPOSIÇÃO ENDOVENOSA TRAZ BENEFÍCIO MESMO SEM ANEMIA.')
-      suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA (CRITÉRIO DA INSUFICIÊNCIA CARDÍACA: ALVO DE FERRITINA ≥ 100)')
+      suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA')
     }
 
     // UM alerta só para o achado (FE), com o ferro embutido quando houver. Dois pushes
@@ -3207,7 +3211,7 @@ function buildModIntestinal(dados, alertas, suger) {
       alertas.push({ nivel: LEVE, texto: 'OBSTIPAÇÃO + DOR ABDOMINAL: DESCARTAR HÉRNIA INTERNA OU BRIDA — AVALIAÇÃO CIRÚRGICA.' })
       suger.push('AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO (OBSTIPAÇÃO COM DOR ABDOMINAL — DESCARTAR SUBOCLUSÃO)')
     }
-    suger.push('TESTE RESPIRATÓRIO PARA SIBO (SUPERCRESCIMENTO BACTERIANO)')
+    suger.push('TESTE RESPIRATÓRIO PARA SIBO')
 
   } else if (intestinal === 'INTESTINO IRRITÁVEL (DIARREIA FREQUENTE)') {
     nivelGeral = MODERADO
@@ -3215,7 +3219,7 @@ function buildModIntestinal(dados, alertas, suger) {
     linhas.push('PRINCIPAIS CAUSAS A INVESTIGAR: (1) SIBO — SUPERCRESCIMENTO BACTERIANO DO INTESTINO DELGADO: MUITO FREQUENTE APÓS BYPASS GÁSTRICO. SINTOMAS: DISTENSÃO, GASES, DIARREIA GORDUROSA. TRATAMENTO: RIFAXIMINA 550MG 2X/DIA POR 14 DIAS. (2) DUMPING TARDIO: DIARREIA 1–3 HORAS APÓS REFEIÇÕES RICAS EM AÇÚCAR. (3) INTOLERÂNCIA À LACTOSE: COMUM NO PÓS-BARIÁTRICO. TESTE DE EXCLUSÃO POR 2 SEMANAS. (4) DOENÇA CELÍACA: INVESTIGAR SE HÁ HISTÓRICO FAMILIAR OU ANEMIA REFRATÁRIA.')
     linhas.push('ORIENTAÇÕES: DIETA COM BAIXO TEOR DE GORDURA E AÇÚCARES SIMPLES. FRACIONAR AS REFEIÇÕES (6X/DIA). PROBIÓTICOS. EVITAR LACTOSE TEMPORARIAMENTE. SE SUSPEITA DE SIBO, INICIAR ANTIBIOTICOTERAPIA ESPECÍFICA COM MÉDICO.')
     alertas.push({ nivel: MODERADO, texto: 'DIARREIA CRÔNICA: AGRAVA DISABSORÇÃO — INVESTIGAR SIBO, DUMPING E INTOLERÂNCIAS.' })
-    suger.push('TESTE RESPIRATÓRIO PARA SIBO (LACTULOSE OU GLICOSE)')
+    suger.push('TESTE RESPIRATÓRIO PARA SIBO')
     suger.push('SOROLOGIA PARA DOENÇA CELÍACA (ANTI-TRANSGLUTAMINASE IgA)')
     suger.push('TESTE DE INTOLERÂNCIA À LACTOSE')
     suger.push('PESQUISA DE GORDURA FECAL (ESTEATORREIA)')
@@ -3335,8 +3339,8 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
 
   if (temDepressao || temHumor) {
     linhas.push('• DEPRESSÃO E VARIAÇÃO DE HUMOR: ANTES DE INICIAR OU AJUSTAR ANTIDEPRESSIVO, EXCLUIR: DEFICIÊNCIA DE B12 (CAUSA DIRETA DE DEPRESSÃO E LABILIDADE EMOCIONAL), VITAMINA D BAIXA (ASSOCIADA A DEPRESSÃO SAZONAL), HIPOTIREOIDISMO (TSH ELEVADO) E HIPOGLICEMIA REATIVA. ANTIDEPRESSIVOS TRICÍCLICOS E MIRTAZAPINA PODEM ESTIMULAR APETITE E DIFICULTAR CONTROLE DO PESO NO BARIÁTRICO.')
-    suger.push('TSH (HIPOTIREOIDISMO COMO CAUSA DE DEPRESSÃO)')
-    suger.push('GLICEMIA PÓS-PRANDIAL (HIPOGLICEMIA REATIVA)')
+    suger.push('TSH')
+    suger.push('GLICEMIA PÓS-PRANDIAL 1H E 2H')
   }
 
   if (temZumbido || temDesequilib) {
@@ -3344,7 +3348,7 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
     if (!isNaN(tiamina) && tiamina < 70) {
       linhas.push(`  → TIAMINA ATUAL: ${tiamina} nmol/L — BAIXA. SUPLEMENTAR COM URGÊNCIA.`)
     }
-    suger.push('TIAMINA SÉRICA (SE NÃO DOSADA)')
+    suger.push('TIAMINA (VITAMINA B1)')
     suger.push('AVALIAÇÃO OTORRINOLARINGOLÓGICA (ZUMBIDO/VESTIBULOPATIA)')
   }
 
@@ -3354,7 +3358,8 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
 
   if (temTermo) {
     linhas.push('• INTOLERÂNCIA AO FRIO OU CALOR: INVESTIGAR HIPOTIREOIDISMO (INTOLERÂNCIA AO FRIO) E DISFUNÇÃO AUTONÔMICA. NO BARIÁTRICO, A PERDA DE MASSA CORPORAL REDUZ O ISOLAMENTO TÉRMICO, MAS INTOLERÂNCIA PERSISTENTE DEVE SER INVESTIGADA.')
-    suger.push('TSH E T4 LIVRE (DISFUNÇÃO TIREOIDIANA)')
+    suger.push('TSH')
+    suger.push('T4 LIVRE')
   }
 
   // Recomendação geral
