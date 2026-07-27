@@ -10,6 +10,7 @@ import { calcularDeficitFerroGanzoni } from '../engine/ferroProtocol'
 import { avaliarPaciente, triagemEritron } from '../engine/decisionEngine'
 import { cicloFromRow, compararCiclos } from '../engine/obaComparador'
 import OBAComparativoCard from './OBAComparativoCard'
+import { EXAMES_BASE, EXAMES_45, EXAMES_HOMEM_40, EXAMES_MULHER_40 } from '../engine/obaExamesRef'
 
 // Imagem landscape do splash do relatório OBA — A DEFINIR (será horizontal,
 // ocupando a largura do modal, parcialmente sobreposta pelo conteúdo).
@@ -385,71 +386,9 @@ function aplicarSyncIntestinal(p, queixa) {
   return p
 }
 
-// BUG #2 corrigido: removidos os duplicados antigos (hdl, ldl, vldl,
-// lipoproteina_a, apolipoproteina_b, colesterol_total v1, triglicerides v1)
-// Mantida a versao 2 alinhada com buildModLipidico no obaEngine.js
-const EXAMES_BASE = [
-  { key: 'leucocitos',     label: "Leuc\u00f3citos (Total)",       unit: '/uL',    ref: "4.000\u201311.000", hint: "Sem ponto ou v\u00edrgula. Ex: 7500" },
-  { key: 'neutrofilos',    label: "Neutr\u00f3filos Segmentados",  unit: '%',      ref: "40\u201370%" },
-  { key: 'neutrofilos_ul', label: "Neutr\u00f3filos (calculado)",  unit: '/uL',    ref: "1.800\u20137.700", readOnly: true },
-  { key: 'plaquetas',      label: 'Plaquetas',                unit: "x1000/\u00b5L", ref: "150\u2013400", hint: 'Ex: 250 = 250.000/\u00b5L' },
-  { key: 'ferritina_oba',  label: 'Ferritina',                unit: 'ng/mL',  ref: "H: 24\u2013300 / F: 25\u2013150" },
-  { key: 'vitamina_b12',   label: 'Vitamina B12',             unit: 'pg/mL',  ref: "200\u2013900" },
-  { key: 'vitamina_d',     label: 'Vitamina D', sublabel: '25-OH', unit: 'ng/mL',  ref: "30\u2013100 (bari: >30)" },
-  { key: 'tsh',            label: 'TSH',                      unit: 'mUI/L',  ref: "0,4\u20134,5" },
-  { key: 't4_livre',       label: 'T4 Livre',                 unit: 'ng/dL',  ref: "0,7\u20131,8" },
-  { key: 'hb_glicada',     label: 'Hb Glicada',               unit: '%',      ref: '<5,7%' },
-  { key: 'glicemia',       label: 'Glicemia (jejum)',          unit: 'mg/dL',  ref: "70\u201399" },
-  { key: 'insulina',       label: 'Insulina (jejum)',          unit: "\u00b5UI/mL", ref: "2\u201315" },
-  { key: 'ast',            label: 'AST (TGO)',                 unit: 'U/L',    ref: 'H: <40 / F: <32' },
-  { key: 'alt',            label: 'ALT (TGP)',                 unit: 'U/L',    ref: 'H: <56 / F: <35' },
-  { key: 'gama_gt',        label: 'Gama-GT',                  unit: 'U/L',    ref: 'H: <61 / F: <36' },
-  { key: 'ureia',          label: "Ur\u00e9ia",                     unit: 'mg/dL',  ref: "15\u201340" },
-  { key: 'creatinina',     label: 'Creatinina',               unit: 'mg/dL',  ref: "H: 0,7\u20131,2 / F: 0,5\u20131,0" },
-  { key: 'acido_urico',    label: "\u00c1cido \u00darico",              unit: 'mg/dL',  ref: "H: 3,4\u20137,0 / F: 2,4\u20136,0" },
-  { key: 'd_dimero',       label: "D-D\u00edmero",                 unit: 'ng/mL FEU', ref: "<500" },
-  { key: 'folatos',        label: "\u00c1cido F\u00f3lico (folato)",    unit: 'ng/mL',  ref: "4,0\u201320,0" },
-  { key: 'zinco',          label: "Zinco s\u00e9rico",              unit: "\u00b5g/dL",  ref: "70\u2013120" },
-  { key: 'pth',            label: 'PTH',                       unit: 'pg/mL',  ref: "15\u201365" },
-  { key: 'calcio_ionico',  label: "C\u00e1lcio i\u00f4nico",             unit: 'mmol/L', ref: "1,15\u20131,32" },
-  { key: 'magnesio',       label: "Magn\u00e9sio",                  unit: 'mg/dL',  ref: "1,7\u20132,4" },
-  { key: 'colesterol_total', label: 'Colesterol Total',        unit: 'mg/dL',  ref: '<200' },
-  { key: 'ldl_c',            label: 'LDL-c',                   unit: 'mg/dL',  ref: '<100' },
-  { key: 'hdl_c',            label: 'HDL-c',                   unit: 'mg/dL',  ref: "M \u226540 / F \u226550" },
-  { key: 'triglicerides',    label: "Triglic\u00e9rides",           unit: 'mg/dL',  ref: '<150' },
-  { key: 'lpa',              label: 'Lp(a)',                   unit: 'mg/dL',  ref: '<30' },
-  { key: 'apob',             label: 'ApoB',                    unit: 'mg/dL',  ref: '<90' },
-  { key: 'apoa',             label: 'ApoA',                    unit: 'mg/dL',  ref: "M \u2265120 / F \u2265140" },
-  { key: 'sdldl',            label: 'sdLDL',                   unit: 'mg/dL',  ref: '<30' },
-  { key: 'vitamina_a',     label: 'Vitamina A (Retinol)',      unit: "\u00b5g/dL",  ref: "20\u201377" },
-  { key: 'vitamina_e',     label: 'Vitamina E (Tocoferol)',    unit: 'mg/L',   ref: "5\u201318" },
-  { key: 'tiamina',        label: 'Vitamina B1', sublabel: '(Tiamina)', unit: 'nmol/L', ref: "70\u2013180" },
-  { key: 'selenio',        label: "Sel\u00eanio",                   unit: "\u00b5g/L",   ref: "63\u2013160" },
-  { key: 'vitamina_c',     label: 'Vitamina C',                unit: 'mg/dL',  ref: "0,4\u20132,0" },
-  { key: 'vitamina_k',     label: 'Vitamina K',                unit: 'ng/mL',  ref: "0,2\u20133,2" },
-  { key: 'niacina',        label: 'Vitamina B3', sublabel: '(Niacina)', unit: "\u00b5g/mL",  ref: "0,5\u20138,9" },
-  { key: 'testosterona',   label: 'Testosterona Total',        unit: 'ng/dL',  ref: "H: 300\u20131.000 / F: 15\u201370" },
-  { key: 'prolactina',     label: 'Prolactina',                unit: 'ng/mL',  ref: "H: <15 / F: <25" },
-  { key: 'ige_total',      label: 'IgE Total',                 unit: 'UI/mL',  ref: "<100" },
-]
-
-// Idade >= 45 (ambos os sexos): proteínas + globulina calculada (A/G).
-const EXAMES_45 = [
-  { key: 'proteina_total', label: "Proteína Total", unit: 'g/dL', ref: "6,0–8,0" },
-  { key: 'albumina',       label: 'Albumina',          unit: 'g/dL', ref: "3,5–5,2" },
-  { key: 'globulina',      label: 'Globulina (calc)',  unit: 'g/dL', ref: "2,0–3,5", readOnly: true },
-]
-
-const EXAMES_HOMEM_40 = [
-  { key: 'psa_total', label: 'PSA Total', unit: 'ng/mL', ref: '<4,0' },
-  { key: 'ca199',     label: 'CA 19-9',   unit: 'U/mL',  ref: '<37' },
-  { key: 'cea',       label: 'CEA',       unit: 'ng/mL', ref: 'H: <5,0 / F: <3,8' },
-]
-
-const EXAMES_MULHER_40 = [
-  { key: 'cea',       label: 'CEA',       unit: 'ng/mL', ref: '<3,8' },
-  { key: 'estradiol', label: 'Estradiol', unit: 'pg/mL', ref: 'varia por fase do ciclo' },
-]
+// EXAMES_BASE / EXAMES_45 / EXAMES_HOMEM_40 / EXAMES_MULHER_40 movidas para
+// src/engine/obaExamesRef.js (fonte única, compartilhada com obaComparador.js
+// — evita duplicar rótulos e correr risco de divergência entre os dois).
 
 function Radio16({ active }) {
   return (
@@ -2294,6 +2233,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // Compara sempre contra os DOIS (decisão do Dr. Ramos): anterior (N-1) e baseline
     // (1ª avaliação) — se coincidirem (só 2 ciclos existem), oculta a duplicata.
     const cicloAtualVivo = cicloFromRow({
+      ...buildExamesOBA(),   // valores de exame ao vivo (ferritina_oba, vitamina_d, pth, ...) — Fase 3
       data_exames: dataExames || null,
       created_at: new Date().toISOString(),
       estado_clinico: estadoClinico?.estado || null,

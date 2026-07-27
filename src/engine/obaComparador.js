@@ -9,6 +9,9 @@
 // dois ciclos, não a gravidade em si.
 // =============================================================================
 
+import { OBA_CUTOFFS, CUTOFFS_BARIATRICA, classificarValor } from './obaCutoffs'
+import { LABEL_POR_CHAVE, UNIT_POR_CHAVE } from './obaExamesRef'
+
 export const STATUS = {
   MELHOROU: 'MELHOROU',
   PIOROU: 'PIOROU',
@@ -153,7 +156,80 @@ function compararExamesSugeridos(cicloAtual, cicloReferencia) {
   return { novos, resolvidos, mantidos }
 }
 
-function contarResumo(modulos, examesSugeridos) {
+// -----------------------------------------------------------------------------
+// Dimensão: EXAMES LABORATORIAIS NUMÉRICOS. Reaproveita o princípio de
+// HistoricoChartModal.calcularStatus (distância até a faixa normal + limiar de
+// ruído) generalizado para qualquer analito com cutoff em obaCutoffs.js, e
+// classificarValor (vocabulário normal|limitrofe|alterado, DIFERENTE do
+// grave|moderado|leve/normal de módulo — usado só para rótulo/cor, não para
+// decidir o STATUS de movimento).
+//
+// LIMIAR PROVISÓRIO: 10% relativo ao valor de referência (só Hb/ferritina têm
+// limiar calibrado hoje, em HistoricoChartModal). Ajustável por analito via
+// opts.limiaresExamePct = { chave: percentual }, ou globalmente via
+// opts.limiarExamePctDefault — sem tocar este arquivo quando o Dr. Ramos calibrar.
+// -----------------------------------------------------------------------------
+const LIMIAR_EXAME_PCT_DEFAULT = 10
+
+function distForaDaFaixa(v, lo, hi) {
+  if (v < lo) return lo - v
+  if (v > hi) return v - hi
+  return 0
+}
+
+// Todo ciclo do OBA é de paciente bariátrico (é a tabela do sub-algoritmo
+// bariátrico) — sempre resolve o cutoff ajustado quando existir (mesma regra
+// de classificarValor com contexto.bariatrica=true).
+function resolverCutoff(chave) {
+  return CUTOFFS_BARIATRICA[chave] || OBA_CUTOFFS[chave] || null
+}
+
+function statusEvolucaoAnalito(valorRef, valorAtu, { min, max }, limiarPct) {
+  const dRef = distForaDaFaixa(valorRef, min, max)
+  const dAtu = distForaDaFaixa(valorAtu, min, max)
+  if (dRef === 0 && dAtu === 0) return STATUS.ESTAVEL
+  const aproximou = dRef - dAtu   // > 0 = aproximou-se da faixa (melhora)
+  const limiarAbs = (limiarPct / 100) * Math.max(Math.abs(valorRef), 1)
+  if (aproximou >= limiarAbs) return STATUS.MELHOROU
+  if (aproximou <= -limiarAbs) return STATUS.PIOROU
+  return STATUS.ESTAVEL
+}
+
+function compararExames(cicloAtual, cicloReferencia, opts) {
+  const out = []
+  for (const chave of Object.keys(OBA_CUTOFFS)) {
+    // Guarda EXPLÍCITA contra null/undefined/'' ANTES de Number(...): Number(null)
+    // é 0 (não NaN!) — sem esta guarda, um exame NÃO PREENCHIDO num dos ciclos
+    // vazaria como "valor 0" e produziria uma melhora/piora falsa.
+    const bruteRef = cicloReferencia.exames?.[chave]
+    const bruteAtu = cicloAtual.exames?.[chave]
+    if (bruteRef == null || bruteRef === '' || bruteAtu == null || bruteAtu === '') continue
+    const valorRef = Number(bruteRef)
+    const valorAtu = Number(bruteAtu)
+    if (!Number.isFinite(valorRef) || !Number.isFinite(valorAtu)) continue
+
+    const cutoff = resolverCutoff(chave)
+    if (!cutoff) continue
+
+    const limiarPct = opts.limiaresExamePct?.[chave] ?? opts.limiarExamePctDefault ?? LIMIAR_EXAME_PCT_DEFAULT
+    const status = statusEvolucaoAnalito(valorRef, valorAtu, cutoff, limiarPct)
+    const classRef = classificarValor(chave, valorRef, { bariatrica: true })?.nivel || null
+    const classAtu = classificarValor(chave, valorAtu, { bariatrica: true })?.nivel || null
+
+    out.push({
+      chave,
+      rotulo: LABEL_POR_CHAVE[chave] || chave,
+      unidade: UNIT_POR_CHAVE[chave] || '',
+      valorRef, valorAtu,
+      deltaPct: +(((valorAtu - valorRef) / (valorRef || 1)) * 100).toFixed(1),
+      classRef, classAtu,
+      status,
+    })
+  }
+  return out
+}
+
+function contarResumo(modulos, examesSugeridos, exames) {
   const r = { melhoraram: 0, pioraram: 0, estaveis: 0, novos: 0, resolvidos: 0 }
   for (const m of modulos) {
     if (m.status === STATUS.MELHOROU) r.melhoraram++
@@ -166,6 +242,13 @@ function contarResumo(modulos, examesSugeridos) {
     r.novos += examesSugeridos.novos.length
     r.resolvidos += examesSugeridos.resolvidos.length
   }
+  if (exames) {
+    for (const e of exames) {
+      if (e.status === STATUS.MELHOROU) r.melhoraram++
+      else if (e.status === STATUS.PIOROU) r.pioraram++
+      else if (e.status === STATUS.ESTAVEL) r.estaveis++
+    }
+  }
   return r
 }
 
@@ -173,22 +256,24 @@ function contarResumo(modulos, examesSugeridos) {
 // Diff PAR-A-PAR entre dois ciclos canônicos. Chamada 2x pelo consumidor (uma
 // vez vs anterior, uma vez vs baseline) — não sabe de "anterior"/"baseline",
 // só compara A vs B. Fase 0: estado + módulos + peso/IMC. Fase 2: exames
-// sugeridos. Fases seguintes adicionam `exames` (numéricos) e `categoricos`.
+// sugeridos. Fase 3: exames laboratoriais numéricos. Fase seguinte: `categoricos`.
 // -----------------------------------------------------------------------------
 export function compararCiclos(cicloAtual, cicloReferencia, opts = {}) {
   if (!cicloAtual || !cicloReferencia) return null
   const modulos = compararModulos(cicloAtual, cicloReferencia)
   const examesSugeridos = compararExamesSugeridos(cicloAtual, cicloReferencia)
+  const exames = compararExames(cicloAtual, cicloReferencia, opts)
   return {
     meta: {
       dataAtual: cicloAtual.data,
       dataReferencia: cicloReferencia.data,
       diasEntre: diasEntreDatas(cicloReferencia.data, cicloAtual.data),
     },
-    resumo: contarResumo(modulos, examesSugeridos),
+    resumo: contarResumo(modulos, examesSugeridos, exames),
     estado: compararEstado(cicloAtual, cicloReferencia),
     ponderal: compararPonderal(cicloAtual, cicloReferencia, opts),
     modulos,
     examesSugeridos,
+    exames,
   }
 }

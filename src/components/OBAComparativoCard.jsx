@@ -1,9 +1,9 @@
 // =============================================================================
 // OBAComparativoCard — exibe o diff produzido por obaComparador.compararCiclos.
 // Fase 1: estado clínico global, módulos (por id) e peso/IMC. Fase 2: exames
-// sugeridos (novos/resolvidos/mantidos). Fases seguintes (exames laboratoriais,
-// status categóricos) só adicionam seções aqui quando `diff` trouxer essas
-// chaves — nada a mudar na estrutura.
+// sugeridos (novos/resolvidos/mantidos). Fase 3: exames laboratoriais numéricos.
+// Fase seguinte (status categóricos) só adiciona seção quando `diff` trouxer
+// essa chave — nada a mudar na estrutura.
 // =============================================================================
 
 const SETA = {
@@ -31,7 +31,7 @@ const setaStyle = (cor) => ({ fontSize: '0.66rem', fontWeight: 800, color: cor, 
 
 export default function OBAComparativoCard({ diff, titulo }) {
   if (!diff) return null
-  const { meta, resumo, estado, ponderal, modulos, examesSugeridos } = diff
+  const { meta, resumo, estado, ponderal, modulos, examesSugeridos, exames } = diff
   const dataRefFmt = formatarDataISO(meta.dataReferencia)
 
   const chips = [
@@ -44,7 +44,11 @@ export default function OBAComparativoCard({ diff, titulo }) {
   const modulosMudaram = (modulos || [])
     .filter(m => m.status !== 'ESTAVEL')
     .sort((a, b) => (PRIORIDADE[a.status] ?? 9) - (PRIORIDADE[b.status] ?? 9))
-  const temSecaoExames = !!examesSugeridos && (examesSugeridos.novos.length > 0 || examesSugeridos.resolvidos.length > 0 || examesSugeridos.mantidos.length > 0)
+  const examesMudaram = (exames || [])
+    .filter(e => e.status !== 'ESTAVEL')
+    .sort((a, b) => (PRIORIDADE[a.status] ?? 9) - (PRIORIDADE[b.status] ?? 9))
+  const temSecaoExamesLab = examesMudaram.length > 0
+  const temSecaoExamesSugeridos = !!examesSugeridos && (examesSugeridos.novos.length > 0 || examesSugeridos.resolvidos.length > 0 || examesSugeridos.mantidos.length > 0)
 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: 12, padding: '0.9rem 1rem', marginBottom: '0.9rem' }}>
@@ -85,7 +89,7 @@ export default function OBAComparativoCard({ diff, titulo }) {
       </div>
 
       {modulosMudaram.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: temSecaoExames ? '0.6rem' : 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: (temSecaoExamesLab || temSecaoExamesSugeridos) ? '0.6rem' : 0 }}>
           {modulosMudaram.map(m => (
             <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
               <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600 }}>{m.titulo}</span>
@@ -95,7 +99,21 @@ export default function OBAComparativoCard({ diff, titulo }) {
         </div>
       )}
 
-      {temSecaoExames && (
+      {temSecaoExamesLab && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: temSecaoExamesSugeridos ? '0.6rem' : 0 }}>
+          {examesMudaram.map(e => (
+            <div key={e.chave} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
+              <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600 }}>
+                {e.rotulo}{" "}
+                <span style={{ fontWeight: 400, color: '#6B7280' }}>{e.valorRef}{" → "}{e.valorAtu}{e.unidade ? ` ${e.unidade}` : ''}</span>
+              </span>
+              <span style={{ fontSize: '0.68rem', fontWeight: 800, color: seta(e.status).cor, whiteSpace: 'nowrap' }}>{seta(e.status).txt}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {temSecaoExamesSugeridos && (
         <div>
           <p style={labelStyle}>{"Exames sugeridos"}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>

@@ -81,7 +81,9 @@ export const OBA_CUTOFFS = {
 
 // Cutoffs especiais para pacientes bariatricas
 // Bariatrica precisa de alvo mais rigoroso em B12 e Vit D
-const CUTOFFS_BARIATRICA = {
+// Exportado (alem de usado por classificarValor aqui) para o obaComparador.js
+// poder resolver o mesmo cutoff-ajustado-por-bariatrica ao comparar ciclos.
+export const CUTOFFS_BARIATRICA = {
   vitamina_b12:   { min: 200,   max: 2000  },  // 200 ja e normal (Dr. Ramos)
   vitamina_d:     { min: 30,    max: 200   },  // alvo pos-bariatrica
 }
