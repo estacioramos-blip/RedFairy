@@ -2,8 +2,7 @@
 // OBAComparativoCard — exibe o diff produzido por obaComparador.compararCiclos.
 // Fase 1: estado clínico global, módulos (por id) e peso/IMC. Fase 2: exames
 // sugeridos (novos/resolvidos/mantidos). Fase 3: exames laboratoriais numéricos.
-// Fase seguinte (status categóricos) só adiciona seção quando `diff` trouxer
-// essa chave — nada a mudar na estrutura.
+// Fase 4: status categóricos (queixas/achados declarados na anamnese).
 // =============================================================================
 
 const SETA = {
@@ -31,7 +30,7 @@ const setaStyle = (cor) => ({ fontSize: '0.66rem', fontWeight: 800, color: cor, 
 
 export default function OBAComparativoCard({ diff, titulo }) {
   if (!diff) return null
-  const { meta, resumo, estado, ponderal, modulos, examesSugeridos, exames } = diff
+  const { meta, resumo, estado, ponderal, modulos, examesSugeridos, exames, categoricos } = diff
   const dataRefFmt = formatarDataISO(meta.dataReferencia)
 
   const chips = [
@@ -48,6 +47,11 @@ export default function OBAComparativoCard({ diff, titulo }) {
     .filter(e => e.status !== 'ESTAVEL')
     .sort((a, b) => (PRIORIDADE[a.status] ?? 9) - (PRIORIDADE[b.status] ?? 9))
   const temSecaoExamesLab = examesMudaram.length > 0
+  const itensCategoricos = (categoricos || []).flatMap(c => [
+    ...c.entraram.map(valor => ({ rotulo: c.rotulo, valor, status: 'NOVO' })),
+    ...c.sairam.map(valor => ({ rotulo: c.rotulo, valor, status: 'RESOLVIDO' })),
+  ]).sort((a, b) => (PRIORIDADE[a.status] ?? 9) - (PRIORIDADE[b.status] ?? 9))
+  const temSecaoCategoricos = itensCategoricos.length > 0
   const temSecaoExamesSugeridos = !!examesSugeridos && (examesSugeridos.novos.length > 0 || examesSugeridos.resolvidos.length > 0 || examesSugeridos.mantidos.length > 0)
 
   return (
@@ -89,7 +93,7 @@ export default function OBAComparativoCard({ diff, titulo }) {
       </div>
 
       {modulosMudaram.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: (temSecaoExamesLab || temSecaoExamesSugeridos) ? '0.6rem' : 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: (temSecaoExamesLab || temSecaoCategoricos || temSecaoExamesSugeridos) ? '0.6rem' : 0 }}>
           {modulosMudaram.map(m => (
             <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
               <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600 }}>{m.titulo}</span>
@@ -100,7 +104,7 @@ export default function OBAComparativoCard({ diff, titulo }) {
       )}
 
       {temSecaoExamesLab && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: temSecaoExamesSugeridos ? '0.6rem' : 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: (temSecaoCategoricos || temSecaoExamesSugeridos) ? '0.6rem' : 0 }}>
           {examesMudaram.map(e => (
             <div key={e.chave} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
               <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600 }}>
@@ -108,6 +112,20 @@ export default function OBAComparativoCard({ diff, titulo }) {
                 <span style={{ fontWeight: 400, color: '#6B7280' }}>{e.valorRef}{" → "}{e.valorAtu}{e.unidade ? ` ${e.unidade}` : ''}</span>
               </span>
               <span style={{ fontSize: '0.68rem', fontWeight: 800, color: seta(e.status).cor, whiteSpace: 'nowrap' }}>{seta(e.status).txt}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {temSecaoCategoricos && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginBottom: temSecaoExamesSugeridos ? '0.6rem' : 0 }}>
+          {itensCategoricos.map((it, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
+              <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600 }}>
+                {it.rotulo}{": "}
+                <span style={{ fontWeight: 400, color: '#6B7280' }}>{it.valor}</span>
+              </span>
+              <span style={{ fontSize: '0.68rem', fontWeight: 800, color: seta(it.status).cor, whiteSpace: 'nowrap' }}>{seta(it.status).txt}</span>
             </div>
           ))}
         </div>

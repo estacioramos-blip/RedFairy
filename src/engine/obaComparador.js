@@ -229,7 +229,59 @@ function compararExames(cicloAtual, cicloReferencia, opts) {
   return out
 }
 
-function contarResumo(modulos, examesSugeridos, exames) {
+// -----------------------------------------------------------------------------
+// Dimensão: STATUS CATEGÓRICOS (queixas/achados declarados na anamnese) — diff
+// via `formSnapshot` de cada ciclo (o formulário inteiro daquele ciclo, já
+// persistido em `relatorio_oba.form_snapshot`). Cobre os ~16 campos status_*
+// (arrays multi-select E enums de valor único — normalizados pro MESMO formato
+// de conjunto). ENTROU = NOVO (âmbar), SAIU = RESOLVIDO (verde) — mesma
+// convenção do card de exames sugeridos (decisão do Dr. Ramos: escopo = todos
+// os ~16; cor sem distinção fina de polaridade por item, mesmo padrão).
+// -----------------------------------------------------------------------------
+const CAMPOS_CATEGORICOS = [
+  { campo: 'status_ginecologico',   rotulo: 'Status Ginecológico' },
+  { campo: 'status_hormonal',       rotulo: 'Status Hormonal' },
+  { campo: 'status_cardiovascular', rotulo: 'Status Cardiovascular' },
+  { campo: 'status_osseo',          rotulo: 'Status Ósseo' },
+  { campo: 'status_intestinal',     rotulo: 'Status Intestinal' },
+  { campo: 'status_respiratorio',   rotulo: 'Status Respiratório' },
+  { campo: 'status_prostatico',     rotulo: 'Status Prostático' },
+  { campo: 'status_alergico',       rotulo: 'Status Alérgico' },
+  { campo: 'status_articular',      rotulo: 'Status Articular' },
+  { campo: 'status_dental',         rotulo: 'Status Dental' },
+  { campo: 'status_endoscopico',    rotulo: 'Achados Endoscópicos' },
+  { campo: 'status_neurologico',    rotulo: 'Sintomas Neurológicos' },
+  { campo: 'status_glicemico',      rotulo: 'Status Glicêmico' },
+  { campo: 'status_pressorico',     rotulo: 'Status Pressórico' },
+  { campo: 'status_gestacional',    rotulo: 'Status Gestacional' },
+  { campo: 'status_fibromialgia',   rotulo: 'Sintomas de Fibromialgia' },
+]
+
+// Normaliza um valor de form_snapshot (array multi-select OU string única, o
+// campo pode ser qualquer um dos dois conforme a seção da anamnese) num Set —
+// string vazia/ausente/null vira conjunto vazio (nenhuma queixa marcada).
+function comoConjunto(valor) {
+  if (Array.isArray(valor)) return new Set(valor.filter(Boolean))
+  if (valor) return new Set([valor])
+  return new Set()
+}
+
+function compararCategoricos(cicloAtual, cicloReferencia) {
+  const snapRef = cicloReferencia.formSnapshot || {}
+  const snapAtu = cicloAtual.formSnapshot || {}
+  const out = []
+  for (const { campo, rotulo } of CAMPOS_CATEGORICOS) {
+    const ref = comoConjunto(snapRef[campo])
+    const atu = comoConjunto(snapAtu[campo])
+    const entraram = [...atu].filter(x => !ref.has(x))
+    const sairam = [...ref].filter(x => !atu.has(x))
+    if (entraram.length === 0 && sairam.length === 0) continue   // sem mudança — não polui o diff
+    out.push({ campo, rotulo, entraram, sairam })
+  }
+  return out
+}
+
+function contarResumo(modulos, examesSugeridos, exames, categoricos) {
   const r = { melhoraram: 0, pioraram: 0, estaveis: 0, novos: 0, resolvidos: 0 }
   for (const m of modulos) {
     if (m.status === STATUS.MELHOROU) r.melhoraram++
@@ -249,6 +301,12 @@ function contarResumo(modulos, examesSugeridos, exames) {
       else if (e.status === STATUS.ESTAVEL) r.estaveis++
     }
   }
+  if (categoricos) {
+    for (const c of categoricos) {
+      r.novos += c.entraram.length
+      r.resolvidos += c.sairam.length
+    }
+  }
   return r
 }
 
@@ -256,24 +314,26 @@ function contarResumo(modulos, examesSugeridos, exames) {
 // Diff PAR-A-PAR entre dois ciclos canônicos. Chamada 2x pelo consumidor (uma
 // vez vs anterior, uma vez vs baseline) — não sabe de "anterior"/"baseline",
 // só compara A vs B. Fase 0: estado + módulos + peso/IMC. Fase 2: exames
-// sugeridos. Fase 3: exames laboratoriais numéricos. Fase seguinte: `categoricos`.
+// sugeridos. Fase 3: exames laboratoriais numéricos. Fase 4: status categóricos.
 // -----------------------------------------------------------------------------
 export function compararCiclos(cicloAtual, cicloReferencia, opts = {}) {
   if (!cicloAtual || !cicloReferencia) return null
   const modulos = compararModulos(cicloAtual, cicloReferencia)
   const examesSugeridos = compararExamesSugeridos(cicloAtual, cicloReferencia)
   const exames = compararExames(cicloAtual, cicloReferencia, opts)
+  const categoricos = compararCategoricos(cicloAtual, cicloReferencia)
   return {
     meta: {
       dataAtual: cicloAtual.data,
       dataReferencia: cicloReferencia.data,
       diasEntre: diasEntreDatas(cicloReferencia.data, cicloAtual.data),
     },
-    resumo: contarResumo(modulos, examesSugeridos, exames),
+    resumo: contarResumo(modulos, examesSugeridos, exames, categoricos),
     estado: compararEstado(cicloAtual, cicloReferencia),
     ponderal: compararPonderal(cicloAtual, cicloReferencia, opts),
     modulos,
     examesSugeridos,
     exames,
+    categoricos,
   }
 }
