@@ -2,7 +2,9 @@
 // OBAComparativoCard — exibe o diff produzido por obaComparador.compararCiclos.
 // Fase 1: estado clínico global, módulos (por id) e peso/IMC. Fase 2: exames
 // sugeridos (novos/resolvidos/mantidos). Fase 3: exames laboratoriais numéricos.
-// Fase 4: status categóricos (queixas/achados declarados na anamnese).
+// Fase 4: status categóricos (queixas/achados declarados na anamnese). Fase 5:
+// alertas (por codigo estável — só funciona a partir de ciclos salvos após o
+// sweep; ciclos anteriores sem codigo são ignorados pelo motor, não geram erro).
 // =============================================================================
 
 const SETA = {
@@ -30,7 +32,7 @@ const setaStyle = (cor) => ({ fontSize: '0.66rem', fontWeight: 800, color: cor, 
 
 export default function OBAComparativoCard({ diff, titulo }) {
   if (!diff) return null
-  const { meta, resumo, estado, ponderal, modulos, examesSugeridos, exames, categoricos } = diff
+  const { meta, resumo, estado, ponderal, modulos, examesSugeridos, exames, categoricos, alertas } = diff
   const dataRefFmt = formatarDataISO(meta.dataReferencia)
 
   const chips = [
@@ -53,6 +55,7 @@ export default function OBAComparativoCard({ diff, titulo }) {
   ]).sort((a, b) => (PRIORIDADE[a.status] ?? 9) - (PRIORIDADE[b.status] ?? 9))
   const temSecaoCategoricos = itensCategoricos.length > 0
   const temSecaoExamesSugeridos = !!examesSugeridos && (examesSugeridos.novos.length > 0 || examesSugeridos.resolvidos.length > 0 || examesSugeridos.mantidos.length > 0)
+  const temSecaoAlertas = !!alertas && (alertas.novos.length > 0 || alertas.resolvidos.length > 0 || alertas.persistentes.length > 0)
 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: 12, padding: '0.9rem 1rem', marginBottom: '0.9rem' }}>
@@ -132,7 +135,7 @@ export default function OBAComparativoCard({ diff, titulo }) {
       )}
 
       {temSecaoExamesSugeridos && (
-        <div>
+        <div style={{ marginBottom: temSecaoAlertas ? '0.6rem' : 0 }}>
           <p style={labelStyle}>{"Exames sugeridos"}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
             {examesSugeridos.novos.map((nome, i) => (
@@ -151,6 +154,31 @@ export default function OBAComparativoCard({ diff, titulo }) {
           {examesSugeridos.mantidos.length > 0 && (
             <p style={{ fontSize: '0.68rem', color: '#6B7280', margin: '0.35rem 0 0' }}>
               {"Ainda pendente"}{examesSugeridos.mantidos.length > 1 ? 's' : ''}{": "}{examesSugeridos.mantidos.join(' • ')}
+            </p>
+          )}
+        </div>
+      )}
+
+      {temSecaoAlertas && (
+        <div>
+          <p style={labelStyle}>{"Alertas"}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+            {alertas.novos.map((a, i) => (
+              <div key={'novo-' + i} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
+                <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600, lineHeight: 1.4 }}>{a.texto}</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 800, color: seta('NOVO').cor, whiteSpace: 'nowrap', flexShrink: 0 }}>{seta('NOVO').txt}</span>
+              </div>
+            ))}
+            {alertas.resolvidos.map((a, i) => (
+              <div key={'resolvido-' + i} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '0.4rem 0.6rem' }}>
+                <span style={{ fontSize: '0.72rem', color: '#374151', fontWeight: 600, lineHeight: 1.4 }}>{a.texto}</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: 800, color: seta('RESOLVIDO').cor, whiteSpace: 'nowrap', flexShrink: 0 }}>{seta('RESOLVIDO').txt}</span>
+              </div>
+            ))}
+          </div>
+          {alertas.persistentes.length > 0 && (
+            <p style={{ fontSize: '0.68rem', color: '#6B7280', margin: '0.35rem 0 0' }}>
+              {alertas.persistentes.length}{" alerta"}{alertas.persistentes.length > 1 ? 's' : ''}{" ainda ativo"}{alertas.persistentes.length > 1 ? 's' : ''}{"."}
             </p>
           )}
         </div>

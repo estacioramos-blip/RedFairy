@@ -119,7 +119,7 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   // GESTANTE + SANGRAMENTO MENSTRUAL: contradicao clinica -> sangramento na gravidez e'
   // emergencia. Alerta GRAVE no relatorio (o aviso inline na anamnese ja avisa na hora).
   if (dadosOBA.status_gestacional === 'GRÁVIDA' && (dadosOBA.status_ginecologico || []).includes('SANGRAMENTO MENSTRUAL')) {
-    alertas.push({ nivel: GRAVE, texto: 'GESTANTES NÃO MENSTRUAM. SE VOCÊ ESTÁ GRÁVIDA E APRESENTA SANGRAMENTO, PROCURE UMA UNIDADE DE EMERGÊNCIA IMEDIATAMENTE.' })
+    alertas.push({ codigo: 'avaliarOBA.gestantes_nao_menstruam_se_voce_esta_gravida', nivel: GRAVE, texto: 'GESTANTES NÃO MENSTRUAM. SE VOCÊ ESTÁ GRÁVIDA E APRESENTA SANGRAMENTO, PROCURE UMA UNIDADE DE EMERGÊNCIA IMEDIATAMENTE.' })
   }
 
   // ── 0. IDEAÇÃO SUICIDA (queixa) — situação crítica, tem prioridade sobre tudo ──
@@ -258,7 +258,7 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   if (Number.isFinite(ptAG) && Number.isFinite(albAG) && ptAG > 0 && albAG > 0) {
     const globAG = Math.round((ptAG - albAG) * 10) / 10
     if (globAG >= albAG) {
-      alertas.push({ nivel: GRAVE, texto: `INVERSÃO ALBUMINA/GLOBULINA (globulina ${globAG} ≥ albumina ${albAG} g/dL) — É IMPORTANTE A AVALIAÇÃO COM HEMATOLOGISTA.` })
+      alertas.push({ codigo: 'avaliarOBA.inversao_albumina_globulina_globulina', nivel: GRAVE, texto: `INVERSÃO ALBUMINA/GLOBULINA (globulina ${globAG} ≥ albumina ${albAG} g/dL) — É IMPORTANTE A AVALIAÇÃO COM HEMATOLOGISTA.` })
       examesSuger.push('AVALIAÇÃO COM HEMATOLOGISTA (inversão albumina/globulina)')
       examesSuger.push('ELETROFORESE DE PROTEÍNAS SÉRICAS')
       modulos.push({
@@ -287,7 +287,7 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const _usaFerroDim     = _usaFerroOralDim || _usaFerroEVDim
   const _rdwDim = Number(resultadoEritron?.inputs?.rdw ?? examesOBA?.rdw_novo)
   if (_usaFerroDim && Number.isFinite(_rdwDim) && _rdwDim > 15) {
-    alertas.push({ nivel: MODERADO, texto: `RDW ALARGADO (${_rdwDim}%) EM PACIENTE JÁ EM USO DE FERRO — QUADRO POSSIVELMENTE DIMÓRFICO: O ALARGAMENTO PODE SER A RESPOSTA AO TRATAMENTO (HEMÁCIAS NOVAS NORMAIS CONVIVENDO COM AS ANTIGAS MICROCÍTICAS), NÃO CARÊNCIA ATIVA. NÃO LER COMO FERROPENIA PURA: SOLICITAR RETICULÓCITOS PARA MEDIR A RESPOSTA E CONSIDERAR A DOSE JÁ REPOSTA ANTES DE CALCULAR NOVA DOSE (A FÓRMULA DE GANZONI NÃO DESCONTA O QUE JÁ ENTROU).` })
+    alertas.push({ codigo: 'avaliarOBA.rdw_alargado', nivel: MODERADO, texto: `RDW ALARGADO (${_rdwDim}%) EM PACIENTE JÁ EM USO DE FERRO — QUADRO POSSIVELMENTE DIMÓRFICO: O ALARGAMENTO PODE SER A RESPOSTA AO TRATAMENTO (HEMÁCIAS NOVAS NORMAIS CONVIVENDO COM AS ANTIGAS MICROCÍTICAS), NÃO CARÊNCIA ATIVA. NÃO LER COMO FERROPENIA PURA: SOLICITAR RETICULÓCITOS PARA MEDIR A RESPOSTA E CONSIDERAR A DOSE JÁ REPOSTA ANTES DE CALCULAR NOVA DOSE (A FÓRMULA DE GANZONI NÃO DESCONTA O QUE JÁ ENTROU).` })
     examesSuger.push('RETICULÓCITOS (MEDIR A RESPOSTA AO FERRO JÁ EM USO)')
   }
 
@@ -311,7 +311,7 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const _satTal = Number(resultadoEritron?.inputs?.satTransf ?? examesOBA?.sat_novo)
   if (_vcmTal >= 60 && _vcmTal <= 74 && _ferTal >= 30 && _satTal >= 20) {
     examesSuger.push('ELETROFORESE DE HEMOGLOBINAS')
-    alertas.push({ nivel: MODERADO, texto: `MICROCITOSE (VCM ${_vcmTal}) COM FERRITINA E SATURAÇÃO DA TRANSFERRINA NORMAIS OU ELEVADAS — O FERRO ADEQUADO TORNA A FERROPENIA IMPROVÁVEL COMO CAUSA. SUSPEITAR DE TALASSEMIA (TRAÇO) OU OUTRA HEMOGLOBINOPATIA (EX.: HEMOGLOBINA C HOMOZIGÓTICA). SOLICITAR ELETROFORESE DE HEMOGLOBINAS: A HEMOGLOBINA A2 ESTÁ AUMENTADA NA BETA-TALASSEMIA (MINOR OU INTERMÉDIA) E NORMAL NA ALFA-TALASSEMIA. ATENÇÃO: ELETROFORESE NORMAL NÃO EXCLUI A ALFA-TALASSEMIA (SILENCIOSA — CONFIRMAR POR ESTUDO MOLECULAR/DNA). DIFERENCIAL: INFLAMAÇÃO OU DOENÇA CRÔNICA (A FERRITINA É REAGENTE DE FASE AGUDA); UM RDW NORMAL REFORÇA A TALASSEMIA.` })
+    alertas.push({ codigo: 'avaliarOBA.microcitose_vcm', nivel: MODERADO, texto: `MICROCITOSE (VCM ${_vcmTal}) COM FERRITINA E SATURAÇÃO DA TRANSFERRINA NORMAIS OU ELEVADAS — O FERRO ADEQUADO TORNA A FERROPENIA IMPROVÁVEL COMO CAUSA. SUSPEITAR DE TALASSEMIA (TRAÇO) OU OUTRA HEMOGLOBINOPATIA (EX.: HEMOGLOBINA C HOMOZIGÓTICA). SOLICITAR ELETROFORESE DE HEMOGLOBINAS: A HEMOGLOBINA A2 ESTÁ AUMENTADA NA BETA-TALASSEMIA (MINOR OU INTERMÉDIA) E NORMAL NA ALFA-TALASSEMIA. ATENÇÃO: ELETROFORESE NORMAL NÃO EXCLUI A ALFA-TALASSEMIA (SILENCIOSA — CONFIRMAR POR ESTUDO MOLECULAR/DNA). DIFERENCIAL: INFLAMAÇÃO OU DOENÇA CRÔNICA (A FERRITINA É REAGENTE DE FASE AGUDA); UM RDW NORMAL REFORÇA A TALASSEMIA.` })
   }
 
   // ── Ordenar alertas por prioridade ──────────────────────────────────────
@@ -382,7 +382,7 @@ function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir,
   // HIV/ARV — macrocitose e anemia
   if (dadosOBA.hivTratamento) {
     linhas.push('TRATAMENTO PARA HIV/ARV: ANTIRRETROVIRAIS (ESPECIALMENTE AZT/ZIDOVUDINA) PODEM CAUSAR MACROCITOSE E ANEMIA. NO BARIÁTRICO, ESSE EFEITO SE SOMA À SÍNDROME DISABSORTIVA. MONITORAR HEMOGRAMA COM ATENÇÃO AO VCM E RETICULÓCITOS. COMUNICAR AO INFECTOLOGISTA O CONTEXTO BARIÁTRICO.')
-    alertas.push({ nivel: MODERADO, texto: 'TRATAMENTO ARV: RISCO DE MACROCITOSE E ANEMIA — CORRELACIONAR COM HEMOGRAMA.' })
+    alertas.push({ codigo: 'eritron.tratamento_arv_risco_de_macrocitose_e_anemia', nivel: MODERADO, texto: 'TRATAMENTO ARV: RISCO DE MACROCITOSE E ANEMIA — CORRELACIONAR COM HEMOGRAMA.' })
   }
 
   // Plasma de argônio
@@ -394,7 +394,7 @@ function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir,
   const ferrOBA = parseFloat(examesOBA?.ferritina_oba)
   if (!isNaN(ferrOBA) && ferrOBA > 400) {
     linhas.push(`FERRITINA ELEVADA NO CONTEXTO BARIÁTRICO: ${ferrOBA} ng/mL. FERRITINA MUITO ACIMA DE 400 ng/mL PODE INDICAR SIDEROSE HEPÁTICA, INFLAMAÇÃO CRÔNICA OU SÍNDROME DE SOBRECARGA DE FERRO. NO BARIÁTRICO, A REPOSIÇÃO PARENTERAL DE FERRO SEM MONITORAMENTO ADEQUADO É UMA CAUSA FREQUENTE. AVALIAR SATURAÇÃO DA TRANSFERRINA — SE > 45%, INVESTIGAR HEMOCROMATOSE.`)
-    alertas.push({ nivel: MODERADO, texto: `FERRITINA MUITO ELEVADA: ${ferrOBA} ng/mL — AVALIAR SOBRECARGA DE FERRO E INFLAMAÇÃO CRÔNICA.` })
+    alertas.push({ codigo: 'eritron.ferritina_muito_elevada', nivel: MODERADO, texto: `FERRITINA MUITO ELEVADA: ${ferrOBA} ng/mL — AVALIAR SOBRECARGA DE FERRO E INFLAMAÇÃO CRÔNICA.` })
     // BUG #7 corrigido: antes, cada exame era empurrado 2x (dedup acontece
     // no fim, mas suja a fonte). Agora cada um aparece 1x.
     examesSuger.push('SATURAÇÃO DA TRANSFERRINA (AVALIAR SOBRECARGA DE FERRO)')
@@ -425,15 +425,15 @@ function buildModIndicacao(dadosOBA, alertas) {
   if (indic.includes('HEMOCROMATOSE')) {
     linhas.push('CIRURGIA INDICADA POR HEMOCROMATOSE (INDICAÇÃO MUITO RARA): ATENÇÃO — O CONTEXTO DE FERRO ESTÁ INVERTIDO. A SUPLEMENTAÇÃO DE FERRO É CONTRAINDICADA. A DISABSORÇÃO PÓS-CIRÚRGICA PODE TER EFEITO PROTETOR AO REDUZIR A ABSORÇÃO DE FERRO. FERRITINA E SATURAÇÃO DA TRANSFERRINA DEVEM SER MANTIDAS NO LIMITE INFERIOR DA NORMALIDADE. CONFIRMAR MUTAÇÃO HFE E RASTREAR FAMILIARES. SANGRIAS TERAPÊUTICAS PODEM PERMANECER INDICADAS MESMO APÓS A CIRURGIA.')
     nivel = MODERADO
-    alertas.push({ nivel: MODERADO, texto: 'CIRURGIA POR HEMOCROMATOSE: contexto de ferro invertido — suplementação de ferro contraindicada.' })
+    alertas.push({ codigo: 'indicacao.cirurgia_por_hemocromatose_contexto_de_ferro', nivel: MODERADO, texto: 'CIRURGIA POR HEMOCROMATOSE: contexto de ferro invertido — suplementação de ferro contraindicada.' })
   } else if (indic.includes('METÁBOLICA') || indic.includes('METABÓLICA') || indic.includes('DIABETES')) {
     linhas.push('É IMPORTANTE AVALIAR QUANTO DO OBJETIVO DA CIRURGIA FOI ATINGIDO, COMPARANDO OS EXAMES ANTERIORES AO PROCEDIMENTO COM OS POSTERIORES. ORGANIZE OS EXAMES PRÉ E PÓS-CIRÚRGICOS POR DATA PARA SER ADEQUADAMENTE ORIENTADO NA AVALIAÇÃO MÉDICA. SE OS EXAMES TÊM MAIS DE 90 DIAS, SOLICITE AO MÉDICO O PEDIDO PARA NOVOS EXAMES.')
     nivel = LEVE
-    alertas.push({ nivel: LEVE, texto: 'INDICAÇÃO METABÓLICA/DIABETES: avaliar quanto do objetivo da cirurgia foi atingido — comparar exames pré e pós na avaliação médica.' })
+    alertas.push({ codigo: 'indicacao.indicacao_metabolica_diabetes_avaliar_quanto', nivel: LEVE, texto: 'INDICAÇÃO METABÓLICA/DIABETES: avaliar quanto do objetivo da cirurgia foi atingido — comparar exames pré e pós na avaliação médica.' })
   } else if (indic.includes('GASTRECTOMIA')) {
     linhas.push('CIRURGIA POR GASTRECTOMIA DE OUTRA CAUSA: É FUNDAMENTAL QUE UM MÉDICO REVISE OS EXAMES E INVESTIGUE A ENFERMIDADE QUE LEVOU À CIRURGIA, CONSIDERADA A POSSIBILIDADE DE RECIDIVA E EVENTUAL PERDA DE CONTROLE SOBRE A DOENÇA.')
     nivel = MODERADO
-    alertas.push({ nivel: MODERADO, texto: 'GASTRECTOMIA POR OUTRA CAUSA: revisar exames e investigar recidiva da doença de base — avaliação médica indicada.' })
+    alertas.push({ codigo: 'indicacao.gastrectomia_por_outra_causa_revisar_exames_e', nivel: MODERADO, texto: 'GASTRECTOMIA POR OUTRA CAUSA: revisar exames e investigar recidiva da doença de base — avaliação médica indicada.' })
   } else {
     return null
   }
@@ -456,7 +456,7 @@ function buildModNeurologico(dadosOBA, alertas, suger) {
   linhas.push(`SINTOMAS NEUROLÓGICOS RELATADOS: ${sintomas.join(', ')}.`)
   linhas.push('NO PÓS-BARIÁTRICO, MANIFESTAÇÕES NEUROLÓGICAS SÃO SINAIS DE ALERTA PARA CARÊNCIAS NUTRICIONAIS — ESPECIALMENTE VITAMINA B12, TIAMINA (B1) E COBRE. RECOMENDA-SE DOSAR ESSES NUTRIENTES E AVALIAÇÃO NEUROLÓGICA. O TRATAMENTO PRECOCE PODE REVERTER OS SINTOMAS; A DEMORA PODE TORNÁ-LOS PERMANENTES.')
 
-  alertas.push({ nivel: MODERADO, texto: `SINTOMAS NEUROLÓGICOS (${sintomas.length}): investigar B12/B1/cobre e avaliação neurológica.` })
+  alertas.push({ codigo: 'neurologico.sintomas_neurologicos', nivel: MODERADO, texto: `SINTOMAS NEUROLÓGICOS (${sintomas.length}): investigar B12/B1/cobre e avaliação neurológica.` })
   suger.push('VITAMINA B12 SÉRICA')
   suger.push('TIAMINA (VITAMINA B1)')
   suger.push('COBRE SÉRICO')
@@ -490,7 +490,7 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
 
   if (has('DIVERTÍCULOS')) {
     linhas.push('DIVERTÍCULOS: A DIVERTICULITE É FONTE DE SANGRAMENTO QUE AGRAVA A SIDEROPENIA E PODE EXIGIR MAIOR REPOSIÇÃO DE FERRO ENDOVENOSO. INVESTIGAR SANGRAMENTO ATIVO E ACOMPANHAR COM GASTROENTEROLOGISTA/COLOPROCTOLOGISTA.')
-    alertas.push({ nivel: MODERADO, texto: 'DIVERTÍCULOS: fonte de sangramento — agrava sideropenia, pode exigir ferro endovenoso.' })
+    alertas.push({ codigo: 'endoscopico.diverticulos_fonte_de_sangramento_agrava_side', nivel: MODERADO, texto: 'DIVERTÍCULOS: fonte de sangramento — agrava sideropenia, pode exigir ferro endovenoso.' })
     suger.push('SANGUE OCULTO NAS FEZES')
     suger.push('COLONOSCOPIA')
     bump(MODERADO)
@@ -501,7 +501,7 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
       : 'SOROLOGIA IgG REAGENTE'
     linhas.push(`H. PYLORI (${fonte}): CARCINÓGENO DO GRUPO 1 (IARC/OMS) — AUMENTA O RISCO DE CÂNCER GÁSTRICO E LINFOMA MALT, ALÉM DE COMPROMETER A ABSORÇÃO DE B12 E FERRO E CAUSAR GASTRITE.`)
     linhas.push('TRATADA OU NÃO? OS ANTICORPOS CONTRA O H. PYLORI NÃO SÃO PROTETORES E PERSISTEM APÓS O TRATAMENTO — A SOROLOGIA NÃO CONFIRMA CURA NEM IMUNIDADE. SE A INFECÇÃO NÃO FOI TRATADA, INDICA-SE A ERRADICAÇÃO. SE JÁ FOI TRATADA, CONFIRME A ERRADICAÇÃO POR TESTE NÃO SOROLÓGICO (ANTÍGENO FECAL, TESTE RESPIRATÓRIO DA UREIA OU BIÓPSIA) — NUNCA PELA SOROLOGIA.')
-    alertas.push({ nivel: MODERADO, texto: igmReag
+    alertas.push({ codigo: 'endoscopico.h_pylori_igm_reagente_infeccao_ativa_erradica', nivel: MODERADO, texto: igmReag
       ? 'H. PYLORI — IgM reagente (infecção ativa): erradicar e confirmar cura por teste não sorológico.'
       : 'H. PYLORI — verificar se foi tratada; se não, erradicar. Sorologia não confirma cura (anticorpos persistem).' })
     suger.push('PESQUISA DE H. PYLORI POR ANTÍGENO FECAL OU TESTE RESPIRATÓRIO DA UREIA (confirmar status / controle pós-tratamento)')
@@ -515,7 +515,7 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
     // aviso a mais custa uma conferência do prescritor; um a menos custa anafilaxia.
     if (alergiaPenicilina) {
       linhas.push('⚠ ATENÇÃO — VOCÊ DECLAROU ALERGIA A PENICILINAS: O ESQUEMA PADRÃO DE ERRADICAÇÃO DO H. PYLORI USA AMOXICILINA, QUE É UMA PENICILINA — ESTÁ CONTRAINDICADO PARA VOCÊ. EXISTEM ESQUEMAS ALTERNATIVOS EFICAZES SEM PENICILINA (POR EXEMPLO, O ESQUEMA QUÁDRUPLO COM BISMUTO: IBP + BISMUTO + TETRACICLINA + METRONIDAZOL). NÃO ACEITE NEM INICIE NENHUMA RECEITA DE ERRADICAÇÃO SEM QUE O MÉDICO SAIBA DESSA ALERGIA — INFORME-A SEMPRE, EM TODA CONSULTA.')
-      alertas.push({ nivel: GRAVE, texto: 'ALERGIA A PENICILINAS + H. PYLORI A ERRADICAR — O ESQUEMA PADRÃO (COM AMOXICILINA) É CONTRAINDICADO. EXIGIR ESQUEMA ALTERNATIVO SEM PENICILINA (EX.: QUÁDRUPLO COM BISMUTO). INFORME A ALERGIA AO MÉDICO PRESCRITOR.' })
+      alertas.push({ codigo: 'endoscopico.alergia_a_penicilinas_h_pylori_a_erradicar_o', nivel: GRAVE, texto: 'ALERGIA A PENICILINAS + H. PYLORI A ERRADICAR — O ESQUEMA PADRÃO (COM AMOXICILINA) É CONTRAINDICADO. EXIGIR ESQUEMA ALTERNATIVO SEM PENICILINA (EX.: QUÁDRUPLO COM BISMUTO). INFORME A ALERGIA AO MÉDICO PRESCRITOR.' })
       bump(GRAVE)
     } else if (alergiaCefalosporina) {
       // Reatividade cruzada penicilina×cefalosporina existe, mas é baixa (~1-2%) e
@@ -525,7 +525,7 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
   }
   if (has('BARRETT')) {
     linhas.push('BARRETT: LESÃO PRÉ-MALIGNA — EXIGE VIGILÂNCIA ENDOSCÓPICA PERIÓDICA COM GASTROENTEROLOGISTA.')
-    alertas.push({ nivel: MODERADO, texto: 'ESÔFAGO DE BARRETT: lesão pré-maligna — vigilância endoscópica periódica.' })
+    alertas.push({ codigo: 'endoscopico.esofago_de_barrett_lesao_pre_maligna_vigilanc', nivel: MODERADO, texto: 'ESÔFAGO DE BARRETT: lesão pré-maligna — vigilância endoscópica periódica.' })
     suger.push('ENDOSCOPIA DIGESTIVA ALTA')
     bump(MODERADO)
   }
@@ -563,12 +563,12 @@ function buildModB12(ex, dados, disab, alertas, suger) {
   if (b12 < REF.b12.critico) {
     nivel = GRAVE
     linhas.push('DÉFICIT GRAVE DE VITAMINA B12 (< 100 pg/mL). RISCO ELEVADO DE NEUROPATIA PERIFÉRICA E DEGENERAÇÃO SUBAGUDA DA MEDULA ESPINHAL. REPOSIÇÃO PARENTERAL URGENTE E EM DOSES DE ATAQUE. AVALIAÇÃO NEUROLÓGICA INDICADA.')
-    alertas.push({ nivel: GRAVE, texto: `B12 CRÍTICA: ${b12} pg/mL — RISCO DE NEUROPATIA. REPOSIÇÃO PARENTERAL URGENTE.` })
+    alertas.push({ codigo: 'b12.b12_critica', nivel: GRAVE, texto: `B12 CRÍTICA: ${b12} pg/mL — RISCO DE NEUROPATIA. REPOSIÇÃO PARENTERAL URGENTE.` })
     suger.push('AVALIAÇÃO NEUROLÓGICA')
   } else if (b12 < REF.b12.baixo) {
     nivel = MODERADO
     linhas.push('DÉFICIT MODERADO DE VITAMINA B12 (100–200 pg/mL). PODE PRODUZIR MACROCITOSE, ANEMIA MACROCÍTICA E ALTERAÇÕES NEUROLÓGICAS SUBCLÍNICAS. REPOSIÇÃO SUBLINGUAL OU PARENTERAL OBRIGATÓRIA.')
-    alertas.push({ nivel: MODERADO, texto: `B12 BAIXA: ${b12} pg/mL — DÉFICIT MODERADO. REPOSIÇÃO SUBLINGUAL OU IM NECESSÁRIA.` })
+    alertas.push({ codigo: 'b12.b12_baixa', nivel: MODERADO, texto: `B12 BAIXA: ${b12} pg/mL — DÉFICIT MODERADO. REPOSIÇÃO SUBLINGUAL OU IM NECESSÁRIA.` })
   } else if (b12 > REF.b12.alto) {
     // B12 alta: no bariátrico é MUITO comum por suplementação (sublingual/IM em altas
     // doses) — nesse caso é esperada/benigna. SEM suplementação, B12 persistentemente
@@ -578,7 +578,7 @@ function buildModB12(ex, dados, disab, alertas, suger) {
     } else {
       nivel = MODERADO
       linhas.push(`VITAMINA B12 ELEVADA (> 1.000 pg/mL: ${b12}) SEM SUPLEMENTAÇÃO REGISTRADA: EMBORA POSSA SER BENIGNA/GENÉTICA, A B12 PERSISTENTEMENTE ALTA SEM CAUSA EXÓGENA PEDE INVESTIGAÇÃO — HEPATOPATIA, DOENÇA MIELOPROLIFERATIVA (HEMOGRAMA COM DIFERENCIAL) OU NEOPLASIA OCULTA.`)
-      alertas.push({ nivel: MODERADO, texto: `B12 ELEVADA (${b12} pg/mL) SEM SUPLEMENTAÇÃO — INVESTIGAR (HEPATOPATIA, MIELOPROLIFERATIVA, NEOPLASIA).` })
+      alertas.push({ codigo: 'b12.b12_elevada', nivel: MODERADO, texto: `B12 ELEVADA (${b12} pg/mL) SEM SUPLEMENTAÇÃO — INVESTIGAR (HEPATOPATIA, MIELOPROLIFERATIVA, NEOPLASIA).` })
       suger.push('HEMOGRAMA COM DIFERENCIAL + BIOQUÍMICA HEPÁTICA (B12 elevada sem suplementação)')
     }
   } else {
@@ -590,18 +590,18 @@ function buildModB12(ex, dados, disab, alertas, suger) {
   const usaIBP = dados.ibp || false
   if (usaMetformina) {
     linhas.push('USO DE METFORMINA: REDUZ SIGNIFICATIVAMENTE A ABSORÇÃO DE VITAMINA B12 — RISCO CUMULATIVO COM A SÍNDROME DISABSORTIVA BARIÁTRICA. MONITORAR B12 A CADA 6 MESES.')
-    if (nivel === NORMAL) alertas.push({ nivel: LEVE, texto: 'METFORMINA + BARIÁTRICA: RISCO AUMENTADO DE DÉFICIT DE B12 — MONITORAR.' })
+    if (nivel === NORMAL) alertas.push({ codigo: 'b12.metformina_bariatrica_risco_aumentado_de_defi', nivel: LEVE, texto: 'METFORMINA + BARIÁTRICA: RISCO AUMENTADO DE DÉFICIT DE B12 — MONITORAR.' })
   }
   if (usaIBP) {
     linhas.push('USO DE IBP (OMEPRAZOL/PANTOPRAZOL): SUPRIME ÁCIDO GÁSTRICO NECESSÁRIO PARA ABSORÇÃO DE B12. NO BARIÁTRICO, O USO CRÔNICO DE IBP AGRAVA O RISCO DE DEFICIÊNCIA DE B12 E FERRO. AVALIAR REAL NECESSIDADE DE MANUTENÇÃO.')
-    if (nivel === NORMAL) alertas.push({ nivel: LEVE, texto: 'IBP CRÔNICO: REDUZ ABSORÇÃO DE B12 E FERRO — AVALIAR NECESSIDADE.' })
+    if (nivel === NORMAL) alertas.push({ codigo: 'b12.ibp_cronico_reduz_absorcao_de_b12_e_ferro_ava', nivel: LEVE, texto: 'IBP CRÔNICO: REDUZ ABSORÇÃO DE B12 E FERRO — AVALIAR NECESSIDADE.' })
   }
 
   // Via de reposição
   if (disab.grau >= 2) {
     if (!usaB12IM && !usaB12Sub) {
       linhas.push('ATENÇÃO: NÃO HÁ REGISTRO DE USO DE B12 SUBLINGUAL OU INTRAMUSCULAR. NO BARIÁTRICO, A REPOSIÇÃO ORAL NÃO É EFICAZ. A SUPLEMENTAÇÃO SUBLINGUAL OU PARENTERAL É MANDATÓRIA.')
-      if (nivel === NORMAL) alertas.push({ nivel: LEVE, texto: 'SEM B12 SUBLINGUAL/IM: VIA ORAL INSUFICIENTE NO BARIÁTRICO.' })
+      if (nivel === NORMAL) alertas.push({ codigo: 'b12.sem_b12_sublingual_im_via_oral_insuficiente_n', nivel: LEVE, texto: 'SEM B12 SUBLINGUAL/IM: VIA ORAL INSUFICIENTE NO BARIÁTRICO.' })
     } else if (usaB12Sub && !usaB12IM && b12 < REF.b12.normal) {
       linhas.push('O USO DE B12 SUBLINGUAL NÃO ESTÁ CORRIGINDO O DÉFICIT. CONSIDERAR MIGRAR PARA B12 INTRAMUSCULAR (CIANOCOBALAMINA 1.000 mcg/mês OU HIDROXICOBALAMINA).')
     }
@@ -629,21 +629,21 @@ function buildModVitD(ex, dados, alertas, suger) {
   if (vd < REF.vitD.critico) {
     nivel = GRAVE
     linhas.push('DEFICIÊNCIA GRAVE DE VITAMINA D (< 10 ng/mL). RISCO ELEVADO DE OSTEOPOROSE, MIOPATIA, HIPERPARATIREOIDISMO SECUNDÁRIO E COMPROMETIMENTO IMUNOLÓGICO. REPOSIÇÃO EM DOSES DE ATAQUE (50.000 UI/semana POR 8–12 SEMANAS) COM SUPERVISÃO MÉDICA.')
-    alertas.push({ nivel: GRAVE, texto: `VITAMINA D CRÍTICA: ${vd} ng/mL — DEFICIÊNCIA GRAVE. REPOSIÇÃO DE ATAQUE URGENTE.` })
+    alertas.push({ codigo: 'vitD.vitamina_d_critica', nivel: GRAVE, texto: `VITAMINA D CRÍTICA: ${vd} ng/mL — DEFICIÊNCIA GRAVE. REPOSIÇÃO DE ATAQUE URGENTE.` })
     suger.push('PTH INTACTO')
     suger.push('CÁLCIO SÉRICO E URINÁRIO')
   } else if (vd < REF.vitD.baixo) {
     nivel = MODERADO
     linhas.push('INSUFICIÊNCIA DE VITAMINA D (10–20 ng/mL). NO BARIÁTRICO, A META É ≥ 30 ng/mL. AUMENTAR DOSE SUPLEMENTAR. VERIFICAR SE USA VITAMINA D3 (COLECALCIFEROL) — PREFERENCIAL EM RELAÇÃO À D2 (ERGOCALCIFEROL).')
-    alertas.push({ nivel: MODERADO, texto: `VITAMINA D INSUFICIENTE: ${vd} ng/mL — AUMENTAR DOSE SUPLEMENTAR.` })
+    alertas.push({ codigo: 'vitD.vitamina_d_insuficiente', nivel: MODERADO, texto: `VITAMINA D INSUFICIENTE: ${vd} ng/mL — AUMENTAR DOSE SUPLEMENTAR.` })
   } else if (vd < REF.vitD.normal) {
     nivel = LEVE
     linhas.push('VITAMINA D ABAIXO DA META BARIÁTRICA (20–30 ng/mL). A META PARA BARIÁTRICOS É ≥ 30 ng/mL. OTIMIZAR SUPLEMENTAÇÃO COM D3.')
-    alertas.push({ nivel: LEVE, texto: `VITAMINA D ABAIXO DA META: ${vd} ng/mL (meta ≥ 30 ng/mL).` })
+    alertas.push({ codigo: 'vitD.vitamina_d_abaixo_da_meta', nivel: LEVE, texto: `VITAMINA D ABAIXO DA META: ${vd} ng/mL (meta ≥ 30 ng/mL).` })
   } else if (vd > REF.vitD.alto) {
     nivel = LEVE
     linhas.push('VITAMINA D ELEVADA (> 100 ng/mL). RISCO DE HIPERVITAMINOSE D E HIPERCALCEMIA. REDUZIR DOSE SUPLEMENTAR E VERIFICAR CÁLCIO SÉRICO.')
-    alertas.push({ nivel: LEVE, texto: `VITAMINA D ELEVADA: ${vd} ng/mL — VERIFICAR HIPERCALCEMIA.` })
+    alertas.push({ codigo: 'vitD.vitamina_d_elevada', nivel: LEVE, texto: `VITAMINA D ELEVADA: ${vd} ng/mL — VERIFICAR HIPERCALCEMIA.` })
     suger.push('CÁLCIO SÉRICO')
   } else {
     linhas.push('VITAMINA D DENTRO DA META BARIÁTRICA (≥ 30 ng/mL). MANTER SUPLEMENTAÇÃO E REMONITORAR EM 6 MESES.')
@@ -676,11 +676,11 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     if (zinco < REF.zinco.critico) {
       nivelGeral = GRAVE
       linhas.push('ZINCO GRAVEMENTE BAIXO (< 50 mcg/dL). RISCO DE ALOPECIA SEVERA, CICATRIZAÇÃO COMPROMETIDA, DISFUNÇÃO IMUNOLÓGICA E HIPOGONADISMO. SUPLEMENTAÇÃO URGENTE: 60–220 mg DE ZINCO ELEMENTAR/DIA.')
-      alertas.push({ nivel: GRAVE, texto: `ZINCO CRÍTICO: ${zinco} mcg/dL — SUPLEMENTAÇÃO URGENTE.` })
+      alertas.push({ codigo: 'vitaminas.zinco_critico', nivel: GRAVE, texto: `ZINCO CRÍTICO: ${zinco} mcg/dL — SUPLEMENTAÇÃO URGENTE.` })
     } else if (zinco < REF.zinco.baixo) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('ZINCO BAIXO (50–60 mcg/dL). SUPLEMENTAÇÃO NECESSÁRIA: 15–30 mg DE ZINCO ELEMENTAR/DIA. SEPARAR DA SUPLEMENTAÇÃO DE FERRO EM 2 HORAS (COMPETIÇÃO ABSORTIVA).')
-      alertas.push({ nivel: MODERADO, texto: `ZINCO BAIXO: ${zinco} mcg/dL — SUPLEMENTAÇÃO NECESSÁRIA.` })
+      alertas.push({ codigo: 'vitaminas.zinco_baixo', nivel: MODERADO, texto: `ZINCO BAIXO: ${zinco} mcg/dL — SUPLEMENTAÇÃO NECESSÁRIA.` })
     } else if (zinco < REF.zinco.normal) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('ZINCO EM ZONA LIMÍTROFE (60–70 mcg/dL). MONITORAR. MANTER SUPLEMENTAÇÃO COM POLIVITAMÍNICO CONTENDO ZINCO.')
@@ -699,12 +699,12 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     if (vitA < REF.vitA.critico) {
       nivelGeral = GRAVE
       linhas.push('VITAMINA A GRAVEMENTE BAIXA (< 15 mcg/dL). RISCO DE XEROFTALMIA, CEGUEIRA NOTURNA E COMPROMETIMENTO IMUNOLÓGICO GRAVE. REPOSIÇÃO URGENTE SOB SUPERVISÃO MÉDICA.')
-      alertas.push({ nivel: GRAVE, texto: `VITAMINA A CRÍTICA: ${vitA} mcg/dL — RISCO DE XEROFTALMIA.` })
+      alertas.push({ codigo: 'vitaminas.vitamina_a_critica', nivel: GRAVE, texto: `VITAMINA A CRÍTICA: ${vitA} mcg/dL — RISCO DE XEROFTALMIA.` })
       suger.push('AVALIAÇÃO OFTALMOLÓGICA')
     } else if (vitA < REF.vitA.baixo) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('VITAMINA A BAIXA (15–20 mcg/dL). SUPLEMENTAÇÃO NECESSÁRIA. PREFERIR POLIVITAMÍNICO COM BETACAROTENO. ATENÇÃO: EXCESSO DE VITAMINA A PURA (RETINOL) É HEPATOTÓXICO E TERATOGÊNICO.')
-      alertas.push({ nivel: MODERADO, texto: `VITAMINA A BAIXA: ${vitA} mcg/dL — SUPLEMENTAÇÃO NECESSÁRIA.` })
+      alertas.push({ codigo: 'vitaminas.vitamina_a_baixa', nivel: MODERADO, texto: `VITAMINA A BAIXA: ${vitA} mcg/dL — SUPLEMENTAÇÃO NECESSÁRIA.` })
     } else {
       linhas.push('VITAMINA A DENTRO DA FAIXA NORMAL.')
     }
@@ -720,12 +720,12 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     if (tiamina < REF.tiamina.critico) {
       nivelGeral = GRAVE
       linhas.push('TIAMINA GRAVEMENTE BAIXA (< 50 nmol/L). RISCO DE ENCEFALOPATIA DE WERNICKE (CONFUSÃO, ATAXIA, NISTAGMO), NEUROPATIA PERIFÉRICA E INSUFICIÊNCIA CARDÍACA DE ALTO DÉBITO (BERIBÉRI). EMERGÊNCIA NUTRICIONAL. TIAMINA IV URGENTE.')
-      alertas.push({ nivel: GRAVE, texto: `TIAMINA CRÍTICA: ${tiamina} nmol/L — RISCO DE WERNICKE. TIAMINA IV URGENTE.` })
+      alertas.push({ codigo: 'vitaminas.tiamina_critica', nivel: GRAVE, texto: `TIAMINA CRÍTICA: ${tiamina} nmol/L — RISCO DE WERNICKE. TIAMINA IV URGENTE.` })
       suger.push('AVALIAÇÃO NEUROLÓGICA URGENTE')
     } else if (tiamina < REF.tiamina.baixo) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('TIAMINA BAIXA (50–70 nmol/L). SUPLEMENTAÇÃO VO OU IM NECESSÁRIA. A DEFICIÊNCIA DE TIAMINA É PARTICULARMENTE GRAVE NO BARIÁTRICO, ESPECIALMENTE COM VÔMITOS FREQUENTES OU DIETA MUITO RESTRITIVA.')
-      alertas.push({ nivel: MODERADO, texto: `TIAMINA BAIXA: ${tiamina} nmol/L — SUPLEMENTAÇÃO IM/VO NECESSÁRIA.` })
+      alertas.push({ codigo: 'vitaminas.tiamina_baixa', nivel: MODERADO, texto: `TIAMINA BAIXA: ${tiamina} nmol/L — SUPLEMENTAÇÃO IM/VO NECESSÁRIA.` })
     } else {
       linhas.push('TIAMINA DENTRO DA FAIXA NORMAL.')
     }
@@ -741,7 +741,7 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     if (vitE < REF.vitE.baixo) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('VITAMINA E ABAIXO DO NORMAL (< 5 mg/L). ANTIOXIDANTE ESSENCIAL. SUPLEMENTAR VIA POLIVITAMÍNICO COM TOCOFEROL.')
-      alertas.push({ nivel: LEVE, texto: `VITAMINA E BAIXA: ${vitE} mg/L.` })
+      alertas.push({ codigo: 'vitaminas.vitamina_e_baixa', nivel: LEVE, texto: `VITAMINA E BAIXA: ${vitE} mg/L.` })
     } else {
       linhas.push('VITAMINA E DENTRO DA FAIXA NORMAL.')
     }
@@ -755,23 +755,23 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     if (folatos < REF.folatos.critico) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('DÉFICIT GRAVE DE FOLATOS (< 2 ng/mL). RISCO DE ANEMIA MEGALOBLÁSTICA E, EM MULHERES GRÁVIDAS, DE DEFEITOS DO TUBO NEURAL. SUPLEMENTAR COM ÁCIDO FÓLICO 1–5 MG/DIA.')
-      alertas.push({ nivel: MODERADO, texto: `FOLATOS CRÍTICOS: ${folatos} ng/mL — SUPLEMENTAR URGENTE.` })
+      alertas.push({ codigo: 'vitaminas.folatos_criticos', nivel: MODERADO, texto: `FOLATOS CRÍTICOS: ${folatos} ng/mL — SUPLEMENTAR URGENTE.` })
     } else if (folatos < REF.folatos.baixo) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('FOLATOS BAIXOS (2–4 ng/mL). SUPLEMENTAR COM ÁCIDO FÓLICO. NO BARIÁTRICO, O POLIVITAMÍNICO DEVE CONTER FOLATO.')
-      alertas.push({ nivel: LEVE, texto: `FOLATOS BAIXOS: ${folatos} ng/mL.` })
+      alertas.push({ codigo: 'vitaminas.folatos_baixos', nivel: LEVE, texto: `FOLATOS BAIXOS: ${folatos} ng/mL.` })
     } else {
       linhas.push('FOLATOS DENTRO DA FAIXA NORMAL.')
     }
     if (dados.methotrexato) {
       linhas.push('USO DE METOTREXATO: ANTAGONISTA DO ÁCIDO FÓLICO. CAUSA DEPLEÇÃO PROGRESSIVA DE FOLATOS — EFEITO SOMADO À DISABSORÇÃO BARIÁTRICA. SUPLEMENTAÇÃO COM ÁCIDO FÓLICO 5 MG/DIA É OBRIGATÓRIA. MONITORAR FOLATOS E HEMOGRAMA REGULARMENTE.')
-      alertas.push({ nivel: MODERADO, texto: 'METOTREXATO + BARIÁTRICA: ALTO RISCO DE DEFICIÊNCIA DE FOLATOS — SUPLEMENTAR OBRIGATORIAMENTE.' })
+      alertas.push({ codigo: 'vitaminas.metotrexato_bariatrica_alto_risco_de_deficien', nivel: MODERADO, texto: 'METOTREXATO + BARIÁTRICA: ALTO RISCO DE DEFICIÊNCIA DE FOLATOS — SUPLEMENTAR OBRIGATORIAMENTE.' })
     }
   } else {
     suger.push('FOLATOS SÉRICOS')
     if (dados.methotrexato) {
       linhas.push('USO DE METOTREXATO SEM FOLATOS DOSADOS: METOTREXATO É ANTAGONISTA DO ÁCIDO FÓLICO. SOLICITAR FOLATOS URGENTE E INICIAR SUPLEMENTAÇÃO PREVENTIVA COM ÁCIDO FÓLICO 5 MG/DIA.')
-      alertas.push({ nivel: MODERADO, texto: 'METOTREXATO EM USO — DOSEAR FOLATOS E SUPLEMENTAR ÁCIDO FÓLICO.' })
+      alertas.push({ codigo: 'vitaminas.metotrexato_em_uso_dosear_folatos_e_suplement', nivel: MODERADO, texto: 'METOTREXATO EM USO — DOSEAR FOLATOS E SUPLEMENTAR ÁCIDO FÓLICO.' })
     }
   }
 
@@ -783,7 +783,7 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     if (selenio < REF.selenio.baixo) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('SELÊNIO BAIXO (< 60 mcg/L). ANTIOXIDANTE ESSENCIAL, ENVOLVIDO NA FUNÇÃO TIREOIDIANA E IMUNOLÓGICA. SUPLEMENTAR VIA POLIVITAMÍNICO COM SELÊNIO.')
-      alertas.push({ nivel: LEVE, texto: `SELÊNIO BAIXO: ${selenio} mcg/L.` })
+      alertas.push({ codigo: 'vitaminas.selenio_baixo', nivel: LEVE, texto: `SELÊNIO BAIXO: ${selenio} mcg/L.` })
     } else {
       linhas.push('SELÊNIO DENTRO DA FAIXA NORMAL.')
     }
@@ -797,11 +797,11 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     if (vitC < REF.vitC.critico) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('VITAMINA C GRAVEMENTE BAIXA (< 0,2 mg/dL). RISCO DE ESCORBUTO: SANGRAMENTO GENGIVAL, PETÉQUIAS, COMPROMETIMENTO DE CICATRIZAÇÃO E FRAGILIDADE VASCULAR. A DEFICIÊNCIA DE VITAMINA C PREJUDICA TAMBÉM A ABSORÇÃO DE FERRO NÃO-HEME — AGRAVA ANEMIA FERROPRIVA. SUPLEMENTAÇÃO URGENTE: 500–1.000 MG/DIA.')
-      alertas.push({ nivel: MODERADO, texto: `VITAMINA C CRÍTICA: ${vitC} mg/dL — RISCO DE ESCORBUTO E COMPROMETIMENTO ABSORTIVO DE FERRO.` })
+      alertas.push({ codigo: 'vitaminas.vitamina_c_critica', nivel: MODERADO, texto: `VITAMINA C CRÍTICA: ${vitC} mg/dL — RISCO DE ESCORBUTO E COMPROMETIMENTO ABSORTIVO DE FERRO.` })
     } else if (vitC < REF.vitC.baixo) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('VITAMINA C BAIXA (0,2–0,4 mg/dL). SUPLEMENTAR 200–500 MG/DIA. A VITAMINA C POTENCIALIZA A ABSORÇÃO DO FERRO NÃO-HEME — IMPORTANTE NO BARIÁTRICO COM DEFICIÊNCIA DE FERRO.')
-      alertas.push({ nivel: LEVE, texto: `VITAMINA C BAIXA: ${vitC} mg/dL — SUPLEMENTAR.` })
+      alertas.push({ codigo: 'vitaminas.vitamina_c_baixa', nivel: LEVE, texto: `VITAMINA C BAIXA: ${vitC} mg/dL — SUPLEMENTAR.` })
     } else {
       linhas.push('VITAMINA C DENTRO DA FAIXA NORMAL.')
     }
@@ -817,12 +817,12 @@ function buildModVitaminas(ex, dados, disab, alertas, suger) {
     if (vitK < REF.vitK.critico) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('VITAMINA K GRAVEMENTE BAIXA (< 0,1 ng/mL). RISCO DE COAGULOPATIA E AGRAVAMENTO DA PERDA ÓSSEA. NO BARIÁTRICO COM VARIZES DE ESÔFAGO OU USO DE ANTICOAGULANTES, ESSE ACHADO É PARTICULARMENTE CRÍTICO. SUPLEMENTAÇÃO SUPERVISIONADA NECESSÁRIA.')
-      alertas.push({ nivel: MODERADO, texto: `VITAMINA K CRÍTICA: ${vitK} ng/mL — RISCO DE COAGULOPATIA.` })
+      alertas.push({ codigo: 'vitaminas.vitamina_k_critica', nivel: MODERADO, texto: `VITAMINA K CRÍTICA: ${vitK} ng/mL — RISCO DE COAGULOPATIA.` })
       suger.push('TEMPO DE PROTROMBINA (TP/INR)')
     } else if (vitK < REF.vitK.baixo) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('VITAMINA K BAIXA (0,1–0,2 ng/mL). IMPORTANTE PARA COAGULAÇÃO E SAÚDE ÓSSEA. SUPLEMENTAR VIA POLIVITAMÍNICO COM MK-7 (MENAQUINONA).')
-      alertas.push({ nivel: LEVE, texto: `VITAMINA K BAIXA: ${vitK} ng/mL — SUPLEMENTAR.` })
+      alertas.push({ codigo: 'vitaminas.vitamina_k_baixa', nivel: LEVE, texto: `VITAMINA K BAIXA: ${vitK} ng/mL — SUPLEMENTAR.` })
     } else {
       linhas.push('VITAMINA K DENTRO DA FAIXA NORMAL.')
     }
@@ -874,7 +874,7 @@ function buildModGlico(ex, dados, alertas, suger) {
     if (gli >= REF.glicemia.diabetes) {
       nivelGeral = GRAVE
       linhas.push('GLICEMIA ELEVADA NO NÍVEL DIAGNÓSTICO DE DIABETES (≥ 200 mg/dL). NO BARIÁTRICO, ISSO PODE INDICAR RECIDIVA DO DIABETES OU INEFICÁCIA DA CIRURGIA PARA CONTROLE GLICÊMICO. AVALIAÇÃO COM ENDOCRINOLOGISTA URGENTE.')
-      alertas.push({ nivel: GRAVE, texto: `GLICEMIA ELEVADA: ${gli} mg/dL — POSSÍVEL DIABETES EM ATIVIDADE.` })
+      alertas.push({ codigo: 'glico.glicemia_elevada', nivel: GRAVE, texto: `GLICEMIA ELEVADA: ${gli} mg/dL — POSSÍVEL DIABETES EM ATIVIDADE.` })
       suger.push('AVALIAÇÃO COM ENDOCRINOLOGISTA')
     } else if (gli >= REF.glicemia.preD) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
@@ -884,11 +884,11 @@ function buildModGlico(ex, dados, alertas, suger) {
       // moderado do mesmo eixo (2 moderados = estado RUIM). O texto/linha fica; só
       // o alerta é suprimido quando a HbA1c o cobre.
       const hbaCobre = !isNaN(hba) && hba >= REF.hbA1c.diabetes
-      if (!hbaCobre) alertas.push({ nivel: MODERADO, texto: `GLICEMIA AUMENTADA: ${gli} mg/dL — AVALIAR COM HBA1C.` })
+      if (!hbaCobre) alertas.push({ codigo: 'glico.glicemia_aumentada', nivel: MODERADO, texto: `GLICEMIA AUMENTADA: ${gli} mg/dL — AVALIAR COM HBA1C.` })
     } else if (gli >= REF.glicemia.otimo) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('GLICEMIA LIMÍTROFE (100–125 mg/dL): PRÉ-DIABETES OU RESISTÊNCIA INSULÍNICA. AVALIAR HBA1C E INSULINEMIA EM JEJUM.')
-      alertas.push({ nivel: LEVE, texto: `GLICEMIA LIMÍTROFE: ${gli} mg/dL — PRÉ-DIABETES OU RESISTÊNCIA INSULÍNICA.` })
+      alertas.push({ codigo: 'glico.glicemia_limitrofe', nivel: LEVE, texto: `GLICEMIA LIMÍTROFE: ${gli} mg/dL — PRÉ-DIABETES OU RESISTÊNCIA INSULÍNICA.` })
     } else {
       linhas.push('GLICEMIA NORMAL (< 100 mg/dL).')
     }
@@ -901,11 +901,11 @@ function buildModGlico(ex, dados, alertas, suger) {
     if (hba >= REF.hbA1c.ruim) {
       if (nivelGeral !== GRAVE) nivelGeral = GRAVE
       linhas.push('HBA1C MUITO ELEVADA (≥ 8%): CONTROLE GLICÊMICO RUIM. RISCO ELEVADO DE COMPLICAÇÕES MICRO E MACROVASCULARES. AJUSTE URGENTE DO ESQUEMA TERAPÊUTICO.')
-      alertas.push({ nivel: GRAVE, texto: `HBA1C MUITO ALTA: ${hba}% — CONTROLE GLICÊMICO RUIM.` })
+      alertas.push({ codigo: 'glico.hba1c_muito_alta', nivel: GRAVE, texto: `HBA1C MUITO ALTA: ${hba}% — CONTROLE GLICÊMICO RUIM.` })
     } else if (hba >= REF.hbA1c.diabetes) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('HBA1C NO NÍVEL DE DIABETES (≥ 6.5%): DIABETES EM ATIVIDADE OU REMISSÃO INCOMPLETA PÓS-BARIÁTRICA. AVALIAÇÃO COM ENDOCRINOLOGISTA.')
-      alertas.push({ nivel: MODERADO, texto: `HBA1C ELEVADA: ${hba}% — DIABETES EM ATIVIDADE.` })
+      alertas.push({ codigo: 'glico.hba1c_elevada', nivel: MODERADO, texto: `HBA1C ELEVADA: ${hba}% — DIABETES EM ATIVIDADE.` })
     } else if (hba >= REF.hbA1c.preD) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('HBA1C NO NÍVEL DE PRÉ-DIABETES (5.7–6.4%): RISCO AUMENTADO DE PROGRESSÃO PARA DIABETES. MONITORAMENTO E INTERVENÇÃO DIETÉTICA.')
@@ -924,7 +924,7 @@ function buildModGlico(ex, dados, alertas, suger) {
       if (homa > 2.5) {
         if (nivelGeral === NORMAL) nivelGeral = LEVE
         linhas.push('HOMA-IR ELEVADO: RESISTÊNCIA INSULÍNICA PRESENTE. NO BARIÁTRICO, PODE INDICAR REGANHO DE PESO COM PERDA DO EFEITO METABÓLICO DA CIRURGIA. CONSIDERAR INTERVENÇÃO DIETÉTICA E ATIVIDADE FÍSICA REGULAR.')
-        alertas.push({ nivel: LEVE, texto: `HOMA-IR: ${homa.toFixed(1)} — RESISTÊNCIA INSULÍNICA.` })
+        alertas.push({ codigo: 'glico.homa_ir', nivel: LEVE, texto: `HOMA-IR: ${homa.toFixed(1)} — RESISTÊNCIA INSULÍNICA.` })
       }
     }
     if (ins > REF.insulina.resistencia) {
@@ -940,7 +940,7 @@ function buildModGlico(ex, dados, alertas, suger) {
     if (tg >= REF.tg.muitoAlto) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('HIPERTRIGLICERIDEMIA GRAVE (≥ 500 mg/dL). RISCO DE PANCREATITE AGUDA. TRATAMENTO MEDICAMENTOSO URGENTE (FIBRATOS) E RESTRIÇÃO DE CARBOIDRATOS E ÁLCOOL.')
-      alertas.push({ nivel: MODERADO, texto: `TRIGLICÉRIDES MUITO ALTOS: ${tg} mg/dL — RISCO DE PANCREATITE.` })
+      alertas.push({ codigo: 'glico.triglicerides_muito_altos', nivel: MODERADO, texto: `TRIGLICÉRIDES MUITO ALTOS: ${tg} mg/dL — RISCO DE PANCREATITE.` })
       suger.push('AMILASE E LIPASE SÉRICAS')
     } else if (tg >= REF.tg.alto) {
       // 200–499: o risco CV é contado no módulo LIPIDOGRAMA (evita contar 2x no
@@ -967,7 +967,7 @@ function buildModGlico(ex, dados, alertas, suger) {
     linhas.push('ORIENTAÇÕES PARA CONTROLE: EVITAR AÇÚCARES SIMPLES E ULTRAPROCESSADOS. PREFERIR REFEIÇÕES PEQUENAS E FREQUENTES (5-6/DIA). NÃO BEBER DURANTE AS REFEIÇÕES — AGUARDAR 30 MIN APÓS. PRIORIZAR PROTEÍNAS E GORDURAS BOAS. DEITAR 20-30 MIN APÓS COMER REDUZ OS SINTOMAS DO DUMPING PRECOCE.')
     linhas.push('EM CASOS GRAVES: OCTREOTIDE OU REVISÃO CIRÚRGICA PODEM SER INDICADOS. AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO OU NUTRÓLOGO ESPECIALIZADO É FORTEMENTE RECOMENDADA.')
     linhas.push('A INTERVENÇÃO MÉDICA É NECESSÁRIA PARA REDUZIR ESSE RISCO — NÃO POSTERGUE A AVALIAÇÃO ESPECIALIZADA.')
-    alertas.push({ nivel: MODERADO, texto: 'DUMPING RELATADO: AJUSTAR DIETA E AVALIAR COM ESPECIALISTA — intervenção médica reduz o risco.' })
+    alertas.push({ codigo: 'glico.dumping_relatado_ajustar_dieta_e_avaliar_com', nivel: MODERADO, texto: 'DUMPING RELATADO: AJUSTAR DIETA E AVALIAR COM ESPECIALISTA — intervenção médica reduz o risco.' })
     suger.push('AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO OU NUTRÓLOGO ESPECIALIZADO')
     suger.push('GLICEMIA PÓS-PRANDIAL 1H E 2H')
     suger.push('TESTE DE TOLERÂNCIA À GLICOSE 75G (DUMPING TARDIO)')
@@ -1012,14 +1012,14 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
     if (astAlto || altAlto) {
       nivelGeral = GRAVE
       linhas.push('TRANSAMINASES MUITO ELEVADAS (> 3× LIMITE SUPERIOR): HEPATITE AGUDA, ESTEATOHEPATITE GRAVE OU TOXICIDADE HEPÁTICA. AVALIAÇÃO COM HEPATOLOGISTA URGENTE. SUSPENDER MEDICAMENTOS HEPATOTÓXICOS SE POSSÍVEL.')
-      alertas.push({ nivel: GRAVE, texto: 'TRANSAMINASES MUITO ELEVADAS — AVALIAÇÃO HEPÁTICA URGENTE.' })
+      alertas.push({ codigo: 'orgaos.transaminases_muito_elevadas_avaliacao_hepati', nivel: GRAVE, texto: 'TRANSAMINASES MUITO ELEVADAS — AVALIAÇÃO HEPÁTICA URGENTE.' })
       suger.push('ECOGRAFIA HEPÁTICA')
       suger.push('ANTI-HCV, HBsAg, ANTI-HBS')
       suger.push('AVALIAÇÃO COM HEPATOLOGISTA')
     } else if ((!isNaN(ast) && ast > REF.ast.normal) || (!isNaN(alt) && alt > REF.alt.normal)) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('TRANSAMINASES LEVEMENTE ELEVADAS: ESTEATOSE HEPÁTICA NÃO ALCOÓLICA (ESTEATO-HEPATITE) É FREQUENTE NO BARIÁTRICO COM REGANHO DE PESO OU RESISTÊNCIA INSULÍNICA. MONITORAR E CONTROLAR FATORES METABÓLICOS.')
-      alertas.push({ nivel: LEVE, texto: 'TRANSAMINASES LEVEMENTE ELEVADAS — INVESTIGAR ESTEATOSE HEPÁTICA.' })
+      alertas.push({ codigo: 'orgaos.transaminases_levemente_elevadas_investigar_e', nivel: LEVE, texto: 'TRANSAMINASES LEVEMENTE ELEVADAS — INVESTIGAR ESTEATOSE HEPÁTICA.' })
     } else {
       linhas.push('TRANSAMINASES DENTRO DA NORMALIDADE.')
     }
@@ -1032,7 +1032,7 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
     if (ggt > limAlt * 3) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('GAMA-GT MUITO ELEVADA: SUGESTIVO DE DOENÇA HEPÁTICA, COLESTASE, OU USO DE ÁLCOOL. INVESTIGAR CAUSA.')
-      alertas.push({ nivel: MODERADO, texto: `GAMA-GT MUITO ELEVADA: ${ggt} U/L.` })
+      alertas.push({ codigo: 'orgaos.gama_gt_muito_elevada', nivel: MODERADO, texto: `GAMA-GT MUITO ELEVADA: ${ggt} U/L.` })
     } else if (ggt > limAlt) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('GAMA-GT LEVEMENTE ELEVADA: MONITORAR. ÁLCOOL, MEDICAMENTOS E ESTEATOSE SÃO CAUSAS COMUNS.')
@@ -1052,7 +1052,7 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
       nivelGeral = GRAVE
       creAlertou = true
       linhas.push('CREATININA MUITO ELEVADA: INSUFICIÊNCIA RENAL SIGNIFICATIVA. AVALIAÇÃO COM NEFROLOGISTA URGENTE. AJUSTAR DOSES DE MEDICAMENTOS DE EXCREÇÃO RENAL.')
-      alertas.push({ nivel: GRAVE, texto: `CREATININA MUITO ALTA: ${cre} mg/dL — AVALIAÇÃO NEFROLÓGICA URGENTE.` })
+      alertas.push({ codigo: 'orgaos.creatinina_muito_alta', nivel: GRAVE, texto: `CREATININA MUITO ALTA: ${cre} mg/dL — AVALIAÇÃO NEFROLÓGICA URGENTE.` })
       suger.push('TAXA DE FILTRAÇÃO GLOMERULAR (TFG)')
       suger.push('UREIA')
       suger.push('SUMÁRIO DE URINA')
@@ -1061,7 +1061,7 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       creAlertou = true
       linhas.push('CREATININA ACIMA DO LIMITE SUPERIOR: MONITORAR FUNÇÃO RENAL. HIDRATAÇÃO ADEQUADA É FUNDAMENTAL NO BARIÁTRICO.')
-      alertas.push({ nivel: LEVE, texto: `CREATININA ELEVADA: ${cre} mg/dL — MONITORAR.` })
+      alertas.push({ codigo: 'orgaos.creatinina_elevada', nivel: LEVE, texto: `CREATININA ELEVADA: ${cre} mg/dL — MONITORAR.` })
     } else {
       linhas.push('CREATININA NORMAL.')
     }
@@ -1074,7 +1074,7 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
     if (au > limAU) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push(`HIPERURICEMIA (> ${limAU} mg/dL): RISCO DE GOTA E NEFROLITÍASE. NO BARIÁTRICO, A HIPERURICEMIA PODE PIORAR NO PERÍODO INICIAL DE PERDA DE PESO RÁPIDA. HIDRATAÇÃO ABUNDANTE E AVALIAÇÃO DIETÉTICA.`)
-      alertas.push({ nivel: LEVE, texto: `ÁCIDO ÚRICO ELEVADO: ${au} mg/dL — RISCO DE GOTA.` })
+      alertas.push({ codigo: 'orgaos.acido_urico_elevado', nivel: LEVE, texto: `ÁCIDO ÚRICO ELEVADO: ${au} mg/dL — RISCO DE GOTA.` })
     } else {
       linhas.push('ÁCIDO ÚRICO NORMAL.')
     }
@@ -1089,7 +1089,7 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('UREIA MUITO ELEVADA (> 100 mg/dL): avaliar função renal, desidratação ou sangramento gastrointestinal. Correlacionar com a creatinina.')
       // Só alerta próprio se a creatinina NÃO alertou — senão é o mesmo eixo renal.
-      if (!creAlertou) alertas.push({ nivel: MODERADO, texto: `UREIA MUITO ELEVADA: ${ure} mg/dL.` })
+      if (!creAlertou) alertas.push({ codigo: 'orgaos.ureia_muito_elevada', nivel: MODERADO, texto: `UREIA MUITO ELEVADA: ${ure} mg/dL.` })
     } else if (ure > 40) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('UREIA ELEVADA (> 40 mg/dL): no bariátrico, causas comuns são desidratação e dieta hiperproteica; correlacionar com a creatinina e a hidratação.')
@@ -1160,11 +1160,11 @@ function buildModPonderal(dados, alertas) {
         } else if (pctIMC >= 10) {
           if (nivelGeral === NORMAL) nivelGeral = LEVE
           linhas.push('PERDA DE IMC PARCIAL (10–25% do IMC inicial): RESULTADO INSUFICIENTE PARA O ESPERADO NA BARIÁTRICA. REAVALIAR ADESÃO À DIETA, ATIVIDADE FÍSICA E POSSÍVEL FALHA PARCIAL DA CIRURGIA.')
-          alertas.push({ nivel: LEVE, texto: `PERDA DE IMC PARCIAL: ${pctIMC.toFixed(0)}% — INSUFICIENTE.` })
+          alertas.push({ codigo: 'ponderal.perda_de_imc_parcial', nivel: LEVE, texto: `PERDA DE IMC PARCIAL: ${pctIMC.toFixed(0)}% — INSUFICIENTE.` })
         } else {
           if (nivelGeral !== GRAVE) nivelGeral = MODERADO
           linhas.push('PERDA DE IMC MUITO AQUÉM DO ESPERADO (< 10% do IMC inicial): RESULTADO INSATISFATÓRIO DA CIRURGIA. INVESTIGAR ADESÃO, TÉCNICA CIRÚRGICA OU NECESSIDADE DE CIRURGIA REVISIONAL.')
-          alertas.push({ nivel: MODERADO, texto: `PERDA DE IMC AQUÉM: apenas ${pctIMC.toFixed(0)}%.` })
+          alertas.push({ codigo: 'ponderal.perda_de_imc_aquem_apenas', nivel: MODERADO, texto: `PERDA DE IMC AQUÉM: apenas ${pctIMC.toFixed(0)}%.` })
         }
       } else if (deltaIMC < 0) {
         const ganhoAbs = Math.abs(deltaIMC)
@@ -1173,15 +1173,15 @@ function buildModPonderal(dados, alertas) {
         if (ganhoPct > 10) {
           nivelGeral = GRAVE
           linhas.push('REGANHO EXPRESSIVO DO IMC (> 10% acima do IMC pré-cirúrgico): FALHA BARIÁTRICA SIGNIFICATIVA. AVALIAÇÃO PARA REVISÃO CIRÚRGICA, ACOMPANHAMENTO PSICOLÓGICO E TERAPIA FARMACOLÓGICA ADJUVANTE.')
-          alertas.push({ nivel: GRAVE, texto: `REGANHO DE IMC EXPRESSIVO: +${ganhoPct.toFixed(0)}%.` })
+          alertas.push({ codigo: 'ponderal.reganho_de_imc_expressivo', nivel: GRAVE, texto: `REGANHO DE IMC EXPRESSIVO: +${ganhoPct.toFixed(0)}%.` })
         } else if (ganhoPct > 5) {
           if (nivelGeral !== GRAVE) nivelGeral = MODERADO
           linhas.push('REGANHO MODERADO DO IMC (5–10% acima do IMC inicial): INTERVENÇÃO NECESSÁRIA. REAVALIAR PADRÃO ALIMENTAR, ATIVIDADE FÍSICA E CONSIDERAR FARMACOTERAPIA.')
-          alertas.push({ nivel: MODERADO, texto: `REGANHO DE IMC: +${ganhoPct.toFixed(0)}%.` })
+          alertas.push({ codigo: 'ponderal.reganho_de_imc', nivel: MODERADO, texto: `REGANHO DE IMC: +${ganhoPct.toFixed(0)}%.` })
         } else {
           if (nivelGeral === NORMAL) nivelGeral = LEVE
           linhas.push('REGANHO LEVE DO IMC (até 5% acima do IMC inicial): MONITORAR. ATENÇÃO AO PADRÃO ALIMENTAR E ROTINA DE EXERCÍCIOS.')
-          alertas.push({ nivel: LEVE, texto: `REGANHO LEVE DE IMC: +${ganhoPct.toFixed(0)}%.` })
+          alertas.push({ codigo: 'ponderal.reganho_leve_de_imc', nivel: LEVE, texto: `REGANHO LEVE DE IMC: +${ganhoPct.toFixed(0)}%.` })
         }
       } else {
         linhas.push('IMC ATUAL IGUAL AO PRÉ-CIRÚRGICO: AVALIAR SE HÁ OSCILAÇÃO RECENTE OU SE A CIRURGIA NÃO TEVE O IMPACTO PONDERAL ESPERADO.')
@@ -1225,13 +1225,13 @@ function buildModPonderal(dados, alertas) {
       // P1 — baixo peso / perda excessiva
       if (meta === 'GANHAR') {
         linhas.push('PERDA DE PESO EXCESSIVA — IMC ATUAL ABAIXO DO IDEAL. COMO VOCÊ DESEJA GANHAR PESO, BUSQUE AVALIAÇÃO DO CIRURGIÃO E DE ENDOCRINOLOGISTA OU METABOLOGISTA PARA ORIENTAR A RECUPERAÇÃO PONDERAL COM SEGURANÇA.')
-        alertas.push({ nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20) + META GANHAR: buscar cirurgião e endocrinologista/metabologista.' })
+        alertas.push({ codigo: 'ponderal.baixo_peso_imc_20_meta_ganhar_buscar_cirurgia', nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20) + META GANHAR: buscar cirurgião e endocrinologista/metabologista.' })
       } else if (meta === 'MANTER') {
         linhas.push('SEU IMC ESTÁ ABAIXO DO IDEAL E VOCÊ DESEJA MANTER O PESO. BUSQUE AVALIAÇÃO DE ENDOCRINOLOGISTA/NUTRÓLOGO — NESSE NÍVEL DE IMC A MANUTENÇÃO PODE NÃO SER SEGURA.')
-        alertas.push({ nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20) + META MANTER: avaliação de endocrinologista/nutrólogo.' })
+        alertas.push({ codigo: 'ponderal.baixo_peso_imc_20_meta_manter_avaliacao_de_en', nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20) + META MANTER: avaliação de endocrinologista/nutrólogo.' })
       } else {
         linhas.push('ATENÇÃO: SEU IMC JÁ ESTÁ ABAIXO DO IDEAL E VOCÊ DESEJA PERDER MAIS PESO — ISSO PODE SER PERIGOSO. BUSQUE AVALIAÇÃO MÉDICA (ENDOCRINOLOGISTA/METABOLOGISTA).')
-        alertas.push({ nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20) + META PERDER: avaliação médica — pode ser perigoso.' })
+        alertas.push({ codigo: 'ponderal.baixo_peso_imc_20_meta_perder_avaliacao_medic', nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20) + META PERDER: avaliação médica — pode ser perigoso.' })
       }
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     } else if (pctSobreNadir !== null && pctSobreNadir > 15) {
@@ -1243,7 +1243,7 @@ function buildModPonderal(dados, alertas) {
       } else {
         linhas.push('VOCÊ DESEJA GANHAR PESO, MAS HÁ REGANHO SIGNIFICATIVO (MAIS DE 15% SOBRE O MENOR PESO). O GANHO DEVE SER SUPERVISIONADO POR NUTRÓLOGO PARA NÃO COMPROMETER O RESULTADO DA CIRURGIA.')
       }
-      alertas.push({ nivel: MODERADO, texto: `REGANHO > 15% SOBRE O MENOR PESO + META ${metaLabel}: orientação de nutrólogo.` })
+      alertas.push({ codigo: 'ponderal.reganho_15_sobre_o_menor_peso_meta', nivel: MODERADO, texto: `REGANHO > 15% SOBRE O MENOR PESO + META ${metaLabel}: orientação de nutrólogo.` })
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     } else if (pctSobreNadir !== null) {
       // P3 — controlado (reganho <= 15%) e IMC ok (>= 20 ou desconhecido)
@@ -1263,11 +1263,11 @@ function buildModPonderal(dados, alertas) {
     if (!isNaN(imcAtualVer) && imcAtualVer < 20) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('IMC ATUAL ABAIXO DO IDEAL (PERDA DE PESO POSSIVELMENTE EXCESSIVA): BUSQUE AVALIAÇÃO MÉDICA (ENDOCRINOLOGISTA/NUTRÓLOGO) PARA AVALIAR A RECUPERAÇÃO PONDERAL.')
-      alertas.push({ nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20): avaliação médica para recuperação ponderal.' })
+      alertas.push({ codigo: 'ponderal.baixo_peso_imc_20_avaliacao_medica_para_recup', nivel: MODERADO, texto: 'BAIXO PESO (IMC < 20): avaliação médica para recuperação ponderal.' })
     } else if (pctSobreNadir !== null && pctSobreNadir > 15) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('REGANHO SIGNIFICATIVO (MAIS DE 15% SOBRE O MENOR PESO PÓS-CIRURGIA): PROCURE ORIENTAÇÃO DE NUTRÓLOGO PARA AVALIAR A TENDÊNCIA DE GANHO.')
-      alertas.push({ nivel: MODERADO, texto: 'REGANHO > 15% SOBRE O MENOR PESO: orientação de nutrólogo.' })
+      alertas.push({ codigo: 'ponderal.reganho_15_sobre_o_menor_peso_orientacao_de_n', nivel: MODERADO, texto: 'REGANHO > 15% SOBRE O MENOR PESO: orientação de nutrólogo.' })
     }
   }
 
@@ -1315,11 +1315,11 @@ function buildModVascular(dados, alertas, suger) {
     }
     if (usouAnticoa && !usaAnticoa) {
       linhas.push('MESMO QUE VOCÊ TENHA INTERROMPIDO O ANTICOAGULANTE COM ORIENTAÇÃO MÉDICA, VOCÊ PODE ESTAR EM RISCO DE NOVA TROMBOSE: ISSO MERECE AVALIAÇÃO MÉDICA O MAIS RÁPIDO POSSÍVEL.')
-      alertas.push({ nivel: MODERADO, texto: 'TROMBOSE PRÉVIA COM ANTICOAGULANTE JÁ INTERROMPIDO — risco de nova trombose; avaliação médica o quanto antes.' })
+      alertas.push({ codigo: 'vascular.trombose_previa_com_anticoagulante_ja_interro', nivel: MODERADO, texto: 'TROMBOSE PRÉVIA COM ANTICOAGULANTE JÁ INTERROMPIDO — risco de nova trombose; avaliação médica o quanto antes.' })
     }
     linhas.push('NA INVESTIGAÇÃO DA TROMBOSE COM HEMATOLOGISTA, O D-DÍMERO PODE AUXILIAR (POR EXEMPLO, NA DEFINIÇÃO DA DURAÇÃO DA ANTICOAGULAÇÃO E NA AVALIAÇÃO DE TROMBOFILIA). HISTÓRICO DE COVID-19 REFORÇA ESSA INVESTIGAÇÃO.')
     suger.push('D-DÍMERO (NA AVALIAÇÃO COM HEMATOLOGISTA)')
-    alertas.push({ nivel: GRAVE, texto: 'HISTÓRICO DE TROMBOSE COM RISCO AUMENTADO DE TEV NO BARIÁTRICO.' })
+    alertas.push({ codigo: 'vascular.historico_de_trombose_com_risco_aumentado_de', nivel: GRAVE, texto: 'HISTÓRICO DE TROMBOSE COM RISCO AUMENTADO DE TEV NO BARIÁTRICO.' })
   }
 
   if (varizes) {
@@ -1334,7 +1334,7 @@ function buildModVascular(dados, alertas, suger) {
     temAlgo = true
     nivelGeral = GRAVE
     linhas.push('VARIZES DE ESÔFAGO: INDICAM HIPERTENSÃO PORTAL, FREQUENTEMENTE ASSOCIADA A CIRROSE HEPÁTICA OU OUTRAS HEPATOPATIAS. NO BRASIL, A ESQUISTOSSOMOSE (S. MANSONI) É CAUSA IMPORTANTE DE HIPERTENSÃO PORTAL. AVALIAÇÃO GASTROENTEROLÓGICA E HEPATOLÓGICA URGENTE.')
-    alertas.push({ nivel: GRAVE, texto: 'VARIZES DE ESÔFAGO — INVESTIGAR HIPERTENSÃO PORTAL E HEPATOPATIA (INCL. ESQUISTOSSOMOSE).' })
+    alertas.push({ codigo: 'vascular.varizes_de_esofago_investigar_hipertensao_por', nivel: GRAVE, texto: 'VARIZES DE ESÔFAGO — INVESTIGAR HIPERTENSÃO PORTAL E HEPATOPATIA (INCL. ESQUISTOSSOMOSE).' })
     suger.push('ENDOSCOPIA DIGESTIVA ALTA')
     suger.push('ECOGRAFIA ABDOMINAL COM DOPPLER PORTAL')
     suger.push('AVALIAÇÃO COM HEPATOLOGISTA')
@@ -1350,12 +1350,12 @@ function buildModVascular(dados, alertas, suger) {
     temAlgo = true
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     linhas.push('HIPERTENSÃO ARTERIAL SISTÊMICA: AVALIAR SE HOUVE MELHORA COM A PERDA DE PESO. MUITOS BARIÁTRICOS ENTRAM EM REMISSÃO DA HAS. SE AINDA HIPERTENSO, REVISAR MEDICAÇÃO COM CARDIOLOGISTA.')
-    alertas.push({ nivel: LEVE, texto: 'HIPERTENSÃO ARTERIAL — AVALIAR NECESSIDADE DE AJUSTE MEDICAMENTOSO.' })
+    alertas.push({ codigo: 'vascular.hipertensao_arterial_avaliar_necessidade_de_a', nivel: LEVE, texto: 'HIPERTENSÃO ARTERIAL — AVALIAR NECESSIDADE DE AJUSTE MEDICAMENTOSO.' })
   } else if (pressao === 'HIPOTENSÃO') {
     temAlgo = true
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     linhas.push('HIPOTENSÃO ARTERIAL: COMUM NO PÓS-BARIÁTRICO POR DESHIDRATAÇÃO, DESNUTRIÇÃO PROTEICA OU AJUSTE EXCESSIVO DE ANTI-HIPERTENSIVOS. REVISÃO MEDICAMENTOSA INDICADA.')
-    alertas.push({ nivel: LEVE, texto: 'HIPOTENSÃO — REVISAR MEDICAÇÃO E HIDRATAÇÃO.' })
+    alertas.push({ codigo: 'vascular.hipotensao_revisar_medicacao_e_hidratacao', nivel: LEVE, texto: 'HIPOTENSÃO — REVISAR MEDICAÇÃO E HIDRATAÇÃO.' })
   }
 
   // Sequelas trombóticas e síndrome pós-COVID
@@ -1369,7 +1369,7 @@ function buildModVascular(dados, alertas, suger) {
     if (dados.trombose === true && fibroCount >= 2) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('SUSPEITA DE SÍNDROME PÓS-COVID: A COMBINAÇÃO DE COVID-19 PRÉVIA, EVENTO TROMBÓTICO E MÚLTIPLOS SINTOMAS (FADIGA, DORES, ALTERAÇÕES COGNITIVAS E DE HUMOR) LEVANTA A POSSIBILIDADE DE SÍNDROME PÓS-COVID — DOENÇA DA PROTEÍNA SPIKE E COVID-LONGA. IMPORTANTE AFASTAR ESSA HIPÓTESE COM AVALIAÇÃO MÉDICA ESPECÍFICA.')
-      alertas.push({ nivel: MODERADO, texto: 'POSSÍVEL SÍNDROME PÓS-COVID (PROTEÍNA SPIKE / COVID-LONGA) — IMPORTANTE AFASTAR ESSA POSSIBILIDADE.' })
+      alertas.push({ codigo: 'vascular.possivel_sindrome_pos_covid_proteina_spike_co', nivel: MODERADO, texto: 'POSSÍVEL SÍNDROME PÓS-COVID (PROTEÍNA SPIKE / COVID-LONGA) — IMPORTANTE AFASTAR ESSA POSSIBILIDADE.' })
     }
   }
 
@@ -1420,7 +1420,7 @@ function buildModOsseo(dados, ex, alertas, suger) {
   if (osseo === 'OSTEOPOROSE') {
     nivelGeral = GRAVE
     linhas.push('OSTEOPOROSE CONFIRMADA: A SÍNDROME DISABSORTIVA BARIÁTRICA, SOMADA À DEFICIÊNCIA DE VITAMINA D, CÁLCIO E VITAMINA K, PODE ACELERAR A PERDA ÓSSEA. TRATAMENTO ESPECÍFICO NECESSÁRIO (BIFOSFONATOS, DENOSUMAB OU TERIPARATIDA CONFORME AVALIAÇÃO). ATENÇÃO: BIFOSFONATOS ORAIS PODEM CAUSAR ÚLCERAS ESOFÁGICAS — PREFERIR VIA ENDOVENOSA NO BARIÁTRICO.')
-    alertas.push({ nivel: GRAVE, texto: 'OSTEOPOROSE — TRATAMENTO ESPECÍFICO NECESSÁRIO. AVALIAR VIA DE REPOSIÇÃO DE CÁLCIO E VITAMINA D.' })
+    alertas.push({ codigo: 'osseo.osteoporose_tratamento_especifico_necessario', nivel: GRAVE, texto: 'OSTEOPOROSE — TRATAMENTO ESPECÍFICO NECESSÁRIO. AVALIAR VIA DE REPOSIÇÃO DE CÁLCIO E VITAMINA D.' })
     suger.push('DENSITOMETRIA ÓSSEA (SE NÃO RECENTE)')
     suger.push('PTH INTACTO')
     suger.push('CÁLCIO SÉRICO')
@@ -1428,7 +1428,7 @@ function buildModOsseo(dados, ex, alertas, suger) {
   } else if (osseo === 'OSTEOPENIA') {
     nivelGeral = MODERADO
     linhas.push('OSTEOPENIA: ESTÁGIO INICIAL DE PERDA ÓSSEA. NO BARIÁTRICO, A PROGRESSÃO PARA OSTEOPOROSE É RISCO REAL SEM SUPLEMENTAÇÃO ADEQUADA. CITRATO DE CÁLCIO 1.200–1.500 MG/DIA + VITAMINA D PARA META ≥ 30 NG/ML. MONITORAR COM DENSITOMETRIA ANUALMENTE.')
-    alertas.push({ nivel: MODERADO, texto: 'OSTEOPENIA — SUPLEMENTAÇÃO DE CÁLCIO E VITAMINA D OBRIGATÓRIA.' })
+    alertas.push({ codigo: 'osseo.osteopenia_suplementacao_de_calcio_e_vitamina', nivel: MODERADO, texto: 'OSTEOPENIA — SUPLEMENTAÇÃO DE CÁLCIO E VITAMINA D OBRIGATÓRIA.' })
     suger.push('DENSITOMETRIA ÓSSEA (ANUAL)')
   } else if (osseo === 'DENSITOMETRIA ÓSSEA NORMAL') {
     linhas.push('DENSITOMETRIA ÓSSEA NORMAL: MANTER SUPLEMENTAÇÃO PREVENTIVA DE CÁLCIO E VITAMINA D. REPETIR DENSITOMETRIA EM 2 ANOS.')
@@ -1448,7 +1448,7 @@ function buildModOsseo(dados, ex, alertas, suger) {
   if (dental === 'PERDI MAIS DE UM DENTE APÓS A CIRURGIA') {
     if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     linhas.push('PERDA DE DENTES SIGNIFICATIVA: PODE SER MANIFESTAÇÃO DE DEFICIÊNCIA DE VITAMINA D, CÁLCIO E VITAMINA C CRÔNICA, ALÉM DE REFLUXO ÁCIDO E HÁBITOS ALIMENTARES PÓS-BARIÁTRICOS. AVALIAÇÃO ODONTOLÓGICA E INVESTIGAÇÃO NUTRICIONAL.')
-    alertas.push({ nivel: MODERADO, texto: 'PERDA DENTÁRIA SIGNIFICATIVA — INVESTIGAR DEFICIÊNCIAS NUTRICIONAIS.' })
+    alertas.push({ codigo: 'osseo.perda_dentaria_significativa_investigar_defic', nivel: MODERADO, texto: 'PERDA DENTÁRIA SIGNIFICATIVA — INVESTIGAR DEFICIÊNCIAS NUTRICIONAIS.' })
   } else if (dental === 'PRECISO TRATAMENTO ODONTOLÓGICO') {
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     linhas.push('PROBLEMAS DENTÁRIOS FREQUENTES: ASSOCIADOS À ACIDEZ BUCAL (REFLUXO), DEFICIÊNCIA DE CÁLCIO E VITAMINA D, E VÔMITOS FREQUENTES. AVALIAÇÃO ODONTOLÓGICA E CONTROLE DO REFLUXO INDICADOS.')
@@ -1499,7 +1499,7 @@ function buildModOsseo(dados, ex, alertas, suger) {
       if (!isNaN(ca) && ca > cCa.max) {
         // Entidade DIFERENTE da cascata da deficiência — alerta próprio.
         linhas.push(`PTH ELEVADO (${pth} PG/ML) COM CÁLCIO ALTO: PADRÃO SUGESTIVO DE HIPERPARATIREOIDISMO PRIMÁRIO. INVESTIGAÇÃO ENDOCRINOLÓGICA INDICADA.`)
-        alertas.push({ nivel: GRAVE, texto: 'PTH E CÁLCIO ELEVADOS — INVESTIGAR HIPERPARATIREOIDISMO PRIMÁRIO.' })
+        alertas.push({ codigo: 'osseo.pth_e_calcio_elevados_investigar_hiperparatir', nivel: GRAVE, texto: 'PTH E CÁLCIO ELEVADOS — INVESTIGAR HIPERPARATIREOIDISMO PRIMÁRIO.' })
         subirNivel(GRAVE)
       } else {
         const grave = vitDCritica || caBaixo
@@ -1520,7 +1520,7 @@ function buildModOsseo(dados, ex, alertas, suger) {
 
   // UM alerta para toda a cascata da deficiência (não um por componente).
   if (cascata.length) {
-    alertas.push({ nivel: cascataGrave ? GRAVE : MODERADO, texto:
+    alertas.push({ codigo: 'osseo.cascata_osseo_mineral_da_deficiencia', nivel: cascataGrave ? GRAVE : MODERADO, texto:
       `CASCATA ÓSSEO-MINERAL DA DEFICIÊNCIA (${cascata.join(' + ')}) — UMA MESMA CAUSA (DEFICIÊNCIA DE VITAMINA D E CÁLCIO NO BARIÁTRICO). CORRIGIR NA ORDEM: MAGNÉSIO PRIMEIRO, DEPOIS CITRATO DE CÁLCIO E VITAMINA D (META ≥ 30 NG/ML); REAVALIAR O PTH APÓS A CORREÇÃO.` })
   }
 
@@ -1582,7 +1582,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
       // elevado dosado, o alerta de lá já diz "hipotireoidismo — avaliar" e este
       // seria um 2º moderado pelo MESMO diagnóstico (2 moderados = estado RUIM).
       if (!(!isNaN(tsh) && tsh > REF.tsh.hipotireoidismo)) {
-        alertas.push({ nivel: MODERADO, texto: 'HIPOTIREOIDISMO DECLARADO SEM LEVOTIROXINA REGISTRADA — CONFIRMAR SE HÁ REPOSIÇÃO EM CURSO. NÃO TRATADO, DIFICULTA A PERDA DE PESO E AGRAVA ANEMIA E FADIGA.' })
+        alertas.push({ codigo: 'hormonal.hipotireoidismo_declarado_sem_levotiroxina_re', nivel: MODERADO, texto: 'HIPOTIREOIDISMO DECLARADO SEM LEVOTIROXINA REGISTRADA — CONFIRMAR SE HÁ REPOSIÇÃO EM CURSO. NÃO TRATADO, DIFICULTA A PERDA DE PESO E AGRAVA ANEMIA E FADIGA.' })
       }
     }
   }
@@ -1602,7 +1602,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
       // armadilha de contagem que assombra o resto do arquivo.
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push(`ATENÇÃO — A SUA VITAMINA B12 ESTÁ BAIXA (${b12Hash} pg/mL) E VOCÊ TEM HASHIMOTO: NÃO ATRIBUA ISSO AUTOMATICAMENTE À CIRURGIA. A COMBINAÇÃO DAS DUAS COISAS LEVANTA A SUSPEITA DE GASTRITE ATRÓFICA AUTOIMUNE / ANEMIA PERNICIOSA, QUE É UMA CAUSA DIFERENTE, VITALÍCIA, E QUE EXIGE VIGILÂNCIA PRÓPRIA DO ESTÔMAGO. VALE INVESTIGAR COM ANTICORPOS ANTI-CÉLULA PARIETAL E ANTI-FATOR INTRÍNSECO E COM A GASTRINA SÉRICA — O TRATAMENTO É PARENTERAL E PARA A VIDA TODA.`)
-      alertas.push({ nivel: MODERADO, texto: `HASHIMOTO + B12 BAIXA (${b12Hash} pg/mL) — NÃO ATRIBUIR SÓ À CIRURGIA: INVESTIGAR GASTRITE ATRÓFICA AUTOIMUNE / ANEMIA PERNICIOSA (ANTI-CÉLULA PARIETAL, ANTI-FATOR INTRÍNSECO, GASTRINA). CAUSA VITALÍCIA, COM VIGILÂNCIA GÁSTRICA PRÓPRIA.` })
+      alertas.push({ codigo: 'hormonal.hashimoto_b12_baixa', nivel: MODERADO, texto: `HASHIMOTO + B12 BAIXA (${b12Hash} pg/mL) — NÃO ATRIBUIR SÓ À CIRURGIA: INVESTIGAR GASTRITE ATRÓFICA AUTOIMUNE / ANEMIA PERNICIOSA (ANTI-CÉLULA PARIETAL, ANTI-FATOR INTRÍNSECO, GASTRINA). CAUSA VITALÍCIA, COM VIGILÂNCIA GÁSTRICA PRÓPRIA.` })
       suger.push('ANTICORPO ANTI-CÉLULA PARIETAL')
       suger.push('ANTICORPO ANTI-FATOR INTRÍNSECO')
       suger.push('GASTRINA SÉRICA')
@@ -1622,7 +1622,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
     if (teveTrombose) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('ATENÇÃO — VOCÊ FAZ REPOSIÇÃO HORMONAL E TEM HISTÓRICO DE TROMBOSE: O ESTROGÊNIO POR VIA ORAL AUMENTA O RISCO DE UM NOVO EVENTO TROMBÓTICO, PORQUE PASSA PELO FÍGADO E ALTERA A COAGULAÇÃO. ISSO NÃO SIGNIFICA PARAR NADA POR CONTA PRÓPRIA — SIGNIFICA LEVAR ESSA COMBINAÇÃO AO SEU MÉDICO COM PRIORIDADE. A VIA TRANSDÉRMICA (ADESIVO OU GEL) NÃO TEM ESSE EFEITO DE PRIMEIRA PASSAGEM E COSTUMA SER A PREFERIDA PARA QUEM JÁ TROMBOSOU.')
-      alertas.push({ nivel: MODERADO, texto: 'REPOSIÇÃO HORMONAL + HISTÓRICO DE TROMBOSE — O ESTROGÊNIO ORAL ELEVA O RISCO DE NOVO EVENTO. REVER VIA (TRANSDÉRMICA NÃO TEM 1ª PASSAGEM HEPÁTICA) E INDICAÇÃO COM O MÉDICO. NÃO SUSPENDER POR CONTA PRÓPRIA.' })
+      alertas.push({ codigo: 'hormonal.reposicao_hormonal_historico_de_trombose_o_es', nivel: MODERADO, texto: 'REPOSIÇÃO HORMONAL + HISTÓRICO DE TROMBOSE — O ESTROGÊNIO ORAL ELEVA O RISCO DE NOVO EVENTO. REVER VIA (TRANSDÉRMICA NÃO TEM 1ª PASSAGEM HEPÁTICA) E INDICAÇÃO COM O MÉDICO. NÃO SUSPENDER POR CONTA PRÓPRIA.' })
     } else {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('VOCÊ FAZ REPOSIÇÃO HORMONAL: NO PÓS-BARIÁTRICO ELA TEM UM BENEFÍCIO EXTRA — PROTEGE O OSSO, QUE JÁ PERDE MASSA POR CONTA DA CIRURGIA. MANTENHA O ACOMPANHAMENTO E INFORME AO SEU MÉDICO QUALQUER HISTÓRICO DE TROMBOSE, SEU OU DA FAMÍLIA, PORQUE ISSO MUDA A VIA RECOMENDADA (ORAL × ADESIVO/GEL).')
@@ -1674,7 +1674,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
     if (!isNaN(testo) && testo > 900) trtFatos.push(`TESTOSTERONA ${testo} ng/dL — DOSE EXCESSIVA (ALIMENTA A ERITROCITOSE)`)
     else if (!isNaN(testo) && testo < REF.testoM.baixo) trtFatos.push(`TESTOSTERONA ${testo} ng/dL APESAR DA REPOSIÇÃO — REVER DOSE/INTERVALO E CONFERIR O MOMENTO DA COLETA NO CICLO`)
     const trtGrave = hbAlta || dados.trombose || (!isNaN(testo) && (testo > 900 || testo < REF.testoM.baixo))
-    alertas.push({ nivel: trtGrave ? MODERADO : LEVE, texto:
+    alertas.push({ codigo: 'hormonal.reposicao_de_testosterona_monitorar_hematocri', nivel: trtGrave ? MODERADO : LEVE, texto:
       `REPOSIÇÃO DE TESTOSTERONA — MONITORAR HEMATÓCRITO E NÃO USAR A HEMOGLOBINA PARA AVALIAR O FERRO (ELA MASCARA A ANEMIA: USAR FERRITINA/SATURAÇÃO). REAVALIAR INDICAÇÃO E DOSE APÓS A PERDA DE PESO (A OBESIDADE CAUSAVA PARTE DO HIPOGONADISMO).${trtFatos.length ? ' ' + trtFatos.join('. ') + '.' : ''}` })
   }
 
@@ -1682,7 +1682,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
     temAlgo = true
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     linhas.push('VOCÊ DECLAROU HIPERTIREOIDISMO: DUAS ARMADILHAS NO PÓS-BARIÁTRICO. A PRIMEIRA É CONFUNDIR O EMAGRECIMENTO DA TIREOIDE ACELERADA COM O SUCESSO DA CIRURGIA — SÃO COISAS DIFERENTES E A PRIMEIRA PRECISA DE TRATAMENTO. A SEGUNDA É O OSSO: O EXCESSO DE HORMÔNIO TIREOIDIANO ACELERA A PERDA DE MASSA ÓSSEA, QUE JÁ É UM PONTO FRÁGIL DEPOIS DA CIRURGIA — OS DOIS EFEITOS SE SOMAM. MANTENHA O ACOMPANHAMENTO ENDOCRINOLÓGICO.')
-    alertas.push({ nivel: LEVE, texto: 'HIPERTIREOIDISMO DECLARADO — O EMAGRECIMENTO PODE NÃO SER SÓ DA CIRURGIA; E A PERDA ÓSSEA SOMA-SE À DO PÓS-BARIÁTRICO. ACOMPANHAMENTO ENDOCRINOLÓGICO.' })
+    alertas.push({ codigo: 'hormonal.hipertireoidismo_declarado_o_emagrecimento_po', nivel: LEVE, texto: 'HIPERTIREOIDISMO DECLARADO — O EMAGRECIMENTO PODE NÃO SER SÓ DA CIRURGIA; E A PERDA ÓSSEA SOMA-SE À DO PÓS-BARIÁTRICO. ACOMPANHAMENTO ENDOCRINOLÓGICO.' })
     if (isNaN(tsh)) suger.push('TSH')
   }
 
@@ -1693,13 +1693,13 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
     if (tsh > REF.tsh.hipotireoidismo) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('TSH ELEVADO: COMPATÍVEL COM HIPOTIREOIDISMO. NO BARIÁTRICO, O HIPOTIREOIDISMO PODE DIFICULTAR A PERDA DE PESO E AGRAVAR A ANEMIA. AVALIAÇÃO COM ENDOCRINOLOGISTA.')
-      alertas.push({ nivel: MODERADO, texto: `TSH ELEVADO: ${tsh} mcUI/mL — HIPOTIREOIDISMO. AVALIAR COM ENDOCRINOLOGISTA.` })
+      alertas.push({ codigo: 'hormonal.tsh_elevado', nivel: MODERADO, texto: `TSH ELEVADO: ${tsh} mcUI/mL — HIPOTIREOIDISMO. AVALIAR COM ENDOCRINOLOGISTA.` })
       suger.push('T4 LIVRE')
       suger.push('ANTI-TPO')
     } else if (tsh < REF.tsh.hipertireoidismo) {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('TSH SUPRIMIDO: COMPATÍVEL COM HIPERTIREOIDISMO OU USO DE LEVOTIROXINA EM DOSE EXCESSIVA. AVALIAÇÃO COM ENDOCRINOLOGISTA.')
-      alertas.push({ nivel: LEVE, texto: `TSH SUPRIMIDO: ${tsh} mcUI/mL — AVALIAR HIPERTIREOIDISMO.` })
+      alertas.push({ codigo: 'hormonal.tsh_suprimido', nivel: LEVE, texto: `TSH SUPRIMIDO: ${tsh} mcUI/mL — AVALIAR HIPERTIREOIDISMO.` })
       suger.push('T4 LIVRE')
       suger.push('T3 TOTAL')
     } else {
@@ -1714,17 +1714,17 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
     if (!isNaN(tsh)) {
       if (tsh > REF.tsh.hipotireoidismo) {
         linhas.push('EM USO DE TIROXINA COM TSH AINDA ELEVADO: DOSE INSUFICIENTE OU ABSORÇÃO COMPROMETIDA PELA CIRURGIA BARIÁTRICA. CONSIDERAR AUMENTO DE DOSE OU FORMULAÇÃO LÍQUIDA/SUBLINGUAL. AVALIAÇÃO COM ENDOCRINOLOGISTA.')
-        alertas.push({ nivel: MODERADO, texto: 'TIROXINA EM USO MAS TSH AINDA ALTO — AJUSTE DE DOSE NECESSÁRIO.' })
+        alertas.push({ codigo: 'hormonal.tiroxina_em_uso_mas_tsh_ainda_alto_ajuste_de', nivel: MODERADO, texto: 'TIROXINA EM USO MAS TSH AINDA ALTO — AJUSTE DE DOSE NECESSÁRIO.' })
       } else if (tsh < REF.tsh.hipertireoidismo) {
         linhas.push('EM USO DE TIROXINA COM TSH SUPRIMIDO: DOSE EXCESSIVA. RISCO DE FIBRILAÇÃO ATRIAL E PERDA ÓSSEA. REDUZIR DOSE COM ENDOCRINOLOGISTA.')
-        alertas.push({ nivel: MODERADO, texto: 'TIROXINA EM DOSE EXCESSIVA — TSH SUPRIMIDO. AJUSTAR.' })
+        alertas.push({ codigo: 'hormonal.tiroxina_em_dose_excessiva_tsh_suprimido_ajus', nivel: MODERADO, texto: 'TIROXINA EM DOSE EXCESSIVA — TSH SUPRIMIDO. AJUSTAR.' })
       } else {
         linhas.push('EM USO DE TIROXINA COM TSH CONTROLADO: DOSE ADEQUADA. MANTER MONITORAMENTO SEMESTRAL.')
       }
     } else {
       linhas.push('EM USO DE TIROXINA SEM TSH DOSADO: SOLICITAR TSH PARA AJUSTE DE DOSE. NO BARIÁTRICO, A ABSORÇÃO PODE VARIAR E A DOSE PRÉ-CIRURGIA PODE SER INSUFICIENTE.')
       suger.push('TSH')
-      alertas.push({ nivel: LEVE, texto: 'TIROXINA EM USO — SOLICITAR TSH PARA CONTROLE.' })
+      alertas.push({ codigo: 'hormonal.tiroxina_em_uso_solicitar_tsh_para_controle', nivel: LEVE, texto: 'TIROXINA EM USO — SOLICITAR TSH PARA CONTROLE.' })
     }
   }
 
@@ -1741,7 +1741,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
         linhas.push('TESTOSTERONA BAIXA APESAR DA REPOSIÇÃO: A DOSE OU O INTERVALO PODEM NÃO ESTAR ADEQUADOS — OU A COLETA FOI FEITA NO FIM DO CICLO (O NÍVEL CAI ANTES DA PRÓXIMA APLICAÇÃO). LEVE O RESULTADO AO PRESCRITOR E CONFIRME EM QUE MOMENTO DO CICLO O SANGUE FOI COLHIDO — ISSO MUDA A INTERPRETAÇÃO.')
       } else {
         linhas.push('TESTOSTERONA BAIXA (HIPOGONADISMO MASCULINO): CAUSA FREQUENTE EM BARIÁTRICOS. PODE RESULTAR DE DEFICIÊNCIA DE ZINCO, VITAMINA D E OBESIDADE RESIDUAL. SUPLEMENTAÇÃO DE TESTOSTERONA PODE AGRAVAR ERITROCITOSE E HAS — AVALIAÇÃO COM UROLOGISTA OU ENDOCRINOLOGISTA.')
-        alertas.push({ nivel: MODERADO, texto: `TESTOSTERONA BAIXA: ${testo} ng/dL — AVALIAR HIPOGONADISMO.` })
+        alertas.push({ codigo: 'hormonal.testosterona_baixa', nivel: MODERADO, texto: `TESTOSTERONA BAIXA: ${testo} ng/dL — AVALIAR HIPOGONADISMO.` })
         suger.push('LH, FSH, PROLACTINA')
       }
     } else if (testo > 900) {
@@ -1754,7 +1754,7 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
         if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       } else {
         linhas.push('TESTOSTERONA ELEVADA (> 900 ng/dL): VERIFICAR USO DE ANABOLIZANTES OU TESTOSTERONA EXÓGENA. PODE PRODUZIR ERITROCITOSE.')
-        alertas.push({ nivel: LEVE, texto: 'TESTOSTERONA ELEVADA — VERIFICAR USO DE ANABOLIZANTES.' })
+        alertas.push({ codigo: 'hormonal.testosterona_elevada_verificar_uso_de_anaboli', nivel: LEVE, texto: 'TESTOSTERONA ELEVADA — VERIFICAR USO DE ANABOLIZANTES.' })
       }
     } else {
       linhas.push('TESTOSTERONA DENTRO DA FAIXA NORMAL MASCULINA.')
@@ -1772,10 +1772,10 @@ function buildModHormonal(ex, dados, sexo, idade, alertas, suger, resultadoEritr
         // outro: a reposição não está alcançando o alvo (e no bariátrico a absorção
         // do comprimido é uma causa provável disso).
         linhas.push('ESTRADIOL BAIXO EM QUEM JÁ FAZ REPOSIÇÃO HORMONAL: A DOSE PODE NÃO ESTAR SENDO SUFICIENTE OU NÃO ESTAR SENDO BEM ABSORVIDA — E NO PÓS-BARIÁTRICO A ABSORÇÃO DO COMPRIMIDO É UMA CAUSA PROVÁVEL. LEVE ESTE RESULTADO AO SEU MÉDICO PARA REVER DOSE E VIA (O ADESIVO OU GEL NÃO DEPENDEM DO INTESTINO).')
-        alertas.push({ nivel: LEVE, texto: 'ESTRADIOL BAIXO APESAR DA REPOSIÇÃO HORMONAL — REVER DOSE E VIA (A ABSORÇÃO ORAL É REDUZIDA NO PÓS-BARIÁTRICO; VIA TRANSDÉRMICA NÃO DEPENDE DO INTESTINO).' })
+        alertas.push({ codigo: 'hormonal.estradiol_baixo_apesar_da_reposicao_hormonal', nivel: LEVE, texto: 'ESTRADIOL BAIXO APESAR DA REPOSIÇÃO HORMONAL — REVER DOSE E VIA (A ABSORÇÃO ORAL É REDUZIDA NO PÓS-BARIÁTRICO; VIA TRANSDÉRMICA NÃO DEPENDE DO INTESTINO).' })
       } else {
         linhas.push('ESTRADIOL BAIXO EM MULHER ≥ 40 ANOS: COMPATÍVEL COM MENOPAUSA OU INSUFICIÊNCIA OVARIANA. AVALIAR INDICAÇÃO DE TERAPIA HORMONAL — IMPORTANTE PARA PREVENÇÃO DA OSTEOPOROSE NO CONTEXTO BARIÁTRICO.')
-        alertas.push({ nivel: LEVE, texto: 'ESTRADIOL BAIXO — AVALIAR INDICAÇÃO DE TERAPIA HORMONAL NA MENOPAUSA.' })
+        alertas.push({ codigo: 'hormonal.estradiol_baixo_avaliar_indicacao_de_terapia', nivel: LEVE, texto: 'ESTRADIOL BAIXO — AVALIAR INDICAÇÃO DE TERAPIA HORMONAL NA MENOPAUSA.' })
         suger.push('FSH, LH (SE NÃO MENOPAUSA CONFIRMADA)')
       }
     } else {
@@ -1823,7 +1823,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
         if (psa >= 0.2) {
           nivelGeral = GRAVE
           linhas.push(`PSA ${psa} ng/mL DEPOIS DA CIRURGIA DE PRÓSTATA: ATENÇÃO — ESTE VALOR NÃO PODE SER LIDO PELA TABELA NORMAL. QUEM RETIROU A PRÓSTATA NÃO TEM DE ONDE PRODUZIR PSA, ENTÃO O ESPERADO É QUE ELE SEJA INDETECTÁVEL. QUALQUER VALOR A PARTIR DE 0,2 CARACTERIZA RECIDIVA BIOQUÍMICA E EXIGE AVALIAÇÃO UROLÓGICA/ONCOLÓGICA SEM DEMORA — MESMO PARECENDO "BAIXO" NUMA TABELA COMUM.`)
-          alertas.push({ nivel: GRAVE, texto: `PSA ${psa} ng/mL EM PACIENTE PROSTATECTOMIZADO — RECIDIVA BIOQUÍMICA (O ALVO É INDETECTÁVEL, ≥0,2 JÁ É RECIDIVA). AVALIAÇÃO UROLÓGICA/ONCOLÓGICA SEM DEMORA. NÃO LER PELO CORTE DE 4 ng/mL.` })
+          alertas.push({ codigo: 'oncologico.ng_ml_em_paciente_prostatectomizado_recidiva', nivel: GRAVE, texto: `PSA ${psa} ng/mL EM PACIENTE PROSTATECTOMIZADO — RECIDIVA BIOQUÍMICA (O ALVO É INDETECTÁVEL, ≥0,2 JÁ É RECIDIVA). AVALIAÇÃO UROLÓGICA/ONCOLÓGICA SEM DEMORA. NÃO LER PELO CORTE DE 4 ng/mL.` })
           suger.push('AVALIAÇÃO COM UROLOGISTA/ONCOLOGISTA (RECIDIVA BIOQUÍMICA PÓS-PROSTATECTOMIA)')
         } else {
           linhas.push(`PSA ${psa} ng/mL DEPOIS DA CIRURGIA DE PRÓSTATA: INDETECTÁVEL OU MUITO BAIXO, QUE É EXATAMENTE O ESPERADO PARA QUEM RETIROU A PRÓSTATA. MANTENHA O SEGUIMENTO NA PERIODICIDADE COMBINADA COM O SEU UROLOGISTA — O QUE IMPORTA AQUI É A TENDÊNCIA AO LONGO DO TEMPO, NÃO UM VALOR ISOLADO.`)
@@ -1833,7 +1833,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
         // para decidir aqui; o que NÃO se pode é aplicar o corte de 4.
         linhas.push(`PSA ${psa} ng/mL APÓS RADIOTERAPIA DE PRÓSTATA: ESTE VALOR NÃO DEVE SER LIDO PELA TABELA COMUM (< 4). DEPOIS DA RADIOTERAPIA A PRÓSTATA CONTINUA NO LUGAR E O PSA NÃO ZERA — O CONTROLE É FEITO COMPARANDO COM O SEU MENOR VALOR JÁ ATINGIDO (O "NADIR"): UMA SUBIDA DE 2 PONTOS ACIMA DELE INDICA RECIDIVA. LEVE O HISTÓRICO DOS SEUS PSAs AO UROLOGISTA — SEM OS VALORES ANTERIORES, NENHUM PSA ISOLADO DIZ SE ESTÁ TUDO BEM.`)
         if (nivelGeral !== GRAVE) nivelGeral = MODERADO
-        alertas.push({ nivel: MODERADO, texto: `PSA ${psa} ng/mL APÓS RADIOTERAPIA — NÃO APLICAR O CORTE DE 4. O CONTROLE É PELO NADIR + 2 (CRITÉRIO DE PHOENIX): LEVAR O HISTÓRICO DE PSAs AO UROLOGISTA.` })
+        alertas.push({ codigo: 'oncologico.ng_ml_apos_radioterapia_nao_aplicar_o_corte_d', nivel: MODERADO, texto: `PSA ${psa} ng/mL APÓS RADIOTERAPIA — NÃO APLICAR O CORTE DE 4. O CONTROLE É PELO NADIR + 2 (CRITÉRIO DE PHOENIX): LEVAR O HISTÓRICO DE PSAs AO UROLOGISTA.` })
         suger.push('AVALIAÇÃO COM UROLOGISTA')
       } else if (psa > REF.psa.alto) {
         nivelGeral = GRAVE
@@ -1842,7 +1842,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
         linhas.push(temCaProstata
           ? 'PSA MUITO ELEVADO (> 10 ng/mL) COM CÂNCER DE PRÓSTATA JÁ DIAGNOSTICADO: ESTE VALOR PRECISA CHEGAR À SUA EQUIPE ONCOLÓGICA/UROLÓGICA SEM DEMORA — PODE INDICAR DOENÇA EM ATIVIDADE OU PROGRESSÃO.'
           : 'PSA MUITO ELEVADO (> 10 ng/mL): RISCO AUMENTADO DE CÂNCER DE PRÓSTATA. AVALIAÇÃO UROLÓGICA URGENTE COM BIÓPSIA.')
-        alertas.push({ nivel: GRAVE, texto: `PSA MUITO ELEVADO: ${psa} ng/mL — AVALIAÇÃO UROLÓGICA URGENTE.${temCaProstata ? ' CÂNCER JÁ DIAGNOSTICADO: LEVAR À EQUIPE (POSSÍVEL ATIVIDADE/PROGRESSÃO).' : ''}` })
+        alertas.push({ codigo: 'oncologico.psa_muito_elevado', nivel: GRAVE, texto: `PSA MUITO ELEVADO: ${psa} ng/mL — AVALIAÇÃO UROLÓGICA URGENTE.${temCaProstata ? ' CÂNCER JÁ DIAGNOSTICADO: LEVAR À EQUIPE (POSSÍVEL ATIVIDADE/PROGRESSÃO).' : ''}` })
         suger.push('AVALIAÇÃO COM UROLOGISTA')
         if (!temCaProstata) suger.push('PSA LIVRE / PSA TOTAL RATIO')
       } else if (psa > REF.psa.normal) {
@@ -1850,7 +1850,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
         linhas.push(temCaProstata
           ? 'PSA ENTRE 4 E 10 ng/mL COM CÂNCER DE PRÓSTATA JÁ DIAGNOSTICADO: LEVE ESTE VALOR AO SEU UROLOGISTA/ONCOLOGISTA — EM QUEM JÁ TEM O DIAGNÓSTICO, O QUE IMPORTA É A COMPARAÇÃO COM OS SEUS EXAMES ANTERIORES, NÃO A TABELA.'
           : 'PSA ELEVADO (4–10 ng/mL): ZONA CINZENTA. AVALIAÇÃO COM UROLOGISTA E CONSIDERAR PSA LIVRE, RESSONÂNCIA DE PRÓSTATA E BIÓPSIA.')
-        alertas.push({ nivel: MODERADO, texto: `PSA ELEVADO: ${psa} ng/mL — AVALIAÇÃO UROLÓGICA NECESSÁRIA.` })
+        alertas.push({ codigo: 'oncologico.psa_elevado', nivel: MODERADO, texto: `PSA ELEVADO: ${psa} ng/mL — AVALIAÇÃO UROLÓGICA NECESSÁRIA.` })
         suger.push('AVALIAÇÃO COM UROLOGISTA')
         if (!temCaProstata) suger.push('PSA LIVRE')
       } else {
@@ -1867,7 +1867,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
       if (ca199 > 37) {
         if (nivelGeral !== GRAVE) nivelGeral = MODERADO
         linhas.push('CA 19-9 ELEVADO (> 37 U/mL): MARCADOR DE NEOPLASIAS DO TRATO GASTROINTESTINAL (PÂNCREAS, VIAS BILIARES). AVALIAÇÃO COM ONCOLOGISTA. TAMBÉM PODE ESTAR ELEVADO EM PANCREATITES E COLANGITES — CORRELACIONAR COM CLÍNICA E IMAGEM.')
-        alertas.push({ nivel: MODERADO, texto: `CA 19-9 ELEVADO: ${ca199} U/mL — INVESTIGAR NEOPLASIA ABDOMINAL.` })
+        alertas.push({ codigo: 'oncologico.ca_19_9_elevado', nivel: MODERADO, texto: `CA 19-9 ELEVADO: ${ca199} U/mL — INVESTIGAR NEOPLASIA ABDOMINAL.` })
         suger.push('ECOGRAFIA ABDOMINAL')
         suger.push('TOMOGRAFIA DE ABDOME COM CONTRASTE')
         suger.push('AVALIAÇÃO COM ONCOLOGISTA')
@@ -1886,7 +1886,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
       if (cea > limCea) {
         if (nivelGeral !== GRAVE) nivelGeral = MODERADO
         linhas.push(`CEA ELEVADO (> ${limCea} ng/mL): MARCADOR ASSOCIADO A CÂNCER COLORRETAL, GÁSTRICO E PULMONAR. TABAGISMO TAMBÉM ELEVA CEA. AVALIAR COM ONCOLOGISTA. COLONOSCOPIA INDICADA SE NÃO RECENTE.`)
-        alertas.push({ nivel: MODERADO, texto: `CEA ELEVADO: ${cea} ng/mL — INVESTIGAR NEOPLASIA.` })
+        alertas.push({ codigo: 'oncologico.cea_elevado', nivel: MODERADO, texto: `CEA ELEVADO: ${cea} ng/mL — INVESTIGAR NEOPLASIA.` })
         suger.push('COLONOSCOPIA')
         suger.push('AVALIAÇÃO COM ONCOLOGISTA')
       } else {
@@ -1918,7 +1918,7 @@ function buildModOncologico(ex, dados, sexo, idade, alertas, suger) {
 function buildModIdeacao(dados, alertas, suger) {
   const qs = [dados.queixa_principal, ...(dados.queixas_secundarias || [])]
   if (!qs.includes('IDEAÇÃO SUICIDA')) return null
-  alertas.push({ nivel: GRAVE, texto: 'IDEAÇÃO SUICIDA RELATADA — SITUAÇÃO CRÍTICA. AJUDA IMEDIATA: CVV 188 (24H) / EMERGÊNCIA 192. ENCAMINHAMENTO URGENTE A PSIQUIATRA/PSICÓLOGO.' })
+  alertas.push({ codigo: 'ideacao.ideacao_suicida_relatada_situacao_critica_aju', nivel: GRAVE, texto: 'IDEAÇÃO SUICIDA RELATADA — SITUAÇÃO CRÍTICA. AJUDA IMEDIATA: CVV 188 (24H) / EMERGÊNCIA 192. ENCAMINHAMENTO URGENTE A PSIQUIATRA/PSICÓLOGO.' })
   suger.push('AVALIAÇÃO PSIQUIÁTRICA URGENTE')
   return {
     id: 'ideacao',
@@ -2085,7 +2085,7 @@ function buildModInfeccoes(dados, alertas) {
     if (dados.ebv_status === 'CRÔNICA') {
       bump(MODERADO)
       linhas.push('EPSTEIN-BARR CRÔNICO ATIVO: RARO E RELEVANTE (ASSOCIAÇÃO COM SÍNDROMES LINFOPROLIFERATIVAS) — AVALIAÇÃO COM HEMATOLOGISTA/INFECTOLOGISTA.')
-      alertas.push({ nivel: MODERADO, texto: 'EPSTEIN-BARR CRÔNICO ATIVO — AVALIAÇÃO COM HEMATOLOGISTA/INFECTOLOGISTA (RISCO LINFOPROLIFERATIVO).' })
+      alertas.push({ codigo: 'infeccoes.epstein_barr_cronico_ativo_avaliacao_com_hema', nivel: MODERADO, texto: 'EPSTEIN-BARR CRÔNICO ATIVO — AVALIAÇÃO COM HEMATOLOGISTA/INFECTOLOGISTA (RISCO LINFOPROLIFERATIVO).' })
     } else {
       bump(LEVE)
       linhas.push('EPSTEIN-BARR' + (dados.ebv_status === 'RESOLVIDA' ? ' (RESOLVIDA)' : '') + ': MONONUCLEOSE PRÉVIA — SEM IMPLICAÇÃO ATUAL.')
@@ -2096,7 +2096,7 @@ function buildModInfeccoes(dados, alertas) {
     if (dados.htlv_ativa) {
       bump(GRAVE)
       linhas.push('HTLV I/II (DOENÇA ATIVA): RELEVÂNCIA HEMATOLÓGICA DIRETA — ASSOCIAÇÃO COM LEUCEMIA/LINFOMA DE CÉLULAS T DO ADULTO E COM MIELOPATIA (HAM/TSP). SEGUIMENTO COM HEMATOLOGISTA E INFECTOLOGISTA. NÃO DOE SANGUE NEM ÓRGÃOS; ATENÇÃO À TRANSMISSÃO PELA AMAMENTAÇÃO.')
-      alertas.push({ nivel: GRAVE, texto: 'HTLV I/II ATIVO — AVALIAÇÃO HEMATOLÓGICA (RISCO DE LEUCEMIA/LINFOMA T E MIELOPATIA).' })
+      alertas.push({ codigo: 'infeccoes.htlv_i_ii_ativo_avaliacao_hematologica_risco', nivel: GRAVE, texto: 'HTLV I/II ATIVO — AVALIAÇÃO HEMATOLÓGICA (RISCO DE LEUCEMIA/LINFOMA T E MIELOPATIA).' })
     } else {
       bump(MODERADO)
       linhas.push('HTLV I/II: RELEVÂNCIA HEMATOLÓGICA — SEGUIMENTO COM HEMATOLOGISTA/INFECTOLOGISTA; NÃO DOAR SANGUE NEM ÓRGÃOS.')
@@ -2138,7 +2138,7 @@ function buildModComportamental(dados, alertas, suger) {
     nivelGeral = GRAVE
     linhas.push('COMPULSÃO POR ÁLCOOL: A SÍNDROME DE TRANSFERÊNCIA DE ADIÇÃO (ADDICTION TRANSFER) É RECONHECIDA NO PÓS-BARIÁTRICO. O ÁLCOOL É ABSORVIDO MAIS RÁPIDO E PRODUZ PICOS MAIORES DE ALCOOLEMIA NO BARIÁTRICO. AVALIAÇÃO COM PSIQUIATRA E ENCAMINHAMENTO PARA GRUPO DE APOIO (ALCOÓLICOS ANÔNIMOS). O ÁLCOOL AGRAVA DEFICIÊNCIAS DE TIAMINA, FOLATOS E PRODUZ DANO HEPÁTICO ACELERADO.')
     linhas.push('ALERTA: USO DE ÁLCOOL NO BARIÁTRICO ELEVA RISCO DE CÂNCER DE ESÔFAGO, CIRROSE E VARIZES ESOFAGIANAS.')
-    alertas.push({ nivel: GRAVE, texto: 'COMPULSÃO POR ÁLCOOL no pós-bariátrico (transferência de adição) — avaliação com psiquiatra e grupo de apoio.' })
+    alertas.push({ codigo: 'comportamental.compulsao_por_alcool_no_pos_bariatrico_transf', nivel: GRAVE, texto: 'COMPULSÃO POR ÁLCOOL no pós-bariátrico (transferência de adição) — avaliação com psiquiatra e grupo de apoio.' })
     suger.push('AVALIAÇÃO COM PSIQUIATRA (compulsão por álcool)')
   }
 
@@ -2157,7 +2157,7 @@ function buildModComportamental(dados, alertas, suger) {
       // poderosos..." do módulo fibromiálgico, que ela lê no mesmo relatório.
       linhas.push('VOCÊ TAMBÉM REGISTROU USO DE CANNABIS MEDICINAL: AS DUAS COISAS NÃO SE ANULAM. O CANABINOIDE PRESCRITO E ACOMPANHADO TEM PAPEL TERAPÊUTICO RECONHECIDO (VEJA O CARD DO STATUS FIBROMIÁLGICO) — O QUE ESTÁ EM QUESTÃO AQUI NÃO É A SUBSTÂNCIA, É A PERDA DE CONTROLE SOBRE O USO. LEVE ESSE PONTO AO MÉDICO QUE ACOMPANHA A SUA PRESCRIÇÃO: DOSE, VIA E FINALIDADE PRECISAM SER REVISTAS COM ELE, NÃO AJUSTADAS POR CONTA PRÓPRIA.')
     }
-    alertas.push({ nivel: MODERADO, texto: `COMPULSÃO POR CANNABIS no pós-bariátrico (possível transferência de adição) — aumenta o apetite (risco de reganho) e o uso crônico pode causar hiperemese canabinoide, confundível com dumping/estenose.${usaMedicinal ? ' Paciente também em uso MEDICINAL: revisar dose/finalidade com o prescritor (o problema é a perda de controle, não a substância).' : ''}` })
+    alertas.push({ codigo: 'comportamental.compulsao_por_cannabis_no_pos_bariatrico_poss', nivel: MODERADO, texto: `COMPULSÃO POR CANNABIS no pós-bariátrico (possível transferência de adição) — aumenta o apetite (risco de reganho) e o uso crônico pode causar hiperemese canabinoide, confundível com dumping/estenose.${usaMedicinal ? ' Paciente também em uso MEDICINAL: revisar dose/finalidade com o prescritor (o problema é a perda de controle, não a substância).' : ''}` })
     suger.push('AVALIAÇÃO COM PSIQUIATRA (compulsão por cannabis)')
   }
 
@@ -2165,7 +2165,7 @@ function buildModComportamental(dados, alertas, suger) {
     temAlgo = true
     if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     linhas.push('COMPULSÃO ALIMENTAR POR DOCES OU COMIDA: FATOR DE RISCO PARA REGANHO DE PESO. AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA ESPECIALIZADO EM COMPULSÃO ALIMENTAR. SÍNDROME DE DUMPING TARDIA PODE MIMETIZAR COMPULSÃO POR DOCES.')
-    alertas.push({ nivel: MODERADO, texto: 'COMPULSÃO ALIMENTAR (doces/comida) — fator de risco para reganho de peso; avaliação especializada.' })
+    alertas.push({ codigo: 'comportamental.compulsao_alimentar_doces_comida_fator_de_ris', nivel: MODERADO, texto: 'COMPULSÃO ALIMENTAR (doces/comida) — fator de risco para reganho de peso; avaliação especializada.' })
   }
 
   if (compulsoes.includes('GELO')) {
@@ -2179,7 +2179,7 @@ function buildModComportamental(dados, alertas, suger) {
     temAlgo = true
     if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     linhas.push('COMPULSÃO POR COMPRAS (ONIOMANIA): PODE REPRESENTAR TRANSFERÊNCIA DE ADIÇÃO NO PÓS-BARIÁTRICO, EM QUE O COMPORTAMENTO ALIMENTAR COMPULSIVO É SUBSTITUÍDO POR OUTRO COMPORTAMENTO COMPULSIVO. ALÉM DO SOFRIMENTO PSÍQUICO, TEM IMPACTO NEGATIVO SOBRE AS FINANÇAS PESSOAIS, COM RISCO DE ENDIVIDAMENTO EXCESSIVO, COMPROMETIMENTO DOS RECURSOS NECESSÁRIOS AO INVESTIMENTO NA PRÓPRIA SAÚDE (CONSULTAS, EXAMES E SUPLEMENTAÇÃO) E IMPACTO DELETÉRIO SOBRE O ORÇAMENTO FAMILIAR. AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA.')
-    alertas.push({ nivel: MODERADO, texto: 'COMPULSÃO POR COMPRAS (oniomania) — possível transferência de adição; impacto sobre finanças pessoais, risco de endividamento e do orçamento familiar; avaliação psicológica/psiquiátrica.' })
+    alertas.push({ codigo: 'comportamental.compulsao_por_compras_oniomania_possivel_tran', nivel: MODERADO, texto: 'COMPULSÃO POR COMPRAS (oniomania) — possível transferência de adição; impacto sobre finanças pessoais, risco de endividamento e do orçamento familiar; avaliação psicológica/psiquiátrica.' })
     suger.push('AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA (compulsão por compras)')
   }
 
@@ -2187,7 +2187,7 @@ function buildModComportamental(dados, alertas, suger) {
     temAlgo = true
     if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     linhas.push('COMPULSÃO POR JOGO (JOGO PATOLÓGICO / LUDOMANIA): PODE REPRESENTAR TRANSFERÊNCIA DE ADIÇÃO NO PÓS-BARIÁTRICO, EM QUE O COMPORTAMENTO ALIMENTAR COMPULSIVO É SUBSTITUÍDO POR OUTRO COMPORTAMENTO COMPULSIVO. ALÉM DO SOFRIMENTO PSÍQUICO, TEM IMPACTO NEGATIVO SOBRE AS FINANÇAS PESSOAIS, COM RISCO DE ENDIVIDAMENTO EXCESSIVO, COMPROMETIMENTO DOS RECURSOS NECESSÁRIOS AO INVESTIMENTO NA PRÓPRIA SAÚDE (CONSULTAS, EXAMES E SUPLEMENTAÇÃO) E IMPACTO DELETÉRIO SOBRE O ORÇAMENTO FAMILIAR. AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA E ENCAMINHAMENTO PARA GRUPO DE APOIO (JOGADORES ANÔNIMOS).')
-    alertas.push({ nivel: MODERADO, texto: 'COMPULSÃO POR JOGO (ludomania) — possível transferência de adição; impacto sobre finanças pessoais, risco de endividamento e do orçamento familiar; avaliação psicológica/psiquiátrica.' })
+    alertas.push({ codigo: 'comportamental.compulsao_por_jogo_ludomania_possivel_transfe', nivel: MODERADO, texto: 'COMPULSÃO POR JOGO (ludomania) — possível transferência de adição; impacto sobre finanças pessoais, risco de endividamento e do orçamento familiar; avaliação psicológica/psiquiátrica.' })
     suger.push('AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA (compulsão por jogo)')
   }
 
@@ -2233,7 +2233,7 @@ function buildModComportamental(dados, alertas, suger) {
     linhas.push('MONITORAMENTO RECOMENDADO: HIDRATAÇÃO DIÁRIA (MÍNIMO 2L), FUNÇÃO RENAL, BICARBONATO SÉRICO, SINTOMAS NEUROCOGNITIVOS E LITÍASE RENAL. NÃO É INDICADO COMO SUBSTITUTO DA INVESTIGAÇÃO DA CAUSA DO REGANHO (COMPORTAMENTAL, ANATÔMICA, NUTRICIONAL OU HORMONAL) — DEVE ENTRAR COMO COADJUVANTE.')
     if (dados.status_gestacional === 'GRÁVIDA' || dados.status_gestacional?.includes('GRÁVIDA')) {
       linhas.push('ATENÇÃO: TOPIRAMATO TEM ALERTA IMPORTANTE DE TERATOGENICIDADE. NÃO DEVE SER USADO NA GESTAÇÃO. SUSPENDER IMEDIATAMENTE SE GRAVIDEZ CONFIRMADA.')
-      alertas.push({ nivel: GRAVE, texto: 'TOPIRAMATO EM GESTANTE — TERATOGÊNICO. SUSPENDER IMEDIATAMENTE.' })
+      alertas.push({ codigo: 'comportamental.topiramato_em_gestante_teratogenico_suspender', nivel: GRAVE, texto: 'TOPIRAMATO EM GESTANTE — TERATOGÊNICO. SUSPENDER IMEDIATAMENTE.' })
     }
     suger.push('FUNÇÃO RENAL E BICARBONATO SÉRICO (TOPIRAMATO)')
     suger.push('ULTRASSONOGRAFIA RENAL (RASTREIO DE LITÍASE — TOPIRAMATO)')
@@ -2276,10 +2276,10 @@ function buildModGestacional(dados, mesesPos, alertas, suger) {
   const mesesAoEngravidar = semanas > 0 ? Math.max(0, Math.round(mesesPos - semanas / 4.345)) : mesesPos
   if (mesesAoEngravidar < 18) {
     linhas.push('GRAVIDEZ INICIADA DENTRO DE 18 MESES DA CIRURGIA BARIÁTRICA: PERÍODO DE MAIOR RISCO NUTRICIONAL. AS PRINCIPAIS SOCIEDADES (ASMBS, IFSO) RECOMENDAM AGUARDAR PELO MENOS 12–18 MESES APÓS A CIRURGIA PARA ENGRAVIDAR. RISCOS INCLUEM RESTRIÇÃO DE CRESCIMENTO INTRAUTERINO (RCIU), PREMATURIDADE E DEFICIÊNCIAS NUTRICIONAIS GRAVES PARA MÃE E BEBÊ.')
-    alertas.push({ nivel: GRAVE, texto: 'ENGRAVIDOU ANTES DE 18 MESES DA CIRURGIA — RECOMENDAÇÃO CRÍTICA INFRINGIDA. ALERTE O SEU OBSTETRA.' })
+    alertas.push({ codigo: 'gestacional.engravidou_antes_de_18_meses_da_cirurgia_reco', nivel: GRAVE, texto: 'ENGRAVIDOU ANTES DE 18 MESES DA CIRURGIA — RECOMENDAÇÃO CRÍTICA INFRINGIDA. ALERTE O SEU OBSTETRA.' })
   } else {
     linhas.push('GRAVIDEZ APÓS 18 MESES DA CIRURGIA: RISCO RELATIVO MENOR, MAS ACOMPANHAMENTO ESPECIALIZADO AINDA NECESSÁRIO. GRAVIDEZ PÓS-BARIÁTRICA É CONSIDERADA DE ALTO RISCO OBSTÉTRICO.')
-    alertas.push({ nivel: GRAVE, texto: 'GRAVIDEZ PÓS-BARIÁTRICA — PRÉ-NATAL DE ALTO RISCO OBRIGATÓRIO.' })
+    alertas.push({ codigo: 'gestacional.gravidez_pos_bariatrica_pre_natal_de_alto_ris', nivel: GRAVE, texto: 'GRAVIDEZ PÓS-BARIÁTRICA — PRÉ-NATAL DE ALTO RISCO OBRIGATÓRIO.' })
   }
 
   // Recomendações gestacionais
@@ -2334,7 +2334,7 @@ function buildModObstetrico(dados, alertas, suger) {
     if (n >= 4) {
       nivel = MODERADO
       linhas.push(`GRANDE MULTÍPARA (${n} GESTAÇÕES): DEPLEÇÃO CUMULATIVA DE FERRO POR GESTAÇÕES E LACTAÇÕES SUCESSIVAS — REFORÇA A NECESSIDADE DE REPOSIÇÃO E MONITORAMENTO DA FERRITINA.`)
-      alertas.push({ nivel: MODERADO, texto: `GRANDE MULTÍPARA (${n} gestações): depleção cumulativa de ferro — reforçar reposição.` })
+      alertas.push({ codigo: 'obstetrico.grande_multipara', nivel: MODERADO, texto: `GRANDE MULTÍPARA (${n} gestações): depleção cumulativa de ferro — reforçar reposição.` })
     } else {
       nivel = LEVE
       linhas.push(`HISTÓRICO DE ${n} GESTAÇÃO(ÕES): CADA GESTAÇÃO E LACTAÇÃO CONSOME FERRO — CONSIDERAR NO BALANÇO DA SIDEROPENIA.`)
@@ -2348,7 +2348,7 @@ function buildModObstetrico(dados, alertas, suger) {
     const repeticao = numAbortos >= 2
     nivel = repeticao ? GRAVE : MODERADO
     linhas.push(`HISTÓRICO DE ${numAbortos} ABORTAMENTO(S) ESPONTÂNEO(S): INFORMAÇÃO CRÍTICA. INVESTIGAR CAUSAS (TROMBOFILIA / SÍNDROME ANTIFOSFOLÍPIDE, DEFICIÊNCIAS NUTRICIONAIS), ESPECIALMENTE SE HOUVER HISTÓRICO DE TROMBOSE.`)
-    alertas.push({ nivel: repeticao ? GRAVE : MODERADO, texto: repeticao
+    alertas.push({ codigo: 'obstetrico.abortamentos_espontaneos_de_repeticao_2_infor', nivel: repeticao ? GRAVE : MODERADO, texto: repeticao
       ? 'ABORTAMENTOS ESPONTÂNEOS DE REPETIÇÃO (≥2) — INFORMAÇÃO CRÍTICA. INFORME O SEU OBSTETRA; INDICADA AVALIAÇÃO COM HEMATOLOGISTA.'
       : 'ABORTAMENTO ESPONTÂNEO — INFORME O SEU OBSTETRA; CONSIDERE AVALIAÇÃO COM HEMATOLOGISTA.' })
     suger.push('AVALIAÇÃO PARA TROMBOFILIA (SE ABORTAMENTOS DE REPETIÇÃO)')
@@ -2421,7 +2421,7 @@ function buildModGinecologico(dados, resultadoEritron, examesOBA, alertas, suger
     if (somaFerro) {
       linhas.push(`ESTE SANGRAMENTO JÁ SE REFLETE NO SEU FERRO (${textoFerro}) — TRATE A REPOSIÇÃO EM PARALELO À INVESTIGAÇÃO GINECOLÓGICA, SEM ESPERAR POR ELA. NO PÓS-BARIÁTRICO A VIA ORAL É LIMITADA; DISCUTA FERRO PARENTERAL.`)
     }
-    alertas.push({ nivel: GRAVE, texto: 'SANGRAMENTO APÓS A MENOPAUSA — INVESTIGAÇÃO GINECOLÓGICA PRIORITÁRIA PARA DESCARTAR CÂNCER DE ENDOMÉTRIO. ULTRASSONOGRAFIA TRANSVAGINAL INDICADA.' })
+    alertas.push({ codigo: 'ginecologico.sangramento_apos_a_menopausa_investigacao_gin', nivel: GRAVE, texto: 'SANGRAMENTO APÓS A MENOPAUSA — INVESTIGAÇÃO GINECOLÓGICA PRIORITÁRIA PARA DESCARTAR CÂNCER DE ENDOMÉTRIO. ULTRASSONOGRAFIA TRANSVAGINAL INDICADA.' })
     need.prioritaria = true
     need.motivos.push('SANGRAMENTO PÓS-MENOPAUSA')
     need.usTransvaginal = true
@@ -2517,7 +2517,7 @@ function buildSecaoSangramento(dados, { somaFerro, textoFerro, causaConhecida },
   // a causa do sangramento). Este alerta carrega tudo quando a causa é conhecida; o
   // alerta da seção B (achados) é suprimido nesse caso — senão 2 alertas do mesmo eixo.
   const sufixoCausa = causaConhecida ? ' A CAUSA PROVÁVEL JÁ FOI IDENTIFICADA (VER CARD) — TRATAR A DOENÇA DE BASE É PARTE DO TRATAMENTO DA ANEMIA.' : ''
-  alertas.push({ nivel, texto: (somaFerro
+  alertas.push({ codigo: 'secaoSangramento.com_repercussao_no_ferro_avaliacao_ginecologi', nivel, texto: (somaFerro
     ? `${comoTexto} COM REPERCUSSÃO NO FERRO — AVALIAÇÃO GINECOLÓGICA PARA TRATAR A CAUSA DA PERDA; SÓ REPOR FERRO NÃO RESOLVE.`
     : `${comoTexto} — PERDA DE FERRO QUE SOMA À DISABSORÇÃO BARIÁTRICA. AVALIAÇÃO GINECOLÓGICA E MONITORAMENTO DA FERRITINA.`) + sufixoCausa })
 
@@ -2561,7 +2561,7 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
     // Só alerta próprio quando NÃO há sangramento — se há, o alerta do sangramento
     // (seção A) já carrega "a causa provável foi identificada" (dedup da auditoria).
     if (!sangramento) {
-      alertas.push({ nivel: nivelS, texto: `${nomes}${somaFerro ? ' COM REPERCUSSÃO NO FERRO' : ''} — CAUSA DE PERDA MENSTRUAL QUE SOMA À DISABSORÇÃO BARIÁTRICA. ACOMPANHAMENTO GINECOLÓGICO; TRATAR A DOENÇA DE BASE É PARTE DO TRATAMENTO DA ANEMIA.` })
+      alertas.push({ codigo: 'secaoAchadosGineco.causa_de_perda_menstrual_que_soma_a_disabsorc', nivel: nivelS, texto: `${nomes}${somaFerro ? ' COM REPERCUSSÃO NO FERRO' : ''} — CAUSA DE PERDA MENSTRUAL QUE SOMA À DISABSORÇÃO BARIÁTRICA. ACOMPANHAMENTO GINECOLÓGICO; TRATAR A DOENÇA DE BASE É PARTE DO TRATAMENTO DA ANEMIA.` })
     }
     need.motivos.push(`ACOMPANHAMENTO DE ${nomes}`)
     need.usPelvico = true
@@ -2575,14 +2575,14 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
   if (tem('OVÁRIOS POLICÍSTICOS')) {
     bump(LEVE)
     linhas.push('OVÁRIOS POLICÍSTICOS (SOP): ASSOCIADA À RESISTÊNCIA INSULÍNICA E AO GANHO DE PESO — A CIRURGIA BARIÁTRICA COSTUMA MELHORAR A SOP E PODE RESTAURAR A FERTILIDADE (ATENÇÃO À CONTRACEPÇÃO NOS PRIMEIROS 18 MESES, QUANDO A GESTAÇÃO É DESACONSELHADA). A ANOVULAÇÃO DA SOP TAMBÉM CAUSA CICLOS IRREGULARES E, ÀS VEZES, SANGRAMENTO AUMENTADO. MANTENHA ACOMPANHAMENTO GINECOLÓGICO E CONTROLE METABÓLICO.')
-    alertas.push({ nivel: LEVE, texto: 'OVÁRIOS POLICÍSTICOS (SOP) — RESISTÊNCIA INSULÍNICA; A CIRURGIA PODE RESTAURAR A FERTILIDADE (ATENÇÃO À CONTRACEPÇÃO NOS PRIMEIROS 18 MESES). ACOMPANHAMENTO GINECOLÓGICO E METABÓLICO.' })
+    alertas.push({ codigo: 'secaoAchadosGineco.ovarios_policisticos_sop_resistencia_insulini', nivel: LEVE, texto: 'OVÁRIOS POLICÍSTICOS (SOP) — RESISTÊNCIA INSULÍNICA; A CIRURGIA PODE RESTAURAR A FERTILIDADE (ATENÇÃO À CONTRACEPÇÃO NOS PRIMEIROS 18 MESES). ACOMPANHAMENTO GINECOLÓGICO E METABÓLICO.' })
     need.motivos.push('ACOMPANHAMENTO DE SOP')
   }
 
   if (tem('CISTOS NAS MAMAS')) {
     bump(LEVE)
     linhas.push('CISTOS NAS MAMAS: NA GRANDE MAIORIA DAS VEZES SÃO BENIGNOS. MANTENHA O RASTREIO MAMOGRÁFICO/ULTRASSONOGRÁFICO NA PERIODICIDADE ORIENTADA PELO SEU GINECOLOGISTA.')
-    alertas.push({ nivel: LEVE, texto: 'CISTOS NAS MAMAS — EM REGRA BENIGNOS; MANTER O RASTREIO MAMOGRÁFICO/ULTRASSONOGRÁFICO NA PERIODICIDADE ORIENTADA.' })
+    alertas.push({ codigo: 'secaoAchadosGineco.cistos_nas_mamas_em_regra_benignos_manter_o_r', nivel: LEVE, texto: 'CISTOS NAS MAMAS — EM REGRA BENIGNOS; MANTER O RASTREIO MAMOGRÁFICO/ULTRASSONOGRÁFICO NA PERIODICIDADE ORIENTADA.' })
   }
 
   if (tem('CÂNCER DE MAMA')) {
@@ -2590,27 +2590,27 @@ function buildSecaoAchadosGineco(dados, { sangramento, somaFerro }, linhas, aler
     if (st === 'EM TRATAMENTO') {
       bump(GRAVE)
       linhas.push('CÂNCER DE MAMA EM TRATAMENTO: A QUIMIOTERAPIA DEPRIME A MEDULA ÓSSEA (ANEMIA, LEUCOPENIA, PLAQUETOPENIA) E ESSE EFEITO SE SOMA ÀS CARÊNCIAS DO PÓS-BARIÁTRICO — O SEU ERITRON PRECISA SER LIDO NESSE CONTEXTO, E O HEMOGRAMA MONITORADO DE PERTO. INFORME AO ONCOLOGISTA QUE VOCÊ É BARIÁTRICA: A ABSORÇÃO DE MEDICAMENTOS ORAIS E DE NUTRIENTES ESTÁ REDUZIDA. NÃO INICIE REPOSIÇÃO DE FERRO POR CONTA PRÓPRIA DURANTE O TRATAMENTO ONCOLÓGICO — ALINHE COM A EQUIPE.')
-      alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE MAMA EM TRATAMENTO — QUIMIOTERAPIA DEPRIME A MEDULA E SOMA-SE ÀS CARÊNCIAS BARIÁTRICAS. LER O ERITRON NESSE CONTEXTO; ALINHAR REPOSIÇÃO COM O ONCOLOGISTA.' })
+      alertas.push({ codigo: 'secaoAchadosGineco.cancer_de_mama_em_tratamento_quimioterapia_de', nivel: GRAVE, texto: 'CÂNCER DE MAMA EM TRATAMENTO — QUIMIOTERAPIA DEPRIME A MEDULA E SOMA-SE ÀS CARÊNCIAS BARIÁTRICAS. LER O ERITRON NESSE CONTEXTO; ALINHAR REPOSIÇÃO COM O ONCOLOGISTA.' })
     } else if (st === 'RESOLVIDO') {
       bump(MODERADO)
       linhas.push('CÂNCER DE MAMA (RESOLVIDO): MANTENHA O SEGUIMENTO ONCOLÓGICO E O RASTREIO. SE VOCÊ USA OU USOU TAMOXIFENO, SAIBA QUE ELE AUMENTA O RISCO DE ESPESSAMENTO E DE CÂNCER DO ENDOMÉTRIO E TAMBÉM DE TROMBOSE — QUALQUER SANGRAMENTO VAGINAL ANORMAL DEVE SER INVESTIGADO SEM DEMORA.')
       // Alerta MODERADO: antes o card ficava moderado mas NADA entrava no Estado
       // Geral nem no topo do card do médico — assimetria com endometriose/miomas,
       // que já alertavam no mesmo nível.
-      alertas.push({ nivel: MODERADO, texto: 'CÂNCER DE MAMA (RESOLVIDO) — MANTER SEGUIMENTO ONCOLÓGICO E RASTREIO. SE USOU/USA TAMOXIFENO: RISCO DE CÂNCER DE ENDOMÉTRIO E DE TROMBOSE — INVESTIGAR QUALQUER SANGRAMENTO VAGINAL ANORMAL.' })
+      alertas.push({ codigo: 'secaoAchadosGineco.cancer_de_mama_resolvido_manter_seguimento_on', nivel: MODERADO, texto: 'CÂNCER DE MAMA (RESOLVIDO) — MANTER SEGUIMENTO ONCOLÓGICO E RASTREIO. SE USOU/USA TAMOXIFENO: RISCO DE CÂNCER DE ENDOMÉTRIO E DE TROMBOSE — INVESTIGAR QUALQUER SANGRAMENTO VAGINAL ANORMAL.' })
     } else {
       // Status não respondido (o rádio não é obrigatório). Em tratamento e resolvido
       // pedem condutas MUITO diferentes — não presumir qual é: pedir o dado.
       bump(MODERADO)
       linhas.push('CÂNCER DE MAMA: VOCÊ NÃO INFORMOU SE O TRATAMENTO ESTÁ EM CURSO OU JÁ FOI CONCLUÍDO — ESSA INFORMAÇÃO MUDA A LEITURA DO SEU ERITRON (A QUIMIOTERAPIA DEPRIME A MEDULA ÓSSEA E ESSE EFEITO SE SOMA ÀS CARÊNCIAS DO PÓS-BARIÁTRICO). INFORME-A NA SUA PRÓXIMA AVALIAÇÃO OBA OU AO SEU MÉDICO. DE TODA FORMA: MANTENHA O SEGUIMENTO ONCOLÓGICO E O RASTREIO, E SE USA OU USOU TAMOXIFENO, SAIBA QUE ELE AUMENTA O RISCO DE CÂNCER DO ENDOMÉTRIO E DE TROMBOSE — QUALQUER SANGRAMENTO VAGINAL ANORMAL DEVE SER INVESTIGADO SEM DEMORA.')
-      alertas.push({ nivel: MODERADO, texto: 'CÂNCER DE MAMA — STATUS (EM TRATAMENTO / RESOLVIDO) NÃO INFORMADO. CONFIRMAR: SE HÁ QUIMIOTERAPIA EM CURSO, O ERITRON PRECISA SER LIDO NESSE CONTEXTO.' })
+      alertas.push({ codigo: 'secaoAchadosGineco.cancer_de_mama_status_em_tratamento_resolvido', nivel: MODERADO, texto: 'CÂNCER DE MAMA — STATUS (EM TRATAMENTO / RESOLVIDO) NÃO INFORMADO. CONFIRMAR: SE HÁ QUIMIOTERAPIA EM CURSO, O ERITRON PRECISA SER LIDO NESSE CONTEXTO.' })
     }
   }
 
   if (tem('MOLA HIDATIFORME')) {
     bump(GRAVE)
     linhas.push('MOLA HIDATIFORME: DOENÇA TROFOBLÁSTICA GESTACIONAL — EXIGE SEGUIMENTO COM BETA-HCG SERIADO ATÉ A NEGATIVAÇÃO E POR TODO O PERÍODO ORIENTADO PELO SEU MÉDICO, PELO RISCO DE NEOPLASIA TROFOBLÁSTICA (CORIOCARCINOMA). ENQUANTO O SEGUIMENTO ESTIVER EM CURSO, A GESTAÇÃO É CONTRAINDICADA (UMA NOVA GRAVIDEZ ELEVA O BETA-HCG E IMPEDE A INTERPRETAÇÃO DO CONTROLE). CONFIRME COM O SEU GINECOLOGISTA SE O SEU SEGUIMENTO FOI CONCLUÍDO.')
-    alertas.push({ nivel: GRAVE, texto: 'MOLA HIDATIFORME — CONFIRMAR SE O SEGUIMENTO COM BETA-HCG SERIADO FOI CONCLUÍDO (RISCO DE NEOPLASIA TROFOBLÁSTICA). GESTAÇÃO CONTRAINDICADA ENQUANTO EM SEGUIMENTO.' })
+    alertas.push({ codigo: 'secaoAchadosGineco.mola_hidatiforme_confirmar_se_o_seguimento_co', nivel: GRAVE, texto: 'MOLA HIDATIFORME — CONFIRMAR SE O SEGUIMENTO COM BETA-HCG SERIADO FOI CONCLUÍDO (RISCO DE NEOPLASIA TROFOBLÁSTICA). GESTAÇÃO CONTRAINDICADA ENQUANTO EM SEGUIMENTO.' })
     need.motivos.push('SEGUIMENTO DE DOENÇA TROFOBLÁSTICA')
     need.betaHcg = true
     need.prioritaria = true
@@ -2664,11 +2664,11 @@ function buildModArticular(dados, resultadoEritron, alertas, suger) {
     if (temAnemia) {
       bump(GRAVE)
       linhas.push('VOCÊ TEM ARTRITE E ANEMIA AO MESMO TEMPO: SÃO DOIS PROCESSOS QUE SE MISTURAM (A CARÊNCIA DE FERRO DA CIRURGIA E A INFLAMAÇÃO DA ARTRITE). SEPARAR AS DUAS CAUSAS EXIGE UM HEMATOLOGISTA — NÃO É PARA TRATAR SÓ COM FERRO SEM ENTENDER O QUANTO CADA UMA PESA.')
-      alertas.push({ nivel: GRAVE, texto: 'ARTRITE + ANEMIA — QUADRO MISTO (FERROPENIA BARIÁTRICA + ANEMIA DE DOENÇA CRÔNICA). AVALIAÇÃO HEMATOLÓGICA; A SATURAÇÃO DA TRANSFERRINA DISTINGUE MELHOR QUE A FERRITINA.' })
+      alertas.push({ codigo: 'articular.artrite_anemia_quadro_misto_ferropenia_bariat', nivel: GRAVE, texto: 'ARTRITE + ANEMIA — QUADRO MISTO (FERROPENIA BARIÁTRICA + ANEMIA DE DOENÇA CRÔNICA). AVALIAÇÃO HEMATOLÓGICA; A SATURAÇÃO DA TRANSFERRINA DISTINGUE MELHOR QUE A FERRITINA.' })
     } else if (!fanForte) {
       // O alerta da artrite sem anemia sai aqui — MAS se há FAN forte, ele é
       // consolidado no bloco do FAN abaixo (o FAN reforça, não duplica).
-      alertas.push({ nivel: MODERADO, texto: 'ARTRITE (INFLAMATÓRIA/AUTOIMUNE) — A INFLAMAÇÃO CRÔNICA CAUSA ANEMIA DE DOENÇA CRÔNICA E ELEVA A FERRITINA (MASCARA A FERROPENIA). USAR A SATURAÇÃO DA TRANSFERRINA PARA JULGAR O FERRO.' })
+      alertas.push({ codigo: 'articular.artrite_inflamatoria_autoimune_a_inflamacao_c', nivel: MODERADO, texto: 'ARTRITE (INFLAMATÓRIA/AUTOIMUNE) — A INFLAMAÇÃO CRÔNICA CAUSA ANEMIA DE DOENÇA CRÔNICA E ELEVA A FERRITINA (MASCARA A FERROPENIA). USAR A SATURAÇÃO DA TRANSFERRINA PARA JULGAR O FERRO.' })
     }
     suger.push('AVALIAÇÃO COM REUMATOLOGISTA')
   }
@@ -2688,7 +2688,7 @@ function buildModArticular(dados, resultadoEritron, alertas, suger) {
       // Sem anemia: um alerta MODERADO cobre o quadro autoimune (artrite + FAN
       // juntos, se houver artrite). Com anemia, o GRAVE da artrite já domina.
       if (!temAnemia) {
-        alertas.push({ nivel: MODERADO, texto: `${temArtrite ? 'ARTRITE + ' : ''}FAN REAGENTE ${titulo} (TÍTULO ALTO) — ${temArtrite ? 'QUADRO AUTOIMUNE (A INFLAMAÇÃO CAUSA ANEMIA DE DOENÇA CRÔNICA E MASCARA A FERROPENIA; USAR A SATURAÇÃO). ' : ''}REFORÇA A SUSPEITA DE DOENÇA AUTOIMUNE — AVALIAÇÃO REUMATOLÓGICA.` })
+        alertas.push({ codigo: 'articular.fan_reagente', nivel: MODERADO, texto: `${temArtrite ? 'ARTRITE + ' : ''}FAN REAGENTE ${titulo} (TÍTULO ALTO) — ${temArtrite ? 'QUADRO AUTOIMUNE (A INFLAMAÇÃO CAUSA ANEMIA DE DOENÇA CRÔNICA E MASCARA A FERROPENIA; USAR A SATURAÇÃO). ' : ''}REFORÇA A SUSPEITA DE DOENÇA AUTOIMUNE — AVALIAÇÃO REUMATOLÓGICA.` })
       }
       suger.push('AVALIAÇÃO COM REUMATOLOGISTA')
       suger.push('ANTI-DNA, ANTI-ENA E COMPLEMENTO (C3/C4) SE INDICADO PELO REUMATOLOGISTA')
@@ -2759,7 +2759,7 @@ function buildModAlergico(dados, alertas, suger) {
       // nossa quando o ósseo não vai empurrar a dele, senão aparecem duas.
       const osseoDecl = dados.status_osseo || ''
       if (!/OSTEOPOROSE|OSTEOPENIA/.test(osseoDecl)) suger.push('DENSITOMETRIA ÓSSEA')
-      alertas.push({ nivel: MODERADO, texto: 'ALERGIA A LEITE + BARIÁTRICO — PERDA DA PRINCIPAL FONTE DE CÁLCIO NUM PACIENTE QUE JÁ PERDE OSSO. GARANTIR CÁLCIO (CITRATO) E VIT. D; DENSITOMETRIA.' })
+      alertas.push({ codigo: 'alergico.alergia_a_leite_bariatrico_perda_da_principal', nivel: MODERADO, texto: 'ALERGIA A LEITE + BARIÁTRICO — PERDA DA PRINCIPAL FONTE DE CÁLCIO NUM PACIENTE QUE JÁ PERDE OSSO. GARANTIR CÁLCIO (CITRATO) E VIT. D; DENSITOMETRIA.' })
     }
 
     // Proteína: ovo, leite e (se vier no campo livre) carne/peixe são fontes-chave.
@@ -2803,7 +2803,7 @@ function buildModAlergico(dados, alertas, suger) {
     }
     // Só empurra um alerta se há substância concreta a evitar (não pela categoria solta).
     if (semAINE || temMed('DIPIRONA') || (temMed('OUTRA') && outroMed)) {
-      alertas.push({ nivel: LEVE, texto: `ALERGIA MEDICAMENTOSA DECLARADA (${med.filter(m => m !== 'PENICILINAS' && m !== 'CEFALOSPORINAS').join(', ') || 'ver anamnese'}) — CONSIDERAR ANTES DE QUALQUER PRESCRIÇÃO. ${semAINE ? 'AINEs/ASPIRINA JÁ SÃO DESACONSELHADOS NO BARIÁTRICO (SANGRAMENTO).' : ''}`.trim() })
+      alertas.push({ codigo: 'alergico.alergia_medicamentosa_declarada', nivel: LEVE, texto: `ALERGIA MEDICAMENTOSA DECLARADA (${med.filter(m => m !== 'PENICILINAS' && m !== 'CEFALOSPORINAS').join(', ') || 'ver anamnese'}) — CONSIDERAR ANTES DE QUALQUER PRESCRIÇÃO. ${semAINE ? 'AINEs/ASPIRINA JÁ SÃO DESACONSELHADOS NO BARIÁTRICO (SANGRAMENTO).' : ''}`.trim() })
     }
   }
 
@@ -2868,14 +2868,14 @@ function buildModProstatico(dados, alertas, suger) {
     if ((dados.status_hormonal || []).includes('REPOSIÇÃO DE TESTOSTERONA')) {
       bump(GRAVE)
       linhas.push('⚠ ATENÇÃO — VOCÊ DECLAROU CÂNCER DE PRÓSTATA E REPOSIÇÃO DE TESTOSTERONA AO MESMO TEMPO. O CÂNCER DE PRÓSTATA É, EM REGRA, ALIMENTADO PELA TESTOSTERONA: TANTO É ASSIM QUE UM DOS TRATAMENTOS CONSISTE JUSTAMENTE EM BLOQUEAR ESSE HORMÔNIO. REPOR TESTOSTERONA NESSE CONTEXTO É UMA DECISÃO DELICADA, QUE SÓ PODE SER TOMADA PELO UROLOGISTA/ONCOLOGISTA QUE ACOMPANHA O SEU CASO — E QUE PRECISA SABER DAS DUAS COISAS. NÃO SUSPENDA NADA POR CONTA PRÓPRIA: LEVE ESTA INFORMAÇÃO A ELE COM PRIORIDADE.')
-      alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA + REPOSIÇÃO DE TESTOSTERONA DECLARADOS JUNTOS — O TUMOR PROSTÁTICO É ANDROGÊNIO-DEPENDENTE (O BLOQUEIO HORMONAL É TRATAMENTO). CONFIRMAR COM O UROLOGISTA/ONCOLOGISTA SE A REPOSIÇÃO ESTÁ MESMO INDICADA. NÃO SUSPENDER POR CONTA PRÓPRIA.' })
+      alertas.push({ codigo: 'prostatico.cancer_de_prostata_reposicao_de_testosterona', nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA + REPOSIÇÃO DE TESTOSTERONA DECLARADOS JUNTOS — O TUMOR PROSTÁTICO É ANDROGÊNIO-DEPENDENTE (O BLOQUEIO HORMONAL É TRATAMENTO). CONFIRMAR COM O UROLOGISTA/ONCOLOGISTA SE A REPOSIÇÃO ESTÁ MESMO INDICADA. NÃO SUSPENDER POR CONTA PRÓPRIA.' })
       suger.push('AVALIAÇÃO COM UROLOGISTA/ONCOLOGISTA (REPOSIÇÃO DE TESTOSTERONA EM CÂNCER DE PRÓSTATA)')
     }
 
     // Bloqueio hormonal (privação de androgênio): bate nos DOIS eixos deste app.
     if (hormonal) {
       linhas.push('O SEU TRATAMENTO É O BLOQUEIO HORMONAL (PRIVAÇÃO DE ANDROGÊNIO), E ELE SOMA DOIS EFEITOS AO SEU CONTEXTO BARIÁTRICO. O PRIMEIRO É NO SANGUE: O BLOQUEIO CAUSA ANEMIA POR SI — ENTÃO A SUA ANEMIA PODE TER DUAS CAUSAS SOMADAS, E CORRIGIR SÓ O FERRO PODE NÃO RESOLVER TUDO. O SEGUNDO É NO OSSO: ELE ACELERA A PERDA DE MASSA ÓSSEA, QUE JÁ É UM PONTO FRÁGIL DEPOIS DA CIRURGIA — OS DOIS JUNTOS PEDEM DENSITOMETRIA E ATENÇÃO REDOBRADA A CÁLCIO E VITAMINA D.')
-      alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA EM BLOQUEIO HORMONAL — CAUSA ANEMIA (SOMA-SE À CARÊNCIA BARIÁTRICA) E ACELERA A PERDA ÓSSEA (SOMA-SE À DA CIRURGIA). LER O ERITRON NESSE CONTEXTO; DENSITOMETRIA E ATENÇÃO A CÁLCIO/VIT. D.' })
+      alertas.push({ codigo: 'prostatico.cancer_de_prostata_em_bloqueio_hormonal_causa', nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA EM BLOQUEIO HORMONAL — CAUSA ANEMIA (SOMA-SE À CARÊNCIA BARIÁTRICA) E ACELERA A PERDA ÓSSEA (SOMA-SE À DA CIRURGIA). LER O ERITRON NESSE CONTEXTO; DENSITOMETRIA E ATENÇÃO A CÁLCIO/VIT. D.' })
       // O módulo ósseo já sugere densitometria com sufixo próprio ("(SE NÃO RECENTE)"/
       // "(ANUAL)") quando status_osseo é OSTEOPOROSE/OSTEOPENIA — o dedup por Set não
       // reconhece como a mesma. Mesma guarda já usada no módulo alérgico (~l.2761).
@@ -2885,7 +2885,7 @@ function buildModProstatico(dados, alertas, suger) {
 
     if (quimio) {
       linhas.push('VOCÊ ESTÁ EM QUIMIOTERAPIA: ELA DEPRIME A MEDULA ÓSSEA (ANEMIA, QUEDA DE LEUCÓCITOS E DE PLAQUETAS), E ESSE EFEITO SE SOMA ÀS CARÊNCIAS DO PÓS-BARIÁTRICO — O SEU HEMOGRAMA PRECISA SER LIDO NESSE CONTEXTO E MONITORADO DE PERTO PELA SUA EQUIPE. NÃO INICIE REPOSIÇÃO DE FERRO POR CONTA PRÓPRIA DURANTE O TRATAMENTO: ALINHE COM O ONCOLOGISTA.')
-      alertas.push({ nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA EM QUIMIOTERAPIA — DEPRIME A MEDULA E SOMA-SE ÀS CARÊNCIAS BARIÁTRICAS. LER O ERITRON NESSE CONTEXTO; ALINHAR QUALQUER REPOSIÇÃO COM O ONCOLOGISTA.' })
+      alertas.push({ codigo: 'prostatico.cancer_de_prostata_em_quimioterapia_deprime_a', nivel: GRAVE, texto: 'CÂNCER DE PRÓSTATA EM QUIMIOTERAPIA — DEPRIME A MEDULA E SOMA-SE ÀS CARÊNCIAS BARIÁTRICAS. LER O ERITRON NESSE CONTEXTO; ALINHAR QUALQUER REPOSIÇÃO COM O ONCOLOGISTA.' })
     }
 
     if (vigilancia && !emTratamento) {
@@ -2916,7 +2916,7 @@ function buildModProstatico(dados, alertas, suger) {
   if (tem('HIPERPLASIA BENIGNA')) {
     bump(LEVE)
     linhas.push('HIPERPLASIA BENIGNA DA PRÓSTATA: CONDIÇÃO COMUM COM A IDADE E NÃO É CÂNCER. DOIS PONTOS ÚTEIS: ELA PODE ELEVAR O PSA SEM QUE HAJA TUMOR (POR ISSO O VALOR SEMPRE SE INTERPRETA COM O UROLOGISTA, NUNCA SOZINHO); E SE VOCÊ USA FINASTERIDA OU DUTASTERIDA, SAIBA QUE ESSES REMÉDIOS REDUZEM O PSA PELA METADE — O SEU UROLOGISTA PRECISA SABER PARA DOBRAR O VALOR NA HORA DE INTERPRETAR, SENÃO UM PSA "NORMAL" PODE ESCONDER UM PROBLEMA.')
-    alertas.push({ nivel: LEVE, texto: 'HIPERPLASIA BENIGNA DA PRÓSTATA — ELEVA O PSA SEM TUMOR; E FINASTERIDA/DUTASTERIDA REDUZEM O PSA PELA METADE (INFORMAR AO UROLOGISTA PARA A CORRETA INTERPRETAÇÃO).' })
+    alertas.push({ codigo: 'prostatico.hiperplasia_benigna_da_prostata_eleva_o_psa_s', nivel: LEVE, texto: 'HIPERPLASIA BENIGNA DA PRÓSTATA — ELEVA O PSA SEM TUMOR; E FINASTERIDA/DUTASTERIDA REDUZEM O PSA PELA METADE (INFORMAR AO UROLOGISTA PARA A CORRETA INTERPRETAÇÃO).' })
   }
 
   if (tem('OK. AVALIADO POR MÉDICO') && !tem('CÂNCER') && !tem('HIPERPLASIA BENIGNA')) {
@@ -2966,7 +2966,7 @@ function buildModRespiratorio(dados, examesOBA, alertas, suger) {
       linhas.push('SE VOCÊ JÁ PAROU DE FUMAR E MARCOU ESSA OPÇÃO POR CAUSA DO DPOC: PARABÉNS, A DECISÃO MAIS IMPORTANTE JÁ FOI TOMADA. O DPOC AINDA ASSIM PEDE ACOMPANHAMENTO PNEUMOLÓGICO, VACINAÇÃO EM DIA (GRIPE E PNEUMOCOCO) E ATENÇÃO AO CORTICOIDE ORAL REPETIDO, QUE PREJUDICA O OSSO — JÁ FRÁGIL NO PÓS-BARIÁTRICO.')
       suger.push('AVALIAÇÃO PNEUMOLÓGICA')
     }
-    alertas.push({ nivel: MODERADO, texto: 'TABAGISMO NO PÓS-BARIÁTRICO — RISCO MUITO AUMENTADO DE ÚLCERA DE ANASTOMOSE (SANGRAMENTO/PERFURAÇÃO) E DE SANGRIA OCULTA QUE AGRAVA A FERROPENIA; O CO MASCARA A ANEMIA. FATOR DE RISCO EVITÁVEL — ENCAMINHAR PARA CESSAÇÃO DO TABAGISMO.' })
+    alertas.push({ codigo: 'respiratorio.tabagismo_no_pos_bariatrico_risco_muito_aumen', nivel: MODERADO, texto: 'TABAGISMO NO PÓS-BARIÁTRICO — RISCO MUITO AUMENTADO DE ÚLCERA DE ANASTOMOSE (SANGRAMENTO/PERFURAÇÃO) E DE SANGRIA OCULTA QUE AGRAVA A FERROPENIA; O CO MASCARA A ANEMIA. FATOR DE RISCO EVITÁVEL — ENCAMINHAR PARA CESSAÇÃO DO TABAGISMO.' })
     suger.push('AVALIAÇÃO PARA CESSAÇÃO DO TABAGISMO')
     suger.push('SANGUE OCULTO NAS FEZES')
 
@@ -2992,7 +2992,7 @@ function buildModRespiratorio(dados, examesOBA, alertas, suger) {
   if (temResp('ASMA | BRONCOESPASMOS')) {
     bump(LEVE)
     linhas.push('ASMA / BRONCOESPASMOS: A PERDA DE PESO COSTUMA MELHORAR MUITO O CONTROLE DA ASMA. SE VOCÊ USA CORTICOIDE ORAL COM FREQUÊNCIA, INFORME AO SEU MÉDICO — O USO REPETIDO PREJUDICA O OSSO, QUE JÁ É UM PONTO FRÁGIL NO PÓS-BARIÁTRICO. MANTENHA O ACOMPANHAMENTO PNEUMOLÓGICO E A VACINAÇÃO EM DIA.')
-    alertas.push({ nivel: LEVE, texto: 'ASMA / BRONCOESPASMOS — A PERDA DE PESO TENDE A MELHORAR O CONTROLE; ATENÇÃO AO CORTICOIDE ORAL REPETIDO (RISCO ÓSSEO SOMADO AO DO PÓS-BARIÁTRICO).' })
+    alertas.push({ codigo: 'respiratorio.asma_broncoespasmos_a_perda_de_peso_tende_a_m', nivel: LEVE, texto: 'ASMA / BRONCOESPASMOS — A PERDA DE PESO TENDE A MELHORAR O CONTROLE; ATENÇÃO AO CORTICOIDE ORAL REPETIDO (RISCO ÓSSEO SOMADO AO DO PÓS-BARIÁTRICO).' })
   }
 
   if (temResp('RINITE | SINUSITE')) {
@@ -3000,7 +3000,7 @@ function buildModRespiratorio(dados, examesOBA, alertas, suger) {
     linhas.push('RINITE / SINUSITE: CONDIÇÃO COMUM E EM GERAL BENIGNA. SE HÁ ALERGIA ENVOLVIDA, O CONTROLE AMBIENTAL AJUDA. A RESPIRAÇÃO PELA BOCA QUE ELA CAUSA PIORA O RONCO E A QUALIDADE DO SONO — RELEVANTE SE VOCÊ TAMBÉM TEM APNEIA.')
     // Alerta LEVE pelo mesmo motivo de SOP/cistos (f5352d0): sem ele o achado não
     // aparece no topo do card do médico, que lista os alertas.
-    alertas.push({ nivel: LEVE, texto: 'RINITE / SINUSITE — EM GERAL BENIGNA; A RESPIRAÇÃO BUCAL PIORA RONCO E SONO (RELEVANTE SE HOUVER APNEIA).' })
+    alertas.push({ codigo: 'respiratorio.rinite_sinusite_em_geral_benigna_a_respiracao', nivel: LEVE, texto: 'RINITE / SINUSITE — EM GERAL BENIGNA; A RESPIRAÇÃO BUCAL PIORA RONCO E SONO (RELEVANTE SE HOUVER APNEIA).' })
   }
 
   if (!linhas.length) return null
@@ -3060,7 +3060,7 @@ function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, sug
       linhas.push('A ANGINA É UM SINTOMA ATIVO: DOR OU APERTO NO PEITO QUE PIORA COM ESFORÇO OU NÃO PASSA EM REPOUSO EXIGE ATENDIMENTO DE EMERGÊNCIA IMEDIATO (192) — NÃO ESPERE A PRÓXIMA CONSULTA.')
     }
     linhas.push('DOIS PONTOS QUE LIGAM O SEU CORAÇÃO À BARIÁTRICA: (1) A ANEMIA SOBRECARREGA O CORAÇÃO E PIORA A ANGINA — CORRIGIR O ERITRON É PARTE DO SEU CUIDADO CARDÍACO; (2) A ABSORÇÃO DE MEDICAMENTOS ORAIS ESTÁ REDUZIDA APÓS A CIRURGIA — INFORME O SEU CARDIOLOGISTA QUE VOCÊ É BARIÁTRICO(A) PARA QUE ELE REAVALIE AS DOSES.')
-    alertas.push({ nivel: GRAVE, texto: `${coronarianas.join(' + ')} — DOENÇA CORONARIANA ESTABELECIDA. ACOMPANHAMENTO CARDIOLÓGICO REGULAR; A ANEMIA AGRAVA A ISQUEMIA E A ABSORÇÃO DE MEDICAMENTOS ORAIS ESTÁ REDUZIDA NO PÓS-BARIÁTRICO (REAVALIAR DOSES).` })
+    alertas.push({ codigo: 'cardiovascular.doenca_coronariana_estabelecida_acompanhament', nivel: GRAVE, texto: `${coronarianas.join(' + ')} — DOENÇA CORONARIANA ESTABELECIDA. ACOMPANHAMENTO CARDIOLÓGICO REGULAR; A ANEMIA AGRAVA A ISQUEMIA E A ABSORÇÃO DE MEDICAMENTOS ORAIS ESTÁ REDUZIDA NO PÓS-BARIÁTRICO (REAVALIAR DOSES).` })
   }
 
   // ── 3. Aterosclerose declarada em outros territórios ───────────────────────
@@ -3077,7 +3077,7 @@ function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, sug
     // numa lista genérica de fatores de risco: ou é o fator dela, ou não se menciona.
     const fuma = pacienteFuma(dados)
     linhas.push(`${ateros.join(' + ')}: A ATEROSCLEROSE NÃO É UMA DOENÇA DE UM VASO SÓ — QUEM TEM PLACA NA CARÓTIDA OU NAS PERNAS TEM RISCO AUMENTADO NAS CORONÁRIAS E NO CÉREBRO TAMBÉM. ISSO PEDE AVALIAÇÃO CARDIOLÓGICA E CONTROLE RIGOROSO DOS FATORES DE RISCO (LÍPIDES, PRESSÃO E GLICEMIA).${fuma ? ' E, NO SEU CASO, O FATOR MAIS URGENTE É O CIGARRO: FUMAR COM ATEROSCLEROSE JÁ INSTALADA ACELERA A PLACA E MULTIPLICA O RISCO DE INFARTO E AVC — VEJA O CARD DE SAÚDE RESPIRATÓRIA.' : ''}`)
-    alertas.push({ nivel: GRAVE, texto: `${ateros.join(' + ')} — DOENÇA ATEROSCLERÓTICA ESTABELECIDA (RISCO SISTÊMICO, NÃO LOCAL). AVALIAÇÃO CARDIOLÓGICA E CONTROLE DOS FATORES DE RISCO.` })
+    alertas.push({ codigo: 'cardiovascular.doenca_aterosclerotica_estabelecida_risco_sis', nivel: GRAVE, texto: `${ateros.join(' + ')} — DOENÇA ATEROSCLERÓTICA ESTABELECIDA (RISCO SISTÊMICO, NÃO LOCAL). AVALIAÇÃO CARDIOLÓGICA E CONTROLE DOS FATORES DE RISCO.` })
   }
 
   // ── 4. Exames cardíacos alterados — reconhecer e encaminhar, sem interpretar ──
@@ -3116,7 +3116,7 @@ function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, sug
     const soExplicavelPeloMarcapasso = dados.ecg_marcapasso &&
       alterados.every(a => a === 'ECG ALTERADO' || a === 'ARRITMIA')
     if (!soExplicavelPeloMarcapasso) {
-      alertas.push({ nivel: MODERADO, texto: `ACHADOS CARDIOVASCULARES A ESCLARECER (${alterados.join('; ')}) — AVALIAÇÃO CARDIOLÓGICA COM OS LAUDOS.` })
+      alertas.push({ codigo: 'cardiovascular.achados_cardiovasculares_a_esclarecer', nivel: MODERADO, texto: `ACHADOS CARDIOVASCULARES A ESCLARECER (${alterados.join('; ')}) — AVALIAÇÃO CARDIOLÓGICA COM OS LAUDOS.` })
     }
   }
 
@@ -3155,7 +3155,7 @@ function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, sug
     // UM alerta só para o achado (FE), com o ferro embutido quando houver. Dois pushes
     // aqui inflavam a contagem de `classificarEstadoClinico` (que conta alertas, sem
     // dedup): 1 achado virava 2 moderados e jogava a paciente de RAZOÁVEL p/ RUIM.
-    alertas.push({ nivel: reduzida ? GRAVE : MODERADO, texto:
+    alertas.push({ codigo: 'cardiovascular.fracao_de_ejecao', nivel: reduzida ? GRAVE : MODERADO, texto:
       `FRAÇÃO DE EJEÇÃO ${fe}% (${reduzida ? 'REDUZIDA — INSUFICIÊNCIA CARDÍACA' : 'LEVEMENTE REDUZIDA'}) — ACOMPANHAMENTO CARDIOLÓGICO. A ANEMIA DESCOMPENSA O CORAÇÃO QUE JÁ BOMBEIA MENOS: CORRIGIR O ERITRON É PARTE DO TRATAMENTO CARDÍACO.` +
       (carenteIC ? ` FERRITINA ${ferrCv} ng/mL É DEFICIÊNCIA PELO CRITÉRIO DA INSUFICIÊNCIA CARDÍACA (<100, OU 100-299 COM SAT <20%), AINDA QUE ACIMA DO CORTE GERAL — FERRO ENDOVENOSO MELHORA SINTOMAS E INTERNAÇÕES MESMO SEM ANEMIA; DISCUTIR COM O CARDIOLOGISTA.` : '') })
   } else if (feInformada && !fePlausivel) {
@@ -3170,7 +3170,7 @@ function buildModCardiovascular(dados, resultadoEritron, examesOBA, alertas, sug
     bump(MODERADO)
     precisaCardio = true
     linhas.push('VOCÊ USA MARCAPASSO: INFORME ISSO ANTES DE QUALQUER RESSONÂNCIA MAGNÉTICA — INCLUSIVE A RESSONÂNCIA COM PROTOCOLO DE FERRO, QUE ESTA PLATAFORMA PODE VIR A SUGERIR SE A SUA FERRITINA E A SATURAÇÃO ESTIVEREM MUITO ALTAS. MUITOS MARCAPASSOS MODERNOS SÃO COMPATÍVEIS COM RESSONÂNCIA, MAS SÓ O SEU CARDIOLOGISTA E O SERVIÇO DE IMAGEM PODEM LIBERAR O EXAME, COM O APARELHO PROGRAMADO PARA ISSO. LEVE SEMPRE A CARTEIRINHA DO SEU DISPOSITIVO.')
-    alertas.push({ nivel: MODERADO, texto: 'PORTADOR(A) DE MARCAPASSO — CONFIRMAR COMPATIBILIDADE ANTES DE QUALQUER RESSONÂNCIA (INCLUSIVE A DE PROTOCOLO DE FERRO). LIBERAÇÃO PELO CARDIOLOGISTA E PELO SERVIÇO DE IMAGEM.' })
+    alertas.push({ codigo: 'cardiovascular.portador_a_de_marcapasso_confirmar_compatibil', nivel: MODERADO, texto: 'PORTADOR(A) DE MARCAPASSO — CONFIRMAR COMPATIBILIDADE ANTES DE QUALQUER RESSONÂNCIA (INCLUSIVE A DE PROTOCOLO DE FERRO). LIBERAÇÃO PELO CARDIOLOGISTA E PELO SERVIÇO DE IMAGEM.' })
   }
 
   if (!linhas.length) return null
@@ -3198,12 +3198,12 @@ function buildModIntestinal(dados, alertas, suger) {
     nivelGeral = MODERADO
     linhas.push('OBSTIPAÇÃO CRÔNICA NO PÓS-BARIÁTRICO: CONDIÇÃO MULTIFATORIAL FREQUENTE. AS PRINCIPAIS CAUSAS INCLUEM: BAIXA INGESTÃO HÍDRICA (ABAIXO DE 2L/DIA), FERRO ORAL (CAUSA MUITO COMUM — CONSIDERAR SUBSTITUIÇÃO POR FERRO ENDOVENOSO), DISMOTILIDADE INTESTINAL PÓS-CIRÚRGICA, DISBIOSE E BAIXA INGESTÃO DE FIBRAS.')
     linhas.push('ORIENTAÇÕES GERAIS: HIDRATAÇÃO MÍNIMA DE 2L/DIA (FORA DAS REFEIÇÕES). FIBRAS SOLÚVEIS — PSYLLIUM 5–10G/DIA DILUÍDO EM ÁGUA. PROBIÓTICOS (LACTOBACILLUS E BIFIDOBACTERIUM). ATIVIDADE FÍSICA REGULAR. EVITAR LAXANTES ESTIMULANTES CRÔNICOS (SENE, BISACODIL) — CAUSAM DEPENDÊNCIA E DANIFICAM A MUCOSA INTESTINAL.')
-    alertas.push({ nivel: MODERADO, texto: 'OBSTIPAÇÃO CRÔNICA — REVISAR FERRO ORAL, HIDRATAÇÃO E FIBRAS.' })
+    alertas.push({ codigo: 'intestinal.obstipacao_cronica_revisar_ferro_oral_hidrata', nivel: MODERADO, texto: 'OBSTIPAÇÃO CRÔNICA — REVISAR FERRO ORAL, HIDRATAÇÃO E FIBRAS.' })
 
     // Ferro oral como causa
     if (usaFerroOral && !usaFerroEV) {
       linhas.push('FERRO ORAL EM USO: O FERRO ORAL É A CAUSA MAIS FREQUENTE DE OBSTIPAÇÃO E INTOLERÂNCIA GASTROINTESTINAL NO BARIÁTRICO. CONSIDERAR MIGRAÇÃO PARA FERRO ENDOVENOSO, QUE ALÉM DE NÃO CAUSAR OBSTIPAÇÃO, TEM ABSORÇÃO MUITO SUPERIOR NO PÓS-BARIÁTRICO.')
-      alertas.push({ nivel: MODERADO, texto: 'FERRO ORAL: PRINCIPAL CAUSA DE OBSTIPAÇÃO NO BARIÁTRICO — CONSIDERAR FERRO EV.' })
+      alertas.push({ codigo: 'intestinal.ferro_oral_principal_causa_de_obstipacao_no_b', nivel: MODERADO, texto: 'FERRO ORAL: PRINCIPAL CAUSA DE OBSTIPAÇÃO NO BARIÁTRICO — CONSIDERAR FERRO EV.' })
       suger.push('AVALIAÇÃO PARA FERRO ENDOVENOSO (SUBSTITUIÇÃO DO FERRO ORAL)')
     }
 
@@ -3212,7 +3212,7 @@ function buildModIntestinal(dados, alertas, suger) {
     // Antes eram incondicionais: obstipação sozinha já pedia cirurgião (falso-positivo).
     linhas.push('ATENÇÃO IMPORTANTE: OBSTIPAÇÃO CRÔNICA NO BARIÁTRICO PODE MASCARAR SUBOCLUSÃO INTESTINAL POR BRIDA OU HÉRNIA INTERNA — COMPLICAÇÕES CIRÚRGICAS TARDIAS QUE PODEM SER GRAVES. SE HOUVER DOR ABDOMINAL ASSOCIADA À OBSTIPAÇÃO, PROCURE AVALIAÇÃO CIRÚRGICA COM URGÊNCIA.')
     if (temDorAbdominal) {
-      alertas.push({ nivel: LEVE, texto: 'OBSTIPAÇÃO + DOR ABDOMINAL: DESCARTAR HÉRNIA INTERNA OU BRIDA — AVALIAÇÃO CIRÚRGICA.' })
+      alertas.push({ codigo: 'intestinal.obstipacao_dor_abdominal_descartar_hernia_int', nivel: LEVE, texto: 'OBSTIPAÇÃO + DOR ABDOMINAL: DESCARTAR HÉRNIA INTERNA OU BRIDA — AVALIAÇÃO CIRÚRGICA.' })
       suger.push('AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO (OBSTIPAÇÃO COM DOR ABDOMINAL — DESCARTAR SUBOCLUSÃO)')
     }
     suger.push('TESTE RESPIRATÓRIO PARA SIBO')
@@ -3222,7 +3222,7 @@ function buildModIntestinal(dados, alertas, suger) {
     linhas.push('DIARREIA CRÔNICA NO PÓS-BARIÁTRICO: AGRAVA DRAMATICAMENTE A SÍNDROME DISABSORTIVA. TODOS OS DÉFICITS NUTRICIONAIS JÁ PRESENTES NO BARIÁTRICO SÃO POTENCIALIZADOS PELA DIARREIA CRÔNICA — FERRO, B12, VITAMINAS LIPOSSOLÚVEIS, ZINCO E PROTEÍNAS SÃO PERDIDOS EM EXCESSO.')
     linhas.push('PRINCIPAIS CAUSAS A INVESTIGAR: (1) SIBO — SUPERCRESCIMENTO BACTERIANO DO INTESTINO DELGADO: MUITO FREQUENTE APÓS BYPASS GÁSTRICO. SINTOMAS: DISTENSÃO, GASES, DIARREIA GORDUROSA. TRATAMENTO: RIFAXIMINA 550MG 2X/DIA POR 14 DIAS. (2) DUMPING TARDIO: DIARREIA 1–3 HORAS APÓS REFEIÇÕES RICAS EM AÇÚCAR. (3) INTOLERÂNCIA À LACTOSE: COMUM NO PÓS-BARIÁTRICO. TESTE DE EXCLUSÃO POR 2 SEMANAS. (4) DOENÇA CELÍACA: INVESTIGAR SE HÁ HISTÓRICO FAMILIAR OU ANEMIA REFRATÁRIA.')
     linhas.push('ORIENTAÇÕES: DIETA COM BAIXO TEOR DE GORDURA E AÇÚCARES SIMPLES. FRACIONAR AS REFEIÇÕES (6X/DIA). PROBIÓTICOS. EVITAR LACTOSE TEMPORARIAMENTE. SE SUSPEITA DE SIBO, INICIAR ANTIBIOTICOTERAPIA ESPECÍFICA COM MÉDICO.')
-    alertas.push({ nivel: MODERADO, texto: 'DIARREIA CRÔNICA: AGRAVA DISABSORÇÃO — INVESTIGAR SIBO, DUMPING E INTOLERÂNCIAS.' })
+    alertas.push({ codigo: 'intestinal.diarreia_cronica_agrava_disabsorcao_investiga', nivel: MODERADO, texto: 'DIARREIA CRÔNICA: AGRAVA DISABSORÇÃO — INVESTIGAR SIBO, DUMPING E INTOLERÂNCIAS.' })
     suger.push('TESTE RESPIRATÓRIO PARA SIBO')
     suger.push('SOROLOGIA PARA DOENÇA CELÍACA (ANTI-TRANSGLUTAMINASE IgA)')
     suger.push('TESTE DE INTOLERÂNCIA À LACTOSE')
@@ -3236,12 +3236,12 @@ function buildModIntestinal(dados, alertas, suger) {
     if (calpro > 150) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push(`CALPROTECTINA FECAL ELEVADA (${calpro} µg/g): MARCADOR DE INFLAMAÇÃO INTESTINAL. INVESTIGAR DOENÇA INFLAMATÓRIA INTESTINAL, INFECÇÃO/SIBO OU ENTEROPATIA. CORRELACIONAR COM DIARREIA E ANEMIA; ENCAMINHAR AO GASTROENTEROLOGISTA.`)
-      alertas.push({ nivel: MODERADO, texto: `CALPROTECTINA ELEVADA: ${calpro} µg/g — inflamação intestinal, investigar.` })
+      alertas.push({ codigo: 'intestinal.calprotectina_elevada', nivel: MODERADO, texto: `CALPROTECTINA ELEVADA: ${calpro} µg/g — inflamação intestinal, investigar.` })
       suger.push('AVALIAÇÃO COM GASTROENTEROLOGISTA')
     } else {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push(`CALPROTECTINA FECAL LEVEMENTE ELEVADA (${calpro} µg/g): INFLAMAÇÃO INTESTINAL DISCRETA. REPETIR O EXAME E CORRELACIONAR COM OS SINTOMAS.`)
-      alertas.push({ nivel: LEVE, texto: `CALPROTECTINA LEVEMENTE ELEVADA: ${calpro} µg/g — repetir e correlacionar.` })
+      alertas.push({ codigo: 'intestinal.calprotectina_levemente_elevada', nivel: LEVE, texto: `CALPROTECTINA LEVEMENTE ELEVADA: ${calpro} µg/g — repetir e correlacionar.` })
     }
   }
 
@@ -3249,7 +3249,7 @@ function buildModIntestinal(dados, alertas, suger) {
   if (/POSITIVO/i.test(indican)) {
     if (nivelGeral === NORMAL) nivelGeral = LEVE
     linhas.push('INDICAN PLASMÁTICO POSITIVO: SUGERE MÁ DIGESTÃO DE PROTEÍNAS / PUTREFAÇÃO INTESTINAL, FREQUENTEMENTE ASSOCIADA A SUPERCRESCIMENTO BACTERIANO (SIBO). INVESTIGAR SIBO E OTIMIZAR A DIGESTÃO.')
-    alertas.push({ nivel: LEVE, texto: 'INDICAN POSITIVO: possível SIBO / má digestão proteica — investigar.' })
+    alertas.push({ codigo: 'intestinal.indican_positivo_possivel_sibo_ma_digestao_pr', nivel: LEVE, texto: 'INDICAN POSITIVO: possível SIBO / má digestão proteica — investigar.' })
     suger.push('TESTE RESPIRATÓRIO PARA SIBO')
   }
 
@@ -3301,12 +3301,12 @@ function buildModFibromialgia(dados, ex, alertas, suger) {
   if (temDiagnostico) {
     nivelGeral = MODERADO
     linhas.push('DIAGNÓSTICO DE FIBROMIALGIA CONFIRMADO: NO CONTEXTO BARIÁTRICO, É FUNDAMENTAL CORRELACIONAR OS SINTOMAS FIBROMIÁLGICOS COM AS DEFICIÊNCIAS NUTRICIONAIS, QUE PODEM SER CAUSA OU AGRAVANTE IMPORTANTE. ANTES DE AJUSTAR MEDICAÇÃO ESPECÍFICA, CORRIGIR TODAS AS DEFICIÊNCIAS IDENTIFICADAS.')
-    alertas.push({ nivel: MODERADO, texto: 'FIBROMIALGIA CONFIRMADA — CORRELACIONAR COM DEFICIÊNCIAS NUTRICIONAIS DO BARIÁTRICO.' })
+    alertas.push({ codigo: 'fibromialgia.fibromialgia_confirmada_correlacionar_com_def', nivel: MODERADO, texto: 'FIBROMIALGIA CONFIRMADA — CORRELACIONAR COM DEFICIÊNCIAS NUTRICIONAIS DO BARIÁTRICO.' })
     suger.push('AVALIAÇÃO COM REUMATOLOGISTA')
   } else if (qtdSintomas >= 2) {
     nivelGeral = LEVE
     linhas.push(`${qtdSintomas} SINTOMAS FIBROMIÁLGICOS RELATADOS: A CONSTELAÇÃO DE SINTOMAS APRESENTADA (${sintomasClinicos.join(', ')}) É COMPATÍVEL COM SÍNDROME FIBROMIÁLGICA SECUNDÁRIA ÀS DEFICIÊNCIAS NUTRICIONAIS DO PÓS-BARIÁTRICO. PRIORIZAR A CORREÇÃO DAS DEFICIÊNCIAS ANTES DE DIAGNÓSTICO DEFINITIVO.`)
-    alertas.push({ nivel: LEVE, texto: `${qtdSintomas} SINTOMAS FIBROMIÁLGICOS — INVESTIGAR DEFICIÊNCIAS NUTRICIONAIS COMO CAUSA PRIMÁRIA.` })
+    alertas.push({ codigo: 'fibromialgia.sintomas_fibromialgicos_investigar_deficienci', nivel: LEVE, texto: `${qtdSintomas} SINTOMAS FIBROMIÁLGICOS — INVESTIGAR DEFICIÊNCIAS NUTRICIONAIS COMO CAUSA PRIMÁRIA.` })
   }
 
   // Canabinoides (quando em uso): menção educativa no relatório (os TIPOS de canabinoide
@@ -3423,7 +3423,7 @@ function buildModAcompanhamento(dadosOBA, alertas) {
     linhas.push('O ACOMPANHAMENTO MULTIDISCIPLINAR VITALÍCIO É PADRÃO-OURO PÓS-BARIÁTRICA. A AUSÊNCIA DE SEGUIMENTO AUMENTA SIGNIFICATIVAMENTE O RISCO DE DEFICIÊNCIAS NUTRICIONAIS GRAVES, REGANHO PONDERAL E COMPLICAÇÕES DE LONGO PRAZO.')
     linhas.push('RECOMENDAÇÃO PRIORITÁRIA: estabelecer acompanhamento imediatamente — como mínimo HEMATOLOGISTA, GASTROENTEROLOGISTA, ENDOCRINOLOGISTA ou CLÍNICO GERAL.')
     nivelGeral = GRAVE
-    alertas.push({ nivel: GRAVE, texto: 'SEM ACOMPANHAMENTO ESPECIALIZADO — retomar imediatamente.' })
+    alertas.push({ codigo: 'acompanhamento.sem_acompanhamento_especializado_retomar_imed', nivel: GRAVE, texto: 'SEM ACOMPANHAMENTO ESPECIALIZADO — retomar imediatamente.' })
   } else if (temG1.length === 0) {
     // Tem G2 mas sem G1 critico
     linhas.push(`ESPECIALISTAS DECLARADOS: ${especialistas.join(', ')}.`)
@@ -3431,7 +3431,7 @@ function buildModAcompanhamento(dadosOBA, alertas) {
     linhas.push('OS PROFISSIONAIS COMPLEMENTARES (NUTRICIONISTA, PSICÓLOGO, CIRURGIÃO) SÃO IMPORTANTES, MAS A VIGILÂNCIA CLÍNICA DE DEFICIÊNCIAS NUTRICIONAIS E COMPLICAÇÕES ORGÂNICAS EXIGE AVALIAÇÃO MÉDICA REGULAR.')
     linhas.push('RECOMENDAÇÃO: incluir ao menos um profissional do grupo crítico no acompanhamento.')
     nivelGeral = MODERADO
-    alertas.push({ nivel: MODERADO, texto: 'SEM ESPECIALISTA CRÍTICO (hemato/gastro/endo/clínico) no acompanhamento.' })
+    alertas.push({ codigo: 'acompanhamento.sem_especialista_critico_hemato_gastro_endo_c', nivel: MODERADO, texto: 'SEM ESPECIALISTA CRÍTICO (hemato/gastro/endo/clínico) no acompanhamento.' })
   } else if (temG1.length === 1) {
     linhas.push(`ESPECIALISTA CRÍTICO: ${temG1.join(', ')}.`)
     if (temG2.length > 0) {
@@ -3479,7 +3479,7 @@ function buildModAcompanhamento(dadosOBA, alertas) {
       linhas.push('A FREQUÊNCIA ATUAL ESTÁ ABAIXO DO RECOMENDADO PARA O SEU PERFIL. AJUSTAR.')
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       else if (nivelGeral === LEVE) nivelGeral = MODERADO
-      alertas.push({ nivel: nivelGeral, texto: `FREQUÊNCIA DE ACOMPANHAMENTO (${acompFreq}) INSUFICIENTE — ideal: ${freqRec}.` })
+      alertas.push({ codigo: 'acompanhamento.frequencia_de_acompanhamento', nivel: nivelGeral, texto: `FREQUÊNCIA DE ACOMPANHAMENTO (${acompFreq}) INSUFICIENTE — ideal: ${freqRec}.` })
     }
   }
 
@@ -3581,12 +3581,12 @@ function buildModLipidico(ex, dados, sexo, alertas, suger) {
     categoria = 'RISCO CRÍTICO'
     nivel = GRAVE
     conduta = 'Avaliação cardiológica URGENTE. Considerar terapia hipolipemiante intensiva (estatinas, ezetimiba, iPCSK9 se Lp(a) elevada).'
-    alertas.push({ nivel: GRAVE, texto: `Risco cardiovascular CRÍTICO (score ${score}${lpaCritica ? ', Lp(a) >50' : ''})` })
+    alertas.push({ codigo: 'lipidico.risco_cardiovascular_critico_score', nivel: GRAVE, texto: `Risco cardiovascular CRÍTICO (score ${score}${lpaCritica ? ', Lp(a) >50' : ''})` })
   } else if (score >= 4) {
     categoria = 'RISCO ELEVADO'
     nivel = MODERADO
     conduta = 'Considerar terapia farmacológica (estatina). Encaminhar à avaliação cardiológica.'
-    alertas.push({ nivel: MODERADO, texto: `Risco cardiovascular elevado (score ${score})` })
+    alertas.push({ codigo: 'lipidico.risco_cardiovascular_elevado_score', nivel: MODERADO, texto: `Risco cardiovascular elevado (score ${score})` })
   } else {
     categoria = 'ALTERAÇÃO LEVE'
     nivel = LEVE
@@ -3644,21 +3644,21 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
     if (leuco < 3000) {
       nivelGeral = GRAVE
       linhas.push('LEUCOPENIA GRAVE: contagem abaixo de 3.000/uL representa risco aumentado de infecções oportunistas. Avaliação hematológica imediata é mandatória. Investigar causas como síndrome mielodisplásica, aplasia medular, medicamentos mielotóxicos, infecções virais (HIV, parvovírus).')
-      alertas.push({ nivel: GRAVE, texto: `LEUCOPENIA GRAVE: ${leuco}/uL. Avaliação hematológica imediata.` })
+      alertas.push({ codigo: 'leucos.leucopenia_grave', nivel: GRAVE, texto: `LEUCOPENIA GRAVE: ${leuco}/uL. Avaliação hematológica imediata.` })
       examesSuger.push('MIELOGRAMA', 'SOROLOGIAS PARA HIV, HEPATITES B/C, PARVOVÍRUS B19', 'ELETROFORESE DE PROTEÍNAS')
     } else if (leuco < 4000) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('LEUCOPENIA MODERADA: investigar causa. Pode estar associada a pós-bariátrica com deficiências nutricionais profundas (B12, folato, cobre), infecções crônicas ou autoimunidade.')
-      alertas.push({ nivel: MODERADO, texto: `LEUCOPENIA: ${leuco}/uL.` })
+      alertas.push({ codigo: 'leucos.leucopenia', nivel: MODERADO, texto: `LEUCOPENIA: ${leuco}/uL.` })
     } else if (leuco > 15000) {
       nivelGeral = GRAVE
       linhas.push('LEUCOCITOSE GRAVE: acima de 15.000/uL sugere processo infeccioso/inflamatório significativo ou, mais raramente, distúrbio mieloproliferativo. Requer avaliação clínica imediata.')
-      alertas.push({ nivel: GRAVE, texto: `LEUCOCITOSE: ${leuco}/uL. Investigar foco infeccioso ou hematológico.` })
+      alertas.push({ codigo: 'leucos.leucocitose', nivel: GRAVE, texto: `LEUCOCITOSE: ${leuco}/uL. Investigar foco infeccioso ou hematológico.` })
       examesSuger.push('PCR', 'VHS', 'ESFREGAÇO DE SANGUE PERIFÉRICO')
     } else if (leuco > 11000) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('LEUCOCITOSE LEVE A MODERADA: frequentemente reativa (infecção, inflamação, estresse). Correlacionar clinicamente.')
-      alertas.push({ nivel: MODERADO, texto: `LEUCOCITOSE: ${leuco}/uL.` })
+      alertas.push({ codigo: 'leucos.leucocitose_2', nivel: MODERADO, texto: `LEUCOCITOSE: ${leuco}/uL.` })
     } else {
       linhas.push('Leucócitos totais dentro da faixa de normalidade.')
     }
@@ -3671,11 +3671,11 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
     if (neutAbs < 500) {
       nivelGeral = GRAVE
       linhas.push('NEUTROPENIA GRAVE (<500/uL): risco alto de infecção grave. Requer conduta imediata — avaliação em pronto atendimento se houver febre.')
-      alertas.push({ nivel: GRAVE, texto: `NEUTROPENIA GRAVE: ${neutAbs}/uL.` })
+      alertas.push({ codigo: 'leucos.neutropenia_grave', nivel: GRAVE, texto: `NEUTROPENIA GRAVE: ${neutAbs}/uL.` })
     } else if (neutAbs < 1500) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('NEUTROPENIA RELEVANTE: valores entre 500 e 1.500/uL exigem investigação causal — deficiências nutricionais (B12/folato/cobre), medicamentos, infecções virais, autoimunidade.')
-      alertas.push({ nivel: MODERADO, texto: `NEUTROPENIA: ${neutAbs}/uL.` })
+      alertas.push({ codigo: 'leucos.neutropenia', nivel: MODERADO, texto: `NEUTROPENIA: ${neutAbs}/uL.` })
     }
   } else if (!isNaN(leuco) && !isNaN(neutPct)) {
     // Calcula neutrofilos absolutos a partir de leuco + %
@@ -3696,7 +3696,7 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
     if (linfEst > 6000) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push(`LINFÓCITOS ESTIMADOS ~${linfEst.toLocaleString('pt-BR')}/uL (leucócitos − neutrófilos − 10%): POSSÍVEL LINFOCITOSE ABSOLUTA A ESCLARECER. Solicitar hemograma com contagem diferencial; investigar causas (infecções virais; em adultos, descartar síndrome linfoproliferativa).`)
-      alertas.push({ nivel: MODERADO, texto: `POSSÍVEL LINFOCITOSE ABSOLUTA (linfócitos estimados ~${linfEst.toLocaleString('pt-BR')}/uL) — esclarecer.` })
+      alertas.push({ codigo: 'leucos.possivel_linfocitose_absoluta_linfocitos_esti', nivel: MODERADO, texto: `POSSÍVEL LINFOCITOSE ABSOLUTA (linfócitos estimados ~${linfEst.toLocaleString('pt-BR')}/uL) — esclarecer.` })
       examesSuger.push('HEMOGRAMA COM CONTAGEM DIFERENCIAL (linfócitos)')
     }
   }
@@ -3707,15 +3707,15 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
     if (plaq < 100) {
       nivelGeral = GRAVE
       linhas.push('PLAQUETOPENIA IMPORTANTE (<100 mil/uL): risco de sangramento. Avaliação hematológica. Investigar deficiência nutricional grave (B12/folato), hepatopatia, hiperesplenismo, medicamentos ou PTI.')
-      alertas.push({ nivel: GRAVE, texto: `PLAQUETOPENIA: ${plaq} mil/uL — avaliação hematológica.` })
+      alertas.push({ codigo: 'leucos.plaquetopenia', nivel: GRAVE, texto: `PLAQUETOPENIA: ${plaq} mil/uL — avaliação hematológica.` })
     } else if (plaq < 150) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('PLAQUETOPENIA LEVE (100–149 mil/uL): investigar causa (nutricional, hepática, medicamentosa).')
-      alertas.push({ nivel: MODERADO, texto: `PLAQUETOPENIA LEVE: ${plaq} mil/uL.` })
+      alertas.push({ codigo: 'leucos.plaquetopenia_leve', nivel: MODERADO, texto: `PLAQUETOPENIA LEVE: ${plaq} mil/uL.` })
     } else if (plaq > 450) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('TROMBOCITOSE (>450 mil/uL): frequentemente reativa (inflamação, ferropenia, infecção). Se persistente, avaliação hematológica.')
-      alertas.push({ nivel: MODERADO, texto: `TROMBOCITOSE: ${plaq} mil/uL.` })
+      alertas.push({ codigo: 'leucos.trombocitose', nivel: MODERADO, texto: `TROMBOCITOSE: ${plaq} mil/uL.` })
     } else if (plaq > 400) {
       linhas.push('PLAQUETAS no limite superior (401–450 mil/uL). Correlacionar clinicamente.')
     } else {

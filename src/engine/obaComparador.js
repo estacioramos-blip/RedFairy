@@ -281,7 +281,40 @@ function compararCategoricos(cicloAtual, cicloReferencia) {
   return out
 }
 
-function contarResumo(modulos, examesSugeridos, exames, categoricos) {
+// -----------------------------------------------------------------------------
+// Dimensão: ALERTAS — agora comparável de verdade, graças ao `codigo` estável
+// que cada `alertas.push({codigo, nivel, texto})` do obaEngine.js ganhou no
+// sweep da Fase 5 (~160 pontos, 1 codigo único por achado/condição). Antes,
+// alertas eram texto livre sem chave estável — impossível saber se "o mesmo
+// achado clínico" persiste entre ciclos sem regex frágil (a v1 desta feature
+// deixou a seção de fora por causa disso).
+//
+// NOVOS = alerta que não existia no ciclo de referência; RESOLVIDOS = existia
+// lá e sumiu; PERSISTENTES = está nos dois (mesmo codigo). Não há MELHOROU/
+// PIOROU aqui — o `nivel` de um alerta é fixo no ponto do código que o gera,
+// não varia ciclo a ciclo; o que muda é só a PRESENÇA do achado.
+//
+// LIMITAÇÃO CONHECIDA: ciclos salvos ANTES deste sweep têm `alertas` sem
+// `codigo` (schema aditivo, como já é o padrão do `relatorio_oba`) — esses
+// alertas são ignorados aqui (guarda `a?.codigo`), não aparecem como
+// novos/resolvidos/persistentes. A comparação de alertas passa a funcionar
+// de verdade a partir do primeiro ciclo salvo IGUAL ou POSTERIOR a este deploy.
+// -----------------------------------------------------------------------------
+function compararAlertas(cicloAtual, cicloReferencia) {
+  const porCodigo = (lista) => {
+    const m = new Map()
+    for (const a of (lista || [])) if (a?.codigo) m.set(a.codigo, a)
+    return m
+  }
+  const mapRef = porCodigo(cicloReferencia.relatorio.alertas)
+  const mapAtu = porCodigo(cicloAtual.relatorio.alertas)
+  const novos = [...mapAtu.entries()].filter(([c]) => !mapRef.has(c)).map(([codigo, a]) => ({ codigo, nivel: a.nivel, texto: a.texto }))
+  const resolvidos = [...mapRef.entries()].filter(([c]) => !mapAtu.has(c)).map(([codigo, a]) => ({ codigo, nivel: a.nivel, texto: a.texto }))
+  const persistentes = [...mapAtu.entries()].filter(([c]) => mapRef.has(c)).map(([codigo, a]) => ({ codigo, nivel: a.nivel, texto: a.texto }))
+  return { novos, resolvidos, persistentes }
+}
+
+function contarResumo(modulos, examesSugeridos, exames, categoricos, alertas) {
   const r = { melhoraram: 0, pioraram: 0, estaveis: 0, novos: 0, resolvidos: 0 }
   for (const m of modulos) {
     if (m.status === STATUS.MELHOROU) r.melhoraram++
@@ -307,6 +340,10 @@ function contarResumo(modulos, examesSugeridos, exames, categoricos) {
       r.resolvidos += c.sairam.length
     }
   }
+  if (alertas) {
+    r.novos += alertas.novos.length
+    r.resolvidos += alertas.resolvidos.length
+  }
   return r
 }
 
@@ -314,7 +351,8 @@ function contarResumo(modulos, examesSugeridos, exames, categoricos) {
 // Diff PAR-A-PAR entre dois ciclos canônicos. Chamada 2x pelo consumidor (uma
 // vez vs anterior, uma vez vs baseline) — não sabe de "anterior"/"baseline",
 // só compara A vs B. Fase 0: estado + módulos + peso/IMC. Fase 2: exames
-// sugeridos. Fase 3: exames laboratoriais numéricos. Fase 4: status categóricos.
+// sugeridos. Fase 3: exames laboratoriais numéricos. Fase 4: status
+// categóricos. Fase 5: alertas (por codigo estável) — última dimensão do plano.
 // -----------------------------------------------------------------------------
 export function compararCiclos(cicloAtual, cicloReferencia, opts = {}) {
   if (!cicloAtual || !cicloReferencia) return null
@@ -322,18 +360,20 @@ export function compararCiclos(cicloAtual, cicloReferencia, opts = {}) {
   const examesSugeridos = compararExamesSugeridos(cicloAtual, cicloReferencia)
   const exames = compararExames(cicloAtual, cicloReferencia, opts)
   const categoricos = compararCategoricos(cicloAtual, cicloReferencia)
+  const alertas = compararAlertas(cicloAtual, cicloReferencia)
   return {
     meta: {
       dataAtual: cicloAtual.data,
       dataReferencia: cicloReferencia.data,
       diasEntre: diasEntreDatas(cicloReferencia.data, cicloAtual.data),
     },
-    resumo: contarResumo(modulos, examesSugeridos, exames, categoricos),
+    resumo: contarResumo(modulos, examesSugeridos, exames, categoricos, alertas),
     estado: compararEstado(cicloAtual, cicloReferencia),
     ponderal: compararPonderal(cicloAtual, cicloReferencia, opts),
     modulos,
     examesSugeridos,
     exames,
     categoricos,
+    alertas,
   }
 }
