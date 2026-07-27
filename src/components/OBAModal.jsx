@@ -612,7 +612,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #6B7280, #4B5563)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, anamneseBaseline = null, coletarHemograma = false, modoMedico = false, modoRevisao = false }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, anamneseBaseline = null, numeroCiclo = 1, coletarHemograma = false, modoMedico = false, modoRevisao = false }) {
   // FOLLOW-UP: avaliação de RETORNO de um bariátrico que já fez o baseline.
   // anamneseAnterior = última linha de oba_anamnese. Nesse modo, os campos
   // IMUTÁVEIS (data/tipo/indicação da cirurgia, peso antes, altura) são
@@ -2015,9 +2015,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             {SPLASH_CONCLUSAO_IMG && <div style={{ height:200 }} />}
 
             <p style={{ fontSize:'1.1rem', fontWeight:900, color:'#7B1E1E', textAlign:'center', margin:'0 0 0.2rem' }}>
-              {"Primeira avaliação concluída!"}
+              {modoRevisao ? "Revisão médica concluída!" : (numeroCiclo > 1 ? `${numeroCiclo}ª avaliação concluída!` : "Primeira avaliação concluída!")}
             </p>
-            <p style={{ fontSize:'0.72rem', color:'#6B7280', textAlign:'center', fontWeight:700, margin:'0 0 0.6rem' }}>{"Avaliação de "}{hojeFmt}</p>
+            <p style={{ fontSize:'0.72rem', color:'#6B7280', textAlign:'center', fontWeight:700, margin:'0 0 0.6rem' }}>{"Avaliação de "}{hojeFmt}{" · Avaliação nº "}{numeroCiclo}{modoRevisao ? " · revisado por médico" : ""}</p>
             <p style={{ fontSize:'0.85rem', color:'#374151', textAlign:'center', lineHeight:1.5, margin:'0 0 1.2rem' }}>
               {"Com base na sua avaliação, estas são as recomendações e opções para você:"}
             </p>
@@ -2305,7 +2305,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 <p style={{ fontSize:'1.05rem', fontWeight:900, color:'#7B1E1E', textAlign:'center', margin:'0 0 0.3rem', lineHeight:1.35 }}>
                   {"AGORA TEMOS UM CONHECIMENTO CL\u00cdNICO SOBRE VOC\u00ca"}
                 </p>
-                <p style={{ fontSize:'0.72rem', color:'#6B7280', textAlign:'center', fontWeight:700, margin:'0 0 1rem' }}>{"Avalia\u00e7\u00e3o de "}{rel.dataAvaliacao}</p>
+                <p style={{ fontSize:'0.72rem', color:'#6B7280', textAlign:'center', fontWeight:700, margin:'0 0 1rem' }}>{"Avalia\u00e7\u00e3o de "}{rel.dataAvaliacao}{" \u00b7 Avalia\u00e7\u00e3o n\u00ba "}{numeroCiclo}{modoRevisao ? " \u00b7 revisado por m\u00e9dico" : ""}</p>
 
                 {/* ESTADO GERAL CL\u00cdNICO \u2014 hero */}
                 <div style={{ background: estadoInfo.fundo, border:`2px solid ${estadoInfo.borda}`, borderRadius:16, padding:'1.2rem 1.4rem', textAlign:'center' }}>
@@ -2938,6 +2938,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
 
           <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
+            <p style={{ fontSize:'0.62rem', textTransform:'uppercase', letterSpacing:'1px', color:'#B45309', fontWeight:800, margin:'0 0 0.4rem' }}>
+              {modoRevisao ? `Revisão médica · Avaliação nº ${numeroCiclo}` : `Avaliação nº ${numeroCiclo}`}
+            </p>
             {modoFollowUp ? (
               <>
                 <p style={{ fontSize:'0.95rem', color:'#7B1E1E', fontWeight:800, margin:'0 0 0.3rem' }}>{"Ol\u00e1, vamos a uma nova avalia\u00e7\u00e3o da sua sa\u00fade!"}</p>

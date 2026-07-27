@@ -107,6 +107,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [precisaOBA, setPrecisaOBA] = useState(false)  // bariátrico sem anamnese OBA → banner persistente
   const [anamneseAnterior, setAnamneseAnterior] = useState(null)  // última oba_anamnese → OBA em modo follow-up
   const [anamneseBaseline, setAnamneseBaseline] = useState(null)  // 1ª oba_anamnese do CPF → comparação longitudinal vs baseline
+  const [numeroCiclo, setNumeroCiclo] = useState(1)  // nº ordinal desta avaliação (1ª/2ª/3ª...) = ciclos salvos + 1
   const [eritronAnterior, setEritronAnterior] = useState(null)    // avaliação eritron anterior → comparação no resultado
   // Vencimento da anuidade (assinaturas.data_fim da assinatura ativa) p/ alerta 15/5 dias.
   const [vencimentoAnuidade, setVencimentoAnuidade] = useState(null)
@@ -388,7 +389,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           .eq('cpf', cpfLimpo).order('created_at', { ascending: true })
         setAnamneseBaseline(obaRows && obaRows.length ? obaRows[0] : null)
         setAnamneseAnterior(obaRows && obaRows.length ? obaRows[obaRows.length - 1] : null)
-      } catch (e) { console.error('Falha ao carregar histórico OBA:', e); setAnamneseAnterior(null); setAnamneseBaseline(null) }
+        setNumeroCiclo((obaRows?.length || 0) + 1)
+      } catch (e) { console.error('Falha ao carregar histórico OBA:', e); setAnamneseAnterior(null); setAnamneseBaseline(null); setNumeroCiclo(1) }
     }
     // HEMOGRAMA DE ENTRADA (só na carga inicial): a triagem que o paciente fez antes
     // de pagar fica na tabela `triagens` (com data_coleta). Se essa entrada ainda NÃO
@@ -1206,6 +1208,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           }
           anamneseAnterior={anamneseAnterior}
           anamneseBaseline={anamneseBaseline}
+          numeroCiclo={numeroCiclo}
           coletarHemograma={obaColetarHemograma}
           onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false); setShowEscolhaEntrarIndicar(true) }}
           onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false); setPrecisaOBA(false); if (onVoltar) onVoltar() }}

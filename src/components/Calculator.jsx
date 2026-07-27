@@ -848,13 +848,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       const { data: avals } = await supabase.from('avaliacoes').select('*').eq('cpf', d).order('data_coleta', { ascending: false }).limit(1)
       // Busca TODAS as linhas (ascendente) — deriva a ÚLTIMA (anterior, follow-up) e a
       // PRIMEIRA (baseline, comparação longitudinal). Ver src/engine/obaComparador.js.
-      let anam = null, anamBaseline = null
+      let anam = null, anamBaseline = null, numeroCiclo = 1
       try {
         const { data: obaRows } = await supabase.from('oba_anamnese').select('*').eq('cpf', d).order('created_at', { ascending: true })
         anamBaseline = (obaRows && obaRows.length) ? obaRows[0] : null
         anam = (obaRows && obaRows.length) ? obaRows[obaRows.length - 1] : null
+        numeroCiclo = (obaRows?.length || 0) + 1
       } catch (e) { console.error('Falha ao carregar histórico OBA:', e) }
-      setPacienteAvaliar({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam, anamneseBaseline: anamBaseline })
+      setPacienteAvaliar({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam, anamneseBaseline: anamBaseline, numeroCiclo })
       setAvaliarRevisao(!!revisao)
       try {
         sessionStorage.setItem('rf_med_oba_cpf', d)   // p/ reabrir no refresh (mesma aba)
@@ -1634,6 +1635,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             : null}
           anamneseAnterior={pacienteAvaliar.anamneseAnterior}
           anamneseBaseline={pacienteAvaliar.anamneseBaseline}
+          numeroCiclo={pacienteAvaliar.numeroCiclo}
           coletarHemograma={!pacienteAvaliar.ultimaAval}
           modoMedico={true}
           modoRevisao={avaliarRevisao}
