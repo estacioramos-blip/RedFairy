@@ -16,3 +16,22 @@ export function ehDominioBariatrico() {
   } catch (e) {}
   return false
 }
+
+// Aplica o branding "Projeto OBA" (título, descrição, manifest, ícone iOS) por
+// cima do padrão RedFairy do index.html — só quando ehDominioBariatrico(). Sem
+// isto, redfairy.bio (domínio geral, não-bariátrico) NÃO deve carregar identidade
+// OBA — o index.html/manifest.webmanifest já nascem com o branding RedFairy.
+export function aplicarBrandingOBA() {
+  if (!ehDominioBariatrico() || typeof document === 'undefined') return
+  try {
+    document.title = 'RedFairy | Projeto OBA'
+    const desc = document.querySelector('meta[name="description"]')
+    if (desc) desc.setAttribute('content', 'Projeto OBA®: plataforma inteligente de acompanhamento e triagem para pacientes bariátricos.')
+    const at = document.querySelector('meta[name="apple-mobile-web-app-title"]')
+    if (at) at.setAttribute('content', 'Projeto OBA')
+    const ai = document.querySelector('link[rel="apple-touch-icon"]')
+    if (ai) ai.setAttribute('href', '/oba-fairy-v2.png')
+    const m = document.querySelector('link[rel="manifest"]')
+    if (m) m.setAttribute('href', '/manifest-oba.webmanifest')
+  } catch (e) {}
+}

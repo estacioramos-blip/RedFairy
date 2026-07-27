@@ -13,7 +13,7 @@ import OBAEntradaPaciente from './components/OBAEntradaPaciente'
 import CaixaPage from './components/CaixaPage'
 import AdminLogin from './components/AdminLogin'
 import RestritoLogin from './components/RestritoLogin'
-import { ehDominioBariatrico } from './lib/dominio'
+import { ehDominioBariatrico, aplicarBrandingOBA } from './lib/dominio'
 import { setManifestFluxo } from './lib/manifestFluxo'
 export default function App() {
   // Modo inicial lido da URL JÁ no 1º render — evita o "flash" da landing (branca)
@@ -97,9 +97,16 @@ export default function App() {
     return () => window.removeEventListener('pageshow', aoRestaurar)
   }, [])
 
+  // Branding OBA (título/descrição/manifest/ícone) só no domínio bariátrico —
+  // redfairy.bio (geral) fica com a identidade RedFairy padrão do index.html.
+  useEffect(() => { aplicarBrandingOBA() }, [])
+
   // PWA por PAPEL: troca o icone/manifesto/titulo conforme o fluxo (p/m/i), pra o
-  // icone instalado sair com a letra do papel e abrir o fluxo certo.
+  // icone instalado sair com a letra do papel e abrir o fluxo certo. Só faz sentido
+  // no domínio bariátrico (os 3 manifests p/m/i são todos identidade "OBA") — no
+  // redfairy.bio geral, fica no manifest RedFairy padrão (sem swap por papel).
   useEffect(() => {
+    if (!ehDominioBariatrico()) return
     const l = modo === 'calculadora' ? 'm' : modo === 'indicador' ? 'i'
             : (modo === 'paciente' || modo === 'oba-paciente' || modo === 'triagem-direta' || modo === 'login') ? 'p' : null
     if (l) setManifestFluxo(l)
