@@ -3471,16 +3471,16 @@ function buildModAcompanhamento(dadosOBA, alertas) {
 
   linhas.push(`FREQUÊNCIA DE ACOMPANHAMENTO RECOMENDADA PARA O SEU PERFIL ATUAL: ${freqRec}.`)
 
+  // acompFreq vem da tela como um dos 4 status de ACOMPANHAMENTO_OPS (ex.: "FAÇO
+  // ACOMPANHAMENTO MÉDICO E REPOSIÇÕES", "FIZ ACOMPANHAMENTO MAS PAREI"...), nunca
+  // um valor de frequência (TRIMESTRAL/SEMESTRAL/ANUAL) — não há campo na anamnese
+  // que colete a periodicidade real. Por isso, a comparação ordemAtual x ordemIdeal
+  // nunca podia ser calculada (ordem[acompFreq] sempre virava 0) e o alerta de
+  // "frequência insuficiente" disparava para todo paciente. A adequação real do
+  // acompanhamento (tem/não tem especialista, cobre o grupo crítico) já é avaliada
+  // acima por especialistas/semEspecialista — aqui fica só o dado informativo.
   if (acompFreq) {
     linhas.push(`FREQUÊNCIA ATUAL DECLARADA: ${acompFreq}.`)
-    const ordemAtual = ordem[acompFreq.toUpperCase()] || 0
-    const ordemIdeal = ordem[freqRec] || 0
-    if (ordemAtual < ordemIdeal) {
-      linhas.push('A FREQUÊNCIA ATUAL ESTÁ ABAIXO DO RECOMENDADO PARA O SEU PERFIL. AJUSTAR.')
-      if (nivelGeral === NORMAL) nivelGeral = LEVE
-      else if (nivelGeral === LEVE) nivelGeral = MODERADO
-      alertas.push({ codigo: 'acompanhamento.frequencia_de_acompanhamento', nivel: nivelGeral, texto: `FREQUÊNCIA DE ACOMPANHAMENTO (${acompFreq}) INSUFICIENTE — ideal: ${freqRec}.` })
-    }
   }
 
   return {
