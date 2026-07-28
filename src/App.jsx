@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import Calculator from './components/Calculator'
-import AuthPage from './components/AuthPage'
 import PatientDashboard from './components/PatientDashboard'
 import AdminPage from './components/AdminPage'
 import logo from './assets/logo.png'
@@ -81,7 +80,6 @@ export default function App() {
   const [demoMedicoClicks, setDemoMedicoClicks] = useState(0)
   const [demoMedicoTimer, setDemoMedicoTimer] = useState(null)
   const [demoPacientePerfil, setDemoPacientePerfil] = useState(null)
-  const [dadosPreCadastro, setDadosPreCadastro] = useState({ cpf: '', sexo: '', dataNascimento: '' })
   const [showInatividade, setShowInatividade] = useState(false)
   const [landingKey, setLandingKey] = useState(0)
   // (bariatrico.net) URL externa para o "Voltar" quando o usuário entrou pelo site.
@@ -124,7 +122,7 @@ export default function App() {
   useEffect(() => {
     if (!ehDominioBariatrico()) return
     const l = modo === 'calculadora' ? 'm' : modo === 'indicador' ? 'i'
-            : (modo === 'paciente' || modo === 'oba-paciente' || modo === 'triagem-direta' || modo === 'login') ? 'p' : null
+            : (modo === 'paciente' || modo === 'oba-paciente' || modo === 'triagem-direta') ? 'p' : null
     if (l) setManifestFluxo(l)
   }, [modo])
 
@@ -188,8 +186,10 @@ export default function App() {
     } else if (modoParam === 'paciente') {
       setModo('paciente')
     } else if (modoParam === 'login') {
-      // (bariatrico.net) card de login/senha do paciente.
-      setModo('login')
+      // (bariatrico.net) card de login/senha do paciente — abre a landing direto
+      // no card CPF+senha (mesmo mecanismo do rf_paciente_cpf_prefill, sem CPF).
+      try { localStorage.setItem('rf_paciente_abrir_login', '1') } catch (e) {}
+      setModo('home')
     } else if (modoParam === 'indicador') {
       setModo('indicador')
       setTimeout(() => setSaindo(false), 450)
@@ -414,7 +414,7 @@ export default function App() {
   // (paciente logado -> Modo Medico desloga o paciente, e vice-versa).
   useEffect(() => {
     const fluxoMedico = modo === 'calculadora' || modo === 'admin'
-    const fluxoPaciente = modo === 'paciente' || modo === 'triagem-direta' || modo === 'login' || modo === 'oba-paciente'
+    const fluxoPaciente = modo === 'paciente' || modo === 'triagem-direta' || modo === 'oba-paciente'
     if (fluxoMedico) {
       let pacLogado = false
       try { pacLogado = !!localStorage.getItem('paciente_id') } catch (e) {}
@@ -556,21 +556,14 @@ export default function App() {
         onVoltar={irVoltar}
         onIrDashboard={() => setModo('paciente')}
         onCadastrar={(dados) => {
-          setDadosPreCadastro(dados)
-          setModo('paciente')
+          // Manda pro cadastro CPF+senha moderno (LandingPage, fluxoEtapa='paciente'),
+          // com o CPF da triagem pré-preenchido — não mais pro AuthPage antigo (email+senha,
+          // aposentado: nunca recebia o token de sessão que o resto do app exige).
+          try { localStorage.setItem('rf_paciente_cpf_prefill', dados?.cpf || '') } catch (e) {}
+          setModo('home')
         }}
       />
     )
-  }
-
-  if (modo === 'login') {
-    if (session) { setModo('paciente'); return null }
-    return <AuthPage
-      onLogin={() => setModo('paciente')}
-      onVoltar={irVoltar}
-      onDemoEntrar={(perfil) => { setDemoPacientePerfil(perfil); setModo('paciente') }}
-      etapaInicial="cpf"
-    />
   }
 
   if (modo === 'paciente') {
@@ -584,22 +577,9 @@ export default function App() {
       const pseudoSession = { user: { id: pacienteLocalId } }
       return <PatientDashboard session={pseudoSession} onVoltar={irVoltar} abrirOBA={!!localStorage.getItem('rf_flag')} />
     }
-    // Sem paciente_id E sem dadosPreCadastro: estado dessincronizado, volta pra home.
-    if (!dadosPreCadastro.cpf && !dadosPreCadastro.semCpf) {
-      setTimeout(() => setModo('home'), 0);
-      return null;
-    }
-    // Fallback antigo: Supabase Auth (so chega aqui com dadosPreCadastro preenchido)
-    if (!session) return <AuthPage
-      onLogin={() => {}}
-      onVoltar={() => { setModo('home'); setDadosPreCadastro({ cpf: '', sexo: '', dataNascimento: '' }) }}
-      onDemoEntrar={(perfil) => setDemoPacientePerfil(perfil)}
-      cpfInicial={dadosPreCadastro.cpf}
-      sexoInicial={dadosPreCadastro.sexo}
-      dataNascimentoInicial={dadosPreCadastro.dataNascimento}
-      etapaInicial={dadosPreCadastro.etapa || (dadosPreCadastro.cpf ? 'cadastro' : 'cpf')}
-    />
-    return <PatientDashboard session={session} onVoltar={irVoltar} abrirOBA={!!localStorage.getItem('rf_flag')} />
+    // Sem paciente_id: estado dessincronizado (ex.: refresh antes de logar), volta pra home.
+    setTimeout(() => setModo('home'), 0);
+    return null;
   }
 
   if (modo === 'oba-paciente') {
@@ -646,21 +626,6 @@ if (modo === 'home') {
       onModoPaciente={() => setModo('triagem-direta')}
       onModoAdmin={() => setModo('admin')}
       onIrDashboardPaciente={() => setModo('paciente')}
-      onIrLogin={(payload) => {
-        // payload opcional do fluxo PACIENTE da landing: { cpf, etapa, semCpf }
-        if (payload && typeof payload === 'object') {
-          setDadosPreCadastro({
-            cpf: payload.cpf || '',
-            sexo: '',
-            dataNascimento: '',
-            etapa: payload.etapa || 'cpf',
-            semCpf: !!payload.semCpf,
-          })
-          setModo('paciente')
-        } else {
-          setModo('login')
-        }
-      }}
     />
   )
 }

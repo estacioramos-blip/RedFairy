@@ -12,8 +12,8 @@ import TriagemResultadoModal from './TriagemResultadoModal'
  *   4. Apos Voltar ao inicio -> chama onVoltar (volta para landing)
  *
  * Se usuario clicar "Continuar para o cadastro" no popup azul,
- * chama onCadastrar(cpf) para que o App redirecione ao AuthPage
- * em modo cadastro com o CPF pre-preenchido.
+ * chama onCadastrar(cpf) para que o App volte pra landing com o
+ * CPF pre-preenchido no card de cadastro CPF+senha.
  *
  * Props:
  *   onVoltar:     function() -- fechar tudo e voltar para landing

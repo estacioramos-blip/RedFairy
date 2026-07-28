@@ -599,7 +599,7 @@ function ContagemRegressiva() {
   )
 }
 
-export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, onIrDashboardPaciente, onModoAdmin, autoOBA = false }) {
+export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboardPaciente, onModoAdmin, autoOBA = false }) {
   const [medicoLogado, setMedicoLogado] = useState(() => {
     try { return localStorage.getItem('medico_nome') || ''; } catch(e) { return ''; }
   })
@@ -1046,6 +1046,24 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
     }, 20);
     return () => clearInterval(iv);
   }, [fluxoEtapa, cpfPacPasso, cpfPacModo]);
+  // Paciente veio da triagem anônima (bateu o limite de 2 grátis, clicou "IR PARA O
+  // CADASTRO" em TriagemResultadoModal) — abre direto o card CPF+senha com o CPF já
+  // digitado, em vez de pedir de novo. Consome o localStorage uma vez só.
+  // Ou veio de um link ?modo=login (ex.: bariatrico.net) — mesmo card, sem CPF pronto.
+  useEffect(() => {
+    let prefill = '', abrirLogin = false;
+    try {
+      prefill = localStorage.getItem('rf_paciente_cpf_prefill') || '';
+      abrirLogin = localStorage.getItem('rf_paciente_abrir_login') === '1';
+    } catch (e) {}
+    if (!prefill && !abrirLogin) return;
+    try {
+      localStorage.removeItem('rf_paciente_cpf_prefill');
+      localStorage.removeItem('rf_paciente_abrir_login');
+    } catch (e) {}
+    if (prefill) setCpfPacValor(formatarCPFLand(prefill));
+    irPara('paciente');
+  }, []);
   async function cpfPacAvancar() {
     if (!cpfPacValido || cpfPacBuscando) return;
     setCpfPacErro('');
@@ -1129,15 +1147,6 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrLogin, o
       } catch (e) {}
     }
     onModoPaciente && onModoPaciente();
-  }
-  function cpfPacAlternativo() {
-    // Fluxo alternativo (sem CPF) - por enquanto manda pra AuthPage legacy
-    try {
-      localStorage.setItem('rf_paciente_sem_cpf', '1');
-      localStorage.removeItem('rf_paciente_cpf_prefill');
-      localStorage.removeItem('rf_paciente_etapa_inicial');
-    } catch (e) {}
-    onIrLogin && onIrLogin({ cpf: '', etapa: 'cadastro', semCpf: true });
   }
   function cpfPacVoltarCpf() {
     setCpfPacPasso('cpf');
