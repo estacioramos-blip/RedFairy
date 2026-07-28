@@ -21,6 +21,17 @@ export default function App() {
   const [modo, setModo] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search)
+      // (unificação) Link antigo do site bariatrico.net apontando pro redfairy.bio
+      // (?from=bari ou ?modo=restrito — os 4 CTAs do site estático) → manda pro
+      // app.bariatrico.net, preservando a URL inteira. Só dispara em PRODUÇÃO
+      // (host redfairy.bio/www.redfairy.bio) — nunca em dev/preview, pra não
+      // atrapalhar teste local com ?bari=1 (ver ehDominioBariatrico em lib/dominio.js).
+      const hostAtual = (window.location.hostname || '').toLowerCase()
+      const ehRedfairyBioProd = hostAtual === 'redfairy.bio' || hostAtual === 'www.redfairy.bio'
+      if (ehRedfairyBioProd && (params.get('from') === 'bari' || params.get('modo') === 'restrito')) {
+        window.location.replace('https://app.bariatrico.net' + window.location.pathname + window.location.search)
+        return 'home'
+      }
       // (bariatrico.net) REFRESH vindo do bariátrico: num refresh "limpo" (a URL já foi
       // higienizada no 1º load, então não há mais params de tela) que cairia na landing,
       // se a SESSÃO veio do bariatrico.net (rf_voltar_url setado pelo ?from=bari) devolve
