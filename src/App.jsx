@@ -66,6 +66,11 @@ export default function App() {
         return 'home'
       }
       if (params.get('oba') === '1') return 'oba-paciente'
+      // (app.bariatrico.net) Raiz sem NENHUM parâmetro de tela (?oba=1, ?modo=...,
+      // etc.): quem chega direto nesse domínio (sem vir de um CTA do site) deve cair
+      // no fluxo do paciente OBA, não na landing geral do RedFairy — que não faz
+      // sentido pra esse domínio.
+      if (!temParamTela && ehDominioBariatrico()) return 'oba-paciente'
     } catch (e) {}
     return 'home'
   })
