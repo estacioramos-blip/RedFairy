@@ -152,12 +152,30 @@ function aplicarRegrasPosMatching(inputs, proximosExames, comentarios, resultado
 
 // Separa a lista de exames em LAB / IMAGEM / ENDOSCOPIA / BIOIMAGEM (usado no match e no fallback).
 function splitExames(proximosExames) {
-  const PADROES_IMAGEM = /ULTRASSON|COLONOSCOP|ENDOSCOP|RESSON|RNM|DENSITOMETR/i;
+  // \bUSG\b: 8 entradas das matrizes escrevem o ultrassom ABREVIADO ("USG
+  // OBSTÉTRICA", "USG ABDOME", "USG PÉLVICO TRANSVAGINAL") e não casavam com
+  // ULTRASSON — caíam em `lab`. Enquanto a separação era só visual isso passava;
+  // agora que cada grupo é um PEDIDO FÍSICO, a gestante do id 114 receberia
+  // "USG OBSTÉTRICA COM DOPPLER" no papel do laboratório.
+  const PADROES_IMAGEM = /ULTRASSON|\bUSG\b|COLONOSCOP|ENDOSCOP|RESSON|RNM|DENSITOMETR/i;
   const PADROES_ENDOSCOPIA = /COLONOSCOP|ENDOSCOP/i;
+  // CARDIOLÓGICO é um SERVIÇO próprio (decisão do Estácio, jul/2026): não se faz
+  // ECG no laboratório. Antes o ELETROCARDIOGRAMA caía em `lab` por exclusão e o
+  // paciente levava o pedido ao lugar errado.
+  // Hoje só o ELETROCARDIOGRAMA aparece nas matrizes (varredura de 71 exames
+  // distintos) — os outros padrões estão aqui para que, se vierem a ser
+  // sugeridos, já nasçam no serviço certo.
+  // ANGIOTOMOGRAFIA aparece QUALIFICADA de propósito: sem "CORONARIANA", uma
+  // futura "ANGIOTOMOGRAFIA DE ABDOME" viraria pedido cardiológico por engano.
+  const PADROES_CARDIO = /ELETROCARDIOGRAMA|ECOCARDIOGRAMA|ERGOM[ÉE]TRIC|HOLTER|\bMAPA\b|ANGIOTOMOGRAFIA CORONARIAN|SCORE DE C[ÁA]LCIO|ESCORE DE C[ÁA]LCIO|CINTILOGRAFIA MIOC/i;
   const imagem = proximosExames.filter(e => PADROES_IMAGEM.test(String(e)));
-  const lab = proximosExames.filter(e => !PADROES_IMAGEM.test(String(e)));
+  // A ordem importa: imagem tem precedência (ex.: uma futura "RESSONÂNCIA
+  // CARDÍACA" é bioimagem, feita no mesmo serviço de imagem), e o cardiológico
+  // é retirado do que sobraria como laboratório.
+  const cardiologico = proximosExames.filter(e => !PADROES_IMAGEM.test(String(e)) && PADROES_CARDIO.test(String(e)));
+  const lab = proximosExames.filter(e => !PADROES_IMAGEM.test(String(e)) && !PADROES_CARDIO.test(String(e)));
   return {
-    imagem, lab,
+    imagem, lab, cardiologico,
     endoscopia: imagem.filter(e => PADROES_ENDOSCOPIA.test(String(e))),
     bioimagem: imagem.filter(e => !PADROES_ENDOSCOPIA.test(String(e))),
   };
@@ -370,6 +388,7 @@ export function avaliarPaciente(inputs) {
     fallback.proximosExamesImagem = sp.imagem;
     fallback.proximosExamesEndoscopia = sp.endoscopia;
     fallback.proximosExamesBioimagem = sp.bioimagem;
+    fallback.proximosExamesCardio = sp.cardiologico;
     fallback.diasDesdeColeta = calcularDias(inputs.dataColeta);
     fallback.fraseData = getFraseData(fallback.diasDesdeColeta);
     // A frase de hipermenorreia vale AQUI TAMBÉM — sem ela, a paciente que caía no
@@ -517,7 +536,7 @@ export function avaliarPaciente(inputs) {
   aplicarRegrasPosMatching(inputs, proximosExames, comentarios, resultado);
 
   // Split LAB / IMAGEM / ENDOSCOPIA / BIOIMAGEM.
-  const { imagem: proximosExamesImagem, lab: proximosExamesLab, endoscopia: proximosExamesEndoscopia, bioimagem: proximosExamesBioimagem } = splitExames(proximosExames);
+  const { imagem: proximosExamesImagem, lab: proximosExamesLab, endoscopia: proximosExamesEndoscopia, bioimagem: proximosExamesBioimagem, cardiologico: proximosExamesCardio } = splitExames(proximosExames);
 
   return {
     encontrado: true,
@@ -538,6 +557,7 @@ export function avaliarPaciente(inputs) {
     proximosExamesImagem,
     proximosExamesEndoscopia,
     proximosExamesBioimagem,
+    proximosExamesCardio,
     fraseData,
     fraseHipermenorreia: fraseHiper,
     g6pdAlerta,
@@ -644,6 +664,7 @@ export function triagemEritron(inputs) {
       proximosExamesImagem: [],
       proximosExamesEndoscopia: [],
       proximosExamesBioimagem: [],
+      proximosExamesCardio: [],
       comentarios: [],
       achadosParalelos: [],
       g6pdAlerta: null,
@@ -703,6 +724,7 @@ export function triagemEritron(inputs) {
     proximosExamesImagem: [],
     proximosExamesEndoscopia: [],
     proximosExamesBioimagem: [],
+    proximosExamesCardio: [],
     comentarios: [],
     achadosParalelos: [],
     g6pdAlerta: null,

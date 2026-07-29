@@ -9,6 +9,16 @@ import { ehBloqueio } from '../engine/limitesInput';
 import { credAmbas, credMedico } from '../lib/cred';
 import { DUVIDA_SECOES } from './OBAModal';
 
+// Rótulo curto de cada serviço de exame. Laboratório, imagem, endoscopia e
+// cardiológico são feitos em locais diferentes — daí virarem pedidos separados.
+const rotuloServico = (chave) => ({
+  lab: 'Laboratório',
+  bioimagem: 'Imagem',
+  endoscopia: 'Endoscopia',
+  cardio: 'Cardiológico',
+  imagem: 'Imagem',
+}[chave] || 'Exames');
+
 const colorScheme = {
   green:  { bg: 'bg-green-50',  border: 'border-green-400',  badge: 'bg-green-600',  text: 'text-green-800'  },
   yellow: { bg: 'bg-yellow-50', border: 'border-yellow-400', badge: 'bg-yellow-500', text: 'text-yellow-800' },
@@ -720,9 +730,42 @@ function DocumentoMedicoPanel({ resultado }) {
     carregarTudo();
   }, []);
 
-  function montarTextoExames() {
-    if (!resultado.proximosExames?.length) return '';
-    return 'PEDIDO DE EXAMES:\n' + resultado.proximosExames.map(e => `- ${e}`).join('\n');
+  // Um pedido POR SERVIÇO. Laboratório, bioimagem (US/RNM/densitometria) e
+  // endoscopia (EDA/colonoscopia) são feitos em LUGARES DIFERENTES — um papel só,
+  // com tudo junto, faz o paciente chegar no laboratório com um pedido de
+  // colonoscopia. O motor já entrega as listas separadas; aqui elas viram
+  // documentos distintos. Cobrança: um valor por serviço (decisão do Estácio).
+  function servicosDeExame() {
+    const r = resultado || {};
+    const temSeparacao = Array.isArray(r.proximosExamesLab) || Array.isArray(r.proximosExamesImagem);
+    if (!temSeparacao) {
+      // Retorno antigo do engine (sem split): mantém um pedido único com tudo,
+      // para nunca perder exame.
+      const todos = r.proximosExames || [];
+      return todos.length ? [{ chave: 'lab', titulo: 'PEDIDO DE EXAMES', itens: todos }] : [];
+    }
+    // Se vier proximosExamesImagem mas não os sub-arrays (versão intermediária do
+    // engine), a imagem inteira entra como um serviço só — melhor que perder.
+    const temSub = Array.isArray(r.proximosExamesEndoscopia) || Array.isArray(r.proximosExamesBioimagem);
+    const grupos = temSub
+      ? [
+          { chave: 'lab',         titulo: 'PEDIDO DE EXAMES LABORATORIAIS',    itens: r.proximosExamesLab || [] },
+          { chave: 'bioimagem',   titulo: 'PEDIDO DE EXAMES DE IMAGEM',        itens: r.proximosExamesBioimagem || [] },
+          { chave: 'endoscopia',  titulo: 'PEDIDO DE ENDOSCOPIA/COLONOSCOPIA', itens: r.proximosExamesEndoscopia || [] },
+          { chave: 'cardio',      titulo: 'PEDIDO DE EXAMES CARDIOLÓGICOS',    itens: r.proximosExamesCardio || [] },
+        ]
+      : [
+          { chave: 'lab',    titulo: 'PEDIDO DE EXAMES LABORATORIAIS', itens: r.proximosExamesLab || [] },
+          { chave: 'imagem', titulo: 'PEDIDO DE EXAMES DE IMAGEM',     itens: r.proximosExamesImagem || [] },
+        ];
+    return grupos.filter(g => g.itens.length > 0);
+  }
+
+  // Texto de UM serviço, no formato do pedido. Fonte única: o enviarWhatsApp
+  // chamava esta função e depois remontava o texto na mão — duas formatações do
+  // mesmo pedido, que divergiriam na primeira alteração de uma delas.
+  function textoDoServico(g) {
+    return g.titulo + ':\n' + g.itens.map(e => `- ${e}`).join('\n');
   }
 
   function montarTextoPrescricao() {
@@ -756,8 +799,16 @@ function DocumentoMedicoPanel({ resultado }) {
     setEnviando(true); setErro('');
 
     const documentos = [];
-    if (tiposDoc.exames && temExames) documentos.push(montarTextoExames());
-    if (tiposDoc.prescricao && temPrescricao) documentos.push(montarTextoPrescricao());
+    const tipos = [];   // paralelo a `documentos` — vai pra coluna tipos_documento
+    // Um documento POR SERVIÇO — e cada documento conta como uma solicitação
+    // na cobrança.
+    if (tiposDoc.exames && temExames) {
+      servicosDeExame().forEach(g => {
+        documentos.push(textoDoServico(g));
+        tipos.push('exames_' + g.chave);
+      });
+    }
+    if (tiposDoc.prescricao && temPrescricao) { documentos.push(montarTextoPrescricao()); tipos.push('prescricao'); }
 
     const total = (valorDoc || 0) * documentos.length;
     const msgs = [
@@ -777,7 +828,9 @@ function DocumentoMedicoPanel({ resultado }) {
         nome: dadosPaciente.nome.trim(),
         data_nascimento: dadosPaciente.dataNasc,
         celular: dadosPaciente.celular,
-        tipos_documento: documentos.map((_, i) => tiposDoc.exames && i === 0 ? 'exames' : 'prescricao'),
+        // Antes: map por índice assumindo "0 = exames, resto = prescricao" — com
+        // vários pedidos de exame isso rotulava errado. Agora vem do array paralelo.
+        tipos_documento: tipos,
         texto_documentos: textoCompleto,
         valor_total: total,
         status: 'aguardando_pagamento',
@@ -815,6 +868,13 @@ function DocumentoMedicoPanel({ resultado }) {
   if (!temExames && !temPrescricao) return null;
   if (valorDoc === null) return null;
 
+  // Quantos SERVIÇOS de exame o quadro gerou (lab / bioimagem / endoscopia).
+  // A cobrança é por serviço, porque cada um é um pedido separado, feito em
+  // lugar diferente. Usado no preço exibido e no resumo do checkbox.
+  const servicos = servicosDeExame();
+  const nServicos = servicos.length || 1;
+  const nDocs = (tiposDoc.exames ? nServicos : 0) + (tiposDoc.prescricao ? 1 : 0);
+
   const inputStyle = { width: '100%', border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.9rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' };
 
   if (etapa === 'concluido') return (
@@ -831,7 +891,7 @@ function DocumentoMedicoPanel({ resultado }) {
         <p className="text-white font-bold text-sm">{"\ud83d\udcb3 Efetue o pagamento via Pix"}</p>
       </div>
       <div className="p-4 space-y-4">
-        <p className="text-gray-600 text-sm">{"Valor: "}<strong className="text-red-700 text-lg">{"R$ "}{((valorDoc || 0) * ([tiposDoc.exames, tiposDoc.prescricao].filter(Boolean).length || 1)).toFixed(2)}</strong></p>
+        <p className="text-gray-600 text-sm">{"Valor: "}<strong className="text-red-700 text-lg">{"R$ "}{((valorDoc || 0) * (nDocs || 1)).toFixed(2)}</strong></p>
         {pixChave && (
           <>
             <div className="flex justify-center">
@@ -910,10 +970,21 @@ function DocumentoMedicoPanel({ resultado }) {
               <input type="checkbox" checked={tiposDoc.exames} onChange={e => setTiposDoc(p => ({ ...p, exames: e.target.checked }))}
                 className="w-4 h-4 cursor-pointer" />
               <div>
-                <p className="font-bold text-sm text-gray-700">{"\ud83d\udccb Pedido de Exames"}</p>
+                <p className="font-bold text-sm text-gray-700">
+                  {servicos.length > 1 ? "\ud83d\udccb Pedidos de Exames (" + servicos.length + ")" : "\ud83d\udccb Pedido de Exames"}
+                </p>
                 <p className="text-xs text-gray-500">{resultado.proximosExames?.length}{" exame(s) sugeridos"}</p>
+                {/* Por que mais de um pedido: cada servi\u00e7o \u00e9 feito em lugar
+                    diferente, ent\u00e3o cada um vira um papel pr\u00f3prio. Dizer isso
+                    aqui evita a leitura de "est\u00e3o me cobrando 3x pelo mesmo". */}
+                {servicos.length > 1 && (
+                  <p className="text-[0.68rem] text-gray-500 mt-0.5 leading-snug">
+                    {servicos.map(g => rotuloServico(g.chave)).join(' + ')}
+                    {" \u2014 pedidos separados, porque s\u00e3o feitos em locais diferentes."}
+                  </p>
+                )}
               </div>
-              <span className="ml-auto font-bold text-red-700">{"R$ "}{valorDoc?.toFixed(2)}</span>
+              <span className="ml-auto font-bold text-red-700">{"R$ "}{((valorDoc || 0) * servicos.length).toFixed(2)}</span>
             </label>
           )}
           {temPrescricao && (
@@ -1362,45 +1433,51 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
             {(() => {
               // Usa os arrays separados do engine; se nao existirem (retorno antigo),
               // trata tudo como laboratorio para nao perder exames.
-              const temSeparacao = Array.isArray(resultado.proximosExamesLab) || Array.isArray(resultado.proximosExamesImagem);
-              const listaLab = temSeparacao
-                ? (resultado.proximosExamesLab || [])
-                : (resultado.proximosExames || []);
-              const listaImagem = temSeparacao
-                ? (resultado.proximosExamesImagem || [])
-                : [];
+              // Um card por SERVI\u00c7O, na mesma ordem em que os pedidos s\u00e3o
+              // gerados. Antes, endoscopia e ultrassom apareciam juntos num card
+              // "Imagem" s\u00f3 \u2014 mas s\u00e3o servi\u00e7os diferentes e viram pap\u00e9is
+              // separados, ent\u00e3o a tela precisa mostrar essa mesma divis\u00e3o.
+              const r = resultado;
+              const temSeparacao = Array.isArray(r.proximosExamesLab) || Array.isArray(r.proximosExamesImagem);
+              const temSub = Array.isArray(r.proximosExamesEndoscopia) || Array.isArray(r.proximosExamesBioimagem);
+              const grupos = !temSeparacao
+                ? [{ k: 'lab', icone: '\ud83d\udd2c', titulo: 'Exames', cols: 2, itens: r.proximosExames || [] }]
+                : temSub
+                  ? [
+                      { k: 'lab',        icone: '\ud83d\udd2c', titulo: 'Laborat\u00f3rio',  cols: 2, itens: r.proximosExamesLab || [] },
+                      { k: 'bioimagem',  icone: '\ud83e\ude7b', titulo: 'Imagem',       cols: 1, itens: r.proximosExamesBioimagem || [] },
+                      { k: 'endoscopia', icone: '\ud83d\udd0e', titulo: 'Endoscopia',   cols: 1, itens: r.proximosExamesEndoscopia || [] },
+                      { k: 'cardio',     icone: '\ud83e\udec0', titulo: 'Cardiol\u00f3gico', cols: 1, itens: r.proximosExamesCardio || [] },
+                    ]
+                  : [
+                      { k: 'lab',    icone: '\ud83d\udd2c', titulo: 'Laborat\u00f3rio', cols: 2, itens: r.proximosExamesLab || [] },
+                      { k: 'imagem', icone: '\ud83e\ude7b', titulo: 'Imagem',      cols: 1, itens: r.proximosExamesImagem || [] },
+                    ];
+              const comItens = grupos.filter(g => g.itens.length > 0);
               return (
                 <div className="space-y-3">
-                  {listaLab.length > 0 && (
-                    <div className="bg-white rounded-xl p-4 border border-gray-100">
-                      <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">{"\ud83d\udd2c Laborat\u00f3rio"}</p>
-                      <div className="grid grid-cols-2 gap-1">
-                        {listaLab.map((exame, i) => (
-                          <div key={`lab-${i}`} className="flex items-center gap-2 text-sm text-gray-700">
+                  {comItens.map(g => (
+                    <div key={g.k} className="bg-white rounded-xl p-4 border border-gray-100">
+                      <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">{g.icone + ' ' + g.titulo}</p>
+                      <div className={g.cols === 2 ? 'grid grid-cols-2 gap-1' : 'grid grid-cols-1 gap-1'}>
+                        {g.itens.map((exame, i) => (
+                          <div key={g.k + '-' + i} className="flex items-center gap-2 text-sm text-gray-700">
                             <span className="text-gray-400">{"\u2022"}</span>
                             {exame}
                           </div>
                         ))}
                       </div>
                     </div>
-                  )}
-                  {listaImagem.length > 0 && (
-                    <div className="bg-white rounded-xl p-4 border border-gray-100">
-                      <p className="text-xs font-bold uppercase tracking-wide text-gray-500 mb-2">{"\ud83e\ude7b Imagem"}</p>
-                      <div className="grid grid-cols-1 gap-1">
-                        {listaImagem.map((exame, i) => (
-                          <div key={`img-${i}`} className="flex items-center gap-2 text-sm text-gray-700">
-                            <span className="text-gray-400">{"\u2022"}</span>
-                            {exame}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {listaLab.length === 0 && listaImagem.length === 0 && (
+                  ))}
+                  {comItens.length === 0 && (
                     <div className="bg-white rounded-xl p-4 border border-gray-100">
                       <p className="text-sm text-gray-400">{"Nenhum exame adicional sugerido."}</p>
                     </div>
+                  )}
+                  {comItens.length > 1 && (
+                    <p className="text-[0.7rem] text-gray-500 leading-snug">
+                      {"S\u00e3o " + comItens.length + " servi\u00e7os diferentes \u2014 cada um gera um pedido separado, para o paciente levar ao local certo."}
+                    </p>
                   )}
                 </div>
               );
