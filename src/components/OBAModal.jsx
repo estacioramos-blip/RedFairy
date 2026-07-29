@@ -3027,7 +3027,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           <div style={{ background:'#FEF2F2', border:'1px solid #FECDD3', borderRadius:10, padding:'0.8rem 1rem', marginBottom:'1rem' }}>
             <p style={{ fontSize:'0.62rem', textTransform:'uppercase', letterSpacing:'1px', color:'#B45309', fontWeight:800, margin:'0 0 0.4rem' }}>
-              {modoRevisao ? `Revisão médica · Avaliação nº ${numeroCiclo}` : `Avaliação nº ${numeroCiclo}`}
+              {modoRevisao ? `Revisão médica · Avaliação #${numeroCiclo}` : `Avaliação #${numeroCiclo}`}
             </p>
             {modoFollowUp ? (
               <>
@@ -3036,9 +3036,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               </>
             ) : (
               <>
-                <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.3rem' }}>{isFem ? "A bari\u00e1trica \u00e9 uma paciente complexa." : "O bari\u00e1trico \u00e9 um paciente complexo."}</p>
-                <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.5px', color:'#9B2C2C' }}>{"Precisamos de mais informa\u00e7\u00f5es para cuidar de voc\u00ea. Marque os itens e preencha os campos:"}</p>
-                <p style={{ fontSize:'0.66rem', textTransform:'uppercase', letterSpacing:'0.4px', color:'#9B2C2C', fontWeight:600, marginTop:'0.5rem', lineHeight:1.5 }}>{"Digite r\u00e1pido e com aten\u00e7\u00e3o que o processo ser\u00e1 r\u00e1pido e f\u00e1cil, mas se voc\u00ea errar alguma coisa voc\u00ea sempre pode tocar no campo e editar."}</p>
+                <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'1px', color:'#7B1E1E', fontWeight:700, marginBottom:'0.5rem', lineHeight:1.45 }}>
+                  {(isFem ? "Compreender a bari\u00e1trica" : "Compreender o bari\u00e1trico") + " exige uma investiga\u00e7\u00e3o m\u00e9dica razoavelmente complexa."}
+                </p>
+                {/* Par\u00e1grafo longo em caixa normal (o resto do card \u00e9 caixa alta):
+                    em mai\u00fasculas, um texto deste tamanho fica pesado de ler. */}
+                <p style={{ fontSize:'0.72rem', letterSpacing:'0.2px', color:'#9B2C2C', fontWeight:500, lineHeight:1.6 }}>
+                  {"Precisamos de informa\u00e7\u00f5es. S\u00e3o dados sobre a sua sa\u00fade e a sua vida, e tudo foi pensado para ser o mais simples poss\u00edvel. Nos campos amarelos da primeira fase, voc\u00ea vai notar que o cursor muda automaticamente para o campo seguinte. Esteja " + (isFem ? "atenta" : "atento") + ", mas se ficarem dados errados voc\u00ea pode editar. Marque o que voc\u00ea sabe. Onde voc\u00ea poder\u00e1 ter d\u00favidas marque as caixinhas que informam que voc\u00ea n\u00e3o tem certeza. Em uma p\u00e1gina a seguir voc\u00ea vai entrar os resultados dos seus exames mais recentes. Nela o cursor n\u00e3o salta, porque voc\u00ea vai estar folheando ou consultando arquivos, e voc\u00ea ter\u00e1 todo o tempo que precisar para entrar e corrigir os dados. \u00c9 tudo muito tranquilo, vamos."}
+                </p>
               </>
             )}
           </div>
