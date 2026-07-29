@@ -24,6 +24,16 @@ const fmtData = (d) => {
   if (!d) return '—'
   try { return new Date(d).toLocaleDateString('pt-BR') } catch (e) { return '—' }
 }
+// Data COM hora — usada só na lista de lotes de pagamento, onde dois lançamentos
+// no mesmo dia precisam ser distinguíveis antes de alguém clicar em ESTORNAR.
+const fmtDataHora = (d) => {
+  if (!d) return '—'
+  try {
+    return new Date(d).toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    })
+  } catch (e) { return '—' }
+}
 
 export default function CaixaPage({ onVoltar }) {
   const [token, setToken] = useState(() => { try { return localStorage.getItem('caixa_token') || '' } catch (e) { return '' } })
@@ -406,6 +416,42 @@ function AbaExtratos({ rpc, toast }) {
   const [chave, setChave] = useState('')
   const [texto, setTexto] = useState('')
   const [busy, setBusy] = useState(false)
+  // ESTORNO (M4): lotes de pagamento já lançados desta pessoa. O Caixa paga em
+  // LOTE, então o que se estorna é o lote inteiro — identificado pelo timestamp
+  // exato de data_pagamento, que é igual em todas as linhas de um mesmo UPDATE.
+  const [lotes, setLotes] = useState([])
+  const [estornando, setEstornando] = useState('')
+
+  async function carregarLotes(p, c) {
+    if (p !== 'medico' && p !== 'indicador') { setLotes([]); return }
+    try {
+      const d = await rpc('caixa_lotes_pagos', { p_papel: p, p_chave: c })
+      setLotes((d && d.ok) ? (d.lotes || []) : [])
+    } catch (e) { setLotes([]) }
+  }
+
+  async function estornar(lote) {
+    if (estornando) return
+    const quanto = fmtBRL(lote.total_brl)
+    if (!window.confirm(
+      `ESTORNAR o pagamento de ${fmtData(lote.data_pagamento)}?\n\n` +
+      `${lote.n_linhas} lançamento(s) · ${quanto}\n\n` +
+      `Os créditos voltam para "A PAGAR". Isso NÃO devolve dinheiro que já saiu da conta — ` +
+      `serve para desfazer uma baixa lançada por engano.`
+    )) return
+    const motivo = window.prompt('Motivo do estorno (fica registrado):', '')
+    if (motivo === null) return   // cancelou no motivo
+    setEstornando(lote.data_pagamento)
+    try {
+      const d = await rpc('caixa_estornar', {
+        p_papel: papel, p_chave: chave.trim(), p_data_pagamento: lote.data_pagamento, p_motivo: motivo,
+      })
+      if (!d || d.ok === false) { toast(false, d?.erro || 'Não foi possível estornar.'); setEstornando(''); return }
+      toast(true, `Estornado: ${d.n_linhas} lançamento(s) · ${fmtBRL(d.total_brl)}`)
+      await gerar()          // recarrega extrato + lotes
+      setEstornando('')      // só libera o botão DEPOIS da lista recarregar
+    } catch (e) { toast(false, e.message); setEstornando('') }
+  }
 
   function linhaTxt(l, usdDefault, cot) {
     const st = l.pago ? `PAGO ${fmtData(l.data_pagamento)}${l.valor_brl != null ? ' ' + fmtBRL(l.valor_brl) : ''}` : (l.elegivel === false ? 'NAO ELEGIVEL' : 'A PAGAR')
@@ -455,6 +501,7 @@ function AbaExtratos({ rpc, toast }) {
       }
       L.push('', '— Projeto OBA®')
       setTexto(L.join('\n'))
+      await carregarLotes(papel, chave.trim())
     } catch (e) { toast(false, e.message) }
     setBusy(false)
   }
@@ -464,13 +511,16 @@ function AbaExtratos({ rpc, toast }) {
     <div className="bg-white rounded-2xl shadow p-4">
       <h2 className="font-extrabold text-sm mb-2" style={{ color: DARK }}>{"EXTRATO POR PESSOA"}</h2>
       <div className="flex gap-2 flex-wrap items-center mb-3">
-        <select value={papel} onChange={e => { setPapel(e.target.value); setTexto('') }}
+        <select value={papel} onChange={e => { setPapel(e.target.value); setTexto(''); setLotes([]) }}
           className="border border-gray-300 rounded-lg px-2 py-1.5 text-xs">
           <option value="medico">Médico (CRM/UF)</option>
           <option value="indicador">Indicador (código IND…)</option>
           <option value="paciente">Paciente (CPF)</option>
         </select>
-        <input value={chave} onChange={e => setChave(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') gerar() }}
+        {/* Trocar a chave LIMPA o extrato e os lotes: senão a lista de
+            "PAGAMENTOS LANÇADOS" da pessoa anterior fica na tela e o ESTORNAR
+            passa a apontar para o lote de um, com a chave do outro. */}
+        <input value={chave} onChange={e => { setChave(e.target.value); setTexto(''); setLotes([]) }} onKeyDown={e => { if (e.key === 'Enter') gerar() }}
           placeholder={papel === 'medico' ? '6302/BA' : papel === 'indicador' ? 'INDA1B2C3' : '000.000.000-00'}
           className="border border-gray-300 rounded-lg px-2 py-1.5 text-xs w-40" />
         <button onClick={gerar} disabled={busy || !chave.trim()}
@@ -485,6 +535,39 @@ function AbaExtratos({ rpc, toast }) {
           <button onClick={copiar} className="font-bold px-3 py-2 rounded-xl text-xs bg-gray-100 hover:bg-gray-200 text-gray-700">{"📋 COPIAR"}</button>
           <button onClick={whatsapp} className="font-bold px-3 py-2 rounded-xl text-xs text-white" style={{ background: '#25D366' }}>{"WhatsApp →"}</button>
         </div>
+
+        {/* ESTORNO (M4) — só médico/indicador têm lote de pagamento. */}
+        {lotes.length > 0 && (
+          <div className="mt-4 border-t border-gray-200 pt-3">
+            <h3 className="font-extrabold text-xs mb-1" style={{ color: DARK }}>{"PAGAMENTOS LANÇADOS"}</h3>
+            <p className="text-[0.68rem] text-gray-500 mb-2 leading-snug">
+              {"Estornar devolve os créditos para \"A PAGAR\". Não movimenta dinheiro — serve para desfazer uma baixa lançada por engano."}
+            </p>
+            <div className="space-y-1.5">
+              {lotes.map(l => (
+                <div key={l.data_pagamento} className="flex items-center justify-between gap-2 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5">
+                  {/* Com HORA, não só a data: dois pagamentos no mesmo dia (créditos
+                      novos ficando elegíveis à tarde) apareciam idênticos na lista. */}
+                  <div className="min-w-0 text-xs" title={String(l.data_pagamento)}>
+                    <b>{fmtDataHora(l.data_pagamento)}</b>
+                    <span className="text-gray-500">{" · " + l.n_linhas + " lanç. · "}</span>
+                    <b>{fmtBRL(l.total_brl)}</b>
+                  </div>
+                  {l.tem_nf ? (
+                    <span className="text-[0.66rem] font-bold text-gray-400 whitespace-nowrap" title="Cancele a nota fiscal antes de estornar">
+                      {"NF emitida — bloqueado"}
+                    </span>
+                  ) : (
+                    <button onClick={() => estornar(l)} disabled={!!estornando}
+                      className="font-bold px-2.5 py-1 rounded-lg text-[0.7rem] whitespace-nowrap bg-red-100 hover:bg-red-200 text-red-800 disabled:opacity-50">
+                      {estornando === l.data_pagamento ? '...' : 'ESTORNAR'}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </>)}
     </div>
   )
