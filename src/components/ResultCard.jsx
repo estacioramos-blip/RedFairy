@@ -17,6 +17,7 @@ const rotuloServico = (chave) => ({
   endoscopia: 'Endoscopia',
   cardio: 'Cardiológico',
   avaliacao: 'Avaliação médica',
+  respiratorio: 'Função pulmonar',
   imagem: 'Imagem',
 }[chave] || 'Exames');
 
@@ -754,6 +755,7 @@ function DocumentoMedicoPanel({ resultado }) {
           { chave: 'bioimagem',   titulo: 'PEDIDO DE EXAMES DE IMAGEM',        itens: r.proximosExamesBioimagem || [] },
           { chave: 'endoscopia',  titulo: 'PEDIDO DE ENDOSCOPIA/COLONOSCOPIA', itens: r.proximosExamesEndoscopia || [] },
           { chave: 'cardio',      titulo: 'PEDIDO DE EXAMES CARDIOLÓGICOS',    itens: r.proximosExamesCardio || [] },
+          { chave: 'respiratorio', titulo: 'PEDIDO DE PROVA DE FUNÇÃO PULMONAR',   itens: r.proximosExamesRespiratorio || [] },
           { chave: 'avaliacao',   titulo: 'ENCAMINHAMENTO PARA AVALIAÇÃO MÉDICA', itens: r.proximosExamesAvaliacao || [] },
         ]
       : [
@@ -1450,6 +1452,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
                       { k: 'bioimagem',  icone: '\ud83e\ude7b', titulo: 'Imagem',       cols: 1, itens: r.proximosExamesBioimagem || [] },
                       { k: 'endoscopia', icone: '\ud83d\udd0e', titulo: 'Endoscopia',   cols: 1, itens: r.proximosExamesEndoscopia || [] },
                       { k: 'cardio',     icone: '\ud83e\udec0', titulo: 'Cardiol\u00f3gico', cols: 1, itens: r.proximosExamesCardio || [] },
+                      { k: 'respiratorio', icone: '\ud83e\udec1', titulo: 'Fun\u00e7\u00e3o pulmonar', cols: 1, itens: r.proximosExamesRespiratorio || [] },
                       { k: 'avaliacao',  icone: '\ud83e\ude7a', titulo: 'Avalia\u00e7\u00e3o m\u00e9dica', cols: 1, itens: r.proximosExamesAvaliacao || [] },
                     ]
                   : [

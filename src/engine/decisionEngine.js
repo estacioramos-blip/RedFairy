@@ -134,7 +134,13 @@ function aplicarRegrasPosMatching(inputs, proximosExames, comentarios, resultado
     // do achado paralelo (macrocitose sem/com anemia), evitando repetir "dosar B12/folato".
     const _temValoresMacro = Number(inputs.b12_valor) > 0 || Number(inputs.folato_valor) > 0;
     if (_temValoresMacro) comentarios.push({ titulo: 'MACROCITOSE — INVESTIGAÇÃO', texto: macro.linhas.join(' ') });
-    macro.exames.forEach(ex => { if (!proximosExames.some(e => String(e).toUpperCase() === ex.toUpperCase())) proximosExames.push(ex); });
+    // Dedup ignorando o parêntese final: "ÁCIDO FÓLICO (FOLATOS)" é o MESMO exame
+    // que "ÁCIDO FÓLICO", que a entrada da matriz já pede. Com a comparação
+    // exata que havia aqui, o pedido impresso saía com o folato duas vezes.
+    const _semParenteses = (x) => String(x).toUpperCase().replace(/\s*\([^)]*\)\s*$/, '').trim();
+    macro.exames.forEach(ex => {
+      if (!proximosExames.some(e => _semParenteses(e) === _semParenteses(ex))) proximosExames.push(ex);
+    });
   }
   // Regra 4: microcitose (VCM 60-74) com ferro normal/alto -> talassemia/hemoglobinopatia.
   const vcm = Number(inputs.vcm);
@@ -173,16 +179,31 @@ function splitExames(proximosExames) {
   // de ficar escondida dentro do pedido do laboratório, onde o paciente levaria
   // ao balcão um papel dizendo "procure um hematologista".
   const PADROES_AVALIACAO = /^AVALIA[ÇC][ÃA]O COM|^CONSULTA COM|ENCAMINHAMENTO/i;
+  // RESPIRATÓRIO: espirometria é feita em serviço de função pulmonar, não em
+  // laboratório nem em imagem — pedido isolado (decisão do Estácio, jul/2026).
+  const PADROES_RESPIRATORIO = /ESPIROMETRIA|PROVA DE FUN[ÇC][ÃA]O PULMONAR|PLETISMOGRAFIA/i;
   const imagem = proximosExames.filter(e => PADROES_IMAGEM.test(String(e)));
   // A ordem importa: imagem tem precedência (ex.: uma futura "RESSONÂNCIA
   // CARDÍACA" é bioimagem, feita no mesmo serviço de imagem), e o cardiológico
   // é retirado do que sobraria como laboratório.
-  const naoImagem = (e) => !PADROES_IMAGEM.test(String(e));
-  const cardiologico = proximosExames.filter(e => naoImagem(e) && PADROES_CARDIO.test(String(e)));
-  const avaliacao = proximosExames.filter(e => naoImagem(e) && !PADROES_CARDIO.test(String(e)) && PADROES_AVALIACAO.test(String(e)));
-  const lab = proximosExames.filter(e => naoImagem(e) && !PADROES_CARDIO.test(String(e)) && !PADROES_AVALIACAO.test(String(e)));
+  // Classificação em CASCATA e mutuamente exclusiva: cada exame cai em EXATAMENTE
+  // um serviço. A ordem é a precedência — imagem primeiro (uma futura
+  // "RESSONÂNCIA CARDÍACA" é feita no serviço de imagem, não no cardiológico), e
+  // o laboratório fica com o resto.
+  const servico = (e) => {
+    const s = String(e);
+    if (PADROES_IMAGEM.test(s)) return PADROES_ENDOSCOPIA.test(s) ? 'endoscopia' : 'bioimagem';
+    if (PADROES_CARDIO.test(s)) return 'cardiologico';
+    if (PADROES_RESPIRATORIO.test(s)) return 'respiratorio';
+    if (PADROES_AVALIACAO.test(s)) return 'avaliacao';
+    return 'lab';
+  };
+  const cardiologico = proximosExames.filter(e => servico(e) === 'cardiologico');
+  const respiratorio = proximosExames.filter(e => servico(e) === 'respiratorio');
+  const avaliacao = proximosExames.filter(e => servico(e) === 'avaliacao');
+  const lab = proximosExames.filter(e => servico(e) === 'lab');
   return {
-    imagem, lab, cardiologico, avaliacao,
+    imagem, lab, cardiologico, avaliacao, respiratorio,
     endoscopia: imagem.filter(e => PADROES_ENDOSCOPIA.test(String(e))),
     bioimagem: imagem.filter(e => !PADROES_ENDOSCOPIA.test(String(e))),
   };
@@ -401,6 +422,7 @@ export function avaliarPaciente(inputs) {
     fallback.proximosExamesBioimagem = sp.bioimagem;
     fallback.proximosExamesCardio = sp.cardiologico;
     fallback.proximosExamesAvaliacao = sp.avaliacao;
+    fallback.proximosExamesRespiratorio = sp.respiratorio;
     fallback.diasDesdeColeta = calcularDias(inputs.dataColeta);
     fallback.fraseData = getFraseData(fallback.diasDesdeColeta);
     // A frase de hipermenorreia vale AQUI TAMBÉM — sem ela, a paciente que caía no
@@ -548,7 +570,7 @@ export function avaliarPaciente(inputs) {
   aplicarRegrasPosMatching(inputs, proximosExames, comentarios, resultado);
 
   // Split LAB / IMAGEM / ENDOSCOPIA / BIOIMAGEM.
-  const { imagem: proximosExamesImagem, lab: proximosExamesLab, endoscopia: proximosExamesEndoscopia, bioimagem: proximosExamesBioimagem, cardiologico: proximosExamesCardio, avaliacao: proximosExamesAvaliacao } = splitExames(proximosExames);
+  const { imagem: proximosExamesImagem, lab: proximosExamesLab, endoscopia: proximosExamesEndoscopia, bioimagem: proximosExamesBioimagem, cardiologico: proximosExamesCardio, avaliacao: proximosExamesAvaliacao, respiratorio: proximosExamesRespiratorio } = splitExames(proximosExames);
 
   return {
     encontrado: true,
@@ -571,6 +593,7 @@ export function avaliarPaciente(inputs) {
     proximosExamesBioimagem,
     proximosExamesCardio,
     proximosExamesAvaliacao,
+    proximosExamesRespiratorio,
     fraseData,
     fraseHipermenorreia: fraseHiper,
     g6pdAlerta,
@@ -679,6 +702,7 @@ export function triagemEritron(inputs) {
       proximosExamesBioimagem: [],
       proximosExamesCardio: [],
       proximosExamesAvaliacao: [],
+      proximosExamesRespiratorio: [],
       comentarios: [],
       achadosParalelos: [],
       g6pdAlerta: null,
@@ -740,6 +764,7 @@ export function triagemEritron(inputs) {
     proximosExamesBioimagem: [],
     proximosExamesCardio: [],
     proximosExamesAvaliacao: [],
+    proximosExamesRespiratorio: [],
     comentarios: [],
     achadosParalelos: [],
     g6pdAlerta: null,

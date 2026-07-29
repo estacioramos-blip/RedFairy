@@ -3645,7 +3645,12 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
       nivelGeral = GRAVE
       linhas.push('LEUCOPENIA GRAVE: contagem abaixo de 3.000/uL representa risco aumentado de infecções oportunistas. Avaliação hematológica imediata é mandatória. Investigar causas como síndrome mielodisplásica, aplasia medular, medicamentos mielotóxicos, infecções virais (HIV, parvovírus).')
       alertas.push({ codigo: 'leucos.leucopenia_grave', nivel: GRAVE, texto: `LEUCOPENIA GRAVE: ${leuco}/uL. Avaliação hematológica imediata.` })
-      examesSuger.push('MIELOGRAMA', 'SOROLOGIAS PARA HIV, HEPATITES B/C, PARVOVÍRUS B19', 'ELETROFORESE DE PROTEÍNAS')
+      // MIELOGRAMA saiu da lista de exames sugeridos (decisão do Estácio,
+      // jul/2026): é procedimento, não exame de rotina — a eventual necessidade
+      // fica INFORMADA no texto acima, a critério do hematologista, em vez de
+      // virar item de pedido (e cobrança).
+      linhas.push('O MIELOGRAMA PODE SER NECESSÁRIO NESSA INVESTIGAÇÃO, A CRITÉRIO DO HEMATOLOGISTA.')
+      examesSuger.push('SOROLOGIAS PARA HIV, HEPATITES B/C, PARVOVÍRUS B19', 'ELETROFORESE DE PROTEÍNAS')
     } else if (leuco < 4000) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('LEUCOPENIA MODERADA: investigar causa. Pode estar associada a pós-bariátrica com deficiências nutricionais profundas (B12, folato, cobre), infecções crônicas ou autoimunidade.')
