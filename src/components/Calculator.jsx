@@ -841,9 +841,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       const { data: _pfResp } = await supabase.rpc('profiles_por_cpf', { p_cpf: d, ...credMedico() })
       const prof = (_pfResp && _pfResp.ok) ? _pfResp.perfil : null
       if (!prof) {
-        setAvaliarErro('Paciente não cadastrado. Peça que se cadastre primeiro.'); setAvaliarBusy(false)
+        // Distingue "paciente não existe" de "a SUA sessão expirou". Dizer ao
+        // médico que o paciente não é cadastrado quando o problema é o token
+        // dele manda o médico caçar o problema no lugar errado.
+        const semSessao = !!(_pfResp && _pfResp.ok === false)
+        const msg = semSessao
+          ? 'Sua sessão expirou. Saia e entre novamente com o seu CRM para continuar.'
+          : 'Paciente não cadastrado. Peça que se cadastre primeiro.'
+        setAvaliarErro(msg); setAvaliarBusy(false)
         // Na REVISÃO não há tela de CPF onde o erro apareça — avisa direto.
-        if (revisao) { try { window.alert('Paciente não encontrado no cadastro. Não é possível revisar a anamnese.') } catch (e) {} }
+        if (revisao) { try { window.alert(msg) } catch (e) {} }
         return
       }
       // Traz o que o paciente já tem: última avaliação (eritron) + última anamnese do OBA.

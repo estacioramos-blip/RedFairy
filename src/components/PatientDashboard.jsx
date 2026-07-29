@@ -265,6 +265,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       return
     }
     let prof = null
+    let ultimaResp = null
     const delays = [0, 250, 600, 1200]
     for (const d of delays) {
       if (d > 0) await new Promise(r => setTimeout(r, d))
@@ -274,11 +275,32 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       const { data: pResp } = await supabase.rpc('profiles_meu', {
         p_cpf: cpfPacienteLogado(), p_id: session.user.id, ...credPaciente()
       })
+      ultimaResp = pResp
       const data = (pResp && pResp.ok) ? pResp.perfil : null
       if (data) { prof = data; break }
+      // Token inválido não melhora com retry — sai do laço na primeira negativa.
+      if (pResp && pResp.ok === false) break
     }
     if (!prof) {
-      console.warn('[PatientDashboard] profile nao encontrado apos retries; signOut')
+      // DUAS causas distintas, que antes caíam no mesmo lugar:
+      //  (a) NÃO AUTORIZADO — a sessão desta aba está obsoleta. O login do paciente
+      //      é de sessão ÚNICA: logar em outro navegador/dispositivo GIRA o token e
+      //      invalida este. Mandar o paciente pro site de marketing (o que o
+      //      onVoltar faz no domínio bariátrico) é a pior resposta possível: ele
+      //      só precisa entrar de novo. Limpa a sessão morta e vai pro login.
+      //  (b) perfil realmente ausente — comportamento antigo preservado.
+      const naoAutorizado = !!(ultimaResp && ultimaResp.ok === false)
+      console.warn('[PatientDashboard] perfil não carregou —',
+        naoAutorizado ? ('sessão obsoleta: ' + (ultimaResp.erro || 'nao autorizado')) : 'perfil ausente após retries')
+      if (naoAutorizado) {
+        try {
+          // Preserva paciente_cpf e as credenciais de reentrada (rf_reentry_*):
+          // se elas ainda valerem, o /?oba=1 reentra sozinho, sem pedir senha.
+          ;['paciente_id', 'paciente_nome', 'paciente_login_at', 'paciente_token'].forEach(k => localStorage.removeItem(k))
+        } catch (e) {}
+        window.location.replace('/?oba=1')
+        return
+      }
       await supabase.auth.signOut()
       onVoltar()
       return
