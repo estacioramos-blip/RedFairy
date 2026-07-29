@@ -655,6 +655,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const duvidaPopupVisto = useRef((salvo?.form?.duvidas || []).length > 0)
   const [pesquisaAceita, setPesquisaAceita] = useState(false)
   const [pesquisaEnviado, setPesquisaEnviado] = useState(false)
+  const [pesquisaEnviando, setPesquisaEnviando] = useState(false)
+  const [pesquisaFalhou, setPesquisaFalhou] = useState(false)
 
   const [form, setForm] = useState(() => {
    const def = {
@@ -1033,14 +1035,36 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       `Telefone: ${celular || '(não informado)'}\n` +
       `E-mail: (não informado)\n` +
       `Data|Hora: ${agora}`
-    try { await supabase.rpc('tg_enviar', { p_msg: msg }) } catch (e) {}
+    // NÃO engolir a falha: antes o erro morria num catch vazio e o aceite era
+    // marcado como enviado de qualquer jeito — o paciente via "recebemos" e o
+    // ADM nunca ficava sabendo que ele existiu. Agora devolve true/false.
+    try {
+      const { error } = await supabase.rpc('tg_enviar', { p_msg: msg })
+      if (error) {
+        console.error('PESQUISA: falha ao avisar o ADM —', error.message)
+        return false
+      }
+      return true
+    } catch (e) {
+      console.error('PESQUISA: falha ao avisar o ADM —', e?.message || e)
+      return false
+    }
   }
 
-  function aceitarPesquisa(checked) {
+  async function aceitarPesquisa(checked) {
     setPesquisaAceita(checked)
-    if (checked && !pesquisaEnviado) {
-      enviarPesquisaTelegram()
+    if (!checked || pesquisaEnviado || pesquisaEnviando) return
+    setPesquisaEnviando(true)
+    setPesquisaFalhou(false)
+    const ok = await enviarPesquisaTelegram()
+    setPesquisaEnviando(false)
+    if (ok) {
       setPesquisaEnviado(true)
+    } else {
+      // Deixa o aceite EM ABERTO: desmarca a caixinha e mostra o aviso, para o
+      // paciente poder tentar de novo em vez de sair achando que foi registrado.
+      setPesquisaFalhou(true)
+      setPesquisaAceita(false)
     }
   }
 
@@ -2954,11 +2978,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               {"Se voc\u00ea quiser participar da PESQUISA M\u00c9DICA com o tratamento inofensivo e SIMBI\u00d3TICO para obstipa\u00e7\u00e3o e fibromialgia, marque a caixinha abaixo que enviaremos informa\u00e7\u00f5es detalhadas por WhatsApp."}
             </p>
             <label style={{ display:'flex', alignItems:'flex-start', gap:'0.6rem', cursor:'pointer', userSelect:'none', background:'#FBEAEA', border:'1px solid #E3B5B5', borderRadius:10, padding:'0.8rem 0.9rem' }}>
-              <input type="checkbox" checked={pesquisaAceita} onChange={e => aceitarPesquisa(e.target.checked)} style={{ width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#7B1E1E', flexShrink:0 }} />
+              <input type="checkbox" checked={pesquisaAceita} disabled={pesquisaEnviando || pesquisaEnviado} onChange={e => aceitarPesquisa(e.target.checked)} style={{ width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#7B1E1E', flexShrink:0 }} />
               <span style={{ fontSize:'0.8rem', fontWeight:700, color:'#7B1E1E', lineHeight:1.4 }}>{"Sim, quero participar e entendo que n\u00e3o h\u00e1 custos envolvidos para participar do estudo."}</span>
             </label>
+            {pesquisaEnviando && (
+              <p style={{ fontSize:'0.76rem', color:'#6B7280', fontWeight:700, margin:'0.8rem 0 0', textAlign:'center' }}>{"Registrando o seu interesse\u2026"}</p>
+            )}
+            {/* A confirma\u00e7\u00e3o verde s\u00f3 aparece quando o aviso ao ADM REALMENTE saiu.
+                Antes ela aparecia mesmo com o envio falhando. */}
             {pesquisaEnviado && (
               <p style={{ fontSize:'0.76rem', color:'#166534', fontWeight:700, margin:'0.8rem 0 0', textAlign:'center' }}>{"\u2713 Recebemos o seu interesse! Em breve entraremos em contato."}</p>
+            )}
+            {pesquisaFalhou && (
+              <p style={{ fontSize:'0.76rem', color:'#B91C1C', fontWeight:700, margin:'0.8rem 0 0', textAlign:'center', lineHeight:1.4 }}>{"N\u00e3o conseguimos registrar agora \u2014 verifique a conex\u00e3o e marque a caixinha de novo."}</p>
             )}
             <button onClick={() => setShowPesquisa(false)} style={{ display:'block', width:'100%', background:'none', border:'none', color:'#9CA3AF', fontSize:'0.78rem', fontWeight:600, textDecoration:'underline', cursor:'pointer', marginTop:'1rem' }}>{"N\u00e3o desejo participar da pesquisa"}</button>
           </div>
