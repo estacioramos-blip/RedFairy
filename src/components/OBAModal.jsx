@@ -1539,10 +1539,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           }
           // Mesma data já tem linha (ex.: completou Ferritina/Sat do MESMO hemograma,
           // ou o espelho da triagem)? ATUALIZA em vez de duplicar.
-          const { data: exist } = await supabase.from('avaliacoes').select('id')
-            .eq('cpf', cpfLimpo).eq('data_coleta', dataCol).limit(1)
-          if (exist && exist.length > 0) await supabase.from('avaliacoes').update(linha).eq('id', exist[0].id)
-          else await supabase.from('avaliacoes').insert(linha)
+          // RLS Fase 2: upsert por cpf+data_coleta feito dentro da RPC.
+          await supabase.rpc('avaliacoes_salvar', {
+            p_dados: linha, p_modo: 'upsert', p_chave: 'cpf', ...credAmbas(),
+          })
         } catch (e) { /* não bloqueia o relatório */ }
       }
     }

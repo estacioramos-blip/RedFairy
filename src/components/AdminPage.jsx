@@ -385,12 +385,9 @@ function AbaPacientes() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const carregar = useCallback(async () => {
-    const { data } = await supabase
-      .from('avaliacoes')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(200);
-    setAvaliacoes(data || []);
+    // RLS Fase 2: leitura por RPC de admin.
+    const { data } = await supabase.rpc('admin_avaliacoes_recentes', { ...credAdmin(), p_limite: 200 });
+    setAvaliacoes((data && data.ok) ? (data.linhas || []) : []);
     setLoading(false);
   }, []);
 

@@ -338,10 +338,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       // o dashboard "Olá" vazio por baixo. Sem isso, a tela vazia piscava antes do OBA.
       await verificarEAbrirOBA(prof)
     }
-    const { data: avals } = await supabase
-      .from('avaliacoes').select('*')
-      .eq('user_id', session.user.id)
-      .order('data_coleta', { ascending: false })
+    // RLS Fase 2: leitura por RPC. O filtro continua sendo por user_id (mesma
+    // semântica de antes); o CPF vai junto só para o PORTÃO de autorização.
+    const { data: avalResp } = await supabase.rpc('avaliacoes_por_cpf', {
+      p_cpf: String(prof.cpf || '').replace(/\D/g, ''),
+      p_user_id: session.user.id,
+      p_ordem: 'desc',
+      ...credPaciente(),
+    })
+    const avals = (avalResp && avalResp.ok) ? avalResp.linhas : []
     setAvaliacoes(avals || [])
     // Flags de Histórico/Medicamentos da ÚLTIMA avaliação CONCLUÍDA — p/ pré-marcar
     // (editável) na próxima entrada de dados. Ignora o "espelho" (concluida=false).
@@ -563,15 +568,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     setHistoricoBuscando(true)
     setHistoricoMsg('')
 
-    let pacTokenGrafico = ''
-    try { pacTokenGrafico = localStorage.getItem('paciente_token') || '' } catch (e) {}
+    // RLS Fase 2: as duas séries do gráfico agora vêm por RPC.
     const [tRes, aRes] = await Promise.all([
-      supabase.rpc('triagens_por_cpf', { p_cpf: cpfDigits, p_pac_token: pacTokenGrafico }),
-      supabase
-        .from('avaliacoes')
-        .select('data_coleta, hemoglobina, vcm, rdw, ferritina, sat_transf')
-        .eq('cpf', cpfDigits)
-        .order('data_coleta', { ascending: true }),
+      supabase.rpc('triagens_por_cpf', { p_cpf: cpfDigits, ...credPaciente() }),
+      supabase.rpc('avaliacoes_por_cpf', { p_cpf: cpfDigits, p_ordem: 'asc', ...credPaciente() }),
     ])
 
     setHistoricoBuscando(false)
@@ -605,7 +605,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         ferritina: null, sat: null, origem: 'triagem',
       })
     })
-    ;(aRes.data || []).forEach((r) => {
+    ;(((aRes.data && aRes.data.ok) ? aRes.data.linhas : []) || []).forEach((r) => {
       const key = dia(r.data_coleta)
       if (!key) return
       porData.set(key, {  // sobrepoe a triagem da mesma data (avaliacao e mais rica)
@@ -767,16 +767,20 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       // Evita o DUPLICADO: se já existe avaliação nesta MESMA data (ex.: o "espelho"
       // da triagem de entrada, com ferritina=null), ATUALIZA essa linha em vez de
       // inserir outra. Assim a 1ª avaliação preenche o espelho — uma linha só.
-      const { data: existentes } = await supabase
-        .from('avaliacoes').select('id')
-        .eq('user_id', session.user.id)
-        .eq('data_coleta', dataColISO)
-        .limit(1)
-      const existeId = existentes?.[0]?.id
-      if (existeId) {
-        await supabase.from('avaliacoes').update(dados).eq('id', existeId)
-      } else {
-        await supabase.from('avaliacoes').insert(dados)
+      // RLS Fase 2: a RPC faz o "acha por user_id+data_coleta e atualiza, senão
+      // insere" num passo só — antes eram dois, com corrida entre eles.
+      // O `dados` original NÃO carregava cpf (só user_id): pelo caminho de
+      // INSERT a linha nascia com cpf nulo e ficava fora do gráfico, que filtra
+      // por CPF. Passa o cpf explicitamente — a RPC também precisa dele para
+      // autorizar.
+      const { data: salvResp } = await supabase.rpc('avaliacoes_salvar', {
+        p_dados: { ...dados, user_id: session.user.id, cpf: String(profile.cpf || '').replace(/\D/g, '') },
+        p_modo: 'upsert',
+        p_chave: 'user_id',
+        ...credPaciente(),
+      })
+      if (salvResp && salvResp.ok === false) {
+        console.error('Avaliação: falha ao salvar —', salvResp.erro)
       }
       // 1ª avaliação concluída: marca no perfil. Isso quebra o loop do
       // "Continuando a sua primeira avaliação". (A contagem que rege o paywall da 2ª

@@ -847,7 +847,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         return
       }
       // Traz o que o paciente já tem: última avaliação (eritron) + última anamnese do OBA.
-      const { data: avals } = await supabase.from('avaliacoes').select('*').eq('cpf', d).order('data_coleta', { ascending: false }).limit(1)
+      // RLS Fase 2: leitura por RPC (a mais recente é a primeira da lista desc).
+      const { data: avalResp } = await supabase.rpc('avaliacoes_por_cpf', { p_cpf: d, p_ordem: 'desc', ...credMedico() })
+      const avals = ((avalResp && avalResp.ok) ? avalResp.linhas : []) || []
       // Busca TODAS as linhas (ascendente) — deriva a ÚLTIMA (anterior, follow-up) e a
       // PRIMEIRA (baseline, comparação longitudinal). Ver src/engine/obaComparador.js.
       let anam = null, anamBaseline = null, numeroCiclo = 1
@@ -1393,7 +1395,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       if (medicoCRM) {
         // Só avaliações COMPLETAS (ferritina preenchida): o "espelho" da triagem
         // (ferritina=null) inflava a contagem e fechava o convite 4DOC cedo demais.
-        const { count: totalAvals } = await supabase.from('avaliacoes').select('*', { count: 'exact', head: true }).eq('medico_crm', medicoCRM).not('ferritina', 'is', null)
+        // RLS Fase 2: contagem por RPC (só avaliações com ferritina — regra já
+        // aplicada dentro da função).
+        const { data: cntResp } = await supabase.rpc('avaliacoes_contagem_medico', credMedico())
+        const totalAvals = (cntResp && cntResp.ok) ? cntResp.total : 0
         const { data: medDados } = await supabase.from('medicos').select('cep, cpf, pix_chave').eq('crm', medicoCRM).maybeSingle()
         if (!medDados?.cep || !medDados?.cpf || !medDados?.pix_chave) {
           // Se o 4DOC ja foi oferecido (e declinado) nesta sessao, nao reabre o modal cheio:
@@ -1408,7 +1413,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         const [d, m, a] = inputs.dataColeta.split('/');
         dataColetaISO = `${a}-${m}-${d}`;
       }
-      await supabase.from('avaliacoes').insert({
+      // RLS Fase 2: gravação por RPC. Modo 'inserir' — o médico sempre cria uma
+      // linha nova (mesmo comportamento do insert direto que existia aqui).
+      await supabase.rpc('avaliacoes_salvar', { p_modo: 'inserir', ...credMedico(), p_dados: {
         cpf: inputs.cpf.replace(/\D/g, ''),
         data_coleta: dataColetaISO,
         peso: inputs.peso !== '' && Number.isFinite(Number(inputs.peso)) ? Number(inputs.peso) : null,
@@ -1435,7 +1442,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         diagnostico_color: res.color,
         medico_crm: medicoCRM || null,
         quer_extrato_oba: querExtratoOba,
-      });
+      } });
     }
     setTimeout(() => { document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' }); }, 100);
   }

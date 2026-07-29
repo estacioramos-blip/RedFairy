@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { triagemEritron } from '../engine/decisionEngine'
 import { checarValor } from '../engine/limitesInput'
+import { credAmbas } from '../lib/cred'
 import logo from '../assets/logo.png'
 import obaLogo from '../assets/oba-logo.png'
 import { supabase } from '../lib/supabase';
@@ -344,14 +345,12 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     // tela (pacienteConhecido), então pega 2ª, 3ª... avaliação em qualquer caminho.
     const _cpfDig = String(inputs.cpf || '').replace(/\D/g, '')
     if (_cpfDig.length === 11 && dataColetaISO && /^\d{4}-\d{2}-\d{2}$/.test(dataColetaISO)) {
-      const { data: _ult } = await supabase
-        .from('avaliacoes')
-        .select('data_coleta')
-        .eq('cpf', _cpfDig)
-        .eq('concluida', true)
-        .order('data_coleta', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      // RLS Fase 2: leitura por RPC. O filtro `concluida` passa a ser aplicado
+      // aqui (a RPC devolve as linhas do CPF em ordem decrescente de data).
+      const { data: _avResp } = await supabase.rpc('avaliacoes_por_cpf', {
+        p_cpf: _cpfDig, p_ordem: 'desc', ...credAmbas()
+      })
+      const _ult = ((_avResp && _avResp.ok ? _avResp.linhas : []) || []).find(a => a.concluida === true)
       const _prev = _ult && _ult.data_coleta ? String(_ult.data_coleta).slice(0, 10) : ''
       if (_prev && dataColetaISO <= _prev) {
         setErros(prev => ({ ...prev, data_coleta: 'A data deve ser posterior à da avaliação anterior (' + _prev.split('-').reverse().join('/') + ').' }))
@@ -382,13 +381,11 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
     if (profile) {
       // Última avaliação completa: para mostrar no topo e impedir data retroativa.
-      const { data: ultAval } = await supabase
-        .from('avaliacoes')
-        .select('data_coleta, hemoglobina, vcm, rdw')
-        .eq('cpf', cpfDigits)
-        .order('data_coleta', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // RLS Fase 2: leitura por RPC.
+      const { data: _uaResp } = await supabase.rpc('avaliacoes_por_cpf', {
+        p_cpf: cpfDigits, p_ordem: 'desc', ...credAmbas()
+      });
+      const ultAval = ((_uaResp && _uaResp.ok ? _uaResp.linhas : []) || [])[0] || null;
       setPacienteConhecido({
         origem: 'profile',
         nome: profile.nome || '',
@@ -664,20 +661,10 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     setHistoricoBuscando(true);
     setHistoricoMsg('');
 
-    let credCrm = '', credMedToken = '', credPacToken = '';
-    try {
-      credCrm = localStorage.getItem('medico_crm') || '';
-      credMedToken = localStorage.getItem('medico_token') || '';
-      credPacToken = localStorage.getItem('paciente_token') || '';
-    } catch (e) {}
-
+    // RLS Fase 2: as duas séries vêm por RPC; credenciais centralizadas em cred.js.
     const [tRes, aRes] = await Promise.all([
-      supabase.rpc('triagens_por_cpf', { p_cpf: cpfDigits, p_crm: credCrm, p_med_token: credMedToken, p_pac_token: credPacToken }),
-      supabase
-        .from('avaliacoes')
-        .select('data_coleta, hemoglobina, vcm, rdw, ferritina, sat_transf')
-        .eq('cpf', cpfDigits)
-        .order('data_coleta', { ascending: true }),
+      supabase.rpc('triagens_por_cpf', { p_cpf: cpfDigits, ...credAmbas() }),
+      supabase.rpc('avaliacoes_por_cpf', { p_cpf: cpfDigits, p_ordem: 'asc', ...credAmbas() }),
     ]);
 
     setHistoricoBuscando(false);
@@ -708,7 +695,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       });
     });
 
-    (aRes.data || []).forEach((r) => {
+    (((aRes.data && aRes.data.ok) ? aRes.data.linhas : []) || []).forEach((r) => {
       serie.push({
         data: r.data_coleta,
         hb: norm(r.hemoglobina),

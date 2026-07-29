@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 import obaLogo from '../assets/oba-logo.png'
 import PlayButton from './PlayButton'
+import { credAmbas } from '../lib/cred'
 
 /**
  * TriagemResultadoModal - popup de resultado da triagem.
@@ -121,14 +122,11 @@ export default function TriagemResultadoModal({
       try {
         if (userId && inputs.data_coleta) {
           const cpfDigits = (inputs.cpf || '').replace(/\D/g, '')
-          const { data: existente } = await supabase
-            .from('avaliacoes')
-            .select('id')
-            .eq('user_id', userId)
-            .eq('data_coleta', inputs.data_coleta)
-            .maybeSingle()
-          if (!existente) {
-            await supabase.from('avaliacoes').insert({
+          // RLS Fase 2: o modo 'se_ausente' preserva a semântica original —
+          // insere só se não houver linha do mesmo user_id+data_coleta, e nunca
+          // sobrescreve uma avaliação já existente com o "espelho" da triagem.
+          await supabase.rpc('avaliacoes_salvar', {
+            p_dados: {
               user_id: userId,
               cpf: cpfDigits,
               data_coleta: inputs.data_coleta,
@@ -144,8 +142,11 @@ export default function TriagemResultadoModal({
               semanas_gestacao: inputs.semanas_gestacao ? Math.round(Number(inputs.semanas_gestacao)) : null,
               diagnostico_label: resultado.label || null,
               diagnostico_color: resultado.color || null,
-            })
-          }
+            },
+            p_modo: 'se_ausente',
+            p_chave: 'user_id',
+            ...credAmbas(),
+          })
         }
       } catch (e) { console.warn('Falha ao criar avaliacao da triagem:', e) }
       try {

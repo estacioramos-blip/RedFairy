@@ -3,6 +3,10 @@ import { supabase } from '../lib/supabase';
 import HistoricoChartModal from './HistoricoChartModal';
 import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
 import { ehBloqueio } from '../engine/limitesInput';
+// credAmbas: o ResultCard roda tanto no fluxo do médico quanto no do paciente
+// (modoPaciente). Passar só a credencial do médico deixaria o histórico do
+// paciente vazio. credMedico continua sendo usado onde a ação É do médico.
+import { credAmbas, credMedico } from '../lib/cred';
 import { DUVIDA_SECOES } from './OBAModal';
 
 const colorScheme = {
@@ -594,11 +598,15 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
     setSalvando(true)
     const cpf = resultado._inputs?.cpf?.replace(/\D/g, '') || null
     try {
-      await supabase.from('avaliacoes')
-        .update({ medico_quer_receber: true })
-        .eq('medico_crm', medicoCRM)
-        .order('created_at', { ascending: false })
-        .limit(1);
+      // RLS Fase 2 + correção: o UPDATE antigo usava .order().limit(1) via
+      // PostgREST, que não restringe PATCH de forma confiável — o efeito real
+      // podia ser marcar TODAS as avaliações daquele CRM. Além disso a coluna
+      // `medico_quer_receber` nem existia, então o update falhava sempre e o
+      // erro morria neste try/catch. A RPC escolhe a linha mais recente no SQL.
+      const { data: prefResp } = await supabase.rpc('avaliacoes_marcar_quer_receber', credMedico());
+      if (prefResp && prefResp.ok === false) {
+        console.error('Preferência do médico não salva —', prefResp.erro);
+      }
     } catch (e) {
       console.error('Erro ao atualizar preferencia:', e);
     }
@@ -966,11 +974,12 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
         // Só contagem (sem valor clínico) — usa a RPC pública de lookup, mais leve.
         const [tRes, aRes] = await Promise.all([
           supabase.rpc('lookup_triagens_cpf', { p_cpf: cpfResultado }),
-          supabase.from('avaliacoes').select('id', { count: 'exact', head: true }).eq('cpf', cpfResultado),
+          supabase.rpc('avaliacoes_contagem_cpf', { p_cpf: cpfResultado, ...credAmbas() }),
         ]);
         if (cancelado) return;
         const tCount = (tRes.data && tRes.data.ok) ? (tRes.data.count || 0) : 0;
-        const total = tCount + (aRes.count || 0);
+        const aCount = (aRes.data && aRes.data.ok) ? (aRes.data.total || 0) : 0;
+        const total = tCount + aCount;
         setTotalRegistrosHist(total);
       } catch (e) { /* silencioso */ }
     })();
@@ -985,11 +994,9 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
       const n = Number(v);
       return (v === null || v === undefined || v === '' || isNaN(n)) ? null : n;
     };
-    let medToken = '';
-    try { medToken = localStorage.getItem('medico_token') || '' } catch (e) {}
     const [tRes, aRes] = await Promise.all([
-      supabase.rpc('triagens_por_cpf', { p_cpf: cpfResultado, p_crm: medicoCRM, p_med_token: medToken }),
-      supabase.from('avaliacoes').select('data_coleta, hemoglobina, vcm, rdw, ferritina, sat_transf').eq('cpf', cpfResultado).order('data_coleta', { ascending: true }),
+      supabase.rpc('triagens_por_cpf', { p_cpf: cpfResultado, ...credAmbas() }),
+      supabase.rpc('avaliacoes_por_cpf', { p_cpf: cpfResultado, p_ordem: 'asc', ...credAmbas() }),
     ]);
     setHistoricoBuscando(false);
     if (tRes.error && aRes.error) {
@@ -1000,7 +1007,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
     const serie = [];
     const triagensLista = (tRes.data && tRes.data.ok) ? tRes.data.triagens : [];
     (triagensLista || []).forEach((r) => serie.push({ data: r.created_at, hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw), ferritina: null, sat: null, origem: 'triagem' }));
-    (aRes.data || []).forEach((r) => serie.push({ data: r.data_coleta, hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw), ferritina: norm(r.ferritina), sat: norm(r.sat_transf), origem: 'avaliacao' }));
+    (((aRes.data && aRes.data.ok) ? aRes.data.linhas : []) || []).forEach((r) => serie.push({ data: r.data_coleta, hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw), ferritina: norm(r.ferritina), sat: norm(r.sat_transf), origem: 'avaliacao' }));
     serie.sort((a, b) => new Date(a.data) - new Date(b.data));
     const pontosG1 = serie.filter((p) => p.hb !== null || p.vcm !== null || p.rdw !== null);
     if (pontosG1.length < 2) {
