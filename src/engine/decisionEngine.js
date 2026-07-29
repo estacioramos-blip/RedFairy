@@ -168,14 +168,21 @@ function splitExames(proximosExames) {
   // ANGIOTOMOGRAFIA aparece QUALIFICADA de propósito: sem "CORONARIANA", uma
   // futura "ANGIOTOMOGRAFIA DE ABDOME" viraria pedido cardiológico por engano.
   const PADROES_CARDIO = /ELETROCARDIOGRAMA|ECOCARDIOGRAMA|ERGOM[ÉE]TRIC|HOLTER|\bMAPA\b|ANGIOTOMOGRAFIA CORONARIAN|SCORE DE C[ÁA]LCIO|ESCORE DE C[ÁA]LCIO|CINTILOGRAFIA MIOC/i;
+  // AVALIAÇÃO/CONSULTA com especialista NÃO é exame de laboratório, mas GERA
+  // COBRANÇA (decisão do Estácio, jul/2026) — então vira serviço próprio, em vez
+  // de ficar escondida dentro do pedido do laboratório, onde o paciente levaria
+  // ao balcão um papel dizendo "procure um hematologista".
+  const PADROES_AVALIACAO = /^AVALIA[ÇC][ÃA]O COM|^CONSULTA COM|ENCAMINHAMENTO/i;
   const imagem = proximosExames.filter(e => PADROES_IMAGEM.test(String(e)));
   // A ordem importa: imagem tem precedência (ex.: uma futura "RESSONÂNCIA
   // CARDÍACA" é bioimagem, feita no mesmo serviço de imagem), e o cardiológico
   // é retirado do que sobraria como laboratório.
-  const cardiologico = proximosExames.filter(e => !PADROES_IMAGEM.test(String(e)) && PADROES_CARDIO.test(String(e)));
-  const lab = proximosExames.filter(e => !PADROES_IMAGEM.test(String(e)) && !PADROES_CARDIO.test(String(e)));
+  const naoImagem = (e) => !PADROES_IMAGEM.test(String(e));
+  const cardiologico = proximosExames.filter(e => naoImagem(e) && PADROES_CARDIO.test(String(e)));
+  const avaliacao = proximosExames.filter(e => naoImagem(e) && !PADROES_CARDIO.test(String(e)) && PADROES_AVALIACAO.test(String(e)));
+  const lab = proximosExames.filter(e => naoImagem(e) && !PADROES_CARDIO.test(String(e)) && !PADROES_AVALIACAO.test(String(e)));
   return {
-    imagem, lab, cardiologico,
+    imagem, lab, cardiologico, avaliacao,
     endoscopia: imagem.filter(e => PADROES_ENDOSCOPIA.test(String(e))),
     bioimagem: imagem.filter(e => !PADROES_ENDOSCOPIA.test(String(e))),
   };
@@ -380,7 +387,11 @@ export function avaliarPaciente(inputs) {
     // AQUI TAMBÉM — senão casos que caem no fallback (ex.: traço talassêmico) perderiam essas
     // recomendações. Herda também os comentários de histórico clínico (flags) já montados.
     const fallback = gerarFallbackClinico(inputsAjustados);
-    fallback.comentarios = comentarios;
+    // PRESERVA os comentários próprios do fallback (a orientação de reavaliação
+    // clínica saiu de `proximosExames` para cá, para não virar item cobrável) e
+    // acrescenta os de histórico clínico. Antes era atribuição direta, que
+    // descartava os do fallback.
+    fallback.comentarios = [...(fallback.comentarios || []), ...comentarios];
     aplicarRegrasPosMatching(inputsAjustados, fallback.proximosExames, fallback.comentarios);
     fallback.achadosParalelos = detectarAchadosParalelos(inputsAjustados);
     const sp = splitExames(fallback.proximosExames);
@@ -389,6 +400,7 @@ export function avaliarPaciente(inputs) {
     fallback.proximosExamesEndoscopia = sp.endoscopia;
     fallback.proximosExamesBioimagem = sp.bioimagem;
     fallback.proximosExamesCardio = sp.cardiologico;
+    fallback.proximosExamesAvaliacao = sp.avaliacao;
     fallback.diasDesdeColeta = calcularDias(inputs.dataColeta);
     fallback.fraseData = getFraseData(fallback.diasDesdeColeta);
     // A frase de hipermenorreia vale AQUI TAMBÉM — sem ela, a paciente que caía no
@@ -536,7 +548,7 @@ export function avaliarPaciente(inputs) {
   aplicarRegrasPosMatching(inputs, proximosExames, comentarios, resultado);
 
   // Split LAB / IMAGEM / ENDOSCOPIA / BIOIMAGEM.
-  const { imagem: proximosExamesImagem, lab: proximosExamesLab, endoscopia: proximosExamesEndoscopia, bioimagem: proximosExamesBioimagem, cardiologico: proximosExamesCardio } = splitExames(proximosExames);
+  const { imagem: proximosExamesImagem, lab: proximosExamesLab, endoscopia: proximosExamesEndoscopia, bioimagem: proximosExamesBioimagem, cardiologico: proximosExamesCardio, avaliacao: proximosExamesAvaliacao } = splitExames(proximosExames);
 
   return {
     encontrado: true,
@@ -558,6 +570,7 @@ export function avaliarPaciente(inputs) {
     proximosExamesEndoscopia,
     proximosExamesBioimagem,
     proximosExamesCardio,
+    proximosExamesAvaliacao,
     fraseData,
     fraseHipermenorreia: fraseHiper,
     g6pdAlerta,
@@ -665,6 +678,7 @@ export function triagemEritron(inputs) {
       proximosExamesEndoscopia: [],
       proximosExamesBioimagem: [],
       proximosExamesCardio: [],
+      proximosExamesAvaliacao: [],
       comentarios: [],
       achadosParalelos: [],
       g6pdAlerta: null,
@@ -725,6 +739,7 @@ export function triagemEritron(inputs) {
     proximosExamesEndoscopia: [],
     proximosExamesBioimagem: [],
     proximosExamesCardio: [],
+    proximosExamesAvaliacao: [],
     comentarios: [],
     achadosParalelos: [],
     g6pdAlerta: null,

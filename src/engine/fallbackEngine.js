@@ -273,8 +273,17 @@ export function gerarFallbackClinico(inputs) {
     recomendacao,
     recomendacaoAge1: recomendacao,
     recomendacaoAge2: recomendacao,
-    proximosExames: ['Reavaliação clínica com médico assistente ou hematologista'],
-    comentarios: [],
+    // A reavaliação clínica é ORIENTAÇÃO, não exame (decisão do Estácio,
+    // jul/2026): não pode gerar cobrança. Enquanto estava em `proximosExames`,
+    // o DocumentoMedicoPanel (fluxo do paciente, que NÃO tem guarda de
+    // _fallback) oferecia um "Pedido de Exames" PAGO cujo único item era
+    // "procure um médico" — o paciente pagaria por uma frase. Agora sai como
+    // comentário, e `proximosExames` vazio desliga a oferta paga.
+    proximosExames: [],
+    comentarios: [{
+      titulo: 'REAVALIAÇÃO CLÍNICA',
+      texto: 'OS VALORES INFORMADOS NÃO FORMAM UM PADRÃO CATALOGADO. RECOMENDA-SE REAVALIAÇÃO CLÍNICA COM O SEU MÉDICO ASSISTENTE OU COM HEMATOLOGISTA, LEVANDO O HEMOGRAMA ORIGINAL.',
+    }],
     achadosParalelos: [],
     g6pdAlerta: null,
     obsoleto: false,
