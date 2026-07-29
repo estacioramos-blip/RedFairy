@@ -153,13 +153,13 @@ export default function TriagemResultadoModal({
         const { data: prof } = await supabase
           .from('profiles').select('cpf').eq('cpf', cpfDigits).maybeSingle()
         if (!prof) {
-          const { count: nTri } = await supabase
-            .from('triagens').select('*', { count: 'exact', head: true })
-            .eq('cpf', cpfDigits)
-          if ((nTri || 0) >= 2) {
+          // RPC pública (sem token) — visitante ainda não tem conta nesse ponto.
+          const { data: triResp } = await supabase.rpc('lookup_triagens_cpf', { p_cpf: cpfDigits })
+          const nTri = (triResp && triResp.ok) ? (triResp.count || 0) : 0
+          if (nTri >= 2) {
             return { sucesso: true, limite3: true }
           }
-          if ((nTri || 0) === 1) {
+          if (nTri === 1) {
             return { sucesso: true, pedidoExames: true }
           }
         }

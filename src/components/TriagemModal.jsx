@@ -359,12 +359,13 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       .select('nome, sexo, data_nascimento, bariatrica, gestante, semanas_gestacao_triagem, data_triagem_gestacao')
       .eq('cpf', cpfDigits)
       .maybeSingle();
-    const { count: nTriagens } = await supabase
-      .from('triagens')
-      .select('*', { count: 'exact', head: true })
-      .eq('cpf', cpfDigits);
+    // triagens: via RPC pública (sem token) — usada no funil anônimo, antes de
+    // existir qualquer conta/credencial. Só campos não-clínicos + contagem.
+    const { data: triResp } = await supabase.rpc('lookup_triagens_cpf', { p_cpf: cpfDigits });
+    const nTriagens = (triResp && triResp.ok) ? (triResp.count || 0) : 0;
+    const ultimaTriagem = (triResp && triResp.ok) ? triResp.ultima : null;
     setBuscandoCpf(false);
-    if (!profile && (nTriagens || 0) >= 2) {
+    if (!profile && nTriagens >= 2) {
       setPacienteConhecido('BLOQUEADO');
       return;
     }
@@ -393,29 +394,20 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
       });
       return;
     }
-    if ((nTriagens || 0) > 0) {
-      const { data: triagem } = await supabase
-        .from('triagens')
-        .select('sexo, data_nascimento, bariatrica, gestante, semanas_gestacao, created_at')
-        .eq('cpf', cpfDigits)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (triagem) {
-        setPacienteConhecido({
-          origem: 'triagem',
-          sexo: triagem.sexo,
-          data_nascimento: triagem.data_nascimento,
-          bariatrica: !!triagem.bariatrica,
-          gestante: !!triagem.gestante,
-          semanas_gestacao_triagem: null,
-          data_triagem_gestacao: null,
-          semanas_gestacao: triagem.semanas_gestacao,
-          dum: null,
-          created_at: triagem.created_at,
-        });
-        return;
-      }
+    if (nTriagens > 0 && ultimaTriagem) {
+      setPacienteConhecido({
+        origem: 'triagem',
+        sexo: ultimaTriagem.sexo,
+        data_nascimento: ultimaTriagem.data_nascimento,
+        bariatrica: !!ultimaTriagem.bariatrica,
+        gestante: !!ultimaTriagem.gestante,
+        semanas_gestacao_triagem: null,
+        data_triagem_gestacao: null,
+        semanas_gestacao: ultimaTriagem.semanas_gestacao,
+        dum: null,
+        created_at: ultimaTriagem.created_at,
+      });
+      return;
     }
     setPacienteConhecido(null);
   }
@@ -661,12 +653,15 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     setHistoricoBuscando(true);
     setHistoricoMsg('');
 
+    let credCrm = '', credMedToken = '', credPacToken = '';
+    try {
+      credCrm = localStorage.getItem('medico_crm') || '';
+      credMedToken = localStorage.getItem('medico_token') || '';
+      credPacToken = localStorage.getItem('paciente_token') || '';
+    } catch (e) {}
+
     const [tRes, aRes] = await Promise.all([
-      supabase
-        .from('triagens')
-        .select('created_at, hemoglobina, vcm, rdw')
-        .eq('cpf', cpfDigits)
-        .order('created_at', { ascending: true }),
+      supabase.rpc('triagens_por_cpf', { p_cpf: cpfDigits, p_crm: credCrm, p_med_token: credMedToken, p_pac_token: credPacToken }),
       supabase
         .from('avaliacoes')
         .select('data_coleta, hemoglobina, vcm, rdw, ferritina, sat_transf')
@@ -676,6 +671,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
 
     setHistoricoBuscando(false);
 
+    const triagensOk = tRes.data && tRes.data.ok;
     if (tRes.error && aRes.error) {
       setHistoricoMsg("Erro ao buscar hist\u00f3rico. Tente novamente.");
       setTimeout(() => setHistoricoMsg(''), 4000);
@@ -689,7 +685,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
 
     const serie = [];
 
-    (tRes.data || []).forEach((r) => {
+    (triagensOk ? tRes.data.triagens : []).forEach((r) => {
       serie.push({
         data: r.created_at,
         hb: norm(r.hemoglobina),

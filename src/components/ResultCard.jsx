@@ -957,12 +957,14 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
     let cancelado = false;
     (async () => {
       try {
+        // Só contagem (sem valor clínico) — usa a RPC pública de lookup, mais leve.
         const [tRes, aRes] = await Promise.all([
-          supabase.from('triagens').select('id', { count: 'exact', head: true }).eq('cpf', cpfResultado),
+          supabase.rpc('lookup_triagens_cpf', { p_cpf: cpfResultado }),
           supabase.from('avaliacoes').select('id', { count: 'exact', head: true }).eq('cpf', cpfResultado),
         ]);
         if (cancelado) return;
-        const total = (tRes.count || 0) + (aRes.count || 0);
+        const tCount = (tRes.data && tRes.data.ok) ? (tRes.data.count || 0) : 0;
+        const total = tCount + (aRes.count || 0);
         setTotalRegistrosHist(total);
       } catch (e) { /* silencioso */ }
     })();
@@ -977,8 +979,10 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
       const n = Number(v);
       return (v === null || v === undefined || v === '' || isNaN(n)) ? null : n;
     };
+    let medToken = '';
+    try { medToken = localStorage.getItem('medico_token') || '' } catch (e) {}
     const [tRes, aRes] = await Promise.all([
-      supabase.from('triagens').select('created_at, hemoglobina, vcm, rdw').eq('cpf', cpfResultado).order('created_at', { ascending: true }),
+      supabase.rpc('triagens_por_cpf', { p_cpf: cpfResultado, p_crm: medicoCRM, p_med_token: medToken }),
       supabase.from('avaliacoes').select('data_coleta, hemoglobina, vcm, rdw, ferritina, sat_transf').eq('cpf', cpfResultado).order('data_coleta', { ascending: true }),
     ]);
     setHistoricoBuscando(false);
@@ -988,7 +992,8 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
       return;
     }
     const serie = [];
-    (tRes.data || []).forEach((r) => serie.push({ data: r.created_at, hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw), ferritina: null, sat: null, origem: 'triagem' }));
+    const triagensLista = (tRes.data && tRes.data.ok) ? tRes.data.triagens : [];
+    (triagensLista || []).forEach((r) => serie.push({ data: r.created_at, hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw), ferritina: null, sat: null, origem: 'triagem' }));
     (aRes.data || []).forEach((r) => serie.push({ data: r.data_coleta, hb: norm(r.hemoglobina), vcm: norm(r.vcm), rdw: norm(r.rdw), ferritina: norm(r.ferritina), sat: norm(r.sat_transf), origem: 'avaliacao' }));
     serie.sort((a, b) => new Date(a.data) - new Date(b.data));
     const pontosG1 = serie.filter((p) => p.hb !== null || p.vcm !== null || p.rdw !== null);

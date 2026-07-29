@@ -401,13 +401,12 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     if (prof.cpf) {
       const cpfDigits = String(prof.cpf).replace(/\D/g, '')
       if (cpfDigits.length === 11) {
-        const { data: entrada } = await supabase
-          .from('triagens')
-          .select('data_coleta, hemoglobina, vcm, rdw, gestante, bariatrica, semanas_gestacao')
-          .eq('cpf', cpfDigits)
-          .order('data_coleta', { ascending: false })
-          .limit(1)
-          .maybeSingle()
+        let pacTokenEntrada = ''
+        try { pacTokenEntrada = localStorage.getItem('paciente_token') || '' } catch (e) {}
+        const { data: triResp } = await supabase.rpc('triagens_por_cpf', { p_cpf: cpfDigits, p_pac_token: pacTokenEntrada })
+        const entrada = (triResp && triResp.ok && triResp.triagens.length)
+          ? [...triResp.triagens].sort((a, b) => new Date(b.data_coleta || 0) - new Date(a.data_coleta || 0))[0]
+          : null
         // "Pendente" = ainda NÃO concluiu a 1ª avaliação. Antes isso era decidido
         // pela Ferritina (ferritina != null), mas a 1ª pode ser só triagem do eritron
         // (sem Ferritina) — então o paciente caía de novo em "Continuando a sua
@@ -560,12 +559,10 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     setHistoricoBuscando(true)
     setHistoricoMsg('')
 
+    let pacTokenGrafico = ''
+    try { pacTokenGrafico = localStorage.getItem('paciente_token') || '' } catch (e) {}
     const [tRes, aRes] = await Promise.all([
-      supabase
-        .from('triagens')
-        .select('created_at, data_coleta, hemoglobina, vcm, rdw')
-        .eq('cpf', cpfDigits)
-        .order('created_at', { ascending: true }),
+      supabase.rpc('triagens_por_cpf', { p_cpf: cpfDigits, p_pac_token: pacTokenGrafico }),
       supabase
         .from('avaliacoes')
         .select('data_coleta, hemoglobina, vcm, rdw, ferritina, sat_transf')
@@ -593,7 +590,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // o mesmo exame colapsa em 1 ponto; a avaliacao (mais completa) tem prioridade.
     const dia = (d) => (d ? String(d).slice(0, 10) : null)
     const porData = new Map()
-    ;(tRes.data || []).forEach((r) => {
+    const triagensLista = (tRes.data && tRes.data.ok) ? tRes.data.triagens : []
+    ;(triagensLista || []).forEach((r) => {
       const data = r.data_coleta || dia(r.created_at)
       const key = dia(data)
       if (!key || porData.has(key)) return
