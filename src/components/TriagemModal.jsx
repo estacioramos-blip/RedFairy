@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { triagemEritron } from '../engine/decisionEngine'
+import { checarValor } from '../engine/limitesInput'
 import logo from '../assets/logo.png'
 import obaLogo from '../assets/oba-logo.png'
 import { supabase } from '../lib/supabase';
@@ -255,6 +256,13 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     if (!inputs.hemoglobina) errors.hemoglobina = "Obrigat\u00f3rio"
     if (!inputs.vcm) errors.vcm = "Obrigat\u00f3rio"
     if (!inputs.rdw) errors.rdw = "Obrigat\u00f3rio"
+    // Faixa fisiologicamente possivel (limitesInput). Antes so' a presenca era
+    // checada: "1789" cabia no maxLength={4} e entrava direto no motor.
+    ;['hemoglobina', 'vcm', 'rdw'].forEach(k => {
+      if (errors[k]) return
+      const r = checarValor(k, inputs[k])
+      if (r.status === 'bloqueio' || r.status === 'invalido') errors[k] = r.msg
+    })
     if (!inputs.data_coleta) errors.data_coleta = 'Informe a data do hemograma'
     else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(inputs.data_coleta)) errors.data_coleta = 'Use o formato DD/MM/AAAA'
     else {
@@ -278,6 +286,9 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     }
     if (inputs.sexo === 'F' && inputs.gestante && !inputs.semanas_gestacao) {
       errors.semanas_gestacao = 'Informe as semanas'
+    } else if (inputs.sexo === 'F' && inputs.gestante) {
+      const r = checarValor('semanas_gestacao', inputs.semanas_gestacao)
+      if (r.status === 'bloqueio' || r.status === 'invalido') errors.semanas_gestacao = r.msg
     }
     return { errors, idadeCalc, dataNascimentoISO }
   }

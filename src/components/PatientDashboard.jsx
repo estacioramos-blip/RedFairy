@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
+import { bloqueiosDe } from '../engine/limitesInput'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import { useInstalarFada } from '../lib/useInstalarFada'
@@ -680,6 +681,19 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         return
       }
     }
+
+    // Trava de faixa (limitesInput): valor fisiologicamente impossível é erro de
+    // digitação e não pode entrar no motor. Aqui não existe `erros` por campo —
+    // o alert é o padrão de aviso desta tela.
+    const _bloq = bloqueiosDe({
+      hemoglobina: inputs.hemoglobina, vcm: inputs.vcm, rdw: inputs.rdw,
+      ferritina: mostrarExamesExtras ? inputs.ferritina : '',
+      satTransf: mostrarExamesExtras ? inputs.satTransf : '',
+      b12_valor: inputs.b12_valor, folato_valor: inputs.folato_valor,
+      semanas_gestacao: inputs.gestante ? inputs.semanas_gestacao : '',
+    })
+    const _chaves = Object.keys(_bloq)
+    if (_chaves.length > 0) { alert(_bloq[_chaves[0]]); return }
 
     const inputsNumericos = {
       ...inputs,

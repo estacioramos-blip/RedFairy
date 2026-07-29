@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import HistoricoChartModal from './HistoricoChartModal';
 import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
+import { ehBloqueio } from '../engine/limitesInput';
 import { DUVIDA_SECOES } from './OBAModal';
 
 const colorScheme = {
@@ -218,8 +219,13 @@ function ModalSangria({ onClose, ferritina, satTransf, sexo, hbAtual, isPolicite
                 <label className="block text-sm font-medium text-gray-600 mb-1">Peso (kg)</label>
                 <input type="number" value={peso} onChange={e => setPeso(e.target.value)} placeholder="Ex: 70"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
+                {/* Antes só o piso de 30 kg era checado — sem teto, um 700 digitado
+                    por engano gerava um volume de sangria absurdo. */}
+                {peso !== '' && ehBloqueio('peso', peso) && (
+                  <p className="text-red-500 text-xs mt-1">{"Peso deve estar entre 25 e 400 kg."}</p>
+                )}
               </div>
-              <button onClick={handleCalcular} disabled={!peso || Number(peso) < 30}
+              <button onClick={handleCalcular} disabled={!peso || Number(peso) < 30 || ehBloqueio('peso', peso)}
                 className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
                 Calcular Protocolo
               </button>

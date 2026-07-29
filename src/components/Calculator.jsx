@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine';
 import { avaliarOBA } from '../engine/obaEngine';
+import { checarValor } from '../engine/limitesInput';
 import OBAModal from './OBAModal';
 import TriagemModal from './TriagemModal';
 import TriagemResultadoModal from './TriagemResultadoModal';
@@ -1182,13 +1183,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     return digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6,9) + '-' + digits.slice(9);
   }
 
-  const LIMITES_ABERRANTE = {
-    ferritina:   { min: 1,   max: 5000 },
-    hemoglobina: { min: 4,   max: 22   },
-    vcm:         { min: 50,  max: 140  },
-    rdw:         { min: 8,   max: 30   },
-    satTransf:   { min: 1,   max: 99   },
-  };
+  // As faixas viviam aqui como tabela solta; agora vêm de limitesInput.js
+  // (fonte única, compartilhada com a TriagemModal e o OBA).
+  const CAMPOS_COM_FAIXA = ['ferritina', 'hemoglobina', 'vcm', 'rdw', 'satTransf', 'b12_valor', 'folato_valor', 'peso'];
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -1236,11 +1233,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       if (checked) { setInputs(prev => ({ ...prev, bariatrica: true, bariatrica_medico: true })); setBriefingOBAFechado(false); }
       else { setInputs(prev => ({ ...prev, bariatrica: false, bariatrica_medico: false })); setDadosOBAColetados(null); setQuerExtratoOba(false); setBriefingOBAFechado(false); }
     }
-    if (LIMITES_ABERRANTE[name] && value !== '') {
-      const num = parseFloat(String(value).replace(',', '.'));
-      const lim = LIMITES_ABERRANTE[name];
-      if (!isNaN(num) && (num < lim.min || num > lim.max)) setAberrantes(prev => ({ ...prev, [name]: true }));
-      else setAberrantes(prev => ({ ...prev, [name]: false }));
+    // (fix) O `value !== ''` ficava DE FORA do else: ao APAGAR o campo, o aviso
+    // amarelo de aberrante continuava na tela. Agora o vazio limpa o aviso.
+    if (CAMPOS_COM_FAIXA.includes(name)) {
+      const st = checarValor(name, value).status;
+      setAberrantes(prev => ({ ...prev, [name]: st === 'aviso' || st === 'bloqueio' }));
     }
   }
 
@@ -1308,6 +1305,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (!inputs.rdw)         novosErros.rdw = "Campo obrigat\u00f3rio";
     if (mostrarExamesExtras && !inputs.ferritina) novosErros.ferritina = "Campo obrigat\u00f3rio";
     if (mostrarExamesExtras && !inputs.satTransf) novosErros.satTransf = "Campo obrigat\u00f3rio";
+    // Faixa fisiologicamente possivel (limitesInput). O aviso amarelo
+    // "VALOR ABERRANTE - CONFIRME" continua valendo para o extremo POSSIVEL;
+    // aqui so' barra o impossivel (erro de digitacao).
+    CAMPOS_COM_FAIXA.forEach(k => {
+      if (novosErros[k]) return;
+      const r = checarValor(k, inputs[k]);
+      if (r.status === 'bloqueio' || r.status === 'invalido') novosErros[k] = r.msg;
+    });
     return novosErros;
   }
 
@@ -2186,8 +2191,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               </div>
               <div>
                 <label className="label">Peso (kg)</label>
-                <input type="text" name="peso" value={inputs.peso} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="Ex: 72" inputMode="decimal" maxLength={6} autoComplete="off" className={`input ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
-                <p className="text-xs text-gray-400 mt-0.5">{"Opcional — usado no cálculo de dose de ferro EV"}</p>
+                <input type="text" name="peso" value={inputs.peso} onChange={handleChange} disabled={dadosVieramDaTriagem && !editandoDadosPaciente} placeholder="Ex: 72" inputMode="decimal" maxLength={6} autoComplete="off" className={`input ${erros.peso ? 'border-red-500' : ''} ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'bg-gray-100 text-gray-500' : ''}`} />
+                {/* Campo cru (não é LabInput): sem isso o bloqueio por peso
+                    impossível só apareceria no resumo de erros do rodapé. */}
+                {erros.peso
+                  ? <p className="text-red-500 text-xs mt-1">{erros.peso}</p>
+                  : <p className="text-xs text-gray-400 mt-0.5">{"Opcional — usado no cálculo de dose de ferro EV"}</p>}
               </div>
               <div className="col-span-2">
                 <label className={`flex items-start gap-2 p-3 rounded-xl border-2 transition-all ${dadosVieramDaTriagem && !editandoDadosPaciente ? 'cursor-default' : 'cursor-pointer'} ${inputs.bariatrica_medico ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-gray-50 text-gray-600'}`}>
@@ -2331,6 +2340,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   reference="200–900"
                   value={inputs.b12_valor}
                   onChange={handleChange}
+                  error={erros.b12_valor}
+                  aberrante={!!aberrantes["b12_valor"]}
                   hint={mostrarExamesExtras ? "Macrocitose → investigar B12" : "Clique no botão azul para liberar"}
                   disabled={!mostrarExamesExtras}
                   borderColor="blue"
@@ -2342,6 +2353,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   reference="> 4"
                   value={inputs.folato_valor}
                   onChange={handleChange}
+                  error={erros.folato_valor}
+                  aberrante={!!aberrantes["folato_valor"]}
                   hint={mostrarExamesExtras ? "Macrocitose → investigar folato" : "Clique no botão azul para liberar"}
                   disabled={!mostrarExamesExtras}
                   borderColor="blue"
@@ -2482,6 +2495,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     vcm: 'VCM',
                     rdw: 'RDW',
                     satTransf: 'Sat. Transferrina',
+                    b12_valor: 'Vitamina B12',
+                    folato_valor: 'Folato',
+                    peso: 'Peso',
                   };
                   return <li key={k}>{nomes[k] || k}: {v}</li>;
                 })}

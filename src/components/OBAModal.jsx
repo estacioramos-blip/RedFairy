@@ -11,6 +11,7 @@ import { avaliarPaciente, triagemEritron } from '../engine/decisionEngine'
 import { cicloFromRow, compararCiclos } from '../engine/obaComparador'
 import OBAComparativoCard from './OBAComparativoCard'
 import { EXAMES_BASE, EXAMES_45, EXAMES_HOMEM_40, EXAMES_MULHER_40 } from '../engine/obaExamesRef'
+import { checarValor, bloqueiosDe } from '../engine/limitesInput'
 
 // Imagem landscape do splash do relatório OBA — A DEFINIR (será horizontal,
 // ocupando a largura do modal, parcialmente sobreposta pelo conteúdo).
@@ -472,6 +473,19 @@ export const DUVIDA_SECOES = {
   exames:         'Exames laboratoriais',
 }
 
+// Mensagem vermelha sob um campo cujo valor é fisiologicamente IMPOSSÍVEL.
+// Aparece já na digitação (não espera o AVANÇAR) e some sozinha ao corrigir.
+// Só trata o nível 'bloqueio'; o 'aviso' continua sendo o ⚠ amarelo.
+function AvisoFaixa({ chave, valor }) {
+  const r = checarValor(chave, valor)
+  if (r.status !== 'bloqueio' && r.status !== 'invalido') return null
+  return (
+    <p style={{ color:'#B91C1C', fontSize:'0.62rem', fontWeight:700, marginTop:'0.2rem', lineHeight:1.3 }}>
+      {r.msg}
+    </p>
+  )
+}
+
 // Checkbox discreto de "não tenho certeza, vou precisar de ajuda médica".
 function DuvidaCheck({ secao, duvidas, onToggle }) {
   const on = (duvidas || []).includes(secao)
@@ -549,52 +563,9 @@ const ehExameFundamental = (e) => RE_EXAME_FUNDAMENTAL.test(String(e))
 const COR_FUND = { fundo:'#FDF2F8', borda:'#9F1239', texto:'#9F1239' }
 const COR_RECO = { fundo:'#FEFCE8', borda:'#EAB308', texto:'#92400E' }
 
-// BUG #3 corrigido: removidas as chaves duplicadas vitamina_d e triglicerides
-// (cada uma aparecia 2x). Mantida apenas uma versao de cada.
-const LIMITES_OBA = {
-  'leucocitos': { min:500, max:20000 },
-  'neutrofilos': { min:1, max:99 },
-  'plaquetas': { min:10, max:1000 },
-  'ferritina_oba': { min:1, max:5000 },
-  'vitamina_b12': { min:50, max:2000 },
-  'vitamina_d': { min:1, max:200 },
-  'tsh': { min:0.01, max:50 },
-  'hb_glicada': { min:3, max:20 },
-  'glicemia': { min:30, max:600 },
-  'insulina': { min:0.5, max:200 },
-  'triglicerides': { min:20, max:3000 },
-  'ast': { min:5, max:1000 },
-  'alt': { min:5, max:1000 },
-  'gama_gt': { min:5, max:1000 },
-  'creatinina': { min:0.3, max:15 },
-  'acido_urico': { min:1, max:20 },
-  'd_dimero': { min:0, max:50000 },
-  'ige_total': { min:0, max:50000 },
-  'folatos': { min:1, max:50 },
-  'zinco': { min:20, max:300 },
-  'pth': { min:1, max:2000 },
-  'calcio_ionico': { min:0.5, max:3.0 },
-  'magnesio': { min:0.5, max:10 },
-  'colesterol_total': { min:50, max:700 },
-  'ldl_c': { min:10, max:500 },
-  'hdl_c': { min:5, max:200 },
-  'lpa': { min:0, max:300 },
-  'apob': { min:10, max:300 },
-  'apoa': { min:30, max:300 },
-  'sdldl': { min:0, max:100 },
-  'vitamina_a': { min:5, max:200 },
-  'vitamina_e': { min:1, max:50 },
-  'tiamina': { min:10, max:500 },
-  'selenio': { min:10, max:400 },
-  'vitamina_c': { min:0.1, max:10 },
-  'vitamina_k': { min:0.05, max:15 },
-  'niacina': { min:0.1, max:30 },
-  'testosterona': { min:5, max:2000 },
-  'psa_total': { min:0, max:100 },
-  'ca199': { min:0, max:500 },
-  'estradiol': { min:5, max:5000 },
-  'cea': { min:0, max:100 }
-}
+// As faixas dos exames viviam aqui (LIMITES_OBA). Foram para
+// src/engine/limitesInput.js - fonte unica, com dois niveis (possivel x
+// provavel) e compartilhada com o Calculator e a TriagemModal.
 
 // Sub-bloco das infecções crônicas (aparece ao marcar a infecção).
 const SUB_INFEC_BOX = { marginTop:'0.4rem', marginBottom:'0.5rem', padding:'0.5rem 0.7rem', background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:8 }
@@ -641,6 +612,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [exMes, setExMes] = useState(_edSalvo[1] || '')
   const [exAno, setExAno] = useState(_edSalvo[0] || '')
   const [aberrantesOBA, setAberrantesOBA] = useState({})
+  // Valores fisiologicamente IMPOSSÍVEIS (erro de digitação). { chave: mensagem }.
+  // Diferente de aberrantesOBA, que é só o aviso amarelo — estes travam o avanço.
+  const [bloqueiosOBA, setBloqueiosOBA] = useState({})
   // Etapa ERITRON (médico/ícone): popup com o resultado do eritron após lançar Hb/VCM/RDW.
   const [showEritronPopup, setShowEritronPopup] = useState(false)
   const [eritronPopup, setEritronPopup] = useState(null)
@@ -943,15 +917,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // (b) Normaliza vírgula → ponto na entrada dos exames.
     value = typeof value === 'string' ? value.replace(',', '.') : value
     handleExameChange(key, value)
-    if (value !== '') {
-      const num = parseFloat(value)
-      const lim = LIMITES_OBA[key]
-      if (lim && !isNaN(num)) {
-        setAberrantesOBA(prev => ({ ...prev, [key]: num < lim.min || num > lim.max }))
-      }
-    } else {
-      setAberrantesOBA(prev => ({ ...prev, [key]: false }))
-    }
+    // Dois níveis (limitesInput): 'aviso' pinta de amarelo e deixa passar;
+    // 'bloqueio' é valor fisiologicamente impossível e trava o AVANÇAR.
+    const st = checarValor(key, value).status
+    setAberrantesOBA(prev => ({ ...prev, [key]: st === 'aviso' || st === 'bloqueio' }))
+    setBloqueiosOBA(prev => {
+      const novo = { ...prev }
+      if (st === 'bloqueio' || st === 'invalido') novo[key] = checarValor(key, value).msg
+      else delete novo[key]
+      return novo
+    })
   }
 
   const diasExames = calcDias(dataExames)
@@ -1321,6 +1296,38 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     if (!form.acompanhamento) {
       setErro("Selecione a op\u00e7\u00e3o de acompanhamento."); return
     }
+    // Valores fisiologicamente IMPOSS\u00cdVEIS travam aqui. Era por onde uma altura
+    // de 1789 cm passava e virava IMC 0,2 no relat\u00f3rio e no estado cl\u00ednico.
+    // Cada campo condicional só entra na checagem se estiver VISÍVEL — as
+    // condições abaixo espelham as do JSX. Sem isso, um valor errado digitado e
+    // depois escondido (ex.: digitou 999 em fração de ejeção e voltou o
+    // ecocardiograma para NORMAL) travaria o AVANÇAR apontando para um campo
+    // que não está mais na tela, sem o paciente ter como corrigir.
+    const _seVisivel = (cond, v) => (cond ? v : '')
+    const bloq = bloqueiosDe({
+      altura: form.altura, peso_antes: form.peso_antes,
+      peso_minimo_pos: form.peso_minimo_pos, peso_atual: form.peso_atual,
+      meta_kg: _seVisivel(form.meta_peso === 'PERDER' || form.meta_peso === 'GANHAR', form.meta_kg),
+      semanas_gestacao: _seVisivel(form.status_gestacional === "GRÁVIDA", form.semanas_gestacao),
+      gestacoes_previas: form.gestacoes_previas,
+      // Condição DUPLA no JSX: o bloco de abortamentos só existe se houver
+      // gestação anterior, e o campo do número só dentro dele.
+      abortamentos_numero: _seVisivel(
+        form.gestacoes_previas !== '' && parseInt(form.gestacoes_previas) > 0 && form.abortamentos_espontaneos === true,
+        form.abortamentos_numero
+      ),
+      fracao_ejecao: _seVisivel(form.ecocardiograma === 'ANORMAL', form.fracao_ejecao),
+      score_calcio: _seVisivel(!!form.angiotomografia_coronariana, form.score_calcio),
+      estenose_maxima: _seVisivel(form.doppler_carotidas === 'ANORMAL', form.estenose_maxima),
+      calprotectina: form.calprotectina,
+    })
+    const chavesBloq = Object.keys(bloq)
+    if (chavesBloq.length > 0) {
+      // O destaque por campo fica com o <AvisoFaixa>, que recalcula sozinho a
+      // cada tecla — por isso aqui só a mensagem geral.
+      setErro(bloq[chavesBloq[0]])
+      return
+    }
     setLoading(true)
 
     const projetos = [
@@ -1421,6 +1428,19 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // Computa o relatório (BASELINE), classifica o estado clínico, persiste e
   // avança para a etapa 'relatorio'. examesObj pode ser {} (exames pulados).
   async function gerarRelatorio(examesObj) {
+    // Trava do nível 'bloqueio': valor de exame fisiologicamente impossível não
+    // pode chegar ao motor (o hemograma de follow-up — hb_novo/vcm_novo/... —
+    // alimenta o avaliarPaciente em eritronEfetivo logo abaixo).
+    // Recalcula a partir do PRÓPRIO examesObj em vez de ler bloqueiosOBA: o
+    // progresso é restaurado do localStorage e o estado da tela voltaria vazio.
+    const bloqExames = bloqueiosDe(examesObj || {})
+    const chavesBloq = Object.keys(bloqExames)
+    if (chavesBloq.length > 0) {
+      setBloqueiosOBA(bloqExames)
+      setErro(bloqExames[chavesBloq[0]])
+      return
+    }
+    setErro('')
     const dados = buildDadosOBA()
     const eritron = eritronEfetivo(examesObj)
     const rel = avaliarOBA(eritron, dados, examesObj)
@@ -1522,8 +1542,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       alert('Digite o seu novo hemograma: Hemoglobina, VCM e RDW.')
       return
     }
-    setLoading(true)
     const examesObj = buildExamesOBA()
+    // A trava do 'bloqueio' TEM que vir antes do UPDATE abaixo: senão o valor
+    // impossível já teria sido gravado em oba_anamnese antes de a tela barrar.
+    const _bloqEx = bloqueiosDe(examesObj)
+    const _chavesEx = Object.keys(_bloqEx)
+    if (_chavesEx.length > 0) {
+      setBloqueiosOBA(_bloqEx)
+      setErro(_bloqEx[_chavesEx[0]])
+      return
+    }
+    setLoading(true)
 
     if (cpf) {
       const cpfLimpo = cpf.replace(/\D/g, '')
@@ -1596,6 +1625,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     const hb = Number(exames.hb_novo), vcm = Number(exames.vcm_novo), rdw = Number(exames.rdw_novo)
     if (!(hb > 0) || !(vcm > 0) || !(rdw > 0)) { setErro('Lance Hemoglobina, VCM e RDW.'); return }
     if (!dataExames) { setErro('Informe a data do hemograma.'); return }
+    // Mesma trava do gerarRelatorio: este botão também chama o motor do eritron.
+    const _bloqEx = bloqueiosDe(buildExamesOBA())
+    const _bloq = Object.keys(_bloqEx)
+    if (_bloq.length > 0) { setBloqueiosOBA(_bloqEx); setErro(_bloqEx[_bloq[0]]); return }
     setErro('')
     setEritronPopup(eritronEfetivo(buildExamesOBA()))
     setShowEritronPopup(true)
@@ -2745,7 +2778,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 {eritronNovoFields.map((ex, i) => {
                   const ehFerro = ex.key === 'ferritina_novo' || ex.key === 'sat_novo'
                   return (
-                  <div key={ex.key} style={{ display:'flex', flexDirection:'column', background:'#FEFCE8', border: ehFerro ? '1.5px solid #7B1E1E' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
+                  <div key={ex.key} style={{ display:'flex', flexDirection:'column', background:'#FEFCE8', border: bloqueiosOBA[ex.key] ? '1.5px solid #DC2626' : ehFerro ? '1.5px solid #7B1E1E' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
                     <span style={{ fontSize:'0.74rem', fontWeight:600, color:'#1F2937', lineHeight:1.15 }}>{ex.label}</span>
                     <span style={{ fontSize:'0.66rem', fontWeight:600, color:'#4B5563', minHeight:'0.72rem', lineHeight:1.1 }}>{ex.unit}</span>
                     <input
@@ -2756,6 +2789,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       type="text" inputMode="decimal"
                       value={exames[ex.key] || ''}
                       onChange={e => handleExameChangeOBA(ex.key, e.target.value)} />
+                    {bloqueiosOBA[ex.key]
+                      ? <span style={{ fontSize:'0.5rem', fontWeight:700, color:'#DC2626', marginTop:'0.15rem' }}>{"⚠ IMPOSSÍVEL — CORRIJA"}</span>
+                      : aberrantesOBA[ex.key] && <span style={{ fontSize:'0.5rem', fontWeight:700, color:'#CA8A04', marginTop:'0.15rem' }}>{"⚠ ABERRANTE"}</span>}
                   </div>
                   )
                 })}
@@ -2790,7 +2826,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               const dotColor = cl ? (cl.nivel === 'alterado' ? '#DC2626' : cl.nivel === 'limitrofe' ? '#F59E0B' : '#16A34A') : null
               const mascara = ex.readOnly ? 'auto' : refPorSexo(ex.ref, isFem)   // só a referência; a unidade vai sob o nome
               return (
-                <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : '#FEFCE8', border: aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
+                <div key={ex.key} style={{ display:'flex', flexDirection:'column', background: ex.readOnly ? '#F9FAFB' : '#FEFCE8', border: bloqueiosOBA[ex.key] ? '1.5px solid #DC2626' : aberrantesOBA[ex.key] ? '1.5px solid #EAB308' : '1.5px solid #FDE68A', borderRadius:7, padding:'0.3rem 0.38rem' }}>
                   <span style={{ fontSize:'0.74rem', fontWeight:600, color: ex.readOnly ? '#9CA3AF' : '#1F2937', lineHeight:1.15 }}>{ex.label}</span>
                   {ex.sublabel && <span style={{ fontSize:'0.74rem', fontWeight:600, color:'#1F2937', lineHeight:1.15 }}>{ex.sublabel}</span>}
                   <span style={{ fontSize:'0.66rem', fontWeight:600, color:'#4B5563', lineHeight:1.1 }}>{ex.unit || ''}</span>
@@ -2809,7 +2845,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       onChange={e => !ex.readOnly && handleExameChangeOBA(ex.key, e.target.value)} />
                     {dotColor && <span title={cl.rotulo || ''} style={{ width:9, height:9, borderRadius:'50%', background:dotColor, flexShrink:0, boxShadow:'0 0 0 1.5px rgba(255,255,255,0.7)' }} />}
                   </div>
-                  {aberrantesOBA[ex.key] && <span style={{ fontSize:'0.5rem', fontWeight:700, color:'#CA8A04', marginTop:'0.15rem' }}>{"\u26a0 ABERRANTE"}</span>}
+                  {bloqueiosOBA[ex.key]
+                    ? <span style={{ fontSize:'0.5rem', fontWeight:700, color:'#DC2626', marginTop:'0.15rem' }}>{"\u26a0 IMPOSS\u00cdVEL \u2014 CORRIJA"}</span>
+                    : aberrantesOBA[ex.key] && <span style={{ fontSize:'0.5rem', fontWeight:700, color:'#CA8A04', marginTop:'0.15rem' }}>{"\u26a0 ABERRANTE"}</span>}
                 </div>
               )
             })}
@@ -2870,6 +2908,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           {/* Bot\u00e3o \u00fanico (gray piscante, \u25b6 vermelho, subtexto vinho "AVALIA\u00c7\u00c3O").
               salvarExames j\u00e1 cobre o caso de campos vazios (salva nulls e segue),
               ent\u00e3o substitui tanto o "concluir" quanto o antigo "pular". */}
+          {/* Esta etapa n\u00e3o tinha onde exibir `erro` \u2014 o bloqueio por valor
+              imposs\u00edvel travaria o bot\u00e3o sem nada aparecer na tela. */}
+          {erro && (
+            <p style={{ color:'#DC2626', fontSize:'0.82rem', fontWeight:700, marginTop:'1rem', textAlign:'center', lineHeight:1.4 }}>{erro}</p>
+          )}
           <div style={{ display:'flex', justifyContent:'center', marginTop:'1.5rem' }}>
             <PlayButton
               onClick={salvarExames}
@@ -3034,14 +3077,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               ) : (
                 <input ref={refPesoAntes} style={inpA} onWheel={noWheel} type="number" min="0" max="220" placeholder="Ex: 120" value={form.peso_antes} onChange={e => { sf('peso_antes', e.target.value); saltoPorDigitos(e.target.value, refPesoMin, 3, true) }} onFocus={() => agendarSalto(null)} onBlur={handlePesoAntesBlur} />
               )}
+              <AvisoFaixa chave="peso_antes" valor={form.peso_antes} />
             </div>
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"Menor peso p\u00f3s (kg)"}</label>
               <input ref={refPesoMin} style={inpA} onWheel={noWheel} type="number" min="0" max="220" placeholder="Ex: 72" value={form.peso_minimo_pos} onChange={e => { sf('peso_minimo_pos', e.target.value); saltoPorDigitos(e.target.value, refPesoAtual, 3, true) }} onFocus={() => agendarSalto(null)} onBlur={handlePesoMinBlur} />
+              <AvisoFaixa chave="peso_minimo_pos" valor={form.peso_minimo_pos} />
             </div>
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Peso atual (kg)</label>
               <input ref={refPesoAtual} style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 78" value={form.peso_atual} onChange={e => { sf('peso_atual', e.target.value); saltoPorDigitos(e.target.value, refAltura, 3, true) }} onFocus={() => agendarSalto(null)} onBlur={handlePesoAtualBlur} />
+              <AvisoFaixa chave="peso_atual" valor={form.peso_atual} />
             </div>
             <div>
               <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>Altura (cm)</label>
@@ -3050,6 +3096,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               ) : (
                 <input ref={refAltura} style={inpA} onWheel={noWheel} type="number" step="1" placeholder="Ex: 165" value={form.altura} onChange={e => { sf('altura', e.target.value) }} onFocus={() => agendarSalto(null)} />
               )}
+              <AvisoFaixa chave="altura" valor={form.altura} />
             </div>
           </div>
           {alertaPeso && (
@@ -3273,7 +3320,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 {form.status_gestacional === "GR\u00c1VIDA" && (
                   <div>
                     <label style={{ display:'block', fontSize:'0.7rem', fontWeight:700, color:'#374151', marginBottom:'0.3rem' }}>{"Semanas de gesta\u00e7\u00e3o"}</label>
-                    <input style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 28" value={form.semanas_gestacao} onChange={e => sf('semanas_gestacao', e.target.value)} />
+                    <input style={inpA} onWheel={noWheel} type="number" placeholder="Ex: 28" value={form.semanas_gestacao} onChange={e => sf('semanas_gestacao', e.target.value)} /><AvisoFaixa chave="semanas_gestacao" valor={form.semanas_gestacao} />
                   </div>
                 )}
                 <div>
@@ -3292,6 +3339,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                     onChange={e => sf('gestacoes_previas', e.target.value)}
                     onFocus={() => agendarSalto(null)}
                   />
+                  <AvisoFaixa chave="gestacoes_previas" valor={form.gestacoes_previas} />
                 </div>
               </div>
 
@@ -3312,7 +3360,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   {form.abortamentos_espontaneos === true && (
                     <>
                       <label style={{ display:'block', fontSize:'0.72rem', fontWeight:700, color:'#374151', margin:'0.5rem 0 0.3rem' }}>{"Quantos abortamentos espont\u00e2neos?"}</label>
-                      <input style={{ ...inpA, maxWidth:120 }} onWheel={noWheel} type="number" min="1" max="20" step="1" placeholder={"1, 2, 3..."} value={form.abortamentos_numero} onChange={e => sf('abortamentos_numero', e.target.value)} />
+                      <input style={{ ...inpA, maxWidth:120 }} onWheel={noWheel} type="number" min="1" max="20" step="1" placeholder={"1, 2, 3..."} value={form.abortamentos_numero} onChange={e => sf('abortamentos_numero', e.target.value)} /><AvisoFaixa chave="abortamentos_numero" valor={form.abortamentos_numero} />
                       <p style={{ fontSize:'0.75rem', fontWeight:700, color:'#7B1E1E', margin:'0.5rem 0 0', lineHeight:1.45 }}>
                         {"Essa informa\u00e7\u00e3o \u00e9 CR\u00cdTICA, informe a seu obstetra; indicada avalia\u00e7\u00e3o com Hematologista."}
                       </p>
@@ -3519,6 +3567,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <span style={{ fontSize:'0.8rem', color:'#6B7280' }}>{"% \u2014 grau m\u00e1ximo de estenose"}</span>
             </div>
           )}
+          {form.doppler_carotidas === 'ANORMAL' && <AvisoFaixa chave="estenose_maxima" valor={form.estenose_maxima} />}
           <div style={{ marginTop:'0.8rem' }}>
             <CheckRow label={"DOEN\u00c7A ARTERIAL PERIF\u00c9RICA"} checked={!!form.doenca_arterial_periferica} onClick={() => sf('doenca_arterial_periferica', !form.doenca_arterial_periferica)} />
           </div>
@@ -3560,6 +3609,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <span style={{ fontSize:'0.8rem', color:'#6B7280' }}>{"% — fração de ejeção (Teichholz)"}</span>
             </div>
           )}
+          {form.ecocardiograma === 'ANORMAL' && (
+            <AvisoFaixa chave="fracao_ejecao" valor={form.fracao_ejecao} />
+          )}
 
           <div style={{ marginTop:'0.8rem' }}>
             <CheckRow label={"FIZ ANGIOTOMOGRAFIA CORONARIANA"} checked={form.angiotomografia_coronariana} onClick={() => sf('angiotomografia_coronariana', !form.angiotomografia_coronariana)} />
@@ -3570,6 +3622,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <span style={{ fontSize:'0.8rem', color:'#6B7280' }}>{"score de cálcio"}</span>
             </div>
           )}
+          {form.angiotomografia_coronariana && <AvisoFaixa chave="score_calcio" valor={form.score_calcio} />}
 
           <DuvidaCheck secao="cardiovascular" duvidas={form.duvidas} onToggle={toggleDuvida} />
 
@@ -3771,6 +3824,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       fontSize:'0.85rem'
                     }}
                   />
+                  <AvisoFaixa chave="calprotectina" valor={form.calprotectina} />
                 </div>
 
                 <div style={{ display:'flex', flexDirection:'column' }}>
@@ -3870,6 +3924,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <input style={{ ...inp, width:120 }} type="number" placeholder="Quantos kg?" value={form.meta_kg} onChange={e => sf('meta_kg', e.target.value)} />
               <span style={{ fontSize:'0.85rem', color:'#6B7280' }}>kg</span>
             </div>
+          )}
+          {(form.meta_peso === 'PERDER' || form.meta_peso === 'GANHAR') && (
+            <AvisoFaixa chave="meta_kg" valor={form.meta_kg} />
           )}
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.4rem' }}>
             {PROJETOS.map(p => <CheckRow key={p} label={p} checked={form.projetos_vida.includes(p)} onClick={() => sf('projetos_vida', tog(form.projetos_vida, p))} />)}
