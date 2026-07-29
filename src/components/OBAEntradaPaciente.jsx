@@ -4,6 +4,7 @@ import obaLogo from '../assets/oba-logo.png'
 import PlayButton from './PlayButton'
 import TermosModal from './TermosModal'
 import { sairOuVoltar } from '../lib/sairDoApp'
+import { credPaciente } from '../lib/cred'
 
 // =============================================================================
 // OBAEntradaPaciente — tela PRÓPRIA do paciente bariátrico (vindo do bariatrico.net).
@@ -134,7 +135,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
       } catch (e) {}
       // Entrou por SOU BARIÁTRICO → marca o perfil como bariátrico JÁ no cadastro (fonte
       // confiável, não depende do rf_flag sobreviver até o dashboard). RLS off em profiles.
-      try { if (data.id) await supabase.from('profiles').update({ bariatrica: true }).eq('id', data.id) } catch (e) {}
+      try { if (data.id) await supabase.rpc('profiles_atualizar', { p_cpf: cpfDigits, p_patch: { bariatrica: true }, ...credPaciente() }) } catch (e) {}
       // INDICADOR (?ind=): cria a reserva PENDENTE no banco — entra na régua oficial
       // (escolha "VOCÊ FOI INDICADO POR" com o rótulo certo + validade de 3 meses +
       // crédito via confirmar_indicacao/fn_credita_medico). Vale no cadastro E no login

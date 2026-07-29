@@ -702,11 +702,9 @@ function DocumentoMedicoPanel({ resultado }) {
         dnISO = `${a}-${m}-${d}`;
       }
       if (cpfInput) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('nome, data_nascimento, celular, cpf')
-          .eq('cpf', cpfInput)
-          .single();
+        // RLS Fase 2: leitura por RPC.
+        const { data: _pfResp } = await supabase.rpc('profiles_por_cpf', { p_cpf: cpfInput, ...credAmbas() });
+        const profile = (_pfResp && _pfResp.ok) ? _pfResp.perfil : null;
         if (profile) {
           setDadosPaciente({
             nome:      profile.nome || '',

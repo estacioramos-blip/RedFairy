@@ -1022,7 +1022,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     try {
       const cpfLimpo = String(cpf || '').replace(/\D/g, '')
       if (cpfLimpo.length === 11) {
-        const { data } = await supabase.from('profiles').select('celular').eq('cpf', cpfLimpo).maybeSingle()
+        const { data: _pfR } = await supabase.rpc('profiles_por_cpf', { p_cpf: cpfLimpo, ...credAmbas() })
+        const data = (_pfR && _pfR.ok) ? _pfR.perfil : null
         celular = data?.celular || ''
       }
     } catch (e) {}
@@ -1520,7 +1521,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           const mi = eritron.inputs || {}
           const numOrNull = (v) => (v === '' || v === null || v === undefined || !Number.isFinite(Number(v))) ? null : Number(v)
           const dataCol = dataExames || new Date().toISOString().slice(0, 10)
-          const { data: prof } = await supabase.from('profiles').select('id').eq('cpf', cpfLimpo).maybeSingle()
+          const { data: _pfR2 } = await supabase.rpc('profiles_por_cpf', { p_cpf: cpfLimpo, ...credAmbas() })
+          const prof = (_pfR2 && _pfR2.ok) ? _pfR2.perfil : null
           const linha = {
             cpf: cpfLimpo,
             ...(prof?.id ? { user_id: prof.id } : {}),

@@ -204,7 +204,9 @@ function AbaLembretes() {
     (async () => {
       setLoading(true);
       // Perfis (mapas por id e por cpf normalizado).
-      const { data: profs } = await supabase.from('profiles').select('id, nome, cpf, celular');
+      // RLS Fase 2: leitura por RPC de admin.
+      const { data: profResp } = await supabase.rpc('admin_profiles_lista', credAdmin());
+      const profs = (profResp && profResp.ok) ? (profResp.linhas || []) : [];
       const perfilPorId = {}, perfilPorCpf = {};
       (profs || []).forEach(p => {
         perfilPorId[p.id] = p;

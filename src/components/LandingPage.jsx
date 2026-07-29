@@ -4,6 +4,7 @@ import PlayButton from './PlayButton'
 import redcell1 from '../assets/redcell1.png'
 import fatslim from '../assets/fatslim.png'
 import { ehDominioBariatrico } from '../lib/dominio'
+import { credPaciente, cpfPacienteLogado } from '../lib/cred'
 import laiseImg from '../assets/LAISE H.jpg'
 import wing1 from '../assets/wing1.png'
 import wing2 from '../assets/wing2.png'
@@ -644,7 +645,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
     let cancelado = false
     async function carregarPaciente(userId) {
       if (!userId) return
-      const { data } = await supabase.from('profiles').select('nome').eq('id', userId).maybeSingle()
+      const { data: _pfR } = await supabase.rpc('profiles_meu', { p_cpf: cpfPacienteLogado(), p_id: userId, ...credPaciente() })
+      const data = (_pfR && _pfR.ok) ? _pfR.perfil : null
       if (!cancelado && data?.nome) setPacienteLogado(data.nome)
     }
     // Fallback: se nao tem nome no localStorage, tenta Supabase Auth
@@ -1139,7 +1141,8 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
     // Marca rf_abrir_nova (mesmo gatilho do ícone) e vai pro dashboard (→ bifurcação).
     if (cpfPacModo === 'login' && resp.id) {
       try {
-        const { data: pf } = await supabase.from('profiles').select('bariatrica').eq('id', resp.id).maybeSingle();
+        const { data: _pfR2 } = await supabase.rpc('profiles_meu', { p_cpf: cpfPacDigitos, p_id: resp.id, ...credPaciente() });
+        const pf = (_pfR2 && _pfR2.ok) ? _pfR2.perfil : null;
         if (pf && pf.bariatrica) {
           try { localStorage.setItem('rf_abrir_nova', '1'); } catch (e) {}
           if (onIrDashboardPaciente) { onIrDashboardPaciente(); return; }

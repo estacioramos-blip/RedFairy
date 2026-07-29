@@ -112,7 +112,7 @@ export default function TriagemResultadoModal({
             patch.semanas_gestacao_triagem = null
             patch.data_triagem_gestacao = null
           }
-          if (Object.keys(patch).length) await supabase.from('profiles').update(patch).eq('id', userId)
+          if (Object.keys(patch).length) await supabase.rpc('profiles_atualizar', { p_cpf: (inputs.cpf || '').replace(/\D/g, ''), p_patch: patch, ...credAmbas() })
         }
       } catch (e) { /* nao bloqueia */ }
 
@@ -151,8 +151,12 @@ export default function TriagemResultadoModal({
       } catch (e) { console.warn('Falha ao criar avaliacao da triagem:', e) }
       try {
         const cpfDigits = (inputs.cpf || '').replace(/\D/g, '')
-        const { data: prof } = await supabase
-          .from('profiles').select('cpf').eq('cpf', cpfDigits).maybeSingle()
+        // "Existe perfil para este CPF?" — usa a RPC PÚBLICA lookup_cpf_triagem
+        // (origem='profile' quando existe). Aqui o visitante pode ainda não ter
+        // conta nem token, então uma RPC gateada responderia "não autorizado" e
+        // seria lida como "não existe perfil".
+        const { data: lk } = await supabase.rpc('lookup_cpf_triagem', { cpf_input: cpfDigits })
+        const prof = (Array.isArray(lk) ? lk : []).find(r => r.origem === 'profile') || null
         if (!prof) {
           // RPC pública (sem token) — visitante ainda não tem conta nesse ponto.
           const { data: triResp } = await supabase.rpc('lookup_triagens_cpf', { p_cpf: cpfDigits })

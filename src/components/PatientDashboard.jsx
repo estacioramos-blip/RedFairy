@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
 import { bloqueiosDe } from '../engine/limitesInput'
-import { credPaciente } from '../lib/cred'
+import { credPaciente, cpfPacienteLogado } from '../lib/cred'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import { useInstalarFada } from '../lib/useInstalarFada'
@@ -269,12 +269,13 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     const delays = [0, 250, 600, 1200]
     for (const d of delays) {
       if (d > 0) await new Promise(r => setTimeout(r, d))
-      const { data } = await supabase
-        .from('profiles')
-        // Lista EXPLÍCITA (nunca '*': profiles tem senha_klipbit/session_token_hash — hashes
-        // de auth que não podem ir ao cliente). Inclui endereço/contato de emergência (Fase 2).
-        .select('id, nome, cpf, sexo, data_nascimento, celular, email, bariatrica, gestante, boas_vindas_vista, primeira_avaliacao_feita, cep, logradouro, numero, complemento, bairro, cidade, uf, contato_emergencia_nome, contato_emergencia_celular, contato_emergencia_parentesco')
-        .eq('id', session.user.id).maybeSingle()
+      // RLS Fase 2: leitura por RPC. A RPC remove senha_klipbit e
+      // session_token_hash antes de devolver — o cuidado da lista explícita que
+      // existia aqui foi movido para dentro do banco.
+      const { data: pResp } = await supabase.rpc('profiles_meu', {
+        p_cpf: cpfPacienteLogado(), p_id: session.user.id, ...credPaciente()
+      })
+      const data = (pResp && pResp.ok) ? pResp.perfil : null
       if (data) { prof = data; break }
     }
     if (!prof) {
@@ -326,7 +327,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // salva. Antes, o rf_flag era removido aqui sem nunca marcar o paciente, então
     // o bariátrico novo seguia como paciente comum e o OBA não disparava.
     if (flagBariatricaOBA && !prof.bariatrica) {
-      try { await supabase.from('profiles').update({ bariatrica: true }).eq('id', prof.id) } catch (e) {}
+      try { await supabase.rpc('profiles_atualizar', { p_cpf: String(prof.cpf||'').replace(/\D/g,''), p_patch: { bariatrica: true }, ...credPaciente() }) } catch (e) {}
       prof.bariatrica = true
       setProfile(p => (p ? { ...p, bariatrica: true } : p))
     }
@@ -379,7 +380,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // perfil ainda não reflete, gravamos em profiles.bariatrica. O setProfile
     // reaplica o efeito que pré-marca o checkbox da nova avaliação.
     if (!prof.bariatrica && (avals || []).some(a => a.bariatrica)) {
-      await supabase.from('profiles').update({ bariatrica: true }).eq('id', prof.id)
+      await supabase.rpc('profiles_atualizar', { p_cpf: String(prof.cpf||'').replace(/\D/g,''), p_patch: { bariatrica: true }, ...credPaciente() })
       setProfile(p => (p ? { ...p, bariatrica: true } : p))
     }
     // FOLLOW-UP (frente 2): se o bariátrico JÁ fez o baseline (existe linha em
@@ -787,7 +788,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       // usa avaliacoes.concluida; ver precisaPaywallNova.)
       if (!profile?.primeira_avaliacao_feita) {
         try {
-          await supabase.from('profiles').update({ primeira_avaliacao_feita: true }).eq('id', session.user.id)
+          await supabase.rpc('profiles_atualizar', { p_cpf: cpfPacienteLogado(), p_patch: { primeira_avaliacao_feita: true }, ...credPaciente() })
           setProfile(p => (p ? { ...p, primeira_avaliacao_feita: true } : p))
         } catch (e) {}
       }
@@ -909,9 +910,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   async function handleConfirmarBoasVindas() {
     setSalvandoBoasVindas(true)
     try {
-      await supabase.from('profiles')
-        .update({ boas_vindas_vista: true })
-        .eq('id', profile.id)
+      await supabase.rpc('profiles_atualizar', {
+        p_cpf: String(profile.cpf || '').replace(/\D/g, ''),
+        p_patch: { boas_vindas_vista: true },
+        ...credPaciente(),
+      })
     } catch (err) {
       console.error('Erro ao salvar boas-vindas:', err)
     } finally {

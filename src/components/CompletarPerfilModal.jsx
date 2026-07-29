@@ -7,6 +7,7 @@ import eleDigita from '../assets/ELE_DIGITA.jpg'
 import bariMale from '../assets/barimale.jpg'
 import bariFem from '../assets/barifem.jpg'
 import PlayButton from './PlayButton'
+import { credPaciente } from '../lib/cred'
 
 /**
  * CompletarPerfilModal — tela bloqueante (uma vez) para o paciente recém-cadastrado
@@ -213,20 +214,17 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
     if ((email || '').trim() && !emailOk) { setErro('E-mail inválido — ou deixe em branco.'); return }
 
     setLoading(true)
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ nome: nomeT, celular: celDigits })
-      .eq('id', profile.id)
-      .select('id, nome, cpf, sexo, data_nascimento, celular, bariatrica, gestante, boas_vindas_vista')
-      .maybeSingle()
-    // E-mail: profiles.email pode não existir ainda (rodar migrate_profiles_email.sql). Update
-    // SEPARADO e tolerante — não quebra o salvar do perfil se a coluna faltar.
-    try { await supabase.from('profiles').update({ email: emailT }).eq('id', profile.id) } catch (e) {}
-    // Endereço + contato de emergência: colunas podem não existir ainda (rodar
-    // migrate_profiles_endereco_emergencia.sql). Update SEPARADO e tolerante — se as
-    // colunas faltarem, o erro é ignorado e o salvar do perfil (nome/celular) não quebra.
-    try {
-      await supabase.from('profiles').update({
+    // RLS Fase 2: um ÚNICO update por RPC. Antes eram três chamadas separadas,
+    // com try/catch, porque as colunas de e-mail/endereço podiam não existir e
+    // uma coluna faltante derrubaria o update inteiro. A RPC monta o comando só
+    // com as colunas que existem de fato, então a separação deixou de ser
+    // necessária. (A RPC também bloqueia senha/token/cpf contra patch.)
+    const { data: salvoResp } = await supabase.rpc('profiles_atualizar', {
+      p_cpf: String(profile.cpf || '').replace(/\D/g, ''),
+      p_patch: {
+        nome: nomeT,
+        celular: celDigits,
+        email: emailT,
         cep: cep.replace(/\D/g, '') || null,
         logradouro: logradouro.trim() || null,
         numero: numero.trim() || null,
@@ -237,10 +235,12 @@ export default function CompletarPerfilModal({ profile, onSalvo, onVoltar }) {
         contato_emergencia_nome: emergNome.trim() || null,
         contato_emergencia_celular: emergCelular.replace(/\D/g, '') || null,
         contato_emergencia_parentesco: emergParentesco.trim() || null,
-      }).eq('id', profile.id)
-    } catch (e) {}
+      },
+      ...credPaciente(),
+    })
     setLoading(false)
-    if (error) { setErro('Erro ao salvar. Tente novamente.'); return }
+    const data = (salvoResp && salvoResp.ok) ? salvoResp.perfil : null
+    if (!salvoResp || salvoResp.ok === false) { setErro('Erro ao salvar. Tente novamente.'); return }
 
     try { localStorage.setItem('paciente_nome', nomeT) } catch (e) {}
     // Devolve o perfil COMPLETO (endereço/contato de emergência que acabaram de ser salvos),

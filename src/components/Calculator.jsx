@@ -839,7 +839,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (d.length !== 11) { setAvaliarErro('CPF inválido'); return }
     setAvaliarBusy(true); setAvaliarErro('')
     try {
-      const { data: prof } = await supabase.from('profiles').select('cpf, nome, sexo, data_nascimento, bariatrica').eq('cpf', d).maybeSingle()
+      const { data: _pfResp } = await supabase.rpc('profiles_por_cpf', { p_cpf: d, ...credMedico() })
+      const prof = (_pfResp && _pfResp.ok) ? _pfResp.perfil : null
       if (!prof) {
         setAvaliarErro('Paciente não cadastrado. Peça que se cadastre primeiro.'); setAvaliarBusy(false)
         // Na REVISÃO não há tela de CPF onde o erro apareça — avisa direto.

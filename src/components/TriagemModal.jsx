@@ -364,11 +364,9 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
 
   async function buscarCpfConhecido(cpfDigits) {
     setBuscandoCpf(true);
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('nome, sexo, data_nascimento, bariatrica, gestante, semanas_gestacao_triagem, data_triagem_gestacao')
-      .eq('cpf', cpfDigits)
-      .maybeSingle();
+    // RLS Fase 2: leitura por RPC (gateada por token de médico OU do paciente).
+    const { data: _pfResp } = await supabase.rpc('profiles_por_cpf', { p_cpf: cpfDigits, ...credAmbas() });
+    const profile = (_pfResp && _pfResp.ok) ? _pfResp.perfil : null;
     // triagens: via RPC pública (sem token) — usada no funil anônimo, antes de
     // existir qualquer conta/credencial. Só campos não-clínicos + contagem.
     const { data: triResp } = await supabase.rpc('lookup_triagens_cpf', { p_cpf: cpfDigits });
