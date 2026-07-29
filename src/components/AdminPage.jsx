@@ -1558,7 +1558,6 @@ function AbaIndicadores() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
   const [busca, setBusca] = useState('');
-  const [liquidando, setLiquidando] = useState('');
 
   async function carregar() {
     const { data, error } = await supabase.rpc('admin_listar_indicadores', credAdmin());
@@ -1569,16 +1568,7 @@ function AbaIndicadores() {
   }
   useEffect(() => { carregar(); }, []);
 
-  async function liquidar(i) {
-    const n = i.creditos_pendentes || 0;
-    if (!n) return;
-    if (!window.confirm("Marcar " + n + " credito(s) de " + (i.nome || i.codigo) + " como PAGO(s)? (" + fmtUsd(n * comissaoUsd) + ")")) return;
-    setLiquidando(i.codigo);
-    const { data, error } = await supabase.rpc('admin_liquidar_indicador', { ...credAdmin(), p_codigo: i.codigo });
-    setLiquidando('');
-    if (error || (data && !data.ok)) { window.alert('Erro: ' + (error?.message || data?.erro || 'sem permissao')); return; }
-    await carregar();
-  }
+  // (removida) liquidar() do Admin — a baixa é só na Tesouraria (Caixa).
 
   if (loading) return <div className="text-center py-12 text-gray-400">{"Carregando indicadores..."}</div>;
   if (erro) return <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm">{erro}</div>;
@@ -1621,11 +1611,14 @@ function AbaIndicadores() {
                 <p className="text-green-700">{"Pagos: "}<b>{pagos}</b></p>
               </div>
             </div>
+            {/* A BAIXA SAIU DO ADMIN (jul/2026). Existiam dois caminhos para pagar
+                a mesma pessoa, com contabilidades diferentes: o do Admin não
+                congelava USD/cotação/BRL, então a NF enxergava R$ 0. Pagamento
+                agora é só na Tesouraria (?modo=caixa), que congela os valores. */}
             {pend > 0 && (
-              <button onClick={()=>liquidar(i)} disabled={liquidando===i.codigo}
-                className="mt-3 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-xl text-sm transition-colors disabled:opacity-60">
-                {liquidando===i.codigo ? 'Pagando...' : ("Marcar " + pend + " como PAGO (" + fmtUsd(pend*comissaoUsd) + ")")}
-              </button>
+              <p className="mt-3 text-center text-[0.7rem] text-gray-500 leading-snug">
+                {"A pagar: "}<b>{fmtUsd(pend * comissaoUsd)}</b>{" — a baixa é feita na Tesouraria (Caixa)."}
+              </p>
             )}
           </div>
         );
@@ -1641,7 +1634,6 @@ function AbaMedicos() {
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
   const [busca, setBusca] = useState('');
-  const [liquidando, setLiquidando] = useState('');
   const [filtro, setFiltro] = useState('todos');
   const [extratoMed, setExtratoMed] = useState(null);   // médico do extrato aberto
   const [extrato, setExtrato] = useState(null);          // conversões carregadas
@@ -1662,16 +1654,7 @@ function AbaMedicos() {
 
   useEffect(() => { carregar(); }, []);
 
-  async function liquidar(m) {
-    const n = m.creditos_pendentes || 0;
-    if (!n) return;
-    if (!window.confirm(`Marcar ${n} comiss\u00e3o(\u00f5es) de ${m.nome || m.crm} como PAGA(s)? (${fmtUsd(n * comissaoUsd)})`)) return;
-    setLiquidando(m.crm);
-    const { data, error } = await supabase.rpc('admin_liquidar_comissao', { ...credAdmin(), p_medico_crm: m.crm });
-    setLiquidando('');
-    if (error || (data && !data.ok)) { window.alert('Erro ao liquidar: ' + (error?.message || data?.erro || 'sem permiss\u00e3o')); return; }
-    await carregar();
-  }
+  // (removida) liquidar() do Admin \u2014 a baixa \u00e9 s\u00f3 na Tesouraria (Caixa).
 
   async function abrirExtrato(m) {
     setExtratoMed(m); setExtrato(null); setCarregandoExtrato(true);
@@ -1835,11 +1818,12 @@ function AbaMedicos() {
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold px-4 py-2 rounded-xl transition-colors">
                 Extrato
               </button>
+              {/* Baixa removida do Admin — ver comentário na aba Indicadores.
+                  Pagamento de comissão médica é só na Tesouraria (Caixa). */}
               {pend > 0 && (
-                <button onClick={() => liquidar(m)} disabled={liquidando === m.crm}
-                  className="bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors disabled:opacity-50">
-                  {liquidando === m.crm ? 'Liquidando...' : 'Marcar como pago'}
-                </button>
+                <span className="self-center text-[0.7rem] text-gray-500 whitespace-nowrap">
+                  {"baixa na Tesouraria"}
+                </span>
               )}
             </div>
           </div>
