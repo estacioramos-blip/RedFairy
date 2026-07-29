@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
 import { bloqueiosDe } from '../engine/limitesInput'
+import { credPaciente } from '../lib/cred'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
 import { useInstalarFada } from '../lib/useInstalarFada'
@@ -385,9 +386,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     if (prof.cpf && (prof.bariatrica || (avals || []).some(a => a.bariatrica))) {
       try {
         const cpfLimpo = String(prof.cpf).replace(/\D/g, '')
-        const { data: obaRows } = await supabase
-          .from('oba_anamnese').select('*')
-          .eq('cpf', cpfLimpo).order('created_at', { ascending: true })
+        // RLS Fase 2: leitura por RPC (já vem em ordem cronológica).
+        const { data: obaResp } = await supabase.rpc('oba_anamnese_por_cpf', {
+          p_cpf: cpfLimpo, ...credPaciente()
+        })
+        const obaRows = (obaResp && obaResp.ok) ? obaResp.linhas : []
         setAnamneseBaseline(obaRows && obaRows.length ? obaRows[0] : null)
         setAnamneseAnterior(obaRows && obaRows.length ? obaRows[obaRows.length - 1] : null)
         setNumeroCiclo((obaRows?.length || 0) + 1)

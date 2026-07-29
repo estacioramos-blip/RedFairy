@@ -227,12 +227,12 @@ function AbaLembretes() {
 
       // (2) H. PYLORI — última oba_anamnese por cpf com relatorio_oba.hpylori.detectado;
       // vencimento = data da detecção + 6 meses. Janela: ≤15 dias p/ vencer ou vencidos ≤60.
-      const { data: obaRows } = await supabase
-        .from('oba_anamnese').select('cpf, data_exames, created_at, relatorio_oba')
-        .order('created_at', { ascending: false }).limit(400);
-      const ultimaPorCpf = {};
-      (obaRows || []).forEach(r => { if (!ultimaPorCpf[r.cpf]) ultimaPorCpf[r.cpf] = r; });  // 1ª = mais recente
-      setHpylori(Object.values(ultimaPorCpf)
+      // RLS Fase 2: leitura por RPC de admin. A redução "última linha por CPF"
+      // agora é feita no SQL (DISTINCT ON) — antes vinham 400 linhas e o JS
+      // reduzia aqui, o que silenciosamente perdia pacientes acima do limite.
+      const { data: hpResp } = await supabase.rpc('admin_oba_hpylori', credAdmin());
+      const ultimaPorCpf = (hpResp && hpResp.ok) ? (hpResp.linhas || []) : [];
+      setHpylori(ultimaPorCpf
         .map(r => {
           const hp = r.relatorio_oba && r.relatorio_oba.hpylori;
           if (!hp || !hp.detectado) return null;
@@ -570,14 +570,9 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
   useEffect(() => {
     if (!cpf || cpf.startsWith('sem_cpf') || !ultima?.bariatrica) return;
     setLoadingOba(true);
-    supabase
-      .from('oba_anamnese')
-      .select('*')
-      .eq('cpf', cpf.replace(/\D/g, ''))
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-      .then(({ data }) => { setObaData(data); setLoadingOba(false); });
+    // RLS Fase 2: leitura por RPC de admin.
+    supabase.rpc('admin_oba_ficha', { ...credAdmin(), p_cpf: cpf.replace(/\D/g, '') })
+      .then(({ data }) => { setObaData((data && data.ok) ? data.linha : null); setLoadingOba(false); });
   }, [cpf]);
 
   function copiarSolicitacao() {

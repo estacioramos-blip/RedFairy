@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine';
 import { avaliarOBA } from '../engine/obaEngine';
 import { checarValor } from '../engine/limitesInput';
+import { credMedico } from '../lib/cred';
 import OBAModal from './OBAModal';
 import TriagemModal from './TriagemModal';
 import TriagemResultadoModal from './TriagemResultadoModal';
@@ -851,7 +852,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       // PRIMEIRA (baseline, comparação longitudinal). Ver src/engine/obaComparador.js.
       let anam = null, anamBaseline = null, numeroCiclo = 1
       try {
-        const { data: obaRows } = await supabase.from('oba_anamnese').select('*').eq('cpf', d).order('created_at', { ascending: true })
+        // RLS Fase 2: leitura por RPC (gateada pelo token do médico).
+        const { data: obaResp } = await supabase.rpc('oba_anamnese_por_cpf', { p_cpf: d, ...credMedico() })
+        const obaRows = (obaResp && obaResp.ok) ? obaResp.linhas : []
         anamBaseline = (obaRows && obaRows.length) ? obaRows[0] : null
         anam = (obaRows && obaRows.length) ? obaRows[obaRows.length - 1] : null
         numeroCiclo = (obaRows?.length || 0) + 1
@@ -1371,9 +1374,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         obaResult = avaliarOBA(res, obaColetado.dadosOBA, obaColetado.examesOBA);
       } else if (inputs.cpf.trim()) {
         const cpfLimpo = inputs.cpf.replace(/\D/g, '');
-        const { data: obaRow } = await supabase
-          .from('oba_anamnese').select('relatorio_oba, estado_clinico')
-          .eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1).maybeSingle();
+        // RLS Fase 2: leitura por RPC.
+        const { data: obaRow } = await supabase.rpc('oba_anamnese_relatorio_atual', {
+          p_cpf: cpfLimpo, ...credMedico()
+        });
         // O relatorio_oba salvo J\u00c1 \u00e9 a sa\u00edda do avaliarOBA (modulos/alertas/tipoCirurgia/\u2026),
         // completo \u2014 o ResultCard l\u00ea exatamente esses campos. Usa direto.
         if (obaRow?.relatorio_oba) obaResult = { ...obaRow.relatorio_oba, _estadoClinico: obaRow.estado_clinico || null };
@@ -1665,9 +1669,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               const cpfLimpo = String(cpfRev || '').replace(/\D/g, '')
               if (cpfLimpo) {
                 try {
-                  const { data: obaRow } = await supabase
-                    .from('oba_anamnese').select('relatorio_oba, estado_clinico')
-                    .eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1).maybeSingle()
+                  // RLS Fase 2: leitura por RPC.
+                  const { data: obaRow } = await supabase.rpc('oba_anamnese_relatorio_atual', {
+                    p_cpf: cpfLimpo, ...credMedico()
+                  })
                   if (obaRow?.relatorio_oba) {
                     setResultado(prev => prev ? { ...prev, _oba: { ...obaRow.relatorio_oba, _estadoClinico: obaRow.estado_clinico || null } } : prev)
                   }

@@ -12,6 +12,7 @@ import { cicloFromRow, compararCiclos } from '../engine/obaComparador'
 import OBAComparativoCard from './OBAComparativoCard'
 import { EXAMES_BASE, EXAMES_45, EXAMES_HOMEM_40, EXAMES_MULHER_40 } from '../engine/obaExamesRef'
 import { checarValor, bloqueiosDe } from '../engine/limitesInput'
+import { credAmbas } from '../lib/cred'
 
 // Imagem landscape do splash do relatório OBA — A DEFINIR (será horizontal,
 // ocupando a largura do modal, parcialmente sobreposta pelo conteúdo).
@@ -1392,7 +1393,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       relatorio_oba: { form_snapshot: form },
     }
 
-    await supabase.from('oba_anamnese').insert(dadosAnamnese)
+    // RLS Fase 2: grava por RPC (gateada por token de paciente OU de médico) —
+    // o OBAModal roda nos dois fluxos, por isso credAmbas().
+    const { data: insResp } = await supabase.rpc('oba_anamnese_inserir', {
+      p_dados: dadosAnamnese, ...credAmbas()
+    })
+    if (insResp && insResp.ok === false) {
+      console.error('OBA: falha ao gravar anamnese —', insResp.erro)
+    }
     setLoading(false)
     setAnamneseSalva(dadosAnamnese)
     setEtapa('exames')
@@ -1455,10 +1463,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // estado_clinico (text) — ver ALTER TABLE entregue ao Estácio.
     if (cpf && rel) {
       const cpfLimpo = cpf.replace(/\D/g, '')
-      const { data: rows } = await supabase
-        .from('oba_anamnese').select('id')
-        .eq('cpf', cpfLimpo).order('created_at', { ascending: false }).limit(1)
-      if (rows && rows.length > 0) {
+      {
         // Eritron recomputado (nova data) vai dentro do relatorio_oba (jsonb) — sem
         // precisar de colunas novas. data_eritron_atualizado = a data dos exames.
         // form_snapshot: guarda o formulário inteiro p/ o próximo follow-up restaurar
@@ -1495,9 +1500,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           relSalvar._revisado_por_medico = true
           relSalvar._revisao_data = new Date().toISOString()
         }
-        await supabase.from('oba_anamnese')
-          .update({ relatorio_oba: relSalvar, estado_clinico: est?.estado || null })
-          .eq('id', rows[0].id)
+        // RLS Fase 2: a RPC resolve internamente qual é a última linha do CPF —
+        // antes eram dois passos (SELECT id → UPDATE), com corrida no meio.
+        const { data: updResp } = await supabase.rpc('oba_anamnese_atualizar_ultima', {
+          p_cpf: cpfLimpo,
+          p_patch: { relatorio_oba: relSalvar, estado_clinico: est?.estado || null },
+          ...credAmbas(),
+        })
+        if (updResp && updResp.ok === false) {
+          console.error('OBA: falha ao gravar relatório —', updResp.erro)
+        }
       }
 
       // (A1) Hemograma NOVO digitado no OBA também vira linha em `avaliacoes` — antes
@@ -1556,22 +1568,21 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
     if (cpf) {
       const cpfLimpo = cpf.replace(/\D/g, '')
-      const { data: rows } = await supabase
-        .from('oba_anamnese')
-        .select('id')
-        .eq('cpf', cpfLimpo)
-        .order('created_at', { ascending: false })
-        .limit(1)
-
-      if (rows && rows.length > 0) {
-        const { error: errExames } = await supabase.from('oba_anamnese').update({
+      // RLS Fase 2: a RPC acha a última linha do CPF e monta o UPDATE só com as
+      // colunas que EXISTEM na tabela. Isso também elimina a armadilha antiga:
+      // uma única coluna de exame inexistente fazia o Postgres rejeitar o UPDATE
+      // inteiro e NENHUM exame era gravado.
+      const { data: exResp } = await supabase.rpc('oba_anamnese_atualizar_ultima', {
+        p_cpf: cpfLimpo,
+        p_patch: {
           data_exames: dataExames || null,
           dias_exames: diasExames,
           ...Object.fromEntries(todosExames.map(e => [e.key, examesObj[e.key] !== undefined ? examesObj[e.key] : null]))
-        }).eq('id', rows[0].id)
-        // NAO falhar em silencio: se uma coluna de exame nao existir, o Postgres rejeita
-        // o update INTEIRO e nenhum exame e gravado. Loga para nao passar despercebido.
-        if (errExames) console.error('OBA: falha ao gravar exames em oba_anamnese —', errExames.message)
+        },
+        ...credAmbas(),
+      })
+      if (exResp && exResp.ok === false) {
+        console.error('OBA: falha ao gravar exames em oba_anamnese —', exResp.erro)
       }
     }
 
