@@ -110,6 +110,7 @@ export default function CaixaPage({ onVoltar }) {
     { id: 'encontro', t: '🤝 Encontro de Contas' },
     { id: 'extratos', t: '🧾 Extratos' },
     { id: 'nf',       t: '🗂️ Notas Fiscais' },
+    { id: 'estornos', t: '↩️ Estornos' },
   ]
   return (
     <div className="min-h-screen" style={{ background: '#f6f4f1' }}>
@@ -142,6 +143,7 @@ export default function CaixaPage({ onVoltar }) {
         {aba === 'encontro' && <AbaEncontro rpc={rpc} toast={toast} />}
         {aba === 'extratos' && <AbaExtratos rpc={rpc} toast={toast} />}
         {aba === 'nf'       && <AbaNF rpc={rpc} />}
+        {aba === 'estornos' && <AbaEstornos rpc={rpc} toast={toast} />}
       </div>
     </div>
   )
@@ -568,6 +570,78 @@ function AbaExtratos({ rpc, toast }) {
             </div>
           </div>
         )}
+      </>)}
+    </div>
+  )
+}
+
+// ── ↩️ ESTORNOS ──────────────────────────────────────────────────────────────
+// Trilha de auditoria dos estornos (tabela caixa_estornos). Só leitura: um
+// estorno registrado não se apaga daqui — se ele próprio foi um erro, o conserto
+// é lançar o pagamento de novo, e os dois registros ficam no histórico.
+function AbaEstornos({ rpc, toast }) {
+  const [linhas, setLinhas] = useState(null)   // null = carregando
+  const [busy, setBusy] = useState(false)
+
+  async function carregar() {
+    if (busy) return
+    setBusy(true)
+    try {
+      const d = await rpc('caixa_estornos_lista', {})
+      setLinhas((d && d.ok) ? (d.linhas || []) : [])
+      if (d && d.ok === false) toast(false, d.erro || 'Não foi possível carregar.')
+    } catch (e) { toast(false, e.message); setLinhas([]) }
+    setBusy(false)
+  }
+  useEffect(() => { carregar() }, [])
+
+  const total = (linhas || []).reduce((s, l) => s + Number(l.total_brl || 0), 0)
+
+  return (
+    <div className="bg-white rounded-2xl shadow p-4">
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <h2 className="font-extrabold text-sm" style={{ color: DARK }}>{"HISTÓRICO DE ESTORNOS"}</h2>
+        <button onClick={carregar} disabled={busy}
+          className="text-[0.7rem] font-bold px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50">
+          {busy ? '...' : 'ATUALIZAR'}
+        </button>
+      </div>
+      <p className="text-[0.68rem] text-gray-500 mb-3 leading-snug">
+        {"Toda baixa desfeita fica registrada aqui, com o motivo. Os créditos voltaram para \"A PAGAR\" — o estorno não movimenta dinheiro."}
+      </p>
+
+      {linhas === null ? (
+        <p className="text-xs text-gray-400 py-6 text-center">{"Carregando..."}</p>
+      ) : linhas.length === 0 ? (
+        <p className="text-xs text-gray-400 py-6 text-center">{"Nenhum estorno registrado."}</p>
+      ) : (<>
+        <div className="text-xs mb-2">
+          <span className="text-gray-500">{linhas.length + " estorno(s) · total devolvido para \"A PAGAR\": "}</span>
+          <b>{fmtBRL(total)}</b>
+        </div>
+        <div className="space-y-1.5">
+          {linhas.map(l => (
+            <div key={l.id} className="bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2">
+              <div className="flex items-baseline justify-between gap-2 flex-wrap text-xs">
+                <div className="min-w-0">
+                  <span className="font-bold uppercase text-[0.66rem] px-1.5 py-0.5 rounded"
+                    style={{ background: l.papel === 'medico' ? '#e0e7ff' : '#fef3c7', color: l.papel === 'medico' ? '#3730a3' : '#92400e' }}>
+                    {l.papel === 'medico' ? 'MÉDICO' : 'INDICADOR'}
+                  </span>
+                  <b className="ml-1.5">{l.chave}</b>
+                  <span className="text-gray-500">{" · " + l.n_linhas + " lanç."}</span>
+                </div>
+                <b>{fmtBRL(l.total_brl)}</b>
+              </div>
+              <div className="text-[0.68rem] text-gray-500 mt-1 leading-snug">
+                {"estornado em " + fmtDataHora(l.created_at) + " · pagamento de " + fmtDataHora(l.data_pagamento)}
+              </div>
+              {l.motivo && (
+                <div className="text-[0.7rem] text-gray-700 mt-1 italic">{"“" + l.motivo + "”"}</div>
+              )}
+            </div>
+          ))}
+        </div>
       </>)}
     </div>
   )
