@@ -720,7 +720,7 @@ export function formatarParaCopiar(resultado, inputs) {
     ? 'CPF: ***.' + inputs.cpf.replace(/\D/g, '').slice(3, 6) + '.***.** '
     : 'Anônimo';
 
-  let texto = 'RedFairy - Avaliação em ' + hoje + '\n';
+  let texto = 'Projeto OBA® - Avaliação em ' + hoje + '\n';
   texto += 'Paciente: ' + idPaciente + ' | Sexo: ' + sexoLabel + ' | Idade: ' + inputs.idade + ' anos\n\n';
   texto += 'EXAMES (' + resultado.diasDesdeColeta + ' dia(s) atrás)\n';
   texto += resultado.fraseData.texto + '\n\n';
@@ -799,6 +799,6 @@ export function formatarParaCopiar(resultado, inputs) {
     texto += '- ' + e + '\n';
   });
 
-  texto += '\nGerado pelo RedFairy';
+  texto += '\nGerado pelo Projeto OBA®';
   return texto;
 }

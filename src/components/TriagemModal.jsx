@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { triagemEritron } from '../engine/decisionEngine'
 import { checarValor } from '../engine/limitesInput'
 import { credAmbas } from '../lib/cred'
-import logo from '../assets/logo.png'
 import obaLogo from '../assets/oba-logo.png'
 import { supabase } from '../lib/supabase';
 import HistoricoChartModal from './HistoricoChartModal';
@@ -244,7 +243,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
           const mDiff = hoje.getMonth() - (m - 1)
           if (mDiff < 0 || (mDiff === 0 && hoje.getDate() < d)) idade--
           if (idade < 12) {
-            errors.dataNascimento = (flagBariatricaOBA ? "O Projeto OBA\u00ae" : "O RedFairy") + " ainda n\u00e3o atende crian\u00e7as menores de 12 anos. Os valores de refer\u00eancia do eritron pedi\u00e1trico s\u00e3o diferentes dos do adulto e exigem um m\u00f3dulo espec\u00edfico que est\u00e1 em desenvolvimento. Em breve!"
+            errors.dataNascimento = "O Projeto OBA\u00ae" + " ainda n\u00e3o atende crian\u00e7as menores de 12 anos. Os valores de refer\u00eancia do eritron pedi\u00e1trico s\u00e3o diferentes dos do adulto e exigem um m\u00f3dulo espec\u00edfico que est\u00e1 em desenvolvimento. Em breve!"
           } else if (idade > 100) {
             errors.dataNascimento = 'Verifique a data de nascimento'
           } else {
@@ -499,7 +498,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     // (fix) menor de 12 anos: rejeita imediatamente no campo (modulo pediatrico em
     // desenvolvimento) — antes o auto-avanco do medico so' checava futuro/>120/>=100.
     if (idadeCalc < 12) {
-      setErros(prev => ({ ...prev, dataNascimento: (flagBariatricaOBA ? 'O Projeto OBA®' : 'O RedFairy') + ' ainda não atende menores de 12 anos (módulo pediátrico em desenvolvimento).' }));
+      setErros(prev => ({ ...prev, dataNascimento: 'O Projeto OBA®' + ' ainda não atende menores de 12 anos (módulo pediátrico em desenvolvimento).' }));
       setInputs(prev => ({ ...prev, dataNascimento: '' }));
       setTimeout(() => { if (refDnInput.current) refDnInput.current.focus(); }, 0);
       return;
@@ -737,7 +736,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
             X de fechar na extremidade direita centralizado verticalmente. Substitui a Fada grande + nome que ocupavam muito espa\u00e7o vertical. */}
         <div style={{ background: flagBariatricaOBA ? '#6B7280' : '#fff', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {flagBariatricaOBA ? <img src={obaLogo} alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} /> : <img src={logo} alt="RedFairy" style={{ width: 28, height: 28, objectFit: 'contain' }} />}
+            <img src={obaLogo} alt="Projeto OBA" style={{ width: 30, height: 30, objectFit: 'contain' }} />
             <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.25rem', letterSpacing: '-0.02em', margin: 0 }}>
               {flagBariatricaOBA ? (
                 <span style={{ color: '#facc15', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.5em', verticalAlign: 'super' }}>{"®"}</sup></span>
@@ -855,7 +854,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
                     {"\ud83d\uded1 Limite de triagens gratuitas atingido"}
                   </p>
                   <p className="text-xs text-red-900 leading-relaxed">
-                    {"Para continuar avaliando a evolu\u00e7\u00e3o desse paciente, oriente-o a se "}<strong>CADASTRAR</strong>{" no RedFairy para receber gratuitamente um primeiro pedido de exames (Hemograma + Ferritina + Satura\u00e7\u00e3o da Transferrina). E se voc\u00ea ainda n\u00e3o \u00e9 "}<strong>AFILIADO</strong>{", se filie para ter acesso aos benef\u00edcios do Programa."}
+                    {"Para continuar avaliando a evolu\u00e7\u00e3o desse paciente, oriente-o a se "}<strong>CADASTRAR</strong>{" no Projeto OBA® para receber gratuitamente um primeiro pedido de exames (Hemograma + Ferritina + Satura\u00e7\u00e3o da Transferrina). E se voc\u00ea ainda n\u00e3o \u00e9 "}<strong>AFILIADO</strong>{", se filie para ter acesso aos benef\u00edcios do Programa."}
                   </p>
                 </div>
               )}

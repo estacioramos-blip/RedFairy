@@ -3,7 +3,9 @@ import { supabase } from './lib/supabase'
 import Calculator from './components/Calculator'
 import PatientDashboard from './components/PatientDashboard'
 import AdminPage from './components/AdminPage'
-import logo from './assets/logo.png'
+// Marca única nas telas do produto: Projeto OBA®. A fada (logo.png) segue em uso
+// só na landing de redfairy.bio, que foi preservada por decisão do Estácio.
+import obaLogo from './assets/oba-logo.png'
 import LandingPage from './components/LandingPage'
 import TriagemDireta from './components/TriagemDireta'
 import PlayButton from './components/PlayButton'
@@ -527,7 +529,7 @@ export default function App() {
     if (next >= 5) {
       setDemoMedicoClicks(0)
       localStorage.setItem('medico_crm', 'DEMO/BA')
-      localStorage.setItem('medico_nome', 'Dr. Demo RedFairy')
+      localStorage.setItem('medico_nome', 'Dr. Demo OBA')
       setCalcKey(k => k + 1)
       setModo('calculadora')
       setTimeout(() => setSaindo(false), 450)
@@ -652,7 +654,7 @@ if (modo === 'home') {
             <div className="absolute inset-0 rounded-full blur-2xl"
               style={{ background: 'rgba(185,28,28,0.4)', transform: 'scale(1.4)' }}
             />
-            <img src={logo} alt="RedFairy"
+            <img src={obaLogo} alt="Projeto OBA"
               className="relative w-28 h-28 object-contain drop-shadow-2xl"
               style={{ filter: 'drop-shadow(0 0 20px rgba(239,68,68,0.6))' }}
             />
@@ -676,7 +678,7 @@ if (modo === 'home') {
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.transform = 'translateY(0)' }}
           >
             <div className="mb-4">
-              <img src={logo} alt="RedFairy" className="w-10 h-10 object-contain"
+              <img src={obaLogo} alt="Projeto OBA" className="w-10 h-10 object-contain"
                 style={{ filter: 'drop-shadow(0 0 6px rgba(239,68,68,0.5))' }} />
             </div>
             <h2 className="text-lg font-bold text-white mb-2">{"Modo M\u00e9dico"}</h2>
@@ -694,7 +696,7 @@ if (modo === 'home') {
             onMouseLeave={e => { e.currentTarget.style.background = 'linear-gradient(135deg, rgba(185,28,28,0.8) 0%, rgba(153,27,27,0.9) 100%)'; e.currentTarget.style.transform = 'translateY(0)' }}
           >
             <div className="mb-4">
-              <img src={logo} alt="RedFairy" className="w-10 h-10 object-contain"
+              <img src={obaLogo} alt="Projeto OBA" className="w-10 h-10 object-contain"
                 style={{ filter: 'brightness(10)' }} />
             </div>
             <h2 className="text-lg font-bold text-white mb-2">Modo Paciente</h2>

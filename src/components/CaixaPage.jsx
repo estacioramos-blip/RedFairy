@@ -453,7 +453,7 @@ function AbaExtratos({ rpc, toast }) {
         L.push('', `*SALDO ATUAL:* ${fmtBRL(d.saldo_brl)}`)
         if (Number(d.saldo_brl) > 0) L.push('_O saldo pode abater a sua próxima anuidade ou documentos; o excedente é pago via PIX._')
       }
-      L.push('', '— Projeto OBA® · RedFairy')
+      L.push('', '— Projeto OBA®')
       setTexto(L.join('\n'))
     } catch (e) { toast(false, e.message) }
     setBusy(false)

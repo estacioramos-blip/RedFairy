@@ -22,11 +22,11 @@ function ConteudoMedico() {
       <p className="font-bold text-red-700 uppercase tracking-wide mb-1">
         {"Termos e Condi\u00e7\u00f5es de Uso \u2014 Profissionais de Sa\u00fade"}
       </p>
-      <p><strong>{"1. Natureza da Plataforma."}</strong>{" O RedFairy \u00e9 uma ferramenta digital de apoio \u00e0 decis\u00e3o cl\u00ednica. N\u00c3O substitui o julgamento cl\u00ednico do profissional de sa\u00fade, o exame f\u00edsico nem a anamnese detalhada. Os resultados gerados s\u00e3o orientativos e n\u00e3o constituem laudos m\u00e9dicos."}</p>
+      <p><strong>{"1. Natureza da Plataforma."}</strong>{" O Projeto OBA\u00ae \u00e9 uma ferramenta digital de apoio \u00e0 decis\u00e3o cl\u00ednica. N\u00c3O substitui o julgamento cl\u00ednico do profissional de sa\u00fade, o exame f\u00edsico nem a anamnese detalhada. Os resultados gerados s\u00e3o orientativos e n\u00e3o constituem laudos m\u00e9dicos."}</p>
       <p><strong>{"2. Elegibilidade."}</strong>{" O acesso ao m\u00f3dulo profissional \u00e9 restrito a profissionais de sa\u00fade com registro ativo em conselho de classe (CRM, COREN, CRN, CRF ou equivalente). Ao se cadastrar, o profissional declara possuir habilita\u00e7\u00e3o legal para exerc\u00edcio da profiss\u00e3o, sendo legalmente respons\u00e1vel por esta informa\u00e7\u00e3o."}</p>
-      <p><strong>{"3. Responsabilidade Cl\u00ednica."}</strong>{" M\u00e9dicos ser\u00e3o integralmente respons\u00e1veis pelas decis\u00f5es cl\u00ednicas tomadas com base nos resultados gerados. A plataforma mant\u00e9m um canal de comunica\u00e7\u00e3o aberto para d\u00favidas ou esclarecimentos. O RedFairy \u00e9 uma ferramenta auxiliar \u2014 a responsabilidade diagn\u00f3stica e terap\u00eautica \u00e9 exclusivamente do m\u00e9dico. Profissionais de sa\u00fade n\u00e3o m\u00e9dicos que utilizem a plataforma n\u00e3o devem fazer prescri\u00e7\u00f5es nem recomenda\u00e7\u00f5es terap\u00eauticas quando recomendado pelo algoritmo, e devem orientar os pacientes a consultarem os seus m\u00e9dicos, ou os m\u00e9dicos da plataforma."}</p>
+      <p><strong>{"3. Responsabilidade Cl\u00ednica."}</strong>{" M\u00e9dicos ser\u00e3o integralmente respons\u00e1veis pelas decis\u00f5es cl\u00ednicas tomadas com base nos resultados gerados. A plataforma mant\u00e9m um canal de comunica\u00e7\u00e3o aberto para d\u00favidas ou esclarecimentos. O Projeto OBA\u00ae \u00e9 uma ferramenta auxiliar \u2014 a responsabilidade diagn\u00f3stica e terap\u00eautica \u00e9 exclusivamente do m\u00e9dico. Profissionais de sa\u00fade n\u00e3o m\u00e9dicos que utilizem a plataforma n\u00e3o devem fazer prescri\u00e7\u00f5es nem recomenda\u00e7\u00f5es terap\u00eauticas quando recomendado pelo algoritmo, e devem orientar os pacientes a consultarem os seus m\u00e9dicos, ou os m\u00e9dicos da plataforma."}</p>
       <p><strong>{"4. Consentimento dos Pacientes."}</strong>{" Ao inserir dados de pacientes, o profissional declara ter obtido o consentimento informado do titular dos dados, em conformidade com a legisla\u00e7\u00e3o vigente e com o C\u00f3digo de \u00c9tica Profissional. De prefer\u00eancia, as avalia\u00e7\u00f5es devem ser feitas na presen\u00e7a dos pacientes, ou quando os pacientes encaminhem os seus resultados diretamente para o m\u00e9dico, por qualquer meio."}</p>
-      <p><strong>{"5. Programa de Afiliados."}</strong>{" Ao avaliar pacientes na plataforma, o profissional integra automaticamente o Programa de Afiliados RedFairy, com suporte dos patrocinadores da Operadora. As regras e benef\u00edcios s\u00e3o estabelecidos em documento pr\u00f3prio que ser\u00e1 enviado aos profissionais, e podem ser alterados com aviso pr\u00e9vio de 30 dias."}</p>
+      <p><strong>{"5. Programa de Afiliados."}</strong>{" Ao avaliar pacientes na plataforma, o profissional integra automaticamente o Programa de Afiliados 4DOC, com suporte dos patrocinadores da Operadora. As regras e benef\u00edcios s\u00e3o estabelecidos em documento pr\u00f3prio que ser\u00e1 enviado aos profissionais, e podem ser alterados com aviso pr\u00e9vio de 30 dias."}</p>
       <p><strong>{"6. Prote\u00e7\u00e3o de Dados \u2014 LGPD."}</strong>{" Os dados inseridos s\u00e3o tratados em conformidade com a Lei n\u00ba 13.709/2018. O profissional \u00e9 corespons\u00e1vel pelo tratamento adequado dos dados dos seus pacientes inseridos na plataforma."}</p>
       <p><strong>{"7. Propriedade Intelectual."}</strong>{" Todo o conte\u00fado da plataforma, incluindo o algoritmo, as matrizes de decis\u00e3o e as orienta\u00e7\u00f5es terap\u00eauticas, \u00e9 de propriedade exclusiva da Cytomica. \u00c9 vedada reprodu\u00e7\u00e3o, c\u00f3pia ou distribui\u00e7\u00e3o sem autoriza\u00e7\u00e3o expressa."}</p>
       <p><strong>{"8. Limita\u00e7\u00e3o de Responsabilidade."}</strong>{" A Cytomica n\u00e3o se responsabiliza por danos decorrentes do uso inadequado da plataforma ou de decis\u00f5es cl\u00ednicas baseadas exclusivamente nos resultados gerados, sem a devida avalia\u00e7\u00e3o profissional."}</p>
@@ -35,7 +35,7 @@ function ConteudoMedico() {
   )
 }
 
-function ConteudoPaciente({ anuidadeBRL, marca = 'RedFairy' }) {
+function ConteudoPaciente({ anuidadeBRL, marca = 'Projeto OBA®' }) {
   return (
     <>
       <p className="font-bold text-red-700 uppercase tracking-wide mb-1">
@@ -62,9 +62,9 @@ export default function TermosModal({ tipo = 'paciente', onFechar }) {
       .then(({ data }) => { const n = Number(data?.valor); if (Number.isFinite(n) && n > 0) setAnuidadeBRL(formatarBRL(n)) })
   }, [])
 
-  // RedFairy sai do fluxo OBA: paciente bariátrico vê "Projeto OBA®" nos termos.
-  const ehBari = (() => { try { return localStorage.getItem('rf_flag') === 'bariatrica' || localStorage.getItem('rf_dom_bari') === '1' } catch (e) { return false } })()
-  const marca = (tipo === 'paciente' && ehBari) ? 'Projeto OBA®' : 'RedFairy'
+  // Marca única nas telas do produto: Projeto OBA® (o e-mail de contato segue
+  // sendo @redfairy.bio, que é endereço real e não muda com a marca).
+  const marca = 'Projeto OBA®'
 
   const titulo = tipo === 'medico'
     ? "Termos e Condi\u00e7\u00f5es de Uso \u2014 Profissionais de Sa\u00fade"

@@ -317,7 +317,7 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
   function enviarObstipacao() {
     setSalvandoObs(true)
     registrar('obstipacao')
-    const msg = "Ol\u00e1! Desejo testar a solu\u00e7\u00e3o de RedFairy para obstipa\u00e7\u00e3o. Entendo que receberei uma amostra gr\u00e1tis (pagarei apenas o valor do SEDEX), e que se eu quiser continuar o uso, voc\u00eas me garantem a continuidade do fornecimento a custo muito baixo. Obrigado!"
+    const msg = "Ol\u00e1! Desejo testar a solu\u00e7\u00e3o do Projeto OBA\u00ae para obstipa\u00e7\u00e3o. Entendo que receberei uma amostra gr\u00e1tis (pagarei apenas o valor do SEDEX), e que se eu quiser continuar o uso, voc\u00eas me garantem a continuidade do fornecimento a custo muito baixo. Obrigado!"
     window.open(`https://wa.me/${WA_PLATAFORMA}?text=${encodeURIComponent(msg)}`, '_blank')
     setSalvandoObs(false)
     setSalvoObs(true)
@@ -326,7 +326,7 @@ function OBAWhatsAppButtons({ oba, pacienteNome, pacienteCelular }) {
   function enviarFibromialgia() {
     setSalvandoFib(true)
     registrar('fibromialgia')
-    const msg = "Ol\u00e1! Desejo testar a solu\u00e7\u00e3o de RedFairy para os sintomas da fibromialgia. Entendo que receberei uma amostra gr\u00e1tis (pagarei apenas o valor do SEDEX), e que se eu quiser continuar o uso, voc\u00eas me garantem a continuidade do fornecimento a custo muito baixo. Obrigado!"
+    const msg = "Ol\u00e1! Desejo testar a solu\u00e7\u00e3o do Projeto OBA\u00ae para os sintomas da fibromialgia. Entendo que receberei uma amostra gr\u00e1tis (pagarei apenas o valor do SEDEX), e que se eu quiser continuar o uso, voc\u00eas me garantem a continuidade do fornecimento a custo muito baixo. Obrigado!"
     window.open(`https://wa.me/${WA_PLATAFORMA}?text=${encodeURIComponent(msg)}`, '_blank')
     setSalvandoFib(false)
     setSalvoFib(true)
@@ -624,7 +624,7 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
         {isSaudavel ? (
           <div className="bg-white rounded-xl border border-green-200 p-4">
             <p className="text-gray-700 text-sm leading-relaxed">
-              {"Doutor, oriente "}{pronome}{" paciente a se cadastrar no RedFairy para futuras avalia\u00e7\u00f5es e acompanhamento."}
+              {"Doutor, oriente "}{pronome}{" paciente a se cadastrar no Projeto OBA\u00ae para futuras avalia\u00e7\u00f5es e acompanhamento."}
             </p>
           </div>
         ) : (
@@ -761,7 +761,7 @@ function DocumentoMedicoPanel({ resultado }) {
 
     const total = (valorDoc || 0) * documentos.length;
     const msgs = [
-      "ATEN\u00c7\u00c3O | RedFairy!",
+      "ATEN\u00c7\u00c3O | Projeto OBA\u00ae!",
       `CPF: ${dadosPaciente.cpf || "N\u00e3o informado"}`,
       `PACIENTE: ${dadosPaciente.nome.trim().toUpperCase()}`,
       `NASCIMENTO: ${dadosPaciente.dataNasc}`,
@@ -821,7 +821,7 @@ function DocumentoMedicoPanel({ resultado }) {
     <div className="mt-4 bg-green-50 border border-green-200 rounded-2xl p-5 text-center space-y-2">
       <p className="text-2xl">{"\u2705"}</p>
       <p className="font-bold text-green-800">Pedido enviado com sucesso!</p>
-      <p className="text-sm text-green-700">{"O m\u00e9dico do Projeto RedFairy receber\u00e1 seus documentos em breve via WhatsApp."}</p>
+      <p className="text-sm text-green-700">{"O m\u00e9dico do Projeto OBA\u00ae receber\u00e1 seus documentos em breve via WhatsApp."}</p>
     </div>
   );
 
@@ -902,7 +902,7 @@ function DocumentoMedicoPanel({ resultado }) {
         </div>
       </div>
       <div className="p-4 space-y-3">
-        <p className="text-gray-600 text-sm">{"Um m\u00e9dico do Projeto RedFairy gera e envia por WhatsApp:"}</p>
+        <p className="text-gray-600 text-sm">{"Um m\u00e9dico do Projeto OBA\u00ae gera e envia por WhatsApp:"}</p>
         <div className="space-y-2">
           {temExames && (
             <label className="flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all"
@@ -1035,7 +1035,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
             {"Sugerimos que voc\u00ea fa\u00e7a os exames recomendados (hemograma, ferritina, satura\u00e7\u00e3o da transferrina) para obter uma avalia\u00e7\u00e3o v\u00e1lida."}
           </p>
           <div className="bg-white border border-red-200 rounded-xl p-4 text-sm text-gray-700">
-            {"\ud83d\udca1 A plataforma RedFairy pode emitir a solicita\u00e7\u00e3o dos exames mediante o pagamento de uma pequena taxa, evitando a necessidade de uma consulta presencial apenas para isso. Ap\u00f3s realizar os exames, retorne aqui para nova avalia\u00e7\u00e3o."}
+            {"\ud83d\udca1 A plataforma do Projeto OBA\u00ae pode emitir a solicita\u00e7\u00e3o dos exames mediante o pagamento de uma pequena taxa, evitando a necessidade de uma consulta presencial apenas para isso. Ap\u00f3s realizar os exames, retorne aqui para nova avalia\u00e7\u00e3o."}
           </div>
           <button
             onClick={() => setVerObsoleto(true)}
@@ -1056,7 +1056,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           <div>
             <p className="font-semibold text-amber-800 text-base">{"Combina\u00e7\u00e3o n\u00e3o reconhecida pelo algoritmo"}</p>
             <p className="text-amber-700 text-sm mt-1 leading-relaxed">
-              {"Os valores informados n\u00e3o correspondem a nenhum padr\u00e3o catalogado. Isso pode indicar um resultado laboratorial at\u00edpico, um erro de digita\u00e7\u00e3o, ou uma combina\u00e7\u00e3o que ainda n\u00e3o est\u00e1 mapeada no RedFairy."}
+              {"Os valores informados n\u00e3o correspondem a nenhum padr\u00e3o catalogado. Isso pode indicar um resultado laboratorial at\u00edpico, um erro de digita\u00e7\u00e3o, ou uma combina\u00e7\u00e3o que ainda n\u00e3o est\u00e1 mapeada no Projeto OBA\u00ae."}
             </p>
           </div>
         </div>
@@ -1270,8 +1270,8 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
           {!modoPaciente && resultado._inputs?.bariatrica && (() => {
             const ela = (resultado._inputs?.sexo || 'M') === 'F'
             const txt = ela
-              ? "Oriente a paciente a se cadastrar no RedFairy: ao se cadastrar, ela preenche a anamnese do Projeto OBA \u2014 Otimizar o Bari\u00e1trico, e passa a ter acompanhamento din\u00e2mico personalizado. A avalia\u00e7\u00e3o j\u00e1 est\u00e1 salva sob o CPF dela."
-              : "Oriente o paciente a se cadastrar no RedFairy: ao se cadastrar, ele preenche a anamnese do Projeto OBA \u2014 Otimizar o Bari\u00e1trico, e passa a ter acompanhamento din\u00e2mico personalizado. A avalia\u00e7\u00e3o j\u00e1 est\u00e1 salva sob o CPF dele."
+              ? "Oriente a paciente a se cadastrar no Projeto OBA\u00ae: ao se cadastrar, ela preenche a anamnese do Projeto OBA \u2014 Otimizar o Bari\u00e1trico, e passa a ter acompanhamento din\u00e2mico personalizado. A avalia\u00e7\u00e3o j\u00e1 est\u00e1 salva sob o CPF dela."
+              : "Oriente o paciente a se cadastrar no Projeto OBA\u00ae: ao se cadastrar, ele preenche a anamnese do Projeto OBA \u2014 Otimizar o Bari\u00e1trico, e passa a ter acompanhamento din\u00e2mico personalizado. A avalia\u00e7\u00e3o j\u00e1 est\u00e1 salva sob o CPF dele."
             return (
               <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
                 <p className="text-sm font-bold text-blue-800 mb-1">{"\ud83d\udce4 Recomenda\u00e7\u00e3o \u2014 Projeto OBA"}</p>

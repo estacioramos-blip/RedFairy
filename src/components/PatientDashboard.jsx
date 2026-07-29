@@ -18,7 +18,6 @@ import obaLogo from '../assets/oba-logo.png'
 import HistoricoChartModal from './HistoricoChartModal'
 import heroImg from '../assets/redfairy-hero.jpg'
 import comeonImg from '../assets/comeon.jpg'
-import logo from '../assets/logo.png'
 
 // Formata CPF (xxx.xxx.xxx-xx) — mesmo estilo do PacienteIndicaModal.
 function fmtCPF(v) {
@@ -884,7 +883,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         : '(nao informado)'
       const celFormatado = (profile.celular || '').replace(/^(\d{2})(\d{4,5})(\d{4})$/, '($1) $2-$3') || '(nao informado)'
       const mensagem =
-        `*RedFairy - Pedido GRATUITO de exames (sugeridos)*\n\n` +
+        `*Projeto OBA® - Pedido GRATUITO de exames (sugeridos)*\n\n` +
         `*Nome:* ${profile.nome}\n` +
         `*CPF:* ${profile.cpf}\n` +
         `*Data de nascimento:* ${dataNasc}\n` +
@@ -983,8 +982,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       {/* Header igual ao do dashboard/boas-vindas: barra vermelha + fadinha + marca. */}
       <header className="bg-red-700 text-white py-4 px-4 shadow-lg">
         <div className="max-w-3xl mx-auto flex items-center justify-center gap-3">
-          <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain" style={{ filter: 'brightness(10)' }} />
-          <h1 className="text-xl font-bold">{"RedFairy | Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"\u00ae"}</sup></h1>
+          <img src={obaLogo} alt="Projeto OBA" className="w-8 h-8 object-contain" style={{ filter: 'brightness(10)' }} />
+          <h1 className="text-xl font-bold">{"Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"\u00ae"}</sup></h1>
         </div>
       </header>
       <div className="flex items-center justify-center p-4" style={{ minHeight: 'calc(100vh - 64px)' }}>
@@ -1082,11 +1081,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             {ehBari ? (
               <img src={obaLogo} alt="Projeto OBA" className="w-9 h-9 object-contain" />
             ) : (
-              <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
+              <img src={obaLogo} alt="Projeto OBA" className="w-8 h-8 object-contain"
                 style={{ filter: 'brightness(10)' }} />
             )}
             <div>
-              <h1 className="text-xl font-bold" style={ehBari ? { color: '#facc15' } : undefined}>{ehBari ? "Projeto OBA" : "RedFairy | Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"\u00ae"}</sup></h1>
+              <h1 className="text-xl font-bold" style={ehBari ? { color: '#facc15' } : undefined}>{"Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"\u00ae"}</sup></h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -1130,7 +1129,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               </p>
               <button
                 onClick={() => {
-                  const msg = `Olá! Sou ${profile?.nome || 'paciente'} (CPF ${profile?.cpf || ''}). Quero renovar a minha anuidade da RedFairy.`
+                  const msg = `Olá! Sou ${profile?.nome || 'paciente'} (CPF ${profile?.cpf || ''}). Quero renovar a minha anuidade do Projeto OBA®.`
                   window.open(`https://wa.me/5571997110804?text=${encodeURIComponent(msg)}`, '_blank')
                 }}
                 className="mt-3 inline-block text-white font-bold text-xs rounded-lg px-4 py-2"
@@ -1244,7 +1243,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             style={{ maxHeight: '90vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}>
           <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
-  <img src={heroImg} alt="RedFairy"
+  <img src={heroImg} alt="Projeto OBA"
     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
   <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
     <div style={{ textAlign: 'center' }}>
@@ -1366,7 +1365,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                 <div className="text-center px-5" style={{ position: 'absolute', top: '5%', left: 0, right: 0, zIndex: 1 }}>
                   <style>{`@keyframes rfBvFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}`}</style>
                   <h2 className="text-base font-bold" style={{ color: '#ffffff', animation: 'rfBvFade 0.6s ease both' }}>
-                    {(profile.sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo')}{", "}{profile.nome?.split(' ')[0] || ''}{ehBari ? ", ao Projeto OBA" : ", ao RedFairy | OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{"!"}
+                    {(profile.sexo === 'F' ? 'Bem-vinda' : 'Bem-vindo')}{", "}{profile.nome?.split(' ')[0] || ''}{", ao Projeto OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{"!"}
                   </h2>
                 </div>
 

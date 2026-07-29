@@ -262,7 +262,7 @@ function AbaLembretes() {
   function avisarAnuidade(l) {
     const nome = (l.perfil.nome || '').split(' ')[0] || 'paciente';
     const quando = l.dias < 0 ? `venceu há ${Math.abs(l.dias)} dia(s)` : l.dias === 0 ? 'vence hoje' : `vence em ${l.dias} dia(s)`;
-    whats(l.perfil, `Olá, ${nome}! Sua anuidade da RedFairy ${quando}. Podemos renovar para você manter o acesso ao histórico, gráficos e novas avaliações?`);
+    whats(l.perfil, `Olá, ${nome}! Sua anuidade do Projeto OBA® ${quando}. Podemos renovar para você manter o acesso ao histórico, gráficos e novas avaliações?`);
   }
   function avisarHpylori(l) {
     const nome = (l.perfil.nome || '').split(' ')[0] || 'paciente';

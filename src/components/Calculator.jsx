@@ -19,7 +19,6 @@ import welcomeImg from '../assets/welcome.jpg';
 import chatphone2Img from '../assets/chatphone2.jpg';
 import telefonista2Img from '../assets/telefonista2.jpg';
 import telefonista3Img from '../assets/telefonista3.jpg';
-import logo from '../assets/logo.png';
 import obaLogo from '../assets/oba-logo.png';
 import medicoBariImg from '../assets/oba-medico.jpg';
 import obaFairyIcon from '../assets/oba-fairy-icon.png';
@@ -728,7 +727,7 @@ export default function Calculator({ onVoltar, modoDemo }) {
   useEffect(() => {
     if (modoDemo) {
       setCadastrado(true)
-      setMedicoNome('Dr. Demo RedFairy')
+      setMedicoNome('Dr. Demo OBA')
       setMedicoCRM('DEMO/BA')
       return
     }
@@ -923,7 +922,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   useEffect(() => {
     const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
     if (!meta) return;
-    meta.setAttribute('content', cardFada4doc ? '4DOC' : 'RedFairy');
+    meta.setAttribute('content', cardFada4doc ? '4DOC' : 'Projeto OBA');
   }, [cardFada4doc]);
   useEffect(() => {
     if (showAfiliados) {
@@ -2057,11 +2056,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </button>
           </div>
           <div className="flex items-center gap-3">
-            <img src={logo} alt="RedFairy" className="w-8 h-8 object-contain"
+            <img src={obaLogo} alt="Projeto OBA" className="w-8 h-8 object-contain"
               style={{ filter: 'brightness(10)', cursor: 'pointer' }}
               onClick={handleLogoTripleClick} />
             <div>
-              <h1 className="text-xl font-bold tracking-wide leading-tight">{"RedFairy | "}<span style={{ color: '#e5e7eb', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup></span></h1>
+              <h1 className="text-xl font-bold tracking-wide leading-tight">{""}<span style={{ color: '#e5e7eb', fontWeight: 700 }}>{"Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup></span></h1>
               <p className="text-red-200 text-xs">{"Calculadora Cl\u00ednica | Eritron"}</p>
             </div>
           </div>
@@ -2128,7 +2127,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           onClick={() => { setShowSobre(false); setShowSaibaMais(false); }}>
           <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl" style={{ maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <div style={{ position: 'relative', width: '100%', height: '320px', overflow: 'hidden', borderRadius: '16px 16px 0 0' }}>
-              <img src={heroImg} alt="RedFairy" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
+              <img src={heroImg} alt="Projeto OBA" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', padding: '20px' }}>
                 <p style={{ color: '#fca5a5', fontSize: '14px', lineHeight: '1.8', fontStyle: 'italic', margin: 0, textAlign: 'center' }}>
                   {"Eu sou a sua fada vermelha, a sua "}<span style={{ fontWeight: 'bold' }}>HEMOGLOBINA</span>{"."}<br />
@@ -2574,7 +2573,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div style={{ position: 'relative', width: '100%', height: '440px', overflow: 'hidden' }}>
-              <img src={fairyChatImg} alt="Programa de Afiliados RedFairy"
+              <img src={fairyChatImg} alt="Programa de Afiliados 4DOC"
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.5) 40%, transparent)', padding: '24px 24px 18px' }}>
                 {!conviteRecusado ? (

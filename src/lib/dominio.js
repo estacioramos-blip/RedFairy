@@ -24,7 +24,7 @@ export function ehDominioBariatrico() {
 export function aplicarBrandingOBA() {
   if (!ehDominioBariatrico() || typeof document === 'undefined') return
   try {
-    document.title = 'RedFairy | Projeto OBA'
+    document.title = 'Projeto OBA®'
     const desc = document.querySelector('meta[name="description"]')
     if (desc) desc.setAttribute('content', 'Projeto OBA®: plataforma inteligente de acompanhamento e triagem para pacientes bariátricos.')
     const at = document.querySelector('meta[name="apple-mobile-web-app-title"]')
