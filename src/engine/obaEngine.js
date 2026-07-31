@@ -2239,11 +2239,71 @@ function buildModComportamental(dados, alertas, suger) {
     suger.push('ULTRASSONOGRAFIA RENAL (RASTREIO DE LITÍASE — TOPIRAMATO)')
   }
 
-  // Cirurgia plástica pós-bariátrica (projeto de vida + preparo pré-operatório)
-  if (dados.cirurgia_plastica === true) {
+  // Cirurgia plástica pós-bariátrica — reformado (pedido do Dr. Ramos): 1 status
+  // (fiz/desejo/preciso muito/programada) em vez do checkbox booleano antigo,
+  // porque a necessidade de reservas de ferro/B12, bom estado metabólico-
+  // cardiovascular e boa hemostasia varia MUITO conforme a situação. FIZ abre
+  // "há quanto tempo" (o corpo pode ainda estar se recuperando de um porte
+  // grande); PROGRAMADA abre "já está preparado(a)?" — o cenário mais urgente
+  // de todos é ter data marcada e reservas ainda não repostas.
+  const statusPlastica = dados.status_cirurgia_plastica || ''
+  if (statusPlastica === 'FIZ') {
+    temAlgo = true
+    const tempoPlastica = dados.cirurgia_plastica_tempo || ''
+    linhas.push('CIRURGIA PLÁSTICA PÓS-BARIÁTRICA: O DESEJO DE REALIZÁ-LA REFLETE AUTOESTIMA PRESERVADA E DEVE SER VALORIZADO. SÃO PROCEDIMENTOS DE GRANDE PORTE — ÀS VEZES MAIS DE UMA INTERVENÇÃO, COM RISCOS ACUMULADOS —, QUE DEMANDAM BOAS RESERVAS DE FERRO E VITAMINA B12, BOM ESTADO METABÓLICO, CARDIOVASCULAR E BOA HEMOSTASIA.')
+    if (tempoPlastica === '<6M') {
+      nivelGeral = GRAVE
+      linhas.push('CIRURGIA REALIZADA HÁ MENOS DE 6 MESES: É IMPERATIVO CONHECER O SEU ESTADO METABÓLICO, HEMATOLÓGICO E DE RESERVAS ATUAL — O ORGANISMO PODE AINDA ESTAR SE RECUPERANDO DE UM PROCEDIMENTO DE GRANDE PORTE.')
+      alertas.push({ codigo: 'comportamental.cirurgia_plastica_feita_menos_6m_imperativo', nivel: GRAVE, texto: 'CIRURGIA PLÁSTICA PÓS-BARIÁTRICA há menos de 6 meses — imperativo conhecer o estado metabólico, hematológico e de reservas.' })
+      suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA')
+      suger.push('VITAMINA B12 SÉRICA')
+      suger.push('ALBUMINA SÉRICA (MONITORAMENTO PROTEICO)')
+      suger.push('AVALIAÇÃO CARDIOLÓGICA')
+      suger.push('TEMPO DE PROTROMBINA (TP/INR)')
+    } else if (tempoPlastica === '6M_1A') {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('CIRURGIA REALIZADA ENTRE 6 MESES E 1 ANO ATRÁS: É IMPORTANTE AVALIAR A SUA SITUAÇÃO CLÍNICA ATUAL.')
+      alertas.push({ codigo: 'comportamental.cirurgia_plastica_feita_6m_a_1a_importante', nivel: MODERADO, texto: 'CIRURGIA PLÁSTICA PÓS-BARIÁTRICA entre 6 meses e 1 ano atrás — importante avaliar a situação clínica atual.' })
+      suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA')
+      suger.push('VITAMINA B12 SÉRICA')
+    } else if (tempoPlastica === '>1A') {
+      if (nivelGeral === NORMAL) nivelGeral = LEVE
+      linhas.push('CIRURGIA REALIZADA HÁ MAIS DE 1 ANO: VOCÊ JÁ DEVE ESTAR ADAPTADO(A), MAS É RECOMENDÁVEL CHECAR O SEU ESTADO ATUAL.')
+    } else if (nivelGeral === NORMAL) {
+      nivelGeral = LEVE
+    }
+  } else if (statusPlastica === 'DESEJO') {
     temAlgo = true
     if (nivelGeral === NORMAL) nivelGeral = LEVE
-    linhas.push('CIRURGIA PLÁSTICA PÓS-BARIÁTRICA: O DESEJO DE REALIZÁ-LA REFLETE AUTOESTIMA PRESERVADA E DEVE SER VALORIZADO. COMO SÃO PROCEDIMENTOS ELETIVOS — ÀS VEZES MAIS DE UMA INTERVENÇÃO, COM RISCOS ACUMULADOS — A BOA REPOSIÇÃO DE FERRO, VITAMINA B12, FOLATOS, VITAMINA D E PROTEÍNAS DEVE PRECEDER A CIRURGIA E PODE PERMITIR A PROGRAMAÇÃO DE AUTO-TRANSFUSÕES.')
+    linhas.push('DESEJO DE FAZER CIRURGIA PLÁSTICA PÓS-BARIÁTRICA: O DESEJO REFLETE AUTOESTIMA PRESERVADA E DEVE SER VALORIZADO. É PRECISO UM PREPARO PRÉ-CIRÚRGICO: 3 MESES ANTES DA CIRURGIA VOCÊ DEVE SER AVALIADO(A) E FAZER AS REPOSIÇÕES NECESSÁRIAS (FERRO, B12, VITAMINA D, PROTEÍNAS); 2 SEMANAS ANTES DA CIRURGIA, FAZER OS EXAMES PRÉ-OPERATÓRIOS.')
+  } else if (statusPlastica === 'PRECISO_MUITO') {
+    temAlgo = true
+    if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+    linhas.push('NECESSIDADE IMPORTANTE DE CIRURGIA PLÁSTICA PÓS-BARIÁTRICA: PODE REFLETIR DESCONFORTO FÍSICO (INTERTRIGO, DIFICULDADE DE HIGIENE, DOR) OU SOFRIMENTO PSICOLÓGICO RELEVANTE COM O EXCESSO DE PELE — MERECE ACOLHIMENTO E ENCAMINHAMENTO. É PRECISO GARANTIR AS REPOSIÇÕES DE FERRO, B12, VITAMINA D E PROTEÍNAS ANTES DE UM PROCEDIMENTO DE GRANDE PORTE.')
+    alertas.push({ codigo: 'comportamental.cirurgia_plastica_precisa_muito_reposicoes', nivel: MODERADO, texto: 'PACIENTE RELATA NECESSIDADE IMPORTANTE de cirurgia plástica pós-bariátrica — garantir reposições (ferro/B12/vit D/proteínas) antes do procedimento.' })
+    suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA')
+    suger.push('VITAMINA B12 SÉRICA')
+  } else if (statusPlastica === 'PROGRAMADA') {
+    temAlgo = true
+    const preparado = dados.cirurgia_plastica_preparado || ''
+    linhas.push('CIRURGIA PLÁSTICA PÓS-BARIÁTRICA JÁ PROGRAMADA: É PRECISO UM PREPARO PRÉ-CIRÚRGICO: 3 MESES ANTES DA CIRURGIA VOCÊ DEVE SER AVALIADO(A) E FAZER AS REPOSIÇÕES NECESSÁRIAS (FERRO, B12, VITAMINA D, PROTEÍNAS); 2 SEMANAS ANTES DA CIRURGIA, FAZER OS EXAMES PRÉ-OPERATÓRIOS.')
+    if (preparado === 'NAO') {
+      nivelGeral = GRAVE
+      linhas.push('VOCÊ INFORMOU QUE AINDA NÃO ESTÁ PREPARADO(A): COM A CIRURGIA JÁ PROGRAMADA, É IMPERATIVO ACERTAR O PASSO O QUANTO ANTES — AS RESERVAS PRECISAM ESTAR RECUPERADAS/ESTABELECIDAS ANTES DE UM PROCEDIMENTO DE GRANDE PORTE.')
+      alertas.push({ codigo: 'comportamental.cirurgia_plastica_programada_sem_preparo', nivel: GRAVE, texto: 'CIRURGIA PLÁSTICA PÓS-BARIÁTRICA JÁ PROGRAMADA e paciente relata NÃO estar preparado(a) — acertar reposições com urgência.' })
+      suger.push('FERRITINA E SATURAÇÃO DA TRANSFERRINA')
+      suger.push('VITAMINA B12 SÉRICA')
+      suger.push('ALBUMINA SÉRICA (MONITORAMENTO PROTEICO)')
+      suger.push('AVALIAÇÃO CARDIOLÓGICA')
+      suger.push('TEMPO DE PROTROMBINA (TP/INR)')
+    } else if (preparado === 'SIM') {
+      if (nivelGeral === NORMAL) nivelGeral = LEVE
+      linhas.push('VOCÊ INFORMOU QUE JÁ ESTÁ PREPARADO(A), COM AS RESERVAS RECUPERADAS/ESTABELECIDAS — ÓTIMO. MANTENHA O ACOMPANHAMENTO ATÉ A DATA DA CIRURGIA.')
+    } else {
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('CONFIRME COM O SEU MÉDICO SE JÁ ESTÁ PREPARADO(A), COM AS RESERVAS RECUPERADAS/ESTABELECIDAS PARA A CIRURGIA JÁ PROGRAMADA.')
+      alertas.push({ codigo: 'comportamental.cirurgia_plastica_programada_preparo_nao_infor', nivel: MODERADO, texto: 'CIRURGIA PLÁSTICA PÓS-BARIÁTRICA JÁ PROGRAMADA — confirmar com o paciente se as reservas já estão recuperadas/estabelecidas.' })
+    }
   }
 
   if (!temAlgo) return null

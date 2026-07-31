@@ -60,6 +60,29 @@ const ACOMPANHAMENTO_OPS = [
   "N\u00c3O FA\u00c7O ACOMPANHAMENTO M\u00c9DICO",
 ]
 
+// Cirurgia pl\u00e1stica p\u00f3s-bari\u00e1trica \u2014 status \u00fanico (n\u00e3o \u00e9 mais um checkbox
+// booleano). Valores curtos internos + r\u00f3tulo exibido separado (RadioGroup
+// aceita mapLabel), porque a necessidade cl\u00ednica de reservas/estado varia
+// muito conforme a situa\u00e7\u00e3o (ver obaEngine.js buildModComportamental).
+const PLASTICA_STATUS_OPS = ['FIZ', 'DESEJO', 'PRECISO_MUITO', 'PROGRAMADA']
+const PLASTICA_STATUS_LABEL = {
+  FIZ:           "FIZ CIRURGIA PL\u00c1STICA P\u00d3S-BARI\u00c1TRICA",
+  DESEJO:        "DESEJO FAZER CIRURGIA PL\u00c1STICA",
+  PRECISO_MUITO: "PRECISO MUITO FAZER CIRURGIA PL\u00c1STICA",
+  PROGRAMADA:    "ESTOU EM PROGRAMA\u00c7\u00c3O PARA CIRURGIA PL\u00c1STICA",
+}
+const PLASTICA_TEMPO_OPS = ['<6M', '6M_1A', '>1A']
+const PLASTICA_TEMPO_LABEL = {
+  '<6M':   "H\u00c1 MENOS DE SEIS MESES",
+  '6M_1A': "ENTRE SEIS MESES E UM ANO ATR\u00c1S",
+  '>1A':   "H\u00c1 MAIS DE UM ANO",
+}
+const PLASTICA_PREPARADO_OPS = ['SIM', 'NAO']
+const PLASTICA_PREPARADO_LABEL = {
+  SIM: "J\u00c1 ESTOU PREPARADO(A), COM AS RESERVAS RECUPERADAS/ESTABELECIDAS",
+  NAO: "AINDA N\u00c3O ESTOU PREPARADO(A)",
+}
+
 const ESPECIALISTAS = [
   "CIRURGI\u00c3O", "CL\u00cdNICO", "HEMATOLOGISTA", "GASTROENTEROLOGISTA", "NUTR\u00d3LOGO",
   "ENDOCRINOLOGISTA", "CARDIOLOGISTA", "NEUROLOGISTA", "PSIQUIATRA", "REUMATOLOGISTA",
@@ -711,7 +734,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // se REAGENTE, fan_titulo guarda o título ('1/80'…'1/640+'). Crítica no engine: depois.
     fan: '', fan_titulo: '',
     teve_covid: false, vacina_covid: [],
-    atividade_fisica: [], cirurgia_plastica: null,
+    atividade_fisica: [],
+    // Cirurgia plástica pós-bariátrica: status único (não é mais um booleano) —
+    // fiz / desejo fazer / preciso muito fazer / estou em programação. FIZ abre
+    // cirurgia_plastica_tempo; PROGRAMADA abre cirurgia_plastica_preparado.
+    status_cirurgia_plastica: '', cirurgia_plastica_tempo: '', cirurgia_plastica_preparado: '',
     meta_peso: '', meta_kg: '', projetos_vida: [], habitos_sociais: [],
     compulsoes: [], medicamentos: [], emagrecedores: {},
     // Tipos de canabinoide em uso (sub-bloco do fibromiálgico; uso de negócio).
@@ -753,8 +780,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
        if (modoRevisao) return { ...def, ...snap, ...imutaveis }
        // FOLLOW-UP (novo ciclo): as QUEIXAS são perguntadas DE NOVO a cada ciclo (não
        // pré-preenche): o valor anterior fica no relatorio_oba da linha anterior, p/ a
-       // comparação de evolução. As dúvidas também zeram (novo retrato).
-       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '', duvidas: [], outra_condicao: '' }
+       // comparação de evolução. As dúvidas também zeram (novo retrato). Cirurgia
+       // plástica idem — o status pode ter mudado (ex.: era "programada", já foi
+       // feita) e precisa ser reconfirmado, não carregado silenciosamente.
+       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '', duvidas: [], outra_condicao: '', status_cirurgia_plastica: '', cirurgia_plastica_tempo: '', cirurgia_plastica_preparado: '' }
      }
      return { ...def, ...imutaveis }
    }
@@ -1305,7 +1334,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       indicacao_cirurgia: form.indicacao_cirurgia || null,
       teve_covid:         form.teve_covid,
       vacina_covid:       form.vacina_covid,
-      cirurgia_plastica:  form.cirurgia_plastica,
+      status_cirurgia_plastica:     form.status_cirurgia_plastica || null,
+      cirurgia_plastica_tempo:      form.status_cirurgia_plastica === 'FIZ' ? (form.cirurgia_plastica_tempo || null) : null,
+      cirurgia_plastica_preparado:  form.status_cirurgia_plastica === 'PROGRAMADA' ? (form.cirurgia_plastica_preparado || null) : null,
     }
   }
 
@@ -1411,7 +1442,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       teve_covid: form.teve_covid,
       vacina_covid: form.vacina_covid,
       atividade_fisica: form.atividade_fisica,
-      cirurgia_plastica: form.cirurgia_plastica,
+      // Coluna própria (legado, booleana) preservada por compatibilidade — o
+      // status detalhado (fiz/desejo/preciso muito/programada + tempo/preparo)
+      // não ganhou coluna nova, vai só no form_snapshot logo abaixo.
+      cirurgia_plastica: form.status_cirurgia_plastica === 'FIZ',
       projetos_vida: projetos,
       compulsoes: form.compulsoes,
       medicamentos: form.medicamentos,
@@ -4080,7 +4114,26 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           </div>
 
           <SectionTitle>{"Cirurgia Pl\u00e1stica P\u00f3s-Bari\u00e1trica"}</SectionTitle>
-          <CheckRow label={"FIZ CIRURGIA PL\u00c1STICA P\u00d3S-BARI\u00c1TRICA"} checked={!!form.cirurgia_plastica} onClick={() => sf('cirurgia_plastica', !form.cirurgia_plastica)} />
+          <RadioGroup options={PLASTICA_STATUS_OPS} value={form.status_cirurgia_plastica}
+            mapLabel={op => PLASTICA_STATUS_LABEL[op]}
+            onChange={v => setForm(p => ({
+              ...p,
+              status_cirurgia_plastica: v,
+              cirurgia_plastica_tempo: v === 'FIZ' ? p.cirurgia_plastica_tempo : '',
+              cirurgia_plastica_preparado: v === 'PROGRAMADA' ? p.cirurgia_plastica_preparado : '',
+            }))} />
+          {form.status_cirurgia_plastica === 'FIZ' && (
+            <div style={{ marginTop:'0.5rem' }}>
+              <label style={{ display:'block', fontSize:'0.72rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>{"H\u00e1 quanto tempo?"}</label>
+              <RadioGroup options={PLASTICA_TEMPO_OPS} value={form.cirurgia_plastica_tempo} mapLabel={op => PLASTICA_TEMPO_LABEL[op]} onChange={v => sf('cirurgia_plastica_tempo', v)} />
+            </div>
+          )}
+          {form.status_cirurgia_plastica === 'PROGRAMADA' && (
+            <div style={{ marginTop:'0.5rem' }}>
+              <label style={{ display:'block', fontSize:'0.72rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem' }}>{"J\u00e1 est\u00e1 preparado(a), com as reservas recuperadas/estabelecidas?"}</label>
+              <RadioGroup options={PLASTICA_PREPARADO_OPS} value={form.cirurgia_plastica_preparado} mapLabel={op => PLASTICA_PREPARADO_LABEL[op]} onChange={v => sf('cirurgia_plastica_preparado', v)} />
+            </div>
+          )}
 
           <SectionTitle>Projeto de Vida</SectionTitle>
           <div style={{ display:'flex', gap:'0.4rem', marginBottom:'0.6rem', flexWrap:'wrap' }}>
