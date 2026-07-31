@@ -438,7 +438,7 @@ function AchadosParalelosSection({ achados }) {
   );
 }
 
-function OBASection({ oba, modoPaciente = false, cpf, onRevisar }) {
+function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar }) {
   const [expandido, setExpandido] = useState(null);
 
   const alertasGraves = oba.alertas?.filter(a => a.nivel === 'grave') || [];
@@ -459,6 +459,7 @@ function OBASection({ oba, modoPaciente = false, cpf, onRevisar }) {
     ? compararCiclos(
         cicloFromRow({ relatorio_oba: oba, estado_clinico: oba._estadoClinico || null }),
         cicloFromRow({ relatorio_oba: oba._paciente_original.relatorio || {}, estado_clinico: oba._paciente_original.estado || null }),
+        { sexo: sexo === 'F' ? 'F' : 'M' },
       )
     : null;
   const dataRevisaoFmt = oba._revisao_data ? String(oba._revisao_data).slice(0, 10).split('-').reverse().join('/') : null;
@@ -1548,7 +1549,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
       <AchadosParalelosSection achados={resultado.achadosParalelos} />
 
-      {oba && <OBASection oba={oba} modoPaciente={modoPaciente} cpf={resultado._inputs?.cpf} onRevisar={onRevisarAnamnese} />}
+      {oba && <OBASection oba={oba} modoPaciente={modoPaciente} cpf={resultado._inputs?.cpf} sexo={resultado._inputs?.sexo} onRevisar={onRevisarAnamnese} />}
 
       {!modoPaciente && mostrarPainelMedico && (
         <PainelMedico

@@ -1674,6 +1674,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     return compararCiclos(
       cicloFromRow({ relatorio_oba: { modulos: relatorio?.modulos, alertas: relatorio?.alertas, examesComplementares: relatorio?.examesComplementares, form_snapshot: form }, estado_clinico: estadoClinico?.estado || null }),
       cicloFromRow({ relatorio_oba: origBlob, estado_clinico: origEstado }),
+      { sexo: isFem ? 'F' : 'M' },
     )
   }
 
@@ -2383,9 +2384,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       },
     })
     const diffAnterior = (modoFollowUp && anamneseAnterior)
-      ? compararCiclos(cicloAtualVivo, cicloFromRow(anamneseAnterior)) : null
+      ? compararCiclos(cicloAtualVivo, cicloFromRow(anamneseAnterior), { sexo: isFem ? 'F' : 'M' }) : null
     const diffBaseline = (modoFollowUp && anamneseBaseline && anamneseBaseline.id !== anamneseAnterior?.id)
-      ? compararCiclos(cicloAtualVivo, cicloFromRow(anamneseBaseline)) : null
+      ? compararCiclos(cicloAtualVivo, cicloFromRow(anamneseBaseline), { sexo: isFem ? 'F' : 'M' }) : null
 
     return (
       <>
@@ -2979,7 +2980,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           `}</style>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:'0.3rem' }}>
             {todosExames.filter(ex => !(examesRedFairy && (examesRedFairy.ferritina || examesRedFairy.hemoglobina) && ex.key === 'ferritina_oba')).map(ex => {
-              const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
+              const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true, sexo: isFem ? 'F' : 'M' })
               const dotColor = cl ? (cl.nivel === 'alterado' ? '#DC2626' : cl.nivel === 'limitrofe' ? '#F59E0B' : '#16A34A') : null
               const mascara = ex.readOnly ? 'auto' : refPorSexo(ex.ref, isFem)   // só a referência; a unidade vai sob o nome
               return (
@@ -3044,7 +3045,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
           {(() => {
             const temAlterado = todosExames.some(ex => {
-              const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true })
+              const cl = classificarValor(ex.key, exames[ex.key], { bariatrica: true, sexo: isFem ? 'F' : 'M' })
               return cl && cl.nivel === 'alterado'
             })
             if (!temAlterado) return null

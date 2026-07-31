@@ -3,7 +3,9 @@
 //
 // REGRAS (calibradas pelo Dr. Ramos):
 //   - Bariatrica tem alvo especifico em B12 e Vit D (mais exigente)
-//   - Exames com cutoff dimorfico usam o valor mais permissivo (envelope amplo)
+//   - Exames dimorficos de verdade (testosterona/prolactina) usam CUTOFFS_POR_SEXO
+//     quando o sexo e' informado; sem sexo, cai no envelope largo (mais permissivo)
+//     do OBA_CUTOFFS generico so' pra nao travar a classificacao
 //   - Classificacao em 3 niveis: normal / limitrofe (<=10% fora) / alterado (>10% fora)
 
 export const OBA_CUTOFFS = {
@@ -54,8 +56,11 @@ export const OBA_CUTOFFS = {
   vitamina_k:     { min: 0.2,   max: 3.2   },
   niacina:        { min: 0.5,   max: 8.9   },
 
-  // Hormonios (permissivo dimorfico - valor H)
+  // Hormonios — fallback SEXO-CEGO (usado só quando contexto.sexo nao e' informado).
+  // Envelope permissivo (H+F somados) so' pra nao travar sem sexo; a classificacao
+  // de verdade e' por CUTOFFS_POR_SEXO (abaixo), que e' o caso normal no OBAModal.
   testosterona:   { min: 15,    max: 1000  },
+  prolactina:     { min: 0,     max: 25    },  // ng/mL — <15(H)/<25(F); sem sexo usa o teto mais permissivo (F)
 
   // Homens >= 40
   psa_total:      { min: 0,     max: 4.0   },
@@ -88,12 +93,29 @@ export const CUTOFFS_BARIATRICA = {
   vitamina_d:     { min: 30,    max: 200   },  // alvo pos-bariatrica
 }
 
+// Cutoffs DIMORFICOS de verdade (H/F tem faixas clinicamente diferentes, nao so'
+// um envelope permissivo). Prioridade MAXIMA em classificarValor quando
+// contexto.sexo vem preenchido — sem isso, testosterona/prolactina caiam sempre
+// no fallback sexo-cego acima (ex.: testosterona masculina de 50 ng/dL, bem
+// abaixo do normal H de 300-1000, entrava no envelope largo 15-1000 e saia
+// "normal"/verde). Mesmos numeros do ref exibido no OBAModal (obaExamesRef.js).
+export const CUTOFFS_POR_SEXO = {
+  M: {
+    testosterona: { min: 300, max: 1000 },
+    prolactina:   { min: 0,   max: 15   },
+  },
+  F: {
+    testosterona: { min: 15,  max: 70   },
+    prolactina:   { min: 0,   max: 25   },
+  },
+}
+
 /**
  * Classifica um valor laboratorial como normal, limitrofe ou alterado.
  *
  * @param {string} chave - Chave do exame (ex: 'vitamina_b12')
  * @param {number|string} valor - Valor digitado pelo usuario
- * @param {object} contexto - { bariatrica: boolean }
+ * @param {object} contexto - { bariatrica: boolean, sexo: 'M'|'F' }
  * @returns {object|null} { nivel, direcao, faixa } ou null se nao classificavel
  *
  * Niveis:
@@ -112,10 +134,15 @@ export function classificarValor(chave, valor, contexto = {}) {
     return null
   }
 
-  // Pega cutoff especifico ou generico
+  // Pega cutoff especifico ou generico. Prioridade: DIMORFICO por sexo (o mais
+  // clinicamente correto pra quem tem, ex. testosterona/prolactina) > bariatrica
+  // (alvo pos-cirurgia, ex. B12/vit D) > generico sexo-cego (fallback).
   let cutoff = OBA_CUTOFFS[chave]
   if (contexto.bariatrica && CUTOFFS_BARIATRICA[chave]) {
     cutoff = CUTOFFS_BARIATRICA[chave]
+  }
+  if (contexto.sexo && CUTOFFS_POR_SEXO[contexto.sexo]?.[chave]) {
+    cutoff = CUTOFFS_POR_SEXO[contexto.sexo][chave]
   }
   if (!cutoff) return null
 

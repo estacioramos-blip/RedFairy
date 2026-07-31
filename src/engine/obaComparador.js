@@ -9,7 +9,7 @@
 // dois ciclos, não a gravidade em si.
 // =============================================================================
 
-import { OBA_CUTOFFS, CUTOFFS_BARIATRICA, classificarValor } from './obaCutoffs'
+import { OBA_CUTOFFS, CUTOFFS_BARIATRICA, CUTOFFS_POR_SEXO, classificarValor } from './obaCutoffs'
 import { LABEL_POR_CHAVE, UNIT_POR_CHAVE } from './obaExamesRef'
 
 export const STATUS = {
@@ -179,9 +179,14 @@ function distForaDaFaixa(v, lo, hi) {
 
 // Todo ciclo do OBA é de paciente bariátrico (é a tabela do sub-algoritmo
 // bariátrico) — sempre resolve o cutoff ajustado quando existir (mesma regra
-// de classificarValor com contexto.bariatrica=true).
-function resolverCutoff(chave) {
-  return CUTOFFS_BARIATRICA[chave] || OBA_CUTOFFS[chave] || null
+// de classificarValor com contexto.bariatrica=true). Prioridade IDÊNTICA à de
+// classificarValor: dimórfico por sexo (testosterona/prolactina) > bariátrica
+// (B12/vit D) > genérico sexo-cego. Sem isso, um homem com testosterona
+// 50→80 ng/dL (hipogonádico nas duas medidas) caía no envelope sexo-cego
+// 15-1000 — distância zero nas duas pontas — e o card de evolução mostrava
+// ESTÁVEL/normal em vez de reconhecer que ele segue fora da faixa masculina.
+function resolverCutoff(chave, sexo) {
+  return (sexo && CUTOFFS_POR_SEXO[sexo]?.[chave]) || CUTOFFS_BARIATRICA[chave] || OBA_CUTOFFS[chave] || null
 }
 
 function statusEvolucaoAnalito(valorRef, valorAtu, { min, max }, limiarPct) {
@@ -208,13 +213,13 @@ function compararExames(cicloAtual, cicloReferencia, opts) {
     const valorAtu = Number(bruteAtu)
     if (!Number.isFinite(valorRef) || !Number.isFinite(valorAtu)) continue
 
-    const cutoff = resolverCutoff(chave)
+    const cutoff = resolverCutoff(chave, opts.sexo)
     if (!cutoff) continue
 
     const limiarPct = opts.limiaresExamePct?.[chave] ?? opts.limiarExamePctDefault ?? LIMIAR_EXAME_PCT_DEFAULT
     const status = statusEvolucaoAnalito(valorRef, valorAtu, cutoff, limiarPct)
-    const classRef = classificarValor(chave, valorRef, { bariatrica: true })?.nivel || null
-    const classAtu = classificarValor(chave, valorAtu, { bariatrica: true })?.nivel || null
+    const classRef = classificarValor(chave, valorRef, { bariatrica: true, sexo: opts.sexo })?.nivel || null
+    const classAtu = classificarValor(chave, valorAtu, { bariatrica: true, sexo: opts.sexo })?.nivel || null
 
     out.push({
       chave,
