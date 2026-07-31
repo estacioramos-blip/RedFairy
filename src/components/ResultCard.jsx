@@ -8,6 +8,8 @@ import { ehBloqueio } from '../engine/limitesInput';
 // paciente vazio. credMedico continua sendo usado onde a ação É do médico.
 import { credAmbas, credMedico } from '../lib/cred';
 import { DUVIDA_SECOES } from './OBAModal';
+import { cicloFromRow, compararCiclos } from '../engine/obaComparador';
+import OBAComparativoCard from './OBAComparativoCard';
 
 // Rótulo curto de cada serviço de exame. Laboratório, imagem, endoscopia e
 // cardiológico são feitos em locais diferentes — daí virarem pedidos separados.
@@ -448,6 +450,19 @@ function OBASection({ oba, modoPaciente = false, cpf, onRevisar }) {
   // Texto livre que o paciente escreveu no fim da anamnese ("outra condição de saúde").
   const outraCondicao = (oba.form_snapshot?.outra_condicao || '').trim();
 
+  // Passo 4 do fluxo "médico revisa anamnese": quando a linha atual foi revisada
+  // (Passo 3), `_paciente_original` guarda o retrato ANTES da revisão — reaproveita
+  // o motor de diff longitudinal (obaComparador) comparando revisão × original, em
+  // vez de duplicar lógica. Mostra por item (módulo/categoria/alerta) o que mudou.
+  const revisado = !modoPaciente && !!(oba._revisado_por_medico && oba._paciente_original);
+  const diffRevisao = revisado
+    ? compararCiclos(
+        cicloFromRow({ relatorio_oba: oba, estado_clinico: oba._estadoClinico || null }),
+        cicloFromRow({ relatorio_oba: oba._paciente_original.relatorio || {}, estado_clinico: oba._paciente_original.estado || null }),
+      )
+    : null;
+  const dataRevisaoFmt = oba._revisao_data ? String(oba._revisao_data).slice(0, 10).split('-').reverse().join('/') : null;
+
   return (
     <div className="mt-6 rounded-2xl border-2 border-purple-300 bg-purple-50 shadow-lg overflow-hidden">
       <div className="bg-purple-700 text-white px-6 py-4">
@@ -458,6 +473,11 @@ function OBASection({ oba, modoPaciente = false, cpf, onRevisar }) {
             <p className="text-purple-200 text-xs mt-1">
               {oba.tipoCirurgia}{" \u00b7 "}{oba.mesesPosCirurgia}{" meses p\u00f3s-cirurgia"}
             </p>
+            {!modoPaciente && revisado && (
+              <span className="inline-block mt-1.5 text-[10px] font-black uppercase tracking-wide bg-white/20 text-white rounded-full px-2 py-0.5">
+                {"\u270f\ufe0f Editado por m\u00e9dico"}{dataRevisaoFmt ? ` \u00b7 ${dataRevisaoFmt}` : ''}
+              </span>
+            )}
           </div>
           <div className="text-right">
             <p className="text-purple-300 text-xs mb-1">{"Disabsor\u00e7\u00e3o"}</p>
@@ -517,6 +537,15 @@ function OBASection({ oba, modoPaciente = false, cpf, onRevisar }) {
           <p className="text-[11px] text-center text-purple-700 mt-1.5 leading-snug px-2">
             {"Abre a anamnese do paciente pré-preenchida para você corrigir os pontos em consulta/teleconsulta. O original do paciente é preservado."}
           </p>
+        </div>
+      )}
+
+      {!modoPaciente && revisado && diffRevisao && (
+        <div className="px-4 pt-4">
+          <OBAComparativoCard
+            diff={diffRevisao}
+            titulo={"✏️ O que mudou nesta revisão médica (versão revisada × versão original do paciente)"}
+          />
         </div>
       )}
 

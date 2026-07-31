@@ -78,21 +78,27 @@ export default function OBAComparativoCard({ diff, titulo }) {
         <p style={{ fontSize: '0.72rem', color: '#6B7280', margin: '0 0 0.7rem' }}>{"Sem mudanças relevantes nos módulos clínicos."}</p>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: '0.4rem', marginBottom: modulosMudaram.length ? '0.6rem' : 0 }}>
+      {/* Célula de peso só existe quando algum dos dois ciclos tem peso_atual
+          (coluna própria da linha do banco) — o comparador entre a versão
+          original do paciente e a revisão médica não a carrega, e mostrar
+          "Peso: —" sempre soaria como dado quebrado. */}
+      <div style={{ display: 'grid', gridTemplateColumns: (ponderal.pesoRef != null || ponderal.pesoAtu != null) ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)', gap: '0.4rem', marginBottom: modulosMudaram.length ? '0.6rem' : 0 }}>
         <div style={cellStyle}>
           <p style={labelStyle}>{"Estado clínico"}</p>
           <p style={valueStyle}>{estado.anterior || '—'}{" → "}{estado.atual || '—'}</p>
           <p style={setaStyle(seta(estado.status).cor)}>{seta(estado.status).txt}</p>
         </div>
-        <div style={cellStyle}>
-          <p style={labelStyle}>{"Peso"}</p>
-          <p style={valueStyle}>
-            {ponderal.pesoRef != null ? `${ponderal.pesoRef} → ` : ''}{ponderal.pesoAtu != null ? `${ponderal.pesoAtu} kg` : '—'}
-          </p>
-          <p style={setaStyle(seta(ponderal.status).cor)}>
-            {ponderal.status ? `${seta(ponderal.status).txt}${ponderal.deltaPesoPct != null ? ` (${ponderal.deltaPesoPct > 0 ? '+' : ''}${ponderal.deltaPesoPct}%)` : ''}` : '—'}
-          </p>
-        </div>
+        {(ponderal.pesoRef != null || ponderal.pesoAtu != null) && (
+          <div style={cellStyle}>
+            <p style={labelStyle}>{"Peso"}</p>
+            <p style={valueStyle}>
+              {ponderal.pesoRef != null ? `${ponderal.pesoRef} → ` : ''}{ponderal.pesoAtu != null ? `${ponderal.pesoAtu} kg` : '—'}
+            </p>
+            <p style={setaStyle(seta(ponderal.status).cor)}>
+              {ponderal.status ? `${seta(ponderal.status).txt}${ponderal.deltaPesoPct != null ? ` (${ponderal.deltaPesoPct > 0 ? '+' : ''}${ponderal.deltaPesoPct}%)` : ''}` : '—'}
+            </p>
+          </div>
+        )}
       </div>
 
       {modulosMudaram.length > 0 && (

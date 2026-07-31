@@ -584,7 +584,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #6B7280, #4B5563)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, anamneseBaseline = null, numeroCiclo = 1, coletarHemograma = false, modoMedico = false, modoRevisao = false }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, anamneseBaseline = null, numeroCiclo = 1, coletarHemograma = false, modoMedico = false, modoRevisao = false, celularPaciente = '' }) {
   // FOLLOW-UP: avaliação de RETORNO de um bariátrico que já fez o baseline.
   // anamneseAnterior = última linha de oba_anamnese. Nesse modo, os campos
   // IMUTÁVEIS (data/tipo/indicação da cirurgia, peso antes, altura) são
@@ -636,6 +636,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // Exames MARCADOS para solicitar. Cada SERVIÇO (lab/bioimagem/endoscopia/outros) com ≥1
   // marcado = 1 pedido (mesmo custo). Começa vazio; persistido no rascunho do OBA (array).
   const [exOn, setExOn] = useState(() => { try { return new Set(Array.isArray(salvo?.exOn) ? salvo.exOn : []) } catch (e) { return new Set() } })
+  // Mensagem opcional do médico ao paciente, ao final de uma REVISÃO (etapa
+  // 'mensagemPaciente', só existe quando modoRevisao=true). Vai embutida na
+  // mensagem padrão que abre no WhatsApp para o paciente.
+  const [msgMedicoPaciente, setMsgMedicoPaciente] = useState('')
   // Modal de conclusão da 1ª avaliação (etapa 'conclusao').
   const [splashConcl, setSplashConcl] = useState(false)
   const [bgConcl, setBgConcl] = useState(false)
@@ -653,6 +657,11 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // Popup da 1ª dúvida ("não tenho certeza"). Não repete se o progresso já vinha com dúvidas.
   const [showDuvidaPopup, setShowDuvidaPopup] = useState(false)
   const duvidaPopupVisto = useRef((salvo?.form?.duvidas || []).length > 0)
+  // Evita reenviar o mesmo aviso de "paciente marcou dúvida" ao Telegram toda vez
+  // que gerarRelatorio() roda de novo (ex.: paciente volta e reenvia os exames).
+  // Guarda a ASSINATURA do conjunto de dúvidas já avisado; só reenvia se o
+  // conjunto mudar (dúvida nova entrou, ou saiu e voltou diferente).
+  const duvidaAvisoEnviadoRef = useRef(null)
   const [pesquisaAceita, setPesquisaAceita] = useState(false)
   const [pesquisaEnviado, setPesquisaEnviado] = useState(false)
   const [pesquisaEnviando, setPesquisaEnviando] = useState(false)
@@ -1535,6 +1544,21 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
         if (updResp && updResp.ok === false) {
           console.error('OBA: falha ao gravar relatório —', updResp.erro)
         }
+        // Aviso à ADM no Telegram: o PACIENTE (nunca a própria revisão do médico,
+        // senão toda revisão reabriria o próprio aviso) marcou "não tenho certeza"
+        // em ≥1 seção da anamnese — sinal de que precisa de olhar médico.
+        if (!modoRevisao && (form.duvidas || []).length > 0) {
+          const assinaturaDuvidas = [...form.duvidas].sort().join('|')
+          if (duvidaAvisoEnviadoRef.current !== assinaturaDuvidas) {
+            const secoesDuvida = form.duvidas.map(s => DUVIDA_SECOES[s] || s).join(', ')
+            try {
+              await supabase.rpc('tg_enviar', {
+                p_msg: `🔎 Revisão médica recomendada — Projeto OBA\nPaciente: ${nome || cpfLimpo}\nCPF: ${cpfLimpo}\nMarcou dúvida em: ${secoesDuvida}`,
+              })
+              duvidaAvisoEnviadoRef.current = assinaturaDuvidas
+            } catch (e) { /* best-effort, não bloqueia o relatório */ }
+          }
+        }
       }
 
       // (A1) Hemograma NOVO digitado no OBA também vira linha em `avaliacoes` — antes
@@ -1628,8 +1652,52 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   }
 
   // Botão "CONCLUIR" do relatório → vai para o modal de conclusão da 1ª avaliação
-  // (NÃO finaliza ainda; o progresso é mantido até o paciente finalizar).
+  // (NÃO finaliza ainda; o progresso é mantido até o paciente finalizar). Em
+  // REVISÃO médica, passa antes pela etapa 'mensagemPaciente' — o médico não
+  // tem como concluir uma revisão sem decidir a mensagem para o paciente.
   function concluirRelatorio() {
+    setEtapa(modoRevisao ? 'mensagemPaciente' : 'conclusao')
+  }
+
+  // Diff da revisão médica (versão revisada × versão ORIGINAL do paciente, nunca
+  // contra uma revisão intermediária) — reaproveita o motor de comparação
+  // longitudinal só para extrair os campos "Status X" que mudaram nesta revisão.
+  // ATENÇÃO: só `.categoricos` é confiável aqui — os "ciclos" montados abaixo não
+  // têm peso_atual/data_exames/colunas de analito (só relatorio_oba/estado), então
+  // `.ponderal` e `.exames` do retorno sempre voltam vazios/nulos. Se um dia esta
+  // tela precisar mostrar peso ou exame laboratorial alterado, esses dados
+  // precisam ser passados aqui também.
+  function diffDaRevisao() {
+    if (!modoRevisao || !anamneseAnterior) return null
+    const origBlob = anamneseAnterior?.relatorio_oba?._paciente_original?.relatorio || anamneseAnterior?.relatorio_oba || {}
+    const origEstado = anamneseAnterior?.relatorio_oba?._paciente_original?.estado ?? anamneseAnterior?.estado_clinico ?? null
+    return compararCiclos(
+      cicloFromRow({ relatorio_oba: { modulos: relatorio?.modulos, alertas: relatorio?.alertas, examesComplementares: relatorio?.examesComplementares, form_snapshot: form }, estado_clinico: estadoClinico?.estado || null }),
+      cicloFromRow({ relatorio_oba: origBlob, estado_clinico: origEstado }),
+    )
+  }
+
+  // Monta a mensagem padrão + texto do médico p/ abrir no WhatsApp do paciente.
+  function montarMensagemRevisao() {
+    const diff = diffDaRevisao()
+    const statusAlterados = (diff?.categoricos || []).map(c => c.rotulo.replace(/^Status\s+/i, ''))
+    const partes = ['O médico do Projeto OBA reavaliou os seus dados.']
+    if (statusAlterados.length > 0) {
+      partes.push(`O médico completou a sua entrevista alterando os status: ${statusAlterados.join(', ')}.`)
+    }
+    if (msgMedicoPaciente.trim()) partes.push(msgMedicoPaciente.trim())
+    partes.push('Se você deseja que o médico saiba mais alguma coisa sobre isso, responda essa mensagem. Obrigado.')
+    return partes.join('\n\n')
+  }
+
+  // Abre o WhatsApp já com o número do PACIENTE (saindo do número da plataforma,
+  // logado no WhatsApp Web/app) — diferente de abrirWhats(), que fala COM a
+  // plataforma. Sem celular cadastrado, ainda assim libera o "CONCLUIR" (best-effort).
+  function enviarMensagemRevisaoEConcluir() {
+    const digitos = String(celularPaciente || '').replace(/\D/g, '')
+    if (digitos) {
+      try { window.open(`https://wa.me/55${digitos}?text=${encodeURIComponent(montarMensagemRevisao())}`, '_blank') } catch (e) {}
+    }
     setEtapa('conclusao')
   }
 
@@ -1651,7 +1719,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
   // Voltar = volta UMA etapa (revis\u00e3o/edi\u00e7\u00e3o); na 1\u00aa etapa (anamnese), sai do OBA.
   function voltarEtapa() {
-    if (etapa === 'conclusao') setEtapa('relatorio')
+    if (etapa === 'conclusao') setEtapa(modoRevisao ? 'mensagemPaciente' : 'relatorio')
+    else if (etapa === 'mensagemPaciente') setEtapa('relatorio')
     else if (etapa === 'relatorio') setEtapa('exames')
     else if (etapa === 'exames') setEtapa('anamnese')
     else if (etapa === 'anamnese' && coletarHemograma && modoMedico) setEtapa('eritron')
@@ -2608,6 +2677,57 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     )
   }
 
+  // Etapa só existe em REVISÃO médica (concluirRelatorio() a ignora fora desse
+  // modo) — o médico não sai da revisão sem decidir a mensagem ao paciente
+  // (texto livre é opcional, a etapa em si não tem atalho para pular).
+  if (etapa === 'mensagemPaciente') {
+    const statusAlterados = (diffDaRevisao()?.categoricos || []).map(c => c.rotulo.replace(/^Status\s+/i, ''))
+    return (
+      <div style={OV}>
+        <div style={CD} onClick={e => e.stopPropagation()}>
+          <Header titulo={"Mensagem para o paciente"} sub={subPaciente} semFada />
+          <div style={{ padding:'1.5rem', boxSizing:'border-box', width:'100%', overflowX:'hidden' }}>
+            <p style={{ fontSize:'0.85rem', color:'#374151', lineHeight:1.5, margin:'0 0 1rem' }}>
+              {"Ao concluir, abrimos o WhatsApp da plataforma já com esta mensagem para o paciente. Revise (ou complemente) antes de enviar."}
+            </p>
+
+            <div style={{ background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:10, padding:'0.9rem 1rem', marginBottom:'1rem' }}>
+              <p style={{ fontSize:'0.68rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'0.5px', color:'#9CA3AF', margin:'0 0 0.4rem' }}>{"Prévia da mensagem"}</p>
+              <p style={{ fontSize:'0.82rem', color:'#374151', lineHeight:1.6, margin:0 }}>
+                {"O médico do Projeto OBA reavaliou os seus dados."}
+                {statusAlterados.length > 0 && <><br /><br />{`O médico completou a sua entrevista alterando os status: ${statusAlterados.join(', ')}.`}</>}
+                {msgMedicoPaciente.trim() && <><br /><br />{msgMedicoPaciente.trim()}</>}
+                <br /><br />{"Se você deseja que o médico saiba mais alguma coisa sobre isso, responda essa mensagem. Obrigado."}
+              </p>
+            </div>
+
+            <label style={{ display:'block', fontSize:'0.78rem', fontWeight:700, color:'#374151', marginBottom:'0.4rem', lineHeight:1.4 }}>
+              {"Algo específico sobre a(s) dúvida(s) deste paciente? (opcional)"}
+            </label>
+            <textarea value={msgMedicoPaciente} onChange={e => setMsgMedicoPaciente(e.target.value)}
+              rows={3} maxLength={600}
+              style={{ width:'100%', boxSizing:'border-box', borderRadius:8, border:'2px solid #E5E7EB', padding:'0.6rem 0.7rem', fontSize:'0.85rem', fontFamily:'inherit', resize:'vertical', color:'#374151' }}
+              placeholder={"Ex.: expliquei o motivo da mudança no status X..."} />
+
+            {!celularPaciente && (
+              <p style={{ fontSize:'0.72rem', color:'#B45309', margin:'0.6rem 0 0' }}>
+                {"⚠️ Este paciente não tem celular cadastrado — a mensagem não vai poder ser enviada por WhatsApp agora."}
+              </p>
+            )}
+
+            <div style={{ display:'flex', justifyContent:'flex-end', marginTop:'1.5rem' }}>
+              <PlayButton
+                onClick={enviarMensagemRevisaoEConcluir}
+                label={celularPaciente ? "ABRIR WHATSAPP E CONCLUIR" : "CONCLUIR"}
+                hint={celularPaciente ? "Envia a mensagem acima ao paciente" : "Sem celular cadastrado"}
+                ariaLabel="Concluir revisão"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // (d) Eritron de NOVA data: se a data dos exames for diferente da data do hemograma
   // da triagem, abrimos campos no topo p/ relançar HB/VCM/RDW/Ferritina/Sat. E

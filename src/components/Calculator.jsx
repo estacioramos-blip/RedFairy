@@ -1662,6 +1662,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           coletarHemograma={!pacienteAvaliar.ultimaAval}
           modoMedico={true}
           modoRevisao={avaliarRevisao}
+          celularPaciente={pacienteAvaliar.celular}
           onFechar={() => { try { sessionStorage.removeItem('rf_med_oba_cpf'); sessionStorage.removeItem('rf_med_oba_rev') } catch (e) {}; setAvaliarFase(null); setPacienteAvaliar(null); setAvaliarRevisao(false) }}
           onConcluir={async () => {
             const eraRevisao = avaliarRevisao
