@@ -2250,7 +2250,7 @@ function buildModComportamental(dados, alertas, suger) {
   if (statusPlastica === 'FIZ') {
     temAlgo = true
     const tempoPlastica = dados.cirurgia_plastica_tempo || ''
-    linhas.push('CIRURGIA PLÁSTICA PÓS-BARIÁTRICA: O DESEJO DE REALIZÁ-LA REFLETE AUTOESTIMA PRESERVADA E DEVE SER VALORIZADO. SÃO PROCEDIMENTOS DE GRANDE PORTE — ÀS VEZES MAIS DE UMA INTERVENÇÃO, COM RISCOS ACUMULADOS —, QUE DEMANDAM BOAS RESERVAS DE FERRO E VITAMINA B12, BOM ESTADO METABÓLICO, CARDIOVASCULAR E BOA HEMOSTASIA.')
+    linhas.push('CIRURGIA PLÁSTICA PÓS-BARIÁTRICA REALIZADA: A INICIATIVA DE CUIDAR DA PRÓPRIA IMAGEM APÓS A PERDA DE PESO REFLETE AUTOESTIMA PRESERVADA E DEVE SER VALORIZADA. SÃO PROCEDIMENTOS DE GRANDE PORTE — ÀS VEZES MAIS DE UMA INTERVENÇÃO, COM RISCOS ACUMULADOS —, QUE DEMANDAM BOAS RESERVAS DE FERRO E VITAMINA B12, BOM ESTADO METABÓLICO, CARDIOVASCULAR E BOA HEMOSTASIA.')
     if (tempoPlastica === '<6M') {
       nivelGeral = GRAVE
       linhas.push('CIRURGIA REALIZADA HÁ MENOS DE 6 MESES: É IMPERATIVO CONHECER O SEU ESTADO METABÓLICO, HEMATOLÓGICO E DE RESERVAS ATUAL — O ORGANISMO PODE AINDA ESTAR SE RECUPERANDO DE UM PROCEDIMENTO DE GRANDE PORTE.')
@@ -2269,8 +2269,14 @@ function buildModComportamental(dados, alertas, suger) {
     } else if (tempoPlastica === '>1A') {
       if (nivelGeral === NORMAL) nivelGeral = LEVE
       linhas.push('CIRURGIA REALIZADA HÁ MAIS DE 1 ANO: VOCÊ JÁ DEVE ESTAR ADAPTADO(A), MAS É RECOMENDÁVEL CHECAR O SEU ESTADO ATUAL.')
-    } else if (nivelGeral === NORMAL) {
-      nivelGeral = LEVE
+    } else {
+      // Marcou FIZ mas não respondeu "há quanto tempo" — mesmo tratamento do
+      // PROGRAMADA sem resposta de "já preparado(a)": não deixa cair em LEVE
+      // silencioso, porque sem saber o tempo não dá pra descartar o cenário
+      // <6 meses (GRAVE). Pede confirmação em vez de presumir o melhor caso.
+      if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+      linhas.push('CONFIRME COM O SEU MÉDICO HÁ QUANTO TEMPO FOI REALIZADA A CIRURGIA PLÁSTICA — O PRAZO MUDA A URGÊNCIA DE AVALIAR SEU ESTADO METABÓLICO, HEMATOLÓGICO E DE RESERVAS.')
+      alertas.push({ codigo: 'comportamental.cirurgia_plastica_feita_tempo_nao_informado', nivel: MODERADO, texto: 'CIRURGIA PLÁSTICA PÓS-BARIÁTRICA realizada, mas sem informar há quanto tempo — confirmar com o paciente (muda a urgência da avaliação).' })
     }
   } else if (statusPlastica === 'DESEJO') {
     temAlgo = true
