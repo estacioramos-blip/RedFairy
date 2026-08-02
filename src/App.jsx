@@ -369,17 +369,24 @@ export default function App() {
     } catch (e) {}
   }
 
+  // Apaga a IDENTIDADE do paciente neste navegador. Inclui rf_reentry_cpf/token, a
+  // credencial de reentrada passwordless (proposital pro paciente comum reabrir pelo
+  // ícone sem senha) — que sobrevivia a todos os logouts e por isso conseguia "puxar
+  // de volta" pra sessão do paciente quem tinha entrado como médico/admin no mesmo
+  // aparelho. Fonte única da lista de chaves: limparAuthPaciente usa esta função.
+  // Só identidade de PACIENTE — nunca médico/indicador/admin.
+  function limparSessaoPaciente() {
+    try {
+      ['paciente_id', 'paciente_cpf', 'paciente_nome', 'paciente_token', 'paciente_login_at',
+       'rf_reentry_cpf', 'rf_reentry_token'].forEach(k => localStorage.removeItem(k))
+    } catch (e) {}
+  }
+
   // Limpa SO a sessao do paciente (login local via RPC + fallback Supabase). Nao navega.
   // Apaga TODAS as chaves paciente_* (mesma lista do handleSairDespedida) — senao
   // sobra estado residual que confunde o fluxo (despedida indevida, dados trocados).
   function limparAuthPaciente() {
-    try {
-      localStorage.removeItem('paciente_id')
-      localStorage.removeItem('paciente_token')
-      localStorage.removeItem('paciente_cpf')
-      localStorage.removeItem('paciente_nome')
-      localStorage.removeItem('paciente_login_at')
-    } catch (e) {}
+    limparSessaoPaciente()
     try { supabase.auth.signOut() } catch (e) {}
     setSession(null)
   }
@@ -420,7 +427,14 @@ export default function App() {
     const fluxoPaciente = modo === 'paciente' || modo === 'triagem-direta' || modo === 'oba-paciente'
     if (fluxoMedico) {
       let pacLogado = false
-      try { pacLogado = !!localStorage.getItem('paciente_id') } catch (e) {}
+      // A credencial de REENTRADA conta como resíduo de paciente: ela sozinha (sem
+      // paciente_id nem sessão) já bastava pra reentrada passwordless relogar o
+      // paciente por cima de quem entrou como médico/admin. Sem este `||`, o caso
+      // exato do bug não disparava a limpeza.
+      try {
+        pacLogado = !!(localStorage.getItem('paciente_id') ||
+          (localStorage.getItem('rf_reentry_cpf') && localStorage.getItem('rf_reentry_token')))
+      } catch (e) {}
       if (pacLogado || session) limparAuthPaciente()
     } else if (fluxoPaciente) {
       // Limpa o resíduo médico ao entrar no fluxo paciente — inclui rf_crm_prefill
@@ -520,20 +534,6 @@ export default function App() {
       setAdminClicks(0)
       setModo('admin')
     }
-  }
-
-  // Limpa qualquer sessão/credencial de PACIENTE guardada neste navegador ao entrar
-  // como médico — sem isso, a reentrada passwordless (rf_reentry_cpf/token, proposital
-  // pro paciente comum reabrir sem senha) podia "puxar de volta" o médico pra sessão
-  // do paciente que testou por último no mesmo aparelho, sem aviso nenhum. Não mexe em
-  // nada do médico/indicador/admin — só identidade de paciente. Chamada nos 2 pontos de
-  // entrada do médico: link ?modo=medico (bariatrico.net) e o card "Modo Médico" da
-  // landing (handleDemoMedico, abaixo).
-  function limparSessaoPaciente() {
-    try {
-      ['paciente_id', 'paciente_cpf', 'paciente_nome', 'paciente_token', 'paciente_login_at',
-       'rf_reentry_cpf', 'rf_reentry_token'].forEach(k => localStorage.removeItem(k))
-    } catch (e) {}
   }
 
   function handleDemoMedico() {
