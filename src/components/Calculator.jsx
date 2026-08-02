@@ -1612,7 +1612,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
                 <p className="text-[11px] font-bold text-amber-900 leading-snug">{"Valide o seu cadastro"}</p>
                 <p className="text-[11px] text-amber-800 leading-snug mt-0.5">
-                  {"Envie uma selfie do seu rosto com a carteira profissional ao lado da face. Fotografe com boa luz e verifique que a foto esteja nítida antes de enviar."}
+                  {"Envie pelo WhatsApp uma selfie do seu rosto com a carteira profissional ao lado da face. Fotografe com boa luz e verifique que a foto esteja nítida antes de enviar."}
                 </p>
                 <p className="text-[11px] text-amber-800 leading-snug mt-1">
                   {"Enquanto isso, você usa o sistema normalmente — a validação libera o pagamento das suas comissões."}
@@ -1623,8 +1623,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   )}`}
                   target="_blank" rel="noopener noreferrer"
                   className="inline-block mt-2 text-[11px] font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg px-3 py-1.5 transition-colors">
-                  {"Enviar foto pelo WhatsApp"}
+                  {"Enviar pelo WhatsApp"}
                 </a>
+                {/* O número VISÍVEL importa: o médico costuma ver isto no
+                    computador, mas a selfie ele tira com o celular — sem o
+                    número ele teria que caçar o contato. E o lembrete de que o
+                    aviso não some tira a pressão de resolver agora (ele fica
+                    neste menu, a cada entrada, até a ADM validar). */}
+                <p className="text-[10px] text-amber-700 leading-snug mt-1.5">
+                  {"WhatsApp (71) 99711-0804 — dá para enviar depois, do seu celular. Este aviso continua aqui até a validação."}
+                </p>
               </div>
               <div className="divide-y divide-gray-100">
                 {/* 1. ENCAMINHAR */}
