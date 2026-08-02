@@ -395,7 +395,12 @@ export default function App() {
   // "sempre deslogar na landing" — a landing não mostra quem está logado, então cada
   // visita começa limpa (evita sessão fantasma e o roteamento bizarro). Mantém os
   // marcadores de domínio/bounce (rf_voltar_url, rf_dom_bari, rf_flag).
-  function limparTodasSessoes() {
+  // `preservarRascunhoMedico`: mantém os rascunhos do OBA do médico. Usado só no
+  // logoff por INATIVIDADE — ali o médico não escolheu sair, e uma anamnese longa
+  // pela metade não pode evaporar porque ele foi buscar um exame. Ao SAIR de
+  // propósito (ou chegar à landing) os rascunhos continuam sendo apagados: aí a
+  // intenção de encerrar é explícita e o PC pode ser compartilhado.
+  function limparTodasSessoes(preservarRascunhoMedico = false) {
     try {
       ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
        'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
@@ -403,7 +408,9 @@ export default function App() {
        'caixa_token',
        'rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo','oba_aberto'].forEach(k => localStorage.removeItem(k))
       // Rascunhos do OBA do MÉDICO: não sobrevivem ao "deslogar na landing" (PC compartilhado).
-      Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_med_') === 0).forEach(k => localStorage.removeItem(k))
+      if (!preservarRascunhoMedico) {
+        Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_med_') === 0).forEach(k => localStorage.removeItem(k))
+      }
     } catch (e) {}
     try { supabase.auth.signOut() } catch (e) {}
     setSession(null)
@@ -413,7 +420,7 @@ export default function App() {
   // indicador), nao so o medico. Em dispositivo compartilhado (clinica) o proximo
   // usuario nao pode herdar a sessao de quem ficou ocioso.
   function fazerLogoffInatividade() {
-    limparTodasSessoes()
+    limparTodasSessoes(true)   // preserva o rascunho do OBA do médico — ver limparTodasSessoes
     setShowInatividade(false)
     setLandingKey(k => k + 1)
     setModo('home')
@@ -448,7 +455,11 @@ export default function App() {
 
   useEffect(() => {
     const naLanding = modo === 'home'
-    const LIMITE = naLanding ? 2 * 60 * 1000 : 5 * 60 * 1000
+    // 15 min nas telas internas: a anamnese do OBA é longa e é normal o paciente
+    // parar pra ler uma seção, ou o médico ir buscar um exame — com 5 min o
+    // logoff caía no meio do preenchimento. Na landing seguem 2 min: lá não há
+    // trabalho em andamento, só uma sessão esquecida aberta.
+    const LIMITE = naLanding ? 2 * 60 * 1000 : 15 * 60 * 1000
     let tIdle = null
     let tGraca = null
     const limpar = () => { if (tIdle) clearTimeout(tIdle); if (tGraca) clearTimeout(tGraca) }
