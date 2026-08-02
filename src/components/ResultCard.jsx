@@ -1575,6 +1575,21 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
 
       <AchadosParalelosSection achados={resultado.achadosParalelos} />
 
+      {/* SEM VÍNCULO: o paciente existe e tem histórico, mas este médico ainda não
+          o encaminhou nem avaliou — então o histórico não é devolvido. Sem este
+          aviso o card do OBA simplesmente sumiria, e o médico poderia concluir
+          que o paciente nunca fez avaliação (leitura clínica errada). */}
+      {!modoPaciente && resultado._semVinculo && (
+        <div className="mt-6 rounded-2xl border-2 border-sky-300 bg-sky-50 px-5 py-4">
+          <p className="text-sky-900 text-sm font-black uppercase tracking-wide mb-1">
+            {"🔒 Histórico deste paciente não disponível para você"}
+          </p>
+          <p className="text-sky-800 text-xs leading-snug">
+            {"Você ainda não encaminhou nem avaliou este paciente, então o histórico dele (avaliações anteriores e anamnese OBA) fica protegido. AVALIE-O para estabelecer o vínculo — a partir daí o histórico completo passa a aparecer aqui. Isso NÃO significa que ele não tenha avaliações anteriores."}
+          </p>
+        </div>
+      )}
+
       {oba && <OBASection oba={oba} modoPaciente={modoPaciente} cpf={resultado._inputs?.cpf} sexo={resultado._inputs?.sexo} onRevisar={onRevisarAnamnese} />}
 
       {!modoPaciente && mostrarPainelMedico && (

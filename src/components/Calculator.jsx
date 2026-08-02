@@ -859,15 +859,35 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       const avals = ((avalResp && avalResp.ok) ? avalResp.linhas : []) || []
       // Busca TODAS as linhas (ascendente) — deriva a ÚLTIMA (anterior, follow-up) e a
       // PRIMEIRA (baseline, comparação longitudinal). Ver src/engine/obaComparador.js.
-      let anam = null, anamBaseline = null, numeroCiclo = 1
+      let anam = null, anamBaseline = null, numeroCiclo = 1, semVinculoOba = false
       try {
         // RLS Fase 2: leitura por RPC (gateada pelo token do médico).
         const { data: obaResp } = await supabase.rpc('oba_anamnese_por_cpf', { p_cpf: d, ...credMedico() })
+        // SEM VÍNCULO ≠ SEM HISTÓRICO. Distinguir os dois é obrigatório aqui: com o
+        // histórico negado, `obaRows` vazio faria o OBA abrir como "primeira
+        // avaliação" e — como as ESCRITAS seguem liberadas (é a escrita que cria o
+        // vínculo) — gravaria uma linha de BASELINE NOVA num paciente que já tem
+        // vários ciclos. Essa linha viraria a mais recente e o PRÓPRIO PACIENTE
+        // passaria a ver um relatório incompleto. Ver migrate_vinculo_medico_paciente.sql.
+        if (obaResp && obaResp.ok === false && /vinculo/i.test(String(obaResp.erro || ''))) {
+          semVinculoOba = true
+        }
         const obaRows = (obaResp && obaResp.ok) ? obaResp.linhas : []
         anamBaseline = (obaRows && obaRows.length) ? obaRows[0] : null
         anam = (obaRows && obaRows.length) ? obaRows[obaRows.length - 1] : null
         numeroCiclo = (obaRows?.length || 0) + 1
       } catch (e) { console.error('Falha ao carregar histórico OBA:', e) }
+
+      if (semVinculoOba) {
+        const msg = 'Você ainda não tem vínculo com este paciente, então o histórico dele fica protegido.\n\n'
+          + 'Para criar o vínculo, avalie-o pelo formulário (hemograma + CPF) nesta mesma tela. '
+          + 'Feito isso, o histórico e a avaliação OBA passam a ficar disponíveis.\n\n'
+          + 'Não abrimos a avaliação OBA agora de propósito: sem o histórico, ela começaria do zero e criaria uma avaliação duplicada no prontuário dele.'
+        setAvaliarErro(msg)
+        if (revisao) { try { window.alert(msg) } catch (e) {} }
+        setAvaliarBusy(false)
+        return
+      }
       setPacienteAvaliar({ ...prof, ultimaAval: (avals && avals.length) ? avals[0] : null, anamneseAnterior: anam, anamneseBaseline: anamBaseline, numeroCiclo })
       setAvaliarRevisao(!!revisao)
       try {
@@ -1372,6 +1392,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     const res = mostrarExamesExtras ? avaliarPaciente(inputsNumericos) : triagemEritron(inputsNumericos);
 
     let obaResult = null;
+    // Vínculo médico↔paciente: sem ele o histórico do paciente não é devolvido.
+    // Precisamos DIZER isso ao médico — um card que some sem explicação é pior
+    // que o bloqueio. Ver migrate_vinculo_medico_paciente.sql.
+    let semVinculo = false;
     if (inputs.bariatrica) {
       // (b) FASE 1: o M\u00c9DICO v\u00ea o relat\u00f3rio COMPLETO que o paciente j\u00e1 gerou e est\u00e1 salvo
       // (oba_anamnese.relatorio_oba), com as travas novas (idea\u00e7\u00e3o, HTLV...) \u2014 N\u00c3O recalcula
@@ -1390,10 +1414,11 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         // O relatorio_oba salvo J\u00c1 \u00e9 a sa\u00edda do avaliarOBA (modulos/alertas/tipoCirurgia/\u2026),
         // completo \u2014 o ResultCard l\u00ea exatamente esses campos. Usa direto.
         if (obaRow?.relatorio_oba) obaResult = { ...obaRow.relatorio_oba, _estadoClinico: obaRow.estado_clinico || null };
+        else if (obaRow?.ok === false && /vinculo/i.test(String(obaRow?.erro || ''))) semVinculo = true;
       }
     }
 
-    setResultado({ ...res, _inputs: inputsNumericos, _oba: obaResult, _medicoDados: medicoDados });
+    setResultado({ ...res, _inputs: inputsNumericos, _oba: obaResult, _semVinculo: semVinculo, _medicoDados: medicoDados });
     setCopiado(false);
 
     if (inputs.cpf.trim() && res.encontrado) {
