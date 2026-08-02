@@ -2764,7 +2764,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 if (!md?.cep || !md?.cpf || !md?.pix_chave) {
                   setShowAfiliados(true);
                 } else {
-                  setShowFelicitacoes(true);
+                  // VETERANO (cadastro de afiliado já completo) vai DIRETO ao menu.
+                  // O "Estamos felizes" é o fecho de quem ACABOU de se afiliar (é
+                  // disparado ali, ao salvar o cadastro) — ele explica o que são
+                  // AVALIAR e ENCAMINHAR e só libera o botão depois de 4s de
+                  // animação. Repetir isso a cada login de quem já conhece o
+                  // sistema é 4 segundos de espera para reler o óbvio.
+                  setMenuMedico(true);
                 }
               } catch (e) {
                 setShowAfiliados(true);
