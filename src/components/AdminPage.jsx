@@ -1649,6 +1649,10 @@ function AbaMedicos() {
   const [extrato, setExtrato] = useState(null);          // conversões carregadas
   const [carregandoExtrato, setCarregandoExtrato] = useState(false);
 
+  // Papel M\u00c9DICO DA PLATAFORMA (quem atende qualquer paciente). Vem de uma RPC
+  // pr\u00f3pria e pequena \u2014 ver migrate_vinculo_medico_paciente.sql.
+  const [plataforma, setPlataforma] = useState({});   // { CRM: bool }
+
   async function carregar() {
     const { data, error } = await supabase.rpc('admin_listar_medicos', credAdmin());
     if (error) setErro("N\u00e3o foi poss\u00edvel carregar. A migration migrate_admin_medicos.sql j\u00e1 foi aplicada?");
@@ -1659,7 +1663,24 @@ function AbaMedicos() {
       setComissaoUsd(Number(data?.comissao_usd) || 0);
       setCotacao(Number(data?.cotacao_dolar) || 0);
     }
+    // Silencioso se a migration do v\u00ednculo ainda n\u00e3o rodou: a aba continua
+    // funcionando, s\u00f3 sem o interruptor.
+    try {
+      const { data: pl } = await supabase.rpc('admin_listar_plataforma', credAdmin());
+      if (pl?.ok) setPlataforma(Object.fromEntries((pl.medicos || []).map(m => [m.crm, !!m.plataforma || !!m.is_admin])));
+    } catch (e) {}
     setLoading(false);
+  }
+
+  async function alternarPlataforma(m) {
+    const novo = !plataforma[m.crm];
+    const aviso = novo
+      ? `Marcar ${m.nome || m.crm} como M\u00c9DICO DA PLATAFORMA?\n\nEle passar\u00e1 a acessar o prontu\u00e1rio de QUALQUER paciente (\u00e9 o que permite atender quem entrou sozinho ou veio de outro m\u00e9dico). Todo acesso fica registrado na trilha.`
+      : `Remover ${m.nome || m.crm} do papel de M\u00c9DICO DA PLATAFORMA?\n\nEle passar\u00e1 a ver apenas os pacientes que ele mesmo encaminhou ou avaliou.`;
+    if (!window.confirm(aviso)) return;
+    const { data, error } = await supabase.rpc('admin_marcar_plataforma', { ...credAdmin(), p_crm_alvo: m.crm, p_valor: novo });
+    if (error || (data && !data.ok)) { window.alert('Erro: ' + (error?.message || data?.erro || '')); return; }
+    setPlataforma(p => ({ ...p, [m.crm]: novo }));
   }
 
   useEffect(() => { carregar(); }, []);
@@ -1781,6 +1802,9 @@ function AbaMedicos() {
               <p className="font-bold text-gray-800">
                 {m.nome || <span className="text-gray-400 italic">sem nome</span>}
                 {m.is_admin && <span className="ml-2 text-xs bg-gray-800 text-white font-bold px-2 py-0.5 rounded-full">ADMIN</span>}
+                {plataforma[m.crm] && !m.is_admin && (
+                  <span className="ml-2 text-xs bg-sky-700 text-white font-bold px-2 py-0.5 rounded-full">{"PLATAFORMA"}</span>
+                )}
               </p>
               <p className="text-sm text-gray-500">
                 {"CRM "}{m.crm}{" \u00b7 "}{regiaoDe(m.uf)}{m.cep ? `${" \u00b7 CEP "}${m.cep}` : ''}
@@ -1824,6 +1848,20 @@ function AbaMedicos() {
                 : <p className="text-xs text-amber-600 mt-0.5">{"Sem chave Pix cadastrada."}</p>}
             </div>
             <div className="shrink-0 flex gap-2">
+              {/* Interruptor do papel PLATAFORMA: quem atende QUALQUER paciente
+                  (o que entrou sozinho, ou o que veio de outro médico). O admin
+                  já tem o alcance pelo is_admin, então não mostra o botão nele. */}
+              {!m.is_admin && (
+                <button onClick={() => alternarPlataforma(m)}
+                  title={plataforma[m.crm]
+                    ? 'Atende qualquer paciente. Clique para restringir aos pacientes dele.'
+                    : 'Só vê os pacientes que ele encaminhou/avaliou. Clique para permitir atender qualquer paciente.'}
+                  className={`text-sm font-bold px-4 py-2 rounded-xl transition-colors ${plataforma[m.crm]
+                    ? 'bg-sky-700 hover:bg-sky-800 text-white'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}>
+                  {plataforma[m.crm] ? 'Plataforma ✓' : 'Tornar plataforma'}
+                </button>
+              )}
               <button onClick={() => abrirExtrato(m)}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold px-4 py-2 rounded-xl transition-colors">
                 Extrato

@@ -14,11 +14,24 @@
 -- inteira — incluindo ideação suicida, HIV e câncer. Não é bug: é o fluxo
 -- normal do produto. É exposição de dado sensível de saúde (LGPD art. 11).
 --
--- RÉGUA DECIDIDA PELO DR. RAMOS ("meus pacientes + auditoria"):
---   - Médico vê LIVREMENTE o paciente que ele encaminhou ou já avaliou.
---   - Para CPF NOVO ele ainda consegue AVALIAR (o negócio depende disso), mas
---     NÃO vê o histórico anterior enquanto o vínculo não existir.
---   - Todo acesso de médico a dado de paciente fica REGISTRADO.
+-- RÉGUA DECIDIDA PELO DR. RAMOS — DOIS TIPOS DE MÉDICO:
+--
+--   1) MÉDICO DA PLATAFORMA (`medicos.plataforma = true`, ligado por você no
+--      Admin): alcança QUALQUER paciente. É o trabalho dele — teleconsulta,
+--      revisão de anamnese, prescrição, plantão. Sem isso, o paciente que entra
+--      espontaneamente não teria quem o atendesse, e um médico da casa não
+--      poderia cuidar de paciente que veio por outro médico.
+--
+--   2) MÉDICO EXTERNO (auto-cadastro 4DOC, o padrão): só alcança o paciente que
+--      ELE encaminhou ou já avaliou. Para CPF novo ainda consegue AVALIAR (o
+--      negócio depende disso), mas não vê o histórico até o vínculo existir.
+--
+--   - TODO acesso de médico a dado de paciente fica REGISTRADO, com o motivo
+--     (papel de plataforma x vínculo próprio).
+--
+-- É a APROVAÇÃO que concede o alcance amplo — por isso esta régua e a foto da
+-- carteira profissional são a mesma defesa em duas partes: quem você aprova
+-- atende todo mundo; quem se cadastra sozinho só alcança os próprios pacientes.
 --
 -- O QUE MUDA E O QUE NÃO MUDA:
 --   - LEITURAS de histórico passam a exigir vínculo (5 funções).
@@ -48,13 +61,45 @@ CREATE TABLE IF NOT EXISTS public.acessos_paciente (
   cpf_paciente text        NOT NULL,
   recurso      text        NOT NULL,
   permitido    boolean     NOT NULL,
+  -- POR QUE passou (ou não): 'plataforma' | 'vinculo' | 'sem_vinculo'. Sem o
+  -- motivo, a trilha não distingue o médico da casa fazendo o trabalho dele de
+  -- um médico externo que forjou vínculo — que é justamente o que se quer ver.
+  motivo       text,
   created_at   timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE public.acessos_paciente ADD COLUMN IF NOT EXISTS motivo text;
 
 ALTER TABLE public.acessos_paciente ENABLE ROW LEVEL SECURITY;
 
 CREATE INDEX IF NOT EXISTS idx_acessos_paciente_cpf  ON public.acessos_paciente (cpf_paciente, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_acessos_paciente_crm  ON public.acessos_paciente (medico_crm,   created_at DESC);
+
+
+-- ── 1b) Papel: MÉDICO DA PLATAFORMA ─────────────────────────────────────────
+-- Default FALSE: quem se cadastra sozinho NÃO nasce com alcance amplo.
+ALTER TABLE public.medicos ADD COLUMN IF NOT EXISTS plataforma boolean NOT NULL DEFAULT false;
+
+-- Os médicos que JÁ existem entram como plataforma (decisão do Dr. Ramos:
+-- "aprovar os atuais e exigir dos novos"). Hoje são 2, ambos dele — sem este
+-- backfill ele perderia acesso ao próprio sistema ao aplicar a migração.
+UPDATE public.medicos SET plataforma = true WHERE plataforma IS DISTINCT FROM true;
+
+-- Admin é sempre plataforma (não depende de alguém lembrar de marcar).
+CREATE OR REPLACE FUNCTION public.medico_e_plataforma(p_crm text)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path TO 'public', 'extensions'
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM public.medicos m
+     WHERE m.crm = upper(btrim(coalesce(p_crm,'')))
+       AND (m.plataforma IS TRUE OR m.is_admin IS TRUE)
+  );
+$function$;
+
+GRANT EXECUTE ON FUNCTION public.medico_e_plataforma(text) TO anon, authenticated;
 
 
 -- ── 2) A régua do vínculo ────────────────────────────────────────────────────
@@ -114,7 +159,8 @@ AS $function$
 DECLARE
   v_cpf     text := regexp_replace(coalesce(p_cpf,''), '\D', '', 'g');
   v_medico  boolean;
-  v_vinculo boolean;
+  v_pode    boolean;
+  v_motivo  text;
 BEGIN
   -- O próprio paciente: sempre pode, sem registro.
   IF public.token_paciente_ok(v_cpf, p_pac_token) THEN
@@ -126,16 +172,24 @@ BEGIN
     RETURN false;   -- nem médico nem paciente: nada a registrar
   END IF;
 
-  v_vinculo := public.medico_tem_vinculo(v_cpf, p_crm);
+  -- MÉDICO DA PLATAFORMA alcança qualquer paciente (é o trabalho dele); médico
+  -- externo, só os próprios. Os dois casos ficam na trilha, com o motivo.
+  IF public.medico_e_plataforma(p_crm) THEN
+    v_pode := true;  v_motivo := 'plataforma';
+  ELSIF public.medico_tem_vinculo(v_cpf, p_crm) THEN
+    v_pode := true;  v_motivo := 'vinculo';
+  ELSE
+    v_pode := false; v_motivo := 'sem_vinculo';
+  END IF;
 
   BEGIN
-    INSERT INTO public.acessos_paciente (medico_crm, cpf_paciente, recurso, permitido)
-    VALUES (upper(btrim(coalesce(p_crm,''))), v_cpf, coalesce(p_recurso,'?'), v_vinculo);
+    INSERT INTO public.acessos_paciente (medico_crm, cpf_paciente, recurso, permitido, motivo)
+    VALUES (upper(btrim(coalesce(p_crm,''))), v_cpf, coalesce(p_recurso,'?'), v_pode, v_motivo);
   EXCEPTION WHEN OTHERS THEN
     NULL;  -- a trilha nunca pode derrubar o atendimento
   END;
 
-  RETURN v_vinculo;
+  RETURN v_pode;
 END;
 $function$;
 
@@ -292,12 +346,16 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'erro', 'Nao autorizado');
   END IF;
 
-  v_vinculo := v_proprio OR public.medico_tem_vinculo(v_cpf, p_crm);
+  v_vinculo := v_proprio
+            OR public.medico_e_plataforma(p_crm)
+            OR public.medico_tem_vinculo(v_cpf, p_crm);
 
   IF v_medico AND NOT v_proprio THEN
     BEGIN
-      INSERT INTO public.acessos_paciente (medico_crm, cpf_paciente, recurso, permitido)
-      VALUES (upper(btrim(coalesce(p_crm,''))), v_cpf, 'profiles', v_vinculo);
+      INSERT INTO public.acessos_paciente (medico_crm, cpf_paciente, recurso, permitido, motivo)
+      VALUES (upper(btrim(coalesce(p_crm,''))), v_cpf, 'profiles', v_vinculo,
+              CASE WHEN public.medico_e_plataforma(p_crm) THEN 'plataforma'
+                   WHEN v_vinculo THEN 'vinculo' ELSE 'sem_vinculo' END);
     EXCEPTION WHEN OTHERS THEN NULL; END;
   END IF;
 
@@ -359,6 +417,62 @@ END;
 $function$;
 
 GRANT EXECUTE ON FUNCTION public.admin_acessos_paciente(text, text, text, int) TO anon, authenticated;
+
+
+-- ── 6b) Admin liga/desliga o papel de MÉDICO DA PLATAFORMA ───────────────────
+-- Interruptor explícito e revogável. Não deixa desligar o próprio admin
+-- (`is_admin` já garante o alcance dele de qualquer forma) nem se auto-excluir.
+CREATE OR REPLACE FUNCTION public.admin_marcar_plataforma(
+  p_crm text, p_token text, p_crm_alvo text, p_valor boolean
+)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE
+  v_alvo text := upper(btrim(coalesce(p_crm_alvo,'')));
+  v_n int;
+BEGIN
+  IF NOT public.token_admin_ok(p_crm, p_token) THEN
+    RETURN jsonb_build_object('ok', false, 'erro', 'Nao autorizado');
+  END IF;
+  IF v_alvo = '' THEN
+    RETURN jsonb_build_object('ok', false, 'erro', 'CRM alvo invalido');
+  END IF;
+
+  UPDATE public.medicos SET plataforma = coalesce(p_valor,false)
+   WHERE crm = v_alvo;
+  GET DIAGNOSTICS v_n = ROW_COUNT;
+
+  IF v_n = 0 THEN
+    RETURN jsonb_build_object('ok', false, 'erro', 'Medico nao encontrado');
+  END IF;
+  RETURN jsonb_build_object('ok', true, 'crm', v_alvo, 'plataforma', coalesce(p_valor,false));
+END;
+$function$;
+
+GRANT EXECUTE ON FUNCTION public.admin_marcar_plataforma(text, text, text, boolean) TO anon, authenticated;
+
+-- Estado atual do papel, por CRM. RPC própria e pequena de propósito: o
+-- `admin_listar_medicos` é uma função grande e funcional (comissões, extratos,
+-- contagens) — reescrevê-la só para acrescentar uma coluna seria risco à toa.
+CREATE OR REPLACE FUNCTION public.admin_listar_plataforma(p_crm text, p_token text)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public', 'extensions'
+AS $function$
+DECLARE v jsonb;
+BEGIN
+  IF NOT public.token_admin_ok(p_crm, p_token) THEN
+    RETURN jsonb_build_object('ok', false, 'erro', 'Nao autorizado');
+  END IF;
+  SELECT COALESCE(jsonb_agg(jsonb_build_object(
+           'crm', m.crm,
+           'plataforma', coalesce(m.plataforma,false),
+           'is_admin',   coalesce(m.is_admin,false)
+         ) ORDER BY m.crm), '[]'::jsonb)
+    INTO v FROM public.medicos m;
+  RETURN jsonb_build_object('ok', true, 'medicos', v);
+END;
+$function$;
+
+GRANT EXECUTE ON FUNCTION public.admin_listar_plataforma(text, text) TO anon, authenticated;
 
 
 -- ── 7) Fecha o caminho MAIS BARATO de forjar vínculo ─────────────────────────
