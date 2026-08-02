@@ -3550,7 +3550,21 @@ function buildModAcompanhamento(dadosOBA, alertas) {
   const temG3 = especialistas.filter(e => G3.includes((e || '').toUpperCase()))
 
   // ─── Avaliacao de adequacao dos especialistas ───────────────────────
-  if (semEspecialista || (especialistas.length === 0 && !semEspecialista)) {
+  // O paciente DECLAROU que faz acompanhamento, mas não marcou nenhum
+  // profissional. Antes isso caía no ramo "não tem ninguém" — o relatório
+  // respondia "SEM ACOMPANHAMENTO ESPECIALIZADO, retomar imediatamente" (GRAVE →
+  // Estado CRÍTICO) a quem tinha acabado de dizer o contrário. É dado FALTANDO,
+  // não ausência de acompanhamento: a lista tem 18 opções e não é obrigatória, e
+  // o profissional dele pode nem estar nela. Mesma solução já adotada no câncer
+  // de mama sem status — PEDIR o dado em vez de presumir o pior caso.
+  const declarouAcomp = acompFreq === 'FAÇO ACOMPANHAMENTO MÉDICO E REPOSIÇÕES'
+  if (declarouAcomp && !semEspecialista && especialistas.length === 0) {
+    linhas.push('VOCÊ INFORMOU QUE FAZ ACOMPANHAMENTO MÉDICO E REPOSIÇÕES, MAS NÃO IDENTIFICOU OS PROFISSIONAIS QUE O(A) ACOMPANHAM.')
+    linhas.push('ESSE DADO IMPORTA: O PADRÃO-OURO PÓS-BARIÁTRICO É O ACOMPANHAMENTO MULTIDISCIPLINAR VITALÍCIO, E PRECISAMOS SABER SE HÁ AO MENOS UM PROFISSIONAL DO GRUPO CRÍTICO (HEMATOLOGISTA, GASTROENTEROLOGISTA, ENDOCRINOLOGISTA OU CLÍNICO GERAL) — SÃO ELES QUE VIGIAM AS DEFICIÊNCIAS NUTRICIONAIS E AS COMPLICAÇÕES ORGÂNICAS.')
+    linhas.push('INFORME QUEM O(A) ACOMPANHA NA PRÓXIMA AVALIAÇÃO, OU LEVE ESTE PONTO À CONSULTA.')
+    nivelGeral = MODERADO
+    alertas.push({ codigo: 'acompanhamento.declarado_sem_especialista_identificado', nivel: MODERADO, texto: 'PACIENTE DECLARA ACOMPANHAMENTO mas não identificou os profissionais — confirmar se há especialista do grupo crítico (hemato/gastro/endo/clínico).' })
+  } else if (semEspecialista || especialistas.length === 0) {
     // Nao tem ninguem
     linhas.push('NENHUM ESPECIALISTA DE ACOMPANHAMENTO DECLARADO.')
     linhas.push('O ACOMPANHAMENTO MULTIDISCIPLINAR VITALÍCIO É PADRÃO-OURO PÓS-BARIÁTRICA. A AUSÊNCIA DE SEGUIMENTO AUMENTA SIGNIFICATIVAMENTE O RISCO DE DEFICIÊNCIAS NUTRICIONAIS GRAVES, REGANHO PONDERAL E COMPLICAÇÕES DE LONGO PRAZO.')
