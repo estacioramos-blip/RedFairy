@@ -627,9 +627,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [anamneseSalva, setAnamneseSalva] = useState(null)
-  // Já existe linha em oba_anamnese para ESTE ciclo? Vem do rascunho (não só do
-  // state) p/ sobreviver a fechar/reabrir o modal — ver salvarAnamnese.
-  const [anamneseInserida, setAnamneseInserida] = useState(!!salvo?.anamneseInserida)
+  // id da linha de oba_anamnese DESTE ciclo (null = ainda não inserida). Vem do
+  // rascunho (não só do state) p/ sobreviver a fechar/reabrir o modal. Serve a
+  // dois propósitos: (1) saber se já inserimos, evitando linha duplicada; (2)
+  // gravar SEMPRE na linha certa — "a última do CPF" é alvo móvel quando médico
+  // e paciente mexem na mesma ficha ao mesmo tempo. Ver salvarAnamnese.
+  const [anamneseId, setAnamneseId] = useState(salvo?.anamneseId || null)
   const [alertaPeso, setAlertaPeso] = useState(null)
   const [dataExames, setDataExames] = useState(salvo?.dataExames || '')
   // Data dos exames em 3 caixas dd/mm/aaaa (substitui o <input type=date> com calendário).
@@ -901,9 +904,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // Persiste o progresso a cada mudança (etapa/respostas/exames/relatório).
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn: [...teleOn], exOn: [...exOn], anamneseInserida }))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn: [...teleOn], exOn: [...exOn], anamneseId }))
     } catch (e) {}
-  }, [etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn, exOn, anamneseInserida])
+  }, [etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn, exOn, anamneseId])
 
   //  Handlers
   const PESO_ANTES_MAX = 220  // (a) teto do peso antes da cirurgia
@@ -1354,6 +1357,51 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     return base
   }
 
+  // Grava um patch NA LINHA DESTE CICLO. Com `anamneseId` conhecido, mira a linha
+  // exata; sem ele (rascunho antigo, salvo antes deste deploy), cai no
+  // comportamento anterior — "a última linha do CPF".
+  //
+  // O alvo importa: "a última do CPF" é um alvo MÓVEL. Se o MÉDICO abrir a ficha
+  // e revisar a anamnese enquanto o PACIENTE ainda está com o app aberto, nasce
+  // uma linha nova e a gravação seguinte do paciente cairia na linha do médico —
+  // misturando dois atendimentos. Mirando pelo id isso não acontece.
+  // Requer a RPC de migrate_oba_anamnese_atualizar_por_id.sql.
+  // `rotulo` só entra no log, p/ saber QUAL gravação falhou (anamnese/exames/relatório).
+  async function gravarNaLinhaDoCiclo(patch, rotulo = 'anamnese') {
+    const porUltima = () => supabase.rpc('oba_anamnese_atualizar_ultima', {
+      p_cpf: String(cpf || '').replace(/\D/g, ''), p_patch: patch, ...credAmbas()
+    })
+    let resp
+    if (anamneseId) {
+      resp = await supabase.rpc('oba_anamnese_atualizar_por_id', { p_id: anamneseId, p_patch: patch, ...credAmbas() })
+      // A RPC nova pode ainda não existir no banco (deploy do código antes de
+      // rodar migrate_oba_anamnese_atualizar_por_id.sql). Nesse caso o
+      // PostgREST devolve erro de função inexistente — voltamos ao caminho
+      // antigo em vez de perder a gravação. Quando a migration rodar, o
+      // primeiro ramo passa a funcionar sozinho, sem novo deploy.
+      if (resp?.error) {
+        console.warn('OBA: RPC por id indisponível, usando a última linha —', resp.error.message)
+        resp = await porUltima()
+      }
+    } else {
+      resp = await porUltima()
+    }
+    // DUAS camadas de falha, e as duas precisam ser vistas: `error` é falha de
+    // PROTOCOLO (função ausente, rede, timeout — nesse caso `data` vem vazio) e
+    // `data.ok === false` é a função tendo rodado e recusado. Checar só a
+    // segunda faria uma falha de protocolo no fallback retornar "sucesso" e a
+    // gravação sumir em silêncio — exatamente o que este trabalho quer evitar.
+    if (resp?.error) {
+      console.error(`OBA: falha de protocolo ao gravar ${rotulo} —`, resp.error.message)
+      return false
+    }
+    if (resp?.data && resp.data.ok === false) {
+      console.error(`OBA: falha ao gravar ${rotulo} —`, resp.data.erro)
+      return false
+    }
+    return true
+  }
+
   async function salvarAnamnese() {
     setErro('')
     if (!form.cirurgia_ano || calcMesesPos() === null) {
@@ -1472,7 +1520,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // chamava esta função outra vez e criava uma LINHA NOVA a cada passagem —
     // duas linhas idênticas para uma única avaliação, inflando o contador de
     // ciclos (`numeroCiclo` = nº de linhas + 1) e a comparação longitudinal.
-    // `anamneseInserida` vive no rascunho (localStorage), não só no state, para
+    // `anamneseId` vive no rascunho (localStorage), não só no state, para
     // sobreviver a fechar/reabrir o modal; `limparProgresso()` do CONCLUIR o
     // zera, então o próximo ciclo de verdade volta a inserir.
     // Em modoRevisao a 1ª gravação também INSERE de propósito (a revisão médica
@@ -1486,11 +1534,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
         console.error('OBA: falha ao gravar anamnese —', insResp.erro)
         return false
       }
-      setAnamneseInserida(true)
+      // Guarda o id devolvido: daqui pra frente todas as gravações deste ciclo
+      // (exames, relatório, re-salvamento) miram esta linha, não "a última".
+      if (insResp?.id) setAnamneseId(insResp.id)
       return true
     }
 
-    if (anamneseInserida) {
+    if (anamneseId) {
       // `relatorio_oba` fica DE FORA do patch de propósito: a RPC substitui a
       // coluna inteira (não faz merge de jsonb), e aqui ela só carregaria
       // `{ form_snapshot }`. Mandá-la apagaria o relatório rico que o
@@ -1501,19 +1551,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       // O form_snapshot volta a ficar em dia assim que o fluxo chegar no
       // relatório de novo (gerarRelatorio o regrava junto do relatório).
       const { relatorio_oba: _fora, ...patchAnamnese } = dadosAnamnese
-      const { data: updResp } = await supabase.rpc('oba_anamnese_atualizar_ultima', {
-        p_cpf: String(cpf || '').replace(/\D/g, ''), p_patch: patchAnamnese, ...credAmbas()
-      })
-      if (updResp && updResp.ok === false) {
+      const ok = await gravarNaLinhaDoCiclo(patchAnamnese)
+      if (!ok) {
         // A linha que deveríamos atualizar não existe mais (apagada por fora /
         // limpeza de banco) e o rascunho local ficou apontando pro vazio. Sem
         // este fallback a anamnese inteira se perderia em silêncio.
         // Reinsere em QUALQUER falha, de propósito: casar com o texto exato do
-        // erro ('Sem anamnese para esse CPF') seria frágil — se a mensagem
-        // mudasse numa migration futura, a perda silenciosa voltaria. Nos
-        // outros motivos (token inválido/CPF inválido) o INSERT falha do mesmo
-        // jeito, sem criar linha — o pior caso é uma chamada de rede à toa.
-        console.error('OBA: falha ao atualizar anamnese, reinserindo —', updResp.erro)
+        // erro ('Anamnese nao encontrada') seria frágil — se a mensagem mudasse
+        // numa migration futura, a perda silenciosa voltaria. Nos outros motivos
+        // (token inválido) o INSERT falha do mesmo jeito, sem criar linha — o
+        // pior caso é uma chamada de rede à toa.
         await inserirLinha()
       }
     } else {
@@ -1618,16 +1665,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           relSalvar._revisado_por_medico = true
           relSalvar._revisao_data = new Date().toISOString()
         }
-        // RLS Fase 2: a RPC resolve internamente qual é a última linha do CPF —
-        // antes eram dois passos (SELECT id → UPDATE), com corrida no meio.
-        const { data: updResp } = await supabase.rpc('oba_anamnese_atualizar_ultima', {
-          p_cpf: cpfLimpo,
-          p_patch: { relatorio_oba: relSalvar, estado_clinico: est?.estado || null },
-          ...credAmbas(),
-        })
-        if (updResp && updResp.ok === false) {
-          console.error('OBA: falha ao gravar relatório —', updResp.erro)
-        }
+        // Grava NA LINHA DESTE CICLO (pelo id) — ver gravarNaLinhaDoCiclo.
+        await gravarNaLinhaDoCiclo({ relatorio_oba: relSalvar, estado_clinico: est?.estado || null }, 'relatório')
         // Aviso à ADM no Telegram: o PACIENTE (nunca a própria revisão do médico,
         // senão toda revisão reabriria o próprio aviso) marcou "não tenho certeza"
         // em ≥1 seção da anamnese — sinal de que precisa de olhar médico.
@@ -1701,23 +1740,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     setLoading(true)
 
     if (cpf) {
-      const cpfLimpo = cpf.replace(/\D/g, '')
-      // RLS Fase 2: a RPC acha a última linha do CPF e monta o UPDATE só com as
-      // colunas que EXISTEM na tabela. Isso também elimina a armadilha antiga:
-      // uma única coluna de exame inexistente fazia o Postgres rejeitar o UPDATE
-      // inteiro e NENHUM exame era gravado.
-      const { data: exResp } = await supabase.rpc('oba_anamnese_atualizar_ultima', {
-        p_cpf: cpfLimpo,
-        p_patch: {
-          data_exames: dataExames || null,
-          dias_exames: diasExames,
-          ...Object.fromEntries(todosExames.map(e => [e.key, examesObj[e.key] !== undefined ? examesObj[e.key] : null]))
-        },
-        ...credAmbas(),
-      })
-      if (exResp && exResp.ok === false) {
-        console.error('OBA: falha ao gravar exames em oba_anamnese —', exResp.erro)
-      }
+      // Grava NA LINHA DESTE CICLO (pelo id) — ver gravarNaLinhaDoCiclo. A RPC
+      // monta o UPDATE só com as colunas que EXISTEM na tabela; isso elimina a
+      // armadilha antiga em que uma única coluna de exame inexistente fazia o
+      // Postgres rejeitar o UPDATE inteiro e NENHUM exame era gravado.
+      await gravarNaLinhaDoCiclo({
+        data_exames: dataExames || null,
+        dias_exames: diasExames,
+        ...Object.fromEntries(todosExames.map(e => [e.key, examesObj[e.key] !== undefined ? examesObj[e.key] : null]))
+      }, 'exames')
     }
 
     await gerarRelatorio(examesObj)
