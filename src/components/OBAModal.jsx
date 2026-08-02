@@ -3186,8 +3186,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             </p>
             {modoFollowUp ? (
               <>
-                <p style={{ fontSize:'0.95rem', color:'#7B1E1E', fontWeight:800, margin:'0 0 0.3rem' }}>{"Ol\u00e1, vamos a uma nova avalia\u00e7\u00e3o da sua sa\u00fade!"}</p>
-                <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.4px', color:'#9B2C2C', fontWeight:600, lineHeight:1.5 }}>{"Os dados da sua cirurgia j\u00e1 est\u00e3o registrados. Preencha apenas o que mudou desde a \u00faltima vez."}</p>
+                {/* Voz do texto muda por audi\u00eancia: "sua sa\u00fade" faz sentido pro PACIENTE
+                    preenchendo a pr\u00f3pria anamnese, mas confundia o M\u00c9DICO fazendo o
+                    follow-up de um paciente j\u00e1 conhecido (parecia que o sistema tinha
+                    trocado ele pelo paciente \u2014 n\u00e3o trocou, \u00e9 o mesmo modoMedico/
+                    modoRevisao de sempre, s\u00f3 o texto que n\u00e3o distinguia audi\u00eancia). */}
+                <p style={{ fontSize:'0.95rem', color:'#7B1E1E', fontWeight:800, margin:'0 0 0.3rem' }}>
+                  {modoMedico ? "Nova avalia\u00e7\u00e3o \u2014 paciente j\u00e1 conhecido" : "Ol\u00e1, vamos a uma nova avalia\u00e7\u00e3o da sua sa\u00fade!"}
+                </p>
+                <p style={{ fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.4px', color:'#9B2C2C', fontWeight:600, lineHeight:1.5 }}>
+                  {modoMedico ? "Os dados da cirurgia j\u00e1 est\u00e3o registrados. Preencha apenas o que mudou desde a \u00faltima avalia\u00e7\u00e3o." : "Os dados da sua cirurgia j\u00e1 est\u00e3o registrados. Preencha apenas o que mudou desde a \u00faltima vez."}
+                </p>
               </>
             ) : (
               <>

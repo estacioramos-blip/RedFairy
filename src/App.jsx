@@ -177,6 +177,7 @@ export default function App() {
     }
     const modoParam = params.get('modo')
     if (modoParam === 'medico') {
+      limparSessaoPaciente()
       // (bariatrico.net) abre o CARD DE LOGIN do médico (não o formulário direto) —
       // MAS só quando não há médico logado: com credencial guardada (saiu pelo SAIR /
       // ícone OBA m), reabre direto na bifurcação ("Retorna sem CRM/SENHA").
@@ -521,7 +522,22 @@ export default function App() {
     }
   }
 
+  // Limpa qualquer sessão/credencial de PACIENTE guardada neste navegador ao entrar
+  // como médico — sem isso, a reentrada passwordless (rf_reentry_cpf/token, proposital
+  // pro paciente comum reabrir sem senha) podia "puxar de volta" o médico pra sessão
+  // do paciente que testou por último no mesmo aparelho, sem aviso nenhum. Não mexe em
+  // nada do médico/indicador/admin — só identidade de paciente. Chamada nos 2 pontos de
+  // entrada do médico: link ?modo=medico (bariatrico.net) e o card "Modo Médico" da
+  // landing (handleDemoMedico, abaixo).
+  function limparSessaoPaciente() {
+    try {
+      ['paciente_id', 'paciente_cpf', 'paciente_nome', 'paciente_token', 'paciente_login_at',
+       'rf_reentry_cpf', 'rf_reentry_token'].forEach(k => localStorage.removeItem(k))
+    } catch (e) {}
+  }
+
   function handleDemoMedico() {
+    limparSessaoPaciente()
     setSaindo(true)   // (a) tela preta cobre o flash branco da entrada no card escuro
     const next = demoMedicoClicks + 1
     setDemoMedicoClicks(next)
