@@ -627,6 +627,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [anamneseSalva, setAnamneseSalva] = useState(null)
+  // Já existe linha em oba_anamnese para ESTE ciclo? Vem do rascunho (não só do
+  // state) p/ sobreviver a fechar/reabrir o modal — ver salvarAnamnese.
+  const [anamneseInserida, setAnamneseInserida] = useState(!!salvo?.anamneseInserida)
   const [alertaPeso, setAlertaPeso] = useState(null)
   const [dataExames, setDataExames] = useState(salvo?.dataExames || '')
   // Data dos exames em 3 caixas dd/mm/aaaa (substitui o <input type=date> com calendário).
@@ -898,9 +901,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // Persiste o progresso a cada mudança (etapa/respostas/exames/relatório).
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn: [...teleOn], exOn: [...exOn] }))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn: [...teleOn], exOn: [...exOn], anamneseInserida }))
     } catch (e) {}
-  }, [etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn, exOn])
+  }, [etapa, form, exames, dataExames, relatorio, estadoClinico, teleOn, exOn, anamneseInserida])
 
   //  Handlers
   const PESO_ANTES_MAX = 220  // (a) teto do peso antes da cirurgia
@@ -1463,11 +1466,58 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
     // RLS Fase 2: grava por RPC (gateada por token de paciente OU de médico) —
     // o OBAModal roda nos dois fluxos, por isso credAmbas().
-    const { data: insResp } = await supabase.rpc('oba_anamnese_inserir', {
-      p_dados: dadosAnamnese, ...credAmbas()
-    })
-    if (insResp && insResp.ok === false) {
-      console.error('OBA: falha ao gravar anamnese —', insResp.erro)
+    //
+    // INSERT só na PRIMEIRA gravação deste ciclo. Voltar de 'exames' para
+    // 'anamnese' e avançar de novo (ou reabrir o rascunho e refazer o caminho)
+    // chamava esta função outra vez e criava uma LINHA NOVA a cada passagem —
+    // duas linhas idênticas para uma única avaliação, inflando o contador de
+    // ciclos (`numeroCiclo` = nº de linhas + 1) e a comparação longitudinal.
+    // `anamneseInserida` vive no rascunho (localStorage), não só no state, para
+    // sobreviver a fechar/reabrir o modal; `limparProgresso()` do CONCLUIR o
+    // zera, então o próximo ciclo de verdade volta a inserir.
+    // Em modoRevisao a 1ª gravação também INSERE de propósito (a revisão médica
+    // vira linha nova e preserva a original do paciente) — o que esta guarda
+    // impede é a 2ª linha dentro da MESMA revisão.
+    async function inserirLinha() {
+      const { data: insResp } = await supabase.rpc('oba_anamnese_inserir', {
+        p_dados: dadosAnamnese, ...credAmbas()
+      })
+      if (insResp && insResp.ok === false) {
+        console.error('OBA: falha ao gravar anamnese —', insResp.erro)
+        return false
+      }
+      setAnamneseInserida(true)
+      return true
+    }
+
+    if (anamneseInserida) {
+      // `relatorio_oba` fica DE FORA do patch de propósito: a RPC substitui a
+      // coluna inteira (não faz merge de jsonb), e aqui ela só carregaria
+      // `{ form_snapshot }`. Mandá-la apagaria o relatório rico que o
+      // `gerarRelatorio` já gravou (modulos/alertas/examesComplementares/
+      // hpylori/eritron_atualizado) e — pior — o `_paciente_original` de uma
+      // revisão médica, que é a garantia de "guarda os dois". Isso acontecia
+      // pelo botão "← Voltar" normal: relatorio → exames → anamnese → AVANÇAR.
+      // O form_snapshot volta a ficar em dia assim que o fluxo chegar no
+      // relatório de novo (gerarRelatorio o regrava junto do relatório).
+      const { relatorio_oba: _fora, ...patchAnamnese } = dadosAnamnese
+      const { data: updResp } = await supabase.rpc('oba_anamnese_atualizar_ultima', {
+        p_cpf: String(cpf || '').replace(/\D/g, ''), p_patch: patchAnamnese, ...credAmbas()
+      })
+      if (updResp && updResp.ok === false) {
+        // A linha que deveríamos atualizar não existe mais (apagada por fora /
+        // limpeza de banco) e o rascunho local ficou apontando pro vazio. Sem
+        // este fallback a anamnese inteira se perderia em silêncio.
+        // Reinsere em QUALQUER falha, de propósito: casar com o texto exato do
+        // erro ('Sem anamnese para esse CPF') seria frágil — se a mensagem
+        // mudasse numa migration futura, a perda silenciosa voltaria. Nos
+        // outros motivos (token inválido/CPF inválido) o INSERT falha do mesmo
+        // jeito, sem criar linha — o pior caso é uma chamada de rede à toa.
+        console.error('OBA: falha ao atualizar anamnese, reinserindo —', updResp.erro)
+        await inserirLinha()
+      }
+    } else {
+      await inserirLinha()
     }
     setLoading(false)
     setAnamneseSalva(dadosAnamnese)
