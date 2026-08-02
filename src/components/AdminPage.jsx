@@ -856,7 +856,9 @@ function AbaConfig() {
       const tgCfg = (tg && tg.ok && tg.config) ? tg.config : {};
       setValor(valConfig?.valor || '');
       setValorDoc(docConfig?.valor || '');
-      setComissaoUsdNaoAfiliado(comNaoAfilConfig?.valor || '10');
+      // Default 15, não 10: esta chave é o AVALIAR do médico (US$15). Com o default
+      // errado, abrir e salvar a tela com a chave vazia REBAIXAVA a comissão do médico.
+      setComissaoUsdNaoAfiliado(comNaoAfilConfig?.valor || '15');
       setPixChave(pixConfig?.valor || '');
       setValorAnuidade(anuConfig?.valor || '200');
       setComissaoUsd(comConfig?.valor || '10');
@@ -877,8 +879,8 @@ function AbaConfig() {
       { p_chave: 'valor_documento_medico',   p_valor: valorDoc, p_descricao: "Valor em R$ da gera\u00e7\u00e3o de documento m\u00e9dico (prescri\u00e7\u00e3o/pedido de exames)" },
       { p_chave: 'pix_chave',                p_valor: pixChave, p_descricao: "Chave Pix para recebimento de solicita\u00e7\u00f5es m\u00e9dicas" },
       { p_chave: 'valor_anuidade',           p_valor: valorAnuidade, p_descricao: "Valor em R$ da anuidade do paciente (exibido na landing e cobrado no Pix de cadastro)" },
-      { p_chave: 'comissao_usd_por_conversao', p_valor: comissaoUsd,  p_descricao: "Comissão em DÓLAR do médico AFILIADO (4DOC) por paciente convertido" },
-      { p_chave: 'comissao_usd_nao_afiliado', p_valor: comissaoUsdNaoAfiliado, p_descricao: "Comissão em DÓLAR do indicador NÃO afiliado (não-médico do OBA) por paciente convertido" },
+      { p_chave: 'comissao_usd_por_conversao', p_valor: comissaoUsd,  p_descricao: "Comissão em DÓLAR por CONVERSÃO: paga ao médico que ENCAMINHOU e ao INDICADOR" },
+      { p_chave: 'comissao_usd_nao_afiliado', p_valor: comissaoUsdNaoAfiliado, p_descricao: "Comissão em DÓLAR do médico por AVALIAR paciente (nome da chave é legado, não reflete o uso)" },
       { p_chave: 'cotacao_dolar',            p_valor: cotacaoDolar,  p_descricao: "Cotação USD->BRL para converter a comissão dos médicos em reais" },
       { p_chave: 'telegram_bot_token',       p_valor: tgToken,       p_descricao: "Token do Bot do Telegram para notificações da ADM" },
       { p_chave: 'telegram_chat_id',         p_valor: tgChat,        p_descricao: "Chat ID do Telegram que recebe as notificações da ADM" },
@@ -933,20 +935,28 @@ function AbaConfig() {
           </div>
 
           <div className="pt-4 border-t border-gray-100">
-            <h3 className="text-base font-semibold text-gray-700 mb-1">{"Comiss\u00e3o por Convers\u00e3o (d\u00f3lar digital)"}</h3>
-            <p className="text-sm text-gray-400 mb-3">{"Valor pago por paciente convertido (triado + cadastrado + pago). A moeda \u00e9 \u00fanica (d\u00f3lar digital); s\u00f3 muda a quantidade entre afiliado e n\u00e3o-afiliado."}</p>
+            {/* \u26a0 R\u00d3TULOS CORRIGIDOS: estavam trocados. As chaves foram REPROPOSITADAS
+                em jun/2026 e os nomes ficaram enganosos \u2014 `comissao_usd_nao_afiliado`
+                N\u00c3O \u00e9 mais a comiss\u00e3o do indicador, \u00e9 a do AVALIAR do m\u00e9dico. Quem
+                confiasse no r\u00f3tulo antigo e mexesse no campo "indicador" estaria, na
+                verdade, mudando quanto o m\u00e9dico ganha por avalia\u00e7\u00e3o. Confirmado no
+                banco e nas fun\u00e7\u00f5es que leem as chaves (fn_credita_medico,
+                listar_creditos_indicador, medico_avaliar_paciente). N\u00c3O renomear os
+                r\u00f3tulos de volta pelo nome da chave. */}
+            <h3 className="text-base font-semibold text-gray-700 mb-1">{"Comiss\u00f5es (d\u00f3lar digital)"}</h3>
+            <p className="text-sm text-gray-400 mb-3">{"A moeda \u00e9 \u00fanica (d\u00f3lar digital); s\u00f3 muda a quantidade conforme o evento que gerou o cr\u00e9dito."}</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">{"Afiliado \u2014 m\u00e9dico 4DOC (US$)"}</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Convers\u00e3o \u2014 encaminhamento e indica\u00e7\u00e3o (US$)"}</label>
                 <input type="number" step="0.01" min="0" value={comissaoUsd}
                   onChange={e => setComissaoUsd(e.target.value)} placeholder="Ex: 10" className={inputClass} />
-                <p className="text-xs text-gray-400 mt-1">{"Comiss\u00e3o do m\u00e9dico afiliado (4DOC)."}</p>
+                <p className="text-xs text-gray-400 mt-1">{"Pago ao M\u00c9DICO QUE ENCAMINHOU e ao INDICADOR, por paciente que se cadastrou e pagou. (chave: comissao_usd_por_conversao)"}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">{"N\u00e3o afiliado \u2014 indicador OBA (US$)"}</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Avalia\u00e7\u00e3o feita pelo m\u00e9dico (US$)"}</label>
                 <input type="number" step="0.01" min="0" value={comissaoUsdNaoAfiliado}
-                  onChange={e => setComissaoUsdNaoAfiliado(e.target.value)} placeholder="Ex: 10" className={inputClass} />
-                <p className="text-xs text-gray-400 mt-1">{"Comiss\u00e3o do indicador n\u00e3o-m\u00e9dico do OBA."}</p>
+                  onChange={e => setComissaoUsdNaoAfiliado(e.target.value)} placeholder="Ex: 15" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"Pago ao M\u00c9DICO por AVALIAR um paciente (creditado na hora). \u26a0 A chave ainda se chama comissao_usd_nao_afiliado \u2014 nome legado, n\u00e3o reflete mais o uso."}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{"Cota\u00e7\u00e3o do d\u00f3lar (R$/US$)"}</label>

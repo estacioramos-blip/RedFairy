@@ -407,6 +407,13 @@ export default function App() {
        'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix','indicador_cpf',
        'caixa_token',
        'rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo','oba_aberto'].forEach(k => localStorage.removeItem(k))
+      // A credencial de REENTRADA passwordless (rf_reentry_cpf/token) precisa cair
+      // aqui também. Ela sobrevivia a TODOS os logouts — inclusive ao logoff por
+      // INATIVIDADE, que existe justamente para dispositivo compartilhado (clínica):
+      // a paciente A saía, o tablet "deslogava" sozinho, e o paciente B seguinte era
+      // relogado como A, com histórico e anamnese na tela. Reusa limparSessaoPaciente
+      // (fonte única da lista de chaves de identidade do paciente).
+      limparSessaoPaciente()
       // Rascunhos do OBA do MÉDICO: não sobrevivem ao "deslogar na landing" (PC compartilhado).
       if (!preservarRascunhoMedico) {
         Object.keys(localStorage).filter(k => k.indexOf('oba_progresso_med_') === 0).forEach(k => localStorage.removeItem(k))

@@ -420,8 +420,15 @@ function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir,
   }
 
   // ── Sobrecarga de ferro ───────────────────────────────────────────────────
-  const ferrOBA = parseFloat(examesOBA?.ferritina_oba)
-  if (!isNaN(ferrOBA) && ferrOBA > 400) {
+  // MESMA cadeia de fontes do bloco de palpitações acima (e dos outros 3
+  // cruzamentos de ferro do arquivo). Lia só `ferritina_oba` — o campo que a tela
+  // de exames ESCONDE quando o paciente já trouxe ferritina da triagem, ou seja,
+  // ficava vazio justamente para o fluxo padrão do produto. Efeito: paciente com
+  // ferritina 650 saía do relatório OBA sem NENHUM alerta de sobrecarga (nem no
+  // Estado Geral), embora o achado seja clinicamente relevante no pós-bariátrico.
+  // `> 0` guarda o Number(null) === 0.
+  const ferrOBA = Number(eritron?.inputs?.ferritina ?? examesOBA?.ferritina_novo ?? examesOBA?.ferritina_oba)
+  if (Number.isFinite(ferrOBA) && ferrOBA > 400) {
     linhas.push(`FERRITINA ELEVADA NO CONTEXTO BARIÁTRICO: ${ferrOBA} ng/mL. FERRITINA MUITO ACIMA DE 400 ng/mL PODE INDICAR SIDEROSE HEPÁTICA, INFLAMAÇÃO CRÔNICA OU SÍNDROME DE SOBRECARGA DE FERRO. NO BARIÁTRICO, A REPOSIÇÃO PARENTERAL DE FERRO SEM MONITORAMENTO ADEQUADO É UMA CAUSA FREQUENTE. AVALIAR SATURAÇÃO DA TRANSFERRINA — SE > 45%, INVESTIGAR HEMOCROMATOSE.`)
     alertas.push({ codigo: 'eritron.ferritina_muito_elevada', nivel: MODERADO, texto: `FERRITINA MUITO ELEVADA: ${ferrOBA} ng/mL — AVALIAR SOBRECARGA DE FERRO E INFLAMAÇÃO CRÔNICA.` })
     // BUG #7 corrigido: antes, cada exame era empurrado 2x (dedup acontece
@@ -1143,6 +1150,13 @@ function buildModOrgaos(ex, dados, sexo, alertas, suger) {
 function buildModPonderal(dados, alertas) {
   const linhas = []
   let nivelGeral = NORMAL
+  // O reganho é medido por DUAS métricas independentes neste módulo (IMC vs.
+  // pré-cirúrgico, e % sobre o menor peso já atingido). As duas descrevem o MESMO
+  // fato clínico, e cada uma empurrava seu próprio alerta — como a régua promove
+  // para RUIM a partir de 2 moderados, um paciente com eritron perfeito e só
+  // reganho saía classificado RUIM em vez de RAZOÁVEL. Esta flag mantém as duas
+  // LINHAS (ângulos clínicos diferentes, ambos úteis) mas garante UM alerta só.
+  let jaAlertouReganho = false
 
   const pesoAntes  = parseFloat(dados.peso_antes)
   const pesoAtual  = parseFloat(dados.peso_atual)
@@ -1198,6 +1212,10 @@ function buildModPonderal(dados, alertas) {
       } else if (deltaIMC < 0) {
         const ganhoAbs = Math.abs(deltaIMC)
         const ganhoPct = Math.abs(pctIMC)
+        // Este ramo INTEIRO é "reganho medido pelo IMC" e sempre empurra um alerta
+        // (expressivo/moderado/leve). Marca aqui para o bloco do nadir, mais
+        // abaixo, não empurrar um SEGUNDO alerta pelo mesmo reganho.
+        jaAlertouReganho = true
         linhas.push(`GANHO DE IMC APÓS A CIRURGIA: ${ganhoAbs.toFixed(1)} unidades (${ganhoPct.toFixed(1)}% a mais que o IMC inicial).`)
         if (ganhoPct > 10) {
           nivelGeral = GRAVE
@@ -1272,7 +1290,14 @@ function buildModPonderal(dados, alertas) {
       } else {
         linhas.push('VOCÊ DESEJA GANHAR PESO, MAS HÁ REGANHO SIGNIFICATIVO (MAIS DE 15% SOBRE O MENOR PESO). O GANHO DEVE SER SUPERVISIONADO POR NUTRÓLOGO PARA NÃO COMPROMETER O RESULTADO DA CIRURGIA.')
       }
-      alertas.push({ codigo: 'ponderal.reganho_15_sobre_o_menor_peso_meta', nivel: MODERADO, texto: `REGANHO > 15% SOBRE O MENOR PESO + META ${metaLabel}: orientação de nutrólogo.` })
+      // A LINHA acima sai sempre (traz a orientação por META, que o bloco do IMC não
+      // dá). O ALERTA só sai se o reganho ainda não foi alertado pelo IMC — senão
+      // seriam 2 alertas para o mesmo reganho, e 2 moderados promovem o paciente a
+      // RUIM sem doença nova.
+      if (!jaAlertouReganho) {
+        alertas.push({ codigo: 'ponderal.reganho_15_sobre_o_menor_peso_meta', nivel: MODERADO, texto: `REGANHO > 15% SOBRE O MENOR PESO + META ${metaLabel}: orientação de nutrólogo.` })
+        jaAlertouReganho = true
+      }
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
     } else if (pctSobreNadir !== null) {
       // P3 — controlado (reganho <= 15%) e IMC ok (>= 20 ou desconhecido)
@@ -3797,7 +3822,12 @@ function buildModLeucos(examesOBA, alertas, examesSuger) {
       // fica INFORMADA no texto acima, a critério do hematologista, em vez de
       // virar item de pedido (e cobrança).
       linhas.push('O MIELOGRAMA PODE SER NECESSÁRIO NESSA INVESTIGAÇÃO, A CRITÉRIO DO HEMATOLOGISTA.')
-      examesSuger.push('SOROLOGIAS PARA HIV, HEPATITES B/C, PARVOVÍRUS B19', 'ELETROFORESE DE PROTEÍNAS')
+      // 'ELETROFORESE DE PROTEÍNAS SÉRICAS' — string IDÊNTICA à do módulo de
+      // albumina/globulina (l.263). O dedup final é Set sobre string exata, então
+      // o nome curto fazia o MESMO exame sair 2x no pedido quando os dois módulos
+      // disparavam juntos (inversão A/G + leucocitose grave coexistem em quadro
+      // inflamatório/hematológico).
+      examesSuger.push('SOROLOGIAS PARA HIV, HEPATITES B/C, PARVOVÍRUS B19', 'ELETROFORESE DE PROTEÍNAS SÉRICAS')
     } else if (leuco < 4000) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('LEUCOPENIA MODERADA: investigar causa. Pode estar associada a pós-bariátrica com deficiências nutricionais profundas (B12, folato, cobre), infecções crônicas ou autoimunidade.')

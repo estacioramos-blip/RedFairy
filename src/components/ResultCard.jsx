@@ -492,6 +492,25 @@ function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar }) {
         </div>
       </div>
 
+      {/* ANAMNESE EM ANDAMENTO: linha gravada na etapa da anamnese, sem o relatório
+          (o paciente/médico saiu antes de concluir). Sem este aviso o card apareceria
+          VAZIO e o médico poderia ler isso como "paciente sem achados" — leitura
+          clínica perigosa, porque a avaliação sequer foi processada. */}
+      {!oba.modulos && (
+        <div className="px-4 pt-4">
+          <div className="bg-slate-100 border-2 border-slate-400 rounded-xl px-4 py-3">
+            <p className="text-slate-900 text-sm font-black uppercase tracking-wide mb-1">
+              {"⏸️ Avaliação OBA em andamento — não concluída"}
+            </p>
+            <p className="text-slate-700 text-xs leading-snug">
+              {modoPaciente
+                ? "Você começou esta avaliação e não chegou até o relatório. Retome de onde parou para receber as recomendações."
+                : "A anamnese foi iniciada mas não chegou ao relatório, então o motor ainda não processou os achados. AUSÊNCIA DE ALERTAS AQUI NÃO SIGNIFICA AUSÊNCIA DE PROBLEMA — peça ao paciente que conclua, ou use REVISAR ANAMNESE."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {!modoPaciente && duvidas.length > 0 && (
         <div className="px-4 pt-4">
           <div className="bg-amber-100 border-2 border-amber-400 rounded-xl px-4 py-3">
@@ -568,7 +587,14 @@ function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar }) {
       )}
 
       <div className="p-4 space-y-2">
-        {oba.modulos.map((mod, i) => {
+        {/* `?.` obrigatório: a linha de oba_anamnese nasce INCOMPLETA (só
+            form_snapshot) quando alguém abandona a anamnese antes do relatório, e
+            o médico depois lê a ÚLTIMA linha do CPF — completa ou não. Sem esta
+            guarda, o .map de undefined derrubava a árvore React INTEIRA (não há
+            Error Boundary no app): o médico via tela branca e perdia o card todo,
+            inclusive alertas graves de avaliações anteriores completas.
+            `alertas` e `examesComplementares` logo acima já eram protegidos assim. */}
+        {(oba.modulos || []).map((mod, i) => {
           const scheme = obaLevelScheme[mod.nivel] || obaLevelScheme.normal;
           const aberto = expandido === i;
           return (
