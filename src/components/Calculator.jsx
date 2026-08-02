@@ -1612,11 +1612,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
                 <p className="text-[11px] font-bold text-amber-900 leading-snug">{"Valide o seu cadastro"}</p>
                 <p className="text-[11px] text-amber-800 leading-snug mt-0.5">
-                  {"Envie uma foto da sua carteira profissional pelo WhatsApp. Enquanto isso, você usa o sistema normalmente — a validação libera o pagamento das suas comissões."}
+                  {"Envie uma selfie do seu rosto com a carteira profissional ao lado da face. Fotografe com boa luz e verifique que a foto esteja nítida antes de enviar."}
+                </p>
+                <p className="text-[11px] text-amber-800 leading-snug mt-1">
+                  {"Enquanto isso, você usa o sistema normalmente — a validação libera o pagamento das suas comissões."}
                 </p>
                 <a
                   href={`https://wa.me/5571997110804?text=${encodeURIComponent(
-                    `Ola! Sou ${medicoNome || 'medico(a)'}, CRM ${medicoCRM || '(informar)'}. Envio a foto da minha carteira profissional para validar meu cadastro no Projeto OBA.`
+                    `Ola! Sou ${medicoNome || 'medico(a)'}, CRM ${medicoCRM || '(informar)'}. Envio a selfie com a minha carteira profissional para validar meu cadastro no Projeto OBA.`
                   )}`}
                   target="_blank" rel="noopener noreferrer"
                   className="inline-block mt-2 text-[11px] font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg px-3 py-1.5 transition-colors">
