@@ -1652,6 +1652,10 @@ function AbaMedicos() {
   // Papel M\u00c9DICO DA PLATAFORMA (quem atende qualquer paciente). Vem de uma RPC
   // pr\u00f3pria e pequena \u2014 ver migrate_vinculo_medico_paciente.sql.
   const [plataforma, setPlataforma] = useState({});   // { CRM: bool }
+  // Validação do cadastro: true = validado | false = invalidado | undefined/null
+  // = PENDENTE (trabalha, mas o crédito não é pago). A foto da carteira chega
+  // pelo WhatsApp — ver migrate_validacao_medico.sql.
+  const [validado, setValidado] = useState({});       // { CRM: true|false|null }
 
   async function carregar() {
     const { data, error } = await supabase.rpc('admin_listar_medicos', credAdmin());
@@ -1667,9 +1671,23 @@ function AbaMedicos() {
     // funcionando, s\u00f3 sem o interruptor.
     try {
       const { data: pl } = await supabase.rpc('admin_listar_plataforma', credAdmin());
-      if (pl?.ok) setPlataforma(Object.fromEntries((pl.medicos || []).map(m => [m.crm, !!m.plataforma || !!m.is_admin])));
+      if (pl?.ok) {
+        setPlataforma(Object.fromEntries((pl.medicos || []).map(m => [m.crm, !!m.plataforma || !!m.is_admin])));
+        setValidado(Object.fromEntries((pl.medicos || []).map(m => [m.crm, m.validado])));
+      }
     } catch (e) {}
     setLoading(false);
+  }
+
+  async function alternarValidacao(m, novo) {
+    const aviso = novo === true
+      ? `VALIDAR ${m.nome || m.crm}?\n\nConfirme que você recebeu e conferiu a foto da carteira profissional dele. A partir daí o crédito acumulado passa a poder ser pago pela Tesouraria.`
+      : `INVALIDAR ${m.nome || m.crm}?\n\nEle perde o acesso na hora (a sessão cai), o crédito pendente NÃO é pago e o papel de plataforma é removido. Use quando a foto não veio ou não confere.`;
+    if (!window.confirm(aviso)) return;
+    const { data, error } = await supabase.rpc('admin_validar_medico', { ...credAdmin(), p_crm_alvo: m.crm, p_valor: novo });
+    if (error || (data && !data.ok)) { window.alert('Erro: ' + (error?.message || data?.erro || '')); return; }
+    setValidado(v => ({ ...v, [m.crm]: novo }));
+    if (novo === false) setPlataforma(p => ({ ...p, [m.crm]: false }));
   }
 
   async function alternarPlataforma(m) {
@@ -1805,6 +1823,12 @@ function AbaMedicos() {
                 {plataforma[m.crm] && !m.is_admin && (
                   <span className="ml-2 text-xs bg-sky-700 text-white font-bold px-2 py-0.5 rounded-full">{"PLATAFORMA"}</span>
                 )}
+                {!m.is_admin && validado[m.crm] === false && (
+                  <span className="ml-2 text-xs bg-red-700 text-white font-bold px-2 py-0.5 rounded-full">{"INVALIDADO"}</span>
+                )}
+                {!m.is_admin && (validado[m.crm] === null || validado[m.crm] === undefined) && (
+                  <span className="ml-2 text-xs bg-amber-500 text-white font-bold px-2 py-0.5 rounded-full" title="Trabalha normalmente, mas o crédito não é pago até você validar">{"AGUARDA FOTO"}</span>
+                )}
               </p>
               <p className="text-sm text-gray-500">
                 {"CRM "}{m.crm}{" \u00b7 "}{regiaoDe(m.uf)}{m.cep ? `${" \u00b7 CEP "}${m.cep}` : ''}
@@ -1847,7 +1871,24 @@ function AbaMedicos() {
                 ? <p className="text-xs text-gray-500 mt-0.5">{"Pix: "}<span className="font-mono break-all">{m.pix_chave}</span></p>
                 : <p className="text-xs text-amber-600 mt-0.5">{"Sem chave Pix cadastrada."}</p>}
             </div>
-            <div className="shrink-0 flex gap-2">
+            <div className="shrink-0 flex gap-2 flex-wrap justify-end">
+              {/* Validação do cadastro (a foto da carteira chega pelo WhatsApp).
+                  Só aparece quando ainda não está validado, ou para permitir
+                  invalidar depois. O admin não valida a si mesmo. */}
+              {!m.is_admin && validado[m.crm] !== true && (
+                <button onClick={() => alternarValidacao(m, true)}
+                  title="Confirme que recebeu e conferiu a foto da carteira profissional"
+                  className="bg-green-700 hover:bg-green-800 text-white text-sm font-bold px-4 py-2 rounded-xl transition-colors">
+                  {"Validar"}
+                </button>
+              )}
+              {!m.is_admin && validado[m.crm] !== false && (
+                <button onClick={() => alternarValidacao(m, false)}
+                  title="Bloqueia o acesso e retém o crédito"
+                  className="bg-white border border-red-300 hover:bg-red-50 text-red-700 text-sm font-bold px-4 py-2 rounded-xl transition-colors">
+                  {"Invalidar"}
+                </button>
+              )}
               {/* Interruptor do papel PLATAFORMA: quem atende QUALQUER paciente
                   (o que entrou sozinho, ou o que veio de outro médico). O admin
                   já tem o alcance pelo is_admin, então não mostra o botão nele. */}

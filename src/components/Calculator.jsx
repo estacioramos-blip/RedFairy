@@ -1584,6 +1584,27 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             <div className="p-5 pt-7">
               <img src={obaLogo} alt="Projeto OBA" className="h-24 object-contain mx-auto mb-1" />
               {(medicoNome || medicoCRM) && <p className="text-center text-[11px] text-gray-400 mb-4">{[medicoNome, medicoCRM].filter(Boolean).join('  ·  ')}</p>}
+              {/* VALIDAÇÃO DO CADASTRO — a foto da carteira vem pelo WhatsApp, não
+                  por upload: guardar documento de identidade criaria dever de guarda
+                  próprio (LGPD). Aqui é só o convite; a ADM valida no Admin. A
+                  mensagem já vai com nome e CRM para ela saber de quem é a foto.
+                  Não bloqueia nada: o médico não validado trabalha normalmente e só
+                  alcança os pacientes dele (ver migrate_vinculo_medico_paciente.sql);
+                  o que fica retido é o pagamento do crédito. */}
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <p className="text-[11px] font-bold text-amber-900 leading-snug">{"Valide o seu cadastro"}</p>
+                <p className="text-[11px] text-amber-800 leading-snug mt-0.5">
+                  {"Envie uma foto da sua carteira profissional pelo WhatsApp. Enquanto isso, você usa o sistema normalmente — a validação libera o pagamento das suas comissões."}
+                </p>
+                <a
+                  href={`https://wa.me/5571997110804?text=${encodeURIComponent(
+                    `Ola! Sou ${medicoNome || 'medico(a)'}, CRM ${medicoCRM || '(informar)'}. Envio a foto da minha carteira profissional para validar meu cadastro no Projeto OBA.`
+                  )}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-block mt-2 text-[11px] font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg px-3 py-1.5 transition-colors">
+                  {"Enviar foto pelo WhatsApp"}
+                </a>
+              </div>
               <div className="divide-y divide-gray-100">
                 {/* 1. ENCAMINHAR */}
                 <div className="flex items-center justify-between gap-3 py-3">
