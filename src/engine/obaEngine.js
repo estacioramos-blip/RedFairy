@@ -390,6 +390,29 @@ function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir,
     linhas.push('FEZ PLASMA DE ARGÔNIO: PROCEDIMENTO PARA TRATAMENTO DE ECTASIA VASCULAR GÁSTRICA (WATERMELON STOMACH), FREQUENTEMENTE RELACIONADO À SANGRIA OCULTA CRÔNICA PÓS-BARIÁTRICA. INVESTIGAR SE HÁ SANGRAMENTO RECORRENTE, ESPECIALMENTE SE A ANEMIA NÃO RESPONDE À SUPLEMENTAÇÃO DE FERRO.')
   }
 
+  // ── PALPITAÇÕES (queixa) ──────────────────────────────────────────────────
+  // Mora no card do ERITRON de propósito (decisão do Dr. Ramos): palpitação é
+  // sintoma cardinal de ANEMIA — o coração acelera para compensar o transporte
+  // de oxigênio. Mandar todo bariátrico que sente palpitação ao cardiologista
+  // seria encaminhar em massa um sintoma que, aqui, quase sempre tem causa
+  // hematológica. Então: se o eritron explica, atribui e reforça a reposição
+  // (SEM alerta próprio — a anemia já tem o dela; empurrar um 2º alerta pelo
+  // MESMO quadro infla o Estado Geral, armadilha já documentada). Se o eritron
+  // NÃO explica, aí sim vira achado próprio e vai para o cardiologista.
+  const queixasEritron = [dadosOBA.queixa_principal, ...(dadosOBA.queixas_secundarias || [])]
+  if (queixasEritron.includes('PALPITAÇÕES')) {
+    const ferrPalp = parseFloat(examesOBA?.ferritina_oba)
+    const ferropenia = !isNaN(ferrPalp) && ferrPalp < 25
+    const eritronExplica = color === 'orange' || color === 'red' || ferropenia
+    if (eritronExplica) {
+      linhas.push('PALPITAÇÕES REFERIDAS: NO SEU CASO ELAS TÊM EXPLICAÇÃO HEMATOLÓGICA PROVÁVEL — COM AS RESERVAS DE FERRO BAIXAS OU O ERITRON COMPROMETIDO, O CORAÇÃO ACELERA PARA COMPENSAR O MENOR TRANSPORTE DE OXIGÊNIO. A CORREÇÃO DA ANEMIA/FERROPENIA COSTUMA FAZER O SINTOMA CEDER. SE AS PALPITAÇÕES PERSISTIREM DEPOIS DE CORRIGIDAS AS RESERVAS, AÍ SIM É PRECISO INVESTIGAR O CORAÇÃO.')
+    } else {
+      linhas.push('PALPITAÇÕES REFERIDAS SEM ANEMIA OU FERROPENIA QUE AS EXPLIQUE: MERECEM AVALIAÇÃO CARDIOLÓGICA. NO PÓS-BARIÁTRICO, VALE INVESTIGAR TAMBÉM HIPOGLICEMIA REATIVA (DUMPING TARDIO — PALPITAÇÃO COM SUOR E TREMOR ALGUMAS HORAS APÓS COMER), DISFUNÇÃO DA TIREOIDE E DISTÚRBIOS ELETROLÍTICOS.')
+      alertas.push({ codigo: 'eritron.palpitacoes_sem_causa_hematologica', nivel: MODERADO, texto: 'PALPITAÇÕES sem anemia/ferropenia que as expliquem — avaliação cardiológica; considerar hipoglicemia reativa (dumping tardio), tireoide e eletrólitos.' })
+      examesSuger.push('AVALIAÇÃO CARDIOLÓGICA')
+    }
+  }
+
   // ── Sobrecarga de ferro ───────────────────────────────────────────────────
   const ferrOBA = parseFloat(examesOBA?.ferritina_oba)
   if (!isNaN(ferrOBA) && ferrOBA > 400) {
@@ -2207,6 +2230,26 @@ function buildModComportamental(dados, alertas, suger) {
   if (meds.includes('REMÉDIO PARA DORMIR')) {
     temAlgo = true
     linhas.push('USO DE MEDICAMENTOS PARA DORMIR: INVESTIGAR APNEIA DO SONO, ANSIEDADE E HÁBITOS DE SONO. A PERDA DE PESO FREQUENTEMENTE MELHORA OU RESOLVE A APNEIA OBSTRUTIVA DO SONO.')
+  }
+
+  // ANSIEDADE — a QUEIXA é acolhimento (leve, sem alerta: segue a convenção deste
+  // módulo, onde só MODERADO+ empurra alerta). Já o REMÉDIO é MODERADO (decisão do
+  // Dr. Ramos): no bariátrico o benzodiazepínico tem 3 problemas somados — absorção
+  // alterada pela cirurgia, risco de queda/fratura sobre osso já fragilizado pela
+  // disabsorção, e potencialização com álcool, num paciente que já é população de
+  // risco para transferência de adição (tema que este módulo trata logo acima).
+  const queixasComp = [dados.queixa_principal, ...(dados.queixas_secundarias || [])]
+  if (queixasComp.includes('ANSIEDADE')) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    linhas.push('ANSIEDADE REFERIDA: É UMA QUEIXA FREQUENTE E LEGÍTIMA NO PÓS-BARIÁTRICO — A MUDANÇA DO CORPO, DA ALIMENTAÇÃO E DA ROTINA COBRA UM PREÇO EMOCIONAL QUE COSTUMA SER SUBESTIMADO. VALE ACOMPANHAMENTO EM SAÚDE MENTAL. DOIS PONTOS PRÁTICOS: A ANSIEDADE PODE SE CONFUNDIR COM HIPOGLICEMIA REATIVA (DUMPING TARDIO), QUE TAMBÉM DÁ TREMOR, SUOR E PALPITAÇÃO ALGUMAS HORAS APÓS COMER; E PODE EMPURRAR DE VOLTA O COMER EMOCIONAL, FATOR DE RISCO PARA REGANHO DE PESO.')
+  }
+
+  if (meds.includes('REMÉDIO PARA ANSIEDADE')) {
+    temAlgo = true
+    if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+    linhas.push('USO DE MEDICAÇÃO PARA ANSIEDADE: SE FOR BENZODIAZEPÍNICO (DIAZEPAM, CLONAZEPAM, ALPRAZOLAM E SEMELHANTES), HÁ TRÊS PONTOS DE ATENÇÃO NO PÓS-BARIÁTRICO. (1) A CIRURGIA MUDA A ABSORÇÃO: O EFEITO PODE FICAR MAIS RÁPIDO E INTENSO QUE O ESPERADO. (2) SONOLÊNCIA E DESEQUILÍBRIO AUMENTAM O RISCO DE QUEDA — E O SEU OSSO PODE ESTAR FRAGILIZADO PELA MÁ ABSORÇÃO DE CÁLCIO E VITAMINA D, O QUE TRANSFORMA UMA QUEDA COMUM EM FRATURA. (3) COM ÁLCOOL O EFEITO SE POTENCIALIZA, E O ÁLCOOL JÁ É ABSORVIDO MAIS RÁPIDO DEPOIS DA CIRURGIA. NÃO SUSPENDA POR CONTA PRÓPRIA — A RETIRADA PRECISA SER GRADUAL E ORIENTADA. LEVE O USO AO MÉDICO QUE ACOMPANHA A PRESCRIÇÃO.')
+    alertas.push({ codigo: 'comportamental.remedio_para_ansiedade_no_pos_bariatrico', nivel: MODERADO, texto: 'USO DE MEDICAÇÃO PARA ANSIEDADE no pós-bariátrico — absorção alterada, risco de queda/fratura sobre osso fragilizado e potencialização com álcool; revisar com o prescritor (não suspender por conta própria).' })
   }
 
   if (meds.includes('LAXANTES')) {
