@@ -894,9 +894,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       } catch (e) { console.error('Falha ao carregar histórico OBA:', e) }
 
       if (semVinculoOba) {
+        // O caminho para criar o vínculo é RECOMENDAR (menu do médico), que grava
+        // em `encaminhamentos_medico` — uma das 6 fontes de vínculo. NÃO existe
+        // "formulário" alcançável a partir do menu: `setMenuMedico(false)` nunca
+        // é chamado, então a calculadora clássica não abre por ali. Apontar para
+        // ela deixava o médico num beco sem saída.
         const msg = 'Você ainda não tem vínculo com este paciente, então o histórico dele fica protegido.\n\n'
-          + 'Para criar o vínculo, avalie-o pelo formulário (hemograma + CPF) nesta mesma tela. '
-          + 'Feito isso, o histórico e a avaliação OBA passam a ficar disponíveis.\n\n'
+          + 'Para atendê-lo, use RECOMENDAR no menu e informe o CPF dele — isso registra que ele é seu paciente. '
+          + 'Depois disso, AVALIAR abre normalmente, com o histórico completo.\n\n'
           + 'Não abrimos a avaliação OBA agora de propósito: sem o histórico, ela começaria do zero e criaria uma avaliação duplicada no prontuário dele.'
         setAvaliarErro(msg)
         if (revisao) { try { window.alert(msg) } catch (e) {} }
