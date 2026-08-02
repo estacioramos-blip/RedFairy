@@ -907,12 +907,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
     const crmLimpo = crmMedicoValor.trim().toUpperCase();
     let existe = false;
     try {
-      const { data } = await supabase
-        .from('medicos')
-        .select('crm')
-        .eq('crm', crmLimpo)
-        .maybeSingle();
-      existe = !!data;
+      // RLS Fase 3: RPC pública que devolve SÓ um booleano.
+      const { data } = await supabase.rpc('medico_crm_existe', { p_crm: crmLimpo });
+      existe = !!data?.existe;
     } catch (e) {
       existe = false;
     }

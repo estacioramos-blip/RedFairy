@@ -316,14 +316,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     // Assinatura ativa? Governa o alerta de anuidade E o paywall (da 2ª avaliação).
     let temAssinAtiva = false
     try {
-      const { data: assinAtiva } = await supabase
-        .from('assinaturas')
-        .select('data_fim')
-        .eq('user_id', prof.id)
-        .eq('status', 'ativa')
-        .order('data_fim', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+      // RLS Fase 3: leitura por RPC (gateada pelo token do paciente).
+      const { data: assResp } = await supabase.rpc('assinatura_minha', {
+        p_cpf: String(prof.cpf || '').replace(/\D/g, ''), ...credPaciente(),
+      })
+      const assinAtiva = (assResp?.ok ? assResp.assinatura : null)
       setVencimentoAnuidade(assinAtiva?.data_fim || null)
       temAssinAtiva = !!assinAtiva
       setTemAssinatura(temAssinAtiva)

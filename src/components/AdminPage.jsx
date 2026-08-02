@@ -214,14 +214,12 @@ function AbaLembretes() {
       });
 
       // (1) ANUIDADES — assinaturas ativas vencendo ≤15 dias (ou vencidas ≤30).
-      const limite = new Date(Date.now() + 15 * 86400000).toISOString();
-      const { data: assins } = await supabase
-        .from('assinaturas').select('user_id, data_fim')
-        .eq('status', 'ativa').lte('data_fim', limite).order('data_fim', { ascending: true });
+      // RLS Fase 3: leitura por RPC (a própria RPC já devolve 1 linha por
+      // usuário, a de vencimento mais distante — a dedup que era feita aqui).
+      const { data: assResp } = await supabase.rpc('admin_assinaturas_vencendo', { ...credAdmin(), p_dias: 15 });
+      const assins = (assResp?.ok ? assResp.assinaturas : []) || [];
       const porUser = {};
-      (assins || []).forEach(a => {
-        if (!porUser[a.user_id] || new Date(a.data_fim) > new Date(porUser[a.user_id].data_fim)) porUser[a.user_id] = a;
-      });
+      assins.forEach(a => { porUser[a.user_id] = a; });
       setAnuidades(Object.values(porUser)
         .map(a => ({ dias: Math.ceil((new Date(a.data_fim).getTime() - Date.now()) / 86400000), perfil: perfilPorId[a.user_id] || {} }))
         .filter(l => l.dias <= 15 && l.dias >= -30)

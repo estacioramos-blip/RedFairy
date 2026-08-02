@@ -88,20 +88,18 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
   async function handleJaPaguei() {
     setErro('')
     setSalvando(true)
-    const agora = new Date()
-    const umAno = new Date(agora.getTime() + 365 * 24 * 60 * 60 * 1000)
-    const { data, error } = await supabase
-      .from('assinaturas')
-      .insert({
-        user_id: profile.id,
-        status: 'ativa',
-        data_inicio: agora.toISOString(),
-        data_fim: umAno.toISOString(),
-        valor_pago: valorLiquido,
-      })
-      .select()
-      .maybeSingle()
-    if (error) {
+    // As datas de início/fim passaram a ser calculadas no BANCO (now() e
+    // now() + 365 dias), dentro da RPC — não dependem mais do relógio do
+    // aparelho do paciente, que pode estar errado.
+    // RLS Fase 3: escrita por RPC gateada pelo token do paciente. O user_id é
+    // resolvido no BANCO a partir do CPF autenticado — antes vinha do cliente,
+    // o que permitiria criar assinatura para qualquer pessoa.
+    const { data: assResp, error } = await supabase.rpc('assinatura_registrar_pagamento', {
+      p_cpf: String(profile?.cpf || '').replace(/\D/g, ''),
+      p_pac_token: localStorage.getItem('paciente_token') || '',
+      p_valor: valorLiquido,
+    })
+    if (error || !assResp?.ok) {
       setSalvando(false)
       setErro('Erro ao registrar pagamento. Tente novamente em alguns segundos.')
       return
@@ -119,7 +117,9 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
       } catch (e) {}
     }
     setSalvando(false)
-    if (onPago) onPago(data)
+    // A RPC devolve só { ok, id } — o consumidor (PatientDashboard) ignora o
+    // argumento, então não repassamos a linha inteira, que não existe mais aqui.
+    if (onPago) onPago()
   }
 
   function handleSairClick() {

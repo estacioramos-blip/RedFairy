@@ -232,8 +232,10 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     let cancelado = false;
     (async () => {
       try {
-        const { data } = await supabase.from('medicos').select('crm').eq('crm', crmLimpo).maybeSingle();
-        if (!cancelado) setLoginCrmExiste(!!data);
+        // RLS Fase 3: RPC pública que devolve SÓ um booleano (a tela precisa
+        // decidir entrar × cadastrar antes de existir qualquer credencial).
+        const { data } = await supabase.rpc('medico_crm_existe', { p_crm: crmLimpo });
+        if (!cancelado) setLoginCrmExiste(!!data?.existe);
       } catch (e) { if (!cancelado) setLoginCrmExiste(null); }
     })();
     return () => { cancelado = true; };
@@ -377,11 +379,24 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     // hero): aqui só completa o perfil (nome/celular/email), sem recriar a conta.
     if (ehMesmoMedico) {
       try {
-        const { error } = await supabase.rpc('complete_medico', {
-          p_crm: conselhoLimpo, p_nome: nome.trim(),
-          p_celular: celularDigits, p_email: email.trim().toLowerCase(), p_sexo: medSexo,
+        // RLS Fase 3: era `complete_medico`, que NÃO exigia token — qualquer
+        // pessoa reescrevia nome/celular/e-mail/sexo de QUALQUER médico (e
+        // continuaria aberta mesmo depois do RLS, porque SECURITY DEFINER o
+        // ignora). O nome é o que sai impresso em receita e pedido; o celular
+        // é por onde a ADM valida o cadastro. Agora usa a RPC gateada por
+        // token — este ramo só roda quando o médico JÁ está logado com este
+        // mesmo CRM (`ehMesmoMedico`), então o token existe.
+        // E-mail vazio fica FORA do patch para não apagar o já cadastrado
+        // (a função antiga preservava com COALESCE/NULLIF; aqui, omitindo).
+        const emailLimpo = email.trim().toLowerCase()
+        const { data: upResp, error } = await supabase.rpc('medico_atualizar_meu', {
+          ...credMedico(),
+          p_patch: {
+            nome: nome.trim(), celular: celularDigits, sexo: medSexo,
+            ...(emailLimpo ? { email: emailLimpo } : {}),
+          },
         })
-        if (error) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
+        if (error || !upResp?.ok) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
       } catch (e) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
       setCadLoading(false)
       localStorage.setItem('medico_crm', conselhoLimpo)
@@ -964,8 +979,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       if (medicoCRM) {
         (async () => {
           try {
-            const { data: medFresh } = await supabase.from('medicos').select('nome, crm, celular, email').eq('crm', medicoCRM).maybeSingle();
-            if (medFresh) setMedicoDados(medFresh);
+            const { data: mr } = await supabase.rpc('medico_meu', credMedico());   // RLS Fase 3
+            if (mr?.ok && mr.medico) setMedicoDados(mr.medico);
           } catch (e) {}
         })();
       }
@@ -1100,7 +1115,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     // proximo destino (mesmo tick), depois que a query resolve.
     let completo = false;
     try {
-      const { data: md } = await supabase.from('medicos').select('nome').eq('crm', medicoCRM).maybeSingle();
+      const { data: mr } = await supabase.rpc('medico_meu', credMedico());   // RLS Fase 3
+      const md = (mr?.ok ? mr.medico : null);
       completo = !!(md && md.nome && String(md.nome).trim());   // e-mail é opcional (só exige o nome)
     } catch (e) { completo = false; }
     // Medico ja cadastrado (nome+email completos) = veterano: NAO mostra "Estamos felizes",
@@ -1146,8 +1162,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         // setSessaoExpirada(true)  // estado vive no Calculator pai, nao no Form
         return
       }
-      const { data, error } = await supabase.from('medicos').select('nome, crm, celular, email').eq('crm', medicoCRM).maybeSingle();
-      if (data) setMedicoDados(data);
+      const { data: mr } = await supabase.rpc('medico_meu', credMedico());   // RLS Fase 3
+      if (mr?.ok && mr.medico) setMedicoDados(mr.medico);
     }
     carregarMedico();
   }, [medicoCRM]);
@@ -1161,7 +1177,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     try { if (!crm) crm = localStorage.getItem('medico_crm') || ''; } catch (e) {}
     if (!crm) return '';
     try {
-      const { data } = await supabase.from('medicos').select('celular, email').eq('crm', crm).maybeSingle();
+      const { data: mr } = await supabase.rpc('medico_meu', credMedico());   // RLS Fase 3
+      const data = (mr?.ok ? mr.medico : null);
       if (data) { setMedicoDados(prev => ({ ...(prev || {}), ...data })); return data[campo] || ''; }
     } catch (e) {}
     return '';
@@ -1431,7 +1448,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         // aplicada dentro da função).
         const { data: cntResp } = await supabase.rpc('avaliacoes_contagem_medico', credMedico())
         const totalAvals = (cntResp && cntResp.ok) ? cntResp.total : 0
-        const { data: medDados } = await supabase.from('medicos').select('cep, cpf, pix_chave').eq('crm', medicoCRM).maybeSingle()
+        const { data: mrA } = await supabase.rpc('medico_meu', credMedico())   // RLS Fase 3
+        const medDados = (mrA?.ok ? mrA.medico : null)
         if (!medDados?.cep || !medDados?.cpf || !medDados?.pix_chave) {
           // Se o 4DOC ja foi oferecido (e declinado) nesta sessao, nao reabre o modal cheio:
           // no maximo o banner discreto. (Antes, o modal reaparecia logo apos a 1a avaliacao.)
@@ -2033,15 +2051,23 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         const pixLimpo = afiliadoPix.trim();
                         const cepLimpo = afiliadoCEP.trim();
                         setAfiliadoSalvando(true);
-                        const { data: linhas, error } = await supabase.from('medicos').update({
-                          endereco: '', cep: cepLimpo, cpf: cpfLimpo, pix_chave: pixLimpo, usa_telegram: usaTelegram,
-                        }).eq('crm', crmSalvar).select('crm');
-                        // Titular do PIX: colunas podem nao existir ainda (migrate_pix_titular_medico.sql).
-                        // Update SEPARADO e tolerante — nao quebra o cadastro do medico se faltarem.
-                        try { await supabase.from('medicos').update({ pix_titular: afilTitular.trim(), pix_titular_pj: afilPj, pix_cnpj: afilPj ? String(afilCnpj).replace(/\D/g, '') : null }).eq('crm', crmSalvar); } catch (e) {}
+                        // RLS Fase 3: uma escrita só, por RPC gateada pelo token. A RPC
+                        // monta o UPDATE apenas com as colunas que EXISTEM na tabela,
+                        // então o titular do PIX não precisa mais de update separado
+                        // "tolerante" (era essa a razão dos 2 updates). E a ALLOWLIST de
+                        // colunas impede que um patch encoste em is_admin/plataforma/
+                        // validado — os campos que decidem poder e dinheiro.
+                        const { data: upResp, error } = await supabase.rpc('medico_atualizar_meu', {
+                          ...credMedico(),
+                          p_patch: {
+                            endereco: '', cep: cepLimpo, cpf: cpfLimpo, pix_chave: pixLimpo, usa_telegram: usaTelegram,
+                            pix_titular: afilTitular.trim(), pix_titular_pj: afilPj,
+                            pix_cnpj: afilPj ? String(afilCnpj).replace(/\D/g, '') : null,
+                          },
+                        });
                         setAfiliadoSalvando(false);
                         if (error) { alert('Erro ao salvar: ' + (error.message || 'tente novamente.')); return; }
-                        if (!linhas || linhas.length === 0) {
+                        if (!upResp?.ok) {
                           alert('Nao foi possivel gravar seus dados: o cadastro do medico (CRM ' + (crmSalvar || '\u2014') + ') nao foi encontrado no banco. Refaca o login/cadastro do medico e tente de novo.');
                           return;
                         }
@@ -2712,8 +2738,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               // Recarrega medicoDados com os valores FRESCOS do banco (nome, celular, email).
               // Sem isso, os checkboxes "MEU TELEFONE \u00c9 O MEU PIX" e "MEU E-MAIL" ficariam vazios.
               try {
-                const { data: medFresh } = await supabase.from('medicos').select('nome, crm, celular, email').eq('crm', crm).maybeSingle();
-                if (medFresh) setMedicoDados(medFresh);
+                const { data: mr } = await supabase.rpc('medico_meu', credMedico());   // RLS Fase 3
+                if (mr?.ok && mr.medico) setMedicoDados(mr.medico);
               } catch (e) {}
               if (afiliacaoRecusada) {
                 setAfiliacaoRecusada(false);
@@ -2722,11 +2748,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 return;
               }
               try {
-                const { data: md } = await supabase
-                  .from('medicos')
-                  .select('cep, cpf, pix_chave')
-                  .eq('crm', crm)
-                  .maybeSingle();
+                const { data: mr } = await supabase.rpc('medico_meu', credMedico());   // RLS Fase 3
+                const md = (mr?.ok ? mr.medico : null);
                 if (!md?.cep || !md?.cpf || !md?.pix_chave) {
                   setShowAfiliados(true);
                 } else {
