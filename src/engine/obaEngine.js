@@ -401,8 +401,14 @@ function buildModEritron(eritron, dadosOBA, examesOBA, mesesPos, disab, tipoCir,
   // NÃO explica, aí sim vira achado próprio e vai para o cardiologista.
   const queixasEritron = [dadosOBA.queixa_principal, ...(dadosOBA.queixas_secundarias || [])]
   if (queixasEritron.includes('PALPITAÇÕES')) {
-    const ferrPalp = parseFloat(examesOBA?.ferritina_oba)
-    const ferropenia = !isNaN(ferrPalp) && ferrPalp < 25
+    // Ferritina tem 3 fontes possíveis, nesta ordem — a MESMA cadeia usada nos
+    // outros cruzamentos de ferro do arquivo. Ler só `ferritina_oba` estaria
+    // errado na maioria dos casos: a tela de exames ESCONDE esse campo quando o
+    // paciente já trouxe ferritina da triagem, então ele fica vazio justamente
+    // para quem tem o dado. `> 0` é obrigatório: Number(null) é 0 (não NaN), e
+    // sem essa guarda "sem ferritina nenhuma" viraria "ferritina zero" = ferropenia.
+    const ferrPalp = Number(eritron?.inputs?.ferritina ?? examesOBA?.ferritina_novo ?? examesOBA?.ferritina_oba)
+    const ferropenia = Number.isFinite(ferrPalp) && ferrPalp > 0 && ferrPalp < OBA_CUTOFFS.ferritina_oba.min
     const eritronExplica = color === 'orange' || color === 'red' || ferropenia
     if (eritronExplica) {
       linhas.push('PALPITAÇÕES REFERIDAS: NO SEU CASO ELAS TÊM EXPLICAÇÃO HEMATOLÓGICA PROVÁVEL — COM AS RESERVAS DE FERRO BAIXAS OU O ERITRON COMPROMETIDO, O CORAÇÃO ACELERA PARA COMPENSAR O MENOR TRANSPORTE DE OXIGÊNIO. A CORREÇÃO DA ANEMIA/FERROPENIA COSTUMA FAZER O SINTOMA CEDER. SE AS PALPITAÇÕES PERSISTIREM DEPOIS DE CORRIGIDAS AS RESERVAS, AÍ SIM É PRECISO INVESTIGAR O CORAÇÃO.')
