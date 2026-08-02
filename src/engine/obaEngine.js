@@ -2245,6 +2245,24 @@ function buildModComportamental(dados, alertas, suger) {
   // disabsorção, e potencialização com álcool, num paciente que já é população de
   // risco para transferência de adição (tema que este módulo trata logo acima).
   const queixasComp = [dados.queixa_principal, ...(dados.queixas_secundarias || [])]
+
+  // DEPRESSÃO como QUEIXA = MODERADO com alerta próprio, independente da régua do
+  // módulo fibromiálgico (decisão do Dr. Ramos). Motivo: aquele módulo só sobe de
+  // nível com 2+ sintomas — pensado para "constelação fibromiálgica" —, então
+  // depressão isolada saía como NORMAL, pesando MENOS que ansiedade (leve), o que
+  // é invertido clinicamente. Aqui o achado tem peso próprio. O módulo fibromiálgico
+  // continua dando a crítica dele (excluir B12/vit D/tireoide/hipoglicemia antes do
+  // antidepressivo) — é outro ângulo do mesmo sintoma, não substitui este.
+  // A IDEAÇÃO SUICIDA não é tratada aqui: tem módulo próprio na etapa 0, com
+  // prioridade sobre tudo e alerta GRAVE — não pode ser diluída neste bloco.
+  if (queixasComp.includes('DEPRESSÃO')) {
+    temAlgo = true
+    if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+    linhas.push('DEPRESSÃO REFERIDA: MERECE ATENÇÃO E ACOMPANHAMENTO EM SAÚDE MENTAL. NO PÓS-BARIÁTRICO ELA TEM UM PESO EXTRA: É UM DOS PRINCIPAIS MOTIVOS DE ABANDONO DO ACOMPANHAMENTO E DA SUPLEMENTAÇÃO — E ESSE ABANDONO É, POR SUA VEZ, A PRINCIPAL CAUSA DE COMPLICAÇÕES TARDIAS. OU SEJA: CUIDAR DO HUMOR AQUI TAMBÉM É CUIDAR DAS SUAS RESERVAS NUTRICIONAIS. ANTES DE ATRIBUIR TUDO AO EMOCIONAL, AS CARÊNCIAS PRECISAM SER EXCLUÍDAS (VEJA O CARD DOS SINTOMAS FIBROMIÁLGICOS): DEFICIÊNCIA DE B12, VITAMINA D BAIXA, HIPOTIREOIDISMO E HIPOGLICEMIA REATIVA PRODUZEM QUADROS QUE IMITAM DEPRESSÃO.')
+    alertas.push({ codigo: 'comportamental.depressao_referida_como_queixa', nivel: MODERADO, texto: 'DEPRESSÃO referida como queixa — acompanhamento em saúde mental; excluir carências (B12, vitamina D, tireoide, hipoglicemia reativa) e atentar ao risco de abandono da suplementação.' })
+    suger.push('AVALIAÇÃO COM PSIQUIATRA (depressão referida)')
+  }
+
   if (queixasComp.includes('ANSIEDADE')) {
     temAlgo = true
     if (nivelGeral === NORMAL) nivelGeral = LEVE

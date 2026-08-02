@@ -397,8 +397,31 @@ const INTESTINAL_OBSTIPACAO = STATUS_INTESTINAL_OPS[1]   // "OBSTIPAÇÃO CRÔNI
 const INTESTINAL_IRRITAVEL  = STATUS_INTESTINAL_OPS[2]   // "INTESTINO IRRITÁVEL (DIARREIA FREQUENTE)"
 const FIBRO_OBSTIPACAO      = STATUS_FIBROMIALGIA_OPS.find(o => o.indexOf('OBSTIPA') === 0)
 
-// Aplica a propagação da queixa intestinal sobre um estado 'p' do form (dentro de setForm).
+// Mapeamento QUEIXA -> item equivalente do STATUS FIBROMIÁLGICO. Os rótulos são
+// PARECIDOS mas não idênticos ('DEPRESSÃO' na queixa vs 'DEPRESSÃO OU MELANCOLIA'
+// no fibro), e era por isso que essas queixas ficavam órfãs: o motor só lê
+// status_fibromialgia, então quem marcava só na queixa não recebia crítica nenhuma.
+// Propagar (em vez de criar regra nova no motor) reaproveita a crítica clínica que
+// já existe lá — insônia puxa investigação de apneia/magnésio/cafeína, depressão
+// puxa a exclusão de B12, vitamina D, tireoide e hipoglicemia antes do
+// antidepressivo — e evita contar o MESMO achado duas vezes no Estado Geral.
+const QUEIXA_FIBRO_SYNC = {
+  'DEPRESSÃO': 'DEPRESSÃO OU MELANCOLIA',
+  'INSÔNIA':   'INSÔNIA',
+}
+
+// Aplica a propagação da queixa (intestinal e fibromiálgica) sobre um estado 'p'
+// do form (dentro de setForm).
 function aplicarSyncIntestinal(p, queixa) {
+  // ADD-ONLY, como o sync do fibromiálgico -> medicamentos: marcar a queixa marca
+  // o item no fibro, mas DESMARCAR a queixa não o remove (o paciente pode tê-lo
+  // marcado por conta própria lá; o toggle das secundárias já segue essa regra).
+  const itemFibro = QUEIXA_FIBRO_SYNC[queixa]
+  if (itemFibro) {
+    const fibro = new Set(p.status_fibromialgia || [])
+    fibro.add(itemFibro)
+    return { ...p, status_fibromialgia: Array.from(fibro) }
+  }
   if (queixa === QUEIXA_OBSTIPACAO) {
     const fibro = new Set(p.status_fibromialgia || [])
     if (FIBRO_OBSTIPACAO) fibro.add(FIBRO_OBSTIPACAO)
