@@ -636,7 +636,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #6B7280, #4B5563)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, anamneseBaseline = null, numeroCiclo = 1, coletarHemograma = false, modoMedico = false, modoRevisao = false, celularPaciente = '' }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, anamneseBaseline = null, numeroCiclo = 1, coletarHemograma = false, modoMedico = false, modoRevisao = false, celularPaciente = '', semVinculo = false }) {
   // FOLLOW-UP: avaliação de RETORNO de um bariátrico que já fez o baseline.
   // anamneseAnterior = última linha de oba_anamnese. Nesse modo, os campos
   // IMUTÁVEIS (data/tipo/indicação da cirurgia, peso antes, altura) são
@@ -652,7 +652,13 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   //  States: declarados PRIMEIRO, antes de qualquer useEffect que os use
   // BUG #4 e #5 corrigidos: ordem dos hooks. form, exames, dataExames,
   // aberrantesOBA, alertaPeso agora vem antes dos useEffects que os mexem.
-  const [etapa, setEtapa] = useState(salvo?.etapa || ((coletarHemograma && modoMedico) ? 'eritron' : 'anamnese'))
+  // SEM VÍNCULO o médico começa (e termina) no ERITRON, IGNORANDO o rascunho:
+  // um rascunho antigo com etapa='anamnese' restauraria direto na anamnese e
+  // burlaria o limite, gravando o baseline duplicado que este modo existe para
+  // evitar. A trava fica aqui, no ponto único que decide a etapa inicial.
+  const [etapa, setEtapa] = useState(
+    (semVinculo && modoMedico) ? 'eritron' : (salvo?.etapa || ((coletarHemograma && modoMedico) ? 'eritron' : 'anamnese'))
+  )
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const [anamneseSalva, setAnamneseSalva] = useState(null)
@@ -2950,12 +2956,28 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <p style={{ color:'#fff', fontSize:'1.05rem', fontWeight:900, margin:'0.2rem 0 0', lineHeight:1.2 }}>{eritronPopup.label || 'Eritrograma'}</p>
             </div>
             <div style={{ padding:'1.2rem' }}>
+              {/* SEM VÍNCULO: o médico faz o eritron, mas NÃO segue para a
+                  anamnese. Sem o histórico (que fica protegido até haver
+                  vínculo), a anamnese começaria do zero e gravaria um BASELINE
+                  NOVO num paciente que já tem ciclos — essa linha viraria a mais
+                  recente e o PRÓPRIO PACIENTE passaria a ver um relatório
+                  incompleto. Encerrar aqui grava o crédito de avaliação, que é
+                  uma das 6 fontes de vínculo: na próxima entrada o OBA abre
+                  completo, com o histórico. */}
               <p style={{ fontSize:'0.85rem', color:'#374151', lineHeight:1.5, margin:'0 0 1rem' }}>
-                {"Esse é o resultado da leitura do eritron. Você pode CONTINUAR a avaliação (anamnese + exames) agora, ou ENCERRAR e deixar o paciente completar a anamnese depois."}
+                {semVinculo
+                  ? "Esse é o resultado da leitura do eritron. Como este paciente ainda não estava vinculado a você, o histórico dele não é exibido nesta primeira avaliação. Ao ENCERRAR, o vínculo é registrado — reabra AVALIAR com o mesmo CPF e a avaliação OBA completa, com todo o histórico, ficará disponível."
+                  : "Esse é o resultado da leitura do eritron. Você pode CONTINUAR a avaliação (anamnese + exames) agora, ou ENCERRAR e deixar o paciente completar a anamnese depois."}
               </p>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.6rem' }}>
-                <button onClick={() => { setShowEritronPopup(false); setEtapa('anamnese') }} style={{ background:'#6B7280', color:'#facc15', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.9rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>{"CONTINUAR A AVALIAÇÃO"}</button>
-                <button onClick={encerrarAvaliacao} style={{ background:'#fff', color:'#6B7280', border:'1.5px solid #D1D5DB', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>{"ENCERRAR (paciente completa depois)"}</button>
+                {!semVinculo && (
+                  <button onClick={() => { setShowEritronPopup(false); setEtapa('anamnese') }} style={{ background:'#6B7280', color:'#facc15', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.9rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>{"CONTINUAR A AVALIAÇÃO"}</button>
+                )}
+                <button onClick={encerrarAvaliacao} style={semVinculo
+                  ? { background:'#6B7280', color:'#facc15', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.9rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit' }
+                  : { background:'#fff', color:'#6B7280', border:'1.5px solid #D1D5DB', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                  {semVinculo ? "ENCERRAR E VINCULAR" : "ENCERRAR (paciente completa depois)"}
+                </button>
               </div>
             </div>
           </div>
