@@ -47,10 +47,15 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
     try {
       const { data } = await supabase.rpc('medico_encaminhar_cpf', { p_crm: crm, p_token: token, p_cpf: d })
       if (data && data.ok) {
-        setCpfEncMsg({ ok: true, txt: data.ja_cadastrado
-          ? 'Esse paciente já faz parte do Projeto. O encaminhamento foi registrado mesmo assim.'
-          : 'Encaminhamento registrado por 3 meses! Se esse paciente se cadastrar e pagar nesse prazo, o crédito é seu. Registrar de novo renova o prazo.' })
+        setCpfEncMsg({ ok: true, txt: 'Encaminhamento registrado por 3 meses! Se esse paciente se cadastrar e pagar nesse prazo, o crédito é seu. Registrar de novo renova o prazo.' })
         setCpfEnc('')
+      } else if (data && data.ja_cadastrado) {
+        // Recusa COM CAMINHO: encaminhamento é para trazer gente nova. Antes
+        // gravava "mesmo assim" — e era por aí que se sobrescrevia o
+        // encaminhador anterior (roubando a comissão, que é por último toque) e,
+        // depois da régua de vínculo, se destravava o prontuário alheio com um
+        // clique. Ver migrate_encaminhar_so_nao_cadastrado.sql.
+        setCpfEncMsg({ ok: false, txt: 'Esse paciente já faz parte do Projeto — o encaminhamento é para trazer pacientes novos. Para atendê-lo, use AVALIAR com o CPF dele.' })
       } else {
         setCpfEncMsg({ ok: false, txt: (data && data.erro) || 'Não foi possível registrar.' })
       }
