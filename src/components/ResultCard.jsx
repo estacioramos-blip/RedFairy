@@ -741,6 +741,9 @@ function DocumentoMedicoPanel({ resultado }) {
   const [dadosPaciente, setDadosPaciente] = useState({ nome: '', dataNasc: '', celular: '', cpf: '' });
   const [tiposDoc, setTiposDoc] = useState({ exames: false, prescricao: false });
   const [enviando, setEnviando] = useState(false);
+  // id da linha criada no insert — marcar o pagamento por ele, e não pelo
+  // celular, que pode ser compartilhado entre dois pacientes.
+  const [pedidoId, setPedidoId] = useState(null);
   const [erro, setErro] = useState('');
 
   const temExames = resultado.proximosExames && resultado.proximosExames.length > 0;
@@ -883,19 +886,35 @@ function DocumentoMedicoPanel({ resultado }) {
     const textoCompleto = msgs.join('\n---\n');
 
     try {
-      await supabase.from('pedidos_documento').insert({
-        cpf: dadosPaciente.cpf || null,
-        nome: dadosPaciente.nome.trim(),
-        data_nascimento: dadosPaciente.dataNasc,
-        celular: dadosPaciente.celular,
-        // Antes: map por índice assumindo "0 = exames, resto = prescricao" — com
-        // vários pedidos de exame isso rotulava errado. Agora vem do array paralelo.
-        tipos_documento: tipos,
-        texto_documentos: textoCompleto,
-        valor_total: total,
-        status: 'aguardando_pagamento',
-        created_at: new Date().toISOString(),
+      // RPC gateada por token — a tabela deixou de aceitar escrita direta.
+      // Ver migrate_pedidos_documento_rpcs.sql. `created_at` sai do payload: o
+      // banco carimba com now(), sem depender do relógio do aparelho.
+      const { data: resp, error } = await supabase.rpc('pedido_documento_inserir', {
+        p_dados: {
+          cpf: dadosPaciente.cpf || null,
+          nome: dadosPaciente.nome.trim(),
+          data_nascimento: dadosPaciente.dataNasc,
+          celular: dadosPaciente.celular,
+          // Antes: map por índice assumindo "0 = exames, resto = prescricao" — com
+          // vários pedidos de exame isso rotulava errado. Agora vem do array paralelo.
+          tipos_documento: tipos,
+          texto_documentos: textoCompleto,
+          valor_total: total,
+          status: 'aguardando_pagamento',
+        },
+        ...credAmbas(),
       });
+      // supabase-js NÃO lança exceção quando o banco recusa: resolve com `error`
+      // preenchido, ou com {ok:false} vindo da RPC. O try/catch sozinho só pegava
+      // falha de rede — token vencido e erro de SQL passavam como sucesso e o
+      // pedido sumia sem deixar rastro. Guardamos o id para marcar o pagamento
+      // pela linha certa depois.
+      if (error || resp?.ok === false) {
+        console.error('Erro ao salvar pedido_documento:', error || resp?.erro);
+        alert('Nao foi possivel registrar o pedido. Envie a mensagem pelo WhatsApp e avise o administrador.');
+      } else if (resp?.id) {
+        setPedidoId(resp.id);
+      }
     } catch (e) {
       console.error('Erro ao salvar pedido_documento:', e);
     }
@@ -913,11 +932,21 @@ function DocumentoMedicoPanel({ resultado }) {
     window.open(urlPago, '_blank');
 
     try {
-      await supabase.from('pedidos_documento')
-        .update({ status: 'pago', pago_em: new Date().toISOString() })
-        .eq('celular', dadosPaciente.celular)
-        .order('created_at', { ascending: false })
-        .limit(1);
+      // Era um UPDATE direto, e a policy de UPDATE tinha regra `true` para o
+      // público: QUALQUER pessoa com a chave anon marcava QUALQUER pedido como
+      // pago (corrompendo a lista que o Caixa usa para conciliar) e reescrevia o
+      // `texto_documentos` — o conteúdo do pedido médico. Agora é RPC gateada.
+      // `p_id` vem do insert: por celular, dois pacientes que dividem o mesmo
+      // aparelho (família, cuidador) marcavam o pedido um do outro.
+      const { data: resp, error } = await supabase.rpc('pedido_documento_marcar_pago', {
+        p_id: pedidoId,
+        p_celular: dadosPaciente.celular,
+        p_cpf: String(dadosPaciente.cpf || '').replace(/\D/g, ''),
+        ...credAmbas(),
+      });
+      if (error || resp?.ok === false) {
+        console.error('Erro ao atualizar pedido_documento:', error || resp?.erro);
+      }
     } catch (e) {
       console.error('Erro ao atualizar pedido_documento:', e);
     }

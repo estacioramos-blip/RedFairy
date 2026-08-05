@@ -385,12 +385,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     } : {}
     // Pedido grátis já usado? (primeiro pedido = valor_total 0). Se sim, o card
     // opt-in de exames sugeridos na tela de resultado não aparece.
-    const { count: pedidosGratisCount } = await supabase
-      .from('pedidos_documento')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', prof.id)
-      .eq('valor_total', 0)
-    setJaTemPedidoGratis((pedidosGratisCount || 0) > 0)
+    // Esta contagem estava CEGA: a policy de SELECT exigia o papel
+    // `authenticated`, que o paciente NUNCA é (pseudo-sessão por token, roda
+    // como `anon`). O RLS filtrava tudo e o count voltava ZERO — sempre, sem
+    // erro. Resultado: o pedido gratuito podia ser repetido indefinidamente, é
+    // só recarregar. Agora conta por dentro da RPC, onde o RLS não cega.
+    const { data: gratisResp, error: gratisErr } = await supabase.rpc('pedido_gratis_usado', {
+      p_cpf: String(prof.cpf || '').replace(/\D/g, ''), ...credPaciente(),
+    })
+    // Se a RPC recusar (token vencido), `usado` vem undefined e a trava abriria
+    // de novo — o mesmo bug, com outra causa. Na dúvida, mantém o que já estava.
+    if (gratisErr || gratisResp?.ok === false) {
+      console.error('pedido_gratis_usado:', gratisErr || gratisResp?.erro)
+    } else {
+      setJaTemPedidoGratis(!!gratisResp?.usado)
+    }
     // Persistência da flag bariátrica: "uma vez bariátrico, sempre bariátrico".
     // O status era gravado só na linha de avaliacoes, nunca de volta no perfil —
     // por isso, ao relogar, a nova avaliação vinha SEM o bariátrico marcado e o
@@ -886,17 +895,30 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     const exames = resultado.proximosExames || []
     if (!exames.length) return
     try {
-      await supabase.from('pedidos_documento').insert({
-        user_id: profile.id,
-        cpf: profile.cpf,
-        nome: profile.nome,
-        data_nascimento: profile.data_nascimento,
-        celular: profile.celular,
-        tipos_documento: exames,
-        texto_documentos: 'Pedido gratuito - exames sugeridos (1a avaliacao)',
-        valor_total: 0,
-        status: 'pendente_envio',
+      // RPC gateada por token: a tabela deixou de aceitar escrita direta (havia
+      // policy `true` para o público — qualquer um inseria e reescrevia pedido
+      // alheio). Ver migrate_pedidos_documento_rpcs.sql.
+      const { data: resp, error } = await supabase.rpc('pedido_documento_inserir', {
+        p_dados: {
+          user_id: profile.id,
+          cpf: profile.cpf,
+          nome: profile.nome,
+          data_nascimento: profile.data_nascimento,
+          celular: profile.celular,
+          tipos_documento: exames,
+          texto_documentos: 'Pedido gratuito - exames sugeridos (1a avaliacao)',
+          valor_total: 0,
+        },
+        ...credPaciente(),
       })
+      // supabase-js não lança exceção quando o banco recusa — resolve com
+      // `error`, ou com {ok:false} da própria RPC. Sem checar, o paciente veria
+      // o WhatsApp abrir normalmente e o pedido nunca teria sido registrado.
+      if (error || resp?.ok === false) {
+        console.error('pedido_documento_inserir:', error || resp?.erro)
+        alert('Nao foi possivel registrar o pedido. Tente novamente ou fale com o administrador.')
+        return
+      }
       const dataNasc = profile.data_nascimento
         ? new Date(profile.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR')
         : '(nao informado)'
