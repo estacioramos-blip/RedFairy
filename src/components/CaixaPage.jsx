@@ -258,7 +258,15 @@ function AbaAPagar({ rpc, toast }) {
     if (!window.confirm(`Confirma a baixa de TODOS os créditos pendentes do indicador ${codigo}?\n(Faça o PIX no banco ANTES de marcar pago.)`)) return
     try {
       const d = await rpc('caixa_pagar_indicador', { p_codigo: codigo })
-      if (d?.ok) { toast(true, `Pago: ${d.n} crédito(s) = ${fmtBRL(d.total_brl)} (cotação ${d.cotacao}).`); carregar() }
+      // `total_brl` MUDOU de significado: era `n × unitário`, agora é o saldo
+      // LÍQUIDO (já descontado o que saiu por encontro de contas). Sem dizer
+      // isso, "2 crédito(s) = R$ 0,00" parece erro de sistema para quem opera.
+      if (d?.ok) {
+        const abat = Number(d.abatido_brl) || 0
+        toast(true, `Pago: ${d.n} crédito(s) = ${fmtBRL(d.total_brl)} (cotação ${d.cotacao}).`
+          + (abat > 0 ? ` ${fmtBRL(abat)} já haviam sido entregues por encontro de contas.` : ''))
+        carregar()
+      }
       else toast(false, d?.erro || 'Falha na baixa.')
     } catch (e) { toast(false, e.message) }
   }
@@ -468,7 +476,11 @@ function AbaExtratos({ rpc, toast }) {
         p_papel: papel, p_chave: chave.trim(), p_data_pagamento: lote.data_pagamento, p_motivo: motivo,
       })
       if (!d || d.ok === false) { toast(false, d?.erro || 'Não foi possível estornar.'); setEstornando(''); return }
-      toast(true, `Estornado: ${d.n_linhas} lançamento(s) · ${fmtBRL(d.total_brl)}`)
+      // O estorno de indicador também reabre os abatimentos que tinham sido
+      // liquidados naquele lote (senão o saldo voltaria inflado). Dizer isso ao
+      // tesoureiro, porque muda o saldo que ele vai ver na tela seguinte.
+      toast(true, `Estornado: ${d.n_linhas} lançamento(s) · ${fmtBRL(d.total_brl)}`
+        + (Number(d.abatimentos_reabertos) > 0 ? ` · ${d.abatimentos_reabertos} abatimento(s) reaberto(s).` : ''))
       await gerar()          // recarrega extrato + lotes
       setEstornando('')      // só libera o botão DEPOIS da lista recarregar
     } catch (e) { toast(false, e.message); setEstornando('') }

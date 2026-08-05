@@ -1748,7 +1748,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             if (!eraRevisao) {
               try {
                 const tok = localStorage.getItem('medico_token') || ''
-                await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: pacienteAvaliar.cpf, p_opiniao: '', p_sugestao: '' })
+                const { data: avResp, error: avErr } = await supabase.rpc('medico_avaliar_paciente', { p_crm: medicoCRM, p_token: tok, p_cpf: pacienteAvaliar.cpf, p_opiniao: '', p_sugestao: '' })
+                // A RPC passou a RECUSAR CPF que não existe no sistema ou que não
+                // passa no dígito verificador (migrate_avaliar_paciente_real.sql).
+                // Sem checar, o médico faria a avaliação inteira e ficaria SEM o
+                // crédito, sem nunca saber por quê — supabase-js não lança exceção
+                // quando o banco recusa, então o catch não via nada.
+                if (avErr || avResp?.ok === false) {
+                  console.error('medico_avaliar_paciente:', avErr || avResp?.erro)
+                  try { window.alert(avResp?.erro || 'Nao foi possivel registrar o credito desta avaliacao. Avise o administrador.') } catch (e2) {}
+                }
               } catch (e) {}
             }
             try { sessionStorage.removeItem('rf_med_oba_cpf'); sessionStorage.removeItem('rf_med_oba_rev') } catch (e) {}

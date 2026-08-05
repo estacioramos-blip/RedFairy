@@ -109,11 +109,18 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
       try {
         // A3 (auditoria jul/2026): aplicar_abatimento agora exige o token do paciente
         // (antes o GRANT anon deixava qualquer um queimar créditos de qualquer CPF).
-        await supabase.rpc('aplicar_abatimento', {
+        const { data: abResp, error: abErr } = await supabase.rpc('aplicar_abatimento', {
           p_cpf: String(profile?.cpf || '').replace(/\D/g, ''),
           p_anuidade_brl: valor,
           p_token: localStorage.getItem('paciente_token') || '',
         })
+        // O desconto já foi dado (o PIX saiu pelo valor líquido e a assinatura foi
+        // registrada). Se a queima falha em silêncio, os créditos ficam de pé e
+        // podem ser gastos DE NOVO — o desconto sai de graça. supabase-js não
+        // lança exceção nesse caso, então o catch sozinho não via nada.
+        if (abErr || abResp?.ok === false) {
+          console.error('aplicar_abatimento:', abErr || abResp?.erro)
+        }
       } catch (e) {}
     }
     setSalvando(false)
