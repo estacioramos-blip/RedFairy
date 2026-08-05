@@ -320,7 +320,26 @@ function AbaAssinaturas({ rpc, toast }) {
     if (!window.confirm(txt)) return
     try {
       const d = await rpc('caixa_bloquear_assinatura', { p_id: a.id, p_bloquear: bloquear })
-      if (d?.ok) { toast(true, bloquear ? 'Assinatura bloqueada.' : 'Assinatura reativada.'); carregar() }
+      if (d?.ok) {
+        // Bloquear/reativar agora move DINHEIRO junto: a comissão de conversão
+        // nasce do "JÁ PAGUEI" e passa a ser derivada do status da assinatura
+        // (migrate_credito_lastreado.sql). O tesoureiro precisa saber o efeito —
+        // sobretudo o caso que o sistema NÃO desfaz sozinho: crédito daquela
+        // assinatura que JÁ FOI PAGO. Esse é estorno, decisão humana.
+        const n = d.creditos_afetados || 0
+        const jaPagos = d.creditos_ja_pagos || 0
+        let msg = bloquear ? 'Assinatura bloqueada.' : 'Assinatura reativada.'
+        if (n > 0) msg += bloquear
+          ? ` ${n} comissão(ões) saíram da fila de pagamento.`
+          : ` ${n} comissão(ões) voltaram para a fila.`
+        toast(true, msg)
+        if (bloquear && jaPagos > 0) {
+          window.alert(`Atenção: ${jaPagos} comissão(ões) desta assinatura JÁ FORAM PAGAS.\n\n`
+            + 'O bloqueio não desfaz pagamento já feito. Se o PIX do paciente realmente não entrou, '
+            + 'use ESTORNO para reverter essas comissões.')
+        }
+        carregar()
+      }
       else toast(false, d?.erro || 'Falha.')
     } catch (e) { toast(false, e.message) }
   }
