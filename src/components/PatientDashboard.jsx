@@ -112,6 +112,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [eritronAnterior, setEritronAnterior] = useState(null)    // avaliação eritron anterior → comparação no resultado
   // Vencimento da anuidade (assinaturas.data_fim da assinatura ativa) p/ alerta 15/5 dias.
   const [vencimentoAnuidade, setVencimentoAnuidade] = useState(null)
+  // Assinatura existe mas a data passou. Diferente de "nunca assinou": muda o
+  // texto do paywall de "assine" para "renove".
+  const [anuidadeVencida, setAnuidadeVencida] = useState(false)
   const [alertaAnuidadeFechado, setAlertaAnuidadeFechado] = useState(false)
   const [alertaHpyloriFechado, setAlertaHpyloriFechado] = useState(false)  // lembrete de repetir h.pylori (6 meses)
   const [showSaibaMais, setShowSaibaMais] = useState(false)
@@ -321,9 +324,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         p_cpf: String(prof.cpf || '').replace(/\D/g, ''), ...credPaciente(),
       })
       const assinAtiva = (assResp?.ok ? assResp.assinatura : null)
+      // O vencimento vem da linha mesmo quando ela JÁ VENCEU — é o que alimenta
+      // o alerta "Sua anuidade venceu há N dias". Zerar aqui apagaria o aviso
+      // exatamente quando ele passa a importar.
       setVencimentoAnuidade(assinAtiva?.data_fim || null)
-      temAssinAtiva = !!assinAtiva
+      // Antes: `!!assinAtiva` — bastava a linha EXISTIR com status 'ativa'.
+      // Como nada nunca muda esse status quando a data passa (não há job nem
+      // trigger de expiração), uma anuidade vencida há um ano seguia liberando
+      // tudo. Agora quem decide é `valida`, que é status ativa E dentro do prazo.
+      temAssinAtiva = !!assinAtiva?.valida
       setTemAssinatura(temAssinAtiva)
+      setAnuidadeVencida(!!assinAtiva?.vencida)
     } catch (e) { /* sem assinatura → modo grátis */ }
     // Perfil incompleto (paciente recem-cadastrado): pede dados pessoais antes de tudo
     if (prof && (!prof.nome || String(prof.nome).trim().length < 3)) {
@@ -1337,7 +1348,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
 
       <div className="max-w-3xl mx-auto px-4 py-6">
         {/* (paciente vira indicador) card de indicar outros bariatricos e ganhar creditos. */}
-        {temAssinatura && tela === 'historico' && !showBoasVindas && !entradaPendente && (
+        {/* Vencido também vê: este card mostra os créditos que "abatem da sua
+            anuidade" — é justamente quem precisa renovar que mais precisa saber
+            que tem saldo para isso. Escondê-lo do vencido seria esconder o
+            desconto da renovação. */}
+        {(temAssinatura || anuidadeVencida) && tela === 'historico' && !showBoasVindas && !entradaPendente && (
           <div className="mb-5 bg-gradient-to-br from-red-50 to-white border-2 border-red-200 rounded-2xl p-4 flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-bold text-red-800">{"💸 Indique e ganhe créditos"}</p>
@@ -1384,11 +1399,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             {"Nova Avalia\u00e7\u00e3o"}
           </button>
           </div>
-          {/* Modo gr\u00e1tis (sem assinatura): oferece assinar a qualquer momento. */}
+          {/* Modo gr\u00e1tis (sem assinatura): oferece assinar a qualquer momento.
+              Quem VENCEU v\u00ea "renovar" \u2014 ele j\u00e1 pagou uma vez, chamar de "assinar"
+              soa como se o pagamento anterior tivesse sumido. */}
           {!temAssinatura && tela === 'historico' && (
             <button onClick={() => setShowPagamento(true)}
               className="mt-3 text-xs text-blue-700 underline underline-offset-2 hover:text-blue-900">
-              {"Quero acesso completo (assinar a anuidade)"}
+              {anuidadeVencida
+                ? "Minha anuidade venceu \u2014 quero renovar"
+                : "Quero acesso completo (assinar a anuidade)"}
             </button>
           )}
         </div>
@@ -1998,9 +2017,18 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     {showPagamento && profile && (
       <PagamentoCadastroModal
         profile={profile}
+        renovacao={anuidadeVencida}
         onPago={() => {
           setShowPagamento(false)
           setTemAssinatura(true)
+          setAnuidadeVencida(false)
+          // `vencimentoAnuidade` é o que alimenta o banner "Sua anuidade venceu
+          // há N dias", e só era recalculado em `carregarDados`. Sem isto, quem
+          // acabou de renovar continuava vendo o aviso de vencido até recarregar
+          // a página — logo quem resolveu o problema, o que faz parecer que o
+          // pagamento não colou. Relê do banco em vez de recalcular aqui, para
+          // não duplicar a regra dos 365 dias que é do servidor.
+          carregarDados()
           // Cadastro novo (ainda não viu boas-vindas): boas-vindas (com instalar o ÍCONE) →
           // CONTINUAR leva ao OBA (bariátrico) ou à 'nova' (não-bariátrico).
           if (!profile?.boas_vindas_vista) { setShowBoasVindas(true); return }

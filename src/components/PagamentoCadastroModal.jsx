@@ -37,7 +37,7 @@ const SERVICOS = [
   { chave: 'valor_solicitacao_medica', label: 'SOLICITAÇÃO DE OUTROS EXAMES' },
 ]
 
-export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar }) {
+export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar, renovacao = false }) {
   const [copiado, setCopiado] = useState(false)
   const [confirmandoSaida, setConfirmandoSaida] = useState(false)
   const [salvando, setSalvando] = useState(false)
@@ -185,7 +185,15 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
 
         {/* T\u00edtulo vinho do modal */}
         <div className="text-center mb-3">
-          <h2 className="text-xl font-bold text-red-700">{"Ativar seu cadastro"}</h2>
+          {/* Quem j\u00e1 pagou e venceu n\u00e3o est\u00e1 "ativando cadastro" \u2014 est\u00e1
+              renovando. Chamar de ativa\u00e7\u00e3o faz parecer que o pagamento anterior
+              se perdeu. */}
+          <h2 className="text-xl font-bold text-red-700">{renovacao ? "Renovar sua anuidade" : "Ativar seu cadastro"}</h2>
+          {renovacao && (
+            <p className="text-xs text-gray-600 mt-1 leading-snug">
+              {"Sua anuidade venceu. Renove para voltar a ter acesso completo ao seu hist\u00f3rico."}
+            </p>
+          )}
         </div>
 
         {/* Valor destaque */}
