@@ -1756,9 +1756,22 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           // Mesma data já tem linha (ex.: completou Ferritina/Sat do MESMO hemograma,
           // ou o espelho da triagem)? ATUALIZA em vez de duplicar.
           // RLS Fase 2: upsert por cpf+data_coleta feito dentro da RPC.
-          await supabase.rpc('avaliacoes_salvar', {
+          const { data: avSalvo } = await supabase.rpc('avaliacoes_salvar', {
             p_dados: linha, p_modo: 'upsert', p_chave: 'cpf', ...credAmbas(),
           })
+          // O paywall agora vive no SERVIDOR (migrate_paywall_servidor.sql), e
+          // esta chamada ignorava o retorno: a recusa viraria perda silenciosa —
+          // relatório na tela, nenhuma avaliação gravada, e ninguém sabendo.
+          // Avisar é o mínimo; o certo é o pagamento aparecer ANTES da anamnese,
+          // não depois (ver nota no commit).
+          if (avSalvo && avSalvo.ok === false) {
+            console.error('OBA: avaliação não gravada —', avSalvo.erro)
+            if (avSalvo.motivo === 'paywall') {
+              try {
+                window.alert('Seu relatório está pronto, mas esta avaliação não foi salva no seu histórico: a avaliação gratuita deste CPF já foi usada. Ative a anuidade para guardar o histórico.')
+              } catch (e2) {}
+            }
+          }
         } catch (e) { /* não bloqueia o relatório */ }
       }
     }

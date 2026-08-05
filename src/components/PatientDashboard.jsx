@@ -826,6 +826,15 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       })
       if (salvResp && salvResp.ok === false) {
         console.error('Avaliação: falha ao salvar —', salvResp.erro)
+        // O paywall passou a existir no SERVIDOR também
+        // (migrate_paywall_servidor.sql). Se o porteiro do cliente foi
+        // contornado — ou ficou dessincronizado —, quem recusa é o banco: abre
+        // o pagamento em vez de deixar o paciente achando que salvou.
+        if (salvResp.motivo === 'paywall') {
+          setShowPagamento(true)
+          setTela('historico')
+          return
+        }
       }
       // 1ª avaliação concluída: marca no perfil. Isso quebra o loop do
       // "Continuando a sua primeira avaliação". (A contagem que rege o paywall da 2ª
@@ -1944,6 +1953,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
                     // ENTRAR (re-entrada pelo ÍCONE) = nova avaliação DENTRO do OBA: o hemograma
                     // é digitado na etapa de exames do OBA (sem a página 'nova' intermediária).
                     setShowEscolhaEntrarIndicar(false); setResultado(null)
+                    // Paywall ANTES da anamnese. Por este caminho a avaliação só é
+                    // gravada no FIM (OBAModal), então sem esta guarda o paciente
+                    // preencheria a anamnese inteira — que é longa — para só então
+                    // o servidor recusar e o trabalho se perder. Mesma régua do
+                    // porteiro do formulário 'nova'; o baseline (1ª) segue livre,
+                    // porque `bloqueiaNovaAvaliacao` só fecha da 2ª em diante.
+                    if (bloqueiaNovaAvaliacao) {
+                      setTela('historico')
+                      setShowPagamento(true)
+                      return
+                    }
                     const cpfL = String(profile?.cpf || '').replace(/\D/g, '')
                     try { localStorage.removeItem('oba_progresso_' + cpfL) } catch (e) {}  // começa do zero
                     setObaColetarHemograma(true)
