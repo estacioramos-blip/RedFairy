@@ -41,6 +41,43 @@ function diasEntreDatas(dataReferencia, dataAtual) {
 }
 
 // -----------------------------------------------------------------------------
+// CICLOS EFETIVOS — de linhas cruas para "um item por avaliação de verdade".
+//
+// Nem toda linha de `oba_anamnese` é um ciclo. A REVISÃO MÉDICA insere linha
+// nova de propósito (para preservar o retrato original do paciente em
+// `relatorio_oba._paciente_original`), e ela não é uma avaliação a mais — é a
+// versão CORRIGIDA da avaliação anterior. Daí a regra: revisão SUBSTITUI o
+// último ciclo acumulado, não empilha.
+//
+// Isso conserta três coisas de uma vez, que antes divergiam:
+//   · o número da avaliação (contava revisão como ciclo — "2ª" virava "3ª");
+//   · o BASELINE, que era `linhas[0]` cru: se o médico revisasse um paciente
+//     que só tem o baseline (caso comum — o paciente marca dúvidas já na 1ª
+//     anamnese), toda comparação "vs baseline" seguia usando exatamente o dado
+//     que o médico tinha acabado de corrigir, produzindo deltas falsos de
+//     peso/IMC/exames;
+//   · o ciclo ANTERIOR, que já vinha certo por acidente (a revisão é a última
+//     linha), e agora vem certo por construção.
+//
+// A regra vale porque a revisão sempre mira a ÚLTIMA linha do CPF
+// (`carregarPacienteAvaliar`, no Calculator) — as linhas ficam na ordem
+// [ciclo, rev?, rev?, ciclo, rev?, ...]. Revisão órfã (sem ciclo antes) é
+// ignorada em vez de virar ciclo fantasma.
+// -----------------------------------------------------------------------------
+export function ciclosEfetivos(linhas) {
+  const out = []
+  for (const r of (linhas || [])) {
+    if (!r) continue
+    if (r.revisao_medica) {
+      if (out.length) out[out.length - 1] = r
+    } else {
+      out.push(r)
+    }
+  }
+  return out
+}
+
+// -----------------------------------------------------------------------------
 // Normaliza uma linha crua de `oba_anamnese` num "ciclo" canônico — isola o
 // motor do formato de banco. `relatorio_oba` = { ...retorno do avaliarOBA,
 // form_snapshot: form, ... } (ver OBAModal.jsx salvarAnamnese/gerarRelatorio).

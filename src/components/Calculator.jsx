@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase';
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine';
 import { avaliarOBA } from '../engine/obaEngine';
 import { checarValor } from '../engine/limitesInput';
-import { credMedico } from '../lib/cred';
+import { ciclosEfetivos } from '../engine/obaComparador';
+import { credMedico, credAdministrador } from '../lib/cred';
 import OBAModal from './OBAModal';
 import TriagemModal from './TriagemModal';
 import TriagemResultadoModal from './TriagemResultadoModal';
@@ -670,6 +671,7 @@ function AdminConfigModal({ onFechar }) {
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState('');
+  const [erro, setErro] = useState('');
 
   useEffect(() => {
     async function carregar() {
@@ -684,11 +686,34 @@ function AdminConfigModal({ onFechar }) {
     carregar();
   }, []);
 
+  // Este atalho (5 cliques no logo) gravava DIRETO na tabela `config` com
+  // `.upsert()`. S\u00f3 que `config` tem RLS ligado e a \u00daNICA policy \u00e9 de leitura \u2014
+  // ent\u00e3o a escrita era barrada pelo banco, o supabase-js n\u00e3o lan\u00e7a exce\u00e7\u00e3o
+  // nesse caso, e a tela dizia "Salvo!" mesmo assim. O modal nunca salvou nada:
+  // mentia desde sempre, e quem mexesse num pre\u00e7o aqui sairia achando que tinha
+  // mudado. Agora vai pela mesma RPC do Admin (`salvar_config`, gateada por
+  // token de administrador) e mostra o que de fato aconteceu.
   async function salvar() {
     setSalvando(true);
-    await supabase.from('config').upsert({ chave: 'valor_solicitacao_medica', valor, descricao: "Valor R$ solicita\u00e7\u00e3o m\u00e9dica" }, { onConflict: 'chave' });
-    await supabase.from('config').upsert({ chave: 'valor_documento_medico', valor: valorDoc, descricao: "Valor R$ documento m\u00e9dico" }, { onConflict: 'chave' });
-    await supabase.from('config').upsert({ chave: 'pix_chave', valor: pixChave, descricao: 'Chave Pix' }, { onConflict: 'chave' });
+    setErro('');
+    const itens = [
+      ['valor_solicitacao_medica', valor,     "Valor R$ solicita\u00e7\u00e3o m\u00e9dica"],
+      ['valor_documento_medico',   valorDoc,  "Valor R$ documento m\u00e9dico"],
+      ['pix_chave',                pixChave,  'Chave Pix'],
+    ];
+    for (const [chave, val, desc] of itens) {
+      const { data, error } = await supabase.rpc('salvar_config', {
+        p_chave: chave, p_valor: String(val ?? ''), p_descricao: desc, ...credAdministrador(),
+      });
+      if (error || data?.ok === false) {
+        setSalvando(false);
+        // A causa quase certa \u00e9 n\u00e3o ser administrador \u2014 este atalho fica no
+        // Calculator, que qualquer visitante alcan\u00e7a pelo "Modo M\u00e9dico sem
+        // cadastro". Dizer isso evita a ca\u00e7a ao erro errado.
+        setErro(data?.erro || 'Nao foi possivel salvar. Este atalho exige sessao de administrador.');
+        return;
+      }
+    }
     setSalvando(false);
     setSucesso('Salvo!');
     setTimeout(() => { setSucesso(''); onFechar(); }, 1500);
@@ -721,6 +746,7 @@ function AdminConfigModal({ onFechar }) {
               <input type="text" value={pixChave} onChange={e => setPixChave(e.target.value)} placeholder={"E-mail, CPF ou c\u00f3digo"} className={inp} />
             </div>
             {sucesso && <p className="text-green-600 text-sm text-center font-bold">{"\u2705 "}{sucesso}</p>}
+            {erro && <p className="text-red-600 text-xs text-center font-bold leading-snug">{"\u26a0 "}{erro}</p>}
             <button onClick={salvar} disabled={salvando} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl transition-colors disabled:opacity-50 text-sm">
               {salvando ? 'Salvando...' : 'Salvar'}
             </button>
@@ -888,9 +914,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           semVinculoOba = true
         }
         const obaRows = (obaResp && obaResp.ok) ? obaResp.linhas : []
-        anamBaseline = (obaRows && obaRows.length) ? obaRows[0] : null
-        anam = (obaRows && obaRows.length) ? obaRows[obaRows.length - 1] : null
-        numeroCiclo = (obaRows?.length || 0) + 1
+        // Ver `ciclosEfetivos` (obaComparador.js): a revisão médica insere linha
+        // nova de propósito e SUBSTITUI o ciclo que corrigiu, em vez de somar.
+        const ciclos = ciclosEfetivos(obaRows)
+        anamBaseline = ciclos.length ? ciclos[0] : null
+        anam = ciclos.length ? ciclos[ciclos.length - 1] : null
+        numeroCiclo = ciclos.length + 1
       } catch (e) { console.error('Falha ao carregar histórico OBA:', e) }
 
       // SEM VÍNCULO: NÃO bloqueia. A régua do Dr. Ramos é que o médico consegue

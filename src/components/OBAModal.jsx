@@ -1491,6 +1491,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
 
     const dadosAnamnese = {
       cpf: cpf || null, sexo,
+      // A revisão médica INSERE linha nova de propósito (preserva a original do
+      // paciente), e o nº da avaliação é "nº de linhas + 1" — então cada revisão
+      // empurrava o contador para cima: o paciente revisado uma vez via a 2ª
+      // avaliação virar "3ª". Marcar na COLUNA, e não só dentro de
+      // `relatorio_oba._revisado_por_medico`, porque aquele marcador só é escrito
+      // quando o relatório é gerado: revisão abandonada antes disso deixava a
+      // linha sem marca nenhuma e o contador inflava do mesmo jeito.
+      revisao_medica: !!modoRevisao,
       cirurgia_dia: form.cirurgia_dia ? parseInt(form.cirurgia_dia) : null,
       cirurgia_mes: form.cirurgia_mes ? parseInt(form.cirurgia_mes) : null,
       cirurgia_ano: form.cirurgia_ano ? parseInt(form.cirurgia_ano) : null,

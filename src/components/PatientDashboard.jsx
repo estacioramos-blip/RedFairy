@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine'
 import { bloqueiosDe } from '../engine/limitesInput'
+import { ciclosEfetivos } from '../engine/obaComparador'
 import { credPaciente, cpfPacienteLogado } from '../lib/cred'
 import ResultCard from './ResultCard'
 import OBAModal from './OBAModal'
@@ -435,9 +436,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           p_cpf: cpfLimpo, ...credPaciente()
         })
         const obaRows = (obaResp && obaResp.ok) ? obaResp.linhas : []
-        setAnamneseBaseline(obaRows && obaRows.length ? obaRows[0] : null)
-        setAnamneseAnterior(obaRows && obaRows.length ? obaRows[obaRows.length - 1] : null)
-        setNumeroCiclo((obaRows?.length || 0) + 1)
+        // Baseline, anterior e número saem todos de `ciclosEfetivos` (ver
+        // obaComparador.js): a revisão médica SUBSTITUI o ciclo que corrigiu em
+        // vez de empilhar. Antes, `obaRows[0]` cru fazia a comparação "vs
+        // baseline" usar a versão que o médico tinha acabado de corrigir.
+        const ciclos = ciclosEfetivos(obaRows)
+        setAnamneseBaseline(ciclos.length ? ciclos[0] : null)
+        setAnamneseAnterior(ciclos.length ? ciclos[ciclos.length - 1] : null)
+        setNumeroCiclo(ciclos.length + 1)
       } catch (e) { console.error('Falha ao carregar histórico OBA:', e); setAnamneseAnterior(null); setAnamneseBaseline(null); setNumeroCiclo(1) }
     }
     // HEMOGRAMA DE ENTRADA (só na carga inicial): a triagem que o paciente fez antes
