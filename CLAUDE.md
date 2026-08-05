@@ -41,7 +41,13 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
 ### Tipos de usuário
 - **Médico**: avalia pacientes. Login por CRM/UF. Pode ser "afiliado" (Programa 4DOC).
 - **Paciente LOGADO**: tem CPF + senha, só 3 triagens gratuitas.
-- **Paciente CADASTRADO**: pagou R$ 149,90/ano, acesso completo (histórico, gráficos).
+- **Paciente CADASTRADO**: pagou a anuidade, acesso completo (histórico, gráficos).
+  - ⚠ **NUNCA escreva o valor da anuidade em documento nem em código.** Ele é lido do
+    Supabase (`config.valor_anuidade`) e o ADMIN muda quando quiser, em Admin →
+    Configurações. Este arquivo dizia "R$ 149,90/ano" enquanto banco e código diziam
+    200 — número em documento envelhece calado e leva alguém a errar em público.
+  - Único fallback legítimo: `VALOR_ANUIDADE_PADRAO` em `src/lib/pix.js`, usado só
+    quando a leitura do `config` falha. Se um dia divergir do banco, o banco é que vale.
 - No ResultCard, `modoPaciente=true` é tratado como paciente NÃO-cadastrado.
 
 ### Engine (decisionEngine.js)
@@ -67,7 +73,14 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
 ### Supabase
 - Projeto: pfzghybajniyesoiwrcp
 - Tabelas: profiles, medicos, triagens, avaliacoes, assinaturas, pedidos_documento, oba_anamnese, config
-- RLS desabilitado nas tabelas principais.
+- ⚠ **RLS LIGADO em TODAS as 13 tabelas principais** (Fases 1-3, ago/2026) — este arquivo
+  dizia o contrário. Quase todas têm **ZERO policies**: o acesso é EXCLUSIVAMENTE por RPC
+  `SECURITY DEFINER` gateada por token (`credPaciente/credMedico/credAmbas/credAdministrador`
+  em `src/lib/cred.js`). Exceções com policy: `config` e `triagens` (só leitura/insert público).
+  - **Consequência prática:** `supabase.from('tabela').select/insert/update` **não funciona**
+    e **falha em SILÊNCIO** — o RLS filtra tudo, o supabase-js não lança exceção, e você vê
+    `count 0` ou "salvo" sem ter salvo. Foram exatamente assim os itens 6, 7 e 8 da auditoria.
+    Antes de escrever acesso a tabela, procure a RPC correspondente.
 - `oba_anamnese` ganhou colunas **`relatorio_oba` (jsonb)** e **`estado_clinico` (text)** — o relatório/baseline do OBA é gravado na última linha do CPF.
 - `config` (chave/valor) — preços. **Modelo consolidado (2 valores de "trabalho médico"):**
   - `valor_solicitacao_medica` = **"Valor da Solicitação de Exame"** — cobre TODAS as solicitações (lab, bioimagem, endoscopia, cardiológico, outros) **+ atestado pós-consulta**. Em uso no fluxo do médico (Calculator/ResultCard).
@@ -77,6 +90,9 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
     - `comissao_usd_por_conversao` (US$10) = **ENCAMINHAR do médico E conversão do INDICADOR** (os dois leem esta chave em `fn_credita_medico`/`listar_creditos_indicador`).
     - `comissao_usd_nao_afiliado` (US$15) = **AVALIAR do médico** (avaliação simplificada, paga na hora — `creditos_avaliacao`). ⚠ O nome engana: NÃO é mais a comissão do indicador (era, até jun/2026 — não "corrigir" leituras baseando-se só no nome).
   - Outros: `valor_anuidade`, `cotacao_dolar`, `pix_chave`, etc. Editáveis em Admin → Configurações (RPC `salvar_config`).
+  - ⚠ **Os valores em US$/R$ citados acima são o que está no banco HOJE, não constantes.**
+    Todos vêm de `config` e o ADMIN muda quando precisar. Cite a CHAVE, nunca o número —
+    número em documento envelhece calado (foi o que aconteceu com a anuidade).
 - Médico de teste: CRM 6302/BA (ESTÁCIO, afiliado).
 - Paciente de teste no banco: CPF 013.529.807-54 (sexo M, nasc. 10/10/1990).
 
