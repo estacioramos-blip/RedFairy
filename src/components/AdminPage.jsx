@@ -138,7 +138,7 @@ function gerarSolicitacaoCFM(avaliacao, oba, medsAtivos = []) {
 }
 
 export default function AdminPage({ onVoltar }) {
-  const [aba, setAba] = useState('pacientes');
+  const [aba, setAba] = useState('pendencias');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -153,6 +153,9 @@ export default function AdminPage({ onVoltar }) {
         </div>
         <div className="max-w-3xl mx-auto flex gap-2 mt-3">
           {[
+            // Primeira e PADR\u00c3O: o painel de pend\u00eancias s\u00f3 vale se aparecer sem
+            // ser procurado. Como aba secund\u00e1ria, viraria a que ningu\u00e9m abre.
+            { id: 'pendencias',   label: "\ud83d\udd14 Pend\u00eancias" },
             { id: 'pacientes',    label: "\ud83d\udc65 Pacientes" },
             { id: 'lembretes',    label: "\u23f0 Lembretes" },
             { id: 'medicamentos', label: "\ud83e\ude78 Ferro EV" },
@@ -176,6 +179,7 @@ export default function AdminPage({ onVoltar }) {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-6">
+        {aba === 'pendencias'   && <AbaPendencias irPara={setAba} />}
         {aba === 'pacientes'    && <AbaPacientes />}
         {aba === 'lembretes'    && <AbaLembretes />}
         {aba === 'medicamentos' && <AbaMedicamentos />}
@@ -373,6 +377,169 @@ function FunilPacientes() {
       {(d.cadastraram_sem_teste || 0) > 0 && (
         <p className="text-xs text-gray-400 mt-3">{"Obs.: "}{d.cadastraram_sem_teste}{" cadastrados sem registro de teste (triagem apagada no cadastro)."}</p>
       )}
+    </div>
+  );
+}
+
+// ── PENDÊNCIAS (clínico / operacional) ───────────────────────────────────────
+// Contraparte do painel do Caixa: aqui fica o que NÃO é dinheiro. A separação
+// segue as senhas, que já são separadas — cada um vê o que pode resolver.
+// Tudo é derivado do que já existe; nenhuma coluna nova foi criada para isto.
+function AbaPendencias({ irPara }) {
+  const [d, setD] = useState(null);
+  const [erro, setErro] = useState('');
+  const [ocupado, setOcupado] = useState('');
+
+  async function carregar() {
+    setErro('');
+    try {
+      const { data, error } = await supabase.rpc('admin_pendencias', credAdmin());
+      if (error) { setErro('Erro de conexão.'); return; }
+      if (!data || data.ok === false) { setErro(data?.erro || 'Não autorizado.'); return; }
+      setD(data);
+    } catch (e) { setErro(e.message); }
+  }
+  useEffect(() => { carregar(); }, []);
+
+  // Baixa manual: só tira da lista de afazeres, não altera nada clínico.
+  async function baixar(id, tipo) {
+    const chave = tipo + ':' + id;
+    setOcupado(chave);
+    try {
+      const { data, error } = await supabase.rpc('admin_pendencia_baixar', {
+        ...credAdmin(), p_id: id, p_tipo: tipo, p_desfazer: false,
+      });
+      if (error || !data || data.ok === false) {
+        window.alert(data?.erro || 'Não foi possível dar baixa.');
+      } else {
+        await carregar();
+      }
+    } catch (e) { window.alert(e.message); }
+    setOcupado('');
+  }
+
+  const BtnBaixa = ({ id, tipo }) => (
+    <button disabled={ocupado === (tipo + ':' + id)} onClick={() => baixar(id, tipo)}
+      className="text-[11px] font-bold px-2 py-1 rounded-lg bg-gray-700 text-white disabled:opacity-50 flex-shrink-0">
+      {ocupado === (tipo + ':' + id) ? '…' : 'JÁ TRATEI'}
+    </button>
+  );
+
+  if (erro) return <p className="text-sm text-red-700 font-bold p-4">{erro}</p>;
+  if (!d) return <p className="text-sm text-gray-500 p-4">Carregando…</p>;
+
+  const med = d.medicos_a_validar || { n: 0, linhas: [] };
+  const duv = d.duvidas_sem_revisao || { n: 0, linhas: [] };
+  const ped = d.pedidos_do_paciente || { n: 0, linhas: [] };
+  const cri = d.estado_critico || { n: 0, linhas: [] };
+  const total = med.n + duv.n + ped.n + cri.n
+    + (d.prescritores_a_ativar || 0) + (d.anuidades_vencendo || 0) + (d.extratos_a_entregar || 0);
+
+  // O CPF já chega MASCARADO da RPC (a baixa vai pelo id da linha, não pelo CPF).
+  const dataFmt = (iso) => {
+    const dt = new Date(iso);
+    return isNaN(dt.getTime()) ? '' : dt.toLocaleDateString('pt-BR');
+  };
+
+  const Cartao = ({ cor, titulo, n, sub, children, aba }) => (
+    <div className="rounded-2xl border-2 bg-white p-4 mb-3" style={{ borderColor: cor }}>
+      <div className="flex items-center justify-between gap-3 mb-1">
+        <p className="text-sm font-black uppercase tracking-wide" style={{ color: cor }}>{titulo}</p>
+        <span className="text-xs font-black text-white px-2 py-0.5 rounded-full" style={{ background: cor }}>{n}</span>
+      </div>
+      {sub && <p className="text-xs text-gray-500 mb-2">{sub}</p>}
+      {children}
+      {aba && (
+        <button onClick={() => irPara(aba)} className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: cor }}>
+          {"Abrir →"}
+        </button>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="p-4">
+      {total === 0 ? (
+        <div className="rounded-2xl border-2 border-green-300 bg-green-50 p-6 text-center">
+          <p className="text-green-800 font-black text-lg">{"✓ Nada pendente"}</p>
+          <p className="text-green-700 text-sm mt-1">{"Nenhum médico a validar, nenhuma dúvida sem revisão e nenhum paciente em estado crítico sem acompanhamento."}</p>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-600 mb-3">{"Você tem "}<b>{total}</b>{" pendência(s)."}</p>
+      )}
+
+      {/* Primeiro o clínico: paciente em estado crítico vem antes de burocracia. */}
+      {cri.n > 0 && (
+        <Cartao cor="#B91C1C" titulo="Pacientes em estado CRÍTICO" n={cri.n}
+          sub="Avaliação mais recente classificada como crítica. Verifique se houve contato/teleconsulta.">
+          {cri.linhas.map((l) => (
+            <div key={l.id} className="flex items-center justify-between gap-2 border-t border-gray-100 py-1">
+              <p className="text-sm text-gray-800">
+                {l.cpf}<span className="text-xs text-gray-500">{" · "}{dataFmt(l.em)}</span>
+              </p>
+              <BtnBaixa id={l.id} tipo="critico" />
+            </div>
+          ))}
+        </Cartao>
+      )}
+
+      {duv.n > 0 && (
+        <Cartao cor="#B45309" titulo="Dúvidas do paciente sem revisão médica" n={duv.n}
+          sub="O paciente marcou “não tenho certeza” e nenhum médico revisou a anamnese ainda.">
+          {/* Sem botão de baixa de propósito: esta pendência se resolve sozinha
+              quando o médico REVISA (passa a existir revisão posterior ao ciclo).
+              Oferecer "já tratei" aqui seria convidar a riscar sem revisar. */}
+          {duv.linhas.map((l, i) => (
+            <p key={(l.cpf || '') + l.em + i} className="text-sm text-gray-800 border-t border-gray-100 py-1">
+              {l.cpf}<span className="text-xs text-gray-500">{" · "}{l.n}{" seção(ões) · "}{dataFmt(l.em)}</span>
+            </p>
+          ))}
+        </Cartao>
+      )}
+
+      {ped.n > 0 && (
+        <Cartao cor="#15803D" titulo="Pedidos feitos pelo paciente" n={ped.n}
+          sub="Teleconsultas e pedidos de exame solicitados na conclusão da avaliação.">
+          {ped.linhas.map((l) => {
+            const p = l.pedidos || {};
+            const partes = [];
+            if (p.teleconsultas?.quantidade > 0) partes.push(`${p.teleconsultas.quantidade} teleconsulta(s)`);
+            if (p.exames?.n_pedidos > 0) partes.push(`${p.exames.n_pedidos} pedido(s) de exame`);
+            return (
+              <div key={l.id} className="flex items-center justify-between gap-2 border-t border-gray-100 py-1">
+                <p className="text-sm text-gray-800">
+                  {l.cpf}<span className="text-xs text-gray-500">{" · "}{partes.join(' · ') || '—'}{" · "}{dataFmt(l.em)}</span>
+                </p>
+                <BtnBaixa id={l.id} tipo="pedidos" />
+              </div>
+            );
+          })}
+        </Cartao>
+      )}
+
+      {med.n > 0 && (
+        <Cartao cor="#1D4ED8" titulo="Médicos aguardando validação" n={med.n} aba="medicos"
+          sub="Enquanto não validados, os créditos deles ficam retidos — é a pendência que custa dinheiro a eles.">
+          {med.linhas.map((l) => (
+            <p key={l.crm} className="text-sm text-gray-800 border-t border-gray-100 py-1">
+              <b>{l.crm}</b>{" · "}{l.nome || '(sem nome)'}<span className="text-xs text-gray-500">{" · desde "}{dataFmt(l.desde)}</span>
+            </p>
+          ))}
+        </Cartao>
+      )}
+
+      {(d.prescritores_a_ativar || 0) > 0 && (
+        <Cartao cor="#7C3AED" titulo="Prescritores aguardando ativação" n={d.prescritores_a_ativar} aba="prescritores" />
+      )}
+      {(d.extratos_a_entregar || 0) > 0 && (
+        <Cartao cor="#0F766E" titulo="Extratos OBA a entregar" n={d.extratos_a_entregar} aba="extratos" />
+      )}
+      {(d.anuidades_vencendo || 0) > 0 && (
+        <Cartao cor="#B45309" titulo="Anuidades vencendo ou vencidas" n={d.anuidades_vencendo} aba="lembretes"
+          sub="Vencem nos próximos 15 dias ou já venceram." />
+      )}
+
+      <button onClick={carregar} className="text-xs font-bold px-3 py-2 rounded-lg bg-gray-200 text-gray-700">{"↻ Atualizar"}</button>
     </div>
   );
 }

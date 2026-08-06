@@ -40,7 +40,7 @@ export default function CaixaPage({ onVoltar }) {
   const [senha, setSenha] = useState('')
   const [erroLogin, setErroLogin] = useState('')
   const [busy, setBusy] = useState(false)
-  const [aba, setAba] = useState('apagar')
+  const [aba, setAba] = useState('pendencias')
   const [msg, setMsg] = useState(null)          // toast simples {ok, txt}
 
   function toast(ok, txt) { setMsg({ ok, txt }); setTimeout(() => setMsg(null), 4000) }
@@ -104,6 +104,10 @@ export default function CaixaPage({ onVoltar }) {
 
   // ── PAINEL ─────────────────────────────────────────────────────────────────
   const TABS = [
+    // Primeira aba e aba PADRÃO de propósito: o valor do painel de pendências é
+    // aparecer sem ser procurado. Se dependesse de um clique, viraria a aba que
+    // ninguém abre.
+    { id: 'pendencias', t: '🔔 Pendências' },
     { id: 'entradas', t: '📥 Entradas' },
     { id: 'apagar',   t: '📤 A Pagar' },
     { id: 'assinaturas', t: '🔒 Assinaturas' },
@@ -137,6 +141,7 @@ export default function CaixaPage({ onVoltar }) {
         </div>
       )}
       <div className="p-4 max-w-5xl">
+        {aba === 'pendencias' && <AbaPendencias rpc={rpc} toast={toast} irPara={setAba} />}
         {aba === 'entradas' && <AbaEntradas rpc={rpc} toast={toast} />}
         {aba === 'apagar'   && <AbaAPagar rpc={rpc} toast={toast} />}
         {aba === 'assinaturas' && <AbaAssinaturas rpc={rpc} toast={toast} />}
@@ -201,6 +206,141 @@ function CarimboNF({ rpc, toast, tabela, id, nf, onMudou }) {
 }
 
 // ── 📥 ENTRADAS ───────────────────────────────────────────────────────────────
+// ── PENDÊNCIAS (dinheiro) ────────────────────────────────────────────────────
+// O modelo do projeto é "confia primeiro, verifica depois": o paciente declara
+// que pagou e o acesso/comissão saem na hora. Esta aba é a segunda metade —
+// mostra o que foi DECLARADO e ninguém CONFERIU ainda, e some da lista quando
+// você marca CONFERI. Sem o marcador, a lista mostraria os mesmos itens para
+// sempre e viraria ruído.
+function AbaPendencias({ rpc, toast, irPara }) {
+  const [d, setD] = useState(null)
+  const [erro, setErro] = useState('')
+  const [obs, setObs] = useState({})
+  const [ocupado, setOcupado] = useState('')
+
+  async function carregar() {
+    setErro('')
+    try {
+      const r = await rpc('caixa_pendencias', {})
+      if (!r || r.ok === false) { setErro(r?.erro || 'Falha ao carregar.'); return }
+      setD(r)
+    } catch (e) { setErro(e.message) }
+  }
+  useEffect(() => { carregar() }, [])
+
+  async function conferir(tabela, id) {
+    const chave = tabela + ':' + id
+    setOcupado(chave)
+    try {
+      const r = await rpc('caixa_conferir', { p_tabela: tabela, p_id: String(id), p_conferido: true, p_obs: obs[chave] || null })
+      if (!r || r.ok === false) { toast(false, r?.erro || 'Não foi possível marcar.'); setOcupado(''); return }
+      toast(true, 'Conferido.')
+      await carregar()
+    } catch (e) { toast(false, e.message) }
+    setOcupado('')
+  }
+
+  if (erro) return <p className="text-sm text-red-700 font-bold">{erro}</p>
+  if (!d) return <p className="text-sm text-gray-500">Carregando…</p>
+
+  const ass = d.assinaturas_a_conferir || { n: 0, linhas: [] }
+  const ped = d.pedidos_a_conferir || { n: 0, linhas: [] }
+  const com = d.comissoes_a_pagar || {}
+  const nf = d.nf_pendente || {}
+  const nComissoes = (com.medicos || 0) + (com.indicadores || 0) + (com.pacientes || 0)
+  const nNf = (nf.medicos || 0) + (nf.avaliacoes || 0) + (nf.indicador || 0)
+  const total = ass.n + ped.n + nComissoes + nNf
+
+  const Cartao = ({ cor, titulo, n, children, acao }) => (
+    <div className="rounded-2xl border-2 bg-white p-4 mb-3" style={{ borderColor: cor }}>
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <p className="text-sm font-black uppercase tracking-wide" style={{ color: cor }}>{titulo}</p>
+        <span className="text-xs font-black text-white px-2 py-0.5 rounded-full" style={{ background: cor }}>{n}</span>
+      </div>
+      {children}
+      {acao}
+    </div>
+  )
+
+  // Quanto mais antigo o item, mais urgente — é o que separa "chegou hoje" de
+  // "está parado há duas semanas".
+  const selo = (dias) => {
+    const n = Number(dias) || 0
+    const cor = n >= 7 ? '#B91C1C' : n >= 3 ? '#B45309' : '#6B7280'
+    return <span className="text-[11px] font-bold" style={{ color: cor }}>{n === 0 ? 'hoje' : `há ${n} dia${n > 1 ? 's' : ''}`}</span>
+  }
+
+  const LinhaConferir = ({ tabela, l }) => {
+    const chave = tabela + ':' + l.id
+    return (
+      <div className="border-t border-gray-100 py-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-800 truncate">{l.nome || '(sem nome)'}</p>
+            <p className="text-xs text-gray-500">{fmtCPF(l.cpf)}{' · '}<b>{fmtBRL(l.valor)}</b>{' · '}{selo(l.dias)}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input value={obs[chave] || ''} onChange={e => setObs(o => ({ ...o, [chave]: e.target.value }))}
+              placeholder="obs (opcional)" className="text-xs border rounded-lg px-2 py-1 w-32" />
+            <button disabled={ocupado === chave} onClick={() => conferir(tabela, l.id)}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg text-white disabled:opacity-50"
+              style={{ background: '#15803d' }}>{ocupado === chave ? '…' : 'CONFERI'}</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {total === 0 ? (
+        <div className="rounded-2xl border-2 border-green-300 bg-green-50 p-6 text-center">
+          <p className="text-green-800 font-black text-lg">{"✓ Nada pendente"}</p>
+          <p className="text-green-700 text-sm mt-1">{"Todo dinheiro declarado foi conferido e não há comissão na fila."}</p>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-600 mb-3">
+          {"Você tem "}<b>{total}</b>{" pendência(s). Comece pelas mais antigas."}
+        </p>
+      )}
+
+      {ass.n > 0 && (
+        <Cartao cor="#B45309" titulo="Anuidades declaradas, não conferidas" n={ass.n}>
+          <p className="text-xs text-gray-500 mb-1">{"O paciente clicou \"JÁ PAGUEI\" e o acesso foi liberado na confiança. Confira o PIX antes de marcar."}</p>
+          {ass.linhas.map(l => <LinhaConferir key={l.id} tabela="assinaturas" l={l} />)}
+        </Cartao>
+      )}
+
+      {ped.n > 0 && (
+        <Cartao cor="#7C3AED" titulo="Pedidos marcados como pagos" n={ped.n}>
+          <p className="text-xs text-gray-500 mb-1">{"Documentos que o paciente declarou ter pago."}</p>
+          {ped.linhas.map(l => <LinhaConferir key={l.id} tabela="pedidos_documento" l={l} />)}
+        </Cartao>
+      )}
+
+      {nComissoes > 0 && (
+        <Cartao cor="#1D4ED8" titulo="Comissões esperando pagamento" n={nComissoes}
+          acao={<button onClick={() => irPara('apagar')} className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: '#1D4ED8' }}>{"Ir para A PAGAR →"}</button>}>
+          <p className="text-xs text-gray-600">
+            {com.medicos || 0}{" médico(s) · "}{com.indicadores || 0}{" indicador(es) · "}{com.pacientes || 0}{" paciente(s)-indicador"}
+          </p>
+        </Cartao>
+      )}
+
+      {nNf > 0 && (
+        <Cartao cor="#0F766E" titulo="Nota fiscal a emitir" n={nNf}
+          acao={<button onClick={() => irPara('nf')} className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: '#0F766E' }}>{"Ir para NOTAS FISCAIS →"}</button>}>
+          <p className="text-xs text-gray-600">
+            {"Sobre comissões JÁ PAGAS: "}{nf.medicos || 0}{" encaminhamento(s) · "}{nf.avaliacoes || 0}{" avaliação(ões) · "}{nf.indicador || 0}{" indicação(ões)"}
+          </p>
+        </Cartao>
+      )}
+
+      <button onClick={carregar} className="text-xs font-bold px-3 py-2 rounded-lg" style={{ background: '#e8e2da', color: '#5b5248' }}>{"↻ Atualizar"}</button>
+    </div>
+  )
+}
+
 function AbaEntradas({ rpc, toast }) {
   const [dados, setDados] = useState(null)
   const carregar = async () => { try { setDados(await rpc('caixa_entradas', {})) } catch (e) { toast(false, e.message) } }
