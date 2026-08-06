@@ -26,6 +26,14 @@
     #obaHeroImg { object-fit: contain !important; object-position: 50% 18% !important; }
     #obaComoImg { object-fit: contain !important; }
   }
+  /* Rede de segurança do card "Saiba mais": ele agora flutua sobre a hero SEM
+     escurecimento, e a legibilidade depende do vidro fosco. Navegador sem
+     `backdrop-filter` (raro, mas existe) não desfoca nada — o card ficaria
+     translúcido demais e o texto branco sumiria em cima da parte clara da hero.
+     Nesse caso, e SÓ nesse, o fundo fica opaco. */
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    #saibaCard { background: rgba(10,8,7,0.93) !important; }
+  }
 </style>
 </helmet>
 <div data-screen-label="Hero · Projeto OBA" style="height: 100vh; min-height: 560px; width: 100%; background: #14100E; color: #F7F1E7; font-family: 'Archivo', sans-serif; position: relative; overflow: hidden;">
@@ -240,16 +248,24 @@
   </sc-if>
 
   <sc-if value="{{ saibaOpen }}" hint-placeholder-val="{{ false }}">
-    <div onClick="{{ closeSaiba }}" style="position: fixed; inset: 0; z-index: 60; background: rgba(12,9,8,0.84); display: flex; align-items: center; justify-content: center; padding: 24px;">
-      <div onClick="{{ stop }}" style="position: relative; width: 100%; max-width: 340px; border-radius: 8px; overflow: hidden; background: rgba(10,8,7,0.62); backdrop-filter: blur(18px) saturate(1.1); -webkit-backdrop-filter: blur(18px) saturate(1.1); border: 1.5px solid #E3AE37; box-shadow: 0 40px 90px -30px rgba(0,0,0,0.75); padding: 26px 22px;">
+    <!-- Fundo TRANSPARENTE: a hero fica com a visibilidade normal fora do card.
+         O div continua cobrindo a tela inteira porque é ele que fecha no clique
+         fora — só deixou de escurecer. É essa mudança que faz o vidro fosco do
+         card aparecer: antes o escurecimento achatava o blur e ele não se via. -->
+    <div onClick="{{ closeSaiba }}" style="position: fixed; inset: 0; z-index: 60; background: transparent; display: flex; align-items: center; justify-content: center; padding: 24px;">
+      <!-- Vidro fosco: blur mais forte + fundo mais translúcido que antes. A
+           saturação sobe um pouco para o dourado da borda não morrer no desfoque.
+           O fundo não fica mais transparente que isto porque o texto é branco e
+           precisa continuar legível sobre a parte clara da hero. -->
+      <div id="saibaCard" onClick="{{ stop }}" style="position: relative; width: 100%; max-width: 340px; border-radius: 8px; overflow: hidden; background: rgba(10,8,7,0.52); backdrop-filter: blur(26px) saturate(1.35); -webkit-backdrop-filter: blur(26px) saturate(1.35); border: 1.5px solid #E3AE37; box-shadow: 0 40px 90px -30px rgba(0,0,0,0.75); padding: 26px 22px;">
         <button onClick="{{ closeSaiba }}" aria-label="Fechar" style="position: absolute; top: 10px; right: 10px; background: none; border: none; padding: 0; cursor: pointer; color: #fff; font-size: 18px; line-height: 1;">×</button>
-        <p style="margin: 0; font-size: 12.5px; line-height: 1.6; color: #FFFFFF;">
+        <p style="margin: 0; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">
           Existem no Brasil mais de 1,3 milhão de pacientes bariátricos, e mais da metade vive sem assistência médica adequada. O impacto dessa carência sobre a qualidade das suas vidas é profundo. A medicina que precisam é complexa, cara, de difícil acesso, e indisponível em muitas regiões.
         </p>
-        <p style="margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: #FFFFFF;">
+        <p style="margin: 12px 0 0; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">
           O Projeto OBA<span style="font-size: 0.65em; vertical-align: super; color: #E3AE37;">®</span> é um sistema médico virtual de baixo custo e alta eficácia, criado para atender as necessidades dessas pessoas.
         </p>
-        <p style="margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: #FFFFFF;">
+        <p style="margin: 12px 0 0; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">
           Inteligência artificial e médicos reais trabalham em conjunto para entender os problemas, gerar recomendações, receitas e pedidos de exames - e avaliar resultados e progressos, orientando para que atinjam as vidas plenas e saudáveis que desejam.
         </p>
       </div>
