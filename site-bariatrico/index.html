@@ -204,35 +204,19 @@
         <sc-if value="{{ comoMenu }}" hint-placeholder-val="{{ false }}">
           <div style="position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 40px;">
             <span style="font-size: 12px; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(247,241,231,0.72); text-align: center;">Como funciona · escolha seu caminho</span>
-            <!-- Cada caminho = card + subtexto de regras. O link fica FORA do
-                 <button> do card (botão dentro de botão é HTML inválido e o
-                 clique se perde), mas dentro do mesmo bloco, com gap pequeno —
-                 visualmente lê-se como subtexto do card.
-                 Fonte na METADE do card (clamp 15-18 -> 7,5-9px), branca, como
-                 pedido. O `padding` generoso é intencional: o texto é minúsculo,
-                 mas a área de toque no celular não pode ser. -->
-            <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px;">
-              <div style="display: flex; flex-direction: column; gap: 3px;">
-                <button onClick="{{ selectBari }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
-                  <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Sou Bariátrico</span>
-                  <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
-                </button>
-                <button onClick="{{ regrasBari }}" style="align-self: flex-start; background: none; border: none; padding: 4px 20px 2px; cursor: pointer; font-family: 'Archivo', sans-serif; font-size: clamp(7.5px, 1vw, 9px); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #FFFFFF; text-decoration: underline; text-underline-offset: 3px;">Regras de uso do sistema</button>
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 3px;">
-                <button onClick="{{ selectMed }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
-                  <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Sou Médico</span>
-                  <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
-                </button>
-                <button onClick="{{ regrasMed }}" style="align-self: flex-start; background: none; border: none; padding: 4px 20px 2px; cursor: pointer; font-family: 'Archivo', sans-serif; font-size: clamp(7.5px, 1vw, 9px); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #FFFFFF; text-decoration: underline; text-underline-offset: 3px;">Regras de uso do sistema</button>
-              </div>
-              <div style="display: flex; flex-direction: column; gap: 3px;">
-                <button onClick="{{ selectConh }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
-                  <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Conheço um Bariátrico</span>
-                  <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
-                </button>
-                <button onClick="{{ regrasConh }}" style="align-self: flex-start; background: none; border: none; padding: 4px 20px 2px; cursor: pointer; font-family: 'Archivo', sans-serif; font-size: clamp(7.5px, 1vw, 9px); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #FFFFFF; text-decoration: underline; text-underline-offset: 3px;">Regras de uso do sistema</button>
-              </div>
+            <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px;">
+              <button onClick="{{ selectBari }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
+                <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Sou Bariátrico</span>
+                <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
+              </button>
+              <button onClick="{{ selectMed }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
+                <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Sou Médico</span>
+                <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
+              </button>
+              <button onClick="{{ selectConh }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
+                <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Conheço um Bariátrico</span>
+                <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
+              </button>
             </div>
           </div>
         </sc-if>
@@ -256,6 +240,14 @@
                 Sim, quero ser médico prescritor.
               </label>
             </sc-if>
+            <!-- Regras no FIM do texto, não no menu: três links repetidos ali
+                 poluíam a escolha. Aqui o caminho já está escolhido, então basta
+                 UM link — `abrirRegras` usa o `comoChoice` corrente e abre as
+                 regras daquele mesmo público.
+                 Fonte na metade do texto (clamp 15-18 -> 7,5-9px), branca.
+                 Padding folgado porque o texto é minúsculo e o alvo de toque no
+                 celular não pode ser. -->
+            <button onClick="{{ abrirRegras }}" style="align-self: flex-start; margin-top: 2px; background: none; border: none; padding: 6px 2px; cursor: pointer; font-family: 'Archivo', sans-serif; font-size: clamp(7.5px, 1vw, 9px); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #FFFFFF; text-decoration: underline; text-underline-offset: 3px;">Regras de uso do sistema</button>
             </div>
           </div>
         </sc-if>
@@ -485,12 +477,12 @@ class Component extends DCLogic {
       regrasTitulo: regraCur.t,
       regrasTexto: regraCur.x,
       // Abre POR CIMA do "Como Funciona" (z-index maior), sem fechá-lo: quem sai
-      // das regras volta para os três caminhos, que é de onde veio.
-      // `stopPropagation` é obrigatório: sem ele o clique sobe até o card e o
-      // usuário cairia no texto do caminho em vez das regras.
-      regrasBari: (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } this.setState({ regrasChoice: 'bariatrico' }); },
-      regrasMed:  (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } this.setState({ regrasChoice: 'medico' }); },
-      regrasConh: (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } this.setState({ regrasChoice: 'conheco' }); },
+      // das regras volta para o texto que estava lendo.
+      // Um handler só: o link vive no fim do texto, então o caminho JÁ está
+      // escolhido — reaproveita o `comoChoice` em vez de três handlers iguais.
+      // `stopPropagation` é obrigatório: sem ele o clique sobe até o overlay do
+      // "Como Funciona" e fecharia o modal inteiro por baixo das regras.
+      abrirRegras: (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } this.setState({ regrasChoice: this.state.comoChoice }); },
       closeRegras: (ev) => { if (ev) ev.stopPropagation(); this.setState({ regrasChoice: null }); },
     };
   }
