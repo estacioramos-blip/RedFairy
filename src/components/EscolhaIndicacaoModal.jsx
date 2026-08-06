@@ -26,10 +26,20 @@ export default function EscolhaIndicacaoModal({ cpf, medico, indicador, onConclu
     setBusy(true)
     try {
       if (escolha === 'indicador' && indicador?.codigo) {
-        await supabase.rpc('confirmar_indicacao', {
+        const { data, error } = await supabase.rpc('confirmar_indicacao', {
           p_cpf: String(cpf || '').replace(/\D/g, ''),
           p_codigo: indicador.codigo,
         })
+        // Esta RPC decide QUEM recebe a comissão: o indicador ou o médico.
+        // Falhando em silêncio, o crédito ia para o default (médico) e nem o
+        // paciente nem o indicador ficavam sabendo — dinheiro trocando de dono
+        // por causa de uma falha de rede.
+        if (error || data?.ok === false) {
+          console.error('confirmar_indicacao:', error || data?.erro)
+          setBusy(false)
+          try { window.alert('Não conseguimos registrar a sua escolha. Tente novamente — sem isso, o crédito pode ir para outra pessoa.') } catch (e2) {}
+          return
+        }
       }
       // escolha 'medico' = default; não precisa gravar nada.
     } catch (e) {}

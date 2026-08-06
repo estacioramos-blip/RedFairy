@@ -1561,7 +1561,12 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     ].filter(Boolean)
 
     const dadosAnamnese = {
-      cpf: cpf || null, sexo,
+      // NORMALIZADO. A prop `cpf` chega em formatos diferentes conforme a porta:
+      // do painel do paciente vêm dígitos, mas o Calculator passa `inputs.cpf`,
+      // que é o CPF MASCARADO que o médico digitou. Gravar cru fazia o ciclo e a
+      // revisão do mesmo paciente ficarem com formatos diferentes na coluna — e
+      // qualquer comparação entre eles deixava de casar.
+      cpf: String(cpf || '').replace(/\D/g, '') || null, sexo,
       // A revisão médica INSERE linha nova de propósito (preserva a original do
       // paciente), e o nº da avaliação é "nº de linhas + 1" — então cada revisão
       // empurrava o contador para cima: o paciente revisado uma vez via a 2ª

@@ -1128,8 +1128,12 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
     try {
       const indCod = localStorage.getItem('rf_ind_codigo') || '';
       if (/^IND[0-9A-F]{6}$/.test(indCod)) {
-        await supabase.rpc('indicador_reservar_cpf', { p_codigo: indCod, p_cpf: cpfPacDigitos });
-        localStorage.removeItem('rf_ind_codigo');
+        const { data: resv, error: resvErr } = await supabase.rpc('indicador_reservar_cpf', { p_codigo: indCod, p_cpf: cpfPacDigitos });
+        // Ver OBAEntradaPaciente: o `removeItem` incondicional apagava o código
+        // do indicador mesmo quando a reserva falhava — crédito perdido sem
+        // segunda chance. `PacienteIndicaModal` já checava; era só aqui.
+        if (!resvErr && resv?.ok !== false) localStorage.removeItem('rf_ind_codigo');
+        else console.error('indicador_reservar_cpf:', resvErr || resv?.erro);
       }
     } catch (e) {}
     setPacienteLogado(resp.nome || '');

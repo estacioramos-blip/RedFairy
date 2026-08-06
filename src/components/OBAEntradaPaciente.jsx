@@ -143,8 +143,12 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
       try {
         const indCod = localStorage.getItem('rf_ind_codigo') || ''
         if (/^IND[0-9A-F]{6}$/.test(indCod)) {
-          await supabase.rpc('indicador_reservar_cpf', { p_codigo: indCod, p_cpf: cpfDigits })
-          localStorage.removeItem('rf_ind_codigo')
+          const { data: resv, error: resvErr } = await supabase.rpc('indicador_reservar_cpf', { p_codigo: indCod, p_cpf: cpfDigits })
+          // O `removeItem` era INCONDICIONAL: se a reserva falhasse, o código do
+          // indicador era apagado junto e não havia segunda chance — o crédito
+          // dele se perdia de vez, em silêncio. Só apaga quando a reserva pegou.
+          if (!resvErr && resv?.ok !== false) localStorage.removeItem('rf_ind_codigo')
+          else console.error('indicador_reservar_cpf:', resvErr || resv?.erro)
         }
       } catch (e) {}
       onConcluir && onConcluir()

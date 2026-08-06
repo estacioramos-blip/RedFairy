@@ -68,6 +68,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   // BOTÃO DE EMERGÊNCIA (Fase 2): 3 toques para acionar. showEmergencia = tela aberta.
   const [showEmergencia, setShowEmergencia] = useState(false)
   const [emergToques, setEmergToques] = useState(0)
+  // Se NENHUM dos dois avisos (ADM e plantonista) saiu, a tela não pode afirmar
+  // que a equipe foi avisada — a pessoa precisa saber que só tem os telefones.
+  const [emergAvisoFalhou, setEmergAvisoFalhou] = useState(false)
   const emergTimerRef = useRef(null)
   useEffect(() => () => { if (emergTimerRef.current) clearTimeout(emergTimerRef.current) }, [])
   const [querPedidoGratis, setQuerPedidoGratis] = useState(false)
@@ -577,9 +580,25 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         `Endereço: ${endereco || '(não informado)'}` + (p.cep ? ` — CEP ${p.cep}` : '') + '\n' +
         `Contato de emergência: ${contato || '(não informado)'}\n` +
         `Data|Hora: ${new Date().toLocaleString('pt-BR')}`
-      try { await supabase.rpc('tg_enviar', { p_msg: msg }) } catch (e) {}
-      try { await supabase.rpc('tg_enviar_plantonista', { p_msg: msg }) } catch (e) {}
-    } catch (e) {}
+      // EMERGÊNCIA: os dois avisos eram disparados e o retorno descartado. O
+      // paciente via "emergência acionada" e o plantonista podia nunca ter sido
+      // avisado — `tg_enviar_plantonista` é silencioso quando a chave do chat
+      // está vazia no config. Em consequência humana é o pior tipo de falha
+      // silenciosa do sistema: aqui ela precisa aparecer NA TELA, porque a
+      // pessoa precisa saber que tem de ligar 192.
+      let avisou = false
+      try {
+        const { data, error } = await supabase.rpc('tg_enviar', { p_msg: msg })
+        if (!error && data?.ok !== false) avisou = true
+        else console.error('tg_enviar (ADM):', error || data?.erro)
+      } catch (e) { console.error('tg_enviar (ADM):', e) }
+      try {
+        const { data, error } = await supabase.rpc('tg_enviar_plantonista', { p_msg: msg })
+        if (!error && data?.ok !== false) avisou = true
+        else console.error('tg_enviar_plantonista:', error || data?.erro)
+      } catch (e) { console.error('tg_enviar_plantonista:', e) }
+      setEmergAvisoFalhou(!avisou)
+    } catch (e) { setEmergAvisoFalhou(true) }
   }
   function tocarEmergencia() {
     if (emergTimerRef.current) clearTimeout(emergTimerRef.current)
@@ -841,9 +860,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       // usa avaliacoes.concluida; ver precisaPaywallNova.)
       if (!profile?.primeira_avaliacao_feita) {
         try {
-          await supabase.rpc('profiles_atualizar', { p_cpf: cpfPacienteLogado(), p_patch: { primeira_avaliacao_feita: true }, ...credPaciente() })
-          setProfile(p => (p ? { ...p, primeira_avaliacao_feita: true } : p))
-        } catch (e) {}
+          const { data: pfResp, error: pfErr } = await supabase.rpc('profiles_atualizar', { p_cpf: cpfPacienteLogado(), p_patch: { primeira_avaliacao_feita: true }, ...credPaciente() })
+          // O `setProfile` otimista fazia a tela acreditar que gravou mesmo
+          // quando não gravou — e aí o paciente ou ficava preso no loop
+          // "continuando a sua primeira avaliação", ou ganhava uma 2ª de graça.
+          // Só marca na tela o que o banco confirmou.
+          if (pfErr || pfResp?.ok === false) console.error('profiles_atualizar (1ª avaliação):', pfErr || pfResp?.erro)
+          else setProfile(p => (p ? { ...p, primeira_avaliacao_feita: true } : p))
+        } catch (e) { console.error('profiles_atualizar (1ª avaliação):', e) }
       }
       carregarDados()
     }
@@ -2012,7 +2036,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
           <div style={{ background: '#DC2626', padding: '1rem 1.2rem', color: '#fff' }}>
             <p style={{ fontWeight: 900, fontSize: '1.1rem', margin: 0 }}>{"EMERGÊNCIA ACIONADA"}</p>
-            <p style={{ fontSize: '0.78rem', opacity: 0.95, margin: '0.2rem 0 0' }}>{"A equipe do Projeto OBA foi avisada. Use os contatos abaixo agora."}</p>
+            <p style={{ fontSize: '0.78rem', opacity: 0.95, margin: '0.2rem 0 0' }}>
+              {emergAvisoFalhou
+                ? "NÃO conseguimos avisar a equipe. Ligue agora pelos botões abaixo."
+                : "A equipe do Projeto OBA foi avisada. Use os contatos abaixo agora."}
+            </p>
           </div>
           <div className="p-5 flex flex-col gap-3">
             <a href="tel:192" style={{ background: '#DC2626', color: '#fff', fontWeight: 800, textAlign: 'center', padding: '0.9rem', borderRadius: 12, textDecoration: 'none', fontSize: '1rem' }}>{"🚑 Ligar para o SAMU 192"}</a>
