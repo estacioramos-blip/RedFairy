@@ -260,10 +260,40 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: &quot;100%&quot;, &quot;height&quot;: 820}, &quot;showCredits&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;}, &quot;cardHoverFill&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { entered: false, settled: false, view: 'home', comoOpen: false, comoPhase: 'image', comoChoice: null, saibaOpen: false };
+  state = { entered: false, settled: false, view: 'home', comoOpen: false, comoPhase: 'image', comoChoice: null, saibaOpen: false,
+            // Comissões: LIDAS DO BANCO, nunca escritas aqui. O ADMIN muda em
+            // Admin > Configurações e o site tem de acompanhar — antes os valores
+            // estavam cravados no texto e passariam a mentir no dia do ajuste.
+            // null = ainda não chegou (ou falhou): o texto se adapta e não cita número.
+            comAvaliacao: null, comIndicacao: null };
   componentDidMount() {
     this._t1 = setTimeout(() => this.setState({ entered: true }), 60);
     this._t2 = setTimeout(() => this.setState({ settled: true }), 2400);
+    this.carregarComissoes();
+  }
+  // `config` é legível pelo público (policy `config_public_read`), então basta a
+  // chave anon — a mesma já usada no cadastro de prescritor mais abaixo.
+  carregarComissoes() {
+    const URL = 'https://pfzghybajniyesoiwrcp.supabase.co';
+    const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmemdoeWJham5peWVzb2l3cmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTAyMzksImV4cCI6MjA5MDU2NjIzOX0.Cw_mNX4I0L_SsIp1lHr3XxmsloqNCr3zgXpd47B3Oc4';
+    const chaves = 'comissao_usd_nao_afiliado,comissao_usd_por_conversao';
+    fetch(URL + '/rest/v1/config?select=chave,valor&chave=in.(' + chaves + ')',
+          { headers: { apikey: KEY, Authorization: 'Bearer ' + KEY } })
+      .then(r => r.ok ? r.json() : [])
+      .then(linhas => {
+        const mapa = {};
+        (linhas || []).forEach(l => { mapa[l.chave] = l.valor; });
+        const num = (v) => {
+          const n = Number(String(v == null ? '' : v).replace(',', '.'));
+          // `Number('')` é 0, não NaN — sem o `> 0` o site anunciaria "0 dólares".
+          return Number.isFinite(n) && n > 0 ? n : null;
+        };
+        this.setState({
+          comAvaliacao: num(mapa['comissao_usd_nao_afiliado']),   // AVALIAR do médico
+          comIndicacao: num(mapa['comissao_usd_por_conversao']),  // conversão do indicador
+        });
+      })
+      .catch(() => {});   // sem rede: os textos seguem sem citar valor
   }
   componentWillUnmount() {
     clearTimeout(this._t1);
@@ -275,16 +305,32 @@ class Component extends DCLogic {
     const s = this.state.settled;
     // Cada mensagem é dividida em a/b: o ÍCONE do OBA (images/oba-logo.png, pequeno,
     // inline) é renderizado ENTRE as duas partes, dentro do parágrafo do popup.
+    //
+    // Os valores de comissão vêm do banco (ver carregarComissoes). Enquanto não
+    // chegam — ou se a rede falhar — as frases abaixo caem numa versão SEM número,
+    // que continua verdadeira. Prometer um valor errado é pior que não citar valor.
+    const fmtUsd = (n) => String(n).replace(/\.0+$/, '').replace('.', ',');
+    const vAva = this.state.comAvaliacao;
+    const vInd = this.state.comIndicacao;
+    const frAvaliacao = vAva
+      ? 'Cada avaliação de paciente realizada por você no celular gera o equivalente a ' + fmtUsd(vAva) + ' dólares digitais.'
+      : 'Cada avaliação de paciente realizada por você no celular gera crédito em dólares digitais.';
+    const frIndicacaoMed = vInd
+      ? ' E cada paciente indicado por você que se cadastrar e assinar gera o equivalente a ' + fmtUsd(vInd) + ' dólares digitais — uma vez por paciente.'
+      : ' E cada paciente indicado por você que se cadastrar e assinar gera crédito em dólares digitais — uma vez por paciente.';
+    const frIndicacaoConheco = vInd
+      ? 'Cada bariátrico indicado por você que se cadastrar e assinar gera um crédito equivalente a ' + fmtUsd(vInd) + ' dólares digitais — uma vez por paciente.'
+      : 'Cada bariátrico indicado por você que se cadastrar e assinar gera um crédito em dólares digitais — uma vez por paciente.';
     const COMO = {
       bariatrico: { t: 'Sou Bariátrico',
-        a: 'Por um pequeno valor, você faz a assinatura anual de uma plataforma inteligente que opera 24 horas por dia, 365 dias por ano, e pode otimizar a sua vida. Com algumas limitações, até orientações e prescrições médicas de urgência podem ser solicitadas e atendidas por teleconsulta no Projeto OBA®. Receitas, solicitações de exames com certificado digital e acesso a especialistas estarão ao seu alcance por valores muito baixos.\n\nAo se cadastrar, o ícone do Projeto OBA',
-        b: 'será instalado na tela do seu celular. Ele permitirá que você entre no sistema com rapidez.\n\nVocê também poderá indicar outros pacientes bariátricos, gerando créditos para usar no pagamento de documentos médicos e da próxima anuidade. Se o número de pacientes indicados gerar créditos acima do que você gasta na plataforma, os valores serão depositados em sua conta bancária.\n\nPara indicar outros bariátricos, você usará o mesmo ícone na tela do seu dispositivo. Por meio dele, poderá gerar um QR Code para que um paciente indicado acesse o sistema, ou enviar um link por WhatsApp ou Telegram para que alguém distante também possa entrar. Você ainda pode divulgar esse link nas suas redes sociais, e os pacientes que se cadastrarem por ele também gerarão créditos para você.\n\nO Projeto OBA® foi criado para ajudar você a viver melhor.' },
+        a: 'Por um pequeno valor, você faz a assinatura anual de uma plataforma inteligente que opera 24 horas por dia, 365 dias por ano, e pode otimizar a sua vida. Com algumas limitações, até orientações e prescrições médicas de urgência podem ser solicitadas e atendidas por teleconsulta no Projeto OBA®. Receitas e solicitações de exames com assinatura digital estarão ao seu alcance por valores muito baixos.\n\nAo se cadastrar, o ícone do Projeto OBA',
+        b: 'será instalado na tela do seu celular. Ele permitirá que você entre no sistema com rapidez.\n\nVocê também poderá indicar outros pacientes bariátricos. Cada indicado que se cadastrar e assinar gera um crédito para você — uma vez por paciente. Os créditos são usados no pagamento de documentos médicos e da próxima anuidade. Se os créditos superarem o que você gasta na plataforma, os valores serão depositados em sua conta bancária.\n\nPara indicar outros bariátricos, você usará o mesmo ícone na tela do seu dispositivo. Por meio dele, poderá gerar um QR Code para que um paciente indicado acesse o sistema, ou enviar um link por WhatsApp ou Telegram para que alguém distante também possa entrar. Você ainda pode divulgar esse link nas suas redes sociais, e os pacientes que se cadastrarem e assinarem por ele também gerarão créditos para você.\n\nO Projeto OBA® foi criado para ajudar você a viver melhor.' },
       medico: { t: 'Sou Médico',
-        a: 'Ao se cadastrar no Projeto OBA®, você passa a integrar o Programa 4DOC® Patrocinado de Médicos Afiliados, com dois mecanismos de incentivo disponíveis.\n\nCada avaliação de paciente realizada por você no celular gera o equivalente a 15 dólares digitais, e cada paciente indicado por você que efetivar cadastro gera o equivalente a 10 dólares digitais.\n\nCom um simples toque no ícone do Projeto OBA®,',
-        b: 'instalado na tela do seu celular, você pode acessar o sistema, realizar avaliações e indicar pacientes.\n\nPara indicar pacientes, você terá à disposição um QR Code na tela, além da possibilidade de encaminhar um link por WhatsApp ou Telegram para pacientes à distância. Esse mesmo link também pode ser utilizado em suas redes sociais, e os pacientes que ingressarem no sistema por meio dele gerarão créditos para você.\n\nParticipe. Não há custo para adesão, apenas benefícios para você e mais acesso e cuidado para os pacientes.' },
+        a: 'Ao se cadastrar no Projeto OBA®, você passa a integrar o Programa 4DOC® Patrocinado de Médicos Afiliados, com dois mecanismos de incentivo disponíveis.\n\n' + frAvaliacao + frIndicacaoMed + '\n\nPara receber, seu registro precisa ser validado: basta enviar pelo WhatsApp uma selfie do seu rosto com a carteira profissional ao lado da face. Os créditos ficam guardados até a validação.\n\nCom um simples toque no ícone do Projeto OBA®,',
+        b: 'instalado na tela do seu celular, você pode acessar o sistema, realizar avaliações e indicar pacientes.\n\nPara indicar pacientes, você terá à disposição um QR Code na tela, além da possibilidade de encaminhar um link por WhatsApp ou Telegram para pacientes à distância. Esse mesmo link também pode ser utilizado em suas redes sociais, e os pacientes que ingressarem no sistema por meio dele e assinarem gerarão créditos para você.\n\nO crédito por indicação é liberado depois da sua primeira avaliação completa. As regras completas do programa estão disponíveis no sistema.\n\nParticipe. Não há custo para adesão, apenas benefícios para você e mais acesso e cuidado para os pacientes.' },
       conheco: { t: 'Conheço um Bariátrico',
-        a: 'Cada bariátrico indicado por você que se cadastrar gera um crédito equivalente a 10 dólares digitais.\n\nAo entrar no Projeto OBA®, o ícone do projeto',
-        b: 'será instalado na tela do seu celular. Ao tocar nele, você terá um QR Code para ser acessado por outro paciente e um link para envio por WhatsApp ou Telegram, permitindo o cadastro até de pessoas distantes. Esse mesmo link também poderá ser compartilhado nas suas redes sociais, e cada novo cadastro feito por meio dele gerará crédito para você.\n\nVocê ajuda outros bariátricos a viver melhor e, ao mesmo tempo, também recebe benefícios. Todos ganham.' },
+        a: frIndicacaoConheco + '\n\nAo entrar no Projeto OBA®, o ícone do projeto',
+        b: 'será instalado na tela do seu celular. Ao tocar nele, você terá um QR Code para ser acessado por outro paciente e um link para envio por WhatsApp ou Telegram, permitindo o cadastro até de pessoas distantes. Esse mesmo link também poderá ser compartilhado nas suas redes sociais, e cada paciente que se cadastrar e assinar por meio dele gerará crédito para você.\n\nVocê ajuda outros bariátricos a viver melhor e, ao mesmo tempo, também recebe benefícios. Todos ganham.' },
     };
     const comoCur = COMO[this.state.comoChoice] || { t: '', a: '', b: '' };
     const EASE = 'cubic-bezier(.2,.7,.2,1)';
