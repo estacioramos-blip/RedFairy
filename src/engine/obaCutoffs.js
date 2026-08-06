@@ -129,8 +129,17 @@ export const CUTOFFS_POR_SEXO = {
  *   - null    → dentro da faixa
  */
 export function classificarValor(chave, valor, contexto = {}) {
-  const valorNum = Number(valor)
-  if (!Number.isFinite(valorNum) || valor === '' || valor === null) {
+  // Vírgula decimal: '12,5' virava NaN e a função devolvia `null` em silêncio —
+  // o exame simplesmente não era classificado (nem verde, nem vermelho), sem
+  // nenhum aviso. Os campos numéricos do OBA normalmente entregam ponto, mas
+  // valor colado de outra tela ou de um relatório vem com vírgula.
+  // `true`/`false`/`[]`/' ' também viravam 0 e saíam como "baixo": só número ou
+  // texto numérico é aceito.
+  if (typeof valor === 'boolean' || Array.isArray(valor)) return null
+  const bruto = typeof valor === 'string' ? valor.trim().replace(',', '.') : valor
+  if (bruto === '' || bruto === null || bruto === undefined) return null
+  const valorNum = Number(bruto)
+  if (!Number.isFinite(valorNum)) {
     return null
   }
 

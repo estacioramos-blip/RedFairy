@@ -319,7 +319,36 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   alertas.sort((a, b) => prioridade[a.nivel] - prioridade[b.nivel])
 
   // ── Deduplicar exames sugeridos ──────────────────────────────────────────
-  const examesFinal = [...new Set([...examesSuger])]
+  //
+  // `new Set` sozinho dedupa por STRING EXATA — e o mesmo exame é sugerido por
+  // módulos diferentes com o motivo entre parênteses diferente. Saíam repetidos
+  // no MESMO pedido:
+  //   SATURAÇÃO DA TRANSFERRINA (AVALIAR SOBRECARGA DE FERRO)
+  //   SATURAÇÃO DA TRANSFERRINA (A FERRITINA ENGANA NA INFLAMAÇÃO)
+  // e AVALIAÇÃO COM PSIQUIATRA saía até 3× (álcool, cannabis, cigarro) — três
+  // linhas e três cobranças da mesma consulta.
+  //
+  // A regra do projeto é "parêntese-MOTIVO some, parêntese-PROTOCOLO fica"
+  // (ex.: 'VITAMINA D (25-OH)' é nome do exame, não motivo). Em vez de tentar
+  // classificar o parêntese — frágil —, só colapsa QUANDO HÁ COLISÃO de base:
+  // exame que aparece uma vez só sai intacto, protocolo preservado. Os motivos
+  // dos repetidos são unidos, para o médico não perder o porquê.
+  const examesFinal = (() => {
+    const baseDe = (s) => String(s).replace(/\s*\(.*$/, '').trim()
+    const ordem = []
+    const motivos = new Map()
+    for (const item of examesSuger) {
+      const b = baseDe(item)
+      if (!motivos.has(b)) { motivos.set(b, []); ordem.push(b) }
+      const m = (String(item).match(/\(([^)]*)\)\s*$/) || [])[1]
+      const lista = motivos.get(b)
+      if (m && !lista.includes(m)) lista.push(m)
+    }
+    return ordem.map(b => {
+      const ms = motivos.get(b)
+      return ms.length === 0 ? b : `${b} (${ms.join('; ')})`
+    })
+  })()
 
   return {
     tipoCirurgia:       disab.nomeCurto,

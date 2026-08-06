@@ -53,7 +53,17 @@ export function getFraseHipermenorreia(idade) {
 
 function inRange(value, range) {
   if (!range) return true;
-  return value >= range.min && value <= range.max;
+  // `null >= 0` e `'' >= 0` são TRUE em JavaScript (a comparação converte para
+  // 0, não para NaN). Sem esta guarda, exame AUSENTE casava faixas que começam
+  // em 0 — uma mulher com ferritina `null` chegava a casar "ANEMIA FERROPRIVA
+  // MODERADA" e receber prescrição de ferro por um exame que não fez.
+  // Hoje as duas telas exigem ferritina e saturação antes de chamar o motor, o
+  // que segurava o problema; isto é a rede para quando alguma porta nova não
+  // exigir. Ausente = não casa a faixa, e o fallback assume.
+  if (value === null || value === undefined || value === '') return false;
+  const n = Number(value);
+  if (!Number.isFinite(n)) return false;
+  return n >= range.min && n <= range.max;
 }
 
 function matchesConditions(item, inputs) {

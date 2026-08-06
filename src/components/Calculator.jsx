@@ -1394,14 +1394,33 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     return novosErros;
   }
 
+  // Normaliza o FORMATO do número digitado: tira o separador de milhar
+  // ("1.200" → "1200") e aceita vírgula decimal ("13,5" → "13.5").
+  //
+  // ⚠ NÃO ARREDONDA — e isto é uma CORREÇÃO, não um esquecimento.
+  // Até 06/08/2026 esta função terminava em `String(Math.round(num))`, herdado
+  // do commit `cde4521` ("subtexto ferritina, arredondamento..."), onde fazia
+  // sentido para a FERRITINA (valor inteiro, com separador de milhar). Só que
+  // ela é aplicada também a hemoglobina, VCM, RDW e saturação — analitos que o
+  // laboratório reporta COM UMA CASA DECIMAL. O médico digitava 13,5 e o motor
+  // recebia 14.
+  //
+  // O estrago era clínico e silencioso:
+  //   · Hb 13,4 → 13     (atravessa o corte de anemia)
+  //   · VCM 79,5 → 80    (atravessa o corte de microcitose)
+  //   · VCM 100,4 → 100  (atravessa o corte de macrocitose)
+  //   · RDW 14,6 → 15    (atravessa o corte de anisocitose)
+  // Cerca de 28% das combinações com decimais mudavam de diagnóstico.
+  //
+  // E divergia do PACIENTE: `PatientDashboard` sempre usou `Number(inputs.x)`
+  // sem arredondar — os mesmos valores davam diagnósticos diferentes nas duas
+  // telas. Pior: o banco grava o valor CRU, então o histórico e os gráficos não
+  // batiam com o diagnóstico que tinha sido mostrado ao médico.
   function sanitizarNumero(valor) {
     if (!valor && valor !== 0) return valor;
     const str = String(valor).trim();
     const semMilhar = str.replace(/\.(?=\d{3}(?!\d))/g, '');
-    const comPontoDecimal = semMilhar.replace(',', '.');
-    const num = parseFloat(comPontoDecimal);
-    if (!isNaN(num)) return String(Math.round(num));
-    return comPontoDecimal;
+    return semMilhar.replace(',', '.');
   }
 
   async function handleSubmit(e) {
@@ -1494,7 +1513,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       }
       // RLS Fase 2: gravação por RPC. Modo 'inserir' — o médico sempre cria uma
       // linha nova (mesmo comportamento do insert direto que existia aqui).
-      await supabase.rpc('avaliacoes_salvar', { p_modo: 'inserir', ...credMedico(), p_dados: {
+      // O retorno era inteiramente descartado: token de médico vencido, ou a RPC
+      // recusando, e o card aparecia normal com a avaliação NÃO gravada. Os dois
+      // caminhos irmãos (PatientDashboard e OBAModal) já checavam; era só aqui.
+      const { data: salvMed, error: salvMedErr } = await supabase.rpc('avaliacoes_salvar', { p_modo: 'inserir', ...credMedico(), p_dados: {
         cpf: inputs.cpf.replace(/\D/g, ''),
         data_coleta: dataColetaISO,
         peso: inputs.peso !== '' && Number.isFinite(Number(inputs.peso)) ? Number(inputs.peso) : null,
@@ -1522,6 +1544,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         medico_crm: medicoCRM || null,
         quer_extrato_oba: querExtratoOba,
       } });
+      if (salvMedErr || salvMed?.ok === false) {
+        console.error('avaliacoes_salvar (médico):', salvMedErr || salvMed?.erro);
+        try { window.alert('A avaliação foi calculada, mas NÃO foi salva no histórico do paciente: ' + (salvMed?.erro || 'falha de conexão') + '\n\nSe a sua sessão expirou, saia e entre novamente com o seu CRM.'); } catch (e) {}
+      }
     }
     setTimeout(() => { document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth' }); }, 100);
   }
