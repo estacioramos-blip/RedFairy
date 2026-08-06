@@ -32,7 +32,7 @@
      translúcido demais e o texto branco sumiria em cima da parte clara da hero.
      Nesse caso, e SÓ nesse, o fundo fica opaco. */
   @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
-    #saibaCard { background: rgba(10,8,7,0.93) !important; }
+    #saibaCard, #regrasCard { background: rgba(10,8,7,0.93) !important; }
   }
 </style>
 </helmet>
@@ -217,6 +217,9 @@
                 <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Conheço um Bariátrico</span>
                 <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
               </button>
+              <!-- Discreto de propósito: os três caminhos continuam sendo a ação
+                   principal. As regras são consulta, não o caminho de entrada. -->
+              <button onClick="{{ openRegras }}" style="align-self: center; margin-top: 6px; background: none; border: none; padding: 6px 4px; cursor: pointer; font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(247,241,231,0.72); text-decoration: underline; text-underline-offset: 4px;">Regras de uso do sistema</button>
             </div>
           </div>
         </sc-if>
@@ -272,11 +275,48 @@
     </div>
   </sc-if>
 
+  <!-- REGRAS DE USO — abre por cima do "Como Funciona" (z-index 70 > 60), sem
+       fechá-lo: ao sair, o usuário volta para os três caminhos.
+       Overlay transparente para o vidro fosco do card ter o que desfocar.
+       Cada regra abaixo corresponde a uma regra REAL do sistema (fn_credita_medico,
+       avaliacoes_salvar, caixa_pagar_medico) — se a lógica mudar, este texto muda. -->
+  <sc-if value="{{ regrasOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeRegras }}" style="position: fixed; inset: 0; z-index: 70; background: transparent; display: flex; align-items: center; justify-content: center; padding: 24px;">
+      <div id="regrasCard" onClick="{{ stop }}" style="position: relative; width: 100%; max-width: 460px; max-height: 82vh; overflow-y: auto; border-radius: 8px; background: rgba(10,8,7,0.52); backdrop-filter: blur(26px) saturate(1.35); -webkit-backdrop-filter: blur(26px) saturate(1.35); border: 1.5px solid #E3AE37; box-shadow: 0 40px 90px -30px rgba(0,0,0,0.75); padding: 26px 22px 28px;">
+        <button onClick="{{ closeRegras }}" aria-label="Fechar" style="position: absolute; top: 10px; right: 10px; background: none; border: none; padding: 0; cursor: pointer; color: #fff; font-size: 18px; line-height: 1;">×</button>
+
+        <p style="margin: 0 0 16px; font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: #E3AE37;">Regras de uso do sistema</p>
+
+        <p style="margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(247,241,231,0.62);">Paciente</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Cada CPF tem direito a uma avaliação completa gratuita. Da segunda em diante é preciso ter a anuidade ativa.</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">A anuidade vale por um ano a partir do pagamento. Vencida, o acesso volta ao modo gratuito até a renovação — os dados já registrados são preservados.</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Receitas, pedidos de exames e demais documentos médicos têm custo próprio, informado antes de cada solicitação.</p>
+        <p style="margin: 0 0 18px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Créditos obtidos por indicação abatem esses documentos e a anuidade seguinte.</p>
+
+        <p style="margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(247,241,231,0.62);">Indicação e créditos</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O crédito nasce quando o indicado se cadastra <b>e assina</b>. Cadastro sem assinatura não gera crédito.</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Uma vez por paciente. A renovação anual dele não gera nova comissão, e um CPF que já gerou crédito para alguém não gera outra vez.</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Vale o último registro feito antes da assinatura. Se outra pessoa registrar o mesmo paciente depois de você, o crédito é dela. A indicação de um indicador tem prioridade sobre o registro de um médico.</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O encaminhamento feito por médico vale por três meses. Se o paciente assinar depois desse prazo, não gera crédito.</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Se o pagamento do paciente não se confirmar e a assinatura for bloqueada, o crédito correspondente deixa de ser devido.</p>
+        <p style="margin: 0 0 18px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O pagamento é feito por PIX ou USDC, na chave cadastrada no seu perfil.</p>
+
+        <p style="margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(247,241,231,0.62);">Médico</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O cadastro não tem custo.</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Para receber, o registro precisa ser validado: envie pelo WhatsApp uma selfie do seu rosto com a carteira profissional ao lado da face. Os créditos ficam guardados até a validação.</p>
+        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O crédito por indicação é liberado depois da sua primeira avaliação completa.</p>
+        <p style="margin: 0 0 18px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">A avaliação gera crédito uma vez por paciente avaliado, e só vale para paciente já registrado no sistema.</p>
+
+        <p style="margin: 0; font-size: 12px; line-height: 1.55; color: rgba(247,241,231,0.6);">Os valores de anuidade, documentos e comissões são informados no sistema e podem ser ajustados. Vale sempre o valor exibido no momento da operação.</p>
+      </div>
+    </div>
+  </sc-if>
+
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: &quot;100%&quot;, &quot;height&quot;: 820}, &quot;showCredits&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;}, &quot;cardHoverFill&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { entered: false, settled: false, view: 'home', comoOpen: false, comoPhase: 'image', comoChoice: null, saibaOpen: false,
+  state = { entered: false, settled: false, view: 'home', comoOpen: false, comoPhase: 'image', comoChoice: null, saibaOpen: false, regrasOpen: false,
             // Comissões: LIDAS DO BANCO, nunca escritas aqui. O ADMIN muda em
             // Admin > Configurações e o site tem de acompanhar — antes os valores
             // estavam cravados no texto e passariam a mentir no dia do ajuste.
@@ -410,6 +450,11 @@ class Component extends DCLogic {
       saibaOpen: this.state.saibaOpen,
       openSaiba: (ev) => { if (ev) ev.preventDefault(); this.setState({ saibaOpen: true }); },
       closeSaiba: () => this.setState({ saibaOpen: false }),
+      regrasOpen: this.state.regrasOpen,
+      // Abre POR CIMA do "Como Funciona" (z-index maior), sem fechá-lo: quem sai
+      // das regras volta para os três caminhos, que é de onde veio.
+      openRegras: (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } this.setState({ regrasOpen: true }); },
+      closeRegras: (ev) => { if (ev) ev.stopPropagation(); this.setState({ regrasOpen: false }); },
     };
   }
 }
