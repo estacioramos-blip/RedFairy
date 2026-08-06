@@ -438,7 +438,7 @@ function AchadosParalelosSection({ achados }) {
   );
 }
 
-function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar }) {
+function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar, mostrarPainelMedico = true }) {
   const [expandido, setExpandido] = useState(null);
 
   const alertasGraves = oba.alertas?.filter(a => a.nivel === 'grave') || [];
@@ -447,6 +447,13 @@ function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar }) {
   // (ficam no form_snapshot dentro do relatorio_oba salvo). É a "notificação" que o
   // médico recebe ao digitar o CPF: o retrato está PROVISÓRIO nesses itens.
   const duvidas = oba.form_snapshot?.duvidas || [];
+  // `_pedidos` só existe em ciclos posteriores a este deploy — ciclos antigos
+  // simplesmente não mostram o bloco, sem erro.
+  const pedidos = oba._pedidos || null;
+  const fmtDataPedido = (iso) => {
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? "" : d.toLocaleDateString("pt-BR");
+  };
   // Texto livre que o paciente escreveu no fim da anamnese ("outra condição de saúde").
   const outraCondicao = (oba.form_snapshot?.outra_condicao || '').trim();
 
@@ -528,6 +535,54 @@ function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar }) {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* O que o paciente PEDIU na conclusão (teleconsultas / pedidos de exame).
+          Gravado em `relatorio_oba._pedidos` no clique do WhatsApp — antes disso
+          vivia só no rascunho local e o médico nunca via. Só faz sentido para o
+          médico: é a lista de trabalho dele. */}
+      {/* `mostrarPainelMedico` além de `!modoPaciente`: o paciente CADASTRADO é
+          tratado como médico por ora (ver CLAUDE.md), então só `!modoPaciente`
+          mostraria a ele um texto sobre si mesmo em terceira pessoa. Mesma
+          combinação que já gateia o PainelMedico. */}
+      {!modoPaciente && mostrarPainelMedico && pedidos && (
+        <div className="px-4 pt-4">
+          <div className="bg-green-50 border-2 border-green-300 rounded-xl px-4 py-3">
+            <p className="text-green-900 text-sm font-black uppercase tracking-wide mb-2">
+              {"🩺 O paciente solicitou"}
+            </p>
+            {pedidos.teleconsultas?.quantidade > 0 && (
+              <div className="mb-2">
+                <p className="text-green-800 text-xs font-bold uppercase tracking-wide mb-1">
+                  {"Teleconsulta"}{pedidos.teleconsultas.em ? " · " + fmtDataPedido(pedidos.teleconsultas.em) : ""}
+                </p>
+                <ul className="space-y-0.5">
+                  {(pedidos.teleconsultas.itens || []).map((t, i) => (
+                    <li key={i} className="flex items-start gap-2 text-green-900 text-sm font-semibold">
+                      <span className="text-green-500 mt-0.5 flex-shrink-0">{"•"}</span><span>{t}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {pedidos.exames?.n_pedidos > 0 && (
+              <div>
+                <p className="text-green-800 text-xs font-bold uppercase tracking-wide mb-1">
+                  {"Pedidos de exame"}{pedidos.exames.em ? " · " + fmtDataPedido(pedidos.exames.em) : ""}
+                </p>
+                {(pedidos.exames.servicos || []).map((s, i) => (
+                  <div key={i} className="mb-1">
+                    <p className="text-green-900 text-sm font-bold">{s.servico}</p>
+                    <p className="text-green-800 text-xs leading-snug">{(s.itens || []).join(" · ")}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-green-700 text-[11px] leading-snug mt-2">
+              {"Solicitado pelo paciente na conclusão da avaliação. O pagamento é confirmado à parte."}
+            </p>
           </div>
         </div>
       )}
@@ -1619,7 +1674,7 @@ export default function ResultCard({ resultado, onCopiar, copiado, modoPaciente 
         </div>
       )}
 
-      {oba && <OBASection oba={oba} modoPaciente={modoPaciente} cpf={resultado._inputs?.cpf} sexo={resultado._inputs?.sexo} onRevisar={onRevisarAnamnese} />}
+      {oba && <OBASection oba={oba} modoPaciente={modoPaciente} mostrarPainelMedico={mostrarPainelMedico} cpf={resultado._inputs?.cpf} sexo={resultado._inputs?.sexo} onRevisar={onRevisarAnamnese} />}
 
       {!modoPaciente && mostrarPainelMedico && (
         <PainelMedico

@@ -1402,6 +1402,77 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   // misturando dois atendimentos. Mirando pelo id isso não acontece.
   // Requer a RPC de migrate_oba_anamnese_atualizar_por_id.sql.
   // `rotulo` só entra no log, p/ saber QUAL gravação falhou (anamnese/exames/relatório).
+  // Espelho do que foi GRAVADO em `relatorio_oba`. Existe porque a RPC substitui
+  // a coluna inteira (não faz merge de jsonb): para acrescentar os pedidos depois,
+  // é preciso reenviar o relatório completo. Sem este espelho, o patch apagaria o
+  // relatório — foi assim que o `_paciente_original` quase se perdeu antes.
+  const relSalvoRef = useRef(null)
+
+  // Registra o que o paciente PEDIU (teleconsultas / pedidos de exame).
+  //
+  // Por que aqui e não a cada clique no checkbox: o médico precisa saber o que o
+  // paciente SOLICITOU, não o que ele marcou e desmarcou pensando. O clique no
+  // botão do WhatsApp é o ato do pedido — e evita uma escrita por checkbox.
+  //
+  // Antes disto, `teleOn`/`exOn` viviam SÓ no rascunho do localStorage: limpar o
+  // rascunho apagava o pedido, e o médico nunca via no painel o que foi pedido.
+  // Fila das gravações de pedido. Não basta atualizar o espelho antes do await:
+  // duas chamadas em paralelo podem ter as RESPOSTAS fora de ordem (a 1ª pode
+  // cair no fallback "RPC por id indisponível" e levar um round-trip a mais).
+  // A que chegasse por último venceria — e ela foi montada ANTES de saber do
+  // outro pedido, apagando-o. Serializar remove a corrida em vez de torcer.
+  const filaPedidoRef = useRef(Promise.resolve())
+
+  async function registrarPedido(chave, dados) {
+    if (!cpf) return
+    // O MÉDICO também chega à tela de conclusão (avaliação direta e revisão).
+    // Se ele clicasse nesses botões, gravaria um "pedido do paciente" que o
+    // paciente nunca fez — e o card do médico exibiria isso como solicitação
+    // dele, podendo virar agendamento e cobrança indevidos.
+    if (modoMedico || modoRevisao) return
+
+    filaPedidoRef.current = filaPedidoRef.current.then(async () => {
+      let base = relSalvoRef.current
+      if (!base) {
+        // Recarregou a página entre o relatório e a conclusão: o espelho se
+        // perdeu. Busca a linha DESTE ciclo — pelo `anamneseId`, não "a última
+        // do CPF": se um médico tiver revisado nesse intervalo, a última linha é
+        // a DELE, e gravá-la de volta no ciclo do paciente (a escrita mira o
+        // `anamneseId`) misturaria dois atendimentos.
+        try {
+          const { data } = await supabase.rpc('oba_anamnese_por_cpf', {
+            p_cpf: String(cpf).replace(/\D/g, ''), ...credAmbas(),
+          })
+          const linhas = (data?.ok && Array.isArray(data.linhas)) ? data.linhas : []
+          const minha = anamneseId
+            ? linhas.find(l => String(l.id) === String(anamneseId))
+            : linhas[linhas.length - 1]      // sem id: comportamento antigo
+          if (minha?.relatorio_oba) base = minha.relatorio_oba
+        } catch (e) { /* segue sem base */ }
+      }
+      // Sem base, NÃO grava: um objeto pela metade apagaria o relatório inteiro
+      // (a RPC troca a coluna, não faz merge) — inclusive o `_paciente_original`.
+      if (!base) {
+        console.warn('OBA: pedido não registrado (relatório indisponível)')
+        try { window.alert('Não conseguimos registrar o seu pedido no sistema. Envie a mensagem pelo WhatsApp assim mesmo — o administrador vai confirmar com você.') } catch (e) {}
+        return
+      }
+      const novo = {
+        ...base,
+        _pedidos: { ...(base._pedidos || {}), [chave]: { ...dados, em: new Date().toISOString() } },
+      }
+      relSalvoRef.current = novo
+      const ok = await gravarNaLinhaDoCiclo({ relatorio_oba: novo }, 'pedidos')
+      if (!ok) {
+        // Quem clica UM botão uma vez não tem segunda gravação para se corrigir:
+        // sem aviso, ele iria para o WhatsApp achando que ficou registrado e o
+        // médico nunca veria o pedido no painel.
+        try { window.alert('Não conseguimos registrar o seu pedido no sistema. Envie a mensagem pelo WhatsApp assim mesmo — o administrador vai confirmar com você.') } catch (e) {}
+      }
+    }).catch(() => {})   // um erro não pode travar a fila para o próximo pedido
+    return filaPedidoRef.current
+  }
+
   async function gravarNaLinhaDoCiclo(patch, rotulo = 'anamnese') {
     const porUltima = () => supabase.rpc('oba_anamnese_atualizar_ultima', {
       p_cpf: String(cpf || '').replace(/\D/g, ''), p_patch: patch, ...credAmbas()
@@ -1710,6 +1781,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
         }
         // Grava NA LINHA DESTE CICLO (pelo id) — ver gravarNaLinhaDoCiclo.
         await gravarNaLinhaDoCiclo({ relatorio_oba: relSalvar, estado_clinico: est?.estado || null }, 'relatório')
+        // Espelha o que foi gravado: `registrarPedido` precisa reenviar o relatório
+        // INTEIRO ao acrescentar os pedidos (a RPC troca a coluna, não faz merge).
+        relSalvoRef.current = relSalvar
         // Aviso à ADM no Telegram: o PACIENTE (nunca a própria revisão do médico,
         // senão toda revisão reabriria o próprio aviso) marcou "não tenho certeza"
         // em ≥1 seção da anamnese — sinal de que precisa de olhar médico.
@@ -2105,7 +2179,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               : <>{"Total: "}<strong style={{ color:'#7B1E1E' }}>{temPreco ? `R$ ${total}` : 'a confirmar'}</strong>{` · ${selecionadas.length} teleconsulta${selecionadas.length > 1 ? 's' : ''}`}</>}
           </span>
           {selecionadas.length > 0 && (
-            <button style={waBtn} onClick={() => abrirWhats(msg)}>{"Marcar no WhatsApp →"}</button>
+            <button style={waBtn} onClick={() => {
+              // Registra ANTES de abrir o WhatsApp: em celular o `window.open`
+              // troca de app e pode congelar o que ficou pendente aqui.
+              registrarPedido('teleconsultas', {
+                itens: selecionadas,
+                quantidade: selecionadas.length,
+                valor_unit: temPreco ? Number(valorTeleconsulta) : null,
+                total: total,
+              })
+              abrirWhats(msg)
+            }}>{"Marcar no WhatsApp →"}</button>
           )}
         </div>
       </div>
@@ -2219,7 +2303,20 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               ? "Nenhum pedido marcado."
               : <>{"Total: "}<strong style={{ color:'#7B1E1E' }}>{temPreco ? `R$ ${total}` : 'a confirmar'}</strong>{` · ${nPedidos} pedido${nPedidos > 1 ? 's' : ''}`}</>}
           </span>
-          {nPedidos > 0 && <button style={waBtn} onClick={() => abrirWhats(msg)}>{"Solicitar no WhatsApp →"}</button>}
+          {nPedidos > 0 && <button style={waBtn} onClick={() => {
+            // Guarda por SERVIÇO (é assim que o pedido existe e é cobrado: 1 pedido
+            // por serviço com ≥1 exame marcado, não 1 por exame).
+            registrarPedido('exames', {
+              servicos: servicosMarcados.map(s => ({
+                servico: s.c.titulo,
+                itens: s.itens.filter(ex => exOn.has(ex)),
+              })),
+              n_pedidos: nPedidos,
+              valor_unit: temPreco ? Number(valorSolicitacao) : null,
+              total: total,
+            })
+            abrirWhats(msg)
+          }}>{"Solicitar no WhatsApp →"}</button>}
         </div>
       </div>
     )
