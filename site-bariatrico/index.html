@@ -204,22 +204,35 @@
         <sc-if value="{{ comoMenu }}" hint-placeholder-val="{{ false }}">
           <div style="position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 40px;">
             <span style="font-size: 12px; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(247,241,231,0.72); text-align: center;">Como funciona · escolha seu caminho</span>
-            <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px;">
-              <button onClick="{{ selectBari }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
-                <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Sou Bariátrico</span>
-                <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
-              </button>
-              <button onClick="{{ selectMed }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
-                <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Sou Médico</span>
-                <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
-              </button>
-              <button onClick="{{ selectConh }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
-                <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Conheço um Bariátrico</span>
-                <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
-              </button>
-              <!-- Discreto de propósito: os três caminhos continuam sendo a ação
-                   principal. As regras são consulta, não o caminho de entrada. -->
-              <button onClick="{{ openRegras }}" style="align-self: center; margin-top: 6px; background: none; border: none; padding: 6px 4px; cursor: pointer; font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(247,241,231,0.72); text-decoration: underline; text-underline-offset: 4px;">Regras de uso do sistema</button>
+            <!-- Cada caminho = card + subtexto de regras. O link fica FORA do
+                 <button> do card (botão dentro de botão é HTML inválido e o
+                 clique se perde), mas dentro do mesmo bloco, com gap pequeno —
+                 visualmente lê-se como subtexto do card.
+                 Fonte na METADE do card (clamp 15-18 -> 7,5-9px), branca, como
+                 pedido. O `padding` generoso é intencional: o texto é minúsculo,
+                 mas a área de toque no celular não pode ser. -->
+            <div style="width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; flex-direction: column; gap: 3px;">
+                <button onClick="{{ selectBari }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
+                  <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Sou Bariátrico</span>
+                  <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
+                </button>
+                <button onClick="{{ regrasBari }}" style="align-self: flex-start; background: none; border: none; padding: 4px 20px 2px; cursor: pointer; font-family: 'Archivo', sans-serif; font-size: clamp(7.5px, 1vw, 9px); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #FFFFFF; text-decoration: underline; text-underline-offset: 3px;">Regras de uso do sistema</button>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px;">
+                <button onClick="{{ selectMed }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
+                  <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Sou Médico</span>
+                  <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
+                </button>
+                <button onClick="{{ regrasMed }}" style="align-self: flex-start; background: none; border: none; padding: 4px 20px 2px; cursor: pointer; font-family: 'Archivo', sans-serif; font-size: clamp(7.5px, 1vw, 9px); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #FFFFFF; text-decoration: underline; text-underline-offset: 3px;">Regras de uso do sistema</button>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 3px;">
+                <button onClick="{{ selectConh }}" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; background: rgba(255,255,255,0.06); border: 1px solid rgba(227,174,55,0.45); border-radius: 7px; padding: 14px 16px 14px 20px; cursor: pointer;">
+                  <span style="font-family: 'Archivo', sans-serif; font-size: clamp(15px, 2vw, 18px); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #E3AE37; text-align: left;">Conheço um Bariátrico</span>
+                  <span style="flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #E3AE37; display: flex; align-items: center; justify-content: center;"><span style="width: 0; height: 0; border-style: solid; border-width: 6px 0 6px 10px; border-color: transparent transparent transparent #E3AE37; margin-left: 2px;"></span></span>
+                </button>
+                <button onClick="{{ regrasConh }}" style="align-self: flex-start; background: none; border: none; padding: 4px 20px 2px; cursor: pointer; font-family: 'Archivo', sans-serif; font-size: clamp(7.5px, 1vw, 9px); font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #FFFFFF; text-decoration: underline; text-underline-offset: 3px;">Regras de uso do sistema</button>
+              </div>
             </div>
           </div>
         </sc-if>
@@ -285,29 +298,12 @@
       <div id="regrasCard" onClick="{{ stop }}" style="position: relative; width: 100%; max-width: 460px; max-height: 82vh; overflow-y: auto; border-radius: 8px; background: rgba(10,8,7,0.52); backdrop-filter: blur(26px) saturate(1.35); -webkit-backdrop-filter: blur(26px) saturate(1.35); border: 1.5px solid #E3AE37; box-shadow: 0 40px 90px -30px rgba(0,0,0,0.75); padding: 26px 22px 28px;">
         <button onClick="{{ closeRegras }}" aria-label="Fechar" style="position: absolute; top: 10px; right: 10px; background: none; border: none; padding: 0; cursor: pointer; color: #fff; font-size: 18px; line-height: 1;">×</button>
 
-        <p style="margin: 0 0 16px; font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: #E3AE37;">Regras de uso do sistema</p>
+        <p style="margin: 0 0 3px; font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(247,241,231,0.6);">Regras de uso do sistema</p>
+        <p style="margin: 0 0 16px; font-family: 'Archivo', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: #E3AE37;">{{ regrasTitulo }}</p>
 
-        <p style="margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(247,241,231,0.62);">Paciente</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Cada CPF tem direito a uma avaliação completa gratuita. Da segunda em diante é preciso ter a anuidade ativa.</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">A anuidade vale por um ano a partir do pagamento. Vencida, o acesso volta ao modo gratuito até a renovação — os dados já registrados são preservados.</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Receitas, pedidos de exames e demais documentos médicos têm custo próprio, informado antes de cada solicitação.</p>
-        <p style="margin: 0 0 18px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Créditos obtidos por indicação abatem esses documentos e a anuidade seguinte.</p>
+        <p style="margin: 0; font-size: 13.5px; line-height: 1.62; white-space: pre-line; color: #FFFFFF;">{{ regrasTexto }}</p>
 
-        <p style="margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(247,241,231,0.62);">Indicação e créditos</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O crédito nasce quando o indicado se cadastra <b>e assina</b>. Cadastro sem assinatura não gera crédito.</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Uma vez por paciente. A renovação anual dele não gera nova comissão, e um CPF que já gerou crédito para alguém não gera outra vez.</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Vale o último registro feito antes da assinatura. Se outra pessoa registrar o mesmo paciente depois de você, o crédito é dela. A indicação de um indicador tem prioridade sobre o registro de um médico.</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O encaminhamento feito por médico vale por três meses. Se o paciente assinar depois desse prazo, não gera crédito.</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Se o pagamento do paciente não se confirmar e a assinatura for bloqueada, o crédito correspondente deixa de ser devido.</p>
-        <p style="margin: 0 0 18px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O pagamento é feito por PIX ou USDC, na chave cadastrada no seu perfil.</p>
-
-        <p style="margin: 0 0 6px; font-family: 'Archivo', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(247,241,231,0.62);">Médico</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O cadastro não tem custo.</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">Para receber, o registro precisa ser validado: envie pelo WhatsApp uma selfie do seu rosto com a carteira profissional ao lado da face. Os créditos ficam guardados até a validação.</p>
-        <p style="margin: 0 0 5px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">O crédito por indicação é liberado depois da sua primeira avaliação completa.</p>
-        <p style="margin: 0 0 18px; font-size: 13.5px; line-height: 1.6; color: #FFFFFF;">A avaliação gera crédito uma vez por paciente avaliado, e só vale para paciente já registrado no sistema.</p>
-
-        <p style="margin: 0; font-size: 12px; line-height: 1.55; color: rgba(247,241,231,0.6);">Os valores de anuidade, documentos e comissões são informados no sistema e podem ser ajustados. Vale sempre o valor exibido no momento da operação.</p>
+        <p style="margin: 18px 0 0; font-size: 12px; line-height: 1.55; color: rgba(247,241,231,0.6);">Os valores de anuidade, documentos e comissões são informados no sistema e podem ser ajustados. Vale sempre o valor exibido no momento da operação.</p>
       </div>
     </div>
   </sc-if>
@@ -316,7 +312,7 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: &quot;100%&quot;, &quot;height&quot;: 820}, &quot;showCredits&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;}, &quot;cardHoverFill&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { entered: false, settled: false, view: 'home', comoOpen: false, comoPhase: 'image', comoChoice: null, saibaOpen: false, regrasOpen: false,
+  state = { entered: false, settled: false, view: 'home', comoOpen: false, comoPhase: 'image', comoChoice: null, saibaOpen: false, regrasChoice: null,
             // Comissões: LIDAS DO BANCO, nunca escritas aqui. O ADMIN muda em
             // Admin > Configurações e o site tem de acompanhar — antes os valores
             // estavam cravados no texto e passariam a mentir no dia do ajuste.
@@ -389,6 +385,41 @@ class Component extends DCLogic {
         b: 'será instalado na tela do seu celular. Ao tocar nele, você terá um QR Code para ser acessado por outro paciente e um link para envio por WhatsApp ou Telegram, permitindo o cadastro até de pessoas distantes. Esse mesmo link também poderá ser compartilhado nas suas redes sociais, e cada paciente que se cadastrar e assinar por meio dele gerará crédito para você.\n\nVocê ajuda outros bariátricos a viver melhor e, ao mesmo tempo, também recebe benefícios. Todos ganham.' },
     };
     const comoCur = COMO[this.state.comoChoice] || { t: '', a: '', b: '' };
+
+    // REGRAS por público. Separadas porque regra de médico não interessa a quem é
+    // bariátrico — num texto só, cada um lia três vezes mais do que precisava.
+    // Cada linha corresponde a uma regra REAL do sistema (`fn_credita_medico`,
+    // `avaliacoes_salvar`, `caixa_pagar_medico`): se a lógica mudar, mude aqui.
+    // Renderizadas com `white-space: pre-line`, mesmo padrão dos textos do COMO.
+    const REGRA_CREDITO_COMUM =
+      'O crédito nasce quando o indicado se cadastra E ASSINA. Cadastro sem assinatura não gera crédito.\n\n' +
+      'Uma vez por paciente. A renovação anual dele não gera nova comissão, e um CPF que já gerou crédito para alguém não gera outra vez.\n\n' +
+      'Vale o último registro feito antes da assinatura: se outra pessoa registrar o mesmo paciente depois de você, o crédito é dela.\n\n' +
+      'Se o pagamento do paciente não se confirmar e a assinatura for bloqueada, o crédito correspondente deixa de ser devido.';
+    const REGRAS = {
+      bariatrico: { t: 'Sou Bariátrico', x:
+        'Cada CPF tem direito a uma avaliação completa gratuita. Da segunda em diante é preciso ter a anuidade ativa.\n\n' +
+        'A anuidade vale por um ano a partir do pagamento. Vencida, o acesso volta ao modo gratuito até a renovação — os dados já registrados são preservados.\n\n' +
+        'Receitas, pedidos de exames e demais documentos médicos têm custo próprio, informado antes de cada solicitação.\n\n' +
+        'Ao indicar outros bariátricos, você acumula créditos que abatem esses documentos e a anuidade seguinte. Se os créditos superarem o que você gasta na plataforma, o saldo é depositado na chave PIX ou USDC cadastrada no seu perfil.\n\n' +
+        REGRA_CREDITO_COMUM },
+      medico: { t: 'Sou Médico', x:
+        'O cadastro não tem custo.\n\n' +
+        'Para receber, o seu registro precisa ser validado: envie pelo WhatsApp uma selfie do seu rosto com a carteira profissional ao lado da face. Os créditos ficam guardados até a validação.\n\n' +
+        'A avaliação de paciente gera crédito uma vez por paciente avaliado, e vale apenas para paciente já registrado no sistema.\n\n' +
+        'O crédito por indicação só é liberado depois da sua primeira avaliação completa.\n\n' +
+        'O encaminhamento feito por você vale por três meses: se o paciente assinar depois desse prazo, não gera crédito.\n\n' +
+        'Se o paciente tiver sido indicado por um indicador, a indicação dele tem prioridade sobre o seu registro.\n\n' +
+        REGRA_CREDITO_COMUM + '\n\n' +
+        'O pagamento é feito por PIX, na chave cadastrada no seu perfil.' },
+      conheco: { t: 'Conheço um Bariátrico', x:
+        'Qualquer pessoa pode indicar. Não é preciso ser médico nem paciente do Projeto OBA®.\n\n' +
+        REGRA_CREDITO_COMUM + '\n\n' +
+        'A sua indicação tem prioridade sobre o registro de um médico no mesmo paciente.\n\n' +
+        'O pagamento é feito por PIX ou USDC, na chave cadastrada no seu perfil.\n\n' +
+        'Se você também for paciente, os créditos podem abater os seus documentos médicos e a sua anuidade em vez de serem sacados.' },
+    };
+    const regraCur = REGRAS[this.state.regrasChoice] || { t: '', x: '' };
     const EASE = 'cubic-bezier(.2,.7,.2,1)';
     const hoverPart = 'background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease';
     const tr = (spec) => s ? 'none' : spec;
@@ -450,11 +481,17 @@ class Component extends DCLogic {
       saibaOpen: this.state.saibaOpen,
       openSaiba: (ev) => { if (ev) ev.preventDefault(); this.setState({ saibaOpen: true }); },
       closeSaiba: () => this.setState({ saibaOpen: false }),
-      regrasOpen: this.state.regrasOpen,
+      regrasOpen: !!this.state.regrasChoice,
+      regrasTitulo: regraCur.t,
+      regrasTexto: regraCur.x,
       // Abre POR CIMA do "Como Funciona" (z-index maior), sem fechá-lo: quem sai
       // das regras volta para os três caminhos, que é de onde veio.
-      openRegras: (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } this.setState({ regrasOpen: true }); },
-      closeRegras: (ev) => { if (ev) ev.stopPropagation(); this.setState({ regrasOpen: false }); },
+      // `stopPropagation` é obrigatório: sem ele o clique sobe até o card e o
+      // usuário cairia no texto do caminho em vez das regras.
+      regrasBari: (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } this.setState({ regrasChoice: 'bariatrico' }); },
+      regrasMed:  (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } this.setState({ regrasChoice: 'medico' }); },
+      regrasConh: (ev) => { if (ev) { ev.preventDefault(); ev.stopPropagation(); } this.setState({ regrasChoice: 'conheco' }); },
+      closeRegras: (ev) => { if (ev) ev.stopPropagation(); this.setState({ regrasChoice: null }); },
     };
   }
 }
