@@ -7,7 +7,18 @@ export const maleMatrix = [
     color: "green",
     conditions: {
       ferritina:   { min: 24,  max: 150  },
-      hemoglobina: { min: 13.0,max: 17.5 },
+      // 13.5, não 13.0 — corrigido em 08/08/2026.
+      // 13,5 é o corte de anemia masculina em TODO o resto do projeto: 34 outras
+      // entradas desta matriz usam esse mínimo, as irmãs id 4 e id 5 (mesma
+      // estrutura) usam, e a `triagemEritron` classifica explicitamente
+      // 13,0–13,4 como ANEMIA LEVE.
+      // Com 13.0 aqui, esta era a ÚNICA entrada VERDE do projeto abaixo do corte:
+      // o paciente fazia a triagem, era avisado de anemia leve (laranja), e a
+      // avaliação completa em seguida o declarava SAUDÁVEL — com a frase "até os
+      // 65 anos você pode doar sangue". Doar sangue anêmico.
+      // (A outra entrada com 13.0, id 104, é amarela e se chama "PRÉ-ANÊMICA" —
+      // ali o 13.0 é proposital, existe para pegar essa faixa como aviso.)
+      hemoglobina: { min: 13.5,max: 17.5 },
       vcm:         { min: 80,  max: 100  },
       rdw:         { min: 11.5,max: 15   },
       satTransf:   { min: 20,  max: 50   },
