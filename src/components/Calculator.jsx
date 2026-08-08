@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/decisionEngine';
 import { avaliarOBA } from '../engine/obaEngine';
-import { checarValor } from '../engine/limitesInput';
+import { checarValor, normalizarNumero } from '../engine/limitesInput';
 import { ciclosEfetivos } from '../engine/obaComparador';
 import { credMedico, credAdministrador } from '../lib/cred';
 import OBAModal from './OBAModal';
@@ -1416,11 +1416,19 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   // sem arredondar — os mesmos valores davam diagnósticos diferentes nas duas
   // telas. Pior: o banco grava o valor CRU, então o histórico e os gráficos não
   // batiam com o diagnóstico que tinha sido mostrado ao médico.
+  // Delega para a FONTE ÚNICA (`limitesInput.normalizarNumero`). Esta função era
+  // uma segunda implementação: tratava o separador de milhar, e a de lá não —
+  // então ferritina '1.200' valia 1200 aqui e 1,2 na crítica de aberrantes (que
+  // usa `paraNumero` → `normalizarNumero`), fazendo a crítica acusar "ABERRANTE"
+  // num valor correto. Unificado em 08/08/2026.
+  //
+  // Continua existindo só pelo contrato de borda: `normalizarNumero` devolve ''
+  // para nulo/vazio, e aqui os campos opcionais (b12_valor, folato_valor)
+  // dependem de o valor original passar intacto para o teste `!== ''` do
+  // chamador. Preserva esse comportamento e não duplica mais nenhuma regra.
   function sanitizarNumero(valor) {
     if (!valor && valor !== 0) return valor;
-    const str = String(valor).trim();
-    const semMilhar = str.replace(/\.(?=\d{3}(?!\d))/g, '');
-    return semMilhar.replace(',', '.');
+    return normalizarNumero(valor);
   }
 
   async function handleSubmit(e) {

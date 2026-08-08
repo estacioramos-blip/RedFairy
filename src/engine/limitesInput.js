@@ -114,10 +114,40 @@ export const FAIXAS = {
   calprotectina:   { poss: [0, 50000],    prov: [0, 500],     label: 'Calprotectina fecal', un: 'µg/g' },
 }
 
-// Vírgula → ponto e fora tudo que não é número. Usado antes de qualquer parse.
+// Normaliza o FORMATO do número digitado. FONTE ÚNICA — use esta, não escreva
+// outra (ver o histórico abaixo).
+//
+// Faz, nesta ordem:
+//   1. tira o separador de MILHAR:  '1.200' → '1200'
+//   2. vírgula decimal vira ponto:  '13,5'  → '13.5'
+//   3. descarta o que não for dígito ou ponto
+//
+// ⚠ A ORDEM DE 1 E 2 NÃO É ARBITRÁRIA. Em '1.234,56', se a vírgula virasse
+// ponto primeiro, o número teria dois pontos e a regex de milhar não saberia
+// qual é qual. Tirando o milhar antes, sobra '1234,56' → '1234.56'.
+//
+// ⚠ A regex do milhar exige EXATAMENTE 3 dígitos depois do ponto e nenhum a
+// mais (`(?!\d)`), então '13.5' e '100.45' passam intactos. É o ponto de milhar
+// que some, não o decimal.
+//
+// ⚠ NÃO ARREDONDA. Até 06/08/2026 a versão do Calculator terminava em
+// `Math.round` e o motor recebia 14 quando o médico digitava 13,5 — mudava
+// diagnóstico em ~28% das combinações com decimal (commit `6e94bd8`).
+//
+// HISTÓRICO: esta função existia desde sempre mas NINGUÉM fora deste arquivo a
+// usava; o Calculator tinha a própria (`sanitizarNumero`), que tratava o milhar
+// enquanto esta não. Resultado: ferritina '1.200' valia 1200 para o motor e 1,2
+// para a crítica de aberrantes, que acusava "⚠ ABERRANTE" num valor correto.
+// Unificado em 08/08/2026 por decisão do Estácio.
 export function normalizarNumero(v) {
   if (v == null) return ''
-  return String(v).replace(',', '.').replace(/[^0-9.]/g, '')
+  const bruto = String(v).trim()
+  // '1.200' é ambíguo (mil e duzentos × um vírgula dois) e a regra escolhe
+  // MILHAR — exceto quando a parte inteira é 0: '0.500' nunca é "zero mil e
+  // quinhentos", é meio. Sem esta exceção, creatinina/magnésio/cálcio iônico
+  // (valores abaixo de 1, comuns com 3 casas) virariam centenas.
+  const semMilhar = /^0\./.test(bruto) ? bruto : bruto.replace(/\.(?=\d{3}(?!\d))/g, '')
+  return semMilhar.replace(',', '.').replace(/[^0-9.]/g, '')
 }
 
 // Converte pra número respeitando o campo vazio.
