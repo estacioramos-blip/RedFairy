@@ -63,6 +63,9 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [indicaView, setIndicaView] = useState('indicar')   // 'indicar' | 'creditos'
   const [voltarParaGate, setVoltarParaGate] = useState(false)  // INDICAR/VER aberto pela bifurcação → ao fechar, volta pra ela
   const [saldoIndicadorBrl, setSaldoIndicadorBrl] = useState(0)
+  // Crédito que existe mas ainda não pode ser gasto: a assinatura do indicado
+  // foi declarada e o PIX ainda não foi conferido pelo Caixa.
+  const [pendenteIndicadorBrl, setPendenteIndicadorBrl] = useState(0)
   // (icone do bariatrico) bifurcacao ao abrir pelo icone: Entrar x Indicar.
   const [showEscolhaEntrarIndicar, setShowEscolhaEntrarIndicar] = useState(false)
   // BOTÃO DE EMERGÊNCIA (Fase 2): 3 toques para acionar. showEmergencia = tela aberta.
@@ -158,7 +161,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     const cpfd = String(profile?.cpf || '').replace(/\D/g, '')
     if (cpfd.length !== 11) return
     supabase.rpc('saldo_indicador', { p_cpf: cpfd })
-      .then(({ data }) => { if (data && data.ok) setSaldoIndicadorBrl(Number(data.saldo_brl) || 0) })
+      .then(({ data }) => {
+        if (!data || !data.ok) return
+        setSaldoIndicadorBrl(Number(data.saldo_brl) || 0)
+        // Crédito de assinatura ainda não conferida: ele JÁ ganhou, mas o
+        // dinheiro só é liberado depois que o Caixa confirma o PIX. Mostrar
+        // separado evita as duas leituras erradas — "sumiu" e "posso gastar".
+        setPendenteIndicadorBrl(Number(data.pendente_brl) || 0)
+      })
       .catch(() => {})
   }, [profile])
 
@@ -1397,7 +1407,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               <p className="text-sm font-bold text-red-800">{"💸 Indique e ganhe créditos"}</p>
               {saldoIndicadorBrl > 0
                 ? <p className="text-xs text-green-700 font-bold mt-0.5">{"Seu saldo: R$ "}{saldoIndicadorBrl.toFixed(2).replace('.', ',')}{" — abate da sua anuidade."}</p>
-                : <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Cada um que entrar e pagar = US$10 para você."}</p>}
+                : pendenteIndicadorBrl <= 0
+                  ? <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Cada um que entrar e pagar = US$10 para você."}</p>
+                  : null}
+              {/* O indicado pagou (declarou) e o crédito já existe — mas só vira
+                  dinheiro depois que a tesouraria confirma o PIX. Dizer isso
+                  evita as duas leituras erradas: "sumiu" e "posso gastar já". */}
+              {pendenteIndicadorBrl > 0 && (
+                <p className="text-xs text-amber-700 font-semibold mt-0.5">
+                  {"R$ "}{pendenteIndicadorBrl.toFixed(2).replace('.', ',')}{" aguardando a confirmação do pagamento do indicado."}
+                </p>
+              )}
             </div>
             <button onClick={() => { setIndicaView('indicar'); setShowIndica(true) }}
               className="shrink-0 bg-red-700 hover:bg-red-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors whitespace-nowrap">
