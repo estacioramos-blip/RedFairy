@@ -2124,12 +2124,19 @@ function buildModInfeccoes(dados, alertas) {
 
   if (has('HERPES-ZÓSTER')) {
     const hz = dados.herpes_zoster || []
+    // 'USEI ACICLOVIR ORAL' era coletado e ignorado (último input órfão da anamnese).
+    const tratouAciclovir = hz.includes('USEI ACICLOVIR ORAL')
+    const vacinadoZoster = hz.includes('TOMEI VACINA')
+    // Esquema vacinal pós-episódio (Dr. Ramos): cessado o quadro agudo e sem lesão
+    // aberta — mesmo que persista neuralgia — 2 doses com 60-90 dias de intervalo.
+    // Só pra quem NÃO marcou TOMEI VACINA (pro vacinado, "tome as duas doses" erraria).
+    const esquemaVacinaZoster = 'CESSADO O EPISÓDIO AGUDO E SEM LESÃO ABERTA — MESMO QUE AINDA HAJA NEURALGIA — TOME AS DUAS DOSES DA VACINA, COM INTERVALO DE 60 A 90 DIAS DA PRIMEIRA PARA A SEGUNDA. '
     if (hz.includes('MAIS DE UM EPISÓDIO')) {
       bump(MODERADO)
-      linhas.push('HERPES-ZÓSTER RECORRENTE (MAIS DE UM EPISÓDIO): INCOMUM — SUGERE IMUNIDADE COMPROMETIDA. INVESTIGAR CAUSAS (INCLUINDO HIV E NEOPLASIAS) E CORRELACIONAR COM DEFICIÊNCIAS DO BARIÁTRICO. VACINA (SHINGRIX) RECOMENDADA.')
+      linhas.push('HERPES-ZÓSTER RECORRENTE (MAIS DE UM EPISÓDIO' + (tratouAciclovir ? ', TRATADO COM ACICLOVIR ORAL' : '') + '): INCOMUM — SUGERE IMUNIDADE COMPROMETIDA. INVESTIGAR CAUSAS (INCLUINDO HIV E NEOPLASIAS) E CORRELACIONAR COM DEFICIÊNCIAS DO BARIÁTRICO. ' + (vacinadoZoster ? 'VACINA (SHINGRIX) RECOMENDADA.' : 'VACINA (SHINGRIX) RECOMENDADA — ' + esquemaVacinaZoster.trim()))
     } else {
       bump(LEVE)
-      linhas.push('HERPES-ZÓSTER: ' + (hz.includes('TOMEI VACINA') ? 'VACINAÇÃO EM DIA. ' : 'CONSIDERAR A VACINA (SHINGRIX). ') + 'MANTENHA O ACOMPANHAMENTO.')
+      linhas.push('HERPES-ZÓSTER' + (tratouAciclovir ? ' (TRATADO COM ACICLOVIR ORAL — CONDUTA CORRETA, O ANTIVIRAL PRECOCE REDUZ O RISCO DA NEURALGIA PÓS-HERPÉTICA)' : '') + ': ' + (vacinadoZoster ? 'VACINAÇÃO EM DIA. ' : 'CONSIDERAR A VACINA (SHINGRIX) — ' + esquemaVacinaZoster) + 'MANTENHA O ACOMPANHAMENTO.')
     }
   }
 
