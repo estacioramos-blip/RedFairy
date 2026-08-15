@@ -695,7 +695,7 @@ if (modo === 'home') {
           </div>
           <h1 className="text-5xl font-black tracking-tight mb-1"
             style={{ fontFamily: "'Georgia', serif", letterSpacing: '-0.02em' }}>
-            <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
+            <span style={{ color: '#facc15' }}>{"Projeto OBA"}<sup style={{ fontSize: '0.4em', verticalAlign: 'super' }}>{"®"}</sup></span>
           </h1>
           <p className="text-red-300 text-sm tracking-widest uppercase font-medium">
             Cuidar do seu Eritron

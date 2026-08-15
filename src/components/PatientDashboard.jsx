@@ -1889,16 +1889,8 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 px-6"
         onClick={() => setFadaInstaladaPopup(false)}>
         <div className="bg-white rounded-2xl shadow-xl max-w-xs w-full p-6 text-center" onClick={(e) => e.stopPropagation()}>
-          {/* Mesmo padrão condicional dos outros modais do fluxo do paciente:
-              bariátrico NÃO vê a marca RedFairy (supressão pro lançamento OBA). */}
           <h2 style={{ fontFamily: "'Georgia', serif", fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', margin: 0 }}>
-            {profile?.bariatrica ? (
-              <span style={{ color: '#facc15' }}>{"Projeto OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
-            ) : (<>
-              <span style={{ color: '#b91c1c' }}>Red</span><span style={{ color: '#ef4444' }}>Fairy</span>
-              <span style={{ color: '#E3AE37', fontWeight: 700 }}>{" | "}</span>
-              <span style={{ color: '#374151' }}>{"OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
-            </>)}
+            <span style={{ color: '#facc15' }}>{"Projeto OBA"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"®"}</sup></span>
           </h2>
           <img src={obaFairyIcon} alt="Ícone do Projeto OBA" className="w-20 h-20 object-contain mx-auto my-3 rounded-2xl" />
           <p className="text-sm text-gray-700 leading-relaxed">

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="RedFairy — plataforma de triagem hematológica e acompanhamento do eritron para médicos e pacientes." />
+    <meta name="description" content="Projeto OBA®: plataforma inteligente de acompanhamento e triagem para pacientes bariátricos." />
     <!-- Este app (telas de login/CPF/CRM, em qualquer domínio: redfairy.bio e
          app.bariatrico.net) não é conteúdo de busca — é só porta de entrada
          funcional. Quem deve aparecer no Google é o site de marketing
@@ -16,18 +16,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet" />
 
-    <!-- PWA: instalável (ícone da fada RedFairy na tela inicial). Branding OBA é
-         aplicado dinamicamente (ver src/App.jsx) só quando ehDominioBariatrico(). -->
+    <!-- PWA instalável. Desde 15/08/2026 a identidade de NASCIMENTO é Projeto OBA
+         (decisão do Estácio: RedFairy não tem mais divulgação nem aplicação).
+         No domínio bariátrico, aplicarBrandingOBA() ainda troca o manifest pelo
+         manifest-oba (start_url ?oba=1, entra direto no fluxo do paciente). -->
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#111827" />
     <meta name="mobile-web-app-capable" content="yes" />
     <!-- iOS: "Adicionar à Tela de Início" -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="RedFairy" />
-    <link rel="apple-touch-icon" href="/fada-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Projeto OBA" />
+    <link rel="apple-touch-icon" href="/oba-fairy-v2.png" />
 
-    <title>RedFairy — Cuidar do Seu Eritron</title>
+    <title>Projeto OBA®</title>
     <!-- Fundo escuro no carregamento (evita o "flash branco" ao entrar nas telas de acesso, que são escuras) -->
     <style>html, body, #root { background-color: #111827; }</style>
   </head>

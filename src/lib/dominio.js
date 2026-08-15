@@ -17,10 +17,10 @@ export function ehDominioBariatrico() {
   return false
 }
 
-// Aplica o branding "Projeto OBA" (título, descrição, manifest, ícone iOS) por
-// cima do padrão RedFairy do index.html — só quando ehDominioBariatrico(). Sem
-// isto, redfairy.bio (domínio geral, não-bariátrico) NÃO deve carregar identidade
-// OBA — o index.html/manifest.webmanifest já nascem com o branding RedFairy.
+// Desde 15/08/2026 o index.html/manifest JÁ NASCEM com identidade Projeto OBA
+// (decisão do Estácio: RedFairy sem divulgação nem aplicação). Esta função ficou
+// quase redundante — o que ela ainda faz de útil no domínio bariátrico é trocar
+// o manifest pelo manifest-oba (start_url ?oba=1 → entra direto no fluxo OBA).
 export function aplicarBrandingOBA() {
   if (!ehDominioBariatrico() || typeof document === 'undefined') return
   try {
