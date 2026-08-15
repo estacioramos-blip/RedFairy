@@ -65,7 +65,11 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
     let vivo = true
     ;(async () => {
       try {
-        const { data } = await supabase.rpc('paciente_virar_indicador', { p_cpf: cpfLimpo })
+        // Gate de token (migrate_cluster_seguranca_ago2026.sql): a RPC aceita a sessão
+        // de PACIENTE ou de INDICADOR puro — este modal serve os dois perfis (o
+        // paciente via dashboard, o indicador puro via IndicadorPage). Envia o que houver.
+        const tk = (() => { try { return localStorage.getItem('paciente_token') || localStorage.getItem('indicador_token') || '' } catch (e) { return '' } })()
+        const { data } = await supabase.rpc('paciente_virar_indicador', { p_cpf: cpfLimpo, p_token: tk })
         if (!vivo) return
         if (data && data.ok && data.codigo) {
           setCodigo(data.codigo)
@@ -103,10 +107,14 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
     if (pixPj && String(pixCnpj).replace(/\D/g, '').length !== 14) { setMsgPix('Informe o CNPJ (14 dígitos).'); return }
     setSalvando(true)
     try {
+      // Gate de token (migrate_cluster_seguranca_ago2026.sql): só o dono do CPF
+      // grava a própria chave PIX — sessão de paciente OU de indicador puro.
+      const tk = (() => { try { return localStorage.getItem('paciente_token') || localStorage.getItem('indicador_token') || '' } catch (e) { return '' } })()
       const { data } = await supabase.rpc('paciente_salvar_pix', {
         p_cpf: cpfLimpo, p_nome: nomeFinal, p_pix: pixInput.trim(),
         p_celular: indTel.replace(/\D/g, '') || celLimpo, p_email: emailLimpo,
         p_titular: tit, p_pj: pixPj, p_cnpj: pixPj ? String(pixCnpj).replace(/\D/g, '') : null,
+        p_token: tk,
       })
       if (data && data.ok) {
         setPixChave(pixInput.trim())

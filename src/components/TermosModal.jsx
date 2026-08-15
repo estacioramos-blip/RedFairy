@@ -35,7 +35,13 @@ function ConteudoMedico() {
   )
 }
 
-function ConteudoPaciente({ anuidadeBRL, marca = 'Projeto OBA®' }) {
+function ConteudoPaciente({ anuidadeBRL, solicitacaoBRL, marca = 'Projeto OBA®' }) {
+  // Preço do pedido subsequente: lido do config (valor_solicitacao_medica). Se a
+  // leitura falhar, o texto não cita número (a plataforma mostra o valor vigente
+  // na hora da solicitação) — evita repetir a armadilha do "R$ 60,00" hardcoded.
+  const precoPedido = solicitacaoBRL
+    ? `custam ${solicitacaoBRL} cada`
+    : 'têm o valor vigente informado na plataforma no momento da solicitação'
   return (
     <>
       <p className="font-bold text-red-700 uppercase tracking-wide mb-1">
@@ -44,7 +50,7 @@ function ConteudoPaciente({ anuidadeBRL, marca = 'Projeto OBA®' }) {
       <p><strong>{`1. O que \u00e9 o ${marca}.`}</strong>{` O ${marca} \u00e9 uma plataforma digital para acompanhamento do seu eritron (gl\u00f3bulos vermelhos e hemoglobina). Voc\u00ea registra seus hemogramas, recebe orienta\u00e7\u00f5es automatizadas e pode solicitar pedidos m\u00e9dicos de exames complementares. O ${marca} \u00e9 uma ferramenta de apoio \u2014 N\u00c3O substitui consultas m\u00e9dicas, exame f\u00edsico nem laudos profissionais.`}</p>
       <p><strong>{"2. Quem pode usar."}</strong>{" Maiores de 18 anos com CPF v\u00e1lido. Menores de idade devem ser cadastrados por respons\u00e1vel legal, que se responsabiliza pelo uso da plataforma e pela veracidade dos dados informados."}</p>
       <p><strong>{"3. Assinatura anual."}</strong>{" O acesso \u00e0 plataforma \u00e9 anual e custa R$ "}{anuidadeBRL}{" \u2014 pagos via PIX no momento do cadastro. A vig\u00eancia \u00e9 de 365 dias a partir da confirma\u00e7\u00e3o do pagamento. N\u00e3o h\u00e1 renova\u00e7\u00e3o autom\u00e1tica: ao final do per\u00edodo, voc\u00ea ser\u00e1 convidado a renovar manualmente."}</p>
-      <p><strong>{"4. Documentos m\u00e9dicos."}</strong>{` Pedidos de exames e prescri\u00e7\u00f5es geradas pela plataforma s\u00e3o emitidos por m\u00e9dicos parceiros do ${marca}, com base nos dados que voc\u00ea informar. O primeiro pedido ap\u00f3s o cadastro \u00e9 gratuito; pedidos subsequentes custam R$ 60,00 cada. A emiss\u00e3o depende da an\u00e1lise cl\u00ednica do m\u00e9dico respons\u00e1vel.`}</p>
+      <p><strong>{"4. Documentos m\u00e9dicos."}</strong>{` Pedidos de exames e prescri\u00e7\u00f5es geradas pela plataforma s\u00e3o emitidos por m\u00e9dicos parceiros do ${marca}, com base nos dados que voc\u00ea informar. O primeiro pedido ap\u00f3s o cadastro \u00e9 gratuito; pedidos subsequentes ${precoPedido}. A emiss\u00e3o depende da an\u00e1lise cl\u00ednica do m\u00e9dico respons\u00e1vel.`}</p>
       <p><strong>{"5. Sua responsabilidade."}</strong>{" Voc\u00ea \u00e9 respons\u00e1vel pela veracidade dos dados que insere (hemogramas, idade, sexo, condi\u00e7\u00f5es cl\u00ednicas). Resultados imprecisos podem gerar orienta\u00e7\u00f5es incorretas. Em caso de d\u00favida, sempre consulte um m\u00e9dico de sua confian\u00e7a."}</p>
       <p><strong>{"6. Prote\u00e7\u00e3o dos seus dados \u2014 LGPD."}</strong>{" Seus dados s\u00e3o tratados em conformidade com a Lei n\u00ba 13.709/2018 (LGPD). N\u00c3O compartilhamos suas informa\u00e7\u00f5es com terceiros sem o seu consentimento, exceto quando exigido por lei. Voc\u00ea pode solicitar exclus\u00e3o ou portabilidade dos seus dados a qualquer momento via contato@bariatrico.net."}</p>
       <p><strong>{"7. Limita\u00e7\u00e3o de Responsabilidade."}</strong>{" A Cytomica n\u00e3o se responsabiliza por decis\u00f5es de sa\u00fade tomadas exclusivamente com base na plataforma, sem acompanhamento m\u00e9dico. Em emerg\u00eancias, procure atendimento m\u00e9dico imediato."}</p>
@@ -57,9 +63,14 @@ function ConteudoPaciente({ anuidadeBRL, marca = 'Projeto OBA®' }) {
 export default function TermosModal({ tipo = 'paciente', onFechar }) {
   // Valor da anuidade do banco, para o texto dos termos refletir o preço atual.
   const [anuidadeBRL, setAnuidadeBRL] = useState(formatarBRL(VALOR_ANUIDADE_PADRAO))
+  const [solicitacaoBRL, setSolicitacaoBRL] = useState(null)   // null = não carregou → texto sem número
   useEffect(() => {
-    supabase.from('config').select('valor').eq('chave', 'valor_anuidade').maybeSingle()
-      .then(({ data }) => { const n = Number(data?.valor); if (Number.isFinite(n) && n > 0) setAnuidadeBRL(formatarBRL(n)) })
+    supabase.from('config').select('chave, valor').in('chave', ['valor_anuidade', 'valor_solicitacao_medica'])
+      .then(({ data }) => {
+        const map = {}; (data || []).forEach(r => { map[r.chave] = r.valor })
+        const nA = Number(map['valor_anuidade']); if (Number.isFinite(nA) && nA > 0) setAnuidadeBRL(formatarBRL(nA))
+        const nS = Number(map['valor_solicitacao_medica']); if (Number.isFinite(nS) && nS > 0) setSolicitacaoBRL(formatarBRL(nS))
+      })
   }, [])
 
   // Marca única nas telas do produto: Projeto OBA®. E-mail de contato agora é do
@@ -96,7 +107,7 @@ export default function TermosModal({ tipo = 'paciente', onFechar }) {
         </div>
 
         <div className="overflow-y-auto p-5 text-xs text-gray-700 leading-relaxed space-y-4">
-          {tipo === 'medico' ? <ConteudoMedico /> : <ConteudoPaciente anuidadeBRL={anuidadeBRL} marca={marca} />}
+          {tipo === 'medico' ? <ConteudoMedico /> : <ConteudoPaciente anuidadeBRL={anuidadeBRL} solicitacaoBRL={solicitacaoBRL} marca={marca} />}
           <p className="text-gray-400 text-center text-xs pt-2">
             {"cytomica.com"}
           </p>
