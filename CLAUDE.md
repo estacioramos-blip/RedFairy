@@ -17,7 +17,7 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
    - JS puro: `node --check ARQUIVO`
 5. **Teste antes do Estácio testar.** Antes de entregar qualquer mudança para teste manual do Estácio:
    - Dispare o agente **`code-reviewer`** sobre os arquivos alterados (bugs, lógica clínica, armadilhas do projeto).
-   - Se a mudança tem superfície visível/executável (UI, fluxo, engine), rode a skill **`/verify`** para exercitar o fluxo afetado de ponta a ponta.
+   - Se a mudança tem superfície executável, **exercite o fluxo afetado de verdade** antes de entregar (a antiga skill `/verify` não existe mais): motor/engine → bundlar com `npx esbuild src/engine/ARQUIVO.js --bundle --format=esm --outfile=/tmp/x.mjs` e simular os casos no Node (casos-limite e cruzamentos, não só o caminho feliz); UI/fluxo → subir o dev server e percorrer a tela alterada (a skill `run` ajuda).
    - Só entregue para o Estácio depois que o build passar e os problemas apontados forem corrigidos (ou explicitamente relatados). O teste do Estácio é clínico/visual — o técnico é responsabilidade do agente.
 6. **Mostre o diff e peça confirmação antes de commitar.** Não commite automaticamente sem o OK do Estácio.
 7. **Commits descritivos** explicando o "o quê" e o "porquê".
