@@ -46,9 +46,9 @@ function ConteudoPaciente({ anuidadeBRL, marca = 'Projeto OBA®' }) {
       <p><strong>{"3. Assinatura anual."}</strong>{" O acesso \u00e0 plataforma \u00e9 anual e custa R$ "}{anuidadeBRL}{" \u2014 pagos via PIX no momento do cadastro. A vig\u00eancia \u00e9 de 365 dias a partir da confirma\u00e7\u00e3o do pagamento. N\u00e3o h\u00e1 renova\u00e7\u00e3o autom\u00e1tica: ao final do per\u00edodo, voc\u00ea ser\u00e1 convidado a renovar manualmente."}</p>
       <p><strong>{"4. Documentos m\u00e9dicos."}</strong>{` Pedidos de exames e prescri\u00e7\u00f5es geradas pela plataforma s\u00e3o emitidos por m\u00e9dicos parceiros do ${marca}, com base nos dados que voc\u00ea informar. O primeiro pedido ap\u00f3s o cadastro \u00e9 gratuito; pedidos subsequentes custam R$ 60,00 cada. A emiss\u00e3o depende da an\u00e1lise cl\u00ednica do m\u00e9dico respons\u00e1vel.`}</p>
       <p><strong>{"5. Sua responsabilidade."}</strong>{" Voc\u00ea \u00e9 respons\u00e1vel pela veracidade dos dados que insere (hemogramas, idade, sexo, condi\u00e7\u00f5es cl\u00ednicas). Resultados imprecisos podem gerar orienta\u00e7\u00f5es incorretas. Em caso de d\u00favida, sempre consulte um m\u00e9dico de sua confian\u00e7a."}</p>
-      <p><strong>{"6. Prote\u00e7\u00e3o dos seus dados \u2014 LGPD."}</strong>{" Seus dados s\u00e3o tratados em conformidade com a Lei n\u00ba 13.709/2018 (LGPD). N\u00c3O compartilhamos suas informa\u00e7\u00f5es com terceiros sem o seu consentimento, exceto quando exigido por lei. Voc\u00ea pode solicitar exclus\u00e3o ou portabilidade dos seus dados a qualquer momento via contato@redfairy.bio."}</p>
+      <p><strong>{"6. Prote\u00e7\u00e3o dos seus dados \u2014 LGPD."}</strong>{" Seus dados s\u00e3o tratados em conformidade com a Lei n\u00ba 13.709/2018 (LGPD). N\u00c3O compartilhamos suas informa\u00e7\u00f5es com terceiros sem o seu consentimento, exceto quando exigido por lei. Voc\u00ea pode solicitar exclus\u00e3o ou portabilidade dos seus dados a qualquer momento via contato@bariatrico.net."}</p>
       <p><strong>{"7. Limita\u00e7\u00e3o de Responsabilidade."}</strong>{" A Cytomica n\u00e3o se responsabiliza por decis\u00f5es de sa\u00fade tomadas exclusivamente com base na plataforma, sem acompanhamento m\u00e9dico. Em emerg\u00eancias, procure atendimento m\u00e9dico imediato."}</p>
-      <p><strong>{"8. Cancelamento e reembolso."}</strong>{" Voc\u00ea pode cancelar o seu acesso a qualquer momento via contato@redfairy.bio. Reembolso integral \u00e9 garantido se solicitado em at\u00e9 7 dias ap\u00f3s o pagamento (direito de arrependimento \u2014 CDC art. 49)."}</p>
+      <p><strong>{"8. Cancelamento e reembolso."}</strong>{" Voc\u00ea pode cancelar o seu acesso a qualquer momento via contato@bariatrico.net. Reembolso integral \u00e9 garantido se solicitado em at\u00e9 7 dias ap\u00f3s o pagamento (direito de arrependimento \u2014 CDC art. 49)."}</p>
       <p><strong>{"9. Foro."}</strong>{" Comarca de Salvador, Estado da Bahia. Lei aplic\u00e1vel: legisla\u00e7\u00e3o brasileira vigente, especialmente a LGPD e o C\u00f3digo de Defesa do Consumidor."}</p>
     </>
   )
@@ -62,8 +62,9 @@ export default function TermosModal({ tipo = 'paciente', onFechar }) {
       .then(({ data }) => { const n = Number(data?.valor); if (Number.isFinite(n) && n > 0) setAnuidadeBRL(formatarBRL(n)) })
   }, [])
 
-  // Marca única nas telas do produto: Projeto OBA® (o e-mail de contato segue
-  // sendo @redfairy.bio, que é endereço real e não muda com a marca).
+  // Marca única nas telas do produto: Projeto OBA®. E-mail de contato agora é do
+  // domínio bariatrico.net (decisão de 15/08/2026: RedFairy sai de toda superfície
+  // visível). ⚠ A caixa contato@bariatrico.net precisa EXISTIR — criar no provedor.
   const marca = 'Projeto OBA®'
 
   const titulo = tipo === 'medico'
@@ -97,7 +98,7 @@ export default function TermosModal({ tipo = 'paciente', onFechar }) {
         <div className="overflow-y-auto p-5 text-xs text-gray-700 leading-relaxed space-y-4">
           {tipo === 'medico' ? <ConteudoMedico /> : <ConteudoPaciente anuidadeBRL={anuidadeBRL} marca={marca} />}
           <p className="text-gray-400 text-center text-xs pt-2">
-            {"cytomica.com | redfairy.bio | contato@redfairy.bio"}
+            {"cytomica.com"}
           </p>
         </div>
 
