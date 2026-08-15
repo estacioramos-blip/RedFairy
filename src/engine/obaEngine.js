@@ -226,8 +226,8 @@ export function avaliarOBA(resultadoEritron, dadosOBA, examesOBA) {
   const modProst = buildModProstatico(dadosOBA, alertas, examesSuger)
   if (modProst) modulos.push(modProst)
 
-  // ── 15e. MÓDULO STATUS ALÉRGICO (eixo forte: alimentar × nutrição) ───────
-  const modAlerg = buildModAlergico(dadosOBA, alertas, examesSuger)
+  // ── 15e. MÓDULO STATUS ALÉRGICO + INTOLERÂNCIAS (eixo forte: alimentar × nutrição) ──
+  const modAlerg = buildModAlergico(dadosOBA, resultadoEritron, examesOBA, alertas, examesSuger)
   if (modAlerg) modulos.push(modAlerg)
 
   // ── 15f. MÓDULO STATUS ARTICULAR + FAN (artrite→autoimune/eritron; título) ──
@@ -2911,10 +2911,12 @@ function buildModArticular(dados, resultadoEritron, alertas, suger) {
 // restrição somada à disabsorção bariátrica = risco nutricional dobrado, e cada
 // alimento tira um nutriente específico (leite→cálcio/osso, ovo/leite→proteína).
 // ─────────────────────────────────────────────────────────────────────────────
-function buildModAlergico(dados, alertas, suger) {
+function buildModAlergico(dados, resultadoEritron, examesOBA, alertas, suger) {
   const st = Array.isArray(dados.status_alergico) ? dados.status_alergico : []
-  if (!st.length) return null
+  const intol = Array.isArray(dados.intolerancias_alimentares) ? dados.intolerancias_alimentares : []
+  if (!st.length && !intol.length) return null
   const tem = (x) => st.includes(x)
+  const temIntol = (x) => intol.includes(x)
   const alim = Array.isArray(dados.alergias_alimentares) ? dados.alergias_alimentares : []
   const med = Array.isArray(dados.alergia_medicamentosa) ? dados.alergia_medicamentosa : []
   const temAlim = (x) => alim.includes(x)
@@ -2972,6 +2974,60 @@ function buildModAlergico(dados, alertas, suger) {
     suger.push('ACOMPANHAMENTO NUTRICIONAL (RESTRIÇÃO ALIMENTAR NO PÓS-BARIÁTRICO)')
   }
 
+  // ── INTOLERÂNCIAS ALIMENTARES — mesmo eixo nutricional, sem o componente imune ──
+  // A alergia a leite (acima) e a intolerância a laticínio (abaixo) são o MESMO
+  // achado nutricional — quando a alergia já disparou, aqui não se repete nada
+  // (um achado = um alerta; empurrar dois infla o Estado Geral sem doença nova).
+  const semLeiteAlergia = tem('ALIMENTAR') && (temAlim('LEITE (TODOS)') || temAlim('LEITE DE VACA'))
+  const semLaticinioIntol = temIntol('CASEÍNA') || temIntol('LEITE | DERIVADOS')
+
+  if (temIntol('LACTOSE') && !semLaticinioIntol && !semLeiteAlergia) {
+    bump(LEVE)
+    linhas.push('INTOLERÂNCIA À LACTOSE: A LACTOSE É O AÇÚCAR DO LEITE — DIFERENTE DA ALERGIA, OS DERIVADOS SEM LACTOSE E OS QUEIJOS CURADOS CONTINUAM LIBERADOS E MANTÊM O CÁLCIO. PREFIRA-OS EM VEZ DE CORTAR O LATICÍNIO TODO: NO PÓS-BARIÁTRICO, PERDER A PRINCIPAL FONTE DE CÁLCIO SEM COMPENSAR COBRA DO OSSO. SE OS SINTOMAS PERSISTIREM MESMO COM PRODUTOS SEM LACTOSE, COMENTE COM O MÉDICO — PODE NÃO SER LACTOSE.')
+  }
+
+  if (semLaticinioIntol && !semLeiteAlergia) {
+    bump(MODERADO)
+    linhas.push(`SEM LATICÍNIO POR INTOLERÂNCIA (${intol.filter(i => i === 'CASEÍNA' || i === 'LEITE | DERIVADOS').join(', ')}): AQUI NÃO BASTA TROCAR PELO "SEM LACTOSE" — O CORTE É DO LATICÍNIO INTEIRO, E COM ELE VAI A PRINCIPAL FONTE DE CÁLCIO DA DIETA. NO BARIÁTRICO, QUE JÁ PERDE MASSA ÓSSEA, ISSO É FATOR DE RISCO DIRETO PARA OSTEOPOROSE. GARANTA CÁLCIO (DE PREFERÊNCIA CITRATO, MELHOR ABSORVIDO APÓS A CIRURGIA) E VITAMINA D, E MONITORE O OSSO.`)
+    // Strings idênticas às da alergia a leite p/ o dedup por Set pegar.
+    suger.push('CÁLCIO SÉRICO E URINÁRIO')
+    suger.push('VITAMINA D 25-OH')
+    // Mesma guarda da alergia: o módulo ósseo sugere densitometria com sufixo
+    // próprio que o dedup por Set não reconhece como a mesma.
+    const osseoDeclIntol = dados.status_osseo || ''
+    if (!/OSTEOPOROSE|OSTEOPENIA/.test(osseoDeclIntol)) suger.push('DENSITOMETRIA ÓSSEA')
+    alertas.push({ codigo: 'alergico.intolerancia_laticinio_perda_da_fonte_de_calcio', nivel: MODERADO, texto: 'INTOLERÂNCIA A LATICÍNIO (CORTE TOTAL) + BARIÁTRICO — PERDA DA PRINCIPAL FONTE DE CÁLCIO NUM PACIENTE QUE JÁ PERDE OSSO. GARANTIR CÁLCIO (CITRATO) E VIT. D; DENSITOMETRIA.' })
+  }
+
+  if (temIntol('GLÚTEN (NÃO-CELÍACA)')) {
+    bump(LEVE)
+    linhas.push('SENSIBILIDADE AO GLÚTEN (NÃO-CELÍACA): NUTRICIONALMENTE É UMA RESTRIÇÃO ADMINISTRÁVEL. MAS UM PONTO IMPORTA: SE A DOENÇA CELÍACA NUNCA FOI FORMALMENTE EXCLUÍDA POR EXAME, VALE EXCLUIR — A CELÍACA VERDADEIRA AGRIDE JUSTAMENTE O TRECHO DO INTESTINO QUE ABSORVE O FERRO E É CAUSA CLÁSSICA DE FALTA DE FERRO QUE NÃO MELHORA COM REPOSIÇÃO. NO BARIÁTRICO, AS DUAS CAUSAS SOMADAS PASSAM DESPERCEBIDAS UMA ATRÁS DA OUTRA.')
+    // String idêntica à do módulo intestinal (diarreia crônica) — o dedup colapsa
+    // por base antes do parêntese; nome diferente sairia como 2 pedidos do mesmo exame.
+    suger.push('SOROLOGIA PARA DOENÇA CELÍACA (ANTI-TRANSGLUTAMINASE IgA + IgA TOTAL)')
+  }
+
+  if (temIntol('CARNE (ALFA-GAL)')) {
+    // Mesma cadeia de fallback do ginecológico: eritron primeiro, depois os
+    // valores relançados na etapa de exames do OBA. Corte existente — não inventar.
+    const ferrIntol = Number(resultadoEritron?.inputs?.ferritina ?? examesOBA?.ferritina_novo ?? examesOBA?.ferritina_oba)
+    const ferrBaixaIntol = Number.isFinite(ferrIntol) && ferrIntol > 0 && ferrIntol < OBA_CUTOFFS.ferritina_oba.min
+    const temAnemiaIntol = /ANEMIA|ANÊMIC/i.test(resultadoEritron?.label || '') || resultadoEritron?.color === 'red'
+    const escalaAlfaGal = ferrBaixaIntol || temAnemiaIntol
+    bump(escalaAlfaGal ? GRAVE : MODERADO)
+    linhas.push('SÍNDROME ALFA-GAL (REAÇÃO À CARNE DE MAMÍFEROS — BOI, PORCO, CORDEIRO): A CARNE VERMELHA É A PRINCIPAL FONTE DE FERRO HEME, O FERRO QUE MELHOR SE ABSORVE — JUSTAMENTE O QUE MAIS FALTA DEPOIS DA CIRURGIA. CORTÁ-LA NUM ORGANISMO QUE JÁ ABSORVE MENOS EXIGE VIGILÂNCIA ATIVA DA FERRITINA E DA SATURAÇÃO. AVES E PEIXES CONTINUAM LIBERADOS E AJUDAM, MAS NÃO COMPENSAM POR COMPLETO.')
+    if (escalaAlfaGal) {
+      linhas.push(`NO SEU CASO ISSO JÁ ESTÁ PESANDO: ${temAnemiaIntol ? 'HÁ ANEMIA NO SEU ERITRON' : 'A SUA FERRITINA ESTÁ ABAIXO DO CORTE'} — E O "BAIXO CONSUMO DE CARNES" QUE O LAUDO DO ERITRON LEVANTA COMO HIPÓTESE, NO SEU CASO, É FATO DECLARADO. A REPOSIÇÃO DE FERRO (POSSIVELMENTE ENDOVENOSA, PELA ABSORÇÃO REDUZIDA) DEVE SER DISCUTIDA COM O MÉDICO.`)
+    }
+    linhas.push('IMPORTANTE — A REAÇÃO ALFA-GAL NÃO É SÓ À CARNE: DERIVADOS DE MAMÍFEROS EM GERAL PODEM DISPARÁ-LA, INCLUINDO A GELATINA DE CÁPSULAS DE REMÉDIOS E SUPLEMENTOS. CONFIRA COM O FARMACÊUTICO SE AS SUAS CÁPSULAS SÃO VEGETAIS E INFORME ESSA CONDIÇÃO EM TODA PRESCRIÇÃO — INCLUSIVE AS DESTA PLATAFORMA.')
+    alertas.push({ codigo: 'alergico.alfa_gal_perda_do_ferro_heme', nivel: escalaAlfaGal ? GRAVE : MODERADO, texto: `INTOLERÂNCIA À CARNE (ALFA-GAL) DECLARADA — PERDA DA PRINCIPAL FONTE DE FERRO HEME NUM PACIENTE DISABSORTIVO.${escalaAlfaGal ? (temAnemiaIntol ? ' JÁ HÁ ANEMIA NO ERITRON — A RESTRIÇÃO É CAUSA PROVÁVEL; CONSIDERAR FERRO ENDOVENOSO.' : ' FERRITINA JÁ ABAIXO DO CORTE — A RESTRIÇÃO É CAUSA PROVÁVEL; CONSIDERAR FERRO ENDOVENOSO.') : ' VIGIAR FERRITINA/SATURAÇÃO.'} ATENÇÃO: GELATINA DE CÁPSULAS TAMBÉM PODE REAGIR — PREFERIR CÁPSULAS VEGETAIS AO PRESCREVER.` })
+  }
+
+  if (intol.length) {
+    // String idêntica à da alergia alimentar — o dedup por Set colapsa numa só.
+    suger.push('ACOMPANHAMENTO NUTRICIONAL (RESTRIÇÃO ALIMENTAR NO PÓS-BARIÁTRICO)')
+  }
+
   // ── MEDICAMENTOSA — o resto (penicilina/cefalosporina são tratadas no H. pylori) ──
   if (tem('MEDICAMENTOSA')) {
     bump(LEVE)
@@ -3005,7 +3061,11 @@ function buildModAlergico(dados, alertas, suger) {
   }
 
   if (!linhas.length) return null
-  return { id: 'alergico', titulo: 'STATUS ALÉRGICO', nivel, linhas }
+  // id fixo 'alergico' (o comparador longitudinal casa módulos por id); só o
+  // título muda conforme o que o paciente marcou.
+  const titulo = st.length && intol.length ? 'STATUS ALÉRGICO | INTOLERÂNCIAS'
+    : intol.length ? 'INTOLERÂNCIAS ALIMENTARES' : 'STATUS ALÉRGICO'
+  return { id: 'alergico', titulo, nivel, linhas }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3411,7 +3471,7 @@ function buildModIntestinal(dados, alertas, suger) {
     linhas.push('ORIENTAÇÕES: DIETA COM BAIXO TEOR DE GORDURA E AÇÚCARES SIMPLES. FRACIONAR AS REFEIÇÕES (6X/DIA). PROBIÓTICOS. EVITAR LACTOSE TEMPORARIAMENTE. SE SUSPEITA DE SIBO, INICIAR ANTIBIOTICOTERAPIA ESPECÍFICA COM MÉDICO.')
     alertas.push({ codigo: 'intestinal.diarreia_cronica_agrava_disabsorcao_investiga', nivel: MODERADO, texto: 'DIARREIA CRÔNICA: AGRAVA DISABSORÇÃO — INVESTIGAR SIBO, DUMPING E INTOLERÂNCIAS.' })
     suger.push('TESTE RESPIRATÓRIO PARA SIBO')
-    suger.push('SOROLOGIA PARA DOENÇA CELÍACA (ANTI-TRANSGLUTAMINASE IgA)')
+    suger.push('SOROLOGIA PARA DOENÇA CELÍACA (ANTI-TRANSGLUTAMINASE IgA + IgA TOTAL)')
     suger.push('TESTE DE INTOLERÂNCIA À LACTOSE')
     suger.push('PESQUISA DE GORDURA FECAL (ESTEATORREIA)')
     suger.push('AVALIAÇÃO COM GASTROENTEROLOGISTA')

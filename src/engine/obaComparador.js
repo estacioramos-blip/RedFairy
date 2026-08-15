@@ -297,6 +297,7 @@ const CAMPOS_CATEGORICOS = [
   { campo: 'status_pressorico',     rotulo: 'Status Pressórico' },
   { campo: 'status_gestacional',    rotulo: 'Status Gestacional' },
   { campo: 'status_fibromialgia',   rotulo: 'Sintomas de Fibromialgia' },
+  { campo: 'intolerancias_alimentares', rotulo: 'Intolerâncias Alimentares' },
 ]
 
 // Normaliza um valor de form_snapshot (array multi-select OU string única, o

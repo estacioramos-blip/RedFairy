@@ -1340,6 +1340,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       alergia_outra_texto: form.alergia_outra_texto || null,
       alergias_alimentares: form.alergias_alimentares,
       alergias_alimentares_outra: form.alergias_alimentares_outra || null,
+      intolerancias_alimentares: form.intolerancias_alimentares,
       meta_peso:          form.meta_peso || null,
       meta_kg:            form.meta_kg ? parseFloat(form.meta_kg) : null,
       projetos_vida:      form.projetos_vida,

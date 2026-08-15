@@ -456,6 +456,9 @@ function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar, mostrarPa
   };
   // Texto livre que o paciente escreveu no fim da anamnese ("outra condição de saúde").
   const outraCondicao = (oba.form_snapshot?.outra_condicao || '').trim();
+  // Detalhe livre das dores ósseas/articulares (só aparece quando a queixa foi marcada).
+  // Texto livre não serve pro motor — o destino dele é o médico, aqui.
+  const doresDetalhe = (oba.form_snapshot?.dores_osseas_detalhe || '').trim();
 
   // Passo 4 do fluxo "médico revisa anamnese": quando a linha atual foi revisada
   // (Passo 3), `_paciente_original` guarda o retrato ANTES da revisão — reaproveita
@@ -597,6 +600,20 @@ function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar, mostrarPa
               {"O paciente descreveu uma condição não coberta pela anamnese. Recomendamos teleconsulta para avaliá-la."}
             </p>
             <p className="text-gray-900 text-sm bg-white border border-blue-100 rounded-lg px-3 py-2 whitespace-pre-wrap">{outraCondicao}</p>
+          </div>
+        </div>
+      )}
+
+      {!modoPaciente && doresDetalhe && (
+        <div className="px-4 pt-4">
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl px-4 py-3">
+            <p className="text-blue-900 text-sm font-black uppercase tracking-wide mb-1">
+              {"Dores ósseas/articulares — relato do paciente"}
+            </p>
+            <p className="text-blue-800 text-xs leading-snug mb-2">
+              {"O paciente marcou dores nos ossos/articulações como queixa e detalhou assim:"}
+            </p>
+            <p className="text-gray-900 text-sm bg-white border border-blue-100 rounded-lg px-3 py-2 whitespace-pre-wrap">{doresDetalhe}</p>
           </div>
         </div>
       )}
