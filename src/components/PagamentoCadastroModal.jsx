@@ -66,8 +66,8 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
   useEffect(() => {
     const cpfd = String(profile?.cpf || '').replace(/\D/g, '')
     if (cpfd.length !== 11) return
-    supabase.rpc('saldo_indicador', { p_cpf: cpfd })
-      .then(({ data }) => { if (data && data.ok) setSaldoBrl(Number(data.saldo_brl) || 0) })
+    supabase.rpc('saldo_indicador', { p_cpf: cpfd, p_pac_token: (() => { try { return localStorage.getItem('paciente_token') || '' } catch (e) { return '' } })() })
+      .then(({ data }) => { if (data && data.ok) setSaldoBrl(Number(data.saldo_brl) || 0); else if (data?.erro) console.error('saldo_indicador:', data.erro) })
       .catch(() => {})
   }, [profile])
   const desconto = Math.min(saldoBrl, valor)

@@ -808,6 +808,9 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
 
 function DocumentoMedicoPanel({ resultado }) {
   const [valorDoc, setValorDoc] = useState(null);
+  // DEC-3: solicitação de EXAME cobra valor_solicitacao_medica; prescrição/documento
+  // cobra valor_documento_medico. Ambos do config, nunca hardcoded.
+  const [valorSolic, setValorSolic] = useState(null);
   const [pixChave, setPixChave] = useState('');
   const [etapa, setEtapa] = useState('oferta');
   const [dadosPaciente, setDadosPaciente] = useState({ nome: '', dataNasc: '', celular: '', cpf: '' });
@@ -830,10 +833,12 @@ function DocumentoMedicoPanel({ resultado }) {
 
   useEffect(() => {
     async function carregarTudo() {
-      const { data: docConf } = await supabase.from('config').select('valor').eq('chave', 'valor_documento_medico').single();
-      const { data: pixConf } = await supabase.from('config').select('valor').eq('chave', 'pix_chave').single();
-      if (docConf?.valor) setValorDoc(parseFloat(docConf.valor));
-      if (pixConf?.valor) setPixChave(pixConf.valor);
+      const { data: cfgRows } = await supabase.from('config').select('chave, valor')
+        .in('chave', ['valor_documento_medico', 'valor_solicitacao_medica', 'pix_chave']);
+      const cfg = {}; (cfgRows || []).forEach(r => { cfg[r.chave] = r.valor; });
+      if (cfg['valor_documento_medico']) setValorDoc(parseFloat(cfg['valor_documento_medico']));
+      if (cfg['valor_solicitacao_medica']) setValorSolic(parseFloat(cfg['valor_solicitacao_medica']));
+      if (cfg['pix_chave']) setPixChave(cfg['pix_chave']);
 
       const cpfInput = resultado?._inputs?.cpf?.replace(/\D/g, '');
       // Fallbacks vindos da pr\u00f3pria avalia\u00e7\u00e3o (triagem -> Calculator: paciente n\u00e3o-cadastrado).
@@ -945,7 +950,8 @@ function DocumentoMedicoPanel({ resultado }) {
     }
     if (tiposDoc.prescricao && temPrescricao) { documentos.push(montarTextoPrescricao()); tipos.push('prescricao'); }
 
-    const total = (valorDoc || 0) * documentos.length;
+    // DEC-3: cada serviço de exame ao preço de SOLICITAÇÃO; prescrição ao preço de DOCUMENTO.
+    const total = tipos.reduce((s, t) => s + (t === 'prescricao' ? (valorDoc || 0) : (valorSolic ?? valorDoc ?? 0)), 0);
     const msgs = [
       "ATEN\u00c7\u00c3O | Projeto OBA\u00ae!",
       `CPF: ${dadosPaciente.cpf || "N\u00e3o informado"}`,
@@ -1035,6 +1041,10 @@ function DocumentoMedicoPanel({ resultado }) {
   const servicos = servicosDeExame();
   const nServicos = servicos.length || 1;
   const nDocs = (tiposDoc.exames ? nServicos : 0) + (tiposDoc.prescricao ? 1 : 0);
+  // DEC-3: preço por tipo. Fallback ao valor de documento se a chave de solicitação
+  // não carregou (não quebra o painel; config é a fonte).
+  const precoExame = valorSolic ?? valorDoc ?? 0;
+  const totalPedido = (tiposDoc.exames ? precoExame * nServicos : 0) + (tiposDoc.prescricao ? (valorDoc || 0) : 0);
 
   const inputStyle = { width: '100%', border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.9rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' };
 
@@ -1052,7 +1062,7 @@ function DocumentoMedicoPanel({ resultado }) {
         <p className="text-white font-bold text-sm">{"\ud83d\udcb3 Efetue o pagamento via Pix"}</p>
       </div>
       <div className="p-4 space-y-4">
-        <p className="text-gray-600 text-sm">{"Valor: "}<strong className="text-red-700 text-lg">{"R$ "}{((valorDoc || 0) * (nDocs || 1)).toFixed(2)}</strong></p>
+        <p className="text-gray-600 text-sm">{"Valor: "}<strong className="text-red-700 text-lg">{"R$ "}{totalPedido.toFixed(2)}</strong></p>
         {pixChave && (
           <>
             <div className="flex justify-center">
@@ -1145,7 +1155,7 @@ function DocumentoMedicoPanel({ resultado }) {
                   </p>
                 )}
               </div>
-              <span className="ml-auto font-bold text-red-700">{"R$ "}{((valorDoc || 0) * servicos.length).toFixed(2)}</span>
+              <span className="ml-auto font-bold text-red-700">{"R$ "}{(precoExame * servicos.length).toFixed(2)}</span>
             </label>
           )}
           {temPrescricao && (
@@ -1163,7 +1173,7 @@ function DocumentoMedicoPanel({ resultado }) {
         </div>
         {(tiposDoc.exames || tiposDoc.prescricao) && (
           <p className="text-center font-bold text-red-700">
-            {"Total: R$ "}{((valorDoc || 0) * [tiposDoc.exames, tiposDoc.prescricao].filter(Boolean).length).toFixed(2)}
+            {"Total: R$ "}{totalPedido.toFixed(2)}
           </p>
         )}
         <button

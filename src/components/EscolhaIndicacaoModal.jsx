@@ -29,6 +29,9 @@ export default function EscolhaIndicacaoModal({ cpf, medico, indicador, onConclu
         const { data, error } = await supabase.rpc('confirmar_indicacao', {
           p_cpf: String(cpf || '').replace(/\D/g, ''),
           p_codigo: indicador.codigo,
+          // SEC-4: gate por sessão do paciente dono do CPF (só ele confirma quem o
+          // indicou — senão um terceiro desviaria a comissão com o CPF da vítima).
+          p_pac_token: (() => { try { return localStorage.getItem('paciente_token') || '' } catch (e) { return '' } })(),
         })
         // Esta RPC decide QUEM recebe a comissão: o indicador ou o médico.
         // Falhando em silêncio, o crédito ia para o default (médico) e nem o

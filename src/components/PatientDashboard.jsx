@@ -160,9 +160,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   useEffect(() => {
     const cpfd = String(profile?.cpf || '').replace(/\D/g, '')
     if (cpfd.length !== 11) return
-    supabase.rpc('saldo_indicador', { p_cpf: cpfd })
+    supabase.rpc('saldo_indicador', { p_cpf: cpfd, ...credPaciente() })
       .then(({ data }) => {
-        if (!data || !data.ok) return
+        // SEC-5: não degradar em silêncio — se o gate recusar (token ausente/vencido),
+        // loga em vez de sumir com o saldo/desconto sem explicação.
+        if (!data || !data.ok) { if (data?.erro) console.error('saldo_indicador:', data.erro); return }
         setSaldoIndicadorBrl(Number(data.saldo_brl) || 0)
         // Crédito de assinatura ainda não conferida: ele JÁ ganhou, mas o
         // dinheiro só é liberado depois que o Caixa confirma o PIX. Mostrar
