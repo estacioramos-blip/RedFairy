@@ -147,7 +147,13 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     setInputs(prev => ({
       ...prev,
       sexo: pacienteConhecido.sexo || prev.sexo,
-      bariatrica: !!pacienteConhecido.bariatrica,
+      // No domínio bariátrico a flag vem do DOMÍNIO e deve VENCER — este efeito roda
+      // depois do que força bariatrica=true (l.65) e o zerava. Antes do SEC-2 o campo
+      // vinha do banco (normalmente true) e mascarava o conflito; agora o funil anônimo
+      // não traz mais a flag, então sem este `flagBariatricaOBA ||` o médico em
+      // app.bariatrico.net avaliaria bariátrico pela matriz NÃO-bariátrica (UI marcada,
+      // dado errado). Fora do domínio, usa o que o paciente conhecido trouxe.
+      bariatrica: flagBariatricaOBA || !!pacienteConhecido.bariatrica,
     }));
     if (reval.gestanteAtual) {
       setInputs(prev => ({
@@ -158,7 +164,7 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
     } else if (pacienteConhecido.gestante) {
       setInputs(prev => ({ ...prev, gestante: false, semanas_gestacao: '' }));
     }
-  }, [pacienteConhecido]);
+  }, [pacienteConhecido, flagBariatricaOBA]);
 
   // Gestante conhecida: ao informar a DATA DA COLETA, recalcula as semanas NAQUELA data
   // (referência = semanas + data salvas no perfil). Mantém editável; > 42 desmarca.
@@ -404,11 +410,14 @@ export default function TriagemModal({ modoMedico = false, isDemoPaciente = fals
         origem: 'triagem',
         sexo: ultimaTriagem.sexo,
         data_nascimento: ultimaTriagem.data_nascimento,
-        bariatrica: !!ultimaTriagem.bariatrica,
-        gestante: !!ultimaTriagem.gestante,
+        // SEC-2: o lookup anônimo deixou de expor bariátrica/gestante/semanas por CPF
+        // (dado de saúde sem login). No funil anônimo esses campos voltam ao default
+        // — o paciente remarca se for o caso; na bariatrico.net a flag vem do domínio.
+        bariatrica: false,
+        gestante: false,
         semanas_gestacao_triagem: null,
         data_triagem_gestacao: null,
-        semanas_gestacao: ultimaTriagem.semanas_gestacao,
+        semanas_gestacao: null,
         dum: null,
         created_at: ultimaTriagem.created_at,
       });
