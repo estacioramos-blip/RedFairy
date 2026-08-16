@@ -1647,19 +1647,34 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     // vira linha nova e preserva a original do paciente) — o que esta guarda
     // impede é a 2ª linha dentro da MESMA revisão.
     async function inserirLinha() {
-      const { data: insResp } = await supabase.rpc('oba_anamnese_inserir', {
+      const { data: insResp, error: insErr } = await supabase.rpc('oba_anamnese_inserir', {
         p_dados: dadosAnamnese, ...credAmbas()
       })
+      // Falha de PROTOCOLO (rede/timeout/função ausente): `data` vem vazio. Sem
+      // checar `error`, uma falha de rede não caía em nenhuma das checagens abaixo
+      // e a função retornava `true` (falso sucesso) — o fluxo avançava com
+      // anamneseId null e reabria a corrupção do baseline no follow-up (PAC-2).
+      if (insErr) {
+        console.error('OBA: falha de protocolo ao inserir anamnese —', insErr.message)
+        return false
+      }
       if (insResp && insResp.ok === false) {
         console.error('OBA: falha ao gravar anamnese —', insResp.erro)
         return false
       }
-      // Guarda o id devolvido: daqui pra frente todas as gravações deste ciclo
+      // Sem id devolvido não há como mirar ESTA linha nos salvamentos seguintes —
+      // avançar assim cairia em "a última linha do CPF" (o ciclo anterior).
+      if (!insResp?.id) {
+        console.error('OBA: inserção de anamnese sem id retornado — não avançar')
+        return false
+      }
+      // Guarda o id: daqui pra frente todas as gravações deste ciclo
       // (exames, relatório, re-salvamento) miram esta linha, não "a última".
-      if (insResp?.id) setAnamneseId(insResp.id)
+      setAnamneseId(insResp.id)
       return true
     }
 
+    let salvouOk = true
     if (anamneseId) {
       // `relatorio_oba` fica DE FORA do patch de propósito: a RPC substitui a
       // coluna inteira (não faz merge de jsonb), e aqui ela só carregaria
@@ -1681,12 +1696,21 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
         // numa migration futura, a perda silenciosa voltaria. Nos outros motivos
         // (token inválido) o INSERT falha do mesmo jeito, sem criar linha — o
         // pior caso é uma chamada de rede à toa.
-        await inserirLinha()
+        salvouOk = await inserirLinha()
       }
     } else {
-      await inserirLinha()
+      salvouOk = await inserirLinha()
     }
     setLoading(false)
+    // PAC-2: só avança se a anamnese REALMENTE gravou. Antes o setEtapa('exames')
+    // era incondicional — se o INSERT falhava num follow-up, anamneseId ficava null
+    // e os salvamentos seguintes (exames/relatório) caíam em "a última linha do CPF"
+    // = a linha do CICLO ANTERIOR (baseline), sobrescrevendo-a. Barrar aqui, na
+    // origem, é o que impede essa corrupção silenciosa.
+    if (!salvouOk) {
+      setErro('Não conseguimos salvar a sua anamnese agora (conexão instável?). Toque em AVANÇAR de novo — os seus dados continuam preenchidos.')
+      return
+    }
     setAnamneseSalva(dadosAnamnese)
     setEtapa('exames')
   }

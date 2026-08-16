@@ -253,6 +253,7 @@ export default function App() {
     if (pToken && pCpf) {
       try { localStorage.setItem('rf_abrir_nova', '1') } catch (e) {}
       ;(async () => {
+        let logou = false
         try {
           const { data } = await supabase.rpc('login_paciente_token', { p_cpf: pCpf, p_token: pToken })
           if (data && data.ok && data.id) {
@@ -263,9 +264,21 @@ export default function App() {
               localStorage.setItem('paciente_token', pToken)
               localStorage.setItem('paciente_login_at', Date.now().toString())
             } catch (e) {}
+            logou = true
             setModo('paciente')
           }
         } catch (e) {}
+        // Token do atalho VENCIDO/inválido (o iPhone congela o ?p=TOKEN no atalho; ele
+        // expira em 30 dias): o bariátrico NUNCA pode cair na landing do RedFairy — o
+        // ?p= conta como temParamTela e o modo ficava 'home' (landing), num beco sem o
+        // fluxo OBA. Fallback = a entrada bariátrica, MAS só para quem é do universo
+        // bariátrico. ⚠ O atalho da fadinha é oferecido a TODO paciente (bariátrico ou
+        // não); forçar 'oba-paciente' num paciente comum faria o OBAEntradaPaciente
+        // gravar rf_flag/rf_dom_bari e, no login, profiles.bariatrica=true — marcaria
+        // como bariátrico quem não é. Paciente comum com token vencido segue no
+        // comportamento antigo (landing). ehDominioBariatrico() cobre hostname +
+        // rf_dom_bari + ?bari — sinais confiáveis de "é bariátrico".
+        if (!logou && ehDominioBariatrico()) setModo('oba-paciente')
       })()
     }
 

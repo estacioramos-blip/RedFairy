@@ -1333,7 +1333,21 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           numeroCiclo={numeroCiclo}
           coletarHemograma={obaColetarHemograma}
           onFechar={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false); setShowEscolhaEntrarIndicar(true) }}
-          onConcluir={() => { try { localStorage.removeItem('oba_aberto') } catch (e) {}; setShowOBAModal(false); setObaColetarHemograma(false); setPrecisaOBA(false); if (onVoltar) onVoltar() }}
+          onConcluir={() => {
+            try { localStorage.removeItem('oba_aberto') } catch (e) {}
+            setShowOBAModal(false); setObaColetarHemograma(false); setPrecisaOBA(false)
+            // PAC-1: concluir o OBA NÃO é logout. onVoltar() (irVoltar) chama
+            // limparTodasSessoes, que apaga a credencial de reentrada passwordless do
+            // ÍCONE (rf_reentry_cpf/token) — proposital pra tablet de clínica, ERRADO
+            // aqui: o paciente que acabou de concluir no próprio celular ficava sem
+            // reentrar pelo ícone (o ícone promete "entra sem login/senha"). Preserva a
+            // credencial ao redor do onVoltar: limparTodasSessoes é síncrono e a
+            // navegação do irVoltar é em setTimeout, então dá tempo de restaurar.
+            let rc = '', rt = ''
+            try { rc = localStorage.getItem('rf_reentry_cpf') || ''; rt = localStorage.getItem('rf_reentry_token') || '' } catch (e) {}
+            if (onVoltar) onVoltar()
+            try { if (rc) localStorage.setItem('rf_reentry_cpf', rc); if (rt) localStorage.setItem('rf_reentry_token', rt) } catch (e) {}
+          }}
         />
       )}
       {showSobre && (
