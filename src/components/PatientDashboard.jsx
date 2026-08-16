@@ -580,33 +580,20 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   // NOTIFICA (Telegram): ADM + médico plantonista (chat oculto na config).
   async function dispararEmergencia() {
     try {
-      const p = profile || {}
-      const endereco = [p.logradouro, p.numero, p.complemento, p.bairro, p.cidade, p.uf].filter(Boolean).join(', ')
-      const contato = [p.contato_emergencia_nome, p.contato_emergencia_parentesco ? `(${p.contato_emergencia_parentesco})` : null, p.contato_emergencia_celular].filter(Boolean).join(' ')
-      const msg = '🚨 EMERGÊNCIA ACIONADA — Projeto OBA\n' +
-        `Paciente: ${p.nome || '—'}\n` +
-        `CPF: ${fmtCPF(p.cpf)}\n` +
-        `Celular: ${p.celular || '—'}\n` +
-        `Endereço: ${endereco || '(não informado)'}` + (p.cep ? ` — CEP ${p.cep}` : '') + '\n' +
-        `Contato de emergência: ${contato || '(não informado)'}\n` +
-        `Data|Hora: ${new Date().toLocaleString('pt-BR')}`
-      // EMERGÊNCIA: os dois avisos eram disparados e o retorno descartado. O
-      // paciente via "emergência acionada" e o plantonista podia nunca ter sido
-      // avisado — `tg_enviar_plantonista` é silencioso quando a chave do chat
-      // está vazia no config. Em consequência humana é o pior tipo de falha
-      // silenciosa do sistema: aqui ela precisa aparecer NA TELA, porque a
-      // pessoa precisa saber que tem de ligar 192.
+      // SEC-1: a mensagem (nome/CPF/endereço/contato de emergência) e os DOIS
+      // envios (ADM + plantonista) são construídos e disparados no SERVIDOR pela
+      // RPC gateada por token — o tg_enviar deixou de ser chamável direto do
+      // navegador (era aberto ao anon e permitia FORJAR mensagem ao ADM). O
+      // 192/SAMU na tela NÃO depende disto: se o aviso falhar, o banner "ligue
+      // 192" aparece do mesmo jeito (emergAvisoFalhou) — a falha precisa aparecer.
       let avisou = false
       try {
-        const { data, error } = await supabase.rpc('tg_enviar', { p_msg: msg })
+        const { data, error } = await supabase.rpc('oba_avisar_emergencia', {
+          p_cpf: cpfPacienteLogado(), ...credPaciente(),
+        })
         if (!error && data?.ok !== false) avisou = true
-        else console.error('tg_enviar (ADM):', error || data?.erro)
-      } catch (e) { console.error('tg_enviar (ADM):', e) }
-      try {
-        const { data, error } = await supabase.rpc('tg_enviar_plantonista', { p_msg: msg })
-        if (!error && data?.ok !== false) avisou = true
-        else console.error('tg_enviar_plantonista:', error || data?.erro)
-      } catch (e) { console.error('tg_enviar_plantonista:', e) }
+        else console.error('oba_avisar_emergencia:', error || data?.erro)
+      } catch (e) { console.error('oba_avisar_emergencia:', e) }
       setEmergAvisoFalhou(!avisou)
     } catch (e) { setEmergAvisoFalhou(true) }
   }

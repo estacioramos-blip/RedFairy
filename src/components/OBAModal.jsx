@@ -1099,28 +1099,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   }, [gatilhoPesquisa])
 
   async function enviarPesquisaTelegram() {
-    let celular = ''
+    // SEC-1: a mensagem (nome/telefone do profile) e o envio são feitos no
+    // SERVIDOR pela RPC gateada por token — tg_enviar não é mais chamável direto
+    // do navegador. Continua devolvendo true/false pra NÃO engolir a falha (antes
+    // o erro morria num catch e o aceite era marcado como enviado de qualquer jeito).
     try {
-      const cpfLimpo = String(cpf || '').replace(/\D/g, '')
-      if (cpfLimpo.length === 11) {
-        const { data: _pfR } = await supabase.rpc('profiles_por_cpf', { p_cpf: cpfLimpo, ...credAmbas() })
-        const data = (_pfR && _pfR.ok) ? _pfR.perfil : null
-        celular = data?.celular || ''
-      }
-    } catch (e) {}
-    const agora = new Date().toLocaleString('pt-BR')
-    const msg = "🔬 Paciente para a PESQUISA (obstipação/fibromialgia):\n" +
-      `Nome: ${nome || '—'}\n` +
-      `Telefone: ${celular || '(não informado)'}\n` +
-      `E-mail: (não informado)\n` +
-      `Data|Hora: ${agora}`
-    // NÃO engolir a falha: antes o erro morria num catch vazio e o aceite era
-    // marcado como enviado de qualquer jeito — o paciente via "recebemos" e o
-    // ADM nunca ficava sabendo que ele existiu. Agora devolve true/false.
-    try {
-      const { error } = await supabase.rpc('tg_enviar', { p_msg: msg })
-      if (error) {
-        console.error('PESQUISA: falha ao avisar o ADM —', error.message)
+      const { data, error } = await supabase.rpc('oba_avisar_pesquisa', {
+        p_cpf: String(cpf || '').replace(/\D/g, ''), ...credAmbas(),
+      })
+      if (error || data?.ok === false) {
+        console.error('PESQUISA: falha ao avisar o ADM —', error?.message || data?.erro)
         return false
       }
       return true
@@ -1822,8 +1810,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           if (duvidaAvisoEnviadoRef.current !== assinaturaDuvidas) {
             const secoesDuvida = form.duvidas.map(s => DUVIDA_SECOES[s] || s).join(', ')
             try {
-              await supabase.rpc('tg_enviar', {
-                p_msg: `🔎 Revisão médica recomendada — Projeto OBA\nPaciente: ${nome || cpfLimpo}\nCPF: ${cpfLimpo}\nMarcou dúvida em: ${secoesDuvida}`,
+              // SEC-1: RPC gateada por token; nome/CPF vêm do SERVIDOR, só os
+              // rótulos das seções são passados. tg_enviar não é mais chamável direto.
+              await supabase.rpc('oba_avisar_duvida', {
+                p_cpf: cpfLimpo, p_secoes: secoesDuvida, ...credAmbas(),
               })
               duvidaAvisoEnviadoRef.current = assinaturaDuvidas
             } catch (e) { /* best-effort, não bloqueia o relatório */ }
