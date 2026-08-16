@@ -956,7 +956,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [linkMedCopiado, setLinkMedCopiado] = useState(false);
   const [fada4docInstrIOS, setFada4docInstrIOS] = useState(false);
   const { instalar: instalarFada4doc } = useInstalarFada();
-  const qrBaseAfil = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://redfairy.bio';
+  const qrBaseAfil = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://app.bariatrico.net';
   // (i) Vindo do bariatrico.net (Sou Medico), a imagem do topo do modal de afiliados
   // troca para a da landing "Quero encaminhar pacientes" (o medico + paciente).
   // Como a imagem do bari e landscape (2:1) e a welcome e retrato, ajusta enquadramento.

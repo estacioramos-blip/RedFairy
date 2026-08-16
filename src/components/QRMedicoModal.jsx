@@ -15,7 +15,7 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
   const [copiado, setCopiado] = useState(false)
   const base = (typeof window !== 'undefined' && window.location && window.location.origin)
     ? window.location.origin
-    : 'https://redfairy.bio'
+    : 'https://app.bariatrico.net'
   const link = `${base}/?ref=${encodeURIComponent(crm || '')}`
 
   function copiar() {

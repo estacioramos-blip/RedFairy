@@ -426,7 +426,11 @@ function AbaAPagar({ rpc, toast }) {
               <b>US$ {Number(m.total_usd).toFixed(2)}</b>{cot > 0 && <>{" ≈ "}<b>{fmtBRL(m.total_usd * cot)}</b></>}</p>
             <p className="text-gray-500">{"PIX: "}<b>{m.pix || '(sem chave cadastrada)'}</b></p>
           </div>
-          <button onClick={() => pagarMedico(m.crm)} className="font-bold px-3 py-2 rounded-xl text-xs" style={{ background: GOLD, color: DARK }}>
+          {/* MIN-2: sem chave PIX não há para onde pagar — bloqueia o MARCAR PAGO. */}
+          <button onClick={() => pagarMedico(m.crm)} disabled={!m.pix}
+            className="font-bold px-3 py-2 rounded-xl text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: GOLD, color: DARK }}
+            title={!m.pix ? 'Sem chave PIX cadastrada — peça a chave antes de pagar' : undefined}>
             {"MARCAR PAGO"}
           </button>
         </div>
@@ -442,7 +446,11 @@ function AbaAPagar({ rpc, toast }) {
               {cot > 0 && <>{" ≈ "}<b>{fmtBRL(i.total_usd * cot)}</b></>}</p>
             <p className="text-gray-500">{"PIX: "}<b>{i.pix || '(sem chave cadastrada)'}</b>{i.titular ? ` · Titular: ${i.titular}` : ''}</p>
           </div>
-          <button onClick={() => pagarIndicador(i.codigo)} className="font-bold px-3 py-2 rounded-xl text-xs" style={{ background: GOLD, color: DARK }}>
+          {/* MIN-2: sem chave PIX não há para onde pagar — bloqueia o MARCAR PAGO. */}
+          <button onClick={() => pagarIndicador(i.codigo)} disabled={!i.pix}
+            className="font-bold px-3 py-2 rounded-xl text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            style={{ background: GOLD, color: DARK }}
+            title={!i.pix ? 'Sem chave PIX cadastrada — peça a chave antes de pagar' : undefined}>
             {"MARCAR PAGO"}
           </button>
         </div>

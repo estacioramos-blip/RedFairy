@@ -1411,7 +1411,7 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
               {saldoIndicadorBrl > 0
                 ? <p className="text-xs text-green-700 font-bold mt-0.5">{"Seu saldo: R$ "}{saldoIndicadorBrl.toFixed(2).replace('.', ',')}{" — abate da sua anuidade."}</p>
                 : pendenteIndicadorBrl <= 0
-                  ? <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Cada um que entrar e pagar = US$10 para você."}</p>
+                  ? <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Cada um que entrar e pagar vira crédito na sua conta — veja o valor em INDICAR."}</p>
                   : null}
               {/* O indicado pagou (declarou) e o crédito já existe — mas só vira
                   dinheiro depois que a tesouraria confirma o PIX. Dizer isso

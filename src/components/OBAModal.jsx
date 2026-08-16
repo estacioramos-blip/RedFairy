@@ -24,8 +24,6 @@ const SPLASH_REL_IMG = null
 // Mesmo esquema do SPLASH_REL_IMG.
 const SPLASH_CONCLUSAO_IMG = null
 
-// Dados do médico responsável (assinatura do resultado/prescrição).
-const MEDICO_RESP = 'E. F. Ramos, M.D. — CRM 6302 BA | RQE 5830 · 5643 · 27847'
 const WHATS_PLATAFORMA = '5571997110804'
 
 // Apresentação visual de cada ESTADO GERAL CLÍNICO (régua do obaEngine).
@@ -2420,7 +2418,9 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           />
         </div>
       )}
-      <div style={OV} onClick={finalizar}>
+      {/* MIN-14: clicar no fundo NÃO finaliza mais (era ação forte, toque acidental
+          no celular perdia a avaliação) — só o botão FINALIZAR conclui. */}
+      <div style={OV}>
         <div
           style={{ ...CD, position:'relative', overflow:'hidden' }}
           onClick={e => e.stopPropagation()}
@@ -2622,7 +2622,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#166534' }}>{"QUERO RECEBER O RESULTADO POR WHATSAPP"}</span>
               </label>
               <p style={{ fontSize:'0.74rem', color:'#15803D', margin:'0.5rem 0 0', lineHeight:1.5 }}>
-                {"Enviaremos um resumo da sua avaliação (em breve, também em PDF assinado por "}{MEDICO_RESP}{")."}
+                {"Enviaremos um resumo da sua avaliação."}
               </p>
               {querResultado && (
                 <button style={waBtn} onClick={() => abrirWhats('Olá! Concluí minha avaliação OBA e gostaria de receber o resultado da minha avaliação.')}>{"Receber no WhatsApp →"}</button>
@@ -2690,7 +2690,8 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
           />
         </div>
       )}
-      <div style={OV} onClick={concluirRelatorio}>
+      {/* MIN-14: clicar no fundo NÃO avança mais para a conclusão — só o botão. */}
+      <div style={OV}>
         <div
           style={{ ...CD, position:'relative', overflow:'hidden' }}
           onClick={e => e.stopPropagation()}

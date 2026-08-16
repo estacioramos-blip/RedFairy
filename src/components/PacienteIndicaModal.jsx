@@ -43,7 +43,7 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
   const [indNome, setIndNome] = useState(''); const [indTel, setIndTel] = useState('')
   const pixRef = useRef(null)
 
-  const base = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://redfairy.bio'
+  const base = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://app.bariatrico.net'
   // ?ind= (param PRÓPRIO do indicador — ?ref é do médico) + ?oba=1: o bariátrico
   // indicado cai direto na entrada do Projeto OBA, não na landing do RedFairy.
   const link = codigo ? `${base}/?oba=1&ind=${codigo}` : ''
