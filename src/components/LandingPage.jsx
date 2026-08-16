@@ -1503,6 +1503,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
               <p style={{ fontSize: '0.85rem', color: 'var(--text-sec)', fontWeight: 500, margin: '0.2rem 0 0', letterSpacing: '1px', textTransform: 'uppercase' }}>
                 COO
               </p>
+              <p style={{ fontSize: '0.9rem', fontWeight: 600, margin: '0.45rem 0 0' }}>
+                <a href="mailto:contato@bariatrico.net" style={{ color: 'var(--wine)', textDecoration: 'none' }}>{"contato@bariatrico.net"}</a>
+              </p>
             </div>
 
             <div style={{ marginBottom: '1.5rem' }}>
