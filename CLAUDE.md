@@ -172,3 +172,74 @@ Pendente de definição do Estácio:
 - Antes de mexer no engine ou nas matrizes, leia `decisionEngine.js`, `maleMatrix.js` e `femaleMatrix.js` para entender o fluxo completo.
 - Sempre rode `npm run build` antes de propor commit.
 - Mostre o diff e espere confirmação antes de `git commit`/`git push`.
+
+---
+
+## Landing bariatrico.net — faixa de abertura e teste A/B
+
+Site de marketing, projeto separado do app React. Vive em `site-bariatrico/`:
+`index.html` + `support.js` (dc-runtime) + `intro-ab.js` + `images/` + `vendor/`.
+Sem build, sem Vite — edita o arquivo e commita.
+
+### O que é a faixa
+
+Faixa de vidro fosco com borda dourada que sobe do centro para cima ao carregar
+a home, com uma frase explicativa do SaaS. O desfoque sobre o site clareia
+enquanto ela sobe. Sai sozinha ou no primeiro toque/clique/rolagem.
+
+Não bloqueia nada: `pointer-events: none` em tudo. Isso é deliberado —
+interstitial que trava aumenta o abandono, que é justamente o que o teste
+quer reduzir.
+
+### Ajustes finos (topo do `intro-ab.js`)
+
+- `FRASES.A` / `FRASES.B` — as duas variantes de copy
+- `T.subida` — duração do movimento (hoje 2100ms)
+- `T.visivel` — permanência total em tela (hoje 5200ms)
+- `T.foco` — desfoque -> nitidez do site atrás
+- `ALTURA_SUBIDA` — o quanto sobe a partir do centro (hoje 19vh)
+- `VIDRO` — opacidade do vidro fosco (hoje 0.52)
+
+### Modo de teste
+
+`?intro=1` mostra de novo, `?intro=A` e `?intro=B` forçam cada frase.
+No modo de teste NADA é gravado — para os testes internos não entrarem
+na amostra.
+
+Sem esse parâmetro a faixa aparece uma vez por sessão (`sessionStorage`).
+Recarregar não repete; fechar o navegador sim, e isso é o comportamento
+correto para o teste.
+
+### Medição
+
+Tabela `oba_landing_eventos` no mesmo Supabase do app, chave anon, RLS
+insert-only. Views de leitura: `oba_landing_resumo` (visitas, cliques e
+abandono por variante) e `oba_landing_por_cta`.
+
+Registra 1 impressão por sessão e 1 clique no primeiro CTA tocado.
+"Saiu sem clicar" sai por subtração — evento de saída (`beforeunload`) é
+pouco confiável no celular e perderia justamente quem mais interessa.
+
+Os CTAs são identificados por `href`, `data-contato`, `aria-label` e texto
+visível. NÃO dá para usar os `onClick="{{ }}"`: o dc-runtime os compila em
+handlers React e eles somem do DOM.
+
+O `fetch` usa `keepalive: true` — sem isso o clique que leva para
+app.bariatrico.net seria cancelado no meio da navegação.
+
+### Detalhes do dc-runtime que importam
+
+O runtime esconde o `<x-dc>`, carrega React/ReactDOM do `vendor/` de forma
+assíncrona e só então monta o `#dc-root`. Qualquer script que precise do site
+renderizado tem de esperar `#dc-root .sc-host` existir.
+
+A hero tem coreografia própria de ~2,4s (clip-path, título, cards com atraso
+de 0,85 / 1,0 / 1,15s). A faixa deixa isso acontecer por baixo do desfoque.
+
+Pendências conhecidas: a página fica branca até o React montar (falta
+`background` no `body`); o `boot()` faz `fetch(location.href)` e baixa o
+HTML duas vezes por visita.
+
+### Para desligar o teste
+
+Remover a linha `<script src="./intro-ab.js"></script>` do `index.html`.
