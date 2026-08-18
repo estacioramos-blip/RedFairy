@@ -4,28 +4,38 @@
    O QUE FAZ
    Assim que a home termina de montar, uma faixa de vidro fosco com borda
    dourada sobe do centro para cima com uma frase explicativa. Enquanto
-   sobe, o desfoque sobre o site vai a zero. Depois de ~4s (ou no primeiro
-   toque/clique/rolagem) a faixa some e o site fica como sempre foi.
+   sobe, o desfoque sobre o site vai a zero. Depois do tempo configurado
+   (ou no primeiro toque/clique/rolagem) a faixa some.
 
    A faixa NÃO BLOQUEIA nada: `pointer-events: none` em tudo. Se o usuário
    quiser clicar em "Sou Bariátrico" no primeiro segundo, ele clica — a
-   faixa some sozinha. Barreira de entrada aumenta o abandono; a ideia é
-   entregar a mensagem sem cobrar pedágio por ela.
+   faixa some sozinha.
+
+   ---------------------------------------------------------------------
+   COMO TESTAR (importante)
+   A faixa aparece UMA VEZ POR SESSÃO. Recarregar, mesmo com Ctrl+Shift+R,
+   não a traz de volta: `sessionStorage` só morre quando a aba fecha.
+
+   Para rever quantas vezes quiser, use o modo de teste na URL:
+
+     bariatrico.net/?intro=1   → mostra de novo, variante sorteada
+     bariatrico.net/?intro=A   → força a frase A
+     bariatrico.net/?intro=B   → força a frase B
+
+   No modo de teste NADA é gravado no banco — assim os seus próprios
+   testes não entram na amostra e não distorcem o resultado.
+   ---------------------------------------------------------------------
 
    SINCRONIA COM O dc-runtime (support.js)
    O runtime esconde o <x-dc>, carrega React/ReactDOM do vendor/ de forma
-   ASSÍNCRONA e só então monta o #dc-root. Se a faixa aparecesse antes
-   disso, não haveria site atrás para desfocar. Por isso ela espera o
-   #dc-root ter conteúdo. A hero então entra (clip-path, título, cards —
-   ~2,4s de coreografia própria) POR BAIXO do desfoque, e o foco chega
-   junto com o fim dela.
+   ASSÍNCRONA e só então monta o #dc-root. A faixa espera esse momento —
+   antes disso não haveria site atrás para desfocar. A hero entra com a
+   coreografia própria dela (~2,4s) POR BAIXO do desfoque.
 
    MEDIÇÃO (tabela `oba_landing_eventos`, ver migrate_oba_landing_ab.sql)
    - 1 evento 'impressao' por sessão, com a variante sorteada
    - 1 evento 'clique' no primeiro CTA tocado
-   - "Saiu sem clicar" = impressões − sessões com clique (por subtração;
-     evento de saída é pouco confiável no celular e perderia justamente
-     quem mais interessa)
+   - "Saiu sem clicar" = impressões − sessões com clique
 
    PARA DESLIGAR O TESTE: remova a linha do <script> no index.html.
    ===================================================================== */
@@ -45,9 +55,23 @@
     B: 'Um sistema com suporte de IA e médicos de verdade, para otimizar a vida de quem fez cirurgia bariátrica.'
   };
 
-  var MS_VISIVEL   = 4000;   // tempo da faixa em tela, contado a partir da montagem
-  var MS_ESPERA_DC = 4000;   // limite para o #dc-root aparecer; passou disso, desiste
-  var Z_INDEX      = 50;     // acima das seções (40), abaixo dos modais (60/70)
+  // Todos os tempos em milissegundos, num lugar só.
+  // A SUBIDA é lenta de propósito: o movimento é a parte que se olha. O
+  // tempo total não precisa acompanhar essa lentidão, porque a faixa nunca
+  // impede um clique — quem já decidiu não espera nada.
+  var T = {
+    visivel:      5200,   // tempo total da faixa em tela
+    subida:       2100,   // duração do movimento de subida
+    atrasoSubida:  250,   // espera antes de começar a subir
+    aparecer:      900,   // fade-in da faixa
+    foco:         2400,   // desfoque → nitidez do site atrás
+    atrasoFoco:    350,   // espera antes de começar a clarear
+    saida:         550    // fade-out no fim
+  };
+
+  var ALTURA_SUBIDA = '19vh';   // quanto a faixa sobe a partir do centro
+  var MS_ESPERA_DC  = 4000;     // limite para o #dc-root aparecer
+  var Z_INDEX       = 50;       // acima das seções (40), abaixo dos modais (60/70)
 
   // Mesmo Supabase do app, mesma chave anon já usada neste site.
   var SUPA_URL = 'https://pfzghybajniyesoiwrcp.supabase.co';
@@ -55,35 +79,46 @@
   var TABELA   = 'oba_landing_eventos';
 
   // Identidade visual: vem do próprio site, não inventa paleta nova.
-  var OURO   = '#E3AE37';
-  var VIDRO  = 'rgba(10,8,7,0.52)';   // mesmo vidro do #saibaCard
+  var OURO  = '#E3AE37';
+  var VIDRO = 'rgba(10,8,7,0.52)';   // mesmo vidro do #saibaCard
+
+  var EASE = 'cubic-bezier(.2,.7,.2,1)';
 
   /* ------------------------------------------------------------------
-     2. GUARDAS — quando NÃO mostrar nem registrar
+     2. MODO DE TESTE
      ------------------------------------------------------------------ */
 
-  // Bot/crawler: mostraria a faixa para ninguém e sujaria a amostra.
+  var forcado = (function () {
+    var m = /[?&]intro=([AB1])/i.exec(location.search || '');
+    return m ? m[1].toUpperCase() : null;
+  })();
+  var ehTeste = forcado !== null;
+
+  /* ------------------------------------------------------------------
+     3. GUARDAS — quando NÃO mostrar nem registrar
+     ------------------------------------------------------------------ */
+
   if (navigator.webdriver === true ||
       /bot|crawl|spider|slurp|headless|lighthouse|preview|facebookexternalhit/i
         .test(navigator.userAgent || '')) return;
 
   // Link direto para uma seção (#sou-medico etc.): o usuário já sabe onde
-  // quer chegar. Interceptar aqui seria só atrito.
-  if (location.hash && location.hash.length > 1) return;
+  // quer chegar. No modo de teste isso não vale.
+  if (!ehTeste && location.hash && location.hash.length > 1) return;
 
   var ss = (function () {
     try { sessionStorage.setItem('__t', '1'); sessionStorage.removeItem('__t'); return sessionStorage; }
     catch (e) { return null; }   // navegação privada em iOS antigo
   })();
 
-  // Uma vez por sessão. Recarregar não repete a faixa nem duplica a impressão.
-  if (ss && ss.getItem('obaIntroVista') === '1') return;
+  // Uma vez por sessão — exceto no modo de teste.
+  if (!ehTeste && ss && ss.getItem('obaIntroVista') === '1') return;
 
   var poucoMovimento = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ------------------------------------------------------------------
-     3. SESSÃO E SORTEIO DA VARIANTE
+     4. SESSÃO E SORTEIO DA VARIANTE
      ------------------------------------------------------------------ */
 
   function novoId() {
@@ -91,23 +126,30 @@
   }
 
   var SID = (ss && ss.getItem('obaAbSessao')) || novoId();
-  if (ss) ss.setItem('obaAbSessao', SID);
+  if (ss && !ehTeste) ss.setItem('obaAbSessao', SID);
 
-  var VAR = ss && ss.getItem('obaAbVariante');
-  if (VAR !== 'A' && VAR !== 'B') {
-    VAR = Math.random() < 0.5 ? 'A' : 'B';
-    if (ss) ss.setItem('obaAbVariante', VAR);
+  var VAR;
+  if (forcado === 'A' || forcado === 'B') {
+    VAR = forcado;                       // ?intro=A / ?intro=B força a frase
+  } else {
+    VAR = ss && ss.getItem('obaAbVariante');
+    if (VAR !== 'A' && VAR !== 'B') {
+      VAR = Math.random() < 0.5 ? 'A' : 'B';
+      if (ss && !ehTeste) ss.setItem('obaAbVariante', VAR);
+    }
   }
 
-  var t0 = Date.now();          // reposicionado quando a faixa aparece de fato
+  var t0 = Date.now();
   var faixaVisivel = false;
   var cliqueRegistrado = false;
 
   /* ------------------------------------------------------------------
-     4. REGISTRO NO SUPABASE
+     5. REGISTRO NO SUPABASE
      ------------------------------------------------------------------ */
 
   function registrar(tipo, extra) {
+    if (ehTeste) return;   // teste seu não entra na amostra
+
     var corpo = {
       sessao_id: SID,
       variante: VAR,
@@ -137,15 +179,15 @@
   }
 
   /* ------------------------------------------------------------------
-     5. IDENTIFICAÇÃO DO CTA CLICADO
+     6. IDENTIFICAÇÃO DO CTA CLICADO
      ------------------------------------------------------------------
      O dc-runtime transforma `onClick="{{ ... }}"` em handler React — o
      atributo não existe no DOM final. O que sobrevive é: href, data-contato,
-     aria-label e o texto visível. É por aí que reconhecemos cada botão.
+     aria-label e o texto visível.
 
      O React 18 (createRoot) escuta no container #dc-root, não no document.
-     Como este listener é de captura no document, ele roda ANTES do handler
-     do site — inclusive antes de um preventDefault ou de uma navegação.   */
+     Este listener é de captura no document, então roda ANTES do handler do
+     site — inclusive antes de um preventDefault ou de uma navegação.      */
 
   function identificarCta(alvo) {
     if (!alvo || !alvo.closest) return null;
@@ -194,7 +236,7 @@
   }, true);
 
   /* ------------------------------------------------------------------
-     6. ESPERAR O SITE MONTAR
+     7. ESPERAR O SITE MONTAR
      ------------------------------------------------------------------ */
 
   function quandoMontado(pronto, desiste) {
@@ -231,14 +273,16 @@
   });
 
   /* ------------------------------------------------------------------
-     7. A FAIXA
+     8. A FAIXA
      ------------------------------------------------------------------ */
 
   function mostrar() {
-    if (ss) ss.setItem('obaIntroVista', '1');
+    if (ss && !ehTeste) ss.setItem('obaIntroVista', '1');
     t0 = Date.now();
     faixaVisivel = true;
     registrar('impressao');
+
+    var s = function (ms) { return (ms / 1000) + 's'; };
 
     var temVidro = window.CSS && CSS.supports &&
       (CSS.supports('backdrop-filter', 'blur(2px)') ||
@@ -249,15 +293,15 @@
     wrap.setAttribute('aria-hidden', 'true');   // decorativo: o conteúdo real está na página
     wrap.style.cssText = 'position:fixed;inset:0;z-index:' + Z_INDEX + ';pointer-events:none;';
 
-    // Véu: é ele que desfoca o site. Some junto com a subida da faixa —
-    // "o site vai ficando nítido enquanto a mensagem sobe".
+    // Véu: é ele que desfoca o site. Clareia enquanto a faixa sobe.
     var veu = document.createElement('div');
+    var trFoco = s(T.foco) + ' ' + EASE + ' ' + s(T.atrasoFoco);
     veu.style.cssText =
       'position:absolute;inset:0;background:rgba(10,8,7,0.40);' +
       (temVidro ? '-webkit-backdrop-filter:blur(18px) saturate(0.92);backdrop-filter:blur(18px) saturate(0.92);' : '') +
-      'transition:background 1.9s cubic-bezier(.2,.7,.2,1) .3s,' +
-      ' -webkit-backdrop-filter 1.9s cubic-bezier(.2,.7,.2,1) .3s,' +
-      ' backdrop-filter 1.9s cubic-bezier(.2,.7,.2,1) .3s;';
+      'transition:background ' + trFoco +
+      ',-webkit-backdrop-filter ' + trFoco +
+      ',backdrop-filter ' + trFoco + ';';
 
     // A faixa. Vidro fosco + borda fina dourada, quase toda a largura.
     var BASE = 'translate(-50%,-50%)';
@@ -272,7 +316,8 @@
       'box-shadow:0 40px 90px -30px rgba(0,0,0,0.75);' +
       'padding:clamp(18px,3.4vw,30px) clamp(20px,5vw,52px);' +
       'opacity:0;transform:' + BASE + ' translateY(16px);' +
-      'transition:opacity .85s ease,transform 1.25s cubic-bezier(.2,.7,.2,1) .2s;';
+      'transition:opacity ' + s(T.aparecer) + ' ease,' +
+      'transform ' + s(T.subida) + ' ' + EASE + ' ' + s(T.atrasoSubida) + ';';
 
     var texto = document.createElement('p');
     texto.textContent = FRASES[VAR];
@@ -300,13 +345,14 @@
       veu.style.transition = 'opacity .25s ease';
       veu.style.opacity = '0';
 
-      faixa.style.transition = 'opacity .45s ease,transform .55s cubic-bezier(.4,0,.2,1)';
+      faixa.style.transition = 'opacity ' + s(T.saida) + ' ease,transform ' +
+                               s(T.saida + 100) + ' cubic-bezier(.4,0,.2,1)';
       faixa.style.opacity = '0';
       faixa.style.transform = BASE + ' translateY(-26vh)';
 
       setTimeout(function () {
         if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
-      }, 620);
+      }, T.saida + 150);
 
       document.removeEventListener('click', encerrar, true);
       document.removeEventListener('touchstart', encerrar, true);
@@ -327,7 +373,7 @@
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         faixa.style.opacity = '1';
-        faixa.style.transform = BASE + (poucoMovimento ? '' : ' translateY(-19vh)');
+        faixa.style.transform = BASE + (poucoMovimento ? '' : ' translateY(-' + ALTURA_SUBIDA.replace('-', '') + ')');
 
         veu.style.background = 'rgba(10,8,7,0)';
         if (temVidro) {
@@ -337,6 +383,6 @@
       });
     });
 
-    setTimeout(encerrar, poucoMovimento ? 3000 : MS_VISIVEL);
+    setTimeout(encerrar, poucoMovimento ? 3000 : T.visivel);
   }
 })();
