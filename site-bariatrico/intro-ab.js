@@ -314,7 +314,7 @@
       'background:' + (temVidro ? VIDRO : 'rgba(10,8,7,0.93)') + ';' +
       (temVidro ? '-webkit-backdrop-filter:blur(26px) saturate(1.35);backdrop-filter:blur(26px) saturate(1.35);' : '') +
       'box-shadow:0 40px 90px -30px rgba(0,0,0,0.75);' +
-      'padding:clamp(18px,3.4vw,30px) clamp(20px,5vw,52px);' +
+      'padding:clamp(28px,4.6vw,44px) clamp(20px,5vw,52px);' +
       'opacity:0;transform:' + BASE + ' translateY(16px);' +
       'transition:opacity ' + s(T.aparecer) + ' ease,' +
       'transform ' + s(T.subida) + ' ' + EASE + ' ' + s(T.atrasoSubida) + ';';
