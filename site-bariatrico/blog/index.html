@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!-- GERADO por blog/build.js — não editar à mão. Edite o .md ou o script e rode: npm run blog:build -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blog do Projeto OBA®</title>
+<meta name="description" content="Artigos sobre a saúde do paciente bariátrico: exames, disabsorção, reposição de nutrientes e acompanhamento de longo prazo, escritos por médico.">
+<link rel="canonical" href="https://bariatrico.net/blog/">
+<link rel="icon" href="../images/oba-logo.png">
+<meta property="og:site_name" content="Projeto OBA®">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Blog do Projeto OBA®">
+<meta property="og:description" content="Artigos sobre a saúde do paciente bariátrico: exames, disabsorção, reposição de nutrientes e acompanhamento de longo prazo, escritos por médico.">
+<meta property="og:url" content="https://bariatrico.net/blog/">
+<meta property="og:image" content="https://bariatrico.net/images/oba-logo.png">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Blog do Projeto OBA®">
+<meta name="twitter:description" content="Artigos sobre a saúde do paciente bariátrico: exames, disabsorção, reposição de nutrientes e acompanhamento de longo prazo, escritos por médico.">
+<meta name="twitter:image" content="https://bariatrico.net/images/oba-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #14100E; color: #F7F1E7; font-family: 'Archivo', sans-serif;
+         font-size: 17px; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+  a { color: #E3AE37; }
+  a:hover { text-decoration-color: rgba(227,174,55,0.5); }
+  .container { max-width: 68ch; margin: 0 auto; padding: 0 22px; }
+  .site-header { padding: 26px 0 22px; border-bottom: 1px solid rgba(227,174,55,0.22); }
+  .site-header .container { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+  .marca { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600;
+           letter-spacing: 0.04em; color: #F7F1E7; text-decoration: none; }
+  .marca sup { font-size: 12px; color: #E3AE37; }
+  .voltar { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600;
+            color: rgba(247,241,231,0.9); text-decoration: none; }
+  .voltar:hover { color: #E3AE37; }
+  main { padding: 44px 0 30px; }
+  h1, h2, h3 { font-family: 'Cormorant Garamond', serif; font-weight: 600;
+               line-height: 1.12; color: #FBF6EC; letter-spacing: -0.01em; }
+  article h1 { font-size: clamp(34px, 6vw, 52px); margin: 10px 0 14px; }
+  article h2 { font-size: clamp(25px, 4vw, 33px); margin: 40px 0 12px; }
+  article h3 { font-size: clamp(20px, 3vw, 25px); margin: 30px 0 10px; }
+  article p, article li { color: rgba(247,241,231,0.92); }
+  article ul, article ol { padding-left: 1.3em; }
+  article li { margin: 6px 0; }
+  article img { max-width: 100%; height: auto; border-radius: 8px; }
+  article blockquote { margin: 24px 0; padding: 4px 0 4px 20px; border-left: 2px solid #E3AE37;
+                       font-family: 'Cormorant Garamond', serif; font-style: italic;
+                       font-size: 1.18em; color: rgba(247,241,231,0.85); }
+  article hr { border: none; border-top: 1px solid rgba(227,174,55,0.22); margin: 36px 0; }
+  article strong { color: #FBF6EC; }
+  .olho { font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase; font-weight: 600; color: #E3AE37; }
+  .datas { font-size: 13px; color: rgba(247,241,231,0.6); margin: 0 0 6px; }
+  .assinatura { display: flex; flex-direction: column; gap: 2px; margin: 18px 0 34px;
+                padding-bottom: 22px; border-bottom: 1px solid rgba(227,174,55,0.22); }
+  .assinatura a { font-weight: 600; text-decoration: none; }
+  .assinatura .creds { font-size: 13px; color: rgba(247,241,231,0.66); }
+  .aviso { margin: 44px 0 0; padding: 18px 20px; border: 1px solid rgba(227,174,55,0.3);
+           border-radius: 10px; font-size: 14px; line-height: 1.65; color: rgba(247,241,231,0.75);
+           background: rgba(227,174,55,0.05); }
+  .autor-box { margin-top: 26px; padding: 20px; border-radius: 10px; background: rgba(247,241,231,0.045);
+               font-size: 14.5px; line-height: 1.65; color: rgba(247,241,231,0.8); }
+  .autor-box .nome { font-family: 'Cormorant Garamond', serif; font-size: 21px; color: #FBF6EC; margin: 0 0 2px; }
+  .lista-post { padding: 26px 0; border-bottom: 1px solid rgba(227,174,55,0.18); }
+  .lista-post h2 { font-size: clamp(26px, 4.4vw, 36px); margin: 8px 0 8px; }
+  .lista-post h2 a { color: #FBF6EC; text-decoration: none; }
+  .lista-post h2 a:hover { color: #E3AE37; }
+  .lista-post p { margin: 0 0 12px; color: rgba(247,241,231,0.78); }
+  .ler { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; text-decoration: none; }
+  .site-footer { margin-top: 60px; padding: 30px 0 40px; border-top: 1px solid rgba(227,174,55,0.22);
+                 font-size: 13px; color: rgba(247,241,231,0.55); }
+  .site-footer .container { display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: baseline; }
+  .site-footer a { color: rgba(247,241,231,0.75); text-decoration: none; }
+  .site-footer a:hover { color: #E3AE37; }
+</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Blog","name":"Blog do Projeto OBA®","description":"Artigos sobre a saúde do paciente bariátrico: exames, disabsorção, reposição de nutrientes e acompanhamento de longo prazo, escritos por médico.","url":"https://bariatrico.net/blog/","inLanguage":"pt-BR","author":{"@type":"Person","name":"Dr. Estácio Ramos","url":"https://bariatrico.net/blog/autor.html"}}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="marca" href="/">OBA<sup>®</sup></a>
+    <a class="voltar" href="/">← Voltar ao site</a>
+  </div>
+</header>
+<main>
+  <div class="container">
+<span class="olho">Projeto OBA®</span>
+  <h1 style="font-family:'Cormorant Garamond',serif; font-size:clamp(38px,6.5vw,58px); margin:10px 0 8px;">Blog</h1>
+  <p style="color:rgba(247,241,231,0.75); margin:0 0 10px;">Artigos sobre a saúde do paciente bariátrico: exames, disabsorção, reposição de nutrientes e acompanhamento de longo prazo, escritos por médico.</p>
+  <div class="lista-post">
+    <span class="olho">Acompanhamento · 27 de agosto de 2026</span>
+    <h2><a href="exames-pos-bariatrica.html">Por que os exames de sangue viram rotina depois da cirurgia bariátrica</a></h2>
+    <p>A cirurgia bariátrica muda a absorção de nutrientes. Entenda por que os exames de controle são para a vida toda e quais deficiências eles detectam cedo.</p>
+    <a class="ler" href="exames-pos-bariatrica.html">Ler artigo →</a>
+  </div>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <a href="/">Projeto OBA® — início</a>
+    <a href="/blog/">Blog</a>
+    <a href="/blog/autor.html">Sobre o autor</a>
+    <span>© Projeto OBA®</span>
+  </div>
+</footer>
+</body>
+</html>

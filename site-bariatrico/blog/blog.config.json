@@ -1,0 +1,19 @@
+{
+  "siteUrl": "https://bariatrico.net",
+  "blogTitle": "Blog do Projeto OBA®",
+  "blogDescription": "Artigos sobre a saúde do paciente bariátrico: exames, disabsorção, reposição de nutrientes e acompanhamento de longo prazo, escritos por médico.",
+  "ogImage": "https://bariatrico.net/images/oba-logo.png",
+  "autor": {
+    "nome": "Dr. Estácio Ramos",
+    "crm": "CRM 6302/BA",
+    "especialidades": [
+      { "nome": "Hemoterapia", "rqe": "5643" },
+      { "nome": "Patologia Clínica", "rqe": "5830" },
+      { "nome": "Hematologia", "rqe": "27847" }
+    ],
+    "bio": [
+      "Médico, CRM 6302/BA, com registro de especialista (RQE) em Hemoterapia, Patologia Clínica e Hematologia. Idealizador do Projeto OBA®, plataforma de acompanhamento e triagem laboratorial para pacientes que passaram por cirurgia bariátrica.",
+      "O Projeto OBA® nasceu da observação de que o paciente bariátrico precisa de vigilância laboratorial contínua — e de que boa parte dos problemas nutricionais e metabólicos pós-cirurgia pode ser detectada cedo, com os exames certos na hora certa."
+    ]
+  }
+}

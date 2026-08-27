@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /blog/posts/
+Disallow: /index.html.bak
+
+Sitemap: https://bariatrico.net/sitemap.xml
