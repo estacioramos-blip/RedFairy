@@ -575,9 +575,9 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
       linhas.push('DIFICULDADE PARA ENGOLIR COM VIDEODEGLUTOGRAMA NORMAL: A FASE DA DEGLUTIÇÃO AVALIADA PELO EXAME ESTÁ PRESERVADA — BOM SINAL. SE O SINTOMA PERSISTIR, A INVESTIGAÇÃO SEGUE PELO LADO MECÂNICO/DIGESTIVO (AVALIAR A ANASTOMOSE POR ENDOSCOPIA) COM O GASTROENTEROLOGISTA.')
     } else {
       linhas.push('DIFICULDADE PARA ENGOLIR REFERIDA: NO PÓS-BARIÁTRICO ELA PODE SER MECÂNICA (ESTREITAMENTO/ANEL DA ANASTOMOSE, ESOFAGITE) OU FUNCIONAL (DISTÚRBIO DA DEGLUTIÇÃO). O PRIMEIRO PASSO DA INVESTIGAÇÃO FUNCIONAL É O VIDEODEGLUTOGRAMA — EXAME DE IMAGEM SIMPLES QUE FILMA A DEGLUTIÇÃO. ENQUANTO INVESTIGA: COMA DEVAGAR, MASTIGUE MUITO BEM E EVITE LÍQUIDOS JUNTO DAS REFEIÇÕES.')
-      alertas.push({ codigo: 'endoscopico.dificuldade_engolir_investigar_videodeglutogr', nivel: LEVE, texto: 'DIFICULDADE PARA ENGOLIR — investigar com VIDEODEGLUTOGRAMA; se alterado, gastroenterologista + fonoaudiólogo.' })
+      alertas.push({ codigo: 'endoscopico.dificuldade_engolir_investigar_videodeglutogr', nivel: MODERADO, texto: 'DIFICULDADE PARA ENGOLIR — investigar com VIDEODEGLUTOGRAMA; se alterado, gastroenterologista + fonoaudiólogo.' })
       suger.push('VIDEODEGLUTOGRAMA')
-      bump(LEVE)
+      bump(MODERADO)
     }
   }
 
