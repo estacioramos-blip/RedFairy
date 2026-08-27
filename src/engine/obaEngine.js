@@ -544,7 +544,11 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
   const alergias = Array.isArray(dadosOBA.alergia_medicamentosa) ? dadosOBA.alergia_medicamentosa : []
   const alergiaPenicilina = alergias.includes('PENICILINAS')
   const alergiaCefalosporina = alergias.includes('CEFALOSPORINAS')
-  if (achados.length === 0 && !igmReag && !iggReag) return null
+  // DIFICULDADE PARA ENGOLIR (queixa) também abre este módulo: disfagia é
+  // território do trato digestivo alto, mesmo sem achado endoscópico marcado.
+  const queixasDeg = [dadosOBA.queixa_principal, ...(dadosOBA.queixas_secundarias || [])]
+  const temDisfagia = queixasDeg.includes('DIFICULDADE PARA ENGOLIR')
+  if (achados.length === 0 && !igmReag && !iggReag && !temDisfagia) return null
 
   const ordem = { [NORMAL]: 0, [LEVE]: 1, [MODERADO]: 2, [GRAVE]: 3 }
   let nivel = NORMAL
@@ -552,6 +556,30 @@ function buildModEndoscopico(dadosOBA, alertas, suger) {
   const has = (x) => achados.includes(x)
 
   const linhas = []
+
+  // ── DIFICULDADE PARA ENGOLIR × VIDEODEGLUTOGRAMA ─────────────────────────
+  // A disfagia pós-bariátrica tem duas frentes: a MECÂNICA (estreitamento/anel
+  // da anastomose, esofagite — território da endoscopia) e a FUNCIONAL (fase
+  // orofaríngea — território do videodeglutograma e da fonoaudiologia).
+  // Sem resultado → sugere o exame; ALTERADO → gastro + fono; NORMAL → tranquiliza
+  // (sem alerta) e aponta a continuação mecânica se o sintoma persistir.
+  if (temDisfagia) {
+    const deglu = String(dadosOBA.videodeglutograma || '').toUpperCase()
+    if (deglu === 'ALTERADO') {
+      linhas.push('DIFICULDADE PARA ENGOLIR COM VIDEODEGLUTOGRAMA ALTERADO: O EXAME CONFIRMA UM DISTÚRBIO DA DEGLUTIÇÃO, QUE PEDE CUIDADO EM DUAS FRENTES: AVALIAÇÃO COM GASTROENTEROLOGISTA (LADO MECÂNICO/DIGESTIVO, INCLUINDO DESCARTAR ESTREITAMENTO DA ANASTOMOSE) E TERAPIA FONOAUDIOLÓGICA (REEDUCAÇÃO DA DEGLUTIÇÃO). ENQUANTO ISSO: COMA DEVAGAR, MASTIGUE MUITO BEM E NÃO COMA DEITADO(A).')
+      alertas.push({ codigo: 'endoscopico.videodeglutograma_alterado_gastro_e_fono', nivel: MODERADO, texto: 'VIDEODEGLUTOGRAMA ALTERADO com dificuldade para engolir — avaliação com gastroenterologista + fonoaudiólogo (reeducação da deglutição).' })
+      suger.push('AVALIAÇÃO COM GASTROENTEROLOGISTA (videodeglutograma alterado)')
+      suger.push('AVALIAÇÃO COM FONOAUDIÓLOGO (reeducação da deglutição)')
+      bump(MODERADO)
+    } else if (deglu === 'NORMAL') {
+      linhas.push('DIFICULDADE PARA ENGOLIR COM VIDEODEGLUTOGRAMA NORMAL: A FASE DA DEGLUTIÇÃO AVALIADA PELO EXAME ESTÁ PRESERVADA — BOM SINAL. SE O SINTOMA PERSISTIR, A INVESTIGAÇÃO SEGUE PELO LADO MECÂNICO/DIGESTIVO (AVALIAR A ANASTOMOSE POR ENDOSCOPIA) COM O GASTROENTEROLOGISTA.')
+    } else {
+      linhas.push('DIFICULDADE PARA ENGOLIR REFERIDA: NO PÓS-BARIÁTRICO ELA PODE SER MECÂNICA (ESTREITAMENTO/ANEL DA ANASTOMOSE, ESOFAGITE) OU FUNCIONAL (DISTÚRBIO DA DEGLUTIÇÃO). O PRIMEIRO PASSO DA INVESTIGAÇÃO FUNCIONAL É O VIDEODEGLUTOGRAMA — EXAME DE IMAGEM SIMPLES QUE FILMA A DEGLUTIÇÃO. ENQUANTO INVESTIGA: COMA DEVAGAR, MASTIGUE MUITO BEM E EVITE LÍQUIDOS JUNTO DAS REFEIÇÕES.')
+      alertas.push({ codigo: 'endoscopico.dificuldade_engolir_investigar_videodeglutogr', nivel: LEVE, texto: 'DIFICULDADE PARA ENGOLIR — investigar com VIDEODEGLUTOGRAMA; se alterado, gastroenterologista + fonoaudiólogo.' })
+      suger.push('VIDEODEGLUTOGRAMA')
+      bump(LEVE)
+    }
+  }
 
   if (has('DIVERTÍCULOS')) {
     linhas.push('DIVERTÍCULOS: A DIVERTICULITE É FONTE DE SANGRAMENTO QUE AGRAVA A SIDEROPENIA E PODE EXIGIR MAIOR REPOSIÇÃO DE FERRO ENDOVENOSO. INVESTIGAR SANGRAMENTO ATIVO E ACOMPANHAR COM GASTROENTEROLOGISTA/COLOPROCTOLOGISTA.')
@@ -2330,6 +2358,18 @@ function buildModComportamental(dados, alertas, suger) {
     linhas.push('ANSIEDADE REFERIDA: É UMA QUEIXA FREQUENTE E LEGÍTIMA NO PÓS-BARIÁTRICO — A MUDANÇA DO CORPO, DA ALIMENTAÇÃO E DA ROTINA COBRA UM PREÇO EMOCIONAL QUE COSTUMA SER SUBESTIMADO. VALE ACOMPANHAMENTO EM SAÚDE MENTAL. DOIS PONTOS PRÁTICOS: A ANSIEDADE PODE SE CONFUNDIR COM HIPOGLICEMIA REATIVA (DUMPING TARDIO), QUE TAMBÉM DÁ TREMOR, SUOR E PALPITAÇÃO ALGUMAS HORAS APÓS COMER; E PODE EMPURRAR DE VOLTA O COMER EMOCIONAL, FATOR DE RISCO PARA REGANHO DE PESO.')
   }
 
+  // BAIXA AUTOESTIMA como QUEIXA = LEVE acolhedor, mesma convenção da ANSIEDADE
+  // (neste módulo só MODERADO+ empurra alerta). Dialoga com o bloco da plástica
+  // (sobras de pele) e com o comer emocional/reganho. A sugestão de psicólogo usa
+  // a MESMA base 'AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA' das compulsões — o card de
+  // teleconsulta dedupa pela base (fora do parêntese), então não vira visita dupla.
+  if (queixasComp.includes('BAIXA AUTOESTIMA')) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    linhas.push('BAIXA AUTOESTIMA REFERIDA: É UMA QUEIXA COMUM E LEGÍTIMA NO PÓS-BARIÁTRICO — O CORPO MUDA DEPRESSA, MAS A IMAGEM QUE TEMOS DELE DEMORA A ACOMPANHAR, E SOBRAS DE PELE, CICATRIZES E EXPECTATIVAS FRUSTRADAS PESAM. ACOMPANHAMENTO PSICOLÓGICO AJUDA — E IMPORTA TAMBÉM NO PLANO FÍSICO: A AUTOESTIMA BAIXA FAVORECE O COMER EMOCIONAL (RISCO DE REGANHO) E O ABANDONO DA SUPLEMENTAÇÃO. ANTES DE ATRIBUIR TUDO AO EMOCIONAL, VALE EXCLUIR CAUSAS ORGÂNICAS QUE DERRUBAM ENERGIA E HUMOR (B12, VITAMINA D, TIREOIDE, ANEMIA).')
+    suger.push('AVALIAÇÃO COM PSICÓLOGO/PSIQUIATRA (baixa autoestima)')
+  }
+
   if (meds.includes('REMÉDIO PARA ANSIEDADE')) {
     temAlgo = true
     if (nivelGeral !== GRAVE) nivelGeral = MODERADO
@@ -2437,6 +2477,19 @@ function buildModComportamental(dados, alertas, suger) {
       if (nivelGeral !== GRAVE) nivelGeral = MODERADO
       linhas.push('CONFIRME COM O SEU MÉDICO SE JÁ ESTÁ PREPARADO(A), COM AS RESERVAS RECUPERADAS/ESTABELECIDAS PARA A CIRURGIA JÁ PROGRAMADA.')
       alertas.push({ codigo: 'comportamental.cirurgia_plastica_programada_preparo_nao_infor', nivel: MODERADO, texto: 'CIRURGIA PLÁSTICA PÓS-BARIÁTRICA JÁ PROGRAMADA — confirmar com o paciente se as reservas já estão recuperadas/estabelecidas.' })
+    }
+  }
+
+  // FLACIDEZ E SOBRAS DE PELE como QUEIXA — LEVE acolhedor. Fica DEPOIS do bloco
+  // da plástica de propósito: quem marcou FIZ ou PROGRAMADA já tem o assunto
+  // endereçado acima, então a queixa acolhe mas NÃO repete o encaminhamento ao
+  // cirurgião plástico (evita sugerir avaliação para quem já operou/tem data).
+  if (queixasComp.includes('FLACIDEZ E SOBRAS DE PELE')) {
+    temAlgo = true
+    if (nivelGeral === NORMAL) nivelGeral = LEVE
+    linhas.push('FLACIDEZ E SOBRAS DE PELE REFERIDAS: CONSEQUÊNCIA ESPERADA DA GRANDE PERDA DE PESO — NÃO É FALHA SUA NEM DA CIRURGIA. ALÉM DO INCÔMODO ESTÉTICO, AS DOBRAS PODEM CAUSAR ASSADURAS E INFECÇÕES DE PELE (INTERTRIGO), DIFICULDADE DE HIGIENE E DOR. TEM TRATAMENTO: A CIRURGIA PLÁSTICA REPARADORA PÓS-BARIÁTRICA. ELA EXIGE PREPARO — AS RESERVAS DE FERRO, B12, VITAMINA D E PROTEÍNAS PRECISAM ESTAR RECUPERADAS ANTES DE QUALQUER PROCEDIMENTO DE GRANDE PORTE.')
+    if (statusPlastica !== 'FIZ' && statusPlastica !== 'PROGRAMADA') {
+      suger.push('AVALIAÇÃO COM CIRURGIÃO PLÁSTICO (sobras de pele pós-bariátrica)')
     }
   }
 
@@ -3484,6 +3537,19 @@ function buildModIntestinal(dados, alertas, suger) {
     suger.push('AVALIAÇÃO COM GASTROENTEROLOGISTA')
   }
 
+  // ── CÁLCULO E CÓLICAS DE VESÍCULA (queixa) — independe do status acima ──
+  // O emagrecimento rápido pós-bariátrico é litogênico (mais colesterol na bile +
+  // estase da vesícula): a janela clássica da cólica biliar é o 1º-2º ano. Por isso
+  // a queixa existe nas fases precoce e intermediária do checklist.
+  if (queixas.includes('CÁLCULO E CÓLICAS DE VESÍCULA')) {
+    if (nivelGeral !== GRAVE) nivelGeral = MODERADO
+    linhas.push('CÁLCULO E CÓLICAS DE VESÍCULA REFERIDOS: O EMAGRECIMENTO RÁPIDO PÓS-BARIÁTRICO FAVORECE MUITO A FORMAÇÃO DE CÁLCULOS BILIARES — O FÍGADO ELIMINA MAIS COLESTEROL NA BILE E A VESÍCULA ESVAZIA MENOS. A DOR TÍPICA É EM CÓLICA, NO LADO DIREITO SUPERIOR DO ABDOME OU NA BOCA DO ESTÔMAGO, MEIA A DUAS HORAS APÓS REFEIÇÕES GORDUROSAS.')
+    linhas.push('ATENÇÃO IMPORTANTE: DOR INTENSA QUE NÃO PASSA, FEBRE, PELE OU OLHOS AMARELADOS E URINA ESCURA PODEM INDICAR COMPLICAÇÃO (COLECISTITE, PEDRA NO CANAL BILIAR, PANCREATITE) — NESSES CASOS PROCURE EMERGÊNCIA. FORA DA CRISE, A INVESTIGAÇÃO COMEÇA PELA ULTRASSONOGRAFIA DE ABDOME, E A CONDUTA (EM GERAL CIRÚRGICA) É DEFINIDA COM O CIRURGIÃO.')
+    alertas.push({ codigo: 'intestinal.colica_biliar_referida_investigar_litiase', nivel: MODERADO, texto: 'CÁLCULO/CÓLICAS DE VESÍCULA referidos — investigar litíase biliar (ultrassonografia) e avaliar com o cirurgião; sinais de alarme (dor persistente, febre, icterícia) = emergência.' })
+    suger.push('ULTRASSONOGRAFIA DE ABDÔMEN TOTAL')
+    suger.push('AVALIAÇÃO COM CIRURGIÃO BARIÁTRICO (cólica biliar / litíase)')
+  }
+
   // ── Marcadores laboratoriais intestinais (independentes do status acima) ──
   const calpro = parseFloat(dados.calprotectina)
   if (!isNaN(calpro) && calpro > 50) {
@@ -3664,7 +3730,7 @@ function buildModAcompanhamento(dadosOBA, alertas) {
   // ─── Grupo 1 (criticos) ─────────────────────────────────────────────
   const G1 = ['HEMATOLOGISTA', 'GASTROENTEROLOGISTA', 'ENDOCRINOLOGISTA', 'CLÍNICO', 'CLINICO']
   const G2 = ['NUTRÓLOGO', 'NUTROLOGO', 'NUTRICIONISTA', 'CIRURGIÃO', 'CIRURGIAO', 'PSICÓLOGO', 'PSICOLOGO', 'PSIQUIATRA']
-  const G3 = ['PNEUMOLOGISTA', 'NEFROLOGISTA', 'UROLOGISTA', 'DERMATOLOGISTA']
+  const G3 = ['PNEUMOLOGISTA', 'NEFROLOGISTA', 'UROLOGISTA', 'DERMATOLOGISTA', 'FONOAUDIÓLOGO', 'FONOAUDIOLOGO']
 
   const temG1 = especialistas.filter(e => G1.includes((e || '').toUpperCase()))
   const temG2 = especialistas.filter(e => G2.includes((e || '').toUpperCase()))
@@ -3702,19 +3768,17 @@ function buildModAcompanhamento(dadosOBA, alertas) {
     alertas.push({ codigo: 'acompanhamento.sem_especialista_critico_hemato_gastro_endo_c', nivel: MODERADO, texto: 'SEM ESPECIALISTA CRÍTICO (hemato/gastro/endo/clínico) no acompanhamento.' })
   } else if (temG1.length === 1) {
     linhas.push(`ESPECIALISTA CRÍTICO: ${temG1.join(', ')}.`)
-    if (temG2.length > 0) {
-      linhas.push(`COMPLEMENTARES: ${temG2.join(', ')}.`)
-      if (temG3.length > 0) linhas.push(`ESPECIALIZADOS DE APOIO: ${temG3.join(', ')}.`)
-    }
+    // G3 fora do if do G2 (era aninhado): com apoio marcado mas nenhum
+    // complementar, a linha dos especializados de apoio sumia do card.
+    if (temG2.length > 0) linhas.push(`COMPLEMENTARES: ${temG2.join(', ')}.`)
+    if (temG3.length > 0) linhas.push(`ESPECIALIZADOS DE APOIO: ${temG3.join(', ')}.`)
     linhas.push('ACOMPANHAMENTO BÁSICO ESTABELECIDO. IDEAL EXPANDIR PARA COBRIR OS DEMAIS EIXOS (ENDÓCRINO/METABÓLICO, HEMATOLÓGICO E GASTROINTESTINAL).')
     if (nivelGeral === NORMAL) nivelGeral = LEVE
   } else {
     // >= 2 G1
     linhas.push(`ESPECIALISTAS CRÍTICOS: ${temG1.join(', ')}.`)
-    if (temG2.length > 0) {
-      linhas.push(`COMPLEMENTARES: ${temG2.join(', ')}.`)
-      if (temG3.length > 0) linhas.push(`ESPECIALIZADOS DE APOIO: ${temG3.join(', ')}.`)
-    }
+    if (temG2.length > 0) linhas.push(`COMPLEMENTARES: ${temG2.join(', ')}.`)
+    if (temG3.length > 0) linhas.push(`ESPECIALIZADOS DE APOIO: ${temG3.join(', ')}.`)
     linhas.push('COBERTURA MULTIDISCIPLINAR ADEQUADA.')
   }
 

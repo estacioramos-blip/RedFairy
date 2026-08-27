@@ -85,7 +85,7 @@ const ESPECIALISTAS = [
   "CIRURGI\u00c3O", "CL\u00cdNICO", "HEMATOLOGISTA", "GASTROENTEROLOGISTA", "NUTR\u00d3LOGO",
   "ENDOCRINOLOGISTA", "CARDIOLOGISTA", "NEUROLOGISTA", "PSIQUIATRA", "REUMATOLOGISTA",
   "ORTOPEDISTA", "GINECOLOGISTA", "OBSTETRA", "PNEUMOLOGISTA", "NEFROLOGISTA", "UROLOGISTA",
-  "DERMATOLOGISTA", "OUTRO"
+  "DERMATOLOGISTA", "FONOAUDI\u00d3LOGO", "OUTRO"
 ]
 
 const STATUS_GLICEMICO_OPS = [
@@ -321,6 +321,7 @@ const QUEIXAS_POR_FASE = {
     'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
     'AZIA / REFLUXO',
     'DOR NA BOCA DO ESTÔMAGO',
+    'CÁLCULO E CÓLICAS DE VESÍCULA',
     'PRISÃO DE VENTRE (OBSTIPAÇÃO)',
     'CANSAÇO / FADIGA',
     'QUEDA DE CABELO',
@@ -328,6 +329,7 @@ const QUEIXAS_POR_FASE = {
     'PALPITAÇÕES',
     'ANSIEDADE',
     'DEPRESSÃO',
+    'BAIXA AUTOESTIMA',
     'INSÔNIA',
     'IDEAÇÃO SUICIDA',
   ],
@@ -339,12 +341,15 @@ const QUEIXAS_POR_FASE = {
     'PRISÃO DE VENTRE (OBSTIPAÇÃO)',
     'CANSAÇO / FADIGA',
     'QUEDA DE CABELO',
+    'FLACIDEZ E SOBRAS DE PELE',
     'FORMIGAMENTO / DORMÊNCIA',
     'DORES NOS OSSOS OU ARTICULAÇÕES',
     'CÓLICAS / DOR ABDOMINAL RECORRENTE',
+    'CÁLCULO E CÓLICAS DE VESÍCULA',
     'PALPITAÇÕES',
     'ANSIEDADE',
     'DEPRESSÃO',
+    'BAIXA AUTOESTIMA',
     'INSÔNIA',
     'IDEAÇÃO SUICIDA',
   ],
@@ -358,10 +363,12 @@ const QUEIXAS_POR_FASE = {
     'MAL-ESTAR APÓS COMER DOCE (DUMPING)',
     'REGANHO DE PESO',
     'UNHAS FRACAS / PELE SECA',
+    'FLACIDEZ E SOBRAS DE PELE',
     'PROBLEMAS DE MEMÓRIA OU CONCENTRAÇÃO',
     'PALPITAÇÕES',
     'ANSIEDADE',
     'DEPRESSÃO',
+    'BAIXA AUTOESTIMA',
     'INSÔNIA',
     'IDEAÇÃO SUICIDA',
   ],
@@ -576,7 +583,7 @@ function categoriaRecomendacao(item) {
   // SIBO + MAPA agora caem juntos em "OUTROS RECURSOS DIAGNÓSTICOS".
   if (/PRESS[ÃA]O ARTERIAL|MAPA \||SIBO|GORDURA FECAL|INTOLER[ÂA]NCIA [ÀA] LACTOSE|CALPROTECTINA|INDICAN|ESTEATORREIA|SUPERCRESCIMENTO/.test(s)) return 'outros'
   if (/COLONOSCOP|ENDOSCOPIA DIGESTIVA/.test(s)) return 'endoscopia'
-  if (/ULTRASSON|ECOGRAFIA|DENSITOMETR|TOMOGRAFIA|RESSON|DOPPLER/.test(s)) return 'bioimagem'
+  if (/ULTRASSON|ECOGRAFIA|DENSITOMETR|TOMOGRAFIA|RESSON|DOPPLER|DEGLUTOGRAMA/.test(s)) return 'bioimagem'
   if (/^AVALIA[ÇC][ÃA]O|PR[ÉE]-NATAL|POLISSONOGRAFIA/.test(s)) return 'avaliacao'
   return 'laboratorio'
 }
@@ -739,6 +746,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     ganhou_peso_apos: false, fez_plasma_argonio: false, semEspecialista: false,
     metformina: false, ibp: false, tiroxina: false, methotrexato: false, hivTratamento: false,
     status_intestinal: '', status_fibromialgia: [], calprotectina: '', indican: '',
+    videodeglutograma: '',
     // Sorologia ANTI-H.PYLORI (qualitativo): '' | 'REAGENTE' | 'NÃO REAGENTE'
     antiHp_igg: '', antiHp_igm: '',
     gestacoes_previas: '', abortamentos_espontaneos: null, abortamentos_numero: '',
@@ -822,7 +830,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
        // comparação de evolução. As dúvidas também zeram (novo retrato). Cirurgia
        // plástica idem — o status pode ter mudado (ex.: era "programada", já foi
        // feita) e precisa ser reconfirmado, não carregado silenciosamente.
-       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '', duvidas: [], outra_condicao: '', status_cirurgia_plastica: '', cirurgia_plastica_tempo: '', cirurgia_plastica_preparado: '' }
+       return { ...def, ...snap, ...imutaveis, peso_atual: '', queixa_principal: '', queixas_secundarias: [], dores_osseas_detalhe: '', videodeglutograma: '', duvidas: [], outra_condicao: '', status_cirurgia_plastica: '', cirurgia_plastica_tempo: '', cirurgia_plastica_preparado: '' }
      }
      return { ...def, ...imutaveis }
    }
@@ -1174,6 +1182,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   const marcouIdeacao = [form.queixa_principal, ...(form.queixas_secundarias || [])]
     .includes('IDEAÇÃO SUICIDA')
 
+  // Marcou DIFICULDADE PARA ENGOLIR (disfagia) → abre o campo do VIDEODEGLUTOGRAMA.
+  const marcouEngolir = [form.queixa_principal, ...(form.queixas_secundarias || [])]
+    .includes('DIFICULDADE PARA ENGOLIR')
+
   // Data da avaliação (hoje) — topo da anamnese e relatórios. Mesmo formato do motor.
   const hojeFmt = new Date().toLocaleDateString('pt-BR')
 
@@ -1257,6 +1269,10 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
       idade: idadeNum,
       queixa_principal:   form.queixa_principal || null,
       queixas_secundarias: form.queixas_secundarias || [],
+      // Resultado do videodeglutograma só vale com a queixa de deglutição marcada
+      // (mesmo padrão do fan_titulo): desmarcar a queixa esconde o campo na tela,
+      // e este gate impede que um valor antigo preso no form vire dado sujo.
+      videodeglutograma: [form.queixa_principal, ...(form.queixas_secundarias || [])].includes('DIFICULDADE PARA ENGOLIR') ? (form.videodeglutograma || null) : null,
       status_ginecologico: form.status_ginecologico,
       // Sub-respostas só valem se o checkbox pai estiver marcado (senão viram dado sujo).
       // Padrão menstrual: só vale com SANGRAMENTO marcado E SEM MENOPAUSA — com
@@ -3673,6 +3689,29 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 </>
               )}
             </>
+          )}
+
+          {marcouEngolir && (
+            <div style={{ marginTop:'0.6rem', padding:'0.6rem', background:'#FEF3C7', borderRadius:'8px', border:'1px solid #FDE68A' }}>
+              <p style={{ fontSize:'0.72rem', color:'#92400E', fontWeight:600, marginBottom:'0.5rem' }}>
+                {"🔬 Exame sugerido para a dificuldade de engolir"}
+              </p>
+              <div style={{ display:'flex', flexDirection:'column' }}>
+                <label style={{ fontSize:'0.72rem', fontWeight:600, color:'#374151', marginBottom:'0.2rem' }}>
+                  {"Videodeglutograma"}
+                  <span style={{ color:'#6B7280', fontWeight:400, marginLeft:'0.3rem' }}>{"se já fez, informe o resultado"}</span>
+                </label>
+                <select
+                  value={form.videodeglutograma}
+                  onChange={e => sf('videodeglutograma', e.target.value)}
+                  style={{ width:'100%', boxSizing:'border-box', padding:'0.4rem 0.6rem', border:'1px solid #D1D5DB', borderRadius:'6px', fontSize:'0.85rem', background:'white' }}
+                >
+                  <option value="">{"Ainda não fiz"}</option>
+                  <option value="NORMAL">Normal</option>
+                  <option value="ALTERADO">Alterado</option>
+                </select>
+              </div>
+            </div>
           )}
 
           {marcouIdeacao && (
