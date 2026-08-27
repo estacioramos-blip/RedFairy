@@ -4,8 +4,10 @@
   "blogDescription": "Artigos sobre a saúde do paciente bariátrico: exames, disabsorção, reposição de nutrientes e acompanhamento de longo prazo, escritos por médico.",
   "ogImage": "https://bariatrico.net/images/oba-logo.png",
   "autor": {
-    "nome": "Dr. Estácio Ramos",
+    "nome": "E. F. Ramos",
     "crm": "CRM 6302/BA",
+    "linkedin": "https://www.linkedin.com/in/esfera/",
+    "foto": "/blog/img/retrato-oba-assinatura-320.png",
     "especialidades": [
       { "nome": "Hemoterapia", "rqe": "5643" },
       { "nome": "Patologia Clínica", "rqe": "5830" },

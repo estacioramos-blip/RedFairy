@@ -131,8 +131,12 @@ const CSS = `
            border-radius: 10px; font-size: 14px; line-height: 1.65; color: rgba(247,241,231,0.75);
            background: rgba(227,174,55,0.05); }
   .autor-box { margin-top: 26px; padding: 20px; border-radius: 10px; background: rgba(247,241,231,0.045);
-               font-size: 14.5px; line-height: 1.65; color: rgba(247,241,231,0.8); }
+               font-size: 14.5px; line-height: 1.65; color: rgba(247,241,231,0.8);
+               display: flex; gap: 18px; align-items: flex-start; }
   .autor-box .nome { font-family: 'Cormorant Garamond', serif; font-size: 21px; color: #FBF6EC; margin: 0 0 2px; }
+  .autor-foto { flex: none; border-radius: 50%; object-fit: cover;
+                border: 1px solid rgba(227,174,55,0.35); }
+  @media (max-width: 480px) { .autor-box { flex-direction: column; } }
   .lista-post { padding: 26px 0; border-bottom: 1px solid rgba(227,174,55,0.18); }
   .lista-post h2 { font-size: clamp(26px, 4.4vw, 36px); margin: 8px 0 8px; }
   .lista-post h2 a { color: #FBF6EC; text-decoration: none; }
@@ -146,7 +150,8 @@ const CSS = `
   .site-footer a:hover { color: #E3AE37; }
 `;
 
-function pagina({ titulo, descricao, canonical, jsonLd, corpo, ogType = 'website' }) {
+function pagina({ titulo, descricao, canonical, jsonLd, corpo, ogType = 'website',
+                  imagemOg = ogImage, twitterCard = 'summary' }) {
   return `<!DOCTYPE html>
 <!-- GERADO por blog/build.js — não editar à mão. Edite o .md ou o script e rode: npm run blog:build -->
 <html lang="pt-BR">
@@ -162,12 +167,12 @@ function pagina({ titulo, descricao, canonical, jsonLd, corpo, ogType = 'website
 <meta property="og:title" content="${escapeHtml(titulo)}">
 <meta property="og:description" content="${escapeHtml(descricao)}">
 <meta property="og:url" content="${escapeHtml(canonical)}">
-<meta property="og:image" content="${escapeHtml(ogImage)}">
+<meta property="og:image" content="${escapeHtml(imagemOg)}">
 <meta property="og:locale" content="pt_BR">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="${twitterCard}">
 <meta name="twitter:title" content="${escapeHtml(titulo)}">
 <meta name="twitter:description" content="${escapeHtml(descricao)}">
-<meta name="twitter:image" content="${escapeHtml(ogImage)}">
+<meta name="twitter:image" content="${escapeHtml(imagemOg)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -211,6 +216,31 @@ function credenciais() {
   return partes.join(' · ');
 }
 
+// Foto do autor (assinatura): só entra se o arquivo existir de verdade.
+const fotoAutorOk = autor.foto &&
+  fs.existsSync(path.join(SITE_DIR, autor.foto.replace(/^\//, '')));
+if (autor.foto && !fotoAutorOk) {
+  console.warn(`  aviso: foto do autor "${autor.foto}" não encontrada — assinatura sai sem foto.`);
+}
+function fotoAutorHtml(tamanho) {
+  if (!fotoAutorOk) return '';
+  return `<img class="autor-foto" src="${escapeHtml(autor.foto)}" alt="Foto de ${escapeHtml(autor.nome)}" width="${tamanho}" height="${tamanho}">`;
+}
+
+// og:image do artigo: usa o `imagem` do frontmatter (1200x630 recomendado) se o
+// arquivo já existir no site; senão cai no logo, para o compartilhamento no
+// WhatsApp/redes nunca quebrar por causa de imagem ausente.
+function imagemDoPost(post) {
+  if (post.imagem) {
+    const local = path.join(SITE_DIR, post.imagem.replace(/^\//, ''));
+    if (fs.existsSync(local)) {
+      return { url: siteUrl + post.imagem, card: 'summary_large_image' };
+    }
+    console.warn(`  aviso: ${post.slug}: imagem "${post.imagem}" ainda não existe — usando o logo como og:image até o arquivo chegar.`);
+  }
+  return { url: ogImage, card: 'summary' };
+}
+
 function jsonLdArtigo(post) {
   const canonical = `${siteUrl}/blog/${post.slug}.html`;
   return jsonLdSeguro({
@@ -223,13 +253,15 @@ function jsonLdArtigo(post) {
     inLanguage: 'pt-BR',
     datePublished: post.data,
     dateModified: post.atualizado,
+    image: post.imagemResolvida?.url,
     audience: { '@type': 'MedicalAudience', audienceType: 'Patient' },
     author: {
       '@type': 'Person',
-      name: autor.nome,
+      name: post.autor || autor.nome,
       url: `${siteUrl}/blog/autor.html`,
       jobTitle: 'Médico',
       identifier: credenciais(),
+      sameAs: autor.linkedin ? [autor.linkedin] : undefined,
     },
     publisher: {
       '@type': 'Organization',
@@ -269,6 +301,7 @@ posts.sort((a, b) => (b.data.localeCompare(a.data)) || a.slug.localeCompare(b.sl
 // Uma página por artigo
 for (const post of posts) {
   const canonical = `${siteUrl}/blog/${post.slug}.html`;
+  post.imagemResolvida = imagemDoPost(post);
   const datas = post.atualizado !== post.data
     ? `Publicado em ${dataExtenso(post.data)} · Atualizado em ${dataExtenso(post.atualizado)}`
     : `Publicado em ${dataExtenso(post.data)}`;
@@ -277,15 +310,17 @@ for (const post of posts) {
     <h1>${escapeHtml(post.titulo)}</h1>
     <p class="datas">${datas}</p>
     <div class="assinatura">
-      <a href="autor.html">${escapeHtml(autor.nome)}</a>
+      <a href="autor.html">${escapeHtml(post.autor || autor.nome)}</a>
       <span class="creds">${escapeHtml(credenciais())}</span>
     </div>
 ${post.html}
 ${AVISO_HTML}
     <div class="autor-box">
+      ${fotoAutorHtml(76)}<div>
       <p class="nome">${escapeHtml(autor.nome)}</p>
       <p style="margin:0 0 10px; font-size:13px; color:rgba(247,241,231,0.6);">${escapeHtml(credenciais())}</p>
-      <p style="margin:0;">${escapeHtml(autor.bio[0])} <a href="autor.html">Sobre o autor →</a></p>
+      <p style="margin:0;">${escapeHtml(autor.bio[0])} <a href="autor.html">Sobre o autor →</a>${autor.linkedin ? ` · <a href="${escapeHtml(autor.linkedin)}" target="_blank" rel="me noopener">LinkedIn</a>` : ''}</p>
+      </div>
     </div>
   </article>`;
   fs.writeFileSync(path.join(DIR, `${post.slug}.html`), pagina({
@@ -295,6 +330,8 @@ ${AVISO_HTML}
     jsonLd: jsonLdArtigo(post),
     corpo,
     ogType: 'article',
+    imagemOg: post.imagemResolvida.url,
+    twitterCard: post.imagemResolvida.card,
   }));
   console.log(`  blog/${post.slug}.html`);
 }
@@ -343,6 +380,8 @@ fs.writeFileSync(path.join(DIR, 'autor.html'), pagina({
       jobTitle: 'Médico',
       identifier: credenciais(),
       url: `${siteUrl}/blog/autor.html`,
+      image: fotoAutorOk ? siteUrl + autor.foto : undefined,
+      sameAs: autor.linkedin ? [autor.linkedin] : undefined,
       worksFor: { '@type': 'Organization', name: 'Projeto OBA®', url: siteUrl },
     },
   }),
@@ -350,12 +389,24 @@ fs.writeFileSync(path.join(DIR, 'autor.html'), pagina({
     <span class="olho">Sobre o autor</span>
     <h1>${escapeHtml(autor.nome)}</h1>
     <p class="datas">${escapeHtml(credenciais())}</p>
+    ${fotoAutorHtml(132)}
 ${bioHtml}
     <p>Todo o conteúdo publicado neste blog é escrito e revisado pelo autor.</p>
+${autor.linkedin ? `    <p><a href="${escapeHtml(autor.linkedin)}" target="_blank" rel="me noopener">LinkedIn do autor →</a></p>` : ''}
 ${AVISO_HTML}
   </article>`,
 }));
 console.log('  blog/autor.html');
+
+// Remove HTML órfão (artigo apagado ou renomeado): como os gerados são
+// commitados, o build também precisa apagar o que deixou de existir.
+const manter = new Set(['index.html', 'autor.html', ...posts.map((p) => `${p.slug}.html`)]);
+for (const f of fs.readdirSync(DIR).filter((n) => n.endsWith('.html'))) {
+  if (!manter.has(f)) {
+    fs.unlinkSync(path.join(DIR, f));
+    console.log(`  removido (órfão): blog/${f}`);
+  }
+}
 
 // sitemap.xml na raiz do site (landing + blog)
 const urls = [
