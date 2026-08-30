@@ -1190,7 +1190,93 @@ function AbaConfig() {
             className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50">
             {salvando ? 'Salvando...' : "Salvar configura\u00e7\u00f5es"}
           </button>
+
+          <SenhaCaixa />
         </>
+      )}
+    </div>
+  );
+}
+
+// \u2500\u2500 Redefinir a senha do Caixa \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// Caminho de volta da Tesouraria: quem est\u00e1 dentro do Caixa pode trocar a pr\u00f3pria
+// senha, e antes disso n\u00e3o havia como destravar se a nova fosse esquecida. Fica
+// separado do "Salvar configura\u00e7\u00f5es" de prop\u00f3sito: senha n\u00e3o entra em salv\u00e3o de
+// formul\u00e1rio junto com pre\u00e7o e chave Pix.
+function SenhaCaixa() {
+  const [aberto, setAberto] = useState(false);
+  const [nova, setNova] = useState('');
+  const [confirma, setConfirma] = useState('');
+  const [salvando, setSalvando] = useState(false);
+  const [msg, setMsg] = useState(null);   // {ok, txt}
+
+  async function redefinir() {
+    if (salvando) return;
+    if (nova.length < 6) { setMsg({ ok: false, txt: "Senha muito curta (m\u00ednimo 6 caracteres)." }); return; }
+    if (nova !== confirma) { setMsg({ ok: false, txt: "As duas senhas n\u00e3o s\u00e3o iguais." }); return; }
+    setSalvando(true); setMsg(null);
+    try {
+      const { data, error } = await supabase.rpc('admin_resetar_senha_caixa', { ...credAdmin(), p_nova: nova });
+      if (error) throw new Error('conexao');
+      if (data && data.ok) {
+        setNova(''); setConfirma(''); setAberto(false);
+        setMsg({ ok: true, txt: "Senha do Caixa redefinida. Quem estava logado na Tesouraria foi desconectado." });
+      } else {
+        setMsg({ ok: false, txt: (data && data.erro) || 'Falha ao redefinir.' });
+      }
+    } catch (e) {
+      setMsg({ ok: false, txt: "Erro de conex\u00e3o. Tente de novo." });
+    }
+    setSalvando(false);
+  }
+
+  const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400";
+
+  return (
+    <div className="border-t pt-6 space-y-3">
+      <div>
+        <h3 className="text-base font-semibold text-gray-700 mb-1">{"Senha da Tesouraria (Caixa)"}</h3>
+        <p className="text-xs text-gray-400">
+          {"A senha do Caixa n\u00e3o pode ser lida por ningu\u00e9m \u2014 fica guardada cifrada. Se ela for esquecida, o caminho \u00e9 definir uma nova aqui e passar para a pessoa da tesouraria."}
+        </p>
+      </div>
+
+      {!aberto ? (
+        <button onClick={() => { setAberto(true); setMsg(null); }}
+          className="text-sm font-semibold px-4 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50">
+          {"Redefinir senha do Caixa"}
+        </button>
+      ) : (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+          {/* Avisa ANTES, não depois: o reset desconecta na hora quem estiver na
+              Tesouraria, que pode estar no meio de uma baixa. */}
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            {"Ao redefinir, quem estiver usando o Caixa neste momento é desconectado e só volta com a senha nova."}
+          </p>
+          <input type="password" value={nova} autoComplete="new-password"
+            onChange={e => { setNova(e.target.value); setMsg(null); }}
+            placeholder="Nova senha do caixa" className={inputClass} />
+          <input type="password" value={confirma} autoComplete="new-password"
+            onChange={e => { setConfirma(e.target.value); setMsg(null); }}
+            onKeyDown={e => { if (e.key === 'Enter') redefinir(); }}
+            placeholder="Repita a nova senha" className={inputClass} />
+          <div className="flex gap-2">
+            <button onClick={redefinir} disabled={salvando || !nova || !confirma}
+              className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-50">
+              {salvando ? 'Redefinindo...' : 'Redefinir'}
+            </button>
+            <button onClick={() => { setAberto(false); setNova(''); setConfirma(''); setMsg(null); }}
+              className="px-4 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 rounded-xl text-sm">
+              {"Cancelar"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {msg && (
+        <p className={`text-sm font-medium ${msg.ok ? 'text-green-700' : 'text-red-600'}`}>
+          {(msg.ok ? "\u2705 " : "\u26a0\ufe0f ") + msg.txt}
+        </p>
       )}
     </div>
   );
