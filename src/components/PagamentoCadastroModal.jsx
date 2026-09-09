@@ -46,6 +46,8 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
   const [valor, setValor] = useState(VALOR_ANUIDADE_PADRAO)
   // (abatimento) saldo de créditos do paciente-indicador (R$), que abate a anuidade.
   const [saldoBrl, setSaldoBrl] = useState(0)
+  // (R4) desconto de boas-vindas de quem chegou indicado (R$), na 1ª anuidade.
+  const [boasVindasBrl, setBoasVindasBrl] = useState(0)
   // Popup "ATENÇÃO" com os custos do trabalho médico (valores vindos de config).
   const [mostrarCustos, setMostrarCustos] = useState(false)
   const [custos, setCustos] = useState({})
@@ -61,7 +63,7 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
         setCustos(map)
       })
   }, [])
-  // (abatimento) busca o saldo de créditos do paciente (US$10 por indicado que pagou) p/
+  // (abatimento) busca o saldo de créditos do paciente (por indicado que pagou) p/
   // descontar da anuidade. saldo_indicador NÃO consome — só mostra.
   useEffect(() => {
     const cpfd = String(profile?.cpf || '').replace(/\D/g, '')
@@ -70,8 +72,26 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
       .then(({ data }) => { if (data && data.ok) setSaldoBrl(Number(data.saldo_brl) || 0); else if (data?.erro) console.error('saldo_indicador:', data.erro) })
       .catch(() => {})
   }, [profile])
-  const desconto = Math.min(saldoBrl, valor)
-  const valorLiquido = Math.max(0, valor - desconto)
+  // (R4, 09/2026) DESCONTO DE BOAS-VINDAS: quem chegou indicado paga menos na
+  // PRIMEIRA anuidade. É aqui que mora o incentivo da reforma — antes o dinheiro
+  // ia para quem trouxe; agora vai para quem entra.
+  // Não precisa ser "consumido": a RPC devolve tem=false assim que existe uma
+  // assinatura para o CPF, e a assinatura é criada logo abaixo, no JÁ PAGUEI.
+  useEffect(() => {
+    const cpfd = String(profile?.cpf || '').replace(/\D/g, '')
+    if (cpfd.length !== 11) return
+    supabase.rpc('desconto_boas_vindas', { p_cpf: cpfd, p_token: (() => { try { return localStorage.getItem('paciente_token') || '' } catch (e) { return '' } })() })
+      .then(({ data }) => { if (data && data.ok && data.tem) setBoasVindasBrl(Number(data.desconto_brl) || 0) })
+      .catch(() => {})
+  }, [profile])
+  // Ordem dos descontos: BOAS-VINDAS primeiro (é gratuito), CRÉDITO depois — só
+  // sobre o que restou. Invertendo, o paciente queimaria crédito para pagar algo
+  // que o desconto já cobria, e crédito queimado não volta.
+  const descBoasVindas = Math.min(boasVindasBrl, valor)
+  const baseCreditos   = Math.max(0, valor - descBoasVindas)
+  const descCreditos   = Math.min(saldoBrl, baseCreditos)
+  const desconto       = descBoasVindas + descCreditos
+  const valorLiquido   = Math.max(0, valor - desconto)
   // Código Pix gerado dinamicamente a partir do valor LÍQUIDO (com CRC recalculado).
   const pixCode = gerarPixAnuidade(valorLiquido)
 
@@ -105,13 +125,16 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
       return
     }
     // (abatimento) consome os créditos usados no desconto desta anuidade.
-    if (desconto > 0) {
+    // ⚠ Passa `baseCreditos`, não `valor`: o desconto de boas-vindas já cobriu a
+    // sua parte e NÃO é crédito. Mandar o valor cheio faria a RPC queimar
+    // crédito para cobrir algo que já estava pago pelo desconto.
+    if (descCreditos > 0) {
       try {
         // A3 (auditoria jul/2026): aplicar_abatimento agora exige o token do paciente
         // (antes o GRANT anon deixava qualquer um queimar créditos de qualquer CPF).
         const { data: abResp, error: abErr } = await supabase.rpc('aplicar_abatimento', {
           p_cpf: String(profile?.cpf || '').replace(/\D/g, ''),
-          p_anuidade_brl: valor,
+          p_anuidade_brl: baseCreditos,
           p_token: localStorage.getItem('paciente_token') || '',
         })
         // O desconto já foi dado (o PIX saiu pelo valor líquido e a assinatura foi
@@ -195,7 +218,16 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
           {desconto > 0 && (
             <div className="text-[11px] text-gray-600 mb-1 leading-tight">
               {"Anuidade R$ "}{formatarBRL(valor).replace(/,00$/, '')}
-              <span className="text-green-700 font-bold">{"  −  seus créditos R$ "}{formatarBRL(desconto).replace(/,00$/, '')}</span>
+              {/* Duas origens diferentes, discriminadas: o desconto de
+                  boas-vindas é um brinde de entrada; o crédito é saldo que o
+                  paciente acumulou e está sendo GASTO agora. Juntar os dois
+                  numa linha só esconderia do paciente o que ele consumiu. */}
+              {descBoasVindas > 0 && (
+                <span className="text-green-700 font-bold">{"  −  boas-vindas R$ "}{formatarBRL(descBoasVindas).replace(/,00$/, '')}</span>
+              )}
+              {descCreditos > 0 && (
+                <span className="text-green-700 font-bold">{"  −  seus créditos R$ "}{formatarBRL(descCreditos).replace(/,00$/, '')}</span>
+              )}
             </div>
           )}
           <div className="text-xs font-semibold text-red-700 uppercase tracking-wider mb-1">
@@ -256,7 +288,11 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
         </div>
         </>) : (
           <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center mb-3">
-            <p className="text-sm font-bold text-green-800 leading-relaxed">{"✓ Sua anuidade está coberta pelos seus créditos!"}</p>
+            <p className="text-sm font-bold text-green-800 leading-relaxed">
+              {descCreditos > 0
+                ? "✓ Sua anuidade está coberta pelos seus créditos!"
+                : "✓ Sua anuidade está coberta pelo desconto de boas-vindas!"}
+            </p>
             <p className="text-xs text-green-700 mt-1">{"É só confirmar para ativar — sem precisar pagar."}</p>
           </div>
         )}
