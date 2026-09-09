@@ -321,6 +321,54 @@ cache de um site no ar para economizar um 304.
 provavelmente `www.bariatrico.net` é um projeto Vercel separado apontando para
 `site-bariatrico/`.
 
+### Rastreamento de origem (UTM) — medição de marketing
+
+⚠ **NÃO é o programa de indicação.** Não usa código de indicador, não gera
+crédito e não paga ninguém por conversão — o parceiro é remunerado por
+contrato de valor fixo, fora do sistema. Pagar por paciente trazido é captação
+de clientela (ver a seção da reforma CFM acima). A separação é **estrutural**:
+a origem vive em `oba_origem`, tabela que nenhuma função de crédito, desconto
+ou vínculo enxerga.
+
+**Como funciona.** A landing captura `utm_source/medium/campaign/content` da
+URL, guarda num cookie próprio `oba_origem` de **90 dias** (paciente bariátrico
+conhece, some por semanas e volta) e anexa a origem ao link do app no clique.
+O app lê da URL, guarda em `localStorage.rf_utm` e registra em dois momentos:
+cadastro e assinatura.
+
+**Primeiro toque vence**, nos três lugares (cookie da landing, `rf_utm` do app,
+e o `COALESCE` do `ON CONFLICT` na RPC). Quem descobriu por um influenciador e
+voltou pelo Google continua sendo mérito do influenciador.
+
+| onde | o quê |
+|---|---|
+| `site-bariatrico/intro-ab.js` §2.5 | captura, cookie, e `anexarOrigem()` no clique |
+| `site-bariatrico/vercel.json` | **links curtos por parceiro — 1 linha cada** |
+| `site-bariatrico/privacidade.html` | página autônoma; link no rodapé |
+| `src/lib/origem.js` | `capturarOrigemDaUrl()` e `registrarOrigem(cpf, etapa)` |
+| `migrate_oba_utm.sql` | 4 colunas em `oba_landing_eventos`, tabela `oba_origem`, RPC, view |
+| view `oba_origem_resumo` | funil por parceiro, **ordenado por assinaturas** |
+
+⚠ **ARMADILHAS:**
+- **A captura fica ANTES das guardas do `intro-ab.js`.** As guardas dão `return`
+  para robô, link com âncora e sessão que já viu a faixa. Depois delas,
+  perderíamos a origem de quem volta pela 2ª vez e de quem chega por link com
+  `#seção` — e esse parceiro viraria "(direto)". Só o REGISTRO obedece às guardas.
+- **Cookie não atravessa domínio.** `bariatrico.net` ≠ `app.bariatrico.net`; a
+  URL é o único caminho. Por isso o `anexarOrigem()` reescreve o `href` no clique
+  em vez de o `index.html` ter os parâmetros fixos — assim qualquer CTA novo
+  funciona sozinho.
+- **Link curto NUNCA aponta para `?ind=` ou `?ref=`.** É a regra que mantém
+  marketing e indicação separados: um parceiro pago com link de indicador vira
+  indicador remunerado por conversão. Redirect é `permanent: false` (301 fica
+  cacheado para sempre e trava a campanha).
+- **`registrarOrigem` nunca derruba o fluxo:** é chamada depois do cadastro/da
+  assinatura, sem `await`, e engole o próprio erro. Falha de medição perde
+  atribuição; jamais um cadastro.
+- **LGPD:** o cookie sozinho é anônimo; ao ligar a origem ao CPF em `oba_origem`
+  ela vira dado pessoal associado a serviço de saúde. Por isso a tabela é enxuta
+  (sem IP, sem user agent) e existe a `privacidade.html`.
+
 ### Para desligar o teste
 
 Remover a linha `<script src="./intro-ab.js"></script>` do `index.html`.

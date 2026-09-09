@@ -20,6 +20,7 @@ import OBAModal from './OBAModal'
 import TermosModal from './TermosModal'
 import { supabase } from '../lib/supabase'
 import { formatarBRL, VALOR_ANUIDADE_PADRAO } from '../lib/pix'
+import { registrarOrigem } from '../lib/origem'
 
 const LANDING_CSS = `
   .rf-cx-input::placeholder { color:#9ca3af; opacity:1; font-weight:600; letter-spacing:0.5px; }
@@ -1123,6 +1124,9 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
       localStorage.setItem('paciente_login_at', Date.now().toString());
       if (resp.token) localStorage.setItem('paciente_token', resp.token);
     } catch (e) {}
+    // (UTM) De onde veio. Só no CADASTRO: no login a origem já foi registrada.
+    // ⚠ Medição de marketing — não gera crédito nem desconto (ver origem.js).
+    if (cpfPacModo !== 'login') registrarOrigem(cpfPacDigitos, 'cadastro');
     // INDICADOR (?ind=): paciente chegou pelo link do indicador mas concluiu por aqui →
     // cria a reserva PENDENTE no banco (mesma régua do fluxo OBA: rótulo certo, 3 meses).
     try {

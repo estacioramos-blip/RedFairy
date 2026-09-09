@@ -16,6 +16,7 @@ import AdminLogin from './components/AdminLogin'
 import RestritoLogin from './components/RestritoLogin'
 import { ehDominioBariatrico, aplicarBrandingOBA } from './lib/dominio'
 import { setManifestFluxo } from './lib/manifestFluxo'
+import { capturarOrigemDaUrl } from './lib/origem'
 export default function App() {
   // Modo inicial lido da URL JÁ no 1º render — evita o "flash" da landing (branca)
   // antes do useEffect trocar de tela (ex.: ?oba=1 -> tela escura do paciente).
@@ -208,6 +209,11 @@ export default function App() {
       // card de login do ADMIN (AdminLogin) se não houver sessão de administrador.
       setModo('admin')
     }
+    // (UTM) De onde a pessoa veio, se veio por link de parceiro. Guardado no
+    // aparelho e registrado no cadastro e na assinatura.
+    // ⚠ NÃO se mistura com o ?ref/?ind logo abaixo: aquilo é indicação (gera
+    // crédito), isto é medição de marketing (não paga ninguém). Ver origem.js.
+    capturarOrigemDaUrl()
     // (4DOC) ?ref=CRM/UF — QR do MÉDICO. ?ind=INDxxxxxx — link/QR do INDICADOR.
     // Cada valor é validado pelo FORMATO e vai pra sua própria chave (antes o ?ref servia
     // aos dois papéis e o código do indicador vazava pro campo medico_crm). Links ANTIGOS

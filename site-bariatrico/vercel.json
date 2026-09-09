@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/exemplo",
+      "destination": "/?utm_source=exemplo&utm_medium=teste&utm_campaign=verificacao",
+      "permanent": false
+    }
+  ]
+}

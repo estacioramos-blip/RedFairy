@@ -5,6 +5,7 @@ import PlayButton from './PlayButton'
 import TermosModal from './TermosModal'
 import { sairOuVoltar } from '../lib/sairDoApp'
 import { credPaciente } from '../lib/cred'
+import { registrarOrigem } from '../lib/origem'
 
 // =============================================================================
 // OBAEntradaPaciente — tela PRÓPRIA do paciente bariátrico (vindo do bariatrico.net).
@@ -133,6 +134,10 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
         if (modo === 'login') localStorage.setItem('rf_abrir_nova', '1')
         else localStorage.removeItem('rf_abrir_nova')   // cadastro NOVO: garante ir pra TRIAGEM (não pular por flag antigo)
       } catch (e) {}
+      // (UTM) De onde veio, se veio por link de parceiro. Só no CADASTRO — no
+      // login a origem já foi registrada da primeira vez.
+      // ⚠ Medição de marketing, não indicação: não gera crédito (ver origem.js).
+      if (modo !== 'login') registrarOrigem(cpfDigits, 'cadastro')
       // Entrou por SOU BARIÁTRICO → marca o perfil como bariátrico JÁ no cadastro (fonte
       // confiável, não depende do rf_flag sobreviver até o dashboard). RLS off em profiles.
       try { if (data.id) await supabase.rpc('profiles_atualizar', { p_cpf: cpfDigits, p_patch: { bariatrica: true }, ...credPaciente() }) } catch (e) {}

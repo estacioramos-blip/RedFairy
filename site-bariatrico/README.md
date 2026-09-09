@@ -36,3 +36,49 @@ Os botões de ação ainda apontam para `href="#"`. Ligar quando a plataforma es
 - **Animação**: `@keyframes obaKen` (hero) e `obaPan` (seções/popup) — zoom lento.
 
 Edite textos e estilos direto no `index.html`. Se for migrar para React/Vue/etc., trate este arquivo como **referência de design** (look & comportamento), recriando no padrão do seu projeto.
+
+---
+
+## Links curtos por parceiro (rastreamento de origem)
+
+**Para adicionar um parceiro, acrescente UMA LINHA ao array `redirects` do
+arquivo `site-bariatrico/vercel.json`.** É o único lugar a editar; o redirect
+entra no ar no push.
+
+```json
+{ "source": "/mari", "destination": "/?utm_source=mari&utm_medium=influencer&utm_campaign=lancamento", "permanent": false }
+```
+
+⚠ **Escreva os valores em minúsculas e sempre inclua `utm_source`.** O sistema
+normaliza a caixa, mas `utm_source` é a chave pela qual o parceiro aparece no
+relatório — sem ele, a visita cai em "(direto)".
+
+Aí `bariatrico.net/mari` leva à home carregando a origem. O `intro-ab.js`
+guarda essa origem num cookie próprio de 90 dias (primeiro toque vence) e a
+anexa ao link do app quando a pessoa clica num CTA.
+
+**Por que existe:** no Instagram o link vive na bio e é o mesmo para todos. Um
+endereço curto que o parceiro fala em vídeo resolve isso — e funciona também
+para quem digita em vez de clicar.
+
+### Duas regras que não se quebram
+
+**1. `permanent: false`, nunca `true`.** A Vercel usa o par 307/308 (não
+301/302): `false` devolve **307**, temporário; `true` devolve **308**,
+permanente — e permanente fica cacheado no navegador para sempre. Se você
+trocar a campanha do mesmo `/mari` depois, quem já clicou uma vez continua
+indo para a campanha velha, e você não descobre.
+
+**2. O `destination` NUNCA pode conter `ind=` nem `ref=`.** Esses são os
+parâmetros do programa de indicação, que dá crédito. Um link curto que aponte
+para eles transforma um parceiro pago em indicador remunerado por conversão —
+exatamente o que a reforma de 09/09/2026 aboliu (captação de clientela, CFM
+2.336/2023 e 2.170/2017; ver `CLAUDE.md`). Link curto só carrega `utm_*`.
+
+### O `/exemplo`
+
+O arquivo nasce com um redirect `/exemplo` que serve para você conferir que o
+mecanismo funciona ponta a ponta antes de ter parceiro de verdade: abra
+`bariatrico.net/exemplo`, veja se cai na home, e confira o cookie `oba_origem`
+no navegador. **Pode apagar essa linha quando quiser** — ela não atrapalha
+nada, só ocupa um endereço.

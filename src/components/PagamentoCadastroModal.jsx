@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { gerarPixAnuidade, formatarBRL, VALOR_ANUIDADE_PADRAO } from '../lib/pix'
 import obaLogo from '../assets/oba-logo.png'
 import PlayButton from './PlayButton'
+import { registrarOrigem } from '../lib/origem'
 
 /**
  * PagamentoCadastroModal - exibido apos o paciente completar o perfil.
@@ -124,6 +125,12 @@ export default function PagamentoCadastroModal({ profile, onPago, onSairSemPagar
       setErro('Erro ao registrar pagamento. Tente novamente em alguns segundos.')
       return
     }
+    // (UTM) A assinatura é a métrica que decide investimento em parceiro —
+    // visita e cadastro enganam. Registrada DEPOIS da assinatura existir, e
+    // sem `await`: se a medição falhar, o paciente não pode ficar sem acesso.
+    // ⚠ Não confundir com o abatimento logo abaixo: aquilo é crédito de
+    // indicação (dinheiro do paciente), isto é marketing (ver origem.js).
+    registrarOrigem(String(profile?.cpf || ''), 'assinatura')
     // (abatimento) consome os créditos usados no desconto desta anuidade.
     // ⚠ Passa `baseCreditos`, não `valor`: o desconto de boas-vindas já cobriu a
     // sua parte e NÃO é crédito. Mandar o valor cheio faria a RPC queimar

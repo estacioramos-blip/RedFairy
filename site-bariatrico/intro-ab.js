@@ -37,7 +37,14 @@
    - 1 evento 'clique' no primeiro CTA tocado
    - "Saiu sem clicar" = impressões − sessões com clique
 
+   ORIGEM (UTM) — mora neste mesmo arquivo, seção 2.5, e é INDEPENDENTE da
+   faixa: sobrevive se o teste A/B for desligado, porque a captura acontece
+   antes das guardas. Grava cookie próprio `oba_origem` (90 dias), manda os
+   utm_* junto de cada evento e anexa a origem ao link do app no clique.
+   Links curtos por parceiro: site-bariatrico/vercel.json.
+
    PARA DESLIGAR O TESTE: remova a linha do <script> no index.html.
+   ⚠ Isso desliga a MEDIÇÃO DE ORIGEM junto — os dois vivem neste arquivo.
    ===================================================================== */
 
 (function () {
@@ -93,6 +100,86 @@
     return m ? m[1].toUpperCase() : null;
   })();
   var ehTeste = forcado !== null;
+
+  /* ------------------------------------------------------------------
+     2.5 ORIGEM (UTM) — medição de marketing
+     ------------------------------------------------------------------
+     ⚠ ESTE BLOCO VEM ANTES DAS GUARDAS DE PROPÓSITO.
+
+     As guardas abaixo saem da função com `return` em três casos: robô, link
+     com âncora (#sou-medico) e sessão que já viu a faixa. Se a captura da
+     origem ficasse depois delas, perderíamos justamente quem volta pela
+     segunda vez e quem chega por link direto para uma seção — e o parceiro que
+     trouxe essa pessoa seria contado como "direto".
+
+     A captura é barata e não desenha nada. Quem depende das guardas é o
+     REGISTRO no banco, não a memória de onde a pessoa veio.
+
+     PRIMEIRO TOQUE VENCE: se já há origem gravada, não sobrescreve. Quem
+     descobriu o projeto por um influenciador e depois voltou pelo Google
+     continua sendo mérito do influenciador — é para isso que serve o cookie
+     de 90 dias: paciente bariátrico não decide na hora, ele vê, guarda e
+     volta semanas depois.
+
+     ⚠ Isto NÃO é o programa de indicação. Não usa código de indicador, não
+     gera crédito e não paga ninguém por conversão (ver a reforma CFM no
+     CLAUDE.md). Nenhum link curto pode apontar para ?ind= ou ?ref=.
+     ------------------------------------------------------------------ */
+
+  var COOKIE_ORIGEM = 'oba_origem';
+  var DIAS_ORIGEM   = 90;
+
+  function lerCookie(nome) {
+    try {
+      var m = new RegExp('(?:^|; )' + nome + '=([^;]*)').exec(document.cookie || '');
+      return m ? decodeURIComponent(m[1]) : null;
+    } catch (e) { return null; }
+  }
+
+  function gravarCookie(nome, valor, dias) {
+    try {
+      var exp = new Date(Date.now() + dias * 864e5).toUTCString();
+      // SameSite=Lax: o cookie sobrevive à chegada por link de fora (que é o
+      // caso inteiro deste recurso) e não vai em requisição de terceiro.
+      // Sem HttpOnly de propósito — quem lê é este script.
+      document.cookie = nome + '=' + encodeURIComponent(valor) +
+        '; Max-Age=' + (dias * 86400) + '; Expires=' + exp +
+        '; Path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+    } catch (e) {}
+  }
+
+  // A origem do ACESSO ATUAL, lida da URL. Vazia se a pessoa chegou sem UTM.
+  var CAMPOS_UTM = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'];
+
+  function origemDaUrl() {
+    var q = {}, achou = false;
+    try {
+      var sp = new URLSearchParams(location.search || '');
+      for (var i = 0; i < CAMPOS_UTM.length; i++) {
+        // MINÚSCULAS SEMPRE. Sem isto, o mesmo parceiro divulgando "Mari" numa
+        // rede e "mari" noutra vira DUAS linhas na view do funil, sem erro
+        // nenhum na tela — e a decisão de onde investir sai enviesada por um
+        // detalhe de digitação. Convenção de UTM é minúscula.
+        var v = (sp.get(CAMPOS_UTM[i]) || '').trim().toLowerCase().slice(0, 100);
+        if (v) { q[CAMPOS_UTM[i]] = v; achou = true; }
+      }
+    } catch (e) {}
+    return achou ? q : null;
+  }
+
+  // ORIGEM efetiva desta visita: a da URL só vale se ainda não havia nenhuma.
+  var ORIGEM = (function () {
+    var salva = null;
+    try { salva = JSON.parse(lerCookie(COOKIE_ORIGEM) || 'null'); } catch (e) { salva = null; }
+    if (salva && salva.utm_source) return salva;      // primeiro toque vence
+
+    var nova = origemDaUrl();
+    if (!nova) return salva || null;                  // sem UTM: nada a gravar
+
+    gravarCookie(COOKIE_ORIGEM, JSON.stringify(nova), DIAS_ORIGEM);
+    try { sessionStorage.setItem(COOKIE_ORIGEM, JSON.stringify(nova)); } catch (e) {}
+    return nova;
+  })();
 
   /* ------------------------------------------------------------------
      3. GUARDAS — quando NÃO mostrar nem registrar
@@ -158,6 +245,12 @@
       user_agent: (navigator.userAgent || '').slice(0, 300),
       largura_tela: window.innerWidth || null
     };
+    // Origem do parceiro que trouxe esta visita (nulo quando veio direto).
+    if (ORIGEM) {
+      for (var iu = 0; iu < CAMPOS_UTM.length; iu++) {
+        if (ORIGEM[CAMPOS_UTM[iu]]) corpo[CAMPOS_UTM[iu]] = ORIGEM[CAMPOS_UTM[iu]];
+      }
+    }
     if (extra) { for (var k in extra) { if (extra[k] != null) corpo[k] = extra[k]; } }
 
     try {
@@ -222,7 +315,34 @@
     return null;
   }
 
+  /* Anexa a origem ao link do app ANTES da navegação.
+     Por que aqui e não no href fixo do index.html: são três CTAs hoje, e
+     qualquer botão novo passa a funcionar sozinho. Além disso, o valor só
+     existe em tempo de execução — quem chegou sem UTM não leva parâmetro
+     nenhum, em vez de levar um vazio.
+
+     ⚠ bariatrico.net e app.bariatrico.net são domínios diferentes: o cookie
+     NÃO atravessa. A URL é o único caminho. Sem isto mediríamos visita, e
+     visita é a métrica que engana — influenciador grande entrega clique e não
+     entrega cadastro. */
+  function anexarOrigem(a) {
+    if (!ORIGEM || !a) return;
+    var href = a.getAttribute('href') || '';
+    if (!/app\.bariatrico\.net/.test(href)) return;
+    if (/[?&]utm_/.test(href)) return;                 // já anexado (qualquer utm_*)
+    var extra = [];
+    for (var i = 0; i < CAMPOS_UTM.length; i++) {
+      var v = ORIGEM[CAMPOS_UTM[i]];
+      if (v) extra.push(CAMPOS_UTM[i] + '=' + encodeURIComponent(v));
+    }
+    if (!extra.length) return;
+    a.setAttribute('href', href + (href.indexOf('?') >= 0 ? '&' : '?') + extra.join('&'));
+  }
+
   document.addEventListener('click', function (ev) {
+    // Roda mesmo com o clique já registrado: a navegação acontece de qualquer
+    // jeito, e o link precisa carregar a origem em TODA vez.
+    try { if (ev.target && ev.target.closest) anexarOrigem(ev.target.closest('a[href]')); } catch (e) {}
     if (cliqueRegistrado) return;
     var cta = identificarCta(ev.target);
     if (!cta) return;
