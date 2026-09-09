@@ -1407,14 +1407,17 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         {(temAssinatura || anuidadeVencida) && tela === 'historico' && !showBoasVindas && !entradaPendente && (
           <div className="mb-5 bg-gradient-to-br from-red-50 to-white border-2 border-red-200 rounded-2xl p-4 flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-bold text-red-800">{"💸 Indique e ganhe créditos"}</p>
+              {/* (R3) O emoji do dinheiro e o "ganhe" saíram: crédito de
+                  indicação não é renda, é desconto no próprio uso. Manter a
+                  promessa exata que o sistema cumpre. */}
+              <p className="text-sm font-bold text-red-800">{"🤝 Indique e ganhe descontos"}</p>
               {saldoIndicadorBrl > 0
-                ? <p className="text-xs text-green-700 font-bold mt-0.5">{"Seu saldo: R$ "}{saldoIndicadorBrl.toFixed(2).replace('.', ',')}{" — abate da sua anuidade."}</p>
+                ? <p className="text-xs text-green-700 font-bold mt-0.5">{"Seu saldo: R$ "}{saldoIndicadorBrl.toFixed(2).replace('.', ',')}{" — abate da sua anuidade e dos seus documentos."}</p>
                 : pendenteIndicadorBrl <= 0
-                  ? <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Cada um que entrar e pagar vira crédito na sua conta — veja o valor em INDICAR."}</p>
+                  ? <p className="text-xs text-gray-600 mt-0.5">{"Conhece outros bariátricos? Quem entra pela sua indicação ganha desconto de boas-vindas, e você ganha crédito para abater a sua anuidade."}</p>
                   : null}
-              {/* O indicado pagou (declarou) e o crédito já existe — mas só vira
-                  dinheiro depois que a tesouraria confirma o PIX. Dizer isso
+              {/* O indicado pagou (declarou) e o crédito já existe — mas só pode
+                  ser usado depois que a tesouraria confirma o PIX. Dizer isso
                   evita as duas leituras erradas: "sumiu" e "posso gastar já". */}
               {pendenteIndicadorBrl > 0 && (
                 <p className="text-xs text-amber-700 font-semibold mt-0.5">
@@ -2084,8 +2087,11 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
       </div>
     )}
 
+    {/* (R3) `celular`/`email` saíram das props: eram para o cadastro da chave
+        PIX, que não existe mais — crédito de indicação só abate uso da
+        plataforma, nunca vira dinheiro. */}
     {showIndica && profile && (
-      <PacienteIndicaModal cpf={profile.cpf} celular={profile.celular} email={profile.email} view={indicaView}
+      <PacienteIndicaModal cpf={profile.cpf} view={indicaView}
         onFechar={() => { setShowIndica(false); if (voltarParaGate) { setVoltarParaGate(false); setShowEscolhaEntrarIndicar(true) } }} />
     )}
 

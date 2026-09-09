@@ -1,21 +1,27 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { supabase } from '../lib/supabase'
 import PlayButton from './PlayButton'
 import obaLogo from '../assets/oba-logo.png'
 
 /**
- * PacienteIndicaModal — o PACIENTE bariátrico vira INDICADOR.
+ * PacienteIndicaModal — o PACIENTE bariátrico indica outros bariátricos.
  *
  * Modais SEPARADOS por `view`:
  *   - 'indicar'  → só o QR + link (é o que se mostra ao novo paciente). SEM créditos.
- *   - 'creditos' → só os contadores de créditos + a chave PIX. SEM QR.
+ *   - 'creditos' → só os contadores. SEM QR.
  *
- * NOME e CPF já vêm gravados (perfil/ícone) — aparecem pequenos sob o logo. 1ª vez (ou
- * trocar) pede só a CHAVE PIX, com checkboxes CPF/CELULAR + campo "outra chave".
+ * (R3, 09/2026) O crédito de indicação NUNCA vira dinheiro: abate anuidade e
+ * documentos médicos do próprio paciente, e nada mais. Por isso este modal não
+ * tem — e não deve voltar a ter — formulário de chave PIX, titular, CNPJ ou
+ * qualquer coisa parecida: não há para onde pagar. Desconto de fidelidade ao
+ * próprio cliente é lícito; dinheiro por paciente trazido é captação de
+ * clientela (CFM 2.336/2023 e CFM 2.170/2017), e o responsável técnico responde
+ * por isso. O incentivo de quem chega mudou de lado: quem entra indicado ganha
+ * desconto de boas-vindas (ver PagamentoCadastroModal).
  *
- * Cores OBA: cinza + amarelo. QR preto (mais legível). Props: cpf, celular, view, onFechar().
- * Requer migrate_paciente_indicador.sql + migrate_paciente_pix.sql.
+ * Cores OBA: cinza + amarelo. QR preto (mais legível).
+ * Props: cpf, view, onFechar().
  */
 function fmtCPF(v) {
   const d = String(v || '').replace(/\D/g, '').slice(0, 11)
@@ -23,38 +29,22 @@ function fmtCPF(v) {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`
 }
 
-export default function PacienteIndicaModal({ cpf, celular, email, view = 'indicar', onFechar }) {
+export default function PacienteIndicaModal({ cpf, view = 'indicar', onFechar }) {
   const [codigo, setCodigo] = useState('')
   const [nome, setNome] = useState('')
-  const [pixChave, setPixChave] = useState('')
   const [dados, setDados] = useState(null)
   const [copiado, setCopiado] = useState(false)
   const [erro, setErro] = useState('')
-
-  // Form de PIX (1ª vez ou "trocar")
-  const [mostrarTroca, setMostrarTroca] = useState(false)
-  const [pixTipo, setPixTipo] = useState('')   // 'cpf' | 'celular' | 'outra'
-  const [pixInput, setPixInput] = useState('')
-  const [salvando, setSalvando] = useState(false)
-  const [msgPix, setMsgPix] = useState('')
-  const [resCpf, setResCpf] = useState(''); const [resMsg, setResMsg] = useState(null); const [resBusy, setResBusy] = useState(false)  // RESERVAR um CPF
-  // Titular da conta PIX (a chave pode ser de um familiar) + PJ/CNPJ + (indicador) nome/telefone.
-  const [pixTitular, setPixTitular] = useState(''); const [pixPj, setPixPj] = useState(false); const [pixCnpj, setPixCnpj] = useState(''); const [pixFamiliar, setPixFamiliar] = useState(false)
-  const [indNome, setIndNome] = useState(''); const [indTel, setIndTel] = useState('')
-  const pixRef = useRef(null)
+  const [resCpf, setResCpf] = useState(''); const [resMsg, setResMsg] = useState(null); const [resBusy, setResBusy] = useState(false)
 
   const base = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://app.bariatrico.net'
   // ?ind= (param PRÓPRIO do indicador — ?ref é do médico) + ?oba=1: o bariátrico
   // indicado cai direto na entrada do Projeto OBA, não na landing do RedFairy.
   const link = codigo ? `${base}/?oba=1&ind=${codigo}` : ''
   const cpfLimpo = String(cpf || '').replace(/\D/g, '')
-  const celLimpo = String(celular || '').replace(/\D/g, '')
-  const emailLimpo = String(email || '').trim().toLowerCase()
-  const ownNome = (indNome.trim() || nome || '').trim()   // nome próprio p/ o titular travado
 
   async function carregarPainel(cod) {
     try {
-      // Paciente-indicador autentica pela sessão de PACIENTE (o RPC aceita os dois tokens).
       const t = (() => { try { return localStorage.getItem('paciente_token') || '' } catch (e) { return '' } })()
       const { data: pan } = await supabase.rpc('listar_creditos_indicador', { p_codigo: cod, p_token: t })
       if (pan && pan.ok) setDados(pan)
@@ -65,65 +55,21 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
     let vivo = true
     ;(async () => {
       try {
-        // Gate de token (migrate_cluster_seguranca_ago2026.sql): a RPC aceita a sessão
-        // de PACIENTE ou de INDICADOR puro — este modal serve os dois perfis (o
-        // paciente via dashboard, o indicador puro via IndicadorPage). Envia o que houver.
-        const tk = (() => { try { return localStorage.getItem('paciente_token') || localStorage.getItem('indicador_token') || '' } catch (e) { return '' } })()
+        // Gate de token: só o dono do CPF ativa a própria indicação. Desde R4 a
+        // sessão de INDICADOR não existe mais (o leigo não tem conta), então
+        // aqui vale exclusivamente a sessão de PACIENTE.
+        const tk = (() => { try { return localStorage.getItem('paciente_token') || '' } catch (e) { return '' } })()
         const { data } = await supabase.rpc('paciente_virar_indicador', { p_cpf: cpfLimpo, p_token: tk })
         if (!vivo) return
         if (data && data.ok && data.codigo) {
           setCodigo(data.codigo)
           setNome(data.nome || '')
-          setPixTitular(prev => prev || data.nome || '')   // titular default = próprio nome
-          setPixChave(data.pix || '')
-          if (data.pix) carregarPainel(data.codigo)
+          carregarPainel(data.codigo)
         } else setErro((data && data.erro) || 'Não foi possível ativar a sua indicação.')
       } catch (e) { if (vivo) setErro('Erro de conexão. Tente de novo.') }
     })()
     return () => { vivo = false }
   }, [cpfLimpo])
-
-  // PIX titular: chave PRÓPRIA (cpf/celular/email) ou vazia → titular TRAVADO no nome próprio.
-  // Só a chave "outra" libera os checkboxes familiar/PJ que destravam o campo.
-  useEffect(() => {
-    if (pixTipo !== 'outra') { setPixFamiliar(false); setPixPj(false); setPixTitular(ownNome) }
-  }, [pixTipo, ownNome])
-
-  const precisaPix = !pixChave || mostrarTroca
-
-  function escolherPix(tipo, valor) {
-    setMsgPix('')
-    if (pixTipo === tipo) { setPixTipo(''); setPixInput('') }
-    else { setPixTipo(tipo); setPixInput(valor) }
-  }
-
-  async function salvarPix() {
-    setMsgPix('')
-    if (!pixInput.trim()) { setMsgPix('Informe a sua chave PIX.'); return }
-    const nomeFinal = (indNome.trim() || nome).trim()
-    if (!nomeFinal) { setMsgPix('Informe o seu nome.'); return }
-    const tit = pixTitular.trim()
-    if (!tit) { setMsgPix(pixPj ? 'Informe a Razão Social do titular.' : 'Informe o nome do titular da conta.'); return }
-    if (pixPj && String(pixCnpj).replace(/\D/g, '').length !== 14) { setMsgPix('Informe o CNPJ (14 dígitos).'); return }
-    setSalvando(true)
-    try {
-      // Gate de token (migrate_cluster_seguranca_ago2026.sql): só o dono do CPF
-      // grava a própria chave PIX — sessão de paciente OU de indicador puro.
-      const tk = (() => { try { return localStorage.getItem('paciente_token') || localStorage.getItem('indicador_token') || '' } catch (e) { return '' } })()
-      const { data } = await supabase.rpc('paciente_salvar_pix', {
-        p_cpf: cpfLimpo, p_nome: nomeFinal, p_pix: pixInput.trim(),
-        p_celular: indTel.replace(/\D/g, '') || celLimpo, p_email: emailLimpo,
-        p_titular: tit, p_pj: pixPj, p_cnpj: pixPj ? String(pixCnpj).replace(/\D/g, '') : null,
-        p_token: tk,
-      })
-      if (data && data.ok) {
-        setPixChave(pixInput.trim())
-        setMostrarTroca(false)
-        carregarPainel(codigo)
-      } else setMsgPix((data && data.erro) || 'Não foi possível salvar.')
-    } catch (e) { setMsgPix('Erro de conexão. Tente de novo.') }
-    finally { setSalvando(false) }
-  }
 
   async function copiar() {
     try { await navigator.clipboard.writeText(link); setCopiado(true); setTimeout(() => setCopiado(false), 2500) } catch (e) {}
@@ -138,13 +84,18 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
       if (data && data.ok) {
         setResMsg({ ok: true, txt: data.ja_cadastrado
           ? 'Esse CPF já faz parte do Projeto. A reserva foi registrada mesmo assim.'
-          : 'CPF reservado por 3 meses! Se essa pessoa se cadastrar e pagar nesse prazo, o crédito é seu. Reservar de novo renova o prazo.' })
+          : 'CPF reservado por 3 meses! Se essa pessoa entrar nesse prazo, ela ganha o desconto de boas-vindas e você ganha o crédito.' })
         setResCpf('')
       } else setResMsg({ ok: false, txt: (data && data.erro) || 'Não foi possível reservar.' })
     } catch (e) { setResMsg({ ok: false, txt: 'Erro de conexão. Tente de novo.' }) }
     setResBusy(false)
   }
-  const checkCls = (on) =>`flex items-center gap-2 cursor-pointer text-xs font-medium tracking-wide ${on ? 'text-gray-800' : 'text-gray-600'}`
+
+  const creditos   = dados?.creditos || []
+  const usados     = creditos.filter(c => c.usado).length
+  const aUsar      = creditos.length - usados
+  const creditoBrl = Number(dados?.credito_brl) || 0
+  const fmtBrl = (n) => (Math.round((Number(n) || 0) * 100) / 100).toFixed(2).replace('.', ',')
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ background: 'rgba(0,0,0,0.95)' }}>
@@ -166,95 +117,11 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
             {erro && <p className="text-red-600 text-xs font-bold text-center">{erro}</p>}
             {!codigo && !erro && <p className="text-xs text-gray-400 text-center">Carregando…</p>}
 
-            {/* Form de PIX — só a chave (1ª vez ou trocar) */}
-            {codigo && precisaPix && view === 'creditos' && (
-              <>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {mostrarTroca
-                    ? 'Atualize a sua chave PIX (você pode receber em outra conta).'
-                    : 'Precisamos da sua Chave PIX para créditos.'}
-                </p>
-                <div className="space-y-1.5">
-                  <label className={checkCls(pixTipo === 'cpf')}>
-                    <input type="checkbox" checked={pixTipo === 'cpf'} style={{ accentColor: '#7B1E1E' }} onChange={() => escolherPix('cpf', cpfLimpo)} />
-                    {"MEU CPF É O MEU PIX"}
-                  </label>
-                  {celLimpo && (
-                    <label className={checkCls(pixTipo === 'celular')}>
-                      <input type="checkbox" checked={pixTipo === 'celular'} style={{ accentColor: '#7B1E1E' }} onChange={() => escolherPix('celular', celLimpo)} />
-                      {"MEU CELULAR É O MEU PIX"}
-                    </label>
-                  )}
-                  {emailLimpo && (
-                    <label className={checkCls(pixTipo === 'email')}>
-                      <input type="checkbox" checked={pixTipo === 'email'} style={{ accentColor: '#7B1E1E' }} onChange={() => escolherPix('email', emailLimpo)} />
-                      {"MEU E-MAIL É O MEU PIX"}
-                    </label>
-                  )}
-                </div>
-                <div>
-                  <input ref={pixRef} className="w-full border-2 border-yellow-300 bg-yellow-50 rounded-lg px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-yellow-400"
-                    value={pixInput} onChange={e => { setPixInput(e.target.value); setPixTipo(e.target.value ? 'outra' : ''); setMsgPix('') }}
-                    placeholder="Digite ou cole outra chave PIX" />
-                </div>
-                {/* (indicador sem cadastro completo) nome + telefone */}
-                {!nome && (
-                  <input value={indNome} onChange={e => setIndNome(e.target.value.toUpperCase().replace(/[0-9]/g, ''))}
-                    placeholder="SEU NOME COMPLETO" style={{ textTransform: 'uppercase' }}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-                )}
-                {!celLimpo && (
-                  <input value={indTel} onChange={e => setIndTel(e.target.value.replace(/\D/g, '').slice(0, 11))}
-                    placeholder="Seu telefone / WhatsApp (com DDD)" inputMode="numeric"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-                )}
-                {/* Titular do PIX: chave própria → travado no nome. Chave "outra" → familiar/PJ destravam. */}
-                {pixTipo === 'outra' && (
-                  <div className="space-y-1">
-                    <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-600">
-                      <input type="checkbox" checked={pixFamiliar} style={{ accentColor: '#7B1E1E' }}
-                        onChange={e => { const v = e.target.checked; setPixFamiliar(v); if (v) { setPixPj(false); setPixTitular('') } else setPixTitular(ownNome); setMsgPix('') }} />
-                      {"O TITULAR DA CONTA É UM FAMILIAR"}
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-gray-600">
-                      <input type="checkbox" checked={pixPj} style={{ accentColor: '#7B1E1E' }}
-                        onChange={e => { const v = e.target.checked; setPixPj(v); if (v) { setPixFamiliar(false); setPixTitular('') } else setPixTitular(ownNome); setMsgPix('') }} />
-                      {"O TITULAR DA CONTA É PESSOA JURÍDICA"}
-                    </label>
-                  </div>
-                )}
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-600 mb-1">{pixPj ? 'Razão Social (titular da conta)' : 'Nome do titular da conta (quem recebe)'}</label>
-                  <input value={pixTitular} onChange={e => { setPixTitular(e.target.value); setMsgPix('') }}
-                    readOnly={!pixFamiliar && !pixPj}
-                    placeholder={pixPj ? 'Razão Social da empresa' : (pixFamiliar ? 'Nome de quem recebe' : 'Você (titular)')}
-                    className={`w-full border-2 rounded-lg px-3 py-2 text-sm focus:outline-none ${(pixFamiliar || pixPj) ? 'border-red-500 bg-red-50' : 'border-gray-300 bg-gray-100 text-gray-500'}`} />
-                </div>
-                {pixPj && (
-                  <input value={pixCnpj} onChange={e => setPixCnpj(e.target.value.replace(/\D/g, '').slice(0, 14))}
-                    placeholder={"CNPJ (só números)"} inputMode="numeric"
-                    className="w-full border-2 border-red-500 bg-red-50 rounded-lg px-3 py-2 text-sm" />
-                )}
-                {msgPix && <p className="text-xs font-semibold text-red-600">{msgPix}</p>}
-                {pixInput.trim().length >= 3 && (
-                  <div className="flex flex-col items-center pt-1">
-                    <PlayButton onClick={salvarPix} loading={salvando} label="SALVAR" ariaLabel="Salvar chave PIX"
-                      circleClass="bg-gray-700 hover:bg-gray-800" playColor="#facc15" labelColor="#7B1E1E" ringColor="rgba(250,204,21,0.7)" />
-                  </div>
-                )}
-                {mostrarTroca && (
-                  <button onClick={() => { setMostrarTroca(false); setMsgPix('') }} className="w-full text-xs text-gray-400 hover:text-gray-600 font-medium">
-                    {"Cancelar"}
-                  </button>
-                )}
-              </>
-            )}
-
             {/* INDICAR — só QR + link + copiar (o que se mostra ao novo paciente) */}
             {codigo && view !== 'creditos' && (
               <>
                 <p className="text-sm text-gray-600 leading-relaxed text-center">
-                  {"Mostre este "}<b>{"QR"}</b>{" ao bariátrico, ou copie o "}<b>{"LINK"}</b>{" e envie no WhatsApp/Telegram. Quando ele se cadastrar e pagar, você ganha crédito. Você também pode "}<b>{"RESERVAR"}</b>{" o CPF de outro bariátrico, aqui embaixo nesta tela. A reserva vale por "}<b>{"3 meses"}</b>{" — se ele se cadastrar nesse prazo, você recebe os créditos (reservar de novo renova o prazo)."}
+                  {"Mostre este "}<b>{"QR"}</b>{" ao bariátrico, ou copie o "}<b>{"LINK"}</b>{" e envie no WhatsApp/Telegram. Quem entrar por aqui ganha "}<b>{"desconto de boas-vindas"}</b>{", e você ganha um crédito para abater a sua anuidade e os seus documentos. Você também pode "}<b>{"RESERVAR"}</b>{" o CPF de outro bariátrico, aqui embaixo. A reserva vale por "}<b>{"3 meses"}</b>{"."}
                 </p>
                 <div className="flex justify-center">
                   <div className="bg-white p-3 rounded-xl border-2 border-gray-300">
@@ -283,18 +150,17 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
               </>
             )}
 
-            {/* VER MEUS CRÉDITOS — só os créditos + PIX (privado, sem QR) */}
+            {/* VER MEUS CRÉDITOS — contadores (privado, sem QR) */}
             {codigo && view === 'creditos' && (
               <>
                 <p className="text-sm text-gray-600 leading-relaxed text-center">
-                  {"Seus créditos por indicar outros bariátricos. Eles abatem documentos médicos e a sua anuidade."}
+                  {"Seus créditos por indicar outros bariátricos. Eles abatem a sua anuidade e os seus documentos médicos."}
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {[
-                    { n: (dados?.creditos || []).length, t: 'CADASTRADOS' },
                     { n: (dados?.precadastros || []).length, t: 'RESERVADOS' },
-                    { n: (dados?.creditos || []).filter(c => c.pago).length, t: 'RECEBIDOS' },
-                    { n: (dados?.creditos || []).filter(c => !c.pago).length, t: 'PENDENTES' },
+                    { n: aUsar, t: 'A USAR' },
+                    { n: usados, t: 'JÁ USADOS' },
                   ].map((b, i) => (
                     <div key={i} className="bg-gray-700 rounded-lg py-2 text-center">
                       <p className="text-2xl font-extrabold" style={{ color: '#facc15' }}>{b.n}</p>
@@ -302,17 +168,17 @@ export default function PacienteIndicaModal({ cpf, celular, email, view = 'indic
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-gray-400 text-center">{"Cada indicado que paga vale US$ "}{dados?.comissao_usd || 10}{"."}</p>
-                {!precisaPix && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-left">
-                    <p className="text-[11px] text-gray-500">{"Você recebe em (PIX):"}</p>
-                    <p className="text-sm font-bold text-gray-700 break-all">{pixChave}</p>
-                    <button onClick={() => { setPixInput(pixChave); setPixTipo('outra'); setMsgPix(''); setMostrarTroca(true) }}
-                      className="text-xs font-bold text-gray-600 underline underline-offset-2 hover:text-gray-800 mt-1">
-                      {"QUERO TROCAR MINHA CHAVE PIX"}
-                    </button>
-                  </div>
+                {creditoBrl > 0 && (
+                  <p className="text-xs text-gray-400 text-center">{"Cada indicado que entra e assina vale R$ "}{fmtBrl(creditoBrl)}{" em créditos."}</p>
                 )}
+                {/* A frase abaixo NÃO é decorativa: é a promessa que substitui a
+                    antiga ("o excedente cai na sua conta"). Manter explícito que
+                    não há saque evita que o paciente espere dinheiro. */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                  <p className="text-[11px] text-gray-600 leading-snug">
+                    {"Os créditos são usados automaticamente quando você paga a anuidade ou solicita um documento. Eles não são sacados nem depositados em conta."}
+                  </p>
+                </div>
               </>
             )}
           </div>

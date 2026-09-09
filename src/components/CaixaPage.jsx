@@ -296,7 +296,7 @@ function AbaPendencias({ rpc, toast, irPara }) {
       {total === 0 ? (
         <div className="rounded-2xl border-2 border-green-300 bg-green-50 p-6 text-center">
           <p className="text-green-800 font-black text-lg">{"✓ Nada pendente"}</p>
-          <p className="text-green-700 text-sm mt-1">{"Todo dinheiro declarado foi conferido e não há comissão na fila."}</p>
+          <p className="text-green-700 text-sm mt-1">{"Todo dinheiro declarado foi conferido e não há avaliação na fila de pagamento."}</p>
         </div>
       ) : (
         <p className="text-sm text-gray-600 mb-3">
@@ -331,7 +331,7 @@ function AbaPendencias({ rpc, toast, irPara }) {
         <Cartao cor="#0F766E" titulo="Nota fiscal a emitir" n={nNf}
           acao={<button onClick={() => irPara('nf')} className="mt-2 text-xs font-bold px-3 py-1.5 rounded-lg text-white" style={{ background: '#0F766E' }}>{"Ir para NOTAS FISCAIS →"}</button>}>
           <p className="text-xs text-gray-600">
-            {"Sobre comissões JÁ PAGAS: "}{nf.medicos || 0}{" encaminhamento(s) · "}{nf.avaliacoes || 0}{" avaliação(ões) · "}{nf.indicador || 0}{" indicação(ões)"}
+            {"Sobre pagamentos JÁ FEITOS: "}{nf.avaliacoes || 0}{" avaliação(ões)"}
           </p>
         </Cartao>
       )}
@@ -390,31 +390,19 @@ function AbaAPagar({ rpc, toast }) {
     if (!window.confirm(`Confirma a baixa de TODOS os créditos pendentes do CRM ${crm}?\n(Faça o PIX no banco ANTES de marcar pago.)`)) return
     try {
       const d = await rpc('caixa_pagar_medico', { p_crm: crm })
-      if (d?.ok) { toast(true, `Pago: ${d.n_enc} encaminhamento(s) + ${d.n_av} avaliação(ões) = ${fmtBRL(d.total_brl)} (cotação ${d.cotacao}).`); carregar() }
+      if (d?.ok) { toast(true, `Pago: ${d.n_av} avaliação(ões) = ${fmtBRL(d.total_brl)} (cotação ${d.cotacao}).`); carregar() }
       else toast(false, d?.erro || 'Falha na baixa.')
     } catch (e) { toast(false, e.message) }
   }
-  async function pagarIndicador(codigo) {
-    if (!window.confirm(`Confirma a baixa de TODOS os créditos pendentes do indicador ${codigo}?\n(Faça o PIX no banco ANTES de marcar pago.)`)) return
-    try {
-      const d = await rpc('caixa_pagar_indicador', { p_codigo: codigo })
-      // `total_brl` MUDOU de significado: era `n × unitário`, agora é o saldo
-      // LÍQUIDO (já descontado o que saiu por encontro de contas). Sem dizer
-      // isso, "2 crédito(s) = R$ 0,00" parece erro de sistema para quem opera.
-      if (d?.ok) {
-        const abat = Number(d.abatido_brl) || 0
-        toast(true, `Pago: ${d.n} crédito(s) = ${fmtBRL(d.total_brl)} (cotação ${d.cotacao}).`
-          + (abat > 0 ? ` ${fmtBRL(abat)} já haviam sido entregues por encontro de contas.` : ''))
-        carregar()
-      }
-      else toast(false, d?.erro || 'Falha na baixa.')
-    } catch (e) { toast(false, e.message) }
-  }
-  const medicos = dados.medicos || [], inds = dados.indicadores || []
+  // (R3, 09/2026) `pagarIndicador` foi REMOVIDA junto com a RPC
+  // caixa_pagar_indicador: indicador não recebe dinheiro. O paciente que indica
+  // acerta no ENCONTRO DE CONTAS (abate anuidade/documentos); o indicador leigo
+  // não ganha nada — quem ganha é o indicado, no desconto de boas-vindas.
+  const medicos = dados.medicos || []
   return (<>
     <p className="text-xs text-gray-500 mb-3">
       {"Cotação atual: "}<b>{cot > 0 ? `R$ ${cot}` : '⚠ não configurada (Admin → Configurações)'}</b>
-      {" · Encaminhar/Indicador: US$ "}{dados.usd_enc}{" · Avaliar: US$ "}{dados.usd_av}
+      {" · Avaliação: US$ "}{dados.usd_av}
     </p>
     <div className="bg-white rounded-2xl shadow p-4 mb-4">
       <h2 className="font-extrabold text-sm mb-2" style={{ color: DARK }}>{"MÉDICOS "}<span className="text-gray-400 font-normal">({medicos.length})</span></h2>
@@ -422,7 +410,7 @@ function AbaAPagar({ rpc, toast }) {
         <div key={m.crm} className="flex items-center gap-3 flex-wrap border-t border-gray-100 py-2 text-xs">
           <div className="flex-1 min-w-[180px]">
             <p className="font-bold">{m.nome || `CRM ${m.crm}`} <span className="text-gray-400 font-normal">· {m.crm}</span></p>
-            <p className="text-gray-500">{m.n_enc}{" encaminhamento(s) + "}{m.n_av}{" avaliação(ões) = "}
+            <p className="text-gray-500">{m.n_av}{" avaliação(ões) = "}
               <b>US$ {Number(m.total_usd).toFixed(2)}</b>{cot > 0 && <>{" ≈ "}<b>{fmtBRL(m.total_usd * cot)}</b></>}</p>
             <p className="text-gray-500">{"PIX: "}<b>{m.pix || '(sem chave cadastrada)'}</b></p>
           </div>
@@ -436,27 +424,10 @@ function AbaAPagar({ rpc, toast }) {
         </div>
       ))}
     </div>
-    <div className="bg-white rounded-2xl shadow p-4 mb-4">
-      <h2 className="font-extrabold text-sm mb-2" style={{ color: DARK }}>{"INDICADORES "}<span className="text-gray-400 font-normal">({inds.length})</span></h2>
-      {inds.length === 0 ? <p className="text-xs text-gray-400">Nenhum pagamento devido.</p> : inds.map(i => (
-        <div key={i.codigo} className="flex items-center gap-3 flex-wrap border-t border-gray-100 py-2 text-xs">
-          <div className="flex-1 min-w-[180px]">
-            <p className="font-bold">{i.nome || i.codigo} <span className="text-gray-400 font-normal">· {i.codigo}</span></p>
-            <p className="text-gray-500">{i.n}{" crédito(s) = "}<b>US$ {Number(i.total_usd).toFixed(2)}</b>
-              {cot > 0 && <>{" ≈ "}<b>{fmtBRL(i.total_usd * cot)}</b></>}</p>
-            <p className="text-gray-500">{"PIX: "}<b>{i.pix || '(sem chave cadastrada)'}</b>{i.titular ? ` · Titular: ${i.titular}` : ''}</p>
-          </div>
-          {/* MIN-2: sem chave PIX não há para onde pagar — bloqueia o MARCAR PAGO. */}
-          <button onClick={() => pagarIndicador(i.codigo)} disabled={!i.pix}
-            className="font-bold px-3 py-2 rounded-xl text-xs disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: GOLD, color: DARK }}
-            title={!i.pix ? 'Sem chave PIX cadastrada — peça a chave antes de pagar' : undefined}>
-            {"MARCAR PAGO"}
-          </button>
-        </div>
-      ))}
-    </div>
-    <p className="text-[11px] text-gray-400">{"Pacientes que indicam não aparecem aqui — o crédito deles vai pro ENCONTRO DE CONTAS (abate anuidade/documentos; excedente é pago)."}</p>
+    {/* (R3) O bloco INDICADORES saiu daqui. Não é "está vazio": não existe mais
+        pagamento a indicador, para ninguém. Se um dia voltar a aparecer alguém
+        nesta lista, é bug — a RPC devolve `indicadores` sempre vazio. */}
+    <p className="text-[11px] text-gray-400">{"Só médicos aparecem aqui, e só por avaliação feita. Indicação não gera pagamento a ninguém: quem indica e é paciente abate a própria anuidade no ENCONTRO DE CONTAS, e quem chega indicado ganha desconto na primeira anuidade."}</p>
   </>)
 }
 
@@ -477,7 +448,7 @@ function AbaAssinaturas({ rpc, toast }) {
     try {
       const d = await rpc('caixa_bloquear_assinatura', { p_id: a.id, p_bloquear: bloquear })
       if (d?.ok) {
-        // Bloquear/reativar agora move DINHEIRO junto: a comissão de conversão
+        // Bloquear/reativar move CRÉDITO junto: o crédito de indicação
         // nasce do "JÁ PAGUEI" e passa a ser derivada do status da assinatura
         // (migrate_credito_lastreado.sql). O tesoureiro precisa saber o efeito —
         // sobretudo o caso que o sistema NÃO desfaz sozinho: crédito daquela
@@ -486,11 +457,11 @@ function AbaAssinaturas({ rpc, toast }) {
         const jaPagos = d.creditos_ja_pagos || 0
         let msg = bloquear ? 'Assinatura bloqueada.' : 'Assinatura reativada.'
         if (n > 0) msg += bloquear
-          ? ` ${n} comissão(ões) saíram da fila de pagamento.`
-          : ` ${n} comissão(ões) voltaram para a fila.`
+          ? ` ${n} crédito(s) de indicação deixaram de valer.`
+          : ` ${n} crédito(s) de indicação voltaram a valer.`
         toast(true, msg)
         if (bloquear && jaPagos > 0) {
-          window.alert(`Atenção: ${jaPagos} comissão(ões) desta assinatura JÁ FORAM PAGAS.\n\n`
+          window.alert(`Atenção: ${jaPagos} crédito(s) desta assinatura JÁ FORAM USADOS pelo paciente.\n\n`
             + 'O bloqueio não desfaz pagamento já feito. Se o PIX do paciente realmente não entrou, '
             + 'use ESTORNO para reverter essas comissões.')
         }
@@ -539,14 +510,15 @@ function AbaEncontro({ rpc, toast }) {
   async function abater(cpf, tipo, valorSugerido) {
     let valor = valorSugerido
     if (tipo !== 'anuidade') {
-      const v = window.prompt(tipo === 'documento'
-        ? 'Valor do documento a abater (R$):'
-        : 'Valor do EXCEDENTE a pagar via PIX (R$):', String(valorSugerido || ''))
+      const v = window.prompt('Valor do documento a abater (R$):', String(valorSugerido || ''))
       if (v === null) return
       valor = Number(String(v).replace(',', '.'))
       if (!Number.isFinite(valor) || valor <= 0) { toast(false, 'Valor inválido.'); return }
     }
-    const rotulo = { anuidade: 'ANUIDADE FUTURA (+12 meses na assinatura)', documento: 'DOCUMENTO', pix: 'PAGAMENTO PIX do excedente' }[tipo]
+    // (R3) 'pix' saiu: era o PAGAR EXCEDENTE, o único caminho pelo qual o
+    // crédito do paciente virava dinheiro na conta dele. Crédito de indicação
+    // agora SÓ abate uso da plataforma (CFM 2.336/2023 e CFM 2.170/2017).
+    const rotulo = { anuidade: 'ANUIDADE FUTURA (+12 meses na assinatura)', documento: 'DOCUMENTO' }[tipo]
     if (!window.confirm(`Confirma o abatimento de ${fmtBRL(valor)} — ${rotulo} — do CPF ${fmtCPF(cpf)}?`)) return
     try {
       const d = await rpc('caixa_abater', { p_cpf: cpf, p_tipo: tipo, p_valor: valor, p_obs: null })
@@ -557,7 +529,7 @@ function AbaEncontro({ rpc, toast }) {
   return (
     <div className="bg-white rounded-2xl shadow p-4">
       <h2 className="font-extrabold text-sm mb-1" style={{ color: DARK }}>{"PACIENTES QUE INDICAM "}<span className="text-gray-400 font-normal">({pacs.length})</span></h2>
-      <p className="text-[11px] text-gray-400 mb-2">{"Saldo = créditos de indicação − abatimentos. Com saldo ≥ "}{fmtBRL(anuidade)}{" dá pra garantir mais 1 ano (abate a anuidade e estende a assinatura). Excedente é pago via PIX."}</p>
+      <p className="text-[11px] text-gray-400 mb-2">{"Saldo = créditos de indicação − abatimentos. Com saldo ≥ "}{fmtBRL(anuidade)}{" dá pra garantir mais 1 ano (abate a anuidade e estende a assinatura). O saldo NÃO é sacado nem depositado: sobra para os próximos documentos e para a anuidade seguinte."}</p>
       {pacs.length === 0 ? <p className="text-xs text-gray-400">Nenhum paciente com créditos.</p> : pacs.map(p => (
         <div key={p.codigo} className="border-t border-gray-100 py-2 text-xs">
           <div className="flex items-center gap-3 flex-wrap">
@@ -574,10 +546,6 @@ function AbaEncontro({ rpc, toast }) {
               <button onClick={() => abater(p.cpf, 'documento', '')} disabled={Number(p.saldo_brl) <= 0}
                 className="font-bold px-2.5 py-1.5 rounded-lg text-[11px] disabled:opacity-40" style={{ background: '#1d4ed8', color: '#fff' }}>
                 {"ABATER DOCUMENTO"}
-              </button>
-              <button onClick={() => abater(p.cpf, 'pix', p.saldo_brl)} disabled={Number(p.saldo_brl) <= 0}
-                className="font-bold px-2.5 py-1.5 rounded-lg text-[11px] disabled:opacity-40" style={{ background: GOLD, color: DARK }}>
-                {"PAGAR EXCEDENTE"}
               </button>
             </div>
           </div>
@@ -651,7 +619,9 @@ function AbaExtratos({ rpc, toast }) {
         L.push(`Médico: ${d.nome || d.chave} (CRM ${d.chave})`)
         if (d.pix) L.push(`PIX: ${d.pix}`)
         const enc = d.encaminhamentos || [], av = d.avaliacoes || []
-        L.push('', `*ENCAMINHAMENTOS* (${enc.length}):`)
+        // (R2) `encaminhamentos` vem sempre vazio: não há mais crédito por
+        // encaminhar. A seção só aparece se um dia voltar a ter linha.
+        if (enc.length) L.push('', `*ENCAMINHAMENTOS* (${enc.length}):`)
         enc.forEach(l => L.push(linhaTxt(l, d.usd_enc, d.cotacao)))
         L.push('', `*AVALIAÇÕES* (${av.length}):`)
         av.forEach(l => L.push(linhaTxt(l, d.usd_av, d.cotacao)))
@@ -664,21 +634,18 @@ function AbaExtratos({ rpc, toast }) {
         L.push(`Indicador: ${d.nome || d.chave} (${d.chave})`)
         if (d.pix) L.push(`PIX: ${d.pix}`)
         const cr = d.creditos || []
-        L.push('', `*INDICAÇÕES CONVERTIDAS* (${cr.length}):`)
-        cr.forEach(l => L.push(linhaTxt(l, d.usd, d.cotacao)))
-        const devUsd = cr.filter(l => !l.pago).length * d.usd
-        const pagoBrl = cr.filter(l => l.pago).reduce((s, l) => s + Number(l.valor_brl || 0), 0)
-        L.push('', `*A PAGAR:* US$ ${devUsd.toFixed(2)}${d.cotacao > 0 ? ` ≈ ${fmtBRL(devUsd * d.cotacao)}` : ''}`)
-        L.push(`*JÁ PAGO:* ${fmtBRL(pagoBrl)}`)
+        L.push('', `*PACIENTES QUE ENTRARAM POR ESTA INDICAÇÃO* (${cr.length}):`)
+        cr.forEach(l => L.push(`• ${fmtData(l.data)} · indicado ${l.cpf}`))
+        L.push('', '_Indicar não gera pagamento. Quem entra indicado recebe desconto de boas-vindas na primeira anuidade._')
       } else {
         L.push(`Paciente: ${d.nome || fmtCPF(d.chave)} (${fmtCPF(d.chave)})`)
         const cr = d.creditos || [], ab = d.abatimentos || []
         L.push('', `*CRÉDITOS DE INDICAÇÃO* (${cr.length}):`)
-        cr.forEach(l => L.push(`• ${fmtData(l.data)} · indicado ${l.cpf} · US$ ${Number(d.usd).toFixed(2)}`))
+        cr.forEach(l => L.push(`• ${fmtData(l.data)} · indicado ${l.cpf}${l.abatido ? ' · JÁ USADO' : ' · disponível para abater'}`))
         L.push('', `*ABATIMENTOS/PAGAMENTOS* (${ab.length}):`)
-        ab.forEach(a => L.push(`• ${fmtData(a.data)} · ${({ anuidade: 'ANUIDADE FUTURA', documento: 'DOCUMENTO', pix: 'PIX (excedente)' })[a.tipo] || a.tipo} · ${fmtBRL(a.valor_brl)}${a.obs ? ' · ' + a.obs : ''}`))
+        ab.forEach(a => L.push(`• ${fmtData(a.data)} · ${({ anuidade: 'ANUIDADE FUTURA', documento: 'DOCUMENTO' })[a.tipo] || a.tipo} · ${fmtBRL(a.valor_brl)}${a.obs ? ' · ' + a.obs : ''}`))
         L.push('', `*SALDO ATUAL:* ${fmtBRL(d.saldo_brl)}`)
-        if (Number(d.saldo_brl) > 0) L.push('_O saldo pode abater a sua próxima anuidade ou documentos; o excedente é pago via PIX._')
+        if (Number(d.saldo_brl) > 0) L.push('_O saldo abate a sua próxima anuidade e os seus documentos médicos. Ele não é sacado nem depositado em conta._')
       }
       L.push('', '— Projeto OBA®')
       setTexto(L.join('\n'))
@@ -695,6 +662,8 @@ function AbaExtratos({ rpc, toast }) {
         <select value={papel} onChange={e => { setPapel(e.target.value); setTexto(''); setLotes([]) }}
           className="border border-gray-300 rounded-lg px-2 py-1.5 text-xs">
           <option value="medico">Médico (CRM/UF)</option>
+          {/* (R3) "Indicador" continua como consulta de extrato, mas não tem
+              mais lote pago nem estorno: ninguém recebeu dinheiro. */}
           <option value="indicador">Indicador (código IND…)</option>
           <option value="paciente">Paciente (CPF)</option>
         </select>
@@ -852,7 +821,7 @@ function AbaNF({ rpc }) {
   )
   return (<>
     <Bloco titulo="RECEBIMENTOS (anuidades ativas + documentos pagos)" d={dados.recebimentos} />
-    <Bloco titulo="PAGAMENTOS EFETUADOS (comissões pagas)" d={dados.pagamentos} />
+    <Bloco titulo="PAGAMENTOS EFETUADOS (avaliações pagas a médicos)" d={dados.pagamentos} />
     <p className="text-[11px] text-gray-400">{"Para carimbar a NF de um recebimento use a aba ENTRADAS; a NF de um pagamento pode ser carimbada pelo EXTRATO da pessoa (em breve, linha a linha)."}</p>
   </>)
 }
