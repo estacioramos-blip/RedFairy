@@ -987,10 +987,15 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
 function AbaConfig() {
   const [valor, setValor] = useState('');
   const [valorDoc, setValorDoc] = useState('');
-  const [comissaoUsdNaoAfiliado, setComissaoUsdNaoAfiliado] = useState('');
+  const [valorUsdAvaliacao, setValorUsdAvaliacao] = useState('');
   const [pixChave, setPixChave] = useState('');
   const [valorAnuidade, setValorAnuidade] = useState('');
-  const [comissaoUsd, setComissaoUsd] = useState('');
+  // (R3/R4, 09/2026) `comissao_usd_por_conversao` foi APAGADA: nao ha mais
+  // pagamento por paciente trazido. No lugar entraram dois valores em REAIS —
+  // o credito que o paciente-indicador acumula e o desconto de quem chega
+  // indicado. Ver o cabecalho de migrate_cfm_r1_valor_avaliacao.sql.
+  const [creditoIndicacaoBrl, setCreditoIndicacaoBrl] = useState('');
+  const [descontoBoasVindasBrl, setDescontoBoasVindasBrl] = useState('');
   const [cotacaoDolar, setCotacaoDolar] = useState('');
   const [tgToken, setTgToken] = useState('');
   const [tgChat, setTgChat] = useState('');
@@ -1005,14 +1010,16 @@ function AbaConfig() {
         .from('config').select('valor').eq('chave', 'valor_solicitacao_medica').single();
       const { data: docConfig } = await supabase
         .from('config').select('valor').eq('chave', 'valor_documento_medico').single();
-      const { data: comNaoAfilConfig } = await supabase
-        .from('config').select('valor').eq('chave', 'comissao_usd_nao_afiliado').maybeSingle();
+      const { data: avaliacaoConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'valor_usd_avaliacao').maybeSingle();
       const { data: pixConfig } = await supabase
         .from('config').select('valor').eq('chave', 'pix_chave').single();
       const { data: anuConfig } = await supabase
         .from('config').select('valor').eq('chave', 'valor_anuidade').maybeSingle();
-      const { data: comConfig } = await supabase
-        .from('config').select('valor').eq('chave', 'comissao_usd_por_conversao').maybeSingle();
+      const { data: credIndConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'credito_indicacao_brl').maybeSingle();
+      const { data: descBvConfig } = await supabase
+        .from('config').select('valor').eq('chave', 'desconto_boas_vindas_brl').maybeSingle();
       const { data: cotConfig } = await supabase
         .from('config').select('valor').eq('chave', 'cotacao_dolar').maybeSingle();
       // As chaves telegram_* deixaram de ser legíveis por anon (segredo backend-only,
@@ -1021,12 +1028,15 @@ function AbaConfig() {
       const tgCfg = (tg && tg.ok && tg.config) ? tg.config : {};
       setValor(valConfig?.valor || '');
       setValorDoc(docConfig?.valor || '');
-      // Default 15, não 10: esta chave é o AVALIAR do médico (US$15). Com o default
-      // errado, abrir e salvar a tela com a chave vazia REBAIXAVA a comissão do médico.
-      setComissaoUsdNaoAfiliado(comNaoAfilConfig?.valor || '15');
+      // Default 15: é o valor histórico do AVALIAR. Com o default errado, abrir e
+      // salvar a tela com a chave vazia REBAIXARIA o pagamento do médico.
+      setValorUsdAvaliacao(avaliacaoConfig?.valor || '15');
       setPixChave(pixConfig?.valor || '');
       setValorAnuidade(anuConfig?.valor || '200');
-      setComissaoUsd(comConfig?.valor || '10');
+      // Sem default inventado: estes dois valores são decisão do Estácio, e zero
+      // significa "não oferecer" — melhor do que prometer um número que ninguém definiu.
+      setCreditoIndicacaoBrl(credIndConfig?.valor || '0');
+      setDescontoBoasVindasBrl(descBvConfig?.valor || '0');
       setCotacaoDolar(cotConfig?.valor || '');
       setTgToken(tgCfg.telegram_bot_token || '');
       setTgChat(tgCfg.telegram_chat_id || '');
@@ -1044,9 +1054,10 @@ function AbaConfig() {
       { p_chave: 'valor_documento_medico',   p_valor: valorDoc, p_descricao: "Valor em R$ da gera\u00e7\u00e3o de documento m\u00e9dico (prescri\u00e7\u00e3o/pedido de exames)" },
       { p_chave: 'pix_chave',                p_valor: pixChave, p_descricao: "Chave Pix para recebimento de solicita\u00e7\u00f5es m\u00e9dicas" },
       { p_chave: 'valor_anuidade',           p_valor: valorAnuidade, p_descricao: "Valor em R$ da anuidade do paciente (exibido na landing e cobrado no Pix de cadastro)" },
-      { p_chave: 'comissao_usd_por_conversao', p_valor: comissaoUsd,  p_descricao: "Comissão em DÓLAR por CONVERSÃO: paga ao médico que ENCAMINHOU e ao INDICADOR" },
-      { p_chave: 'comissao_usd_nao_afiliado', p_valor: comissaoUsdNaoAfiliado, p_descricao: "Comissão em DÓLAR do médico por AVALIAR paciente (nome da chave é legado, não reflete o uso)" },
-      { p_chave: 'cotacao_dolar',            p_valor: cotacaoDolar,  p_descricao: "Cotação USD->BRL para converter a comissão dos médicos em reais" },
+      { p_chave: 'valor_usd_avaliacao',      p_valor: valorUsdAvaliacao, p_descricao: "Valor em DÓLAR pago ao médico por AVALIAR um paciente (uma vez por paciente)" },
+      { p_chave: 'credito_indicacao_brl',    p_valor: creditoIndicacaoBrl, p_descricao: "Crédito em R$ do paciente que indica outro paciente. SÓ abate anuidade/documentos — nunca vira dinheiro" },
+      { p_chave: 'desconto_boas_vindas_brl', p_valor: descontoBoasVindasBrl, p_descricao: "Desconto em R$ na PRIMEIRA anuidade de quem chega indicado" },
+      { p_chave: 'cotacao_dolar',            p_valor: cotacaoDolar,  p_descricao: "Cotação USD->BRL para converter em reais o pagamento das avaliações" },
       { p_chave: 'telegram_bot_token',       p_valor: tgToken,       p_descricao: "Token do Bot do Telegram para notificações da ADM" },
       { p_chave: 'telegram_chat_id',         p_valor: tgChat,        p_descricao: "Chat ID do Telegram que recebe as notificações da ADM" },
       { p_chave: 'telegram_chat_plantonista', p_valor: tgChatPlantonista, p_descricao: "Chat ID do Telegram do médico plantonista (recebe os acionamentos do botão de emergência)" },
@@ -1100,41 +1111,46 @@ function AbaConfig() {
           </div>
 
           <div className="pt-4 border-t border-gray-100">
-            {/* \u26a0 R\u00d3TULOS CORRIGIDOS: estavam trocados. As chaves foram REPROPOSITADAS
-                em jun/2026 e os nomes ficaram enganosos \u2014 `comissao_usd_nao_afiliado`
-                N\u00c3O \u00e9 mais a comiss\u00e3o do indicador, \u00e9 a do AVALIAR do m\u00e9dico. Quem
-                confiasse no r\u00f3tulo antigo e mexesse no campo "indicador" estaria, na
-                verdade, mudando quanto o m\u00e9dico ganha por avalia\u00e7\u00e3o. Confirmado no
-                banco e nas fun\u00e7\u00f5es que leem as chaves (fn_credita_medico,
-                listar_creditos_indicador, medico_avaliar_paciente). N\u00c3O renomear os
-                r\u00f3tulos de volta pelo nome da chave. */}
-            <h3 className="text-base font-semibold text-gray-700 mb-1">{"Comiss\u00f5es (d\u00f3lar digital)"}</h3>
-            <p className="text-sm text-gray-400 mb-3">{"A moeda \u00e9 \u00fanica (d\u00f3lar digital); s\u00f3 muda a quantidade conforme o evento que gerou o cr\u00e9dito."}</p>
+            {/* (R1-R4, 09/2026) Este bloco chamava-se "Comiss\u00f5es". N\u00e3o h\u00e1 mais
+                comiss\u00e3o: paga-se TRABALHO M\u00c9DICO (avalia\u00e7\u00e3o) e d\u00e1-se DESCONTO
+                (boas-vindas e cr\u00e9dito de indica\u00e7\u00e3o). A distin\u00e7\u00e3o n\u00e3o \u00e9 de
+                vocabul\u00e1rio \u2014 \u00e9 o que separa remunera\u00e7\u00e3o l\u00edcita de capta\u00e7\u00e3o de
+                clientela (CFM 2.336/2023 e CFM 2.170/2017), pela qual o
+                respons\u00e1vel t\u00e9cnico responde. N\u00e3o voltar a chamar de comiss\u00e3o,
+                nem reintroduzir valor por paciente trazido. */}
+            <h3 className="text-base font-semibold text-gray-700 mb-1">{"Pagamento ao m\u00e9dico e descontos ao paciente"}</h3>
+            <p className="text-sm text-gray-400 mb-3">{"O m\u00e9dico recebe por avalia\u00e7\u00e3o feita (em d\u00f3lar). O paciente ganha desconto \u2014 em reais, e s\u00f3 para usar na plataforma."}</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">{"Convers\u00e3o \u2014 encaminhamento e indica\u00e7\u00e3o (US$)"}</label>
-                <input type="number" step="0.01" min="0" value={comissaoUsd}
-                  onChange={e => setComissaoUsd(e.target.value)} placeholder="Ex: 10" className={inputClass} />
-                <p className="text-xs text-gray-400 mt-1">{"Pago ao M\u00c9DICO QUE ENCAMINHOU e ao INDICADOR, por paciente que se cadastrou e pagou. (chave: comissao_usd_por_conversao)"}</p>
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{"Avalia\u00e7\u00e3o feita pelo m\u00e9dico (US$)"}</label>
-                <input type="number" step="0.01" min="0" value={comissaoUsdNaoAfiliado}
-                  onChange={e => setComissaoUsdNaoAfiliado(e.target.value)} placeholder="Ex: 15" className={inputClass} />
-                <p className="text-xs text-gray-400 mt-1">{"Pago ao M\u00c9DICO por AVALIAR um paciente (creditado na hora). \u26a0 A chave ainda se chama comissao_usd_nao_afiliado \u2014 nome legado, n\u00e3o reflete mais o uso."}</p>
+                <input type="number" step="0.01" min="0" value={valorUsdAvaliacao}
+                  onChange={e => setValorUsdAvaliacao(e.target.value)} placeholder="Ex: 15" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"Pago ao M\u00c9DICO por AVALIAR um paciente, uma vez por paciente, creditado na hora. N\u00e3o depende de o paciente assinar. (chave: valor_usd_avaliacao)"}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{"Cota\u00e7\u00e3o do d\u00f3lar (R$/US$)"}</label>
                 <input type="number" step="0.0001" min="0" value={cotacaoDolar}
                   onChange={e => setCotacaoDolar(e.target.value)} placeholder="Ex: 5.40" className={inputClass} />
-                <p className="text-xs text-gray-400 mt-1">{"Atualize com a cota\u00e7\u00e3o atual. Usada para mostrar as comiss\u00f5es em R$."}</p>
+                <p className="text-xs text-gray-400 mt-1">{"Atualize com a cota\u00e7\u00e3o atual. Usada para converter o pagamento das avalia\u00e7\u00f5es em R$."}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Desconto de boas-vindas (R$)"}</label>
+                <input type="number" step="0.01" min="0" value={descontoBoasVindasBrl}
+                  onChange={e => setDescontoBoasVindasBrl(e.target.value)} placeholder="Ex: 30.00" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"Abatido da PRIMEIRA anuidade de quem chega indicado \u2014 por m\u00e9dico, por paciente ou por leigo, tanto faz. Zero = n\u00e3o oferecer. (chave: desconto_boas_vindas_brl)"}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">{"Cr\u00e9dito por indica\u00e7\u00e3o (R$)"}</label>
+                <input type="number" step="0.01" min="0" value={creditoIndicacaoBrl}
+                  onChange={e => setCreditoIndicacaoBrl(e.target.value)} placeholder="Ex: 50.00" className={inputClass} />
+                <p className="text-xs text-gray-400 mt-1">{"O que o PACIENTE ganha quando algu\u00e9m que ele indicou assina. \u26a0 S\u00f3 abate anuidade e documentos dele \u2014 nunca \u00e9 sacado nem depositado. (chave: credito_indicacao_brl)"}</p>
               </div>
             </div>
           </div>
 
           <div className="pt-4 border-t border-gray-100">
             <h3 className="text-base font-semibold text-gray-700 mb-1">{"Notifica\u00e7\u00f5es no Telegram"}</h3>
-            <p className="text-sm text-gray-400 mb-3">{"A cada paciente convertido, a ADM recebe uma mensagem com o valor e o PIX do m\u00e9dico para pagar a comiss\u00e3o. Crie um bot no @BotFather e cole o token + chat ID."}</p>
+            <p className="text-sm text-gray-400 mb-3">{"A cada avalia\u00e7\u00e3o feita, a ADM recebe uma mensagem com o valor e o PIX do m\u00e9dico para pagar. Crie um bot no @BotFather e cole o token + chat ID."}</p>
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{"Bot Token"}</label>
@@ -1158,11 +1174,11 @@ function AbaConfig() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Chave Pix (KlipBit)</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Chave Pix de recebimento</label>
             <input type="text" value={pixChave}
               onChange={e => setPixChave(e.target.value)}
               placeholder={"Cole aqui a chave Pix ou o c\u00f3digo copia-e-cola"} className={inputClass} />
-            <p className="text-xs text-gray-400 mt-1">{"E-mail, CPF, telefone, chave aleat\u00f3ria ou c\u00f3digo copia-e-cola do KlipBit."}</p>
+            <p className="text-xs text-gray-400 mt-1">{"E-mail, CPF, telefone, chave aleat\u00f3ria ou c\u00f3digo copia-e-cola."}</p>
           </div>
 
           {pixChave && (
@@ -1703,7 +1719,7 @@ function GraficoCrescimento({ medicos }) {
   if (!dados.length) return null;
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">{"Crescimento no 4DOC"}</h3>
+      <h3 className="text-sm font-semibold text-gray-700 mb-1">{"Crescimento dos m\u00e9dicos"}</h3>
       <p className="text-xs text-gray-400 mb-3">{"Médicos cadastrados e afiliados, acumulado por mês."}</p>
       <div style={{ width: '100%', height: 220 }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -1812,43 +1828,44 @@ function AbaPrescritores() {
   );
 }
 
+// (R3/R4, 09/2026) Esta aba era uma folha de pagamento: mostrava US$ a pagar e
+// a chave PIX de cada indicador. Nada disso existe mais — ninguém recebe por
+// indicar. Virou o que de fato é: uma lista de quem trouxe gente, com quantos
+// créditos de desconto foram gerados e quantos já foram usados.
+// ⚠ Não voltar a exibir "a pagar", chave PIX ou valor em dólar aqui.
 function AbaIndicadores() {
   const [lista, setLista] = useState([]);
-  const [comissaoUsd, setComissaoUsd] = useState(0);
-  const [cotacao, setCotacao] = useState(0);
+  const [creditoBrl, setCreditoBrl] = useState(0);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState('');
   const [busca, setBusca] = useState('');
 
   async function carregar() {
     const { data, error } = await supabase.rpc('admin_listar_indicadores', credAdmin());
-    if (error) setErro("Nao foi possivel carregar. A migration migrate_admin_indicadores.sql ja foi aplicada?");
+    if (error) setErro("Nao foi possivel carregar. A migration migrate_cfm_r3_credito_so_abate.sql ja foi aplicada?");
     else if (data && !data.ok) setErro(data.erro || 'Sem permissao de admin.');
-    else { setErro(''); setLista(data?.indicadores || []); setComissaoUsd(Number(data?.comissao_usd) || 0); setCotacao(Number(data?.cotacao_dolar) || 0); }
+    else { setErro(''); setLista(data?.indicadores || []); setCreditoBrl(Number(data?.credito_brl) || 0); }
     setLoading(false);
   }
   useEffect(() => { carregar(); }, []);
-
-  // (removida) liquidar() do Admin — a baixa é só na Tesouraria (Caixa).
 
   if (loading) return <div className="text-center py-12 text-gray-400">{"Carregando indicadores..."}</div>;
   if (erro) return <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm">{erro}</div>;
 
   const termo = busca.trim().toLowerCase();
   const filtrados = lista.filter(i => !termo || (i.nome||'').toLowerCase().includes(termo) || (i.cpf||'').includes(termo) || (i.codigo||'').toLowerCase().includes(termo));
-  const totalPend = lista.reduce((s,i)=>s+(i.creditos_pendentes||0),0);
-  const totalPagos = lista.reduce((s,i)=>s+(i.creditos_pagos||0),0);
-  const usdPend = totalPend * comissaoUsd, usdPago = totalPagos * comissaoUsd;
+  const totalAUsar  = lista.reduce((s,i)=>s+(i.creditos_a_usar||0),0);
+  const totalUsados = lista.reduce((s,i)=>s+(i.creditos_usados||0),0);
 
   return (
     <div className="space-y-5">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <h2 className="text-lg font-semibold text-gray-700">Indicadores</h2>
-        <p className="text-sm text-gray-400 mt-1">{"Pessoas que indicam bariatricos e ganham "}{fmtUsd(comissaoUsd)}{" por indicado que paga."}</p>
+        <p className="text-sm text-gray-400 mt-1">{"Quem traz bariátricos para o Projeto. Indicador NÃO recebe dinheiro: quem chega indicado ganha desconto de boas-vindas, e o paciente que indica acumula crédito para abater a própria anuidade."}</p>
         <div className="flex flex-wrap gap-3 mt-3 text-sm">
           <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{lista.length}{" indicador(es)"}</span>
-          <span className="bg-amber-100 rounded-full px-3 py-1 font-medium text-amber-700">{"A pagar: "}{fmtUsd(usdPend)}{cotacao ? " ~ " + fmtBrl(usdPend*cotacao) : ''}</span>
-          <span className="bg-green-50 rounded-full px-3 py-1 font-medium text-green-700">{"Ja pago: "}{fmtUsd(usdPago)}{cotacao ? " ~ " + fmtBrl(usdPago*cotacao) : ''}</span>
+          <span className="bg-amber-100 rounded-full px-3 py-1 font-medium text-amber-700">{"Créditos a usar: "}{totalAUsar}{creditoBrl ? " ~ " + fmtBrl(totalAUsar*creditoBrl) : ''}</span>
+          <span className="bg-green-50 rounded-full px-3 py-1 font-medium text-green-700">{"Já usados: "}{totalUsados}</span>
         </div>
         <input value={busca} onChange={e=>setBusca(e.target.value)} placeholder="Buscar por nome, CPF ou codigo"
           className="w-full mt-3 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400" />
@@ -1857,28 +1874,24 @@ function AbaIndicadores() {
       {filtrados.length === 0 ? (
         <div className="text-center py-10 text-gray-400 text-sm">{"Nenhum indicador ainda."}</div>
       ) : filtrados.map(i => {
-        const pend = i.creditos_pendentes || 0, pagos = i.creditos_pagos || 0;
+        const aUsar = i.creditos_a_usar || 0, usados = i.creditos_usados || 0;
         return (
           <div key={i.codigo} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-bold text-gray-800 truncate">{i.nome || '(sem nome)'} <span className="text-xs text-gray-400 font-mono">{i.codigo}</span></p>
-                <p className="text-xs text-gray-500">{maskCpf(i.cpf)}{i.celular ? ' - ' + i.celular : ''}{i.tipo ? ' - ' + i.tipo : ''}</p>
-                <p className="text-xs text-gray-600 mt-1">{"PIX: "}{i.pix_chave || i.usdc_wallet || '(nao cadastrado)'}</p>
+                {/* O leigo não tem CPF (R4): a linha só sai quando há um. */}
+                <p className="text-xs text-gray-500">{[i.cpf ? maskCpf(i.cpf) : null, i.celular || null, i.tipo === 'paciente' ? 'paciente' : 'leigo'].filter(Boolean).join(' - ')}</p>
               </div>
               <div className="text-right text-xs whitespace-nowrap">
                 <p className="text-gray-500">{"Reservados: "}<b>{i.reservados || 0}</b></p>
-                <p className="text-amber-700">{"A pagar: "}<b>{pend}</b></p>
-                <p className="text-green-700">{"Pagos: "}<b>{pagos}</b></p>
+                <p className="text-amber-700">{"Créditos a usar: "}<b>{aUsar}</b></p>
+                <p className="text-green-700">{"Já usados: "}<b>{usados}</b></p>
               </div>
             </div>
-            {/* A BAIXA SAIU DO ADMIN (jul/2026). Existiam dois caminhos para pagar
-                a mesma pessoa, com contabilidades diferentes: o do Admin não
-                congelava USD/cotação/BRL, então a NF enxergava R$ 0. Pagamento
-                agora é só na Tesouraria (?modo=caixa), que congela os valores. */}
-            {pend > 0 && (
+            {aUsar > 0 && i.tipo === 'paciente' && (
               <p className="mt-3 text-center text-[0.7rem] text-gray-500 leading-snug">
-                {"A pagar: "}<b>{fmtUsd(pend * comissaoUsd)}</b>{" — a baixa é feita na Tesouraria (Caixa)."}
+                {"Abate até "}<b>{fmtBrl(aUsar * creditoBrl)}</b>{" da anuidade ou de documentos deste paciente. O acerto é no Caixa → Encontro de Contas."}
               </p>
             )}
           </div>
@@ -1915,7 +1928,7 @@ function AbaMedicos() {
     else {
       setErro('');
       setMedicos(data?.medicos || []);
-      setComissaoUsd(Number(data?.comissao_usd) || 0);
+      setComissaoUsd(Number(data?.valor_usd_avaliacao) || 0);   // valor da AVALIACAO (R2)
       setCotacao(Number(data?.cotacao_dolar) || 0);
     }
     // Silencioso se a migration do v\u00ednculo ainda n\u00e3o rodou: a aba continua
@@ -1970,13 +1983,13 @@ function AbaMedicos() {
       `${i + 1}. ${c.nome || 'Paciente'} (${maskCpf(c.cpf)}) \u2014 ${fmtData(c.data_conversao)} \u2014 ${c.pago ? 'PAGO em ' + fmtData(c.data_pagamento) : 'A PAGAR'}`
     ).join('\n');
     return [
-      `EXTRATO 4DOC \u2014 ${m.nome || m.crm} (CRM ${m.crm})`,
+      `EXTRATO \u2014 ${m.nome || m.crm} (CRM ${m.crm})`,
       m.pix_chave ? `PIX: ${m.pix_chave}` : 'PIX: n\u00e3o cadastrado',
-      `Comiss\u00e3o: ${fmtUsd(comissaoUsd)} por convers\u00e3o` + (cotacao ? ` \u00b7 cota\u00e7\u00e3o ${fmtBrl(cotacao)}` : ''),
+      `Avalia\u00e7\u00e3o: ${fmtUsd(comissaoUsd)} por paciente avaliado` + (cotacao ? ` \u00b7 cota\u00e7\u00e3o ${fmtBrl(cotacao)}` : ''),
       ``,
-      `Convertidos: ${m.n_convertidos || 0}  |  A pagar: ${fmtUsd(pend * comissaoUsd)}${cotacao ? ' (' + fmtBrl(pend * comissaoUsd * cotacao) + ')' : ''}  |  J\u00e1 pago: ${fmtUsd(pagos * comissaoUsd)}`,
+      `Avaliações: ${m.n_convertidos || 0}  |  A pagar: ${fmtUsd(pend * comissaoUsd)}${cotacao ? ' (' + fmtBrl(pend * comissaoUsd * cotacao) + ')' : ''}  |  J\u00e1 pago: ${fmtUsd(pagos * comissaoUsd)}`,
       ``,
-      `Convers\u00f5es:`,
+      `Avalia\u00e7\u00f5es:`,
       linhas || '(nenhuma)',
     ].join('\n');
   }
@@ -2010,8 +2023,10 @@ function AbaMedicos() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <h2 className="text-lg font-semibold text-gray-700">{"M\u00e9dicos cadastrados"}</h2>
         <p className="text-sm text-gray-400 mt-1">
-          {"Regi\u00e3o (por UF), status de afiliado 4DOC e "}
-          <strong>{"comiss\u00e3o"}</strong>{" ("}{fmtUsd(comissaoUsd)}{" por paciente convertido)."}
+          {/* (R2) Este número é o da AVALIAÇÃO. A coluna "convertidos" passou
+              a contar avaliações feitas — encaminhamento não paga mais nada. */}
+          {"Regi\u00e3o (por UF), status de cadastro completo e "}
+          <strong>{"pagamento"}</strong>{" ("}{fmtUsd(comissaoUsd)}{" por paciente avaliado)."}
         </p>
         <div className="flex flex-wrap gap-3 mt-3 text-sm">
           <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{medicos.length}{" m\u00e9dico(s)"}</span>
@@ -2089,7 +2104,7 @@ function AbaMedicos() {
               )}
             </div>
             <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${m.afiliado ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-              {m.afiliado ? 'Afiliado 4DOC' : 'Perfil incompleto'}
+              {m.afiliado ? 'Cadastro completo' : 'Perfil incompleto'}
             </span>
           </div>
           <div className="grid grid-cols-4 gap-2 mt-3">
@@ -2297,7 +2312,7 @@ function AbaPrescricoes() {
   return (
     <div className="space-y-5">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <h2 className="text-lg font-semibold text-gray-700">{"Prescrições — alavanca 4DOC"}</h2>
+        <h2 className="text-lg font-semibold text-gray-700">{"Prescrições emitidas"}</h2>
         <p className="text-sm text-gray-400 mt-1">
           {"Indicações registradas nas avaliações, atribuídas à marca ATIVA de cada categoria. Ferramenta de negociação com os fabricantes."}
         </p>
@@ -2403,7 +2418,7 @@ function AbaRecrutar() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <h2 className="text-lg font-semibold text-gray-700">{"Recrutamento de afiliados"}</h2>
         <p className="text-sm text-gray-400 mt-1">
-          {"Médicos que já usam a plataforma (triaram pacientes) mas NÃO criaram conta. Cada um é um afiliado 4DOC em potencial."}
+          {"Médicos que já usam a plataforma (triaram pacientes) mas NÃO criaram conta."}
         </p>
         <div className="flex flex-wrap gap-3 mt-3 text-sm">
           <span className="bg-gray-100 rounded-full px-3 py-1 font-medium text-gray-700">{crms.length}{" sem conta"}</span>
@@ -2439,7 +2454,7 @@ function AbaRecrutar() {
       ))}
 
       {crms.length > 0 && (
-        <p className="text-xs text-gray-400">{"Dica: estes médicos já confiam na plataforma. Um convite pra criar conta no 4DOC transforma as triagens em comissões pra eles — e em afiliados pra você."}</p>
+        <p className="text-xs text-gray-400">{"Dica: estes médicos já confiam na plataforma. Com conta criada, as avaliações que eles fizerem passam a ser remuneradas — e os pacientes ficam vinculados a eles."}</p>
       )}
     </div>
   );

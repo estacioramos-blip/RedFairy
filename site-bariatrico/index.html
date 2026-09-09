@@ -307,7 +307,7 @@
 
         <p style="margin: 0; font-size: 13.5px; line-height: 1.62; white-space: pre-line; color: #FFFFFF;">{{ regrasTexto }}</p>
 
-        <p style="margin: 18px 0 0; font-size: 12px; line-height: 1.55; color: rgba(247,241,231,0.6);">Os valores de anuidade, documentos e comissões são informados no sistema e podem ser ajustados. Vale sempre o valor exibido no momento da operação.</p>
+        <p style="margin: 18px 0 0; font-size: 12px; line-height: 1.55; color: rgba(247,241,231,0.6);">Os valores de anuidade, documentos e descontos são informados no sistema e podem ser ajustados. Vale sempre o valor exibido no momento da operação.</p>
       </div>
     </div>
   </sc-if>
@@ -316,41 +316,17 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: &quot;100%&quot;, &quot;height&quot;: 820}, &quot;showCredits&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;}, &quot;cardHoverFill&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { entered: false, settled: false, view: 'home', comoOpen: false, comoPhase: 'image', comoChoice: null, saibaOpen: false, regrasChoice: null,
-            // Comissões: LIDAS DO BANCO, nunca escritas aqui. O ADMIN muda em
-            // Admin > Configurações e o site tem de acompanhar — antes os valores
-            // estavam cravados no texto e passariam a mentir no dia do ajuste.
-            // null = ainda não chegou (ou falhou): o texto se adapta e não cita número.
-            comAvaliacao: null, comIndicacao: null };
+  state = { entered: false, settled: false, view: 'home', comoOpen: false, comoPhase: 'image', comoChoice: null, saibaOpen: false, regrasChoice: null };
   componentDidMount() {
     this._t1 = setTimeout(() => this.setState({ entered: true }), 60);
     this._t2 = setTimeout(() => this.setState({ settled: true }), 2400);
-    this.carregarComissoes();
   }
-  // `config` é legível pelo público (policy `config_public_read`), então basta a
-  // chave anon — a mesma já usada no cadastro de prescritor mais abaixo.
-  carregarComissoes() {
-    const URL = 'https://pfzghybajniyesoiwrcp.supabase.co';
-    const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmemdoeWJham5peWVzb2l3cmNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5OTAyMzksImV4cCI6MjA5MDU2NjIzOX0.Cw_mNX4I0L_SsIp1lHr3XxmsloqNCr3zgXpd47B3Oc4';
-    const chaves = 'comissao_usd_nao_afiliado,comissao_usd_por_conversao';
-    fetch(URL + '/rest/v1/config?select=chave,valor&chave=in.(' + chaves + ')',
-          { headers: { apikey: KEY, Authorization: 'Bearer ' + KEY } })
-      .then(r => r.ok ? r.json() : [])
-      .then(linhas => {
-        const mapa = {};
-        (linhas || []).forEach(l => { mapa[l.chave] = l.valor; });
-        const num = (v) => {
-          const n = Number(String(v == null ? '' : v).replace(',', '.'));
-          // `Number('')` é 0, não NaN — sem o `> 0` o site anunciaria "0 dólares".
-          return Number.isFinite(n) && n > 0 ? n : null;
-        };
-        this.setState({
-          comAvaliacao: num(mapa['comissao_usd_nao_afiliado']),   // AVALIAR do médico
-          comIndicacao: num(mapa['comissao_usd_por_conversao']),  // conversão do indicador
-        });
-      })
-      .catch(() => {});   // sem rede: os textos seguem sem citar valor
-  }
+  // (R2/A12, 09/2026) Aqui vivia `carregarComissoes`, que lia do banco quanto
+  // o médico ganha por avaliação e quanto se ganhava por indicação, para
+  // ANUNCIAR os dois no site aberto. Removida: indicação não paga mais nada, e
+  // o valor da avaliação é remuneração médica — não se anuncia em página
+  // pública (CFM 2.336/2023 e CFM 2.170/2017). O médico vê o valor depois do
+  // login, lido do config. Não reintroduzir cifra nesta página.
   componentWillUnmount() {
     clearTimeout(this._t1);
     clearTimeout(this._t2);
@@ -362,66 +338,54 @@ class Component extends DCLogic {
     // Cada mensagem é dividida em a/b: o ÍCONE do OBA (images/oba-logo.png, pequeno,
     // inline) é renderizado ENTRE as duas partes, dentro do parágrafo do popup.
     //
-    // Os valores de comissão vêm do banco (ver carregarComissoes). Enquanto não
-    // chegam — ou se a rede falhar — as frases abaixo caem numa versão SEM número,
-    // que continua verdadeira. Prometer um valor errado é pior que não citar valor.
-    const fmtUsd = (n) => String(n).replace(/\.0+$/, '').replace('.', ',');
-    const vAva = this.state.comAvaliacao;
-    const vInd = this.state.comIndicacao;
-    const frAvaliacao = vAva
-      ? 'Cada avaliação de paciente realizada por você no celular gera o equivalente a ' + fmtUsd(vAva) + ' dólares digitais.'
-      : 'Cada avaliação de paciente realizada por você no celular gera crédito em dólares digitais.';
-    const frIndicacaoMed = vInd
-      ? ' E cada paciente indicado por você que se cadastrar e assinar gera o equivalente a ' + fmtUsd(vInd) + ' dólares digitais — uma vez por paciente.'
-      : ' E cada paciente indicado por você que se cadastrar e assinar gera crédito em dólares digitais — uma vez por paciente.';
-    const frIndicacaoConheco = vInd
-      ? 'Cada bariátrico indicado por você que se cadastrar e assinar gera um crédito equivalente a ' + fmtUsd(vInd) + ' dólares digitais — uma vez por paciente.'
-      : 'Cada bariátrico indicado por você que se cadastrar e assinar gera um crédito em dólares digitais — uma vez por paciente.';
+    // (R1-R4, 09/2026) NENHUM VALOR EM DINHEIRO NESTA PÁGINA.
+    // O site anunciava, aberto ao público, quanto o médico recebia por avaliação
+    // e por indicação. A indicação deixou de pagar (é captação de clientela —
+    // CFM 2.336/2023 e CFM 2.170/2017, e o responsável técnico responde por ela
+    // mesmo quando quem recebe é leigo). O valor da avaliação continua existindo,
+    // mas aparece ao médico DEPOIS do login, lido do config.
+    // ⚠ Não voltar a citar cifra nem a prometer ganho por paciente trazido aqui.
     const COMO = {
       bariatrico: { t: 'Sou Bariátrico',
         a: 'Por um pequeno valor, você faz a assinatura anual de uma plataforma inteligente que opera 24 horas por dia, 365 dias por ano, e pode otimizar a sua vida. Com algumas limitações, até orientações e prescrições médicas de urgência podem ser solicitadas e atendidas por teleconsulta no Projeto OBA®. Receitas e solicitações de exames com assinatura digital estarão ao seu alcance por valores muito baixos.\n\nAo se cadastrar, o ícone do Projeto OBA',
-        b: 'será instalado na tela do seu celular. Ele permitirá que você entre no sistema com rapidez.\n\nVocê também poderá indicar outros pacientes bariátricos. Cada indicado que se cadastrar e assinar gera um crédito para você — uma vez por paciente. Os créditos são usados no pagamento de documentos médicos e da próxima anuidade. Se os créditos superarem o que você gasta na plataforma, os valores serão depositados em sua conta bancária.\n\nPara indicar outros bariátricos, você usará o mesmo ícone na tela do seu dispositivo. Por meio dele, poderá gerar um QR Code para que um paciente indicado acesse o sistema, ou enviar um link por WhatsApp ou Telegram para que alguém distante também possa entrar. Você ainda pode divulgar esse link nas suas redes sociais, e os pacientes que se cadastrarem e assinarem por ele também gerarão créditos para você.\n\nO Projeto OBA® foi criado para ajudar você a viver melhor.' },
+        b: 'será instalado na tela do seu celular. Ele permitirá que você entre no sistema com rapidez.\n\nVocê também poderá indicar outros pacientes bariátricos. Quem entrar pela sua indicação ganha um desconto de boas-vindas na primeira anuidade — e você ganha um crédito, uma vez por paciente. Esses créditos abatem os seus documentos médicos e a sua próxima anuidade. Eles valem dentro da plataforma: não são sacados nem depositados em conta.\n\nPara indicar outros bariátricos, você usará o mesmo ícone na tela do seu dispositivo. Por meio dele, poderá gerar um QR Code para que um paciente indicado acesse o sistema, ou enviar um link por WhatsApp ou Telegram para que alguém distante também possa entrar.\n\nO Projeto OBA® foi criado para ajudar você a viver melhor.' },
       medico: { t: 'Sou Médico',
-        a: 'Ao se cadastrar no Projeto OBA®, você passa a integrar o Programa 4DOC® Patrocinado de Médicos Afiliados, com dois mecanismos de incentivo disponíveis.\n\n' + frAvaliacao + frIndicacaoMed + '\n\nPara receber, seu registro precisa ser validado: basta enviar pelo WhatsApp uma selfie do seu rosto com a carteira profissional ao lado da face. Os créditos ficam guardados até a validação.\n\nCom um simples toque no ícone do Projeto OBA®,',
-        b: 'instalado na tela do seu celular, você pode acessar o sistema, realizar avaliações e indicar pacientes.\n\nPara indicar pacientes, você terá à disposição um QR Code na tela, além da possibilidade de encaminhar um link por WhatsApp ou Telegram para pacientes à distância. Esse mesmo link também pode ser utilizado em suas redes sociais, e os pacientes que ingressarem no sistema por meio dele e assinarem gerarão créditos para você.\n\nO crédito por indicação é liberado depois da sua primeira avaliação completa. As regras completas do programa estão disponíveis no sistema.\n\nParticipe. Não há custo para adesão, apenas benefícios para você e mais acesso e cuidado para os pacientes.' },
+        a: 'Ao se cadastrar no Projeto OBA®, você passa a poder receber pelas avaliações que fizer. Cada avaliação de paciente realizada por você no celular gera crédito em dólares digitais, uma vez por paciente avaliado. É remuneração por trabalho clínico prestado.\n\nO Projeto OBA® NÃO paga, sob nenhuma forma, por paciente indicado, encaminhado ou cadastrado.\n\nPara receber, seu registro precisa ser validado: basta enviar pelo WhatsApp uma selfie do seu rosto com a carteira profissional ao lado da face. Os créditos ficam guardados até a validação.\n\nCom um simples toque no ícone do Projeto OBA®,',
+        b: 'instalado na tela do seu celular, você pode acessar o sistema, realizar avaliações e encaminhar os seus pacientes.\n\nO encaminhamento existe para o cuidado, não para remuneração: o paciente que entra pelo seu QR Code, pelo seu link ou pelo CPF que você registrou fica vinculado a você — e é esse vínculo que permite acompanhar os exames e a evolução dele ao longo do tempo.\n\nParticipe. Não há custo para adesão, apenas mais acesso e cuidado para os pacientes.' },
       conheco: { t: 'Conheço um Bariátrico',
-        a: frIndicacaoConheco + '\n\nAo entrar no Projeto OBA®, o ícone do projeto',
-        b: 'será instalado na tela do seu celular. Ao tocar nele, você terá um QR Code para ser acessado por outro paciente e um link para envio por WhatsApp ou Telegram, permitindo o cadastro até de pessoas distantes. Esse mesmo link também poderá ser compartilhado nas suas redes sociais, e cada paciente que se cadastrar e assinar por meio dele gerará crédito para você.\n\nVocê ajuda outros bariátricos a viver melhor e, ao mesmo tempo, também recebe benefícios. Todos ganham.' },
+        a: 'Você pode trazer para o Projeto OBA® um bariátrico que conhece — e ele entra com um desconto de boas-vindas na primeira anuidade.\n\nVocê não recebe nada por isso, e é assim de propósito: remunerar quem traz paciente é vedado pela ética médica. O que você ganha é o que quis desde o começo — alguém de quem você gosta sendo bem cuidado.\n\nNão pedimos CPF nem senha: só o seu primeiro nome, que é o que a pessoa vai ver ao entrar. Ao criar o seu link, o ícone do projeto',
+        b: 'será instalado na tela do seu celular. Ao tocar nele, você terá um QR Code para ser acessado por outro paciente e um link para envio por WhatsApp ou Telegram, permitindo o cadastro até de pessoas distantes. Esse mesmo link também poderá ser compartilhado nas suas redes sociais.' },
     };
     const comoCur = COMO[this.state.comoChoice] || { t: '', a: '', b: '' };
 
     // REGRAS por público. Separadas porque regra de médico não interessa a quem é
     // bariátrico — num texto só, cada um lia três vezes mais do que precisava.
-    // Cada linha corresponde a uma regra REAL do sistema (`fn_credita_medico`,
-    // `avaliacoes_salvar`, `caixa_pagar_medico`): se a lógica mudar, mude aqui.
-    // Renderizadas com `white-space: pre-line`, mesmo padrão dos textos do COMO.
-    const REGRA_CREDITO_COMUM =
-      'O crédito nasce quando o indicado se cadastra E ASSINA. Cadastro sem assinatura não gera crédito.\n\n' +
-      'Uma vez por paciente. A renovação anual dele não gera nova comissão, e um CPF que já gerou crédito para alguém não gera outra vez.\n\n' +
+    // Cada linha corresponde a uma regra REAL do sistema (`fn_credita_indicacao`,
+    // `avaliacoes_salvar`, `caixa_pagar_medico`, `desconto_boas_vindas`): se a
+    // lógica mudar, mude aqui. Renderizadas com `white-space: pre-line`.
+    const REGRA_INDICACAO_COMUM =
+      'O desconto de boas-vindas é da PRIMEIRA anuidade de quem chega indicado. O crédito de quem indicou nasce quando o indicado se cadastra E ASSINA — cadastro sem assinatura não gera crédito.\n\n' +
+      'Uma vez por paciente. A renovação anual dele não gera nada de novo, e um CPF que já entrou pelo Projeto não gera outra vez.\n\n' +
       'Vale o último registro feito antes da assinatura: se outra pessoa registrar o mesmo paciente depois de você, o crédito é dela.\n\n' +
-      'Se o pagamento do paciente não se confirmar e a assinatura for bloqueada, o crédito correspondente deixa de ser devido.';
+      'Se o pagamento do paciente não se confirmar e a assinatura for bloqueada, o crédito correspondente deixa de valer.';
     const REGRAS = {
       bariatrico: { t: 'Sou Bariátrico', x:
         'Cada CPF tem direito a uma avaliação completa gratuita. Da segunda em diante é preciso ter a anuidade ativa.\n\n' +
         'A anuidade vale por um ano a partir do pagamento. Vencida, o acesso volta ao modo gratuito até a renovação — os dados já registrados são preservados.\n\n' +
         'Receitas, pedidos de exames e demais documentos médicos têm custo próprio, informado antes de cada solicitação.\n\n' +
-        'Ao indicar outros bariátricos, você acumula créditos que abatem esses documentos e a anuidade seguinte. Se os créditos superarem o que você gasta na plataforma, o saldo é depositado na chave PIX ou USDC cadastrada no seu perfil.\n\n' +
-        REGRA_CREDITO_COMUM },
+        'Ao indicar outros bariátricos, você acumula créditos que abatem esses documentos e a anuidade seguinte. Os créditos servem exclusivamente para isso: não são resgatáveis, não viram dinheiro e não são depositados em conta.\n\n' +
+        REGRA_INDICACAO_COMUM },
       medico: { t: 'Sou Médico', x:
         'O cadastro não tem custo.\n\n' +
+        'A avaliação de paciente é remunerada, uma vez por paciente avaliado, e vale apenas para paciente já registrado no sistema. É a única forma de pagamento do Projeto ao médico.\n\n' +
+        'NÃO há pagamento, comissão ou bônus por paciente indicado, encaminhado ou cadastrado. O encaminhamento serve para vincular o paciente a você e permitir o acompanhamento clínico — nada além disso.\n\n' +
         'Para receber, o seu registro precisa ser validado: envie pelo WhatsApp uma selfie do seu rosto com a carteira profissional ao lado da face. Os créditos ficam guardados até a validação.\n\n' +
-        'A avaliação de paciente gera crédito uma vez por paciente avaliado, e vale apenas para paciente já registrado no sistema.\n\n' +
-        'O crédito por indicação só é liberado depois da sua primeira avaliação completa.\n\n' +
-        'O encaminhamento feito por você vale por três meses: se o paciente assinar depois desse prazo, não gera crédito.\n\n' +
-        'Se o paciente tiver sido indicado por um indicador, a indicação dele tem prioridade sobre o seu registro.\n\n' +
-        REGRA_CREDITO_COMUM + '\n\n' +
         'O pagamento é feito por PIX, na chave cadastrada no seu perfil.' },
       conheco: { t: 'Conheço um Bariátrico', x:
-        'Qualquer pessoa pode indicar. Não é preciso ser médico nem paciente do Projeto OBA®.\n\n' +
-        REGRA_CREDITO_COMUM + '\n\n' +
-        'A sua indicação tem prioridade sobre o registro de um médico no mesmo paciente.\n\n' +
-        'O pagamento é feito por PIX ou USDC, na chave cadastrada no seu perfil.\n\n' +
-        'Se você também for paciente, os créditos podem abater os seus documentos médicos e a sua anuidade em vez de serem sacados.' },
+        'Qualquer pessoa pode indicar. Não é preciso ser médico nem paciente do Projeto OBA®, e não pedimos CPF nem senha — só o seu primeiro nome.\n\n' +
+        'Quem indica NÃO recebe pagamento de nenhum tipo. Quem ganha é a pessoa indicada, com o desconto de boas-vindas na primeira anuidade.\n\n' +
+        REGRA_INDICACAO_COMUM + '\n\n' +
+        'Se você também for paciente do Projeto, aí sim acumula créditos — e eles abatem os seus próprios documentos médicos e a sua anuidade, sem virar dinheiro.' },
     };
     const regraCur = REGRAS[this.state.regrasChoice] || { t: '', x: '' };
     const EASE = 'cubic-bezier(.2,.7,.2,1)';
