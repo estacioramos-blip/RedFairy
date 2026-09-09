@@ -7,6 +7,18 @@
 <meta name="description" content="Projeto OBA®: plataforma inteligente de acompanhamento e triagem para pacientes bariátricos. Faça sua avaliação, receba orientações e cuide da sua saúde.">
 <link rel="icon" href="images/oba-logo.png">
 <link rel="apple-touch-icon" href="images/oba-logo.png">
+<style>
+  /* Fundo do documento. Precisa estar AQUI, no head real, e nao no bloco
+     helmet do template: o CSS do helmet so e compilado quando o React monta,
+     e e justamente antes disso que a pagina ficava branca (o runtime esconde
+     o template de imediato e o React ainda vem de ./vendor/). #14100E e o
+     mesmo tom da hero e do rodape, entao a espera passa a ser o fundo do
+     site em vez de um flash branco.
+     NAO escreva nome de tag entre < > por aqui: o runtime procura o inicio
+     do template varrendo o fonte cru com regex (support.js:39) e uma mencao
+     literal faz ele comecar no lugar errado e vazar texto na tela. */
+  html, body { background: #14100E; }
+</style>
 <script src="./support.js"></script>
 </head>
 <body>
