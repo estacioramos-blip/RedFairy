@@ -231,9 +231,43 @@ renderizado tem de esperar `#dc-root .sc-host` existir.
 A hero tem coreografia própria de ~2,4s (clip-path, título, cards com atraso
 de 0,85 / 1,0 / 1,15s). A faixa deixa isso acontecer por baixo do desfoque.
 
-Pendências conhecidas: a página fica branca até o React montar (falta
-`background` no `body`); o `boot()` faz `fetch(location.href)` e baixa o
-HTML duas vezes por visita.
+### Duas notas antigas, medidas e corrigidas (09/09/2026)
+
+**Tela branca até o React montar — RESOLVIDO** (commit `e056882`). O CSS do site
+vive no bloco helmet do template e só é compilado quando o React monta, ou seja,
+depois da janela em que a tela ficava branca. A correção é um `<style>` no `<head>`
+REAL, antes do `support.js`, com `html, body { background: #14100E }` — o tom da
+hero, das seções, do rodapé e do blog.
+
+⚠ **Ao editar o `<head>` da landing, não escreva nome de tag entre `<` e `>` em
+comentário.** O dc-runtime acha o início do template varrendo o FONTE CRU com
+regex (`support.js:39`), não com o parser do navegador. Uma menção literal em
+comentário faz ele começar o template no lugar errado e despejar o resto do
+comentário como texto visível na tela. Aconteceu de verdade na primeira versão
+dessa correção.
+
+**O `fetch(location.href)` do `boot()` NÃO baixa o HTML duas vezes** — a anotação
+anterior era pessimista. A home é servida com `max-age=0, must-revalidate` + ETag,
+então o segundo pedido é condicional: volta `304` com 0 bytes de corpo. Medido em
+produção: 1ª = 200 com 18.315 bytes (brotli), 2ª = 304 com 0 bytes.
+
+O custo real, que não estava anotado: `updateHtml` (`support.js:1326`) recompila o
+template e chama `registry.bump()` **incondicionalmente**, mesmo com o HTML
+idêntico — um re-parse dos 66 KB e uma re-renderização completa a cada visita.
+Verificado no navegador que isso **não remonta o DOM** (marquei o nó da hero e ele
+sobreviveu): sem defeito visível, sem animação reiniciada, sem imagem recarregada.
+
+DECISÃO (Estácio, 09/09/2026): **deixar como está.** Sobra uma ida à rede e um
+pouco de CPU que ninguém percebe; as alternativas cobram caro demais — apagar o
+re-fetch significa manter biblioteca de terceiro editada à mão (o `support.js` é
+gerado, o `dc-runtime` NÃO está neste repo), e dar `max-age` à home é mexer no
+cache de um site no ar para economizar um 304.
+
+**Achado solto para conferir um dia:** o `vercel.json` da raiz manda
+`no-cache, no-store, must-revalidate` para `/` e `*.html`, mas a produção responde
+`max-age=0, must-revalidate`. Ou seja, esse `vercel.json` não governa a landing —
+provavelmente `www.bariatrico.net` é um projeto Vercel separado apontando para
+`site-bariatrico/`.
 
 ### Para desligar o teste
 
