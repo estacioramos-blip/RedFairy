@@ -204,7 +204,7 @@ $$;
 -- 5. `confirmar_indicacao` continua — mas agora não decide dinheiro nenhum
 --    para o médico (R2 acabou com a disputa). Só registra de quem veio.
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.confirmar_indicacao(p_cpf text, p_codigo text, p_pac_token text)
+CREATE OR REPLACE FUNCTION public.confirmar_indicacao(p_cpf text, p_codigo text, p_pac_token text DEFAULT NULL)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public', 'extensions'
 AS $$
@@ -234,7 +234,7 @@ DROP FUNCTION IF EXISTS public.contato_indicador(text, text);
 
 -- `paciente_virar_indicador` (R3) FICA: é como o paciente ganha o próprio
 -- código. Só perde a leitura da chave PIX, que não existe mais.
-CREATE OR REPLACE FUNCTION public.paciente_virar_indicador(p_cpf text, p_token text)
+CREATE OR REPLACE FUNCTION public.paciente_virar_indicador(p_cpf text, p_token text DEFAULT NULL)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public', 'extensions'
 AS $$
@@ -276,7 +276,7 @@ $$;
 -- `listar_creditos_indicador` perde a autenticação por sessão de indicador
 -- (não existe mais login de leigo) e o valor em dólar. Sobra o paciente-
 -- indicador vendo os próprios créditos pela sessão de PACIENTE.
-CREATE OR REPLACE FUNCTION public.listar_creditos_indicador(p_codigo text, p_token text)
+CREATE OR REPLACE FUNCTION public.listar_creditos_indicador(p_codigo text, p_token text DEFAULT NULL)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public', 'extensions'
 AS $$

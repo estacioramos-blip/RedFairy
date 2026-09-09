@@ -404,7 +404,7 @@ $$;
 
 -- 3.5 Estorno: papel médico só desfaz avaliação.
 CREATE OR REPLACE FUNCTION public.caixa_estornar(
-  p_token text, p_papel text, p_chave text, p_data_pagamento timestamptz, p_motivo text)
+  p_token text, p_papel text, p_chave text, p_data_pagamento timestamptz, p_motivo text DEFAULT NULL)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public', 'extensions'
 AS $$
@@ -478,7 +478,7 @@ $$;
 
 -- 3.6 Nota fiscal: `creditos_medico` sai da allowlist e do relatório.
 CREATE OR REPLACE FUNCTION public.caixa_nf(
-  p_token text, p_tabela text, p_id text, p_emitida boolean, p_numero text)
+  p_token text, p_tabela text, p_id text, p_emitida boolean, p_numero text DEFAULT NULL)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public', 'extensions'
 AS $$
