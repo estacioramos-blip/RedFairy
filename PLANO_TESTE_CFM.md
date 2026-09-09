@@ -3,7 +3,22 @@
 Data: 09/09/2026 · Motivo: CFM 2.336/2023 e CFM 2.170/2017 (captação de clientela).
 Contexto: sistema ainda não lançado, banco sem dados reais.
 
-## Ordem de execução (não pular)
+## ✅ SITUAÇÃO — as 4 migrations JÁ FORAM RODADAS (09/09/2026)
+
+Aplicadas e verificadas no banco de produção, nesta ordem. A varredura de
+fechamento passou: nenhuma função paga indicador, `indicadores` não tem mais
+coluna bancária, e as chaves de comissão sumiram do `config`.
+
+Valores no banco: `valor_usd_avaliacao=15` · `credito_indicacao_brl=56,00` ·
+`cotacao_dolar=5,60` · **`desconto_boas_vindas_brl=0` ← falta definir.**
+
+O que resta é o teste clínico dos cenários abaixo.
+
+⚠ Ao rodar no SQL Editor do Supabase, **use sempre um snippet NOVO**. O editor
+guarda o texto colado e não relê o arquivo — foi por isso que a R2 repetiu o
+mesmo erro depois de corrigida.
+
+## Ordem de execução (para referência, ou se precisar refazer)
 
 1. **Deploy do front** (`git push` → Vercel).
 2. **Rodar as 4 migrations no Supabase Dashboard → SQL Editor, nesta ordem:**
@@ -56,6 +71,15 @@ Com o mesmo par médico/paciente do cenário A:
 ```sql
 SELECT public.medico_tem_vinculo('<cpf_do_paciente>', '6302/BA');   -- espera: true
 ```
+
+⚠ **Este teste não pode ser feito com o banco vazio.** Em 09/09/2026 ele deu
+`false` — e estava certo: não havia nenhum par médico↔paciente cadastrado (0
+avaliações, 0 triagens, e o CPF que o CLAUDE.md dava como paciente de teste já
+não existe). `false` sem dado nenhum não é regressão; é ausência de vínculo.
+
+A prova só vale **depois** de você criar o vínculo: faça uma triagem ou uma
+avaliação como CRM 6302/BA e rode a consulta com o CPF daquele paciente.
+Se der `false` aí, é regressão de verdade — pare e avise.
 
 Repetir para as outras origens de vínculo, uma a uma: paciente que o médico só
 **triou**, paciente que ele só **avaliou**, e paciente cujo CPF ele **RECOMENDOU**
@@ -153,6 +177,13 @@ grep -rniE "comiss[ãa]o|saque|sacar|excedente|dep[óo]sito|usdc" src/ site-bari
   | grep -viE "senha_klipbit|sacarato|não são sacados|nunca vira|NÃO há pagamento"
 # espera: só comentários explicando o que foi removido
 ```
+
+⚠ **Cuidado com falso positivo em `pg_proc.prosrc`:** consultas do tipo
+`prosrc LIKE '%creditos_medico%'` acham também o texto dos COMENTÁRIOS dentro
+das funções. Depois da R2, `fn_credita_indicacao` aparece nessa busca — mas o
+que casa é o comentário "(Antes olhava também creditos_medico…)", não código.
+Mesma coisa com `'pix'` em `caixa_abater`. Antes de tratar como achado,
+olhe o trecho.
 
 ---
 

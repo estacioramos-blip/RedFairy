@@ -96,7 +96,7 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
     Todos vêm de `config` e o ADMIN muda quando precisar. Cite a CHAVE, nunca o número —
     número em documento envelhece calado (foi o que aconteceu com a anuidade).
 - Médico de teste: CRM 6302/BA (ESTÁCIO, afiliado).
-- Paciente de teste no banco: CPF 013.529.807-54 (sexo M, nasc. 10/10/1990).
+- ⚠ **Paciente de teste 013.529.807-54 NÃO existe mais no banco** (conferido 09/09/2026). O único perfil cadastrado é o CPF 039.563.145-90, e há 0 avaliações e 0 triagens. Testes que dependem de vínculo médico↔paciente precisam criá-lo antes.
 
 ### Programa de indicação — reforma ético-regulatória (09/09/2026)
 
