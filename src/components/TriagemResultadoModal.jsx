@@ -327,8 +327,12 @@ export default function TriagemResultadoModal({
             {modoMedico ? (
               <div className="text-center space-y-3">
                 <div>
+                  {/* (R2, 09/2026) "ACUMULE PONTOS NO PROGRAMA 4DOC" saiu: não
+                      há mais benefício por paciente cadastrado. O motivo do
+                      cadastro é clínico — acompanhar o paciente ao longo do
+                      tempo. Não reintroduzir incentivo aqui. */}
                   <p className="text-sm font-bold text-gray-800">RECOMENDE AO PACIENTE QUE SE CADASTRE</p>
-                  <p className="text-xs text-gray-500 mt-0.5">ACUMULE PONTOS NO PROGRAMA 4DOC</p>
+                  <p className="text-xs text-gray-500 mt-0.5">ASSIM VOCÊ ACOMPANHA A EVOLUÇÃO DELE</p>
                 </div>
                 <button
                   onClick={onContinuar || onVoltarInicio}

@@ -5,9 +5,16 @@ import fadaIcon from '../assets/logo.png'
 import obaLogo from '../assets/oba-logo.png'
 
 /**
- * QRMedicoModal — QR de ENCAMINHAMENTO do médico (4DOC).
- * O médico mostra este QR ao paciente; o paciente escaneia, cai no RedFairy já
- * com o CRM "colado" (?ref=CRM/UF), cadastra e paga → crédito do médico.
+ * QRMedicoModal — QR de ENCAMINHAMENTO do médico.
+ * O médico mostra este QR ao paciente; o paciente escaneia e cai no sistema já
+ * com o CRM "colado" (?ref=CRM/UF).
+ *
+ * (R2, 09/2026) É FERRAMENTA CLÍNICA, não comercial: o encaminhamento cria o
+ * VÍNCULO médico↔paciente (é ele que dá ao médico acesso ao prontuário daquele
+ * paciente — ver medico_tem_vinculo) e NÃO gera crédito nenhum. Pagar por
+ * paciente trazido é captação de clientela (CFM 2.336/2023 e 2.170/2017), e o
+ * responsável técnico responde por isso. Não reintroduzir promessa de crédito
+ * nestes textos.
  *
  * Props: crm ('6302/BA'), onClose().
  */
@@ -47,14 +54,16 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
     try {
       const { data } = await supabase.rpc('medico_encaminhar_cpf', { p_crm: crm, p_token: token, p_cpf: d })
       if (data && data.ok) {
-        setCpfEncMsg({ ok: true, txt: 'Encaminhamento registrado por 3 meses! Se esse paciente se cadastrar e pagar nesse prazo, o crédito é seu. Registrar de novo renova o prazo.' })
+        setCpfEncMsg({ ok: true, txt: 'Encaminhamento registrado! Quando esse paciente entrar no sistema, ele já aparece como seu — você acompanha os exames e a evolução dele.' })
         setCpfEnc('')
       } else if (data && data.ja_cadastrado) {
         // Recusa COM CAMINHO: encaminhamento é para trazer gente nova. Antes
         // gravava "mesmo assim" — e era por aí que se sobrescrevia o
-        // encaminhador anterior (roubando a comissão, que é por último toque) e,
-        // depois da régua de vínculo, se destravava o prontuário alheio com um
+        // encaminhador anterior e se destravava o prontuário alheio com um
         // clique. Ver migrate_encaminhar_so_nao_cadastrado.sql.
+        // ⚠ Continua valendo DEPOIS de R2 (09/2026): sem comissão o risco de
+        // dinheiro sumiu, mas o de ACESSO A PRONTUÁRIO ALHEIO não — encaminhar
+        // é uma das provas de vínculo em medico_tem_vinculo.
         setCpfEncMsg({ ok: false, txt: 'Esse paciente já faz parte do Projeto — o encaminhamento é para trazer pacientes novos. Para atendê-lo, use AVALIAR com o CPF dele.' })
       } else {
         setCpfEncMsg({ ok: false, txt: (data && data.erro) || 'Não foi possível registrar.' })
@@ -80,7 +89,7 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
           <img src={obaLogo} alt="Projeto OBA" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div>
             <h2 className="text-lg font-bold" style={{ color: '#facc15' }}>{foco === 'cpf' ? 'Recomendar pelo CPF' : 'Seu QR-CODE + Link de Encaminhar'}</h2>
-            <p className="text-xs mt-1" style={{ color: '#FDE68A' }}>{foco === 'cpf' ? 'Registre o CPF do bariátrico. Ao se cadastrar, ele pode destinar o crédito a você.' : 'Cada paciente que escanear, se cadastrar e pagar = 1 crédito pra você.'}</p>
+            <p className="text-xs mt-1" style={{ color: '#FDE68A' }}>{foco === 'cpf' ? 'Registre o CPF do bariátrico. Quando ele entrar, já aparece como seu paciente.' : 'Quem escanear entra no sistema já vinculado a você — e você acompanha a evolução dele.'}</p>
           </div>
         </div>
 

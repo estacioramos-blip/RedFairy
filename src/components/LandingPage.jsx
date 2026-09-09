@@ -1451,7 +1451,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
               {"Em um país continental, desigual e com carência de hematologistas em extensas regiões, o RedFairy"}<sup style={{ color:'var(--cherry)', fontSize:'0.6em', fontWeight:500, verticalAlign:'super' }}>{"®"}</sup>{" ocupa uma lacuna assistencial com medicina fundamentada, solicitação de exames e prescrições de especialistas."}
             </p>
             <p style={{ color:'var(--text-sec)', fontSize:'0.88rem', fontWeight:600, lineHeight:1.5, marginBottom:0, textAlign:'justify' }}>
-              {"Para ampliar essa rede de cuidado, o sistema inclui o 4DOC – Programa de Afiliados Patrocinado para Médicos – que apoia profissionais que avaliam e orientam os afetados a se cadastrar no sistema, gerando créditos institucionais vinculados, fortalecendo o diagnóstico precoce, o cuidado e a prevenção de sequelas."}
+              {"Para ampliar essa rede de cuidado, o sistema remunera o médico pela avaliação clínica que ele realiza na plataforma — trabalho prestado, uma vez por paciente avaliado. Não há, sob nenhuma forma, pagamento por paciente indicado ou encaminhado."}
             </p>
           </div>
         </div>
@@ -1639,7 +1639,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
             }}
           >Home</a>
           <a href="#filosofia" onClick={() => { setShowFilosofia(true); setNavOpen(false) }}>Filosofia</a>
-          <a href="#afiliados" onClick={() => { setShowAfiliados(true); setNavOpen(false) }}>Afiliados</a>
+          <a href="#afiliados" onClick={() => { setShowAfiliados(true); setNavOpen(false) }}>Patrocínio</a>
           <a href="#como-funciona" onClick={() => setNavOpen(false)}>Como funciona</a>
           <a href="#indicacoes" onClick={() => setNavOpen(false)}>{"Indica\u00e7\u00f5es"}</a>
           <a href="#avaliar" onClick={() => setNavOpen(false)}>Avaliar</a>
@@ -2291,7 +2291,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
             </p>
 
             <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
-              {"O empreendimento inclui ainda um "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Afiliados Patrocinado"}</strong>{", destinado a ampliar o alcance da iniciativa e favorecer o acesso de um n\u00famero crescente de pacientes \u00e0 avalia\u00e7\u00e3o e ao cuidado."}
+              {"O empreendimento inclui ainda um "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Patrocínio"}</strong>{", destinado a ampliar o alcance da iniciativa e favorecer o acesso de um n\u00famero crescente de pacientes \u00e0 avalia\u00e7\u00e3o e ao cuidado."}
             </p>
 
             <p style={{ textAlign: 'center', fontSize: '1.05rem', fontWeight: 700, color: 'var(--text)', margin: '0.5rem 0 0', letterSpacing: '0.5px' }}>
@@ -2325,18 +2325,23 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
       <section className="filosofia" id="afiliados" style={{ display: showAfiliados ? 'block' : 'none', position: 'relative' }}>
         <div className="container">
           <div className="reveal center">
-            <span className="tag">Afiliados</span>
-            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>Programa de Afiliados</h2>
+            <span className="tag">Patrocínio</span>
+            <h2 className="stitle" style={{ fontSize: '1.6rem' }}>Programa de Patrocínio</h2>
           </div>
 
           <div className="reveal" style={{ marginTop: '1.5rem', maxWidth: 760, marginLeft: 'auto', marginRight: 'auto' }}>
 
             <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              {"O "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Afiliados RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" | OBA"}</strong>{" est\u00e1 aberto ao apoio de "}<strong>{"empresas, filantropos, organiza\u00e7\u00f5es sociais e funda\u00e7\u00f5es"}</strong>{" comprometidos com a amplia\u00e7\u00e3o do acesso \u00e0 iniciativa."}
+              {"O "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"Programa de Patrocínio RedFairy"}<sup style={{ color: 'var(--cherry)', fontSize: '0.65em', fontWeight: 500 }}>{"\u00ae"}</sup>{" | OBA"}</strong>{" est\u00e1 aberto ao apoio de "}<strong>{"empresas, filantropos, organiza\u00e7\u00f5es sociais e funda\u00e7\u00f5es"}</strong>{" comprometidos com a amplia\u00e7\u00e3o do acesso \u00e0 iniciativa."}
             </p>
 
             <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.2rem' }}>
-              {"Seu objetivo \u00e9 estimular e reconhecer "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"m\u00e9dicos"}</strong>{" que contribuam para expandir seu alcance, seja por meio de avalia\u00e7\u00f5es, seja por a\u00e7\u00f5es, ideias e iniciativas de difus\u00e3o. Ao realizar a primeira avalia\u00e7\u00e3o de um paciente, o m\u00e9dico j\u00e1 pode optar por integrar o Programa."}
+              {/* (R2, 09/2026) A frase reconhecia o m\u00e9dico "por a\u00e7\u00f5es, ideias e
+                  iniciativas de difus\u00e3o" \u2014 ou seja, por trazer gente. Isso \u00e9
+                  capta\u00e7\u00e3o de clientela (CFM 2.336/2023 e CFM 2.170/2017). O
+                  patroc\u00ednio custeia o CUIDADO e o trabalho cl\u00ednico, n\u00e3o a
+                  divulga\u00e7\u00e3o feita por m\u00e9dico. */}
+              {"O patroc\u00ednio custeia o cuidado: viabiliza o acesso de pacientes \u00e0 plataforma e remunera o "}<strong style={{ color: 'var(--wine)', fontWeight: 700 }}>{"trabalho cl\u00ednico"}</strong>{" dos m\u00e9dicos que os avaliam. N\u00e3o h\u00e1, sob nenhuma forma, remunera\u00e7\u00e3o por paciente indicado ou encaminhado."}
             </p>
 
             <p style={{ fontSize: '0.92rem', color: 'var(--text-sec)', lineHeight: 1.65, fontWeight: 600, textAlign: 'justify', marginBottom: '1.8rem' }}>
@@ -2753,7 +2758,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
                 <li>{"Acesso 100% gratuito para m\u00e9dicos"}</li>
                 <li>{"Cadastro m\u00ednimo"}</li>
                 <li>{"Orienta\u00e7\u00f5es fundamentadas"}</li>
-                <li>{"Programa 4DOC de benef\u00edcios para afiliados"}</li>
+                <li>{"Avalia\u00e7\u00e3o cl\u00ednica remunerada"}</li>
               </ul>
               <button className="rf-comprimido comp-medico" aria-label={"Entrar como M\u00e9dico"}
                 onClick={() => {

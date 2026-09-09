@@ -566,12 +566,18 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputAmarelo} autoComplete="off" />
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-              <p className="text-blue-800 text-xs font-bold mb-1">{"4DOC"}<sup style={{ fontSize: '0.6em', verticalAlign: 'super' }}>{"\u00ae"}</sup>{" | Programa de M\u00e9dicos Afiliados"}</p>
+              <p className="text-blue-800 text-xs font-bold mb-1">{"Cadastro para recebimento"}</p>
               <p className="text-blue-700 text-xs leading-relaxed">
                 <strong>{medSexo === 'F' ? 'Doutora,' : 'Doutor,'}</strong><br />
-                {"Com mais algumas informa\u00e7\u00f5es, voc\u00ea breve estar\u00e1 "}{medSexo === 'F' ? 'integrada' : 'integrado'}{" ao nosso Programa Patrocinado que tem por objetivo trazer um n\u00famero crescente de pacientes bari\u00e1tricos a este Projeto OBA\u00ae, para que possam desfrutar de mais sa\u00fade e qualidade de vida."}<br /><br />
-                {"Ao indicar ou avaliar novos pacientes voc\u00ea receber\u00e1 incentivos dos nossos patrocinadores."}<br /><br />
-                {"N\u00e3o h\u00e1 custo, risco ou compromisso para voc\u00ea \u2014 s\u00f3 benef\u00edcios \u2014 e voc\u00ea pode deixar o Programa a qualquer hora, a seu crit\u00e9rio."}
+                {"Com mais algumas informa\u00e7\u00f5es, voc\u00ea passa a poder receber pelas avalia\u00e7\u00f5es que fizer no Projeto OBA\u00ae. \u00c9 remunera\u00e7\u00e3o por trabalho prestado \u2014 uma vez por paciente avaliado."}<br /><br />
+                {/* (R2) Aqui dizia "Ao INDICAR ou avaliar\u2026 voc\u00ea receber\u00e1 incentivos
+                    dos nossos patrocinadores". Prometia dinheiro por paciente
+                    trazido \u2014 exatamente a capta\u00e7\u00e3o de clientela que a reforma
+                    aboliu (CFM 2.336/2023 e 2.170/2017), e ainda contradizia a
+                    frase logo acima. Encaminhar continua existindo, mas como
+                    v\u00ednculo cl\u00ednico. N\u00e3o voltar a prometer incentivo por indicar. */}
+                {"O encaminhamento de pacientes continua \u00e0 sua disposi\u00e7\u00e3o, como ferramenta cl\u00ednica: o paciente que entra por voc\u00ea fica vinculado a voc\u00ea, e voc\u00ea acompanha a evolu\u00e7\u00e3o dele. N\u00e3o h\u00e1 pagamento por paciente indicado ou encaminhado."}<br /><br />
+                {"N\u00e3o h\u00e1 custo nem compromisso, e voc\u00ea pode sair quando quiser."}
               </p>
             </div>
             <div>
@@ -856,7 +862,8 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   // Card da FADINHA 4DOC (encaminhamento): aparece sobre o splash; o splash só some
   // quando o médico instala a fadinha OU opta por instalar depois.
   const [cardFada4doc, setCardFada4doc] = useState(false);
-  const [showCreditosPopup, setShowCreditosPopup] = useState(false);
+  // (R2) removido junto com o popup da nota de 10 dólares — ver o comentário
+  // no lugar onde ele ficava, dentro do modal de cadastro do médico.
   const [showMeusCreditosMed, setShowMeusCreditosMed] = useState(false);   // médico vê os próprios créditos 4DOC
   // Bifurcação do MÉDICO (pós-login): ENCAMINHAR · AVALIAR · VER CRÉDITOS. Pula se já vier
   // com dados de demo (vai direto ao formulário).
@@ -993,7 +1000,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   useEffect(() => {
     const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
     if (!meta) return;
-    meta.setAttribute('content', cardFada4doc ? '4DOC' : 'Projeto OBA');
+    meta.setAttribute('content', 'Projeto OBA');
   }, [cardFada4doc]);
   useEffect(() => {
     if (showAfiliados) {
@@ -1678,7 +1685,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   {"Envie pelo WhatsApp uma selfie do seu rosto com a carteira profissional ao lado da face. Fotografe com boa luz e verifique que a foto esteja nítida antes de enviar."}
                 </p>
                 <p className="text-[11px] text-amber-800 leading-snug mt-1">
-                  {"Enquanto isso, você usa o sistema normalmente — a validação libera o pagamento das suas comissões."}
+                  {"Enquanto isso, você usa o sistema normalmente — a validação libera o pagamento das suas avaliações."}
                 </p>
                 <a
                   href={`https://wa.me/5571997110804?text=${encodeURIComponent(
@@ -1718,7 +1725,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <div className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="text-lg font-extrabold text-gray-900 leading-tight">{"RECOMENDAR"}</p>
-                    <p className="text-xs leading-snug" style={{ color: '#7B1E1E' }}>{"Registre o CPF do bariátrico no sistema. Ao se cadastrar ele terá a opção de destinar o crédito para você."}</p>
+                    {/* (R2) "destinar o crédito para você" saiu: recomendar não
+                        gera crédito nenhum. O que ele gera é o VÍNCULO — o
+                        paciente entra já ligado a este médico. */}
+                    <p className="text-xs leading-snug" style={{ color: '#7B1E1E' }}>{"Registre o CPF do bariátrico no sistema. Quando ele entrar, já aparece como seu paciente."}</p>
                   </div>
                   <PlayButton onClick={() => { setQrFoco('cpf'); setShowQRMedico(true) }} ariaLabel="Recomendar" />
                 </div>
@@ -1726,7 +1736,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <div className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="text-base font-extrabold text-gray-900 leading-tight">{"VER MEUS CRÉDITOS"}</p>
-                    <p className="text-xs leading-snug" style={{ color: '#7B1E1E' }}>{"Seus encaminhamentos e avaliações."}</p>
+                    <p className="text-xs leading-snug" style={{ color: '#7B1E1E' }}>{"As avaliações que você fez."}</p>
                   </div>
                   <PlayButton onClick={() => setShowMeusCreditosMed(true)} ariaLabel="Ver créditos" />
                 </div>
@@ -1850,7 +1860,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="bg-red-700 px-5 py-3 flex items-center justify-between">
-              <p className="text-white font-bold text-sm">{"\ud83c\udfaf 4DOC | Programa de Afiliados OBA\u00ae"}</p>
+              <p className="text-white font-bold text-sm">{"\ud83e\ude7a Receba pelas suas avalia\u00e7\u00f5es"}</p>
               <button onClick={() => setShowAfiliadosBanner(false)} className="text-red-200 hover:text-white text-lg"
                 style={{ fontFamily: 'Apple Color Emoji, Segoe UI Symbol, Noto Sans Symbols, sans-serif', lineHeight: 1 }}>
                 {"\u2715"}
@@ -1858,7 +1868,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
             <div className="p-4 space-y-3">
               <p className="text-gray-700 text-sm leading-relaxed">
-                {"Voc\u00ea ainda n\u00e3o faz parte do "}<strong>Programa de Afiliados Patrocinado</strong>{". Gostaria de entrar agora e receber os benef\u00edcios previstos?"}
+                {"Voc\u00ea ainda n\u00e3o cadastrou os dados para receber pelas suas avalia\u00e7\u00f5es. Quer fazer isso agora?"}
               </p>
               <div className="flex gap-2">
                 <button onClick={() => { setShowAfiliadosBanner(false); setShowAfiliados(true) }}
@@ -1881,13 +1891,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-red-700 px-5 py-3 flex items-center justify-between">
-              <p className="text-white font-bold text-sm">{"🎯 Programa 4DOC"}</p>
+              <p className="text-white font-bold text-sm">{"🩺 Receba pelas avaliações"}</p>
               <button onClick={() => setShowConvite4doc(false)} className="text-red-200 hover:text-white text-lg" style={{ lineHeight: 1 }}>{"✕"}</button>
             </div>
             <div className="p-5 space-y-4 text-center">
               <p className="text-[11px] uppercase tracking-widest text-gray-400 font-bold">{"Placeholder — a redesenhar"}</p>
               <p className="text-gray-700 text-sm leading-relaxed">
-                {"Você ainda não forneceu CPF e chave Pix para o "}<strong>{"4DOC — Programa Patrocinado de Médicos Afiliados"}</strong>{". Integre-se para receber créditos quando seus pacientes se cadastrarem."}
+                {"Você ainda não forneceu CPF e chave Pix. Sem eles não temos para onde pagar as avaliações que você fizer."}
               </p>
               <button onClick={() => { setShowConvite4doc(false); setShowAfiliados(true); }}
                 className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
@@ -1911,7 +1921,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <div style={{ position: 'absolute', top: '72px', left: 0, right: 0, bottom: '8px' }}>
                 <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${afilBg.img})`, backgroundSize: afilBg.size, backgroundPosition: afilBg.pos, backgroundRepeat: 'no-repeat' }} />
                 <div style={{ position: 'absolute', left: 0, right: 0, top: '8%', padding: '0 22px', textAlign: 'center' }}>
-                  <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{medicoSexo === 'F' ? 'Bem-vinda' : 'Bem-Vindo'}{" ao 4DOC"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup>{" Programa Patrocinado de Médicos Afiliados"}</p>
+                  <p style={{ color: '#ffffff', fontSize: '21px', fontWeight: 900, lineHeight: 1.15, margin: 0, textShadow: '0 2px 14px rgba(0,0,0,0.75), 0 1px 4px rgba(0,0,0,0.6)' }}>{medicoSexo === 'F' ? 'Bem-vinda' : 'Bem-Vindo'}{" ao Projeto OBA"}<sup style={{ fontSize: '0.55em', verticalAlign: 'super' }}>{"®"}</sup></p>
                 </div>
               </div>
             </div>
@@ -1922,20 +1932,15 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               <div style={{ position: 'absolute', left: 0, right: 0, top: '404px', bottom: 0, zIndex: 6, overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'linear-gradient(to top, #ffffff 86%, rgba(255,255,255,0))' }} className="px-4 pt-3 pb-6">
                 <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-3 shadow-lg">
                   <p className="text-[11px] text-blue-900 leading-snug font-bold">
-                    {"AGORA INSTALE o ÍCONE do Programa — "}<span style={{ color: '#7B1E1E' }}>{"o Chapéu de Ouro"}</span>{" — na tela do seu celular. É apenas um atalho seguro para que você possa entrar rapidamente no programa sem precisar digitar LOGIN/SENHA, e que disponibiliza ferramentas imediatas para você AVALIAR ou simplesmente ENCAMINHAR um paciente para que se auto-avalie. Através desse acesso, você também vai poder consultar os seus créditos no 4DOC®."}
+                    {"AGORA INSTALE o ÍCONE — "}<span style={{ color: '#7B1E1E' }}>{"o Chapéu de Ouro"}</span>{" — na tela do seu celular. É apenas um atalho seguro para que você possa entrar rapidamente sem precisar digitar LOGIN/SENHA, e que disponibiliza ferramentas imediatas para você AVALIAR ou simplesmente ENCAMINHAR um paciente para que se auto-avalie. Por ele você também consulta as suas avaliações."}
                   </p>
-                  <div className="text-center mt-2">
-                    <button onClick={() => setShowCreditosPopup(true)} className="text-xs font-bold text-green-700 underline underline-offset-2 hover:text-green-800">
-                      {"Saiba mais sobre os créditos do 4DOC"}
-                    </button>
-                  </div>
                 </div>
                 <div className="flex items-center justify-between gap-2 mt-3">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={fada4docMarcada} onChange={aoMarcarFada4doc} className="w-4 h-4 flex-shrink-0" style={{ accentColor: '#1d4ed8' }} />
-                    <span className="text-xs font-bold text-blue-700">{"Sim, instale o ÍCONE do 4DOC® na minha tela."}</span>
+                    <span className="text-xs font-bold text-blue-700">{"Sim, instale o ÍCONE na minha tela."}</span>
                   </label>
-                  <img src={obaFairyIcon} alt="Ícone do 4DOC" className="flex-shrink-0 w-11 h-11 rounded-lg" style={{ objectFit: 'contain' }} />
+                  <img src={obaFairyIcon} alt="Ícone do Projeto OBA" className="flex-shrink-0 w-11 h-11 rounded-lg" style={{ objectFit: 'contain' }} />
                 </div>
                 {linkMedCopiado && (
                   <p className="text-[11px] mt-1.5 leading-snug text-green-700 font-bold text-center">{"✓ LINK copiado! Cole no WhatsApp ou Telegram e envie aos seus pacientes."}</p>
@@ -1949,26 +1954,16 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               </div>
             )}
 
-            {/* Popup "Saiba mais sobre os créditos do 4DOC" (nota de 10 dólares + USDC) */}
-            {showCreditosPopup && (
-              <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }} onClick={() => setShowCreditosPopup(false)}>
-                <div onClick={e => e.stopPropagation()} style={{ position: 'relative', width: '100%', maxWidth: '398px', aspectRatio: '2.45 / 1', background: '#fff', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}>
-                  {/* Nota de 10 dólares preenchendo o popup (cover), esmaecida p/ o texto ler bem.
-                      aspectRatio fixo: alargar a caixa NÃO altera o enquadramento da nota. */}
-                  <div aria-hidden="true" style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/nota10dolares.png)', backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.06)', opacity: 0.42 }} />
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', padding: '0 30px' }}>
-                    <p style={{ color: '#065f46', fontWeight: 800, fontSize: '10.5px', lineHeight: 1.5 }}>
-                      {"Cada paciente que você AVALIA e que se CADASTRA (ou seja, paga uma pequena anuidade) gera para você um crédito de 15 USDC (dólares digitais)."}<br /><br />{"Cada paciente que você simplesmente ENCAMINHA para auto-avaliação e que SE CADASTRA gera um crédito de 10 USDC."}
-                    </p>
-                  </div>
-                  {/* Fechar: círculo vinho com X branco, menor, no canto superior direito */}
-                  <button onClick={() => setShowCreditosPopup(false)} aria-label="Fechar"
-                    style={{ position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: '50%', background: '#7B1E1E', color: '#fff', border: '2px solid #fff', cursor: 'pointer', fontSize: '10px', fontWeight: 700, lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                    {"✕"}
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* (R2, 09/2026) Aqui existia o popup "Saiba mais sobre os créditos
+                do 4DOC": a nota de 10 dólares ao fundo e, escritos NO CÓDIGO,
+                "15 USDC por avaliar" e "10 USDC por encaminhar". Foi removido
+                por dois motivos, os dois graves:
+                  1. prometia pagamento por paciente ENCAMINHADO, que é captação
+                     de clientela (CFM 2.336/2023 e CFM 2.170/2017);
+                  2. cravava valores no código, que envelhecem em silêncio — os
+                     valores vêm do `config` e o Admin muda quando quer.
+                O valor da avaliação aparece no CreditosMedicoModal, lido do
+                banco. Não reintroduzir cifra escrita à mão nesta tela. */}
             {/* Header compacto estilo TriagemModal: logo-fada + RedFairy em dois tons.
                 zIndex 10 (acima do splash zIndex 5) p/ o header ja aparecer durante a imagem. */}
             <div style={{ position: 'relative', zIndex: 10, background: '#6B7280', borderBottom: '1px solid #f1f5f9', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
@@ -1979,13 +1974,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
             {/* Subtitulo vinho do programa: zIndex 10 p/ aparecer desde o inicio, junto do header */}
             <div style={{ position: 'relative', zIndex: 10, background: 'rgba(255,255,255,0.92)', borderBottom: '1px solid #f1f5f9', padding: '0 14px 9px', flexShrink: 0 }}>
-              <p style={{ margin: 0, color: '#7B1E1E', fontWeight: 700, fontSize: '13px', letterSpacing: '0.3px' }}>{"4DOC® Programa de Médicos Afiliados"}</p>
+              <p style={{ margin: 0, color: '#7B1E1E', fontWeight: 700, fontSize: '13px', letterSpacing: '0.3px' }}>{"Cadastro para recebimento das avaliações"}</p>
             </div>
 
             <div className="p-6 space-y-4" style={{ overflowY: 'auto', flex: 1, position: 'relative', zIndex: 1 }}>
               <div className="bg-blue-50 border-2 border-blue-400 rounded-xl p-3">
               <p className="text-blue-800 text-sm leading-relaxed">
-                {"Para concluir a sua inscri\u00e7\u00e3o no "}<strong>Programa de Médicos Afiliados Patrocinado</strong>{" e receber os benef\u00edcios previstos, precisamos do seu "}<strong>CEP</strong>{", "}<strong>CPF</strong>{" e da sua "}<strong>chave Pix</strong>{"."}
+                {"Para podermos pagar as avalia\u00e7\u00f5es que voc\u00ea fizer, precisamos do seu "}<strong>CEP</strong>{", "}<strong>CPF</strong>{" e da sua "}<strong>chave Pix</strong>{"."}
               </p>
               </div>
               <p className="text-xs text-red-800 leading-relaxed font-medium" style={{ textAlign: 'justify' }}>
@@ -2706,10 +2701,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 <button onClick={() => setShowQRMedico(true)}
                   className="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-md transition-colors">
                   <span style={{ fontSize: '1.1rem' }}>{"🧚"}</span>
-                  <span>{"Gerar QR de encaminhamento (4DOC)"}</span>
+                  <span>{"Gerar QR de encaminhamento"}</span>
                 </button>
+                {/* (R2) Antes: "QUANDO ELE SE CADASTRAR VOCÊ RECEBE CRÉDITOS NO
+                    4DOC". Encaminhar não paga mais nada — o que ele faz é ligar
+                    o paciente a este médico. */}
                 <p className="text-[11px] text-center text-gray-600 font-semibold leading-snug px-4">
-                  {"MOSTRE AGORA AO SEU PACIENTE, QUANDO ELE SE CADASTRAR VOCÊ RECEBE CRÉDITOS NO 4DOC"}<sup style={{ fontSize: '0.7em', verticalAlign: 'super' }}>{"®"}</sup>
+                  {"MOSTRE AGORA AO SEU PACIENTE — AO SE CADASTRAR, ELE JÁ ENTRA VINCULADO A VOCÊ"}
                 </p>
               </div>
             )}
@@ -2890,7 +2888,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               {/* (g) Logo + (f) nova frase: as duas fun\u00e7\u00f5es do m\u00e9dico (AVALIAR / ENCAMINHAR). */}
               <img src={obaLogo} alt="Projeto OBA" className="h-16 object-contain mx-auto mb-3" />
               <p className="text-gray-700 text-sm leading-relaxed text-center">
-                {"Agora voc\u00ea pode AVALIAR ou ENCAMINHAR novos pacientes para o Projeto OBA\u00ae, recebendo incentivo dos nossos patrocinadores para cada paciente que se cadastre sob o seu CRM. Para AVALIAR um/uma paciente voc\u00ea precisar\u00e1 dos seus exames mais recentes; para ENCAMINHAR voc\u00ea s\u00f3 precisará mostrar um QR-CODE a ele/ela na tela do seu celular, ou enviar um link por WhatsApp, ou simplesmente digitar o CPF dele/dela."}
+                {"Agora voc\u00ea pode AVALIAR ou ENCAMINHAR novos pacientes para o Projeto OBA\u00ae. A avaliação que você faz é remunerada, uma vez por paciente avaliado; o encaminhamento não é pago — ele serve para que o paciente entre já vinculado a você, e você acompanhe a evolução dele. Para AVALIAR um/uma paciente voc\u00ea precisar\u00e1 dos seus exames mais recentes; para ENCAMINHAR voc\u00ea s\u00f3 precisará mostrar um QR-CODE a ele/ela na tela do seu celular, ou enviar um link por WhatsApp, ou simplesmente digitar o CPF dele/dela."}
               </p>
               {/* Play DOURADO surge 2s depois do texto: seta o flag bariatrico e abre a triagem
                   (com isso o checkbox "paciente bariatrico" ja vem marcado e travado la). */}
@@ -2913,7 +2911,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="bg-red-700 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-white text-lg font-bold">{"Benef\u00edcios do Programa"}</h2>
+              <h2 className="text-white text-lg font-bold">{"Como voc\u00ea recebe"}</h2>
               <button
                 onClick={() => setShowBeneficios(false)}
                 className="text-red-200 hover:text-white text-xl"
@@ -2923,7 +2921,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
             <div className="p-6 text-center space-y-4">
               <p className="text-gray-600 text-sm leading-relaxed">
-                {"Em breve: lista detalhada dos benef\u00edcios do 4DOC | Programa de Afiliados OBA\u00ae."}
+                {"Cada paciente que voc\u00ea avalia gera um cr\u00e9dito, uma vez por paciente. O valor vigente aparece em VER MEUS CR\u00c9DITOS."}
               </p>
               <p className="text-gray-400 text-xs">
                 {"Conte\u00fado em desenvolvimento."}

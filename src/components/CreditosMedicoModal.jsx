@@ -3,9 +3,16 @@ import { supabase } from '../lib/supabase'
 import obaLogo from '../assets/oba-logo.png'
 
 /**
- * CreditosMedicoModal — o MÉDICO vê os PRÓPRIOS créditos 4DOC (contadores).
+ * CreditosMedicoModal — o MÉDICO vê os próprios créditos (contadores).
  * Lê a sessão do médico (medico_crm + medico_token) do localStorage e chama a RPC
- * listar_creditos_medico. Requer migrate_creditos_medico_self.sql aplicado.
+ * listar_creditos_medico.
+ *
+ * (R2, 09/2026) O médico só recebe por AVALIAÇÃO — trabalho prestado. O crédito
+ * por paciente indicado/encaminhado deixou de existir (CFM 2.336/2023 e
+ * 2.170/2017: pagar por paciente trazido é captação de clientela). As chaves
+ * `cadastrados/recebidos/a_receber/pendentes_elegib` ainda vêm da RPC zeradas,
+ * por compatibilidade — não são exibidas.
+ *
  * Props: onFechar().
  */
 export default function CreditosMedicoModal({ onFechar }) {
@@ -29,7 +36,8 @@ export default function CreditosMedicoModal({ onFechar }) {
   }, [])
 
   const fmt = (n) => (Math.round((Number(n) || 0) * 100) / 100).toFixed(2).replace('.', ',')
-  const aReceberUsd = dados ? (dados.a_receber || 0) * (Number(dados.valor_usd) || 0) : 0
+  const valorUnit  = dados ? (Number(dados.valor_usd_avaliacao) || 0) : 0
+  const aReceberUsd = dados ? (dados.aval_a_receber || 0) * valorUnit : 0
   const aReceberBrl = dados ? aReceberUsd * (Number(dados.cotacao) || 0) : 0
 
   return (
@@ -48,14 +56,13 @@ export default function CreditosMedicoModal({ onFechar }) {
           {dados && (
             <>
               <p className="text-sm text-gray-600 leading-relaxed">
-                {"Cada paciente que se cadastra sob o seu CRM e paga vale "}<b>{"US$ "}{dados.valor_usd}</b>{" para você."}
+                {"Cada paciente que você "}<b>{"avalia"}</b>{" na plataforma vale "}<b>{"US$ "}{valorUnit}</b>{" para você — uma vez por paciente."}
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {[
-                  { n: dados.cadastrados, t: 'CADASTRADOS', c: 'text-red-700' },
-                  { n: dados.recebidos, t: 'RECEBIDOS', c: 'text-green-700' },
-                  { n: dados.a_receber, t: 'A RECEBER', c: 'text-red-700' },
-                  { n: dados.pendentes_elegib, t: 'AGUARDANDO', c: 'text-gray-500' },
+                  { n: dados.avaliacoes, t: 'AVALIAÇÕES', c: 'text-red-700' },
+                  { n: dados.aval_recebidas, t: 'RECEBIDAS', c: 'text-green-700' },
+                  { n: dados.aval_a_receber, t: 'A RECEBER', c: 'text-red-700' },
                 ].map((b, i) => (
                   <div key={i} className="bg-red-50 border border-red-100 rounded-lg py-2 text-center">
                     <p className={`text-2xl font-extrabold ${b.c}`}>{b.n}</p>
@@ -63,24 +70,19 @@ export default function CreditosMedicoModal({ onFechar }) {
                   </div>
                 ))}
               </div>
-              {dados.a_receber > 0 && (
+              {dados.aval_a_receber > 0 && (
                 <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-center">
                   <p className="text-xs text-green-800 font-bold">
                     {"A receber: US$ "}{fmt(aReceberUsd)}{dados.cotacao > 0 ? ` ≈ R$ ${fmt(aReceberBrl)}` : ''}
                   </p>
                 </div>
               )}
-              {dados.pendentes_elegib > 0 && (
-                <p className="text-[11px] text-gray-500 leading-snug text-center">
-                  {"AGUARDANDO: para liberar esses créditos, faça pelo menos uma avaliação completa de paciente na plataforma."}
-                </p>
-              )}
               <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-left">
                 <p className="text-[11px] text-gray-500">{"Você recebe em (PIX):"}</p>
-                <p className="text-sm font-bold text-gray-700 break-all">{dados.pix || '(sem chave PIX — integre-se ao 4DOC)'}</p>
+                <p className="text-sm font-bold text-gray-700 break-all">{dados.pix || '(sem chave PIX cadastrada)'}</p>
               </div>
               <p className="text-[11px] text-gray-400 text-center leading-snug">
-                {"Os pagamentos são processados pela administração."}
+                {"O pagamento é liberado depois que o seu cadastro é validado. Processado pela administração."}
               </p>
             </>
           )}
