@@ -52,22 +52,21 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
 
 ### Engine (decisionEngine.js)
 - `avaliarPaciente(inputs)` é a função central. Cruza os dados com `maleMatrix`/`femaleMatrix`.
-- Retorna objeto com: `diagnostico`, `recomendacao`, `comentarios`, `proximosExames`, `proximosExamesLab`, `proximosExamesImagem`, `proximosExamesEndoscopia`, `proximosExamesBioimagem`, `fraseData`, `g6pdAlerta`, `achadosParalelos`, etc.
+- Retorna objeto com: `diagnostico`, `recomendacao`, `comentarios`, `proximosExames`, `proximosExamesLab`, `proximosExamesImagem`, `proximosExamesEndoscopia`, `proximosExamesBioimagem`, `proximosExamesCardio`, `proximosExamesRespiratorio`, `proximosExamesAvaliacao`, `fraseData`, `g6pdAlerta`, `achadosParalelos`, etc.
 - `triagemEritron()` = avaliação parcial sem Ferritina/Saturação (pede esses 2 exames).
 - **Regras pós-matching já implementadas:**
   - Sat. Transferrina > 50 **E** Ferritina > 1000 → adiciona "RESSONÂNCIA NUCLEAR MAGNÉTICA DO ABDOME SUPERIOR COM PROTOCOLO DE FERRO"
   - Bariátrica + sexo F + idade ≥ 45 → adiciona "DENSITOMETRIA ÓSSEA"
-- **Separação LAB vs IMAGEM:** `proximosExames` é dividido por palavras-chave em `proximosExamesLab` e `proximosExamesImagem`.
-  - Padrão IMAGEM (regex, case-insensitive): `ULTRASSON|COLONOSCOP|ENDOSCOP|RESSON|RNM|DENSITOMETR`
-  - Lista oficial de exames de IMAGEM (escopo fechado — não adicionar outros sem pedir):
-    1. ULTRASSONOGRAFIA DE ABDÔMEN TOTAL
-    2. ULTRASSONOGRAFIA PÉLVICA
-    3. ULTRASSONOGRAFIA DE RINS E VIAS URINÁRIAS
-    4. COLONOSCOPIA
-    5. ENDOSCOPIA DIGESTIVA ALTA
-    6. RESSONÂNCIA NUCLEAR MAGNÉTICA COM PROTOCOLO DE FERRO
-    7. DENSITOMETRIA ÓSSEA
-  - **Sub-split do grupo IMAGEM** (decisionEngine.js): `proximosExamesImagem` é dividido em `proximosExamesEndoscopia` (`COLONOSCOP|ENDOSCOP`) e `proximosExamesBioimagem` (o resto: US/RESSON/RNM/DENSITOMETR) — porque endoscopia e bioimagem são feitas em serviços diferentes (geram pedidos separados). `proximosExamesImagem` continua sendo a união dos dois (compatibilidade). Por ora **só dados** — a UI/geração de documento ainda junta tudo.
+- **Separação por SERVIÇO** (`splitExames`, decisionEngine.js ~l.170): `proximosExames` é classificado em **6 serviços**, em CASCATA e mutuamente exclusivos — cada exame cai em EXATAMENTE um. A ordem é a precedência; o laboratório fica com o resto.
+    1. `proximosExamesEndoscopia` — `COLONOSCOP|ENDOSCOP`
+    2. `proximosExamesBioimagem` — `ULTRASSON|\bUSG\b|RESSON|RNM|DENSITOMETR`
+    3. `proximosExamesCardio` — `ELETROCARDIOGRAMA|ECOCARDIOGRAMA|ERGOMÉTRIC|HOLTER|\bMAPA\b|ANGIOTOMOGRAFIA CORONARIAN|SCORE DE CÁLCIO|CINTILOGRAFIA MIOC`
+    4. `proximosExamesRespiratorio` — `ESPIROMETRIA|PROVA DE FUNÇÃO PULMONAR|PLETISMOGRAFIA`
+    5. `proximosExamesAvaliacao` — `^AVALIAÇÃO COM|^CONSULTA COM|ENCAMINHAMENTO`
+    6. `proximosExamesLab` — o que sobrou
+  - `proximosExamesImagem` = endoscopia + bioimagem (mantido só por **compatibilidade**; a UI e os pedidos usam os sub-arrays).
+  - **Por que serviços e não categorias:** cada grupo vira um PEDIDO FÍSICO separado, porque são feitos em lugares diferentes. Não se faz ECG no laboratório nem colonoscopia no serviço de imagem. É por isso que o `\bUSG\b` existe (8 entradas das matrizes escrevem o ultrassom abreviado e caíam em `lab` — a gestante do id 114 levaria "USG OBSTÉTRICA COM DOPPLER" ao balcão do laboratório), e por isso a `ANGIOTOMOGRAFIA` aparece QUALIFICADA como CORONARIANA (uma futura "de abdome" viraria pedido cardiológico por engano).
+  - ⚠ Ao acrescentar exame novo nas matrizes, confira em qual serviço ele cai. Cair no serviço errado não dá erro nenhum — só manda o paciente ao lugar errado com o papel na mão.
   - `formatarParaCopiar` ainda usa o `proximosExames` original (não quebrar isso).
 
 ### Supabase
@@ -147,12 +146,8 @@ Pendente de definição do Estácio:
 - **Imagem landscape** do topo do relatório (ligar via `SPLASH_REL_IMG`).
 - **Revisão geral da anamnese** (campos/ordem).
 
-### Em andamento (paralelo)
-- **UI do ResultCard para split LAB/IMAGEM**: o engine já separa em `proximosExamesLab`/`proximosExamesImagem`, mas o ResultCard ainda mostra tudo junto numa seção "🧪 Próximos Exames Sugeridos" (~linha 1222, grid 2 colunas usando `resultado.proximosExames`).
-  - Decisão do produto: cada exame de IMAGEM gera um pedido SEPARADO (ULTRASSOM e COLONOSCOPIA são feitos em locais diferentes). Botão "Solicitar Pedidos de Imagem" abre tela com todos empilhados, 1 por página. Médico não escolhe — gera todos os sugeridos.
-  - Falta decidir e implementar a parte visual + geração de documentos.
-
 ### Concluído recentemente
+- **Split por SERVIÇO completo (motor + UI + documentos)** — a antiga pendência "UI do ResultCard para split LAB/IMAGEM" está FECHADA (verificado 09/09/2026). `servicosDeExame` (ResultCard ~l.871) monta um documento por serviço, `enviarWhatsApp` (~l.945) grava `tipos_documento` como `exames_lab`/`exames_bioimagem`/`exames_endoscopia`/... e cobra **um `valor_solicitacao_medica` por SERVIÇO** (prescrição sai por `valor_documento_medico`). A seção "🧪 Próximos Exames Sugeridos" (~l.1602) mostra um card por serviço. Dois níveis de fallback para retorno antigo do motor — nunca perde exame.
 - **OBA Fase 1 + correções (commit `78eedf9`):** relatório/baseline; fix do cardiovascular; auto-marcações (intestinal→fibromiálgico, acompanhamento→especialistas); foto dinâmica por sexo no perfil + hint de e-mail; fix do foco da aba; flag bariátrica persistente; `valor_teleconsulta` no Admin; tela "Olá" melhor no mobile.
 - Padrão **`PlayButton`** aplicado em todo o fluxo do paciente (ver ARMADILHAS) — commits até `87ff3e2`.
 - `CompletarPerfilModal`, `PagamentoCadastroModal` (PIX), boas-vindas e `OBAModal` no padrão novo.
