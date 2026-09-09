@@ -39,7 +39,7 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
 ## CONCEITOS DE DOMÍNIO
 
 ### Tipos de usuário
-- **Médico**: avalia pacientes. Login por CRM/UF. Pode ser "afiliado" (Programa 4DOC).
+- **Médico**: avalia pacientes. Login por CRM/UF. "Afiliado" hoje significa apenas *cadastro completo* (CEP+CPF+PIX), ou seja, tem para onde receber pelas avaliações — a marca 4DOC foi aposentada (ver reforma CFM).
 - **Paciente LOGADO**: tem CPF + senha, só 3 triagens gratuitas.
 - **Paciente CADASTRADO**: pagou a anuidade, acesso completo (histórico, gráficos).
   - ⚠ **NUNCA escreva o valor da anuidade em documento nem em código.** Ele é lido do
@@ -85,15 +85,67 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
   - `valor_solicitacao_medica` = **"Valor da Solicitação de Exame"** — cobre TODAS as solicitações (lab, bioimagem, endoscopia, cardiológico, outros) **+ atestado pós-consulta**. Em uso no fluxo do médico (Calculator/ResultCard).
   - `valor_documento_medico` = **"Valor de Relatório"** — cobre **consulta/teleconsulta, discussão de caso, relatório específico** e documentos (prescrição/pedido). **Também é a fonte do CTA de teleconsulta do OBA** (OBAModal lê esta chave).
   - **`valor_teleconsulta` foi APOSENTADA** (unificada no `valor_documento_medico`) — ninguém mais lê. A linha pode continuar órfã no banco sem efeito. **NÃO reintroduzir** consulta/teleconsulta como valor separado.
-  - Comissões em **dólar digital** (moeda única, quantidade diferente) — **semântica REPROPOSITADA em `migrate_medico_avaliar.sql` (jun/2026)**:
-    - `comissao_usd_por_conversao` (US$10) = **ENCAMINHAR do médico E conversão do INDICADOR** (os dois leem esta chave em `fn_credita_medico`/`listar_creditos_indicador`).
-    - `comissao_usd_nao_afiliado` (US$15) = **AVALIAR do médico** (avaliação simplificada, paga na hora — `creditos_avaliacao`). ⚠ O nome engana: NÃO é mais a comissão do indicador (era, até jun/2026 — não "corrigir" leituras baseando-se só no nome).
+  - **Pagamento e descontos (reforma CFM, 09/09/2026 — ver a seção própria abaixo):**
+    - `valor_usd_avaliacao` = **AVALIAR do médico**, em dólar digital, creditado NA HORA da avaliação (`creditos_avaliacao`, RPC `medico_avaliar_paciente`). Não depende de o paciente assinar: é trabalho prestado. Era `comissao_usd_nao_afiliado`, renomeada em R1.
+    - `credito_indicacao_brl` = **em REAIS**, o que o PACIENTE que indica acumula. Só abate anuidade e documentos dele (`indicador_conta`, `aplicar_abatimento`, `caixa_abater`). **Nunca vira dinheiro.**
+    - `desconto_boas_vindas_brl` = **em REAIS**, abatido da PRIMEIRA anuidade de quem chega indicado (`desconto_boas_vindas`, aplicado no `PagamentoCadastroModal`).
+    - ⚠ **`comissao_usd_por_conversao` foi APAGADA** (R3). Era a comissão por paciente trazido — do médico e do indicador. **NÃO recriar.**
+    - `cotacao_dolar` sobrou só para converter o pagamento das avaliações em R$.
   - Outros: `valor_anuidade`, `cotacao_dolar`, `pix_chave`, etc. Editáveis em Admin → Configurações (RPC `salvar_config`).
   - ⚠ **Os valores em US$/R$ citados acima são o que está no banco HOJE, não constantes.**
     Todos vêm de `config` e o ADMIN muda quando precisar. Cite a CHAVE, nunca o número —
     número em documento envelhece calado (foi o que aconteceu com a anuidade).
 - Médico de teste: CRM 6302/BA (ESTÁCIO, afiliado).
 - Paciente de teste no banco: CPF 013.529.807-54 (sexo M, nasc. 10/10/1990).
+
+### Programa de indicação — reforma ético-regulatória (09/09/2026)
+
+**Por que existe esta seção:** o médico responsável técnico responde perante o
+CFM/CRM pelo mecanismo de incentivo da plataforma — **mesmo quando quem recebe é
+leigo**. Resolução CFM 2.336/2023 e Resolução CFM 2.170/2017 (captação de
+clientela). Sem este registro, alguém reverte as regras achando que é "só um
+programa de indicação desligado".
+
+> **PAGAR POR TRABALHO MÉDICO FEITO** → permitido
+> **DAR DESCONTO POR FIDELIDADE** → permitido
+> **PAGAR POR PACIENTE TRAZIDO** → **NÃO**
+
+| # | situação | regra |
+|---|---|---|
+| **R1** | médico avalia paciente | **recebe** em dólar (`valor_usd_avaliacao`), no ato da avaliação, 1× por paciente. Trabalho prestado. |
+| **R2** | médico indica/encaminha | **não recebe nada.** ENCAMINHAR e RECOMENDAR continuam existindo como **ferramenta clínica** — criam o vínculo médico↔paciente (`encaminhamentos_medico`, `medico_tem_vinculo`), que é o que dá acesso ao prontuário. |
+| **R3** | paciente indica paciente | acumula crédito em R$ (`credito_indicacao_brl`) que **só abate anuidade e documentos dele**. Sem limite, sem validade, **sem saque**. |
+| **R4** | leigo indica | **não recebe nada.** Quem ganha é o indicado, com `desconto_boas_vindas_brl` na 1ª anuidade. |
+| **R5** | influenciador/parceiro | fora do sistema. Contrato por valor fixo de divulgação, como fornecedor — **nunca por conversão**. Nada a implementar. |
+
+**Migrations:** `migrate_cfm_r1_valor_avaliacao.sql` → `_r2_remove_comissao_indicacao.sql`
+→ `_r3_credito_so_abate.sql` → `_r4_desconto_boas_vindas.sql`. **Rodar nessa ordem.**
+
+**O que sumiu do banco (não recriar):** tabela `creditos_medico`; funções
+`fn_credita_medico` (virou `fn_credita_indicacao`), `fn_libera_creditos_pendentes`,
+`medico_tem_avaliacao_completa`, `caixa_pagar_indicador`, `paciente_salvar_pix`,
+`salvar_pix_indicador`, `register_indicador`, `login_indicador`, `lookup_indicador`,
+`contato_indicador`; colunas bancárias de `indicadores` (pix/usdc/titular/CNPJ/senha/token/email);
+tipo `pix` do `caixa_abater` (era o PAGAR EXCEDENTE, o único saque do paciente).
+
+⚠ **ARMADILHAS desta reforma:**
+- **`creditos_medico` era controle de acesso, não só dinheiro.** `medico_tem_vinculo`
+  a usava como prova de vínculo. Foi reescrita (medico_origem OU triou OU avaliou OU
+  `encaminhamentos_medico` OU `creditos_avaliacao`) ANTES do DROP. Apagar sem isso
+  tiraria do médico o acesso aos pacientes dele.
+- **Indicador leigo não tem CPF nem senha** (R4). `indicadores.cpf` é NULL para ele —
+  a UNIQUE aceita vários NULL. Guardar CPF de não-usuário é PII sem contrapartida
+  (LGPD). Só nome (1º nome) e celular opcional. **Não reintroduzir CPF/senha ali.**
+- **Ordem dos descontos no pagamento:** boas-vindas PRIMEIRO (é gratuito), crédito
+  depois, e `aplicar_abatimento` recebe só o que sobrou. Invertendo, o paciente
+  queima crédito para cobrir o que o desconto já cobria — e crédito queimado não volta.
+- **Nada de cifra no site aberto** (`site-bariatrico/index.html`): `carregarComissoes`
+  foi removida. O valor da avaliação é remuneração médica e aparece só depois do login.
+- **A marca "4DOC / Programa de Afiliados" foi aposentada** na interface: nomeava o
+  programa de indicação. Identificadores internos (`cardFada4doc`, `showConvite4doc`…)
+  ficaram como estão — renomeá-los é churn sem efeito para o usuário.
+- `senha_klipbit` em `profiles`/`medicos` **continua**: é o hash bcrypt da senha, nome
+  legado. Não confundir com pagamento — não há integração Klipbit/USDC em lugar nenhum.
 
 ### WhatsApp ADM
 - +55 71 99711-0804
@@ -155,7 +207,7 @@ Pendente de definição do Estácio:
 
 ### Backlog (adiado)
 - Cadastro oportunista (oferecer registro ao paciente antes de finalizar pedido gratuito).
-- Regra afiliados-paciente (créditos 4DOC).
+- ~~Regra afiliados-paciente (créditos 4DOC)~~ — **morta** com a reforma CFM de 09/09/2026.
 - Crítica de exames antigos (>45 dias) — já existe `getFraseData` por faixas de dias.
 - Refinamento geral do algoritmo (objetivo principal do Estácio com o Claude Code).
 
