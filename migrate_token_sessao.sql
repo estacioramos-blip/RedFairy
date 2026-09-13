@@ -103,6 +103,14 @@ WITH
     'nome',     (SELECT CASE WHEN erro IS NULL THEN nome END FROM res),
     'crm',      (SELECT CASE WHEN erro IS NULL THEN crm END FROM res),
     'is_admin', (SELECT CASE WHEN erro IS NULL THEN is_admin END FROM res),
+    -- (consentimento, 13/09/2026) O painel esconde a aba clínica de quem não é
+    -- médico de plataforma. Esconder é cortesia — a trava de verdade está no
+    -- servidor (admin_avaliacoes_recentes / admin_oba_ficha). Aba escondida
+    -- por JavaScript nunca foi segurança.
+    'plataforma', (SELECT CASE WHEN erro IS NULL
+                               THEN COALESCE((SELECT m2.plataforma FROM public.medicos m2
+                                               WHERE m2.crm = (SELECT crm FROM res)), false)
+                          END FROM res),
     'token',    (SELECT CASE WHEN erro IS NULL THEN tok END FROM res),
     'erro',     (SELECT erro FROM res)
   )

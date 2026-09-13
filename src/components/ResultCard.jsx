@@ -725,34 +725,26 @@ function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar, mostrarPa
 }
 
 function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
-  const [querReceber, setQuerReceber] = useState(false)
-  const [salvando, setSalvando] = useState(false)
-  const [salvo, setSalvo] = useState(false)
-
   const isSaudavel = resultado.color === 'green'
   const sexo = resultado._inputs?.sexo || 'M'
   const pronome = sexo === 'F' ? 'a sua' : 'o seu'
 
-  async function salvarPreferencia() {
-    if (!medicoCRM) return
-    setSalvando(true)
-    const cpf = resultado._inputs?.cpf?.replace(/\D/g, '') || null
-    try {
-      // RLS Fase 2 + correção: o UPDATE antigo usava .order().limit(1) via
-      // PostgREST, que não restringe PATCH de forma confiável — o efeito real
-      // podia ser marcar TODAS as avaliações daquele CRM. Além disso a coluna
-      // `medico_quer_receber` nem existia, então o update falhava sempre e o
-      // erro morria neste try/catch. A RPC escolhe a linha mais recente no SQL.
-      const { data: prefResp } = await supabase.rpc('avaliacoes_marcar_quer_receber', credMedico());
-      if (prefResp && prefResp.ok === false) {
-        console.error('Preferência do médico não salva —', prefResp.erro);
-      }
-    } catch (e) {
-      console.error('Erro ao atualizar preferencia:', e);
-    }
-    setSalvando(false)
-    setSalvo(true)
-  }
+  // (consentimento, 13/09/2026) Aqui havia um checkbox "Quero receber as
+  // avaliações futuras deste paciente", que gravava `medico_quer_receber`.
+  // Saiu por DOIS defeitos, não um:
+  //
+  //  1. Parecia consentimento e não era. Era gravado com a credencial do
+  //     MÉDICO — ele declarando que queria receber, não o paciente
+  //     autorizando. O nome fazia quem lesse o código concluir que a questão
+  //     do consentimento estava resolvida; era pior que campo nenhum.
+  //
+  //  2. Prometia o que ninguém entrega. "Você receberá o resultado das novas
+  //     avaliações por WhatsApp" — e o sistema NÃO envia WhatsApp
+  //     automaticamente, por decisão registrada (ver a memória de lembretes:
+  //     in-app + painel ADM manual). O médico marcava e não recebia nada.
+  //
+  // O consentimento de verdade é `autorizacoes_acesso`, por par CPF↔CRM,
+  // concedido pelo PACIENTE. Ver migrate_consentimento_acesso.sql.
 
   return (
     <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 overflow-hidden shadow-sm">
@@ -770,32 +762,26 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
         ) : (
           <div className="bg-white rounded-xl border border-orange-200 p-4">
             <p className="text-gray-700 text-sm leading-relaxed">
-              {"Doutor: esse paciente precisa de reavalia\u00e7\u00e3o e prescri\u00e7\u00e3o m\u00e9dica. Quando ele se cadastrar na plataforma o sistema ir\u00e1 sinalizar, e ele ter\u00e1 a sua avalia\u00e7\u00e3o revisada por HEMATOLOGISTA, que emitir\u00e1 os documentos. Voc\u00ea receber\u00e1 um WhatsApp com essas informa\u00e7\u00f5es."}
+              {/* (13/09/2026) A frase terminava com "Voc\u00ea receber\u00e1 um WhatsApp
+                  com essas informa\u00e7\u00f5es" \u2014 o sistema N\u00c3O envia WhatsApp
+                  automaticamente (decis\u00e3o registrada: in-app + ADM manual), e
+                  agora receber dados do paciente tamb\u00e9m depende da autoriza\u00e7\u00e3o
+                  dele. Promessa dupla-falsa, removida. */}
+              {"Doutor: esse paciente precisa de reavalia\u00e7\u00e3o e prescri\u00e7\u00e3o m\u00e9dica. Quando ele se cadastrar na plataforma o sistema ir\u00e1 sinalizar, e ele ter\u00e1 a sua avalia\u00e7\u00e3o revisada por HEMATOLOGISTA, que emitir\u00e1 os documentos."}
             </p>
           </div>
         )}
 
+        {/* (consentimento, 13/09/2026) O checkbox "Quero receber as avalia\u00e7\u00f5es
+            futuras" foi removido \u2014 ver o coment\u00e1rio no topo de PainelMedico.
+            No lugar entra o que passa a ser verdade: acompanhar o paciente
+            depende de ELE autorizar. A tela que pede a autoriza\u00e7\u00e3o vem no
+            passo 6 da Etapa 1; at\u00e9 l\u00e1, este texto n\u00e3o promete nada. */}
         <div className="bg-white rounded-xl border border-blue-100 p-4">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={querReceber}
-              onChange={e => {
-                setQuerReceber(e.target.checked)
-                if (e.target.checked) salvarPreferencia()
-              }}
-              className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0"
-            />
-            <div>
-              <p className="font-bold text-sm text-gray-700">{"Quero receber as avalia\u00e7\u00f5es futuras deste paciente"}</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {"Se marcar, voc\u00ea receber\u00e1 o resultado das novas avalia\u00e7\u00f5es por WhatsApp."}
-              </p>
-            </div>
-          </label>
-          {salvo && (
-            <p className="text-green-600 text-xs font-semibold mt-2 ml-7">{"\u2705 Prefer\u00eancia salva!"}</p>
-          )}
+          <p className="font-bold text-sm text-gray-700">{"Para acompanhar este paciente"}</p>
+          <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+            {"Ver os dados de sa\u00fade dele depois desta consulta depende da autoriza\u00e7\u00e3o dele \u2014 \u00e9 o paciente quem concede, e pode retirar quando quiser. Oriente-o a autorizar voc\u00ea no aplicativo, em "}<b>{"Meus dados"}</b>{"."}
+          </p>
         </div>
 
         {/* (removido) Card verde "Foram computados Creditos no 4DOC" \u2014 o credito so e

@@ -139,6 +139,13 @@ function gerarSolicitacaoCFM(avaliacao, oba, medsAtivos = []) {
 
 export default function AdminPage({ onVoltar }) {
   const [aba, setAba] = useState('pendencias');
+  // (consentimento, 13/09/2026) Gravado no login (AdminLogin). Serve para
+  // ESCONDER a aba clinica de quem nao e medico de plataforma; a recusa de
+  // verdade vem do servidor. Na duvida, esconde: o painel nao deve oferecer
+  // uma porta que o banco vai fechar.
+  const ehPlataforma = (() => {
+    try { return localStorage.getItem('medico_plataforma') === '1' } catch (e) { return false }
+  })();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -156,7 +163,12 @@ export default function AdminPage({ onVoltar }) {
             // Primeira e PADR\u00c3O: o painel de pend\u00eancias s\u00f3 vale se aparecer sem
             // ser procurado. Como aba secund\u00e1ria, viraria a que ningu\u00e9m abre.
             { id: 'pendencias',   label: "\ud83d\udd14 Pend\u00eancias" },
-            { id: 'pacientes',    label: "\ud83d\udc65 Pacientes" },
+            // (consentimento, 13/09/2026) \u00danica aba CL\u00cdNICA do painel: mostra
+            // diagn\u00f3stico e abre prontu\u00e1rio. As outras onze s\u00e3o operacionais e
+            // n\u00e3o devolvem nada cl\u00ednico. Some para quem n\u00e3o \u00e9 m\u00e9dico de
+            // plataforma \u2014 o servidor recusa de qualquer forma; isto s\u00f3 evita
+            // oferecer uma porta que vai bater na cara de quem abrir.
+            { id: 'pacientes',    label: "\ud83d\udc65 Pacientes", clinica: true },
             { id: 'lembretes',    label: "\u23f0 Lembretes" },
             { id: 'medicamentos', label: "\ud83e\ude78 Ferro EV" },
             { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
@@ -167,7 +179,7 @@ export default function AdminPage({ onVoltar }) {
             { id: 'recrutar',     label: "\ud83d\udce3 Recrutar" },
             { id: 'extratos',     label: "\ud83d\udccb Extratos OBA" },
             { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
-          ].map(tab => (
+          ].filter(tab => !tab.clinica || ehPlataforma).map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                 aba === tab.id ? 'bg-white text-red-700' : 'bg-red-800 text-red-100 hover:bg-red-900'
@@ -180,7 +192,7 @@ export default function AdminPage({ onVoltar }) {
 
       <div className="max-w-3xl mx-auto px-4 py-6">
         {aba === 'pendencias'   && <AbaPendencias irPara={setAba} />}
-        {aba === 'pacientes'    && <AbaPacientes />}
+        {aba === 'pacientes'    && ehPlataforma && <AbaPacientes />}
         {aba === 'lembretes'    && <AbaLembretes />}
         {aba === 'medicamentos' && <AbaMedicamentos />}
         {aba === 'suplementos'  && <AbaSuplementos />}
@@ -238,9 +250,12 @@ function AbaLembretes() {
       const ultimaPorCpf = (hpResp && hpResp.ok) ? (hpResp.linhas || []) : [];
       setHpylori(ultimaPorCpf
         .map(r => {
-          const hp = r.relatorio_oba && r.relatorio_oba.hpylori;
-          if (!hp || !hp.detectado) return null;
-          const base = hp.data || r.data_exames || r.created_at;
+          // (consentimento, 13/09/2026) A RPC agora devolve só cpf/detectado/
+          // data — não mais o relatorio_oba inteiro. Esta lista é lembrete
+          // operacional (WhatsApp de 6 meses); não precisa de prontuário para
+          // existir, então deixou de recebê-lo.
+          if (!r.detectado) return null;
+          const base = r.data;
           if (!base) return null;
           const due = new Date(base);
           if (isNaN(due.getTime())) return null;
@@ -290,6 +305,13 @@ function AbaLembretes() {
 
   return (
     <div className="space-y-5">
+      {/* (consentimento, 13/09/2026) O funil MUDOU de aba. Vivia dentro de
+          "Pacientes", que virou area clinica e sumiu para quem nao e medico
+          de plataforma. Sao contagens (testaram/cadastraram/pagaram), zero
+          dado clinico: nao havia motivo para morar atras daquela porta.
+          A ferramenta "Limpar dados de um paciente" FICOU la de proposito -
+          e irreversivel e apaga o paciente inteiro (decisao do Estacio). */}
+      <FunilPacientes />
       <div>
         <p className="text-sm font-bold text-gray-700 mb-1">{"⏰ Anuidades"}</p>
         <p className="text-xs text-gray-500 mb-2">{"Vencendo (≤15 dias) ou vencidas recentemente. Clique para avisar pelo WhatsApp."}</p>
@@ -549,7 +571,6 @@ function AbaPacientes() {
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState('');
   const [pacienteSelecionado, setPacienteSelecionado] = useState(null);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const carregar = useCallback(async () => {
     // RLS Fase 2: leitura por RPC de admin.
@@ -594,7 +615,6 @@ function AbaPacientes() {
 
   return (
     <div className="space-y-4">
-      <FunilPacientes key={refreshKey} />
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <input
           type="text"
@@ -653,7 +673,7 @@ function AbaPacientes() {
         </div>
       )}
 
-      <LimparPacienteCard onLimpou={() => { setPacienteSelecionado(null); carregar(); setRefreshKey(k => k + 1); }} />
+      <LimparPacienteCard onLimpou={() => { setPacienteSelecionado(null); carregar(); }} />
     </div>
   );
 }
@@ -715,7 +735,14 @@ function LimparPacienteCard({ onLimpou }) {
   );
 }
 
-function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
+function FichaPaciente({ cpf, avaliacoes: resumo, onVoltar }) {
+  // (consentimento, 13/09/2026) A lista deixou de trazer as avaliações
+  // completas — ela é fila de trabalho e carrega 7 campos. O prontuário
+  // inteiro vem AQUI, por `admin_oba_ficha`, que é a porta onde a trilha
+  // grava. `resumo` é a linha magra da lista, usada só para a tela não ficar
+  // em branco enquanto a busca não volta.
+  const [avsCompletas, setAvsCompletas] = useState(null);
+  const [erroFicha, setErroFicha] = useState('');
   const [obaData, setObaData] = useState(null);
   const [loadingOba, setLoadingOba] = useState(false);
   const [modAberto, setModAberto] = useState(null);
@@ -723,6 +750,8 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
   const [copiado, setCopiado] = useState(false);
   const [medsAtivos, setMedsAtivos] = useState([]);
   const [contabilizado, setContabilizado] = useState(false);
+  // Enquanto a busca não volta, vale a linha magra da lista; depois, a cheia.
+  const avaliacoes = avsCompletas || resumo || [];
   const ultima = avaliacoes[0];
 
   // Marcas ativas do catálogo (1 por classe) — para a conduta de ferro EV.
@@ -732,11 +761,22 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
   }, []);
 
   useEffect(() => {
-    if (!cpf || cpf.startsWith('sem_cpf') || !ultima?.bariatrica) return;
-    setLoadingOba(true);
+    if (!cpf || cpf.startsWith('sem_cpf')) return;
+    setLoadingOba(true); setErroFicha('');
     // RLS Fase 2: leitura por RPC de admin.
     supabase.rpc('admin_oba_ficha', { ...credAdmin(), p_cpf: cpf.replace(/\D/g, '') })
-      .then(({ data }) => { setObaData((data && data.ok) ? data.linha : null); setLoadingOba(false); });
+      .then(({ data }) => {
+        // ⚠ Não degradar em silêncio: se a régua recusar (não é médico de
+        // plataforma, ou o paciente não autorizou), a tela DIZ. Uma ficha vazia
+        // sem explicação faria parecer que o paciente não tem dados.
+        if (!data || !data.ok) {
+          setErroFicha((data && data.erro) || 'Nao foi possivel abrir a ficha.');
+          setObaData(null); setAvsCompletas([]); setLoadingOba(false); return;
+        }
+        setObaData(data.linha || null);
+        setAvsCompletas(Array.isArray(data.avaliacoes) ? data.avaliacoes : []);
+        setLoadingOba(false);
+      });
   }, [cpf]);
 
   function copiarSolicitacao() {
@@ -802,6 +842,14 @@ function FichaPaciente({ cpf, avaliacoes, onVoltar }) {
           className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
           {"\u2190 Lista"}
         </button>
+        {/* A r\u00e9gua recusou (n\u00e3o \u00e9 m\u00e9dico de plataforma, ou o paciente n\u00e3o
+            autorizou). Dizer por qu\u00ea: ficha vazia e muda faria parecer que o
+            paciente n\u00e3o tem dados. */}
+        {erroFicha && (
+          <span className="text-xs font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1">
+            {erroFicha}
+          </span>
+        )}
         <div>
           <h2 className="font-bold text-gray-800 text-base">
             {cpf.startsWith('sem_cpf') ? 'Paciente sem CPF' : formatarCPF(cpf)}

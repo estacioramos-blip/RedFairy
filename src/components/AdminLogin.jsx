@@ -33,6 +33,9 @@ export default function AdminLogin({ onOk, onVoltar }) {
         localStorage.setItem('medico_nome', resp.nome || '')
         localStorage.setItem('medico_login_at', Date.now().toString())
         localStorage.setItem('medico_is_admin', '1')
+        // (consentimento) usado só para ESCONDER a aba clínica de quem não é
+        // médico. A recusa de verdade vem do servidor.
+        try { localStorage.setItem('medico_plataforma', resp.plataforma ? '1' : '0') } catch (e) {}
         if (resp.token) localStorage.setItem('medico_token', resp.token)
       } catch (e) {}
       onOk && onOk()

@@ -14,6 +14,9 @@ import CompletarPerfilModal from './CompletarPerfilModal'
 import PagamentoCadastroModal from './PagamentoCadastroModal'
 import EscolhaIndicacaoModal from './EscolhaIndicacaoModal'
 import PacienteIndicaModal from './PacienteIndicaModal'
+import MeusAcessosModal from './MeusAcessosModal'
+import AutorizarMedicoModal from './AutorizarMedicoModal'
+import AtendimentoEncerradoModal from './AtendimentoEncerradoModal'
 import obaFairyIcon from '../assets/oba-fairy-icon.png'
 import obaLogo from '../assets/oba-logo.png'
 import HistoricoChartModal from './HistoricoChartModal'
@@ -60,6 +63,16 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   const [opcoesIndicacao, setOpcoesIndicacao] = useState(null)
   // (paciente vira indicador) indica outros bariatricos e ganha creditos.
   const [showIndica, setShowIndica] = useState(false)
+  // (consentimento, 13/09/2026) Quem vê os dados do paciente — e a faixa que
+  // avisa quando alguém abriu sem atendimento em curso, ou por urgência.
+  const [showAcessos, setShowAcessos] = useState(false)
+  // (consentimento) CRM que pediu autorização por link (?autorizar=CRM/UF).
+  const [autorizarCrm, setAutorizarCrm] = useState(() => { try { return localStorage.getItem('rf_autorizar_crm') || '' } catch (e) { return '' } })
+  const [acessosNovos, setAcessosNovos] = useState(0)
+  // (consentimento) null = ainda não sabemos; true = revogou a plataforma.
+  // Começa null de propósito: assumir "encerrado" antes da resposta faria a
+  // tela piscar em cima de quem está perfeitamente autorizado.
+  const [semPlataforma, setSemPlataforma] = useState(null)
   const [indicaView, setIndicaView] = useState('indicar')   // 'indicar' | 'creditos'
   const [voltarParaGate, setVoltarParaGate] = useState(false)  // INDICAR/VER aberto pela bifurcação → ao fechar, volta pra ela
   const [saldoIndicadorBrl, setSaldoIndicadorBrl] = useState(0)
@@ -155,6 +168,27 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
   })
 
   useEffect(() => { carregarDados(true) }, [])
+
+  // (consentimento) Quantos acessos o paciente ainda não viu. Só conta os que
+  // MERECEM aviso — urgência e acesso sem atendimento em curso. Um contador que
+  // acende a cada leitura de rotina vira ruído e deixa de ser lido.
+  useEffect(() => {
+    const cpfd = String(profile?.cpf || '').replace(/\D/g, '')
+    if (cpfd.length !== 11) return
+    // ⚠ meus_acessos recebe p_token (não p_pac_token): NÃO trocar por
+    // credPaciente(), que produz { p_pac_token } e faz a RPC sumir — o erro
+    // cai no .catch e o aviso ao paciente nunca aparece.
+    supabase.rpc('meus_acessos', { p_cpf: cpfd, p_token: (() => { try { return localStorage.getItem('paciente_token') || '' } catch (e) { return '' } })() })
+      .then(({ data }) => {
+        if (!data || !data.ok) return
+        setAcessosNovos(Number(data.novos_para_ver) || 0)
+        // A RPC só devolve autorização VIGENTE (não revogada, não vencida).
+        // Se não há uma de plataforma, o atendimento está encerrado.
+        const autoriz = Array.isArray(data.autorizacoes) ? data.autorizacoes : []
+        setSemPlataforma(!autoriz.some(a => a && a.nivel === 'plataforma'))
+      })
+      .catch(() => {})
+  }, [profile, showAcessos])
 
   // (paciente vira indicador) busca o saldo de créditos do paciente p/ mostrar no card.
   useEffect(() => {
@@ -1404,6 +1438,36 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
             anuidade" — é justamente quem precisa renovar que mais precisa saber
             que tem saldo para isso. Escondê-lo do vencido seria esconder o
             desconto da renovação. */}
+        {/* (consentimento, 13/09/2026) FAIXA DE AVISO — alguém abriu os dados
+            deste paciente por urgência, ou sem atendimento em curso.
+            Fica no TOPO e não some sozinha: uma trilha que ninguém lê não
+            constrange ninguém, e um aviso discreto é uma trilha que ninguém lê.
+            Só desaparece quando o paciente abre a tela. */}
+        {acessosNovos > 0 && tela === 'historico' && !showBoasVindas && !entradaPendente && (
+          <button onClick={() => setShowAcessos(true)}
+            className="w-full mb-4 text-left bg-red-50 border-2 border-red-300 rounded-2xl p-4 hover:bg-red-100 transition-colors">
+            <p className="text-sm font-bold text-red-800">
+              {acessosNovos === 1 ? 'Um médico abriu os seus dados' : acessosNovos + ' acessos aos seus dados'}
+            </p>
+            <p className="text-xs text-red-700 mt-0.5 leading-snug">
+              {"Toque para ver quem foi, quando e por quê."}
+            </p>
+          </button>
+        )}
+
+        {/* Acesso permanente à tela, mesmo sem novidade: é um direito do
+            paciente (LGPD art. 18), não um alerta ocasional. */}
+        {(temAssinatura || anuidadeVencida) && tela === 'historico' && !showBoasVindas && !entradaPendente && (
+          <button onClick={() => setShowAcessos(true)}
+            className="w-full mb-5 text-left bg-white border border-gray-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 hover:border-gray-300 transition-colors">
+            <div>
+              <p className="text-sm font-bold text-gray-700">{"Quem vê os meus dados"}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{"Autorizações e histórico de acessos"}</p>
+            </div>
+            <span className="text-gray-400 text-lg">{"›"}</span>
+          </button>
+        )}
+
         {(temAssinatura || anuidadeVencida) && tela === 'historico' && !showBoasVindas && !entradaPendente && (
           <div className="mb-5 bg-gradient-to-br from-red-50 to-white border-2 border-red-200 rounded-2xl p-4 flex items-center justify-between gap-3">
             <div>
@@ -2090,6 +2154,34 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
     {/* (R3) `celular`/`email` saíram das props: eram para o cadastro da chave
         PIX, que não existe mais — crédito de indicação só abate uso da
         plataforma, nunca vira dinheiro. */}
+    {/* (consentimento) O médico mandou o link; o paciente decide aqui.
+        Só abre com perfil carregado — sem sessão não há a quem perguntar. */}
+    {/* (consentimento) Tela ÚNICA de quem revogou a plataforma. Vem antes de
+        todos os outros modais — nada de dado clínico atrás dela. */}
+    {semPlataforma === true && profile && (
+      <AtendimentoEncerradoModal
+        cpf={profile.cpf}
+        onReautorizado={() => { setSemPlataforma(false); carregarDados(true) }}
+      />
+    )}
+
+    {autorizarCrm && profile && (
+      <AutorizarMedicoModal
+        cpf={profile.cpf}
+        crm={autorizarCrm}
+        onFechar={() => {
+          // Consome o pedido em QUALQUER saída (autorizou, recusou ou fechou):
+          // um convite que reabre a cada visita vira coação.
+          try { localStorage.removeItem('rf_autorizar_crm') } catch (e) {}
+          setAutorizarCrm('')
+        }}
+      />
+    )}
+
+    {showAcessos && profile && (
+      <MeusAcessosModal cpf={profile.cpf} onFechar={() => setShowAcessos(false)} />
+    )}
+
     {showIndica && profile && (
       <PacienteIndicaModal cpf={profile.cpf} view={indicaView}
         onFechar={() => { setShowIndica(false); if (voltarParaGate) { setVoltarParaGate(false); setShowEscolhaEntrarIndicar(true) } }} />

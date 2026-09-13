@@ -836,6 +836,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   // (item 8) Convite 4DOC pos-avaliacao para medico ainda nao afiliado — PLACEHOLDER a
   // redesenhar. Substitui a antiga "tarja cinza" (showAfiliadosBanner) que auto-aparecia.
   const [showConvite4doc, setShowConvite4doc] = useState(false);
+  // (consentimento, 13/09/2026) Link que o médico envia ao paciente pedindo
+  // autorização para acompanhá-lo. Quem concede é o PACIENTE — o link é só o
+  // convite (ver AutorizarMedicoModal).
+  const [linkAutorizacaoCopiado, setLinkAutorizacaoCopiado] = useState(false);
   const [showQRMedico, setShowQRMedico] = useState(false);  // QR de encaminhamento (4DOC)
   const [qrFoco, setQrFoco] = useState('qr');  // 'qr' (ENCAMINHAR: QR+link) | 'cpf' (RECOMENDAR: digitar CPF)
   // Marca que o 4DOC ja foi oferecido (modal cheio) nesta sessao: evita o modal reaparecer
@@ -1732,7 +1736,38 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   </div>
                   <PlayButton onClick={() => { setQrFoco('cpf'); setShowQRMedico(true) }} ariaLabel="Recomendar" />
                 </div>
-                {/* 4. VER MEUS CRÉDITOS */}
+                {/* 4. PEDIR AUTORIZAÇÃO — (consentimento, 13/09/2026)
+                    Ver os dados de um paciente passou a depender da autorização
+                    DELE. Este botão gera o convite; a decisão é do paciente, na
+                    tela dele. Sem esta porta, o médico não teria como pedir. */}
+                <div className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-base font-extrabold text-gray-900 leading-tight">{"PEDIR AUTORIZAÇÃO"}</p>
+                    <p className="text-xs leading-snug" style={{ color: '#7B1E1E' }}>
+                      {linkAutorizacaoCopiado
+                        ? "Link copiado! Envie ao paciente pelo WhatsApp. Ele decide no aplicativo dele."
+                        : "Para acompanhar um paciente você precisa da autorização dele. Copie o link e envie."}
+                    </p>
+                  </div>
+                  <PlayButton
+                    onClick={async () => {
+                      const base = (typeof window !== 'undefined' && window.location && window.location.origin)
+                        ? window.location.origin : 'https://app.bariatrico.net';
+                      const link = base + '/?autorizar=' + encodeURIComponent(medicoCRM || '');
+                      try {
+                        await navigator.clipboard.writeText(link);
+                        setLinkAutorizacaoCopiado(true);
+                        setTimeout(() => setLinkAutorizacaoCopiado(false), 6000);
+                      } catch (e) {
+                        // Sem permissão de área de transferência (acontece em
+                        // alguns navegadores): mostra o link para copiar à mão,
+                        // em vez de falhar em silêncio.
+                        try { window.prompt('Copie o link e envie ao paciente:', link) } catch (e2) {}
+                      }
+                    }}
+                    ariaLabel="Pedir autorização" />
+                </div>
+                {/* 5. VER MEUS CRÉDITOS */}
                 <div className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="text-base font-extrabold text-gray-900 leading-tight">{"VER MEUS CRÉDITOS"}</p>

@@ -45,6 +45,7 @@ export default function App() {
       // direto numa aba nova (sem rf_voltar_url) → esse abre a landing própria.
       const temParamTela = params.get('oba') || params.get('modo') || params.get('from') ||
                            params.get('fada') || params.get('p') || params.get('ref') || params.get('ind') || params.get('bari') ||
+                           params.get('autorizar') ||  // pedido de autorização do médico — o bounce engoliria o link
                            params.get('contato') ||   // ?contato=1 abre o modal CONTATO — sem isto o bounce engolia o link
                            params.get('reset')   // ?reset=1 NÃO pode dar bounce: precisa rodar o handler que limpa o localStorage
       let standalone = false
@@ -219,6 +220,19 @@ export default function App() {
     // aos dois papéis e o código do indicador vazava pro campo medico_crm). Links ANTIGOS
     // de indicador (?ref=INDxxxxxx) continuam funcionando pelo mesmo teste de formato.
     // Formato desconhecido é DESCARTADO (não polui a atribuição de crédito).
+    // (consentimento) ?autorizar=CRM/UF — o médico gerou um link pedindo
+    // autorização para acompanhar este paciente. É um CONVITE: guardamos o CRM
+    // e o PatientDashboard abre a tela de decisão quando houver sessão de
+    // paciente. Um link nunca concede acesso sozinho — quem concede é o
+    // paciente, com a credencial dele (ver AutorizarMedicoModal).
+    const autorizarParam = params.get('autorizar')
+    if (autorizarParam) {
+      try {
+        const v = decodeURIComponent(autorizarParam).toUpperCase().trim()
+        // Mesmo teste de formato do ?ref: lixo é descartado em silêncio.
+        if (/^\d+\s*\/\s*[A-Z]{2}$/.test(v)) localStorage.setItem('rf_autorizar_crm', v)
+      } catch (e) {}
+    }
     const refParam = params.get('ref')
     const indParam = params.get('ind')
     if (refParam || indParam) {

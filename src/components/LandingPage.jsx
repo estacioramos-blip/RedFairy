@@ -1127,6 +1127,16 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
     // (UTM) De onde veio. Só no CADASTRO: no login a origem já foi registrada.
     // ⚠ Medição de marketing — não gera crédito nem desconto (ver origem.js).
     if (cpfPacModo !== 'login') registrarOrigem(cpfPacDigitos, 'cadastro');
+    // (consentimento, 13/09/2026) AUTORIZAÇÃO DE PLATAFORMA — o paciente
+    // aceitou, no texto acima do botão, ser atendido pelos médicos do OBA.
+    // Sem esta linha no banco, NENHUM médico enxerga os dados dele: o padrão
+    // é ninguém ver. Gravada com a credencial DO PACIENTE — é o ponto inteiro
+    // do modelo (ver migrate_consentimento_acesso.sql).
+    // ⚠ SÓ NO CADASTRO. No login esta linha RECRIAVA a autorização de quem
+    // tinha acabado de revogar ("Encerrar minha conta"), porque uma
+    // autorização revogada não conta como vigente e a RPC inseria linha nova.
+    // Revogar tem de ser definitivo; reconceder é decisão do paciente.
+    if (cpfPacModo !== 'login') try { await supabase.rpc('autorizacao_conceder', { p_cpf: cpfPacDigitos, p_token: (() => { try { return localStorage.getItem('paciente_token') || '' } catch (e) { return '' } })(), p_nivel: 'plataforma' }) } catch (e) {}
     // INDICADOR (?ind=): paciente chegou pelo link do indicador mas concluiu por aqui →
     // cria a reserva PENDENTE no banco (mesma régua do fluxo OBA: rótulo certo, 3 meses).
     try {
@@ -1975,6 +1985,29 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
                         </button>
                       </div>
                       <p style={{ fontSize:'0.62rem', color:'#6B7280', fontWeight:700, letterSpacing:'1px', margin:'6px 0 12px', textAlign:'center' }}>{"LOGIN DO PACIENTE"}</p>
+
+                      {/* (consentimento, 13/09/2026) MESMO texto do OBAEntradaPaciente —
+                          este é o outro caminho de cadastro de paciente, e ele
+                          também grava autorizacao_conceder('plataforma'). Sem o
+                          bloco, gravava a autorização sem nunca mostrar o texto
+                          que a justifica.
+                          ⚠ Bloco PRÓPRIO, acima do aceite dos Termos: dado de saúde
+                          é dado sensível e a LGPD pede consentimento específico e
+                          destacado. Fundir com o checkbox dos Termos é presumir. */}
+                      {cpfPacModo === 'cadastro' && (
+                        <div style={{ margin:'0 0 12px', padding:'10px', borderRadius:'12px', border:'2px solid #fecaca', background:'#fef2f2' }}>
+                          <p style={{ fontSize:'0.7rem', fontWeight:800, color:'#7f1d1d', margin:'0 0 4px' }}>{"Quem vai cuidar de você"}</p>
+                          <p style={{ fontSize:'0.66rem', color:'#374151', lineHeight:1.5, margin:0 }}>
+                            {"O Projeto OBA® é atendido por médicos da nossa equipe clínica. Para te atender, eles precisam ver os seus dados de saúde: os hemogramas que você registrar, as suas respostas sobre sintomas e a sua história clínica."}
+                          </p>
+                          <p style={{ fontSize:'0.66rem', color:'#374151', lineHeight:1.5, margin:'6px 0 0' }}>
+                            {"Cada acesso fica registrado, e você pode ver a qualquer momento quem olhou os seus dados, em "}<b>{"Quem vê os meus dados"}</b>{"."}
+                          </p>
+                          <p style={{ fontSize:'0.66rem', fontWeight:800, color:'#7f1d1d', lineHeight:1.5, margin:'8px 0 0' }}>
+                            {"Ao criar a conta, você autoriza os médicos do Projeto OBA® a acessarem os seus dados de saúde para te atender. Sem essa autorização não é possível usar a plataforma — é ela que permite o atendimento."}
+                          </p>
+                        </div>
+                      )}
 
                       {cpfPacModo === 'cadastro' && (
                         <label style={{ display:'flex', alignItems:'flex-start', gap:'8px', justifyContent:'flex-start', margin:'0 0 12px', cursor:'pointer', userSelect:'none' }}>

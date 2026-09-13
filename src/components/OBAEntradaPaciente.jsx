@@ -138,6 +138,16 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
       // login a origem já foi registrada da primeira vez.
       // ⚠ Medição de marketing, não indicação: não gera crédito (ver origem.js).
       if (modo !== 'login') registrarOrigem(cpfDigits, 'cadastro')
+      // (consentimento, 13/09/2026) AUTORIZAÇÃO DE PLATAFORMA — o paciente
+      // aceitou, no texto acima do botão, ser atendido pelos médicos do OBA.
+      // Sem esta linha no banco, NENHUM médico enxerga os dados dele: o padrão
+      // é ninguém ver. Gravada com a credencial DO PACIENTE — é o ponto inteiro
+      // do modelo (ver migrate_consentimento_acesso.sql).
+      // ⚠ SÓ NO CADASTRO. No login esta linha RECRIAVA a autorização de quem
+      // tinha acabado de revogar ("Encerrar minha conta"), porque uma
+      // autorização revogada não conta como vigente e a RPC inseria linha nova.
+      // Revogar tem de ser definitivo; reconceder é decisão do paciente.
+      if (modo !== 'login') try { await supabase.rpc('autorizacao_conceder', { p_cpf: cpfDigits, p_token: (() => { try { return localStorage.getItem('paciente_token') || '' } catch (e) { return '' } })(), p_nivel: 'plataforma' }) } catch (e) {}
       // Entrou por SOU BARIÁTRICO → marca o perfil como bariátrico JÁ no cadastro (fonte
       // confiável, não depende do rf_flag sobreviver até o dashboard). RLS off em profiles.
       try { if (data.id) await supabase.rpc('profiles_atualizar', { p_cpf: cpfDigits, p_patch: { bariatrica: true }, ...credPaciente() }) } catch (e) {}
@@ -230,6 +240,28 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
             </div>
             <p className="text-center text-[11px] font-bold text-gray-400 tracking-widest mt-2">LOGIN DO PACIENTE</p>
 
+            {/* (consentimento, 13/09/2026) QUEM VAI CUIDAR DE VOCÊ.
+                Dado de saúde é dado pessoal sensível: a LGPD exige
+                consentimento ESPECÍFICO E DESTACADO, não uma linha escondida
+                dentro dos Termos. Por isso é um bloco próprio, acima do aceite
+                geral, e com a autorização escrita por extenso.
+                ⚠ Não fundir com o checkbox dos Termos: fundir é o mesmo que
+                presumir, e presumir é exatamente o que esta etapa corrigiu. */}
+            {modo === 'cadastro' && (
+              <div className="mt-3 rounded-xl border-2 border-red-200 bg-red-50 p-3">
+                <p className="text-xs font-bold text-red-900 mb-1">{"Quem vai cuidar de você"}</p>
+                <p className="text-[11px] text-gray-700 leading-relaxed">
+                  {"O Projeto OBA® é atendido por médicos da nossa equipe clínica. Para te atender, eles precisam ver os seus dados de saúde: os hemogramas que você registrar, as suas respostas sobre sintomas e a sua história clínica."}
+                </p>
+                <p className="text-[11px] text-gray-700 leading-relaxed mt-1.5">
+                  {"Cada acesso fica registrado, e você pode ver a qualquer momento quem olhou os seus dados, em "}<b>{"Quem vê os meus dados"}</b>{"."}
+                </p>
+                <p className="text-[11px] font-bold text-red-900 leading-relaxed mt-2">
+                  {"Ao criar a conta, você autoriza os médicos do Projeto OBA® a acessarem os seus dados de saúde para te atender. Sem essa autorização não é possível usar a plataforma — é ela que permite o atendimento."}
+                </p>
+              </div>
+            )}
+
             {modo === 'cadastro' && (
               <label className="flex items-start gap-2 mt-3 cursor-pointer">
                 <input type="checkbox" checked={aceitoTC} onChange={e => setAceitoTC(e.target.checked)} className="mt-0.5 w-4 h-4 flex-shrink-0" />
@@ -238,7 +270,7 @@ export default function OBAEntradaPaciente({ onVoltar, onConcluir }) {
                     onClick={e => { e.preventDefault(); e.stopPropagation(); setShowTC(true) }}
                     className="text-red-700 font-bold underline hover:text-red-800">
                     {"Termos e Condições de Uso"}
-                  </button>.
+                  </button>{" "}e a autorização acima.
                 </span>
               </label>
             )}
