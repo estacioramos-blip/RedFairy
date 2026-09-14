@@ -249,8 +249,16 @@ $$;
 --    como uma delas fica para trás — foi assim que a ESCRITA ficou sem gate
 --    enquanto a leitura era endurecida. Passa a chamar pode_ler_paciente.
 -- ---------------------------------------------------------------------------
+-- ⚠ OS `DEFAULT` SÃO OBRIGATÓRIOS: a função JÁ EXISTE no banco com eles, e
+--   CREATE OR REPLACE não consegue REMOVER um default (erro 42P13 — "cannot
+--   remove parameter defaults from existing function"). Reescrever a
+--   assinatura sem eles derruba a migration inteira. Conferido contra
+--   pg_get_function_arguments em 13/09/2026. Não "limpar".
 CREATE OR REPLACE FUNCTION public.profiles_por_cpf(
-  p_cpf text, p_crm text, p_med_token text, p_pac_token text)
+  p_cpf text,
+  p_crm text DEFAULT NULL::text,
+  p_med_token text DEFAULT NULL::text,
+  p_pac_token text DEFAULT NULL::text)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public', 'extensions'
 AS $$

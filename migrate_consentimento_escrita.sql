@@ -145,8 +145,16 @@ $$;
 --    A autoria vem do TOKEN, nunca do cliente: um cliente que pudesse dizer
 --    "isto foi o paciente que preencheu" inutilizaria o campo inteiro.
 -- ---------------------------------------------------------------------------
+-- ⚠ OS `DEFAULT` SÃO OBRIGATÓRIOS: a função JÁ EXISTE no banco com eles, e
+--   CREATE OR REPLACE não consegue REMOVER um default (erro 42P13 — "cannot
+--   remove parameter defaults from existing function"). Reescrever a
+--   assinatura sem eles derruba a migration inteira. Conferido contra
+--   pg_get_function_arguments em 13/09/2026. Não "limpar".
 CREATE OR REPLACE FUNCTION public.oba_anamnese_inserir(
-  p_dados jsonb, p_crm text, p_med_token text, p_pac_token text)
+  p_dados jsonb,
+  p_crm text DEFAULT NULL::text,
+  p_med_token text DEFAULT NULL::text,
+  p_pac_token text DEFAULT NULL::text)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public', 'extensions'
 AS $$
@@ -206,8 +214,16 @@ $$;
 --    É o "autor" que preserva o fluxo do modal: ele insere a linha e depois a
 --    atualiza várias vezes com o relatório e os pedidos.
 -- ---------------------------------------------------------------------------
+-- ⚠ OS `DEFAULT` SÃO OBRIGATÓRIOS: a função JÁ EXISTE no banco com eles, e
+--   CREATE OR REPLACE não consegue REMOVER um default (erro 42P13 — "cannot
+--   remove parameter defaults from existing function"). Reescrever a
+--   assinatura sem eles derruba a migration inteira. Conferido contra
+--   pg_get_function_arguments em 13/09/2026. Não "limpar".
 CREATE OR REPLACE FUNCTION public.oba_anamnese_atualizar_por_id(
-  p_id uuid, p_patch jsonb, p_crm text, p_med_token text, p_pac_token text)
+  p_id uuid, p_patch jsonb,
+  p_crm text DEFAULT NULL::text,
+  p_med_token text DEFAULT NULL::text,
+  p_pac_token text DEFAULT NULL::text)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public', 'extensions'
 AS $$
@@ -275,8 +291,16 @@ $$;
 -- 5. ATUALIZAR A ÚLTIMA — mesma régua. "A última linha do CPF" pode ser de
 --    outro médico ou do próprio paciente; alterar exige autorização.
 -- ---------------------------------------------------------------------------
+-- ⚠ OS `DEFAULT` SÃO OBRIGATÓRIOS: a função JÁ EXISTE no banco com eles, e
+--   CREATE OR REPLACE não consegue REMOVER um default (erro 42P13 — "cannot
+--   remove parameter defaults from existing function"). Reescrever a
+--   assinatura sem eles derruba a migration inteira. Conferido contra
+--   pg_get_function_arguments em 13/09/2026. Não "limpar".
 CREATE OR REPLACE FUNCTION public.oba_anamnese_atualizar_ultima(
-  p_cpf text, p_patch jsonb, p_crm text, p_med_token text, p_pac_token text)
+  p_cpf text, p_patch jsonb,
+  p_crm text DEFAULT NULL::text,
+  p_med_token text DEFAULT NULL::text,
+  p_pac_token text DEFAULT NULL::text)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'public', 'extensions'
 AS $$
