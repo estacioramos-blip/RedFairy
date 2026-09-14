@@ -84,3 +84,59 @@ $$;
 GRANT EXECUTE ON FUNCTION public.admin_oba_ficha(text, text, text) TO anon, authenticated;
 
 NOTIFY pgrst, 'reload schema';
+
+-- ---------------------------------------------------------------------------
+-- admin_avaliacoes_recentes — tira o SELECT * da subconsulta interna
+-- ---------------------------------------------------------------------------
+-- A saída já era explícita (7 campos), então nada a mais saía do banco. Mas a
+-- subconsulta interna ainda materializava as 47 colunas, e quem varrer o banco
+-- procurando "SELECT *" encontra isto e tem de parar para entender que é
+-- inofensivo. Custa nada nomear as colunas e acaba a ambiguidade.
+--
+-- ⚠ Assinatura IDÊNTICA, com o DEFAULT 200 (42P13 — não remover).
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.admin_avaliacoes_recentes(
+  p_crm text, p_token text, p_limite int DEFAULT 200
+)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
+SET search_path TO 'public', 'extensions'
+AS $$
+DECLARE
+  v jsonb;
+BEGIN
+  IF NOT public.token_admin_ok(p_crm, p_token) THEN
+    RETURN jsonb_build_object('ok', false, 'erro', 'Nao autorizado');
+  END IF;
+
+  IF NOT public.medico_e_plataforma(p_crm) THEN
+    RETURN jsonb_build_object('ok', false, 'erro',
+      'Esta area e clinica: so medico da plataforma pode abrir.');
+  END IF;
+
+  SELECT COALESCE(jsonb_agg(jsonb_build_object(
+           'id',                a.id,
+           'cpf',               a.cpf,
+           'created_at',        a.created_at,
+           'data_coleta',       a.data_coleta,
+           'diagnostico_label', a.diagnostico_label,
+           'diagnostico_color', a.diagnostico_color,
+           'bariatrica',        a.bariatrica
+         ) ORDER BY a.created_at DESC), '[]'::jsonb) INTO v
+    FROM (
+      -- Só o que a tela desenha. Coluna nova em `avaliacoes` NÃO entra aqui
+      -- sozinha — e e essa a intencao.
+      SELECT id, cpf, created_at, data_coleta,
+             diagnostico_label, diagnostico_color, bariatrica
+        FROM public.avaliacoes
+       ORDER BY created_at DESC
+       LIMIT GREATEST(COALESCE(p_limite, 200), 1)
+    ) a
+   WHERE public.medico_tem_autorizacao(a.cpf, p_crm);
+
+  RETURN jsonb_build_object('ok', true, 'linhas', v);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.admin_avaliacoes_recentes(text, text, int) TO anon, authenticated;
+
+NOTIFY pgrst, 'reload schema';
