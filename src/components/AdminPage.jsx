@@ -53,16 +53,25 @@ function indicaFerroEV(avaliacao) {
 // Monta a conduta de ferro EV com as DUAS marcas ativas do catálogo (DEC-007),
 // já com a dose de Ganzoni (se houver peso) convertida em frascos/sessões.
 function montarCondutaFerro(avaliacao, medsAtivos) {
+  // `semanasGestacao` FALTAVA: sem ela, o acréscimo gestacional (até 1000 mg,
+  // escalado pelas semanas) é sempre 0 e a gestante sai subdosada. Os outros
+  // dois chamadores de Ganzoni no projeto já passavam.
   const calc = calcularDeficitFerroGanzoni({
-    sexo: avaliacao.sexo, peso: avaliacao.peso, hb: avaliacao.hemoglobina, gestante: !!avaliacao.gestante,
+    sexo: avaliacao.sexo, peso: avaliacao.peso, hb: avaliacao.hemoglobina,
+    gestante: !!avaliacao.gestante, semanasGestacao: avaliacao.semanas_gestacao,
   });
   const rotulo = { alta_dose: 'ALTA DOSE', dose_fracionada: 'DOSE FRACIONADA' };
   const acesso = { alta_dose: 'plano de saúde / centro de infusão / compra', dose_fracionada: 'sacarato — disponível no SUS' };
 
   let t = `CONDUTA INDICADA — REPOSIÇÃO DE FERRO ENDOVENOSO (Fórmula de Ganzoni):\n`;
+  // Diz QUAL dado falta. A versão anterior culpava o peso em qualquer caso.
+  const faltam = [];
+  if (!(Number(avaliacao.peso) > 0)) faltam.push('peso');
+  if (!(Number(avaliacao.hemoglobina) > 0)) faltam.push('hemoglobina');
+  if (avaliacao.sexo !== 'M' && avaliacao.sexo !== 'F') faltam.push('sexo');
   t += calc
     ? `Déficit estimado: ${calc.deficitMg} mg (peso ${calc.peso} kg, Hb ${calc.hbAtual} g/dL, alvo ${calc.hbAlvo} g/dL).\n`
-    : `Peso não informado — calcular a dose: peso × (Hb alvo − Hb atual) × 2,4 + 500.\n`;
+    : `Sem ${faltam.join(' e ') || 'dados suficientes'} no cadastro — calcular a dose: peso × (Hb alvo − Hb atual) × 2,4 + 500.\n`;
   t += `A plataforma sugere DUAS opções, conforme o acesso do paciente:\n`;
 
   let n = 0;
@@ -89,10 +98,22 @@ function montarCondutaFerro(avaliacao, medsAtivos) {
 }
 
 function gerarSolicitacaoCFM(avaliacao, oba, medsAtivos = []) {
-  const sexo = avaliacao.sexo === 'M' ? 'masculino' : 'feminino';
+  // ⚠ NÃO voltar ao ternário de dois ramos.
+  // Era: `avaliacao.sexo === 'M' ? 'masculino' : 'feminino'`. Como o dado
+  // nunca chegava aqui (a tabela `avaliacoes` não tem coluna sexo; ele mora
+  // em `profiles.sexo`), a comparação SEMPRE falhava e o else sempre vencia:
+  // todo documento saía afirmando "sexo feminino, portadora", homem incluído,
+  // num texto clínico que um médico assina. Não era campo vazio que alguém
+  // percebe — era uma afirmação errada escrita com naturalidade.
+  // Três ramos: quando não se sabe, NÃO se afirma.
+  const sexo = avaliacao.sexo === 'M' ? 'masculino'
+             : avaliacao.sexo === 'F' ? 'feminino'
+             : null;
   const hoje = new Date().toLocaleDateString('pt-BR');
   let texto = `SOLICITA\u00c7\u00c3O M\u00c9DICA \u2014 ${hoje}\n\n`;
-  texto += `Paciente do sexo ${sexo}, ${avaliacao.sexo === 'M' ? 'portador' : 'portadora'} de diagn\u00f3stico de ${avaliacao.diagnostico_label}`;
+  texto += sexo
+    ? `Paciente do sexo ${sexo}, ${avaliacao.sexo === 'M' ? 'portador' : 'portadora'} de diagn\u00f3stico de ${avaliacao.diagnostico_label}`
+    : `Paciente com diagn\u00f3stico de ${avaliacao.diagnostico_label}`;
   if (avaliacao.bariatrica) texto += `, com hist\u00f3rico de cirurgia bari\u00e1trica`;
   texto += `.\n\n`;
 
@@ -774,7 +795,12 @@ function FichaPaciente({ cpf, avaliacoes: resumo, onVoltar }) {
           setObaData(null); setAvsCompletas([]); setLoadingOba(false); return;
         }
         setObaData(data.linha || null);
-        setAvsCompletas(Array.isArray(data.avaliacoes) ? data.avaliacoes : []);
+        // O sexo mora em `profiles`, não em `avaliacoes`. Sem ele o gerador de
+        // documento afirmava "feminino" para todo mundo e o cálculo de ferro
+        // nunca rodava. Vem da RPC e é costurado em cada avaliação.
+        const sx = data.sexo || null;
+        setAvsCompletas((Array.isArray(data.avaliacoes) ? data.avaliacoes : [])
+          .map(a => (sx ? { ...a, sexo: sx } : a)));
         setLoadingOba(false);
       });
   }, [cpf]);
