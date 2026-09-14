@@ -529,3 +529,6 @@ GRANT EXECUTE ON FUNCTION public.oba_pode_escrever(text,text,text,text,text,bool
 --      AND column_name IN ('preenchida_por','preenchida_crm','revisao_crm');
 --   -- espera: 3 linhas
 -- ---------------------------------------------------------------------------
+
+-- Recarrega o cache de schema do PostgREST (convenção do projeto).
+NOTIFY pgrst, 'reload schema';
