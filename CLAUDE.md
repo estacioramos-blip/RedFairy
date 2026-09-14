@@ -96,7 +96,11 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
     Todos vêm de `config` e o ADMIN muda quando precisar. Cite a CHAVE, nunca o número —
     número em documento envelhece calado (foi o que aconteceu com a anuidade).
 - Médico de teste: CRM 6302/BA (ESTÁCIO, afiliado).
-- ⚠ **Paciente de teste 013.529.807-54 NÃO existe mais no banco** (conferido 09/09/2026). O único perfil cadastrado é o CPF 039.563.145-90, e há 0 avaliações e 0 triagens. Testes que dependem de vínculo médico↔paciente precisam criá-lo antes.
+- ⚠ **Não há paciente de teste fixo.** O banco foi limpo para os testes do
+  consentimento (13/09/2026). Depois de limpar, **cadastre um paciente pelo
+  fluxo normal** — a autorização de plataforma nasce no cadastro, e um CPF
+  inserido direto no banco fica sem autorização nenhuma, invisível para
+  qualquer médico. Testar vínculo médico↔paciente exige criar o vínculo antes.
 
 ### Programa de indicação — reforma ético-regulatória (09/09/2026)
 
@@ -146,6 +150,102 @@ tipo `pix` do `caixa_abater` (era o PAGAR EXCEDENTE, o único saque do paciente)
   ficaram como estão — renomeá-los é churn sem efeito para o usuário.
 - `senha_klipbit` em `profiles`/`medicos` **continua**: é o hash bcrypt da senha, nome
   legado. Não confundir com pagamento — não há integração Klipbit/USDC em lugar nenhum.
+
+### Consentimento de acesso ao prontuário (13/09/2026)
+
+**Por que existe esta seção:** registrar o CPF de alguém em ENCAMINHAR dava ao
+médico acesso permanente ao prontuário — sem consentimento, sem prazo, sem
+revogação e sem o paciente saber. Isso expunha em duas frentes ao mesmo tempo:
+**sigilo médico** (o responsável técnico responde pelo acesso) e **LGPD** (dado
+de saúde é dado pessoal sensível, arts. 5º e 11 — exige consentimento
+**específico e destacado**, não uma linha dentro dos Termos).
+
+> **VÍNCULO ≠ AUTORIZAÇÃO.**
+> Vínculo prova que existe uma relação. Autorização é o paciente ter permitido.
+> **Só a segunda abre o prontuário.** Quem "simplificar" isso reabre as duas
+> exposições de uma vez.
+
+| nível | quem | como nasce | validade |
+|---|---|---|---|
+| `plataforma` | os médicos da equipe clínica | aceito no **cadastro**, em bloco próprio acima do aceite dos Termos | sem prazo, até revogar |
+| `medico` | um médico externo específico | o médico gera `?autorizar=CRM/UF`; **quem concede é o paciente** | 12 meses (alinhado à anuidade) |
+| `urgencia` | válvula de emergência | o médico declara o motivo (≥15 caracteres) | **12 horas**, Telegram ao ADM |
+
+**Migrations:** `migrate_consentimento_acesso.sql` → `migrate_consentimento_escrita.sql`.
+**Rodar nessa ordem** — o segundo usa `medico_tem_autorizacao`, criada no primeiro.
+
+⚠ **ARMADILHAS desta etapa:**
+- **O link é um CONVITE, não uma concessão.** Ele só carrega o CRM. Se um link
+  concedesse acesso sozinho, bastaria fabricar a URL. A gravação passa por
+  `autorizacao_conceder`, gateada pelo token **do paciente**.
+- **Não conceder no LOGIN, só no cadastro.** A linha rodava nos dois e recriava
+  a autorização de quem tinha acabado de revogar — "encerrar o atendimento" se
+  desfazia sozinho no login seguinte. A guarda `!== 'login'` existe nos **dois**
+  fluxos de cadastro (OBAEntradaPaciente e LandingPage).
+- **O bloco de consentimento é SEPARADO do checkbox dos Termos.** Fundir é o
+  mesmo que presumir, e presumir é o que esta etapa corrigiu. Existe nos dois
+  fluxos de cadastro — um deles gravava a autorização sem mostrar o texto.
+- **Revogar é append-only.** `revogada_em` é marcado; a linha nunca é apagada, e
+  reconceder cria linha NOVA. A trilha não se reescreve.
+- **Revogar a plataforma NÃO bloqueia o login.** O paciente cai numa tela única
+  (`AtendimentoEncerradoModal`) — reautorizar em um clique ou falar com o
+  suporte — sem nenhum dado clínico atrás. Bloquear deixaria sem caminho de
+  volta quem revogou por engano e fecharia a porta pela qual o titular exerce
+  acesso e portabilidade (LGPD).
+- **Autoria de escrita vem do TOKEN, nunca do cliente.** Criar o próprio ato é
+  permitido; **alterar** registro existente exige autorização. `preenchida_por`,
+  `preenchida_crm` e `revisao_crm` são excluídas da lista de colunas alteráveis
+  por patch — sem isso dava para forjar que um médico revisou uma anamnese que
+  nunca viu.
+- **Os scripts de limpeza PRECISAM apagar `autorizacoes_acesso`.** A autorização
+  é chaveada por **CPF**: sobreviver a uma limpeza e o CPF ser reaproveitado a
+  faz **ressuscitar**, dando ao novo titular um médico que ele nunca autorizou.
+  Consentimento não se herda. Os dois scripts passaram a ser dirigidos por
+  lista: tabela que não existe é ignorada e **avisada**, em vez de derrubar a
+  limpeza inteira (era o que `creditos_medico` fazia depois da reforma do CFM).
+- **`avaliacoes_salvar` tem `DEFAULT` em 5 parâmetros e eles não saem.**
+  `CREATE OR REPLACE` não consegue REMOVER um default (erro 42P13), e dois call
+  sites contam com eles. Tirar quebra o salvamento **em silêncio**.
+
+#### `is_admin` não alcança mais dado clínico
+
+Ser administrador virou papel **operacional**. Quem precisa de dado clínico
+recebe `plataforma` explicitamente — `medico_e_plataforma` **não** olha
+`is_admin`.
+
+Das 12 abas do painel, **11 são operacionais** e nenhuma devolve dado clínico.
+A única clínica é **Pacientes** (e a ficha que ela abre):
+
+| | régua | trilha |
+|---|---|---|
+| **lista** (fila de trabalho) | médico de plataforma + `medico_tem_autorizacao` por linha | **não grava** |
+| **ficha** (abre o prontuário) | médico de plataforma + `pode_ler_paciente` | **grava** |
+
+A granularidade é deliberada: 200 linhas de trilha por abertura de tela
+encheriam o "quem abriu os meus dados" de ruído e o paciente pararia de ler o
+que importa. A trilha grava onde um prontuário é de fato aberto.
+
+⚠ **A lista devolve 7 campos, não `SELECT *`.** Devolvia as 47 colunas de
+`avaliacoes` de 200 pacientes — incluindo `hiv_tratamento`, `alcoolista`,
+`celiaco`, `g6pd`, `transfundido`. Dado que não sai do banco não vaza, não entra
+em log e não fica em cache — e `SELECT *` volta a crescer sozinho a cada coluna
+nova. **A ficha continua devolvendo o prontuário inteiro, e isso é decisão do
+Estácio:** encolher a ficha seria alguém decidindo o que é clinicamente
+relevante, e o dado que hoje parece supérfluo é o que importa no caso atípico.
+
+⚠ **`admin_oba_hpylori` devolve só CPF, `detectado` e data.** Devolvia o
+`relatorio_oba` inteiro de todos os pacientes para montar um lembrete de
+WhatsApp. Não foi gateada: é lembrete **operacional**, e exigir consentimento
+clínico para disparar lembrete criaria atrito sem proteger ninguém. A correção
+foi parar de devolver o que não se usa. Se um dia a tela precisar de dado
+clínico de verdade, deixou de ser lembrete e passa pela régua.
+
+#### Destino B — **gatilho: LANÇAMENTO**
+
+Enquanto houver **um** médico de plataforma, o nível `plataforma` é suficiente.
+**No lançamento**, com equipe clínica de verdade, o acesso passa a ser por
+**médico responsável designado**, não pelo conjunto da plataforma. Está adiado
+por tamanho, não por discordância.
 
 ### WhatsApp ADM
 - +55 71 99711-0804
