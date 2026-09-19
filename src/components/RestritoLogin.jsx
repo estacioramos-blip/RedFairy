@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import obaLogo from '../assets/oba-logo.png'
+import { limparSessaoOperador } from '../lib/cred'
 
 /**
  * RestritoLogin — porta única do "Acesso Restrito" (chapéu do rodapé do bariatrico.net).
@@ -8,6 +9,7 @@ import obaLogo from '../assets/oba-logo.png'
  * existe um "tesoureiro" (o Estácio achava mercantilista):
  *   - senha do CAIXA  (caixa_login)          → entra no caixa
  *   - senha do ADMIN  (restrito_admin_login)  → entra no painel admin
+ *   - senha de OPERADOR (restrito_operador_login) → painel admin, só abas operacionais
  * Ambas validadas NO SERVIDOR (senha nunca fica no cliente). Senha errada = genérico.
  */
 const DARK = '#14100E'
@@ -32,11 +34,33 @@ export default function RestritoLogin({ onCaixa, onAdmin, onVoltar }) {
       const { data: a } = await supabase.rpc('restrito_admin_login', { p_senha: senha })
       if (a && a.ok && a.is_admin && a.token) {
         try {
+          limparSessaoOperador()
           localStorage.setItem('medico_crm', a.crm || '')
           localStorage.setItem('medico_nome', a.nome || '')
           localStorage.setItem('medico_login_at', Date.now().toString())
           localStorage.setItem('medico_is_admin', '1')
+          // Antes esta porta não gravava a marcação, e a aba Pacientes sumia
+          // do próprio Estácio quando ele entrava pelo chapéu. A recusa de
+          // verdade continua no servidor.
+          localStorage.setItem('medico_plataforma', a.plataforma ? '1' : '0')
           localStorage.setItem('medico_token', a.token)
+        } catch (e) {}
+        setBusy(false); onAdmin(); return
+      }
+      // 3) Senha de um OPERADOR (auxiliar administrativo)? Conta própria, sem
+      //    CRM e sem plataforma — ver migrate_operadores.sql. Antes o auxiliar
+      //    usava a senha do administrador e, para o banco, ERA o Estácio.
+      const { data: o } = await supabase.rpc('restrito_operador_login', { p_senha: senha })
+      if (o && o.ok && o.id && o.token) {
+        try {
+          // Nada de sessão de médico por baixo: se o Estácio deixou a dele
+          // neste computador, o operador não a herda.
+          ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','medico_plataforma']
+            .forEach(k => localStorage.removeItem(k))
+          localStorage.setItem('operador_id', o.id)
+          localStorage.setItem('operador_nome', o.nome || '')
+          localStorage.setItem('operador_token', o.token)
+          localStorage.setItem('operador_login_at', Date.now().toString())
         } catch (e) {}
         setBusy(false); onAdmin(); return
       }

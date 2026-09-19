@@ -17,6 +17,7 @@ import RestritoLogin from './components/RestritoLogin'
 import { ehDominioBariatrico, aplicarBrandingOBA } from './lib/dominio'
 import { setManifestFluxo } from './lib/manifestFluxo'
 import { capturarOrigemDaUrl } from './lib/origem'
+import { sessaoOperador, CHAVES_OPERADOR } from './lib/cred'
 export default function App() {
   // Modo inicial lido da URL JÁ no 1º render — evita o "flash" da landing (branca)
   // antes do useEffect trocar de tela (ex.: ?oba=1 -> tela escura do paciente).
@@ -60,7 +61,8 @@ export default function App() {
       if (!temParamTela && destinoBounce && !standalone) {
         // "Sempre deslogar na landing": ao voltar (F5) ao site externo, limpa a sessão.
         try {
-          ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
+          ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','medico_plataforma','rf_crm_prefill','rf_open_login',
+           ...CHAVES_OPERADOR,
            'paciente_id','paciente_nome','paciente_login_at',  /* mantém paciente_cpf + paciente_token: reentrada passwordless do ÍCONE */
            'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix',
            'rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo','oba_aberto'].forEach(k => localStorage.removeItem(k))
@@ -163,7 +165,8 @@ export default function App() {
     // Ctrl-Shift-R NAO limpa o localStorage (so' o cache de arquivos), por isso este atalho.
     if (params.get('reset') === '1') {
       try {
-        ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
+        ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','medico_plataforma','rf_crm_prefill','rf_open_login',
+           ...CHAVES_OPERADOR,
          'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
          'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix','indicador_cpf',
          'rf_flag','rf_dom_bari','rf_voltar_url','rf_abrir_nova','rf_ref_encaminhador','rf_ind_codigo',
@@ -435,7 +438,8 @@ export default function App() {
   // intenção de encerrar é explícita e o PC pode ser compartilhado.
   function limparTodasSessoes(preservarRascunhoMedico = false) {
     try {
-      ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','rf_crm_prefill','rf_open_login',
+      ['medico_crm','medico_nome','medico_token','medico_login_at','medico_is_admin','medico_plataforma','rf_crm_prefill','rf_open_login',
+           ...CHAVES_OPERADOR,
        'paciente_id','paciente_cpf','paciente_nome','paciente_token','paciente_login_at',
        'indicador_id','indicador_codigo','indicador_nome','indicador_token','indicador_pix','indicador_cpf',
        'caixa_token',
@@ -678,7 +682,9 @@ export default function App() {
   }
 
   if (modo === 'admin') {
-    const ehAdmin = (() => { try { return localStorage.getItem('medico_is_admin') === '1' } catch (e) { return false } })()
+    // (operadores) o auxiliar também entra no painel — com a conta DELE, e o
+    // banco decide o que ele alcança. Aqui é só o roteamento da tela.
+    const ehAdmin = (() => { try { return localStorage.getItem('medico_is_admin') === '1' || !!sessaoOperador() } catch (e) { return false } })()
     if (!ehAdmin) {
       // Sem sessão de admin: card de LOGIN do ADMIN (CRM/UF + senha, só entra is_admin).
       // Porta: ícone discreto no rodapé do hero da landing. onOk força re-render

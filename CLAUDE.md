@@ -247,6 +247,63 @@ Enquanto houver **um** médico de plataforma, o nível `plataforma` é suficient
 **médico responsável designado**, não pelo conjunto da plataforma. Está adiado
 por tamanho, não por discordância.
 
+### Operadores — conta própria dos auxiliares (19/09/2026)
+
+**Por que existe:** a "senha de administrador" do chapéu entrava na **linha de
+médico do Estácio** (`is_admin` + `plataforma`). O auxiliar, para o banco, ERA
+o Estácio: alcance clínico completo, e a trilha `acessos_paciente` gravaria o
+CRM dele para um acesso que ele não fez. **Trilha com autor errado prova uma
+coisa falsa — é pior que não ter trilha.** Esconder a aba por marcação no
+navegador não é controle de acesso. E o login ainda derrubava a sessão de médico
+dele (uma sessão por linha de `medicos`).
+
+**Modelo:** tabela `operadores` (sem CRM, sem plataforma — não existe em
+`medicos`, então nenhuma régua clínica o reconhece). Sessão com id
+`'OP:<LOGIN>'`, no mesmo par `p_crm/p_token` das RPCs de admin. Dois portões:
+
+| portão | quem passa | usado em |
+|---|---|---|
+| `token_admin_ok` | só o administrador | clínicas (`admin_oba_ficha`, `admin_avaliacoes_recentes`), `admin_acessos_paciente`, Configurações, catálogos, plataforma, senha do Caixa, APAGAR TUDO |
+| `token_gestao_ok` | administrador **ou** operador | as 15 operacionais (Pendências, Lembretes, Médicos, Prescritores, Indicadores, Extratos…) |
+
+Dois casos **mistos**, escritos à mão:
+- `admin_validar_medico`: operador **valida** (conferir documento), **não
+  invalida** (tirar de circulação é decisão). `validado_por` grava quem foi.
+- `admin_pendencia_baixar`: operador baixa **pedido**, não baixa **paciente
+  crítico** — fechar o alerta é afirmar que o caso foi tratado (decisão do
+  Estácio, 19/09/2026). O operador continua VENDO o cartão: é ele quem avisa.
+
+O lembrete de H. pylori continua com o operador (decidido): CPF + "positivo" é
+o mínimo para mandar o WhatsApp de 6 meses.
+
+⚠ **Ao criar RPC de admin nova, escolha o portão de propósito.** O padrão
+copiado de uma função vizinha pode dar ao operador o que não devia — ou negar a
+rotina dele.
+⚠ **`credAdministrador()` (cred.js) NÃO aceita operador**, de propósito: quem a
+chama fora do painel (o `salvar_config` do Calculator) é decisão do administrador.
+O painel usa `credPainel()`.
+⚠ **Senha única no chapéu, nos dois sentidos.** O chapéu tem um campo só e testa
+Caixa → admin → operador; senha repetida faz a pessoa cair na porta da frente
+(um operador entrando no Caixa). Toda função que grava senha de porta do chapéu
+consulta `senha_ocupada_no_chapeu` — hoje: `admin_operador_salvar`,
+`caixa_trocar_senha`, `admin_resetar_senha_caixa`, `admin_recuperar_concluir`.
+**Porta nova de senha no chapéu tem de entrar nesta lista.**
+⚠ **Todo login de médico chama `limparSessaoOperador()`** (Calculator ×2,
+LandingPage, AdminLogin, RestritoLogin). E `sessaoOperador()` desempata pelo
+login mais recente. Sem isso o Estácio abria o painel com o token do Arthur por
+baixo, e os atos dele saíam como `OP:ARTHUR`.
+
+#### DÍVIDA NOMEADA — o Caixa não tem autoria de lançamento
+
+A Tesouraria tem **uma senha só**, compartilhada, e `CONFERI`, `MARCAR PAGO`,
+`ABATER`, `BLOQUEAR` e `ESTORNAR` **não registram quem fez**. É o mesmo defeito
+que os operadores corrigiram no Admin, do lado do dinheiro: quando um lançamento
+estiver errado, o sistema não diz quem o fez, e ninguém consegue provar que não
+foi ele. **Tesouraria sem autoria de lançamento é problema, não detalhe.**
+Não entrou em 19/09 por escopo (decisão do Estácio), não por concordância.
+Caminho natural: reaproveitar `operadores` como login do Caixa e gravar o
+autor em cada ato de dinheiro.
+
 ### WhatsApp ADM
 - +55 71 99711-0804
 

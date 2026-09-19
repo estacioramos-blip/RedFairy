@@ -4,7 +4,7 @@ import PlayButton from './PlayButton'
 import redcell1 from '../assets/redcell1.png'
 import fatslim from '../assets/fatslim.png'
 import { ehDominioBariatrico } from '../lib/dominio'
-import { credPaciente, cpfPacienteLogado } from '../lib/cred'
+import { credPaciente, cpfPacienteLogado, limparSessaoOperador } from '../lib/cred'
 import laiseImg from '../assets/LAISE H.jpg'
 import wing1 from '../assets/wing1.png'
 import wing2 from '../assets/wing2.png'
@@ -952,6 +952,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
       }
       try {
         const _crm = resp.crm || crmLimpo;
+        limparSessaoOperador();   // (operadores) ver cred.js
         localStorage.setItem('medico_crm', _crm);
         localStorage.setItem('medico_nome', resp.nome || '');
         localStorage.setItem('medico_login_at', Date.now().toString());

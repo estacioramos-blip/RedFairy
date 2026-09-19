@@ -4,12 +4,20 @@ import {
 } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
+import { credPainel, sessaoOperador } from '../lib/cred';
 
-// Credencial do admin (CRM + token de sessão) para as RPCs de escrita protegidas.
+// Credencial do painel: a do OPERADOR (auxiliar, conta sem CRM) se houver,
+// senão a do administrador. O banco decide o alcance de cada uma
+// (token_gestao_ok × token_admin_ok) — ver migrate_operadores.sql.
 function credAdmin() {
-  try {
-    return { p_crm: localStorage.getItem('medico_crm') || '', p_token: localStorage.getItem('medico_token') || '' };
-  } catch (e) { return { p_crm: '', p_token: '' }; }
+  return credPainel();
+}
+
+// (operadores, 19/09/2026) true = quem está no painel é um auxiliar. Serve
+// só para ESCONDER o que o banco vai recusar de qualquer forma: nenhuma
+// porta oferecida na tela deve bater na cara de quem a abrir.
+function ehOperadorLogado() {
+  return !!sessaoOperador();
 }
 
 const eritronColor = {
@@ -164,9 +172,11 @@ export default function AdminPage({ onVoltar }) {
   // ESCONDER a aba clinica de quem nao e medico de plataforma; a recusa de
   // verdade vem do servidor. Na duvida, esconde: o painel nao deve oferecer
   // uma porta que o banco vai fechar.
-  const ehPlataforma = (() => {
+  const ehOperador = ehOperadorLogado();
+  const ehPlataforma = !ehOperador && (() => {
     try { return localStorage.getItem('medico_plataforma') === '1' } catch (e) { return false }
   })();
+  const nomeOperador = ehOperador ? (sessaoOperador()?.nome || '') : '';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -176,7 +186,10 @@ export default function AdminPage({ onVoltar }) {
             className="bg-red-800 hover:bg-red-900 rounded-lg px-3 py-1 text-xs font-medium transition-colors">
             {"\u2190 Voltar"}
           </button>
-          <h1 className="text-base font-bold">{"Painel M\u00e9dico"}</h1>
+          <h1 className="text-base font-bold text-center leading-tight">
+            {ehOperador ? "Painel Operacional" : "Painel M\u00e9dico"}
+            {ehOperador && nomeOperador && <span className="block text-[11px] font-medium text-red-100">{nomeOperador}</span>}
+          </h1>
           <div className="w-16" />
         </div>
         <div className="max-w-3xl mx-auto flex gap-2 mt-3">
@@ -191,16 +204,18 @@ export default function AdminPage({ onVoltar }) {
             // oferecer uma porta que vai bater na cara de quem abrir.
             { id: 'pacientes',    label: "\ud83d\udc65 Pacientes", clinica: true },
             { id: 'lembretes',    label: "\u23f0 Lembretes" },
-            { id: 'medicamentos', label: "\ud83e\ude78 Ferro EV" },
-            { id: 'suplementos',  label: "\ud83e\uddec Suplementos" },
+            // (operadores) Cat\u00e1logos cl\u00ednicos e Configura\u00e7\u00f5es: decis\u00e3o do
+            // administrador. O banco recusa o operador de qualquer forma.
+            { id: 'medicamentos', label: "\ud83e\ude78 Ferro EV", soAdmin: true },
+            { id: 'suplementos',  label: "\ud83e\uddec Suplementos", soAdmin: true },
             { id: 'medicos',      label: "\ud83e\ude7a M\u00e9dicos" },
             { id: 'indicadores',  label: "\ud83e\udd1d Indicadores" },
             { id: 'prescritores', label: "\ud83e\ude7b Prescritores" },
             { id: 'prescricoes',  label: "\ud83d\udcca Prescri\u00e7\u00f5es" },
             { id: 'recrutar',     label: "\ud83d\udce3 Recrutar" },
             { id: 'extratos',     label: "\ud83d\udccb Extratos OBA" },
-            { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es" },
-          ].filter(tab => !tab.clinica || ehPlataforma).map(tab => (
+            { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es", soAdmin: true },
+          ].filter(tab => (!tab.clinica || ehPlataforma) && (!tab.soAdmin || !ehOperador)).map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                 aba === tab.id ? 'bg-white text-red-700' : 'bg-red-800 text-red-100 hover:bg-red-900'
@@ -215,15 +230,15 @@ export default function AdminPage({ onVoltar }) {
         {aba === 'pendencias'   && <AbaPendencias irPara={setAba} />}
         {aba === 'pacientes'    && ehPlataforma && <AbaPacientes />}
         {aba === 'lembretes'    && <AbaLembretes />}
-        {aba === 'medicamentos' && <AbaMedicamentos />}
-        {aba === 'suplementos'  && <AbaSuplementos />}
+        {aba === 'medicamentos' && !ehOperador && <AbaMedicamentos />}
+        {aba === 'suplementos'  && !ehOperador && <AbaSuplementos />}
         {aba === 'medicos'      && <AbaMedicos />}
         {aba === 'indicadores'  && <AbaIndicadores />}
         {aba === 'prescritores' && <AbaPrescritores />}
         {aba === 'prescricoes'  && <AbaPrescricoes />}
         {aba === 'recrutar'     && <AbaRecrutar />}
         {aba === 'extratos'     && <AbaExtratos />}
-        {aba === 'config'       && <AbaConfig />}
+        {aba === 'config'       && !ehOperador && <AbaConfig />}
       </div>
     </div>
   );
@@ -429,6 +444,7 @@ function FunilPacientes() {
 // segue as senhas, que já são separadas — cada um vê o que pode resolver.
 // Tudo é derivado do que já existe; nenhuma coluna nova foi criada para isto.
 function AbaPendencias({ irPara }) {
+  const ehOperador = ehOperadorLogado();
   const [d, setD] = useState(null);
   const [erro, setErro] = useState('');
   const [ocupado, setOcupado] = useState('');
@@ -512,15 +528,20 @@ function AbaPendencias({ irPara }) {
       )}
 
       {/* Primeiro o clínico: paciente em estado crítico vem antes de burocracia. */}
+      {/* (operadores, 19/09/2026) O operador VÊ o cartão — é ele quem avisa o
+          Estácio —, mas não fecha o alerta: dar baixa num crítico é afirmar que
+          o caso foi tratado, e isso é decisão clínica. O banco recusa também. */}
       {cri.n > 0 && (
         <Cartao cor="#B91C1C" titulo="Pacientes em estado CRÍTICO" n={cri.n}
-          sub="Avaliação mais recente classificada como crítica. Verifique se houve contato/teleconsulta.">
+          sub={ehOperador
+            ? "Avaliação mais recente classificada como crítica. Avise o Estácio no mesmo dia — a baixa é dele."
+            : "Avaliação mais recente classificada como crítica. Verifique se houve contato/teleconsulta."}>
           {cri.linhas.map((l) => (
             <div key={l.id} className="flex items-center justify-between gap-2 border-t border-gray-100 py-1">
               <p className="text-sm text-gray-800">
                 {l.cpf}<span className="text-xs text-gray-500">{" · "}{dataFmt(l.em)}</span>
               </p>
-              <BtnBaixa id={l.id} tipo="critico" />
+              {!ehOperador && <BtnBaixa id={l.id} tipo="critico" />}
             </div>
           ))}
         </Cartao>
@@ -1282,7 +1303,151 @@ function AbaConfig() {
           </button>
 
           <SenhaCaixa />
+          <ContasOperadores />
         </>
+      )}
+    </div>
+  );
+}
+
+// ── Contas dos operadores (auxiliares administrativos) ─────────────────────
+// (operadores, 19/09/2026) Cada auxiliar entra com a PRÓPRIA senha, numa conta
+// sem CRM e sem plataforma. Antes todos usavam a senha do administrador — para
+// o banco eram o Estácio, e a trilha de acesso ao prontuário registrava o nome
+// dele. Ver migrate_operadores.sql.
+// Recuperação de senha = o administrador redefine aqui (mesma decisão do Caixa).
+function ContasOperadores() {
+  const [lista, setLista] = useState(null);
+  const [erro, setErro] = useState('');
+  const [form, setForm] = useState(null);     // { login, nome, senha, confirma, novo }
+  const [salvando, setSalvando] = useState(false);
+  const [msg, setMsg] = useState(null);       // { ok, txt }
+
+  async function carregar() {
+    const { data, error } = await supabase.rpc('admin_operadores_listar', credAdmin());
+    if (error) { setErro("Não foi possível carregar. A migration migrate_operadores.sql já foi aplicada?"); return; }
+    if (!data || !data.ok) { setErro((data && data.erro) || 'Sem permissão.'); return; }
+    setErro(''); setLista(data.operadores || []);
+  }
+  useEffect(() => { carregar(); }, []);
+
+  async function salvar() {
+    if (salvando || !form) return;
+    if (form.senha.length < 10) { setMsg({ ok: false, txt: "Senha muito curta (mínimo 10 caracteres)." }); return; }
+    if (form.senha !== form.confirma) { setMsg({ ok: false, txt: "As duas senhas não são iguais." }); return; }
+    setSalvando(true); setMsg(null);
+    try {
+      const { data, error } = await supabase.rpc('admin_operador_salvar', {
+        ...credAdmin(), p_login: form.login, p_nome: form.nome, p_senha: form.senha,
+      });
+      if (error) throw new Error('conexao');
+      if (data && data.ok) {
+        setMsg({ ok: true, txt: data.criado
+          ? `Conta ${data.login} criada. Passe a senha à pessoa pessoalmente, nunca por WhatsApp.`
+          : `Senha de ${data.login} redefinida. A sessão dela foi encerrada.` });
+        setForm(null); carregar();
+      } else {
+        setMsg({ ok: false, txt: (data && data.erro) || 'Falha ao salvar.' });
+      }
+    } catch (e) { setMsg({ ok: false, txt: "Erro de conexão. Tente de novo." }); }
+    setSalvando(false);
+  }
+
+  async function alternar(op) {
+    const aviso = op.ativo
+      ? `DESATIVAR a conta de ${op.nome}?\n\nA pessoa perde o acesso ao painel na hora. O registro do que ela fez continua.`
+      : `REATIVAR a conta de ${op.nome}?`;
+    if (!window.confirm(aviso)) return;
+    const { data, error } = await supabase.rpc('admin_operador_ativar', { ...credAdmin(), p_login: op.login, p_ativo: !op.ativo });
+    if (error || !data?.ok) { window.alert('Erro: ' + (error?.message || data?.erro || '')); return; }
+    carregar();
+  }
+
+  const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400";
+
+  return (
+    <div className="border-t pt-6 space-y-3">
+      <div>
+        <h3 className="text-base font-semibold text-gray-700 mb-1">{"Contas dos operadores"}</h3>
+        <p className="text-xs text-gray-400">
+          {"Auxiliares entram pelo chapéu com a própria senha e veem só as abas operacionais: sem Pacientes, sem Configurações, sem catálogos. Validam médicos, mas não invalidam. Tudo que fazem fica registrado no nome deles."}
+        </p>
+      </div>
+
+      {erro && <p className="text-sm text-red-600">{erro}</p>}
+
+      {lista && lista.length > 0 && (
+        <div className="space-y-2">
+          {lista.map(op => (
+            <div key={op.login} className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+              <div className="min-w-0">
+                <p className={`text-sm font-bold ${op.ativo ? 'text-gray-800' : 'text-gray-400 line-through'}`}>{op.nome}</p>
+                <p className="text-[11px] text-gray-500">{"login "}{op.login}{op.ativo ? '' : ' · desativada'}</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                {op.ativo && (
+                  <button onClick={() => { setForm({ login: op.login, nome: op.nome, senha: '', confirma: '', novo: false }); setMsg(null); }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-white">
+                    {"Nova senha"}
+                  </button>
+                )}
+                <button onClick={() => alternar(op)}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${op.ativo ? 'border-red-300 text-red-700 hover:bg-red-50' : 'border-green-300 text-green-700 hover:bg-green-50'}`}>
+                  {op.ativo ? "Desativar" : "Reativar"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {lista && lista.length === 0 && <p className="text-xs text-gray-500">{"Nenhum operador cadastrado."}</p>}
+
+      {!form ? (
+        <button onClick={() => { setForm({ login: '', nome: '', senha: '', confirma: '', novo: true }); setMsg(null); }}
+          className="text-sm font-semibold px-4 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50">
+          {"Criar conta de operador"}
+        </button>
+      ) : (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+          {form.novo ? (
+            <>
+              <input id="op-login" value={form.login} autoComplete="off"
+                onChange={e => setForm(f => ({ ...f, login: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '').slice(0, 20) }))}
+                placeholder="Login (ex.: ARTHUR)" className={inputClass} />
+              <input id="op-nome" value={form.nome} autoComplete="off"
+                onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
+                placeholder="Nome (aparece no painel)" className={inputClass} />
+            </>
+          ) : (
+            <p className="text-sm font-bold text-gray-700">{"Nova senha para "}{form.nome}</p>
+          )}
+          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            {"A porta do chapéu tem um campo só: é a senha que escolhe a conta. Por isso ela não pode repetir a do Caixa, a sua ou a de outro operador."}
+          </p>
+          <input id="op-senha" type="password" value={form.senha} autoComplete="new-password"
+            onChange={e => { setForm(f => ({ ...f, senha: e.target.value })); setMsg(null); }}
+            placeholder={"Senha (mínimo 10 caracteres)"} className={inputClass} />
+          <input id="op-confirma" type="password" value={form.confirma} autoComplete="new-password"
+            onChange={e => { setForm(f => ({ ...f, confirma: e.target.value })); setMsg(null); }}
+            onKeyDown={e => { if (e.key === 'Enter') salvar(); }}
+            placeholder="Repita a senha" className={inputClass} />
+          <div className="flex gap-2">
+            <button onClick={salvar} disabled={salvando || !form.senha || !form.confirma || (form.novo && (!form.login || !form.nome.trim()))}
+              className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm disabled:opacity-50">
+              {salvando ? 'Salvando...' : (form.novo ? 'Criar conta' : 'Trocar senha')}
+            </button>
+            <button onClick={() => { setForm(null); setMsg(null); }}
+              className="px-4 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 rounded-xl text-sm">
+              {"Cancelar"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {msg && (
+        <p className={`text-sm font-medium ${msg.ok ? 'text-green-700' : 'text-red-600'}`}>
+          {(msg.ok ? "✅ " : "⚠️ ") + msg.txt}
+        </p>
       )}
     </div>
   );
@@ -1994,6 +2159,7 @@ function AbaMedicos() {
   // = PENDENTE (trabalha, mas o crédito não é pago). A foto da carteira chega
   // pelo WhatsApp — ver migrate_validacao_medico.sql.
   const [validado, setValidado] = useState({});       // { CRM: true|false|null }
+  const ehOperador = ehOperadorLogado();
 
   async function carregar() {
     const { data, error } = await supabase.rpc('admin_listar_medicos', credAdmin());
@@ -2222,7 +2388,9 @@ function AbaMedicos() {
                   {"Validar"}
                 </button>
               )}
-              {!m.is_admin && validado[m.crm] !== false && (
+              {/* (operadores) Validar é conferir documento — o operador faz.
+                  Invalidar tira o médico de circulação — só o administrador. */}
+              {!m.is_admin && !ehOperador && validado[m.crm] !== false && (
                 <button onClick={() => alternarValidacao(m, false)}
                   title="Bloqueia o acesso e retém o crédito"
                   className="bg-white border border-red-300 hover:bg-red-50 text-red-700 text-sm font-bold px-4 py-2 rounded-xl transition-colors">
@@ -2232,7 +2400,7 @@ function AbaMedicos() {
               {/* Interruptor do papel PLATAFORMA: quem atende QUALQUER paciente
                   (o que entrou sozinho, ou o que veio de outro médico). O admin
                   já tem o alcance pelo is_admin, então não mostra o botão nele. */}
-              {!m.is_admin && (
+              {!m.is_admin && !ehOperador && (
                 <button onClick={() => alternarPlataforma(m)}
                   title={plataforma[m.crm]
                     ? 'Atende qualquer paciente. Clique para restringir aos pacientes dele.'

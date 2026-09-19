@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import obaLogo from '../assets/oba-logo.png'
+import { limparSessaoOperador } from '../lib/cred'
 
 /**
  * AdminLogin — card de acesso ao painel ADMIN (CRM/UF + senha).
@@ -29,6 +30,9 @@ export default function AdminLogin({ onOk, onVoltar }) {
         setBusy(false); return
       }
       try {
+        // (operadores) sessão de operador deixada neste computador não pode
+        // continuar valendo por baixo da do administrador.
+        limparSessaoOperador()
         localStorage.setItem('medico_crm', resp.crm || crmLimpo.replace(/\s/g, ''))
         localStorage.setItem('medico_nome', resp.nome || '')
         localStorage.setItem('medico_login_at', Date.now().toString())

@@ -5,7 +5,7 @@ import { avaliarPaciente, triagemEritron, formatarParaCopiar } from '../engine/d
 import { avaliarOBA } from '../engine/obaEngine';
 import { checarValor, normalizarNumero } from '../engine/limitesInput';
 import { ciclosEfetivos } from '../engine/obaComparador';
-import { credMedico, credAdministrador } from '../lib/cred';
+import { credMedico, credAdministrador, limparSessaoOperador } from '../lib/cred';
 import OBAModal from './OBAModal';
 import TriagemModal from './TriagemModal';
 import TriagemResultadoModal from './TriagemResultadoModal';
@@ -350,6 +350,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
       return
     }
     const _crm = resp.crm || conselhoLimpo
+    limparSessaoOperador()   // (operadores) ver cred.js
     localStorage.setItem('medico_crm', _crm)
     localStorage.setItem('medico_nome', resp.nome || '')
     localStorage.setItem('medico_login_at', Date.now().toString())
@@ -423,6 +424,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
         : ((resp && resp.erro) || 'Erro ao salvar. Tente novamente.'))
       return
     }
+    limparSessaoOperador()   // (operadores) ver cred.js
     localStorage.setItem('medico_crm', resp.crm || conselhoLimpo)
     localStorage.setItem('medico_nome', resp.nome || nome.trim())
     localStorage.setItem('medico_login_at', Date.now().toString())
