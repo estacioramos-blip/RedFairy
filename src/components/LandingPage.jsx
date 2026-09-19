@@ -982,6 +982,7 @@ export default function LandingPage({ onModoMedico, onModoPaciente, onIrDashboar
       return;
     }
     try {
+      limparSessaoOperador();   // (operadores) ver cred.js — cadastro também é login
       localStorage.setItem('medico_crm', crmLimpo);
       localStorage.setItem('medico_nome', '');
       localStorage.setItem('medico_login_at', Date.now().toString());

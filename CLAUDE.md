@@ -289,7 +289,8 @@ consulta `senha_ocupada_no_chapeu` — hoje: `admin_operador_salvar`,
 `caixa_trocar_senha`, `admin_resetar_senha_caixa`, `admin_recuperar_concluir`.
 **Porta nova de senha no chapéu tem de entrar nesta lista.**
 ⚠ **Todo login de médico chama `limparSessaoOperador()`** (Calculator ×2,
-LandingPage, AdminLogin, RestritoLogin). E `sessaoOperador()` desempata pelo
+LandingPage ×2 — login e cadastro pela caixa do hero —, AdminLogin,
+RestritoLogin). Cadastro também é login: grava sessão. E `sessaoOperador()` desempata pelo
 login mais recente. Sem isso o Estácio abria o painel com o token do Arthur por
 baixo, e os atos dele saíam como `OP:ARTHUR`.
 
