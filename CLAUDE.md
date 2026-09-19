@@ -294,6 +294,19 @@ RestritoLogin). Cadastro também é login: grava sessão. E `sessaoOperador()` d
 login mais recente. Sem isso o Estácio abria o painel com o token do Arthur por
 baixo, e os atos dele saíam como `OP:ARTHUR`.
 
+#### O "extrato OBA" virou AVISO (19/09/2026)
+
+O médico que marca, ao avaliar, "quero ser avisado quando o paciente preencher
+a anamnese" recebe **só o aviso** — primeiro nome, CPF mascarado, data da
+avaliação e o caminho para ver no aplicativo. **Nenhum campo da anamnese.**
+Antes o extrato levava cirurgia, peso, status clínicos e exames por **três
+portas sem régua**: Telegram direto ao médico (gatilho `fn_extrato_oba`), a aba
+do Admin (o operador lia para copiar) e `formatar_extrato_oba(uuid)`, aberta ao
+`anon` sem portão (apagada). A leitura do conteúdo passa pelo aplicativo, pela
+régua, com trilha. **Não reintroduzir dado clínico em aviso, lembrete ou
+mensagem de Telegram** — é a mesma porta que a Etapa 1 fechou, pela terceira vez.
+Migration: `migrate_extratos_oba_aviso.sql` (depois de `migrate_operadores.sql`).
+
 #### DÍVIDA NOMEADA — o Caixa não tem autoria de lançamento
 
 A Tesouraria tem **uma senha só**, compartilhada, e `CONFERI`, `MARCAR PAGO`,

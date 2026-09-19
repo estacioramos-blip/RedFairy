@@ -2440,7 +2440,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     </ul>
                     <label className="flex items-start gap-2 mt-3 pt-2 border-t border-amber-200 cursor-pointer">
                       <input type="checkbox" checked={querExtratoOba} onChange={e => setQuerExtratoOba(e.target.checked)} className="mt-0.5 w-4 h-4 cursor-pointer flex-shrink-0" />
-                      <span className="text-xs font-semibold text-amber-800">{"Quero receber o extrato da anamnese deste paciente quando ele preencher."}</span>
+                      {/* (extratos, 19/09/2026) Era "receber o extrato" — que levava a
+                          anamnese inteira por Telegram/WhatsApp, sem conferir autorização.
+                          Agora é só o AVISO: o conteúdo se lê no aplicativo, pela régua. */}
+                      <span className="text-xs font-semibold text-amber-800">{"Quero ser avisado quando este paciente preencher a anamnese. Para ver o conteúdo, ele precisa autorizar você."}</span>
                     </label>
                   </div>
                 )}

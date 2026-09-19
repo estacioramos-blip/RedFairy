@@ -213,7 +213,7 @@ export default function AdminPage({ onVoltar }) {
             { id: 'prescritores', label: "\ud83e\ude7b Prescritores" },
             { id: 'prescricoes',  label: "\ud83d\udcca Prescri\u00e7\u00f5es" },
             { id: 'recrutar',     label: "\ud83d\udce3 Recrutar" },
-            { id: 'extratos',     label: "\ud83d\udccb Extratos OBA" },
+            { id: 'extratos',     label: "\ud83d\udccb Avisos OBA" },
             { id: 'config',       label: "\u2699\ufe0f Configura\u00e7\u00f5es", soAdmin: true },
           ].filter(tab => (!tab.clinica || ehPlataforma) && (!tab.soAdmin || !ehOperador)).map(tab => (
             <button key={tab.id} onClick={() => setAba(tab.id)}
@@ -596,7 +596,7 @@ function AbaPendencias({ irPara }) {
         <Cartao cor="#7C3AED" titulo="Prescritores aguardando ativação" n={d.prescritores_a_ativar} aba="prescritores" />
       )}
       {(d.extratos_a_entregar || 0) > 0 && (
-        <Cartao cor="#0F766E" titulo="Extratos OBA a entregar" n={d.extratos_a_entregar} aba="extratos" />
+        <Cartao cor="#0F766E" titulo="Avisos de anamnese a entregar" n={d.extratos_a_entregar} aba="extratos" />
       )}
       {(d.anuidades_vencendo || 0) > 0 && (
         <Cartao cor="#B45309" titulo="Anuidades vencendo ou vencidas" n={d.anuidades_vencendo} aba="lembretes"
@@ -2703,36 +2703,27 @@ function AbaRecrutar() {
 }
 
 // ── Aba Extratos OBA (DEC-015) ────────────────────────────────────────────
-// Extratos da anamnese OBA que médicos pediram (opt-in) e o ADM precisa entregar.
+// Avisos de anamnese que médicos pediram (opt-in na avaliação) e o ADM entrega.
+//
+// (extratos, 19/09/2026) Era um EXTRATO: cirurgia, peso, status clínicos e
+// exames, com nome e CPF — enviado a qualquer médico que tivesse marcado a
+// caixinha, sem conferir se o paciente o autorizou, e LIDO pelo operador para
+// copiar. Virou AVISO: quem preencheu, e o caminho para ver no aplicativo,
+// onde a leitura passa pela régua e fica na trilha que o paciente vê. A RPC
+// (admin_extratos_oba) não devolve mais nenhum campo da anamnese.
 function textoExtratoOba(e) {
-  const a = e.anamnese || {}, m = e.medico || {};
-  const ln = (label, val, unit) =>
-    (val !== null && val !== undefined && val !== '') ? `${label}: ${val}${unit ? ' ' + unit : ''}` : null;
+  const m = e.medico || {};
+  const quando = e.avaliado_em ? new Date(e.avaliado_em).toLocaleDateString('pt-BR') : '';
+  const trato = 'o(a) Sr(a).';
   return [
-    `EXTRATO ANAMNESE OBA — ${e.paciente_nome || e.cpf}`,
-    `Para: ${m.nome || m.crm || '—'}${m.crm ? ' (CRM ' + m.crm + ')' : ''}`,
+    `Olá, ${m.nome || 'Dr(a).'}! Aqui é o Projeto OBA®.`,
     ``,
-    `Cirurgia: ${a.tipo_cirurgia || '—'}${a.meses_pos_cirurgia ? ' · ' + a.meses_pos_cirurgia + ' meses pós-op' : ''}`,
-    ln('Peso antes', a.peso_antes, 'kg'),
-    ln('Peso atual', a.peso_atual, 'kg'),
-    ln('Kg perdidos', a.kg_perdidos, 'kg'),
+    `${e.paciente_nome || 'O paciente'} (CPF ${e.cpf_mascarado || '—'}), que ${trato} avaliou${quando ? ' em ' + quando : ''}, preencheu a anamnese OBA.`,
     ``,
-    `STATUS:`,
-    ln('  Glicêmico', a.status_glicemico),
-    ln('  Pressórico', a.status_pressorico),
-    ln('  Ósseo', a.status_osseo),
-    ln('  Dental', a.status_dental),
-    ln('  Intestinal', a.status_intestinal),
-    ln('  Neurológico', a.status_neurologico),
-    ``,
-    `LABS:`,
-    ln('  B12', a.vitamina_b12, 'pg/mL'),
-    ln('  Vit D', a.vitamina_d, 'ng/mL'),
-    ln('  Ferritina', a.ferritina_oba, 'ng/mL'),
-    ln('  Glicemia', a.glicemia, 'mg/dL'),
-    ln('  HbA1c', a.hb_glicada, '%'),
-    ln('  TSH', a.tsh, 'mUI/L'),
-  ].filter(x => x !== null).join('\n');
+    e.autorizado
+      ? `Para ver: no aplicativo, menu → AVALIAR, com o CPF do paciente.`
+      : `Para ver, o paciente precisa autorizar ${trato}: no menu, toque em PEDIR AUTORIZAÇÃO e envie o link a ele. Assim que ele autorizar, abra em AVALIAR com o CPF.`,
+  ].join('\n');
 }
 
 function AbaExtratos() {
@@ -2752,11 +2743,11 @@ function AbaExtratos() {
   useEffect(() => { carregar(); }, []);
 
   async function copiar(e) {
-    try { await navigator.clipboard.writeText(textoExtratoOba(e)); window.alert('Extrato copiado!'); }
+    try { await navigator.clipboard.writeText(textoExtratoOba(e)); window.alert('Aviso copiado!'); }
     catch (err) { window.alert('Não foi possível copiar.'); }
   }
   async function marcarEntregue(e) {
-    if (!window.confirm(`Marcar o extrato de ${e.paciente_nome || e.cpf} (CRM ${e.medico?.crm}) como ENTREGUE?`)) return;
+    if (!window.confirm(`Marcar o aviso de ${e.paciente_nome || e.cpf_mascarado} (CRM ${e.medico?.crm}) como ENTREGUE?`)) return;
     setMarcando(e.id);
     const { data, error } = await supabase.rpc('admin_marcar_extrato_entregue', { ...credAdmin(), p_id: e.id });
     setMarcando(0);
@@ -2773,9 +2764,9 @@ function AbaExtratos() {
   return (
     <div className="space-y-5">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <h2 className="text-lg font-semibold text-gray-700">{"Extratos OBA a entregar"}</h2>
+        <h2 className="text-lg font-semibold text-gray-700">{"Avisos de anamnese a entregar"}</h2>
         <p className="text-sm text-gray-400 mt-1">
-          {"Anamneses OBA que médicos pediram (opt-in na avaliação). Copie o extrato e envie ao médico (WhatsApp/Telegram/e-mail), depois marque como entregue."}
+          {"Médicos que pediram, ao avaliar, para ser avisados quando o paciente preenchesse a anamnese. Copie o aviso, envie ao médico e marque como entregue. O aviso não leva dado clínico: o médico lê a anamnese no aplicativo — e só se o paciente o tiver autorizado."}
         </p>
         <div className="flex flex-wrap gap-2 mt-3">
           <button onClick={() => setSoPendentes(true)}
@@ -2790,14 +2781,22 @@ function AbaExtratos() {
       </div>
 
       {lista.length === 0 && (
-        <p className="text-center text-gray-400 py-8 text-sm">{soPendentes ? "Nenhum extrato pendente. 🎉" : "Nenhum extrato registrado ainda."}</p>
+        <p className="text-center text-gray-400 py-8 text-sm">{soPendentes ? "Nenhum aviso pendente. 🎉" : "Nenhum aviso registrado ainda."}</p>
       )}
 
       {lista.map(e => (
         <div key={e.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-bold text-gray-800">{e.paciente_nome || e.cpf}</p>
+              <p className="font-bold text-gray-800">
+                {e.paciente_nome || 'Paciente'}
+                <span className="text-xs font-medium text-gray-400">{" · CPF "}{e.cpf_mascarado}</span>
+              </p>
+              {/* Decide QUAL aviso mandar. Calculado agora, não no dia do pedido:
+                  se o paciente autorizou (ou retirou) depois, o texto acompanha. */}
+              <p className={`text-[11px] font-bold mt-0.5 ${e.autorizado ? 'text-green-700' : 'text-amber-700'}`}>
+                {e.autorizado ? "✓ Paciente autorizou este médico" : "⚠ Paciente ainda não autorizou este médico — o aviso orienta a pedir"}
+              </p>
               <p className="text-sm text-gray-500">
                 {"Médico: "}{e.medico?.nome || e.medico?.crm || '—'}{e.medico?.crm ? ` (CRM ${e.medico.crm})` : ''}
               </p>
@@ -2813,7 +2812,7 @@ function AbaExtratos() {
           <div className="flex gap-2 mt-3">
             <button onClick={() => copiar(e)}
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold px-4 py-2 rounded-xl transition-colors">
-              Copiar extrato
+              Copiar aviso
             </button>
             {!e.entregue && (
               <button onClick={() => marcarEntregue(e)} disabled={marcando === e.id}
