@@ -780,7 +780,12 @@ function PainelMedico({ resultado, medicoNome, medicoCRM, medicoDados }) {
         <div className="bg-white rounded-xl border border-blue-100 p-4">
           <p className="font-bold text-sm text-gray-700">{"Para acompanhar este paciente"}</p>
           <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-            {"Ver os dados de sa\u00fade dele depois desta consulta depende da autoriza\u00e7\u00e3o dele \u2014 \u00e9 o paciente quem concede, e pode retirar quando quiser. Oriente-o a autorizar voc\u00ea no aplicativo, em "}<b>{"Meus dados"}</b>{"."}
+            {/* (19/09/2026) Mandava o m\u00e9dico orientar o paciente a autoriz\u00e1-lo
+                "em Meus dados". Essa tela ("Quem v\u00ea os meus dados") s\u00f3 RETIRA
+                acesso \u2014 n\u00e3o tem como autorizar. A \u00fanica porta \u00e9 o link que o
+                m\u00e9dico gera; sem dizer isso, o m\u00e9dico mandava o paciente procurar
+                um bot\u00e3o que n\u00e3o existe. */}
+            {"Ver os dados de sa\u00fade dele depois desta consulta depende da autoriza\u00e7\u00e3o dele \u2014 \u00e9 o paciente quem concede, e pode retirar quando quiser. Para pedir, toque em "}<b>{"PEDIR AUTORIZA\u00c7\u00c3O"}</b>{" no seu menu e envie o link ao paciente: ele abre no aplicativo dele e decide."}
           </p>
         </div>
 

@@ -3111,17 +3111,22 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
               <p style={{ color:'#fff', fontSize:'1.05rem', fontWeight:900, margin:'0.2rem 0 0', lineHeight:1.2 }}>{eritronPopup.label || 'Eritrograma'}</p>
             </div>
             <div style={{ padding:'1.2rem' }}>
-              {/* SEM VÍNCULO: o médico faz o eritron, mas NÃO segue para a
-                  anamnese. Sem o histórico (que fica protegido até haver
-                  vínculo), a anamnese começaria do zero e gravaria um BASELINE
-                  NOVO num paciente que já tem ciclos — essa linha viraria a mais
-                  recente e o PRÓPRIO PACIENTE passaria a ver um relatório
-                  incompleto. Encerrar aqui grava o crédito de avaliação, que é
-                  uma das 6 fontes de vínculo: na próxima entrada o OBA abre
-                  completo, com o histórico. */}
+              {/* SEM AUTORIZAÇÃO (a prop ainda se chama `semVinculo`): o médico
+                  faz o eritron, mas NÃO segue para a anamnese. Sem o histórico
+                  (protegido até o paciente autorizar), a anamnese começaria do
+                  zero e gravaria um BASELINE NOVO num paciente que já tem ciclos
+                  — essa linha viraria a mais recente e o PRÓPRIO PACIENTE
+                  passaria a ver um relatório incompleto.
+                  ⚠ (19/09/2026) O texto dizia "ao ENCERRAR o vínculo é
+                  registrado — reabra AVALIAR que o histórico aparece". Era
+                  verdade até 13/09; desde o consentimento, VÍNCULO NÃO ABRE
+                  NADA, só a autorização do paciente abre. O médico encerrava,
+                  reabria, caía aqui de novo — para sempre, sem nenhuma tela
+                  dizendo por quê. Não voltar a prometer que encerrar/reabrir
+                  destrava o histórico. */}
               <p style={{ fontSize:'0.85rem', color:'#374151', lineHeight:1.5, margin:'0 0 1rem' }}>
                 {semVinculo
-                  ? "Esse é o resultado da leitura do eritron. Como este paciente ainda não estava vinculado a você, o histórico dele não é exibido nesta primeira avaliação. Ao ENCERRAR, o vínculo é registrado — reabra AVALIAR com o mesmo CPF e a avaliação OBA completa, com todo o histórico, ficará disponível."
+                  ? "Esse é o resultado da leitura do eritron. Este paciente ainda não autorizou você a ver o histórico dele — por isso a avaliação para aqui. Ao ENCERRAR, esta avaliação fica registrada. Para ver o histórico e fazer a avaliação OBA completa, o paciente precisa autorizar você: no seu menu, toque em PEDIR AUTORIZAÇÃO e envie o link a ele."
                   : "Esse é o resultado da leitura do eritron. Você pode CONTINUAR a avaliação (anamnese + exames) agora, ou ENCERRAR e deixar o paciente completar a anamnese depois."}
               </p>
               <div style={{ display:'flex', flexDirection:'column', gap:'0.6rem' }}>
@@ -3131,7 +3136,7 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 <button onClick={encerrarAvaliacao} style={semVinculo
                   ? { background:'#6B7280', color:'#facc15', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.9rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit' }
                   : { background:'#fff', color:'#6B7280', border:'1.5px solid #D1D5DB', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
-                  {semVinculo ? "ENCERRAR E VINCULAR" : "ENCERRAR (paciente completa depois)"}
+                  {semVinculo ? "ENCERRAR" : "ENCERRAR (paciente completa depois)"}
                 </button>
               </div>
             </div>

@@ -89,7 +89,12 @@ export default function QRMedicoModal({ crm, onClose, foco = 'qr' }) {
           <img src={obaLogo} alt="Projeto OBA" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
           <div>
             <h2 className="text-lg font-bold" style={{ color: '#facc15' }}>{foco === 'cpf' ? 'Recomendar pelo CPF' : 'Seu QR-CODE + Link de Encaminhar'}</h2>
-            <p className="text-xs mt-1" style={{ color: '#FDE68A' }}>{foco === 'cpf' ? 'Registre o CPF do bariátrico. Quando ele entrar, já aparece como seu paciente.' : 'Quem escanear entra no sistema já vinculado a você — e você acompanha a evolução dele.'}</p>
+            {/* (19/09/2026) Prometia "já aparece como seu paciente" / "você
+                acompanha a evolução dele". Desde o consentimento (13/09) o
+                vínculo NÃO abre os dados — só a autorização do paciente abre. */}
+            <p className="text-xs mt-1" style={{ color: '#FDE68A' }}>{foco === 'cpf'
+              ? 'Registre o CPF do bariátrico: quando ele entrar, já chega ligado a você. Para ver os dados dele, peça a autorização (PEDIR AUTORIZAÇÃO, no seu menu).'
+              : 'Quem escanear entra no sistema já ligado a você. Para acompanhar a evolução, peça a autorização dele (PEDIR AUTORIZAÇÃO, no seu menu).'}</p>
           </div>
         </div>
 

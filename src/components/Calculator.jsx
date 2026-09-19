@@ -2928,7 +2928,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               {/* (g) Logo + (f) nova frase: as duas fun\u00e7\u00f5es do m\u00e9dico (AVALIAR / ENCAMINHAR). */}
               <img src={obaLogo} alt="Projeto OBA" className="h-16 object-contain mx-auto mb-3" />
               <p className="text-gray-700 text-sm leading-relaxed text-center">
-                {"Agora voc\u00ea pode AVALIAR ou ENCAMINHAR novos pacientes para o Projeto OBA\u00ae. A avaliação que você faz é remunerada, uma vez por paciente avaliado; o encaminhamento não é pago — ele serve para que o paciente entre já vinculado a você, e você acompanhe a evolução dele. Para AVALIAR um/uma paciente voc\u00ea precisar\u00e1 dos seus exames mais recentes; para ENCAMINHAR voc\u00ea s\u00f3 precisará mostrar um QR-CODE a ele/ela na tela do seu celular, ou enviar um link por WhatsApp, ou simplesmente digitar o CPF dele/dela."}
+                {"Agora voc\u00ea pode AVALIAR ou ENCAMINHAR novos pacientes para o Projeto OBA\u00ae. A avaliação que você faz é remunerada, uma vez por paciente avaliado; o encaminhamento não é pago — ele serve para que o paciente entre já ligado a você. Para acompanhar a evolução dele, peça a autorização dele: PEDIR AUTORIZAÇÃO, no seu menu. Para AVALIAR um/uma paciente voc\u00ea precisar\u00e1 dos seus exames mais recentes; para ENCAMINHAR voc\u00ea s\u00f3 precisará mostrar um QR-CODE a ele/ela na tela do seu celular, ou enviar um link por WhatsApp, ou simplesmente digitar o CPF dele/dela."}
               </p>
               {/* Play DOURADO surge 2s depois do texto: seta o flag bariatrico e abre a triagem
                   (com isso o checkbox "paciente bariatrico" ja vem marcado e travado la). */}
