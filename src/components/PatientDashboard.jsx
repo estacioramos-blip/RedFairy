@@ -1456,8 +1456,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         )}
 
         {/* Acesso permanente à tela, mesmo sem novidade: é um direito do
-            paciente (LGPD art. 18), não um alerta ocasional. */}
-        {(temAssinatura || anuidadeVencida) && tela === 'historico' && !showBoasVindas && !entradaPendente && (
+            paciente (LGPD art. 18), não um alerta ocasional.
+            ⚠ (21/09/2026) Era `(temAssinatura || anuidadeVencida) &&` — o botão
+            só existia para quem tem anuidade. Mas o texto de consentimento do
+            CADASTRO promete, a todo paciente, ver "a qualquer momento" quem
+            olhou os dados dele. Quem não paga é titular igual, e o que ele
+            precisa retirar (a autorização da plataforma) nasce no cadastro,
+            não na anuidade. */}
+        {tela === 'historico' && !showBoasVindas && !entradaPendente && (
           <button onClick={() => setShowAcessos(true)}
             className="w-full mb-5 text-left bg-white border border-gray-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 hover:border-gray-300 transition-colors">
             <div>
