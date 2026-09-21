@@ -1829,6 +1829,14 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           paciente novo → o OBA coleta o hemograma na etapa de exames). */}
       {avaliarFase === 'oba' && pacienteAvaliar && (
         <OBAModal
+          // (urgência, 19/09/2026) A `key` muda quando a AUTORIZAÇÃO muda, e
+          // isso REMONTA o modal. Sem ela, conceder a urgência atualizava só as
+          // props: `etapa` e `form` são estado local, criados uma única vez na
+          // montagem, e continuariam os do modo sem autorização — formulário em
+          // branco, com os campos da cirurgia ESCONDIDOS (o modo follow-up liga
+          // ao ver `anamneseAnterior`) e o salvamento exigindo justamente esses
+          // campos. O médico ficava preso, sem campo para corrigir.
+          key={`oba-${pacienteAvaliar.cpf}-${pacienteAvaliar.semVinculo ? 'sem' : 'com'}-${avaliarRevisao ? 'rev' : 'aval'}`}
           cpf={pacienteAvaliar.cpf}
           nome={pacienteAvaliar.nome}
           sexo={pacienteAvaliar.sexo}
@@ -1848,6 +1856,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
           modoMedico={true}
           modoRevisao={avaliarRevisao}
           semVinculo={!!pacienteAvaliar.semVinculo}
+          // (urgência) Declarada a urgência, a janela de 12h já está de pé:
+          // recarregar o paciente traz o histórico e o OBA reabre completo,
+          // sem o médico ter de sair e entrar de novo.
+          onRecarregarPaciente={() => carregarPacienteAvaliar(pacienteAvaliar.cpf, avaliarRevisao)}
           celularPaciente={pacienteAvaliar.celular}
           onFechar={() => { try { sessionStorage.removeItem('rf_med_oba_cpf'); sessionStorage.removeItem('rf_med_oba_rev') } catch (e) {}; setAvaliarFase(null); setPacienteAvaliar(null); setAvaliarRevisao(false) }}
           onConcluir={async () => {

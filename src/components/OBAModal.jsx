@@ -641,7 +641,7 @@ const CD = { background:'white', borderRadius:20, width:'100%', maxWidth:800, bo
 const HD = { background:'linear-gradient(135deg, #6B7280, #4B5563)', padding:'1.5rem', borderRadius:'20px 20px 0 0', display:'flex', alignItems:'center', gap:'1rem' }
 
 
-export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, anamneseBaseline = null, numeroCiclo = 1, coletarHemograma = false, modoMedico = false, modoRevisao = false, celularPaciente = '', semVinculo = false }) {
+export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, examesRedFairy, dadosRedFairy, resultadoEritron, onConcluir, onFechar, anamneseAnterior = null, anamneseBaseline = null, numeroCiclo = 1, coletarHemograma = false, modoMedico = false, modoRevisao = false, celularPaciente = '', semVinculo = false, onRecarregarPaciente = null }) {
   // FOLLOW-UP: avaliação de RETORNO de um bariátrico que já fez o baseline.
   // anamneseAnterior = última linha de oba_anamnese. Nesse modo, os campos
   // IMUTÁVEIS (data/tipo/indicação da cirurgia, peso antes, altura) são
@@ -666,6 +666,16 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
   )
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
+  // (urgência, 19/09/2026) Só no modo médico, e só no aviso de "sem
+  // autorização": PEDIR AUTORIZAÇÃO (o caminho normal) e ACESSO DE URGÊNCIA (a
+  // válvula). Antes a urgência existia só no banco — não havia como um médico
+  // acioná-la, e o manual descrevia um recurso sem porta.
+  const [linkAutorizCopiado, setLinkAutorizCopiado] = useState(false)
+  const [showUrgencia, setShowUrgencia] = useState(false)
+  const [justUrgencia, setJustUrgencia] = useState('')
+  const [urgenciaBusy, setUrgenciaBusy] = useState(false)
+  const [urgenciaErro, setUrgenciaErro] = useState('')
+  const [urgenciaOk, setUrgenciaOk] = useState('')
   const [anamneseSalva, setAnamneseSalva] = useState(null)
   // id da linha de oba_anamnese DESTE ciclo (null = ainda não inserida). Vem do
   // rascunho (não só do state) p/ sobreviver a fechar/reabrir o modal. Serve a
@@ -2020,6 +2030,77 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
     setShowEritronPopup(true)
   }
   function encerrarAvaliacao() { setShowEritronPopup(false); finalizar() }
+
+  // ── Sem autorização: as duas saídas do médico ────────────────────────────
+  // O caminho normal. Mesmo link do menu (Calculator): carrega só o CRM, e
+  // quem concede é o PACIENTE, com a credencial dele.
+  async function copiarLinkAutorizacao() {
+    let crm = ''
+    try { crm = localStorage.getItem('medico_crm') || '' } catch (e) {}
+    const base = (typeof window !== 'undefined' && window.location && window.location.origin)
+      ? window.location.origin : 'https://app.bariatrico.net'
+    const link = base + '/?autorizar=' + encodeURIComponent(crm)
+    try {
+      await navigator.clipboard.writeText(link)
+      setLinkAutorizCopiado(true)
+      setTimeout(() => setLinkAutorizCopiado(false), 6000)
+    } catch (e) {
+      // Sem permissão de área de transferência: mostra para copiar à mão, em
+      // vez de falhar em silêncio.
+      try { window.prompt('Copie o link e envie ao paciente:', link) } catch (e2) {}
+    }
+  }
+
+  // A válvula. Janela de 12h, justificativa que o PACIENTE lê, Telegram à ADM
+  // na hora e recusa para quem ainda não teve o cadastro conferido por selfie
+  // (migrate_urgencia_validado.sql) — sem essa trava, um cadastro falso abriria
+  // prontuário alheio só escrevendo um motivo.
+  async function declararUrgencia() {
+    const just = justUrgencia.trim()
+    if (just.length < 15) { setUrgenciaErro('Descreva a urgência com pelo menos 15 caracteres.'); return }
+    setUrgenciaBusy(true); setUrgenciaErro('')
+    try {
+      let crm = '', tok = ''
+      try { crm = localStorage.getItem('medico_crm') || ''; tok = localStorage.getItem('medico_token') || '' } catch (e) {}
+      const { data, error } = await supabase.rpc('autorizacao_urgencia', {
+        p_crm: crm, p_token: tok, p_cpf: String(cpf || '').replace(/\D/g, ''), p_justificativa: just,
+      })
+      if (error || !data || data.ok === false) {
+        setUrgenciaErro((data && data.erro) || 'Não foi possível declarar a urgência.')
+        setUrgenciaBusy(false)
+        return
+      }
+      setJustUrgencia('')
+      // ⚠ O rascunho desta sessão SEM autorização é um formulário em branco, e
+      // ele tem prioridade sobre o histórico na hora de montar o form. Se
+      // sobrevivesse, venceria a remontagem e a anamnese abriria vazia, com os
+      // campos da cirurgia escondidos — o beco sem saída de novo.
+      limparProgresso()
+      // Recarrega o paciente: com a janela de 12h aberta, a próxima leitura já
+      // traz o histórico, e a `key` do OBAModal (Calculator) remonta o modal
+      // completo. Sem o callback, pelo menos diz o que fazer.
+      if (onRecarregarPaciente) {
+        setUrgenciaErro('')
+        setUrgenciaOk('Urgência concedida por 12 horas. Carregando o histórico…')
+        setShowEritronPopup(false)
+        try { await onRecarregarPaciente() } catch (e) {}
+        // No caminho feliz nada abaixo executa: a releitura troca a `key` e
+        // esta instância é substituída. Se chegou aqui, a releitura NÃO trouxe
+        // o paciente — sessão vencida ou rede — e ela engole o próprio erro, sem
+        // avisar ninguém. Sem estas duas linhas a tela ficava presa no
+        // "Carregando…", com os dois botões desabilitados e nenhuma saída.
+        // A urgência já está gravada: o caminho de volta é reabrir AVALIAR.
+        setUrgenciaBusy(false)
+        setUrgenciaOk('Urgência concedida por 12 horas, mas não foi possível carregar o histórico agora. Feche esta janela e abra AVALIAR de novo com o mesmo CPF. Se pedir CRM e senha, entre outra vez.')
+      } else {
+        setUrgenciaBusy(false); setShowUrgencia(false)
+        try { window.alert('Acesso de urgência liberado por 12 horas. Reabra AVALIAR com o mesmo CPF.') } catch (e) {}
+      }
+    } catch (e) {
+      setUrgenciaErro('Erro de conexão. Tente de novo.')
+      setUrgenciaBusy(false)
+    }
+  }
   const Header = ({ sub, titulo, semFada }) => (
     <div style={HD}>
       <button onClick={voltarEtapa} style={{ background:'#E3AE37', border:'none', borderRadius:8, color:'#000', fontSize:'0.8rem', fontWeight:800, padding:'0.4rem 0.8rem', cursor:'pointer', fontFamily:'inherit', flexShrink:0 }}>{"\u2190 Voltar"}</button>
@@ -3133,10 +3214,77 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                 {!semVinculo && (
                   <button onClick={() => { setShowEritronPopup(false); setEtapa('anamnese') }} style={{ background:'#6B7280', color:'#facc15', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.9rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>{"CONTINUAR A AVALIAÇÃO"}</button>
                 )}
+                {/* O caminho normal, em destaque: sem ele o médico só tinha
+                    ENCERRAR e voltava ao mesmo lugar na próxima entrada. */}
+                {semVinculo && modoMedico && (
+                  <button onClick={copiarLinkAutorizacao}
+                    style={{ background:'#7B1E1E', color:'#facc15', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.9rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit' }}>
+                    {linkAutorizCopiado ? "LINK COPIADO — ENVIE AO PACIENTE" : "PEDIR AUTORIZAÇÃO AO PACIENTE"}
+                  </button>
+                )}
                 <button onClick={encerrarAvaliacao} style={semVinculo
                   ? { background:'#6B7280', color:'#facc15', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.9rem', fontWeight:800, cursor:'pointer', fontFamily:'inherit' }
                   : { background:'#fff', color:'#6B7280', border:'1.5px solid #D1D5DB', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
                   {semVinculo ? "ENCERRAR" : "ENCERRAR (paciente completa depois)"}
+                </button>
+                {/* A válvula: discreta de propósito. É excepcional, o paciente
+                    lê a justificativa e a ADM é avisada na hora. */}
+                {/* `modoMedico` explícito: hoje só o Calculator passa
+                    semVinculo, mas um dia alguém pode passá-lo numa tela de
+                    paciente por engano — e a urgência é do médico. */}
+                {semVinculo && modoMedico && (
+                  <button onClick={() => { setShowUrgencia(true); setUrgenciaErro('') }}
+                    style={{ background:'transparent', color:'#B91C1C', border:'none', padding:'0.2rem', fontSize:'0.78rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit', textDecoration:'underline' }}>
+                    {"É uma urgência e não posso esperar"}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── ACESSO DE URGÊNCIA ───────────────────────────────────────────
+          Tudo o que pesa é dito ANTES de escrever, não depois: o paciente lê
+          esta justificativa palavra por palavra, a administração recebe na
+          hora e a janela é de 12 horas. */}
+      {showUrgencia && modoMedico && (
+        <div style={{ position:'fixed', inset:0, zIndex:1200, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}>
+          <div style={{ background:'#fff', borderRadius:16, maxWidth:420, width:'100%', overflow:'hidden', boxShadow:'0 10px 40px rgba(0,0,0,0.45)' }}>
+            <div style={{ background:'#B91C1C', padding:'0.9rem 1.2rem' }}>
+              <p style={{ color:'#fff', fontSize:'0.95rem', fontWeight:900, margin:0 }}>{"Acesso de urgência"}</p>
+            </div>
+            <div style={{ padding:'1.2rem' }}>
+              <p style={{ fontSize:'0.85rem', color:'#374151', lineHeight:1.5, margin:'0 0 0.8rem' }}>
+                {"Use quando a espera pela autorização do paciente puder causar dano a ele, e não for possível obtê-la agora."}
+              </p>
+              <ul style={{ fontSize:'0.8rem', color:'#4B5563', lineHeight:1.5, margin:'0 0 0.9rem', paddingLeft:'1.1rem' }}>
+                <li>{"O paciente vê este acesso e "}<b>{"lê o motivo que você escrever"}</b>{"."}</li>
+                <li>{"A administração é avisada na hora."}</li>
+                <li>{"O acesso vale por "}<b>{"12 horas"}</b>{"."}</li>
+              </ul>
+              <textarea value={justUrgencia} autoFocus
+                onChange={e => { setJustUrgencia(e.target.value); setUrgenciaErro('') }}
+                placeholder={"Descreva a urgência (mínimo de 15 caracteres)"}
+                rows={3}
+                style={{ width:'100%', boxSizing:'border-box', border:'1.5px solid #D1D5DB', borderRadius:10, padding:'0.6rem', fontSize:'0.85rem', fontFamily:'inherit', resize:'vertical' }} />
+              <p style={{ fontSize:'0.72rem', color: justUrgencia.trim().length >= 15 ? '#166534' : '#9CA3AF', margin:'0.3rem 0 0' }}>
+                {justUrgencia.trim().length}{"/15 caracteres"}
+              </p>
+              {urgenciaErro && <p style={{ color:'#DC2626', fontSize:'0.8rem', fontWeight:700, margin:'0.6rem 0 0' }}>{urgenciaErro}</p>}
+              {/* Sem isto o médico via a tela voltar ao hemograma como se o
+                  clique não tivesse feito nada. */}
+              {urgenciaOk && <p style={{ color:'#166534', fontSize:'0.82rem', fontWeight:700, margin:'0.6rem 0 0' }}>{urgenciaOk}</p>}
+              <div style={{ display:'flex', gap:'0.6rem', marginTop:'1rem' }}>
+                {/* Nunca desabilitado: fechar este aviso é sempre seguro (a
+                    gravação já aconteceu), e era por aqui que a tela ficava
+                    sem saída quando a releitura falhava. */}
+                <button onClick={() => { setShowUrgencia(false); setJustUrgencia(''); setUrgenciaErro(''); setUrgenciaOk('') }}
+                  style={{ flex:1, background:'#fff', color:'#6B7280', border:'1.5px solid #D1D5DB', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                  {"Voltar"}
+                </button>
+                <button onClick={declararUrgencia} disabled={urgenciaBusy || justUrgencia.trim().length < 15}
+                  style={{ flex:1, background:'#B91C1C', color:'#fff', border:'none', borderRadius:10, padding:'0.7rem', fontSize:'0.85rem', fontWeight:800, cursor: (urgenciaBusy || justUrgencia.trim().length < 15) ? 'not-allowed' : 'pointer', opacity: (urgenciaBusy || justUrgencia.trim().length < 15) ? 0.5 : 1, fontFamily:'inherit' }}>
+                  {urgenciaBusy ? '…' : 'Declarar urgência'}
                 </button>
               </div>
             </div>
