@@ -22,7 +22,7 @@ import PlayButton from './PlayButton'
  *   indicador — { codigo, nome } | null
  *   onConcluir() — segue o fluxo (→ pagamento)
  */
-export default function EscolhaIndicacaoModal({ cpf, medico, indicador, onConcluir }) {
+export default function EscolhaIndicacaoModal({ cpf, medico, indicador, onConcluir, pagaAgora = true }) {
   const [busy, setBusy] = useState(false)
   const [descontoBrl, setDescontoBrl] = useState(0)
 
@@ -86,7 +86,13 @@ export default function EscolhaIndicacaoModal({ cpf, medico, indicador, onConclu
               <p className="text-sm font-bold text-green-800 leading-snug">
                 {"🎁 Você ganhou R$ "}{descontoBrl.toFixed(2).replace('.', ',')}{" de desconto na sua primeira anuidade."}
               </p>
-              <p className="text-[11px] text-green-700 mt-1">{"Já vem aplicado na próxima tela."}</p>
+              {/* (19/09/2026) Dizia sempre "já vem aplicado na próxima tela".
+                  Virou mentira quando esta tela passou a aparecer também para o
+                  não-bariátrico, cuja próxima tela são as boas-vindas: ele só
+                  paga anuidade na segunda avaliação. */}
+              <p className="text-[11px] text-green-700 mt-1">
+                {pagaAgora ? "Já vem aplicado na próxima tela." : "Ele entra sozinho quando você assinar a anuidade."}
+              </p>
             </div>
           ) : (
             <p className="text-sm leading-relaxed text-center" style={{ color: '#7B1E1E', fontWeight: 600 }}>

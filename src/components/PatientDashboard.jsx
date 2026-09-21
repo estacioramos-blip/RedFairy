@@ -1983,16 +1983,29 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
           // Bariátrico paga na 1ª (obrigatório → OBA). Não-bariátrico: 1ª grátis,
           // vai direto às boas-vindas (o paywall só aparece na 2ª avaliação).
           const ehBari = !!(novoProfile?.bariatrica || inputs.bariatrica || ehDominioBariatrico())
-          if (ehBari) {
-            // (escolha) se há um INDICADOR reservando este CPF, o paciente escolhe de quem
-            // aceita a indicação ANTES de pagar; senão vai direto ao pagamento (médico = default).
-            try {
-              const cpfd = String(novoProfile?.cpf || '').replace(/\D/g, '')
-              const { data: op } = await supabase.rpc('opcoes_indicacao', { p_cpf: cpfd })
-              if (op?.ok && op.indicador) { setOpcoesIndicacao(op); setShowEscolhaIndicacao(true); return }
-            } catch (e) {}
-            setShowPagamento(true)
-          } else setShowBoasVindas(true)
+          // (indicação, 19/09/2026) A tela que reconhece quem trouxe o paciente
+          // vale para TODOS, não só para o bariátrico. Ela estava dentro do
+          // `if (ehBari)`, mas o link do indicador reserva CPF também no fluxo
+          // geral (LandingPage) — e era ali que a confirmação nunca acontecia.
+          // Sem confirmação, `fn_credita_indicacao` não cria o crédito: quem
+          // indicava um paciente não-bariátrico perdia o crédito TODA VEZ, em
+          // silêncio. As regras publicadas não fazem essa ressalva.
+          let mostrouEscolha = false
+          try {
+            const cpfd = String(novoProfile?.cpf || '').replace(/\D/g, '')
+            const { data: op } = await supabase.rpc('opcoes_indicacao', { p_cpf: cpfd })
+            if (op?.ok && op.indicador) {
+              // `proximoPasso` decide o que vem DEPOIS da escolha, porque o
+              // caminho difere: bariátrico paga na 1ª (obrigatório → OBA);
+              // não-bariátrico tem a 1ª grátis e vai às boas-vindas.
+              setOpcoesIndicacao({ ...op, proximoPasso: ehBari ? 'pagamento' : 'boas_vindas' })
+              setShowEscolhaIndicacao(true)
+              mostrouEscolha = true
+            }
+          } catch (e) {}
+          if (mostrouEscolha) return
+          if (ehBari) setShowPagamento(true)
+          else setShowBoasVindas(true)
         }}
         onVoltar={() => {
           // Única saída: abandona o cadastro incompleto e volta ao início (desloga).
@@ -2014,7 +2027,14 @@ export default function PatientDashboard({ session, onVoltar, demoPerfil, abrirO
         cpf={profile.cpf}
         medico={opcoesIndicacao.medico}
         indicador={opcoesIndicacao.indicador}
-        onConcluir={() => { setShowEscolhaIndicacao(false); setShowPagamento(true) }}
+        pagaAgora={opcoesIndicacao?.proximoPasso !== 'boas_vindas'}
+        onConcluir={() => {
+          setShowEscolhaIndicacao(false)
+          // Não-bariátrico não paga na primeira: mandá-lo ao PIX aqui cobraria
+          // pela avaliação que o sistema promete de graça.
+          if (opcoesIndicacao?.proximoPasso === 'boas_vindas') setShowBoasVindas(true)
+          else setShowPagamento(true)
+        }}
       />
     )}
 

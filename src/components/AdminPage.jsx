@@ -1232,7 +1232,12 @@ function AbaConfig() {
                 <label className="block text-sm font-medium text-gray-600 mb-1">{"Desconto de boas-vindas (R$)"}</label>
                 <input type="number" step="0.01" min="0" value={descontoBoasVindasBrl}
                   onChange={e => setDescontoBoasVindasBrl(e.target.value)} placeholder="Ex: 30.00" className={inputClass} />
-                <p className="text-xs text-gray-400 mt-1">{"Abatido da PRIMEIRA anuidade de quem chega indicado \u2014 por m\u00e9dico, por paciente ou por leigo, tanto faz. Zero = n\u00e3o oferecer. (chave: desconto_boas_vindas_brl)"}</p>
+                {/* (19/09/2026) Dizia "por m\u00e9dico, por paciente ou por leigo,
+                    tanto faz". N\u00e3o \u00e9 o que o sistema faz: o desconto sai da
+                    reserva de um INDICADOR (paciente ou leigo). O RECOMENDAR do
+                    m\u00e9dico grava encaminhamento, n\u00e3o indica\u00e7\u00e3o \u2014 e n\u00e3o d\u00e1
+                    desconto nenhum. Conferido em desconto_boas_vindas. */}
+                <p className="text-xs text-gray-400 mt-1">{"Abatido da PRIMEIRA anuidade de quem chega indicado \u2014 por um paciente que indica ou por um indicador leigo. A recomenda\u00e7\u00e3o de um m\u00e9dico N\u00c3O d\u00e1 este desconto. Zero = n\u00e3o oferecer. (chave: desconto_boas_vindas_brl)"}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">{"Cr\u00e9dito por indica\u00e7\u00e3o (R$)"}</label>
