@@ -1470,10 +1470,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
         try { window.alert('Não conseguimos registrar o seu pedido no sistema. Envie a mensagem pelo WhatsApp assim mesmo — o administrador vai confirmar com você.') } catch (e) {}
         return
       }
-      const novo = {
-        ...base,
-        _pedidos: { ...(base._pedidos || {}), [chave]: { ...dados, em: new Date().toISOString() } },
-      }
+      // `dados === null` = RETIRAR o pedido. Existe porque as caixinhas da
+      // conclusão podem ser desmarcadas: quem muda de ideia antes de sair da
+      // tela não pode continuar com um pedido de pé — o painel cobraria uma
+      // teleconsulta que o paciente desistiu de pedir.
+      const pedidosAtuais = { ...(base._pedidos || {}) }
+      if (dados === null) delete pedidosAtuais[chave]
+      else pedidosAtuais[chave] = { ...dados, em: new Date().toISOString() }
+      const novo = { ...base, _pedidos: pedidosAtuais }
       relSalvoRef.current = novo
       const ok = await gravarNaLinhaDoCiclo({ relatorio_oba: novo }, 'pedidos')
       if (!ok) {
@@ -2702,7 +2706,17 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                   {"Cannabinóides Medicinais podem aliviar os seus sintomas. Se quiser mais informações marque o checkbox abaixo que podemos marcar uma teleconsulta gratuita com um médico prescritor desses produtos."}
                 </p>
                 <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
-                  <input type="checkbox" checked={querCanabinoide} onChange={e => setQuerCanabinoide(e.target.checked)} style={{ ...checkBox, accentColor:'#7C3AED' }} />
+                  {/* (22/09/2026) A caixinha era estado de tela e NADA mais:
+                      o paciente marcava, e ninguém no projeto ficava sabendo.
+                      Só quem tocasse no botão do WhatsApp era ouvido. Agora o
+                      pedido é registrado no ato de marcar — mesmo padrão do
+                      card de teleconsulta, que cai em Admin → Pendências. */}
+                  <input type="checkbox" checked={querCanabinoide}
+                    onChange={e => {
+                      setQuerCanabinoide(e.target.checked)
+                      registrarPedido('teleconsulta_canabinoide', e.target.checked ? { motivo: 'sintomas fibromiálgicos', gratuita: true } : null)
+                    }}
+                    style={{ ...checkBox, accentColor:'#7C3AED' }} />
                   <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#6D28D9' }}>{"QUERO UMA TELECONSULTA GRATUITA COM MÉDICO PRESCRITOR"}</span>
                 </label>
                 {querCanabinoide && (
@@ -2715,7 +2729,14 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
             <div style={{ background:'#F0FDF4', border:'1px solid #86EFAC', borderRadius:12, padding:'1rem 1.1rem' }}>
               <p style={{ fontSize:'0.85rem', fontWeight:800, color:'#166534', margin:'0 0 0.5rem' }}>{"Receber o resultado da sua avaliação"}</p>
               <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
-                <input type="checkbox" checked={querResultado} onChange={e => setQuerResultado(e.target.checked)} style={{ ...checkBox, accentColor:'#16A34A' }} />
+                {/* (22/09/2026) Idem: "Enviaremos um resumo da sua avaliação"
+                    não chegava a ninguém se o paciente não tocasse no botão. */}
+                <input type="checkbox" checked={querResultado}
+                  onChange={e => {
+                    setQuerResultado(e.target.checked)
+                    registrarPedido('resultado_whatsapp', e.target.checked ? { canal: 'whatsapp' } : null)
+                  }}
+                  style={{ ...checkBox, accentColor:'#16A34A' }} />
                 <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#166534' }}>{"QUERO RECEBER O RESULTADO POR WHATSAPP"}</span>
               </label>
               <p style={{ fontSize:'0.74rem', color:'#15803D', margin:'0.5rem 0 0', lineHeight:1.5 }}>
@@ -2903,7 +2924,15 @@ export default function OBAModal({ sexo, cpf, nome, dataNascimento, idade, exame
                       {"Uma TELECONSULTA M\u00c9DICA pode esclarecer estes pontos e deixar as suas informa\u00e7\u00f5es mais precisas \u2014 quanto mais precisas, melhor o algoritmo otimiza a sua sa\u00fade."}
                     </p>
                     <label style={{ display:'flex', alignItems:'flex-start', gap:'0.5rem', cursor:'pointer', userSelect:'none' }}>
-                      <input type="checkbox" checked={querTeleDuvida} onChange={e => setQuerTeleDuvida(e.target.checked)} style={{ width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#92400E', flexShrink:0 }} />
+                      {/* (22/09/2026) Idem. Esta é a mais sensível das três: o
+                          paciente marca dúvidas na anamnese e pede ajuda para
+                          esclarecê-las — e o pedido morria na tela. */}
+                      <input type="checkbox" checked={querTeleDuvida}
+                        onChange={e => {
+                          setQuerTeleDuvida(e.target.checked)
+                          registrarPedido('teleconsulta_duvidas', e.target.checked ? { duvidas: (form.duvidas || []).map(s => DUVIDA_SECOES[s] || s) } : null)
+                        }}
+                        style={{ width:'1.1rem', height:'1.1rem', marginTop:'0.1rem', accentColor:'#92400E', flexShrink:0 }} />
                       <span style={{ fontSize:'0.82rem', fontWeight:700, color:'#92400E' }}>{"QUERO UMA TELECONSULTA PARA ESCLARECER ESTES PONTOS"}</span>
                     </label>
                     {querTeleDuvida ? (

@@ -569,6 +569,12 @@ function AbaPendencias({ irPara }) {
             const partes = [];
             if (p.teleconsultas?.quantidade > 0) partes.push(`${p.teleconsultas.quantidade} teleconsulta(s)`);
             if (p.exames?.n_pedidos > 0) partes.push(`${p.exames.n_pedidos} pedido(s) de exame`);
+            // (22/09/2026) Os três pedidos simples da conclusão do OBA. Sem
+            // estas linhas a pendência subia com a descrição "—": o operador
+            // via que havia algo e não o quê.
+            if (p.teleconsulta_duvidas) partes.push('teleconsulta p/ dúvidas');
+            if (p.teleconsulta_canabinoide) partes.push('teleconsulta canabinoides');
+            if (p.resultado_whatsapp) partes.push('resultado por WhatsApp');
             return (
               <div key={l.id} className="flex items-center justify-between gap-2 border-t border-gray-100 py-1">
                 <p className="text-sm text-gray-800">

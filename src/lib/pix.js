@@ -9,6 +9,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Dados fixos do recebedor (do código original).
+// ⚠ A chave da ANUIDADE (aleatória, abaixo) e a de `config.pix_chave` (o CNPJ,
+// usada nos documentos) são da MESMA empresa — confirmado pelo Estácio em
+// 22/09/2026. Por isso o nome/cidade do recebedor podem ser fixos aqui. Se um
+// dia a chave do config passar a ser de OUTRA conta, nome e cidade precisam
+// virar parâmetro junto com a chave, senão o código sai com a chave de uma
+// empresa e o nome de outra.
 const PIX_CHAVE  = '7f45b640-5732-4d2a-bb9a-f3de223d9eab';
 const PIX_NOME   = 'CYTOMICA - MEDICINA, PESQ';
 const PIX_CIDADE = 'SAO PAULO';
@@ -38,15 +44,23 @@ function tlv(id, v) {
 }
 
 /**
- * Gera o código Pix copia-e-cola para um dado valor (R$).
+ * Gera o código Pix copia-e-cola (BR Code) para um valor.
  * @param {number|string} valor - ex.: 149.9 → "149.90" no código.
+ * @param {object} [opcoes]
+ * @param {string} [opcoes.chave] - chave Pix do recebedor. Vazia/ausente → a da anuidade.
+ * @param {string} [opcoes.txid]  - rótulo da cobrança (até 25 caracteres, sem acento).
  * @returns {string} código BR Code válido (com CRC).
  */
-export function gerarPixAnuidade(valor) {
+export function gerarPixCopiaECola(valor, opcoes = {}) {
+  const chave = String(opcoes.chave || '').trim() || PIX_CHAVE;
+  // O rótulo aceita só letras, números e alguns sinais; qualquer outra coisa
+  // faz banco recusar o código. '***' é o "sem identificador" do padrão.
+  const txidBruto = String(opcoes.txid || PIX_TXID).replace(/[^A-Za-z0-9]/g, '').slice(0, 25);
+  const txid = txidBruto || '***';
   const valorStr = Number(valor).toFixed(2); // "149.90"
   const payload =
     tlv('00', '01') +
-    tlv('26', tlv('00', 'BR.GOV.BCB.PIX') + tlv('01', PIX_CHAVE)) +
+    tlv('26', tlv('00', 'BR.GOV.BCB.PIX') + tlv('01', chave)) +
     tlv('52', '0000') +
     tlv('53', '986') +
     tlv('54', valorStr) +
@@ -54,9 +68,14 @@ export function gerarPixAnuidade(valor) {
     tlv('59', PIX_NOME) +
     tlv('60', PIX_CIDADE) +
     tlv('61', PIX_CEP) +
-    tlv('62', tlv('05', PIX_TXID));
+    tlv('62', tlv('05', txid));
   const semCrc = payload + '6304';
   return semCrc + crc16(semCrc);
+}
+
+/** Anuidade: mantém a chave e o rótulo originais, verificados contra o código real. */
+export function gerarPixAnuidade(valor) {
+  return gerarPixCopiaECola(valor);
 }
 
 /** Formata um valor numérico como BRL sem o "R$" (ex.: 149.9 → "149,90"). */

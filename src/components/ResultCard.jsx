@@ -7,6 +7,7 @@ import { ehBloqueio } from '../engine/limitesInput';
 // (modoPaciente). Passar só a credencial do médico deixaria o histórico do
 // paciente vazio. credMedico continua sendo usado onde a ação É do médico.
 import { credAmbas, credMedico } from '../lib/cred';
+import { gerarPixCopiaECola } from '../lib/pix';
 import { DUVIDA_SECOES } from './OBAModal';
 import { cicloFromRow, compararCiclos } from '../engine/obaComparador';
 import OBAComparativoCard from './OBAComparativoCard';
@@ -583,6 +584,30 @@ function OBASection({ oba, modoPaciente = false, cpf, sexo, onRevisar, mostrarPa
                 ))}
               </div>
             )}
+            {/* (22/09/2026) Os três pedidos simples da conclusão. Eles passaram
+                a ser gravados nesta data; antes morriam na tela do paciente.
+                Sem este bloco, continuariam invisíveis para o médico — grava e
+                ninguém vê é quase tão ruim quanto não gravar. */}
+            {[
+              ['teleconsulta_duvidas', 'Teleconsulta para esclarecer dúvidas'],
+              ['teleconsulta_canabinoide', 'Teleconsulta com prescritor de canabinoides'],
+              ['resultado_whatsapp', 'Receber o resultado por WhatsApp'],
+            ].map(([chave, rotulo]) => pedidos[chave] ? (
+              <div key={chave} className="mb-2">
+                <p className="text-green-800 text-xs font-bold uppercase tracking-wide mb-1">
+                  {rotulo}{pedidos[chave].em ? " · " + fmtDataPedido(pedidos[chave].em) : ""}
+                </p>
+                {Array.isArray(pedidos[chave].duvidas) && pedidos[chave].duvidas.length > 0 && (
+                  <ul className="space-y-0.5">
+                    {pedidos[chave].duvidas.map((d, i) => (
+                      <li key={i} className="flex items-start gap-2 text-green-900 text-sm font-semibold">
+                        <span className="text-green-500 mt-0.5 flex-shrink-0">{"•"}</span><span>{d}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ) : null)}
             <p className="text-green-700 text-[11px] leading-snug mt-2">
               {"Solicitado pelo paciente na conclusão da avaliação. O pagamento é confirmado à parte."}
             </p>
@@ -803,6 +828,7 @@ function DocumentoMedicoPanel({ resultado }) {
   // cobra valor_documento_medico. Ambos do config, nunca hardcoded.
   const [valorSolic, setValorSolic] = useState(null);
   const [pixChave, setPixChave] = useState('');
+  const [pixCopiado, setPixCopiado] = useState(false);
   const [etapa, setEtapa] = useState('oferta');
   const [dadosPaciente, setDadosPaciente] = useState({ nome: '', dataNasc: '', celular: '', cpf: '' });
   const [tiposDoc, setTiposDoc] = useState({ exames: false, prescricao: false });
@@ -1036,6 +1062,10 @@ function DocumentoMedicoPanel({ resultado }) {
   // não carregou (não quebra o painel; config é a fonte).
   const precoExame = valorSolic ?? valorDoc ?? 0;
   const totalPedido = (tiposDoc.exames ? precoExame * nServicos : 0) + (tiposDoc.prescricao ? (valorDoc || 0) : 0);
+  // Código Pix de verdade (BR Code), com o valor do pedido embutido. A chave
+  // vem do config (Admin → Configurações); sem ela, cai na chave da anuidade,
+  // que é do mesmo recebedor e está verificada contra o código original.
+  const pixCodigo = totalPedido > 0 ? gerarPixCopiaECola(totalPedido, { chave: pixChave, txid: 'DOCOBA' }) : '';
 
   const inputStyle = { width: '100%', border: '1.5px solid #E5E7EB', borderRadius: 8, padding: '0.6rem 0.8rem', fontSize: '0.9rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' };
 
@@ -1054,15 +1084,28 @@ function DocumentoMedicoPanel({ resultado }) {
       </div>
       <div className="p-4 space-y-4">
         <p className="text-gray-600 text-sm">{"Valor: "}<strong className="text-red-700 text-lg">{"R$ "}{totalPedido.toFixed(2)}</strong></p>
-        {pixChave && (
+        {/* (22/09/2026) O QR e o "copia e cola" traziam a CHAVE crua (o CNPJ).
+            Banco nenhum lê isso: o aplicativo espera o BR Code do padrão do
+            Banco Central, com valor e dígito verificador — o mesmo que a
+            anuidade já gerava. Resultado: o paciente não conseguia pagar
+            documento pelo QR, e o valor ia digitado à mão ou não ia. */}
+        {pixCodigo && (
           <>
             <div className="flex justify-center">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pixChave)}`}
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(pixCodigo)}`}
                 alt="QR Code Pix" className="rounded-xl border border-gray-200" width={180} height={180} />
             </div>
             <div className="bg-gray-50 rounded-xl p-3 text-center">
-              <p className="text-xs text-gray-500 mb-1">{"Chave Pix (Copia e Cola):"}</p>
-              <p className="text-xs font-mono text-gray-700 break-all select-all">{pixChave}</p>
+              <p className="text-xs text-gray-500 mb-1">{"Pix copia e cola (já com o valor):"}</p>
+              <p className="text-[11px] font-mono text-gray-700 break-all select-all">{pixCodigo}</p>
+              <button type="button"
+                onClick={async () => {
+                  try { await navigator.clipboard.writeText(pixCodigo); setPixCopiado(true); setTimeout(() => setPixCopiado(false), 4000) }
+                  catch (e) { try { window.prompt('Copie o código Pix:', pixCodigo) } catch (e2) {} }
+                }}
+                className="mt-2 text-xs font-bold px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700">
+                {pixCopiado ? 'Código copiado!' : 'Copiar código'}
+              </button>
             </div>
           </>
         )}
