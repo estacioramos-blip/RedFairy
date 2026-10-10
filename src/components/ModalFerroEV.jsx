@@ -1,6 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { supabase } from '../lib/supabase';
-import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
+import { calcularDeficitFerroGanzoni, calcReceita, ehBolsaPronta } from '../engine/ferroProtocol';
 
 // Classes de receita exibidas (cada uma puxa a marca ATIVA configurada no Admin →
 // Medicamentos). `ampola` = conteúdo de ferro por ampola (subtexto sob o nome).
@@ -107,6 +107,7 @@ export default function ModalFerroEV({ onClose, hbAtual, sexo, gestante, semanas
                 </Fragment>
               );
               const r = calcReceita(doseTotal, med);
+              const bolsa = ehBolsaPronta(med);
               return (
                 <Fragment key={cl.id}>
                   {sep}
@@ -116,13 +117,14 @@ export default function ModalFerroEV({ onClose, hbAtual, sexo, gestante, semanas
                     <p className="font-semibold text-gray-800 pt-1">{med.nome_comercial}
                       <span className="font-normal text-gray-500 text-xs">{" · "}{med.principio_ativo}</span></p>
                     {/* (a) subtexto sob o nome: conteúdo de ferro por ampola */}
-                    <p className="text-xs font-bold text-red-700">{cl.ampola}</p>
+                    <p className="text-xs font-bold text-red-700">{bolsa ? `CADA BOLSA CONTÉM ${r.frasco} mg` : cl.ampola}</p>
                     {med.fabricante && <p className="text-xs text-gray-400">{"Fabricante: "}{med.fabricante}</p>}
                     <p>{"• Dose total: "}<strong>{doseTotal} mg</strong></p>
                     {/* (c) Frasco → Ampola */}
-                    <p>{"• Ampolas: "}<strong>{r.frascos}{" de "}{r.frasco} mg</strong></p>
+                    <p>{bolsa ? "• Bolsas: " : "• Ampolas: "}<strong>{r.frascos}{" de "}{r.frasco} mg</strong></p>
                     <p>{"• Sessões: "}<strong>{r.sessoes}{" de até "}{r.maxSessao} mg</strong></p>
-                    {med.diluicao && <p>{"• Diluir em "}<strong>{med.diluicao}</strong>{med.tempo_infusao ? <>{", infundir em "}<strong>{med.tempo_infusao}</strong></> : null}</p>}
+                    {bolsa && <p>{"• Bolsa pronta para uso — "}<strong>{"NÃO diluir"}</strong>{med.tempo_infusao ? <>{", infundir em "}<strong>{med.tempo_infusao}</strong></> : null}</p>}
+                    {!bolsa && med.diluicao && <p>{"• Diluir em "}<strong>{med.diluicao}</strong>{med.tempo_infusao ? <>{", infundir em "}<strong>{med.tempo_infusao}</strong></> : null}</p>}
                     {med.intervalo_sessoes && med.intervalo_sessoes !== '—' && <p>{"• Intervalo entre sessões: "}<strong>{med.intervalo_sessoes}</strong></p>}
                     {med.observacoes && <p className="text-xs text-gray-500 italic pt-1">{med.observacoes}</p>}
                   </div>

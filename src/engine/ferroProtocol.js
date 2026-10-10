@@ -95,3 +95,9 @@ export function calcReceita(doseTotal, med) {
   const sessoes = Math.max(1, Math.ceil(doseTotal / maxSessao));
   return { frasco, maxSessao, frascos, sessoes };
 }
+
+// Bolsa pronta para uso (ex.: Ferrara) — a bula PROÍBE diluir. Quem monta a
+// receita usa isto para dizer "bolsa" e "NÃO diluir" em vez de "ampola/diluir em".
+export function ehBolsaPronta(med) {
+  return med?.pronto_para_uso === true;
+}

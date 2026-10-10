@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import HistoricoChartModal from './HistoricoChartModal';
-import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
+import { calcularDeficitFerroGanzoni, calcReceita, ehBolsaPronta } from '../engine/ferroProtocol';
 import { ehBloqueio } from '../engine/limitesInput';
 // credAmbas: o ResultCard roda tanto no fluxo do médico quanto no do paciente
 // (modoPaciente). Passar só a credencial do médico deixaria o histórico do
@@ -141,6 +141,7 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante, pesoInicial }) {
                 </div>
               );
               const r = calcReceita(doseTotal, med);
+              const bolsa = ehBolsaPronta(med);
               return (
                 <div key={cl.id} className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 space-y-1">
                   <p className="text-xs font-bold text-red-700 uppercase tracking-wide">{cl.rotulo}</p>
@@ -150,9 +151,10 @@ function ModalFerroEV({ onClose, hbAtual, sexo, gestante, pesoInicial }) {
                     <span className="font-normal text-gray-500 text-xs">{" \u00b7 "}{med.principio_ativo}</span></p>
                   {med.fabricante && <p className="text-xs text-gray-400">{"Fabricante: "}{med.fabricante}</p>}
                   <p>{"\u2022 Dose total: "}<strong>{doseTotal} mg</strong></p>
-                  <p>{"\u2022 Frascos: "}<strong>{r.frascos}{" de "}{r.frasco} mg</strong></p>
+                  <p>{bolsa ? "\u2022 Bolsas: " : "\u2022 Frascos: "}<strong>{r.frascos}{" de "}{r.frasco} mg</strong></p>
                   <p>{"\u2022 Sess\u00f5es: "}<strong>{r.sessoes}{" de at\u00e9 "}{r.maxSessao} mg</strong></p>
-                  {med.diluicao && <p>{"\u2022 Diluir em "}<strong>{med.diluicao}</strong>{med.tempo_infusao ? <>{", infundir em "}<strong>{med.tempo_infusao}</strong></> : null}</p>}
+                  {bolsa && <p>{"\u2022 Bolsa pronta para uso \u2014 "}<strong>{"N\u00c3O diluir"}</strong>{med.tempo_infusao ? <>{", infundir em "}<strong>{med.tempo_infusao}</strong></> : null}</p>}
+                  {!bolsa && med.diluicao && <p>{"\u2022 Diluir em "}<strong>{med.diluicao}</strong>{med.tempo_infusao ? <>{", infundir em "}<strong>{med.tempo_infusao}</strong></> : null}</p>}
                   {med.intervalo_sessoes && med.intervalo_sessoes !== '\u2014' && <p>{"\u2022 Intervalo entre sess\u00f5es: "}<strong>{med.intervalo_sessoes}</strong></p>}
                   {med.observacoes && <p className="text-xs text-gray-500 italic pt-1">{med.observacoes}</p>}
                 </div>

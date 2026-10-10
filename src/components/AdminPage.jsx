@@ -3,7 +3,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { supabase } from '../lib/supabase';
-import { calcularDeficitFerroGanzoni, calcReceita } from '../engine/ferroProtocol';
+import { calcularDeficitFerroGanzoni, calcReceita, ehBolsaPronta } from '../engine/ferroProtocol';
 import { credPainel, sessaoOperador } from '../lib/cred';
 
 // Credencial do painel: a do OPERADOR (auxiliar, conta sem CRM) se houver,
@@ -91,10 +91,11 @@ function montarCondutaFerro(avaliacao, medsAtivos) {
     t += `   Para: ${acesso[classe]}.\n`;
     if (calc) {
       const r = calcReceita(calc.deficitMg, med);
-      t += `   ${r.frascos} frasco(s) de ${r.frasco} mg · ${r.sessoes} sessão(ões) de até ${r.maxSessao} mg.\n`;
+      t += `   ${r.frascos} ${ehBolsaPronta(med) ? 'bolsa(s)' : 'frasco(s)'} de ${r.frasco} mg · ${r.sessoes} sessão(ões) de até ${r.maxSessao} mg.\n`;
     }
     const inf = [];
-    if (med.diluicao) inf.push(`diluir em ${med.diluicao}`);
+    if (ehBolsaPronta(med)) inf.push('bolsa pronta para uso — NÃO diluir');
+    else if (med.diluicao) inf.push(`diluir em ${med.diluicao}`);
     if (med.tempo_infusao) inf.push(`infundir em ${med.tempo_infusao}`);
     if (med.intervalo_sessoes && med.intervalo_sessoes !== '—') inf.push(`intervalo ${med.intervalo_sessoes}`);
     if (inf.length) t += `   ${inf.join('; ')}.\n`;
