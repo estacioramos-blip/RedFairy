@@ -3,7 +3,7 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { supabase } from '../lib/supabase';
-import { calcularDeficitFerroGanzoni, calcReceita, ehBolsaPronta } from '../engine/ferroProtocol';
+import { calcularDeficitFerroGanzoni, calcReceita, ehBolsaPronta, normalizarIntervalo } from '../engine/ferroProtocol';
 import { credPainel, sessaoOperador } from '../lib/cred';
 
 // Credencial do painel: a do OPERADOR (auxiliar, conta sem CRM) se houver,
@@ -1612,7 +1612,7 @@ function AbaMedicamentos() {
           dose_max_sessao_mg: num(m.dose_max_sessao_mg),
           diluicao: m.diluicao || null,
           tempo_infusao: m.tempo_infusao || null,
-          intervalo_sessoes: m.intervalo_sessoes || null,
+          intervalo_sessoes: normalizarIntervalo(m.intervalo_sessoes) || null,
           cota_total: num(m.cota_total),
           observacoes: m.observacoes || null,
           ativo: !!m.ativo,

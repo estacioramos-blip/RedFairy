@@ -96,6 +96,13 @@ export function calcReceita(doseTotal, med) {
   return { frasco, maxSessao, frascos, sessoes };
 }
 
+// Intervalo entre sessões digitado só como número ("3") ganha a unidade padrão
+// "dias" ("3 dias"). Texto com unidade ("48–72 h", "7 dias") ou "—" fica intacto.
+export function normalizarIntervalo(v) {
+  const s = String(v ?? '').trim();
+  return /^\d+([.,]\d+)?$/.test(s) ? `${s} dias` : s;
+}
+
 // Bolsa pronta para uso (ex.: Ferrara) — a bula PROÍBE diluir. Quem monta a
 // receita usa isto para dizer "bolsa" e "NÃO diluir" em vez de "ampola/diluir em".
 export function ehBolsaPronta(med) {
