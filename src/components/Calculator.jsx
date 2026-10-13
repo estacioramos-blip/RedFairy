@@ -377,7 +377,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     if (!crmUF) { setCadErro("Informe a UF."); return }
     if (!UFS_VALIDAS.includes(crmUF)) { setCadErro("UF inv\u00e1lida."); return }
     if (celularDigits.length < 10) { setCadErro("Informe um celular v\u00e1lido com DDD."); return }
-    if (email && !email.includes('@')) { setCadErro("E-mail inv\u00e1lido \u2014 ou deixe em branco."); return }
+    // Antes s\u00f3 exigia "@", e "medico@teste..com" passava (aconteceu, 13/10/2026).
+    // Agora: algo@dominio.ext, sem espa\u00e7o e sem ponto duplo.
+    if (email && (!/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email.trim()) || email.includes('..'))) { setCadErro("E-mail inv\u00e1lido \u2014 confira ou deixe em branco."); return }
     if (!ehMesmoMedico && (!senha || senha.length < 6)) { setCadErro('A senha deve ter pelo menos 6 caracteres.'); return }
     setCadLoading(true)
     // Médico já identificado em sessão anterior (cadastro mínimo pela caixa do
