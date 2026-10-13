@@ -89,7 +89,7 @@ function CadastroConcluidoTela({ nomeMedico, crmMedico, onConcluir }) {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div style={{ position: 'relative' }}>
-          <img src={telefonista2Img} alt="Vamos ao programa de afiliados"
+          <img src={telefonista2Img} alt="Projeto OBA"
             style={{ width: '100%', height: 'auto', display: 'block' }} />
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.55) 50%, transparent)', padding: '40px 24px 18px' }}>
             <p style={{ color: '#ffffff', fontSize: '20px', fontWeight: 700, lineHeight: 1.2, margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
@@ -171,6 +171,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
   const [medSexo, setMedSexo] = useState('')   // sexo do médico → textos dinâmicos (Doutor/a)
   const [celular, setCelular] = useState('')
   const [email, setEmail] = useState('')
+  // Telegram: veio da tela de pagamento para cá (10/2026). Ele só diz à equipe por
+  // onde falar com o médico — não tinha por que esperar o primeiro crédito.
+  const [usaTelegramCad, setUsaTelegramCad] = useState(false)
   const [senha, setSenha] = useState('')
   const jaLogadoSemSenha = (() => { try { return !!localStorage.getItem('medico_crm'); } catch(e) { return false; } })()
   const [cadErro, setCadErro] = useState('')
@@ -396,6 +399,7 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
           p_patch: {
             nome: nome.trim(), celular: celularDigits, sexo: medSexo,
             ...(emailLimpo ? { email: emailLimpo } : {}),
+            ...(usaTelegramCad ? { usa_telegram: true } : {}),
           },
         })
         if (error || !upResp?.ok) { setCadLoading(false); setCadErro('Erro ao salvar. Tente novamente.'); return }
@@ -430,6 +434,11 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
     localStorage.setItem('medico_login_at', Date.now().toString())
     if (resp.token) localStorage.setItem('medico_token', resp.token)
     try { if (resp.is_admin) localStorage.setItem('medico_is_admin', '1') } catch (e) {}
+    // register_medico não recebe o Telegram; grava logo em seguida, já com o token.
+    // Falhar aqui não derruba o cadastro: é só o canal de contato da equipe.
+    if (usaTelegramCad) {
+      try { await supabase.rpc('medico_atualizar_meu', { ...credMedico(), p_patch: { usa_telegram: true } }) } catch (e) {}
+    }
     setCadSucesso(true)
   }
 
@@ -439,7 +448,9 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
   useEffect(() => {
     if (cadSucesso) {
       setCadSucesso(false);
-      if (typeof onConcluir === 'function') { onConcluir(nome, conselho); }
+      // { novo: true }: quem acabou de se cadastrar vê as boas-vindas (ícone +
+      // "Estamos felizes"); quem fez login vai direto ao menu.
+      if (typeof onConcluir === 'function') { onConcluir(nome, conselho, { novo: true }); }
     }
   }, [cadSucesso]);
 
@@ -568,10 +579,13 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
                 placeholder="(00) 00000-0000" inputMode="numeric" maxLength={15} className={inputAmarelo} autoComplete="off" />
             </div>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-              <p className="text-blue-800 text-xs font-bold mb-1">{"Cadastro para recebimento"}</p>
+              <p className="text-blue-800 text-xs font-bold mb-1">{"Como funciona"}</p>
               <p className="text-blue-700 text-xs leading-relaxed">
                 <strong>{medSexo === 'F' ? 'Doutora,' : 'Doutor,'}</strong><br />
-                {"Com mais algumas informa\u00e7\u00f5es, voc\u00ea passa a poder receber pelas avalia\u00e7\u00f5es que fizer no Projeto OBA\u00ae. \u00c9 remunera\u00e7\u00e3o por trabalho prestado \u2014 uma vez por paciente avaliado."}<br /><br />
+                {/* (10/2026) Dizia "Com mais algumas informa\u00e7\u00f5es, voc\u00ea passa a poder
+                    receber..." e logo em seguida abria a tela de CEP/CPF/PIX. Esses dados
+                    agora s\u00f3 s\u00e3o pedidos quando nasce o primeiro cr\u00e9dito. */}
+                {"A avalia\u00e7\u00e3o que voc\u00ea faz no Projeto OBA\u00ae \u00e9 remunerada \u2014 trabalho prestado, uma vez por paciente avaliado. Os dados para o pagamento (CEP, CPF e chave PIX) s\u00f3 ser\u00e3o pedidos quando voc\u00ea tiver o primeiro cr\u00e9dito a receber."}<br /><br />
                 {/* (R2) Aqui dizia "Ao INDICAR ou avaliar\u2026 voc\u00ea receber\u00e1 incentivos
                     dos nossos patrocinadores". Prometia dinheiro por paciente
                     trazido \u2014 exatamente a capta\u00e7\u00e3o de clientela que a reforma
@@ -584,11 +598,15 @@ function AuthMedico({ onConcluir, onVoltar, sessaoExpirada, modoInicial = 'login
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1">E-mail</label>
-              <p className="text-xs text-gray-500 mb-1">{"Opcional — cadastre só se o seu PIX for o seu e-mail."}</p>
+              <p className="text-xs text-gray-500 mb-1">{"Opcional."}</p>
               <input ref={refEmailCad} type="email" value={email} onChange={e => setEmail(e.target.value.toLowerCase())}
                 placeholder="seu@email.com" className={inputAmarelo} autoComplete="off"
                 inputMode="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
             </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={usaTelegramCad} onChange={e => setUsaTelegramCad(e.target.checked)} style={{ accentColor: '#7B1E1E' }} />
+              <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"USO TAMBÉM O TELEGRAM"}</span>
+            </label>
             <div>
               {!jaLogadoSemSenha && !senha && (<><label className="block text-sm font-medium text-gray-600 mb-1">Crie a sua Senha</label>
               <div style={{ position: 'relative' }}>
@@ -834,20 +852,53 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [triagemResultado, setTriagemResultado] = useState(null);
   const [triagemInputs, setTriagemInputs] = useState(null);
   const [showAfiliados, setShowAfiliados] = useState(false);
+  // (10/2026) O PIX saiu do cadastro. O mesmo modal tem agora DOIS modos:
+  //  - 'boasvindas': no cadastro. Só a imagem de boas-vindas + o card de instalar
+  //    o ícone, e então o "Estamos felizes". NÃO pede CEP/CPF/PIX. (O ícone só é
+  //    oferecido aqui — tirar o modal do cadastro sumiria com ele.)
+  //  - 'pagamento': quando há crédito. Pula o splash e vai direto aos campos.
+  const [modoAfil, setModoAfil] = useState('pagamento');
+  function abrirPagamento() { setModoAfil('pagamento'); setShowAfiliados(true); }
+  // Lembrete discreto (faixa no rodapé) no LOGIN, enquanto houver crédito parado
+  // por falta de CEP/CPF/PIX.
   const [showAfiliadosBanner, setShowAfiliadosBanner] = useState(false);
-  // (item 8) Convite 4DOC pos-avaliacao para medico ainda nao afiliado — PLACEHOLDER a
-  // redesenhar. Substitui a antiga "tarja cinza" (showAfiliadosBanner) que auto-aparecia.
+  // Aviso pós-AVALIAR: abre quando a avaliação gera crédito e faltam os dados de
+  // pagamento. Era um PLACEHOLDER ("tarja cinza" → "convite 4DOC"); virou o
+  // momento em que o PIX é pedido. avisoCredito = { usd, brl } a receber.
   const [showConvite4doc, setShowConvite4doc] = useState(false);
+  const [avisoCredito, setAvisoCredito] = useState(null);
+  // Crédito a receber e dados de pagamento faltando? Devolve { usd, brl } ou null.
+  // Erro de rede → null (melhor não avisar do que avisar errado).
+  async function creditoParadoSemDados() {
+    try {
+      const { data: mr } = await supabase.rpc('medico_meu', credMedico());
+      const md = mr?.ok ? mr.medico : null;
+      if (!md || (md.cep && md.cpf && md.pix_chave)) return null;
+      const c = credMedico();
+      const { data: cr } = await supabase.rpc('listar_creditos_medico', { p_crm: c.p_crm, p_token: c.p_med_token });
+      const n = (cr && cr.ok) ? Number(cr.aval_a_receber || 0) : 0;
+      if (n <= 0) return null;
+      const usd = n * (Number(cr.valor_usd_avaliacao) || 0);
+      return { usd, brl: usd * (Number(cr.cotacao) || 0) };
+    } catch (e) { return null; }
+  }
   // (consentimento, 13/09/2026) Link que o médico envia ao paciente pedindo
   // autorização para acompanhá-lo. Quem concede é o PACIENTE — o link é só o
   // convite (ver AutorizarMedicoModal).
   const [linkAutorizacaoCopiado, setLinkAutorizacaoCopiado] = useState(false);
   const [showQRMedico, setShowQRMedico] = useState(false);  // QR de encaminhamento (4DOC)
   const [qrFoco, setQrFoco] = useState('qr');  // 'qr' (ENCAMINHAR: QR+link) | 'cpf' (RECOMENDAR: digitar CPF)
-  // Marca que o 4DOC ja foi oferecido (modal cheio) nesta sessao: evita o modal reaparecer
-  // depois que o medico ja declinou ("Preencher depois"). Apos isso, no maximo o banner.
-  const jaOfereceu4DOCRef = React.useRef(false);
-  React.useEffect(() => { if (showAfiliados) jaOfereceu4DOCRef.current = true; }, [showAfiliados]);
+  // Aviso de crédito sem dados de pagamento: no máximo uma vez por sessão.
+  const jaAvisouCreditoRef = React.useRef(false);
+  // Faixa de lembrete: confere UMA vez quando a sessão do médico é reconhecida
+  // (login, cadastro ou app aberto já logado pelo ícone).
+  const jaConferiuCreditoRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!cadastrado || jaConferiuCreditoRef.current) return;
+    jaConferiuCreditoRef.current = true;
+    creditoParadoSemDados().then(p => { if (p) setShowAfiliadosBanner(true); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cadastrado]);
   const [afiliadoEndereco, setAfiliadoEndereco] = useState('');
   const [afiliadoPix, setAfiliadoPix] = useState('');
   const [afilTitular, setAfilTitular] = useState(medicoNome || ''); const [afilPj, setAfilPj] = useState(false); const [afilCnpj, setAfilCnpj] = useState(''); const [afilFamiliar, setAfilFamiliar] = useState(false);  // titular do PIX (PF/familiar/PJ)
@@ -856,7 +907,6 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   const [afiliadoCEP, setAfiliadoCEP] = useState('');
   const [afiliadoCPF, setAfiliadoCPF] = useState('');
   const [afiliadoCPFErro, setAfiliadoCPFErro] = useState('');
-  const [usaTelegram, setUsaTelegram] = useState(false);
   const refAfilCEP = useRef(null);
   const refAfilCPF = useRef(null);
   const refAfilPix = useRef(null);
@@ -978,6 +1028,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     : { img: welcomeImg, size: '100% auto', pos: 'center top' };
   // Libera o splash e foca o formulário de afiliação.
   function prosseguirAfil() {
+    // Modo boas-vindas (cadastro): depois do ícone, vai ao "Estamos felizes" — sem
+    // passar pelos campos de pagamento.
+    if (modoAfil === 'boasvindas') {
+      setCardFada4doc(false); setShowAfiliados(false); setShowFelicitacoes(true);
+      return;
+    }
     setCardFada4doc(false); setSplashAfil(false);
     // (b) imagem aparece nitida por 1.5s e depois esmaece para o fundo.
     setFlashFormImg(true); setTimeout(() => setFlashFormImg(false), 1500);
@@ -1011,10 +1067,26 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
   useEffect(() => {
     if (showAfiliados) {
       setEtapaAfil(1);
+      setBgAfilRevelado(false);
+      setCardFada4doc(false); setFada4docMarcada(false); setFada4docInstrIOS(false);
+      // Modo PAGAMENTO: sem splash nem card do ícone — o médico veio cadastrar os
+      // dados de pagamento, vai direto ao CEP.
+      if (modoAfil === 'pagamento') {
+        setSplashAfil(false);
+        const tf = setTimeout(() => { try { refAfilCEP.current?.focus({ preventScroll: true }); } catch (e) {} }, 100);
+        if (medicoCRM) {
+          (async () => {
+            try {
+              const { data: mr } = await supabase.rpc('medico_meu', credMedico());   // RLS Fase 3
+              if (mr?.ok && mr.medico) setMedicoDados(mr.medico);
+            } catch (e) {}
+          })();
+        }
+        return () => clearTimeout(tf);
+      }
       // SPLASH de entrada: imagem + greeting; depois revela o CARD da FADINHA 4DOC.
       // O splash NÃO some sozinho — só sai quando o médico instala ou opta por depois.
-      setSplashAfil(true); setBgAfilRevelado(false);
-      setCardFada4doc(false); setFada4docMarcada(false); setFada4docInstrIOS(false);
+      setSplashAfil(true);
       const t = setTimeout(() => { setCardFada4doc(true); }, 2500);
       // Recarrega medicoDados (celular/email) ao abrir o modal de afiliados,
       // pra garantir que os checkboxes "TELEFONE/EMAIL" usem dados FRESCOS do banco.
@@ -1510,22 +1582,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
     if (inputs.cpf.trim() && res.encontrado) {
       // Logica de afiliados/banner SO se for medico logado (medicoCRM existe).
       // Paciente vindo da triagem pelo botao azul nao entra aqui.
-      if (medicoCRM) {
-        // Só avaliações COMPLETAS (ferritina preenchida): o "espelho" da triagem
-        // (ferritina=null) inflava a contagem e fechava o convite 4DOC cedo demais.
-        // RLS Fase 2: contagem por RPC (só avaliações com ferritina — regra já
-        // aplicada dentro da função).
-        const { data: cntResp } = await supabase.rpc('avaliacoes_contagem_medico', credMedico())
-        const totalAvals = (cntResp && cntResp.ok) ? cntResp.total : 0
-        const { data: mrA } = await supabase.rpc('medico_meu', credMedico())   // RLS Fase 3
-        const medDados = (mrA?.ok ? mrA.medico : null)
-        if (!medDados?.cep || !medDados?.cpf || !medDados?.pix_chave) {
-          // Se o 4DOC ja foi oferecido (e declinado) nesta sessao, nao reabre o modal cheio:
-          // no maximo o banner discreto. (Antes, o modal reaparecia logo apos a 1a avaliacao.)
-          if ((totalAvals || 0) === 0 && !jaOfereceu4DOCRef.current) setTimeout(() => setShowAfiliados(true), 1200)
-          else setTimeout(() => setShowConvite4doc(true), 1200)
-        }
-      }
+      // (10/2026) Aqui se pediam CEP/CPF/PIX depois desta avaliação. Saiu: este
+      // caminho NÃO gera crédito (crédito só nasce em medico_avaliar_paciente, no
+      // AVALIAR). O pedido agora acontece onde o crédito nasce — ver o onConcluir
+      // do OBAModal do AVALIAR.
       // dataColeta esta em DD/MM/AAAA; Supabase coluna date espera YYYY-MM-DD
       let dataColetaISO = inputs.dataColeta;
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(inputs.dataColeta || '')) {
@@ -1879,6 +1939,13 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 if (avErr || avResp?.ok === false) {
                   console.error('medico_avaliar_paciente:', avErr || avResp?.erro)
                   try { window.alert(avResp?.erro || 'Nao foi possivel registrar o credito desta avaliacao. Avise o administrador.') } catch (e2) {}
+                } else if (avResp?.credito_novo) {
+                  // (10/2026) É AQUI que o PIX é pedido: nasceu crédito e faltam os
+                  // dados para pagá-lo. Não insiste a cada avaliação — uma vez por sessão.
+                  if (!jaAvisouCreditoRef.current) {
+                    const parado = await creditoParadoSemDados()
+                    if (parado) { jaAvisouCreditoRef.current = true; setAvisoCredito(parado); setTimeout(() => setShowConvite4doc(true), 600) }
+                  }
                 }
               } catch (e) {}
             }
@@ -1905,7 +1972,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         />
       )}
 
-      {showAfiliadosBanner && !showAfiliados && (
+      {showAfiliadosBanner && !showAfiliados && !showConvite4doc && (
         <div className="fixed bottom-0 left-0 right-0 z-50 p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="bg-red-700 px-5 py-3 flex items-center justify-between">
@@ -1917,12 +1984,12 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
             </div>
             <div className="p-4 space-y-3">
               <p className="text-gray-700 text-sm leading-relaxed">
-                {"Voc\u00ea ainda n\u00e3o cadastrou os dados para receber pelas suas avalia\u00e7\u00f5es. Quer fazer isso agora?"}
+                {"Voc\u00ea tem avalia\u00e7\u00f5es a receber, mas ainda n\u00e3o cadastrou CEP, CPF e chave PIX. Sem eles n\u00e3o temos para onde pagar."}
               </p>
               <div className="flex gap-2">
-                <button onClick={() => { setShowAfiliadosBanner(false); setShowAfiliados(true) }}
+                <button onClick={() => { setShowAfiliadosBanner(false); abrirPagamento() }}
                   className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
-                  {"Sim, quero participar \u2192"}
+                  {"Cadastrar agora \u2192"}
                 </button>
                 <button onClick={() => setShowAfiliadosBanner(false)}
                   className="px-4 bg-gray-100 hover:bg-gray-200 text-gray-500 text-sm rounded-xl transition-colors">
@@ -1934,26 +2001,34 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
         </div>
       )}
 
-      {/* (item 8) PLACEHOLDER do convite 4DOC pos-avaliacao (so para medico nao afiliado).
-          Substitui a antiga tarja cinza. A versao redesenhada sera feita depois. */}
+      {/* (10/2026) Aviso pós-AVALIAR: nasceu crédito e faltam CEP/CPF/PIX. É o
+          momento em que os dados de pagamento são pedidos (saíram do cadastro).
+          O valor vem de listar_creditos_medico — nunca escrito à mão aqui. */}
       {showConvite4doc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-red-700 px-5 py-3 flex items-center justify-between">
-              <p className="text-white font-bold text-sm">{"🩺 Receba pelas avaliações"}</p>
+              <p className="text-white font-bold text-sm">{"🩺 Você tem avaliações a receber"}</p>
               <button onClick={() => setShowConvite4doc(false)} className="text-red-200 hover:text-white text-lg" style={{ lineHeight: 1 }}>{"✕"}</button>
             </div>
             <div className="p-5 space-y-4 text-center">
-              <p className="text-[11px] uppercase tracking-widest text-gray-400 font-bold">{"Placeholder — a redesenhar"}</p>
+              {avisoCredito && avisoCredito.usd > 0 && (
+                <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  <p className="text-sm text-green-800 font-bold">
+                    {"A receber: US$ "}{avisoCredito.usd.toFixed(2).replace('.', ',')}
+                    {avisoCredito.brl > 0 ? ` ≈ R$ ${avisoCredito.brl.toFixed(2).replace('.', ',')}` : ''}
+                  </p>
+                </div>
+              )}
               <p className="text-gray-700 text-sm leading-relaxed">
-                {"Você ainda não forneceu CPF e chave Pix. Sem eles não temos para onde pagar as avaliações que você fizer."}
+                {"Para pagarmos, precisamos do seu CEP, CPF e chave PIX. Leva um minuto."}
               </p>
-              <button onClick={() => { setShowConvite4doc(false); setShowAfiliados(true); }}
+              <button onClick={() => { setShowConvite4doc(false); abrirPagamento(); }}
                 className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-xl text-sm transition-colors">
-                {"Quero participar →"}
+                {"Cadastrar agora →"}
               </button>
               <button onClick={() => setShowConvite4doc(false)} className="block w-full text-gray-400 hover:text-gray-600 text-xs font-medium">
-                {"Agora não"}
+                {"Depois — o crédito fica guardado"}
               </button>
             </div>
           </div>
@@ -2151,10 +2226,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   )}
                 </div>
               </div>
-              <label className="flex items-center gap-2 cursor-pointer mt-1 mb-2">
-                <input type="checkbox" checked={usaTelegram} onChange={e => setUsaTelegram(e.target.checked)} style={{ accentColor: '#7B1E1E' }} />
-                <span className="text-gray-700 font-medium" style={{ fontSize: '12px', letterSpacing: '0.3px' }}>{"USO TAMBÉM O TELEGRAM"}</span>
-              </label>
+              {/* (10/2026) "USO TAMBÉM O TELEGRAM" foi para o CADASTRO (AuthMedico). */}
               {afiliadoSalvo ? null : (
                 <div className="space-y-2">
                   {/* Padrao PlayButton: \u25b6 vinho + piscar DOURADO + subtexto PROSSEGUIR.
@@ -2188,7 +2260,9 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         const { data: upResp, error } = await supabase.rpc('medico_atualizar_meu', {
                           ...credMedico(),
                           p_patch: {
-                            endereco: '', cep: cepLimpo, cpf: cpfLimpo, pix_chave: pixLimpo, usa_telegram: usaTelegram,
+                            // usa_telegram FORA de propósito: é marcado no cadastro, e
+                            // mandá-lo daqui (sempre false) apagaria a escolha do médico.
+                            endereco: '', cep: cepLimpo, cpf: cpfLimpo, pix_chave: pixLimpo,
                             pix_titular: afilTitular.trim(), pix_titular_pj: afilPj,
                             pix_cnpj: afilPj ? String(afilCnpj).replace(/\D/g, '') : null,
                           },
@@ -2201,7 +2275,10 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                         }
                         // Sucesso confirmado: atualiza o cache local p/ o medico ja contar como afiliado.
                         setMedicoDados(prev => ({ ...(prev || {}), cep: cepLimpo, cpf: cpfLimpo, pix_chave: pixLimpo }));
-                        setAfiliadoSalvo(true); setShowAfiliados(false); setShowFelicitacoes(true);
+                        // (10/2026) Os dados de pagamento chegam depois do cadastro — o
+                        // "Estamos felizes" já foi visto. A confirmação é "Meus créditos",
+                        // que agora mostra a chave PIX e o valor a receber.
+                        setAfiliadoSalvo(true); setShowAfiliados(false); setShowMeusCreditosMed(true);
                       }}
                       loading={afiliadoSalvando}
                       disabled={afiliadoSalvando}
@@ -2781,31 +2858,34 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
       )}
 
       {/* Top-level: funciona da bifurcação E de dentro do 4DOC (antes só montava dentro do 4DOC). */}
-      {showMeusCreditosMed && <CreditosMedicoModal onFechar={() => setShowMeusCreditosMed(false)} />}
+      {showMeusCreditosMed && <CreditosMedicoModal onFechar={() => setShowMeusCreditosMed(false)}
+        onCadastrarPagamento={() => { setShowMeusCreditosMed(false); abrirPagamento(); }} />}
 
       {showConviteAfiliado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.95)' }}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div style={{ position: 'relative', width: '100%', height: '440px', overflow: 'hidden' }}>
-              <img src={fairyChatImg} alt="Programa de Afiliados 4DOC"
+              <img src={fairyChatImg} alt={"Projeto OBA®"}
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.92), rgba(0,0,0,0.5) 40%, transparent)', padding: '24px 24px 18px' }}>
-                {!conviteRecusado ? (
+                {/* (10/2026, reforma CFM) Dizia "Participe do nosso PROGRAMA DE AFILIADOS
+                    ... Somente benef\u00edcios para voc\u00ea", e a recusa avisava que, sem se
+                    afiliar, o m\u00e9dico "n\u00e3o participar\u00e1 do sistema de benef\u00edcios" se o
+                    paciente se cadastrar. Era a l\u00f3gica de pagar por paciente trazido
+                    (abolida em R2) com a marca aposentada. N\u00e3o reintroduzir.
+                    A recusa nunca era exibida (nada liga conviteRecusado) e saiu. */}
+                {!conviteRecusado && (
                   <>
                     <p style={{ color: '#ffffff', fontSize: '22px', fontWeight: 800, lineHeight: '1.25', margin: 0, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                      {"Participe do nosso "}<span style={{ color: '#ef4444' }}>PROGRAMA DE AFILIADOS</span>{", \u00e9 r\u00e1pido e n\u00e3o custa nada."}
+                      {"Crie sua conta de m\u00e9dico no "}<span style={{ color: '#facc15' }}>{"Projeto OBA\u00ae"}</span>{". \u00c9 r\u00e1pido e n\u00e3o custa nada."}
                     </p>
                     <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 600, lineHeight: '1.3', margin: '8px 0 0', textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                      {"Somente benef\u00edcios para voc\u00ea."}
+                      {"A avalia\u00e7\u00e3o que voc\u00ea faz \u00e9 remunerada \u2014 uma vez por paciente avaliado."}
                     </p>
                     <p style={{ color: '#fca5a5', fontSize: '14px', fontWeight: 600, lineHeight: '1.4', margin: '10px 0 0', textAlign: 'center' }}>
-                      {"Um cadastro simples e voc\u00ea saber\u00e1 porque \u00e9 bom estar conosco."}
+                      {"Encaminhar n\u00e3o \u00e9 pago: \u00e9 ferramenta cl\u00ednica \u2014 o paciente entra j\u00e1 ligado a voc\u00ea."}
                     </p>
                   </>
-                ) : (
-                  <p style={{ color: '#ffffff', fontSize: '14px', fontWeight: 500, lineHeight: '1.5', margin: '0 auto', maxWidth: '90%', textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>
-                    {"Voc\u00ea inseriu um paciente no sistema pela triagem, mas n\u00e3o se afiliou no seguimento. \u00c9 uma pena. Os dados do paciente est\u00e3o salvos para eventual aprofundamento diagn\u00f3stico; por\u00e9m, se ele se cadastrar sem que voc\u00ea esteja afiliado, voc\u00ea n\u00e3o participar\u00e1 do sistema de benef\u00edcios. Esperamos que seu paciente conclua o cadastro \u2014 e que voc\u00ea volte. Estaremos sempre abertos a ter voc\u00ea conosco. At\u00e9 breve!..."}
-                  </p>
                 )}
               </div>
             </div>
@@ -2817,7 +2897,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                     setShowAuthMedicoOverlay('cadastro');
                   }}
                   className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl text-sm transition-colors">
-                  Continue
+                  {"Criar minha conta"}
                 </button>
                 <label className="flex items-center justify-center gap-2 cursor-pointer">
                   <input
@@ -2839,7 +2919,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                   }}
                   className="w-full text-center mt-1"
                   style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>{"J\u00e1 sou afiliado? "}</span>
+                  <span style={{ color: '#9ca3af', fontSize: '11px' }}>{"J\u00e1 tenho conta? "}</span>
                   <span style={{ color: '#7B1E1E', fontSize: '11px', fontWeight: 600, textDecoration: 'underline' }}>Entrar</span>
                 </button>
               </div>
@@ -2862,7 +2942,7 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
               setShowAuthMedicoOverlay(false);
               if (onVoltar) onVoltar();
             }}
-            onConcluir={async (nome, crm) => {
+            onConcluir={async (nome, crm, opts) => {
               setMedicoNome(nome);
               setMedicoCRM(crm);
               setCadastrado(true);
@@ -2881,25 +2961,25 @@ function CalculatorForm({ onVoltar, medicoNome, medicoCRM, setMedicoNome, setMed
                 setShowAuthMedicoOverlay(false);
                 return;
               }
-              try {
-                const { data: mr } = await supabase.rpc('medico_meu', credMedico());   // RLS Fase 3
-                const md = (mr?.ok ? mr.medico : null);
-                if (!md?.cep || !md?.cpf || !md?.pix_chave) {
-                  setShowAfiliados(true);
-                } else {
-                  // VETERANO (cadastro de afiliado já completo) vai DIRETO ao menu.
-                  // O "Estamos felizes" é o fecho de quem ACABOU de se afiliar (é
-                  // disparado ali, ao salvar o cadastro) — ele explica o que são
-                  // AVALIAR e ENCAMINHAR e só libera o botão depois de 4s de
-                  // animação. Repetir isso a cada login de quem já conhece o
-                  // sistema é 4 segundos de espera para reler o óbvio.
-                  setMenuMedico(true);
-                }
-              } catch (e) {
+              // (10/2026) CEP/CPF/PIX SAÍRAM daqui. Antes, faltando qualquer um, o
+              // formulário de pagamento abria depois do cadastro e em TODO login.
+              // Agora são pedidos quando nasce o primeiro crédito (aviso pós-AVALIAR),
+              // pela faixa de lembrete no login e pelo botão em "Meus créditos".
+              if (opts?.novo) {
+                // Acabou de se cadastrar: boas-vindas + instalar o ícone, depois o
+                // "Estamos felizes" (que explica AVALIAR e ENCAMINHAR).
+                setModoAfil('boasvindas');
                 setShowAfiliados(true);
-              } finally {
                 setShowAuthMedicoOverlay(false);
+                return;
               }
+              // LOGIN vai direto ao menu. O "Estamos felizes" é só para quem acabou
+              // de se cadastrar — repetir a cada login são 4 segundos de animação
+              // para reler o óbvio.
+              // A faixa de "crédito parado" vem do efeito em `cadastrado` (vale também
+              // para quem abre o app já logado, pelo ícone).
+              setMenuMedico(true);
+              setShowAuthMedicoOverlay(false);
             }}
           />
         </div>

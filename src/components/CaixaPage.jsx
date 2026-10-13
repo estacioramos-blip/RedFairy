@@ -413,6 +413,16 @@ function AbaAPagar({ rpc, toast }) {
             <p className="text-gray-500">{m.n_av}{" avaliação(ões) = "}
               <b>US$ {Number(m.total_usd).toFixed(2)}</b>{cot > 0 && <>{" ≈ "}<b>{fmtBRL(m.total_usd * cot)}</b></>}</p>
             <p className="text-gray-500">{"PIX: "}<b>{m.pix || '(sem chave cadastrada)'}</b></p>
+            {/* (10/2026) Sem chave: o celular deixa a tesouraria cobrar a chave
+                sozinha, por WhatsApp. Vem da RPC (migrate_caixa_celular_medico.sql);
+                antes de rodá-la, `celular` não vem e a linha simplesmente não aparece. */}
+            {!m.pix && m.celular && (
+              <p className="text-gray-500">{"Celular: "}
+                <a href={`https://wa.me/55${String(m.celular).replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+                  className="font-bold underline" style={{ color: DARK }}>{m.celular}</a>
+                {" — peça a chave PIX"}
+              </p>
+            )}
           </div>
           {/* MIN-2: sem chave PIX não há para onde pagar — bloqueia o MARCAR PAGO. */}
           <button onClick={() => pagarMedico(m.crm)} disabled={!m.pix}

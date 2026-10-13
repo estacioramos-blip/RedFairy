@@ -13,9 +13,11 @@ import obaLogo from '../assets/oba-logo.png'
  * `cadastrados/recebidos/a_receber/pendentes_elegib` ainda vêm da RPC zeradas,
  * por compatibilidade — não são exibidas.
  *
- * Props: onFechar().
+ * Props: onFechar(), onCadastrarPagamento() — opcional. (10/2026) Os dados de
+ * pagamento saíram do cadastro; sem chave PIX, aparece aqui o botão que abre o
+ * formulário (CEP/CPF/PIX).
  */
-export default function CreditosMedicoModal({ onFechar }) {
+export default function CreditosMedicoModal({ onFechar, onCadastrarPagamento }) {
   const [dados, setDados] = useState(null)
   const [erro, setErro] = useState('')
 
@@ -80,6 +82,12 @@ export default function CreditosMedicoModal({ onFechar }) {
               <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-left">
                 <p className="text-[11px] text-gray-500">{"Você recebe em (PIX):"}</p>
                 <p className="text-sm font-bold text-gray-700 break-all">{dados.pix || '(sem chave PIX cadastrada)'}</p>
+                {!dados.pix && onCadastrarPagamento && (
+                  <button onClick={onCadastrarPagamento}
+                    className="w-full mt-2 bg-red-700 hover:bg-red-800 text-white font-bold py-2 rounded-lg text-xs transition-colors">
+                    {"Cadastrar dados de pagamento (CEP, CPF e PIX) →"}
+                  </button>
+                )}
               </div>
               <p className="text-[11px] text-gray-400 text-center leading-snug">
                 {"O pagamento é liberado depois que o seu cadastro é validado. Processado pela administração."}
