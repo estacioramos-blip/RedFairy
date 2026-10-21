@@ -798,7 +798,6 @@ function FichaPaciente({ cpf, avaliacoes: resumo, onVoltar }) {
   const [showSolicitacao, setShowSolicitacao] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [medsAtivos, setMedsAtivos] = useState([]);
-  const [contabilizado, setContabilizado] = useState(false);
   // Enquanto a busca não volta, vale a linha magra da lista; depois, a cheia.
   const avaliacoes = avsCompletas || resumo || [];
   const ultima = avaliacoes[0];
@@ -838,16 +837,12 @@ function FichaPaciente({ cpf, avaliacoes: resumo, onVoltar }) {
     navigator.clipboard.writeText(texto).then(() => {
       setCopiado(true);
       setTimeout(() => setCopiado(false), 3000);
-      // Contabiliza a prescrição (cota do fabricante) só quando há indicação de
-      // ferro EV e marcas ativas — uma vez por ficha aberta.
-      if (!contabilizado && indicaFerroEV(ultima) && medsAtivos.length) {
-        setContabilizado(true);
-        medsAtivos.forEach(m => {
-          supabase.from('medicamentos')
-            .update({ prescricoes_emitidas: (m.prescricoes_emitidas || 0) + 1 })
-            .eq('id', m.id);
-        });
-      }
+      // (21/10/2026) Aqui somava +1 em `medicamentos.prescricoes_emitidas` a
+      // cada cópia. Nunca funcionou (sem policy de UPDATE, e sem await o
+      // supabase-js nem enviava) e não deve voltar: a contagem real é o log
+      // `prescricoes`, gravado por gatilho a cada avaliação
+      // (migrate_prescricoes_log_fase2.sql). Contar cópias seria uma segunda
+      // fonte, e a parceria com fabricante é valor fixo, nunca por prescrição.
     });
   }
 
@@ -1567,7 +1562,25 @@ const CAMPOS_MED = [
   { key: 'intervalo_sessoes',  label: 'Intervalo sess\u00f5es',  tipo: 'text' },
 ];
 
+// Prescrições por marca, lidas do LOG (`prescricoes`) — a mesma fonte da aba
+// Prescrições. `null` enquanto carrega ou se a RPC recusar: a tela mostra "—",
+// nunca um 0 que pareça dado. O contador `prescricoes_emitidas` do catálogo é
+// mecanismo morto (ver copiarSolicitacao).
+function usePrescricoesPorMarca() {
+  const [porMarca, setPorMarca] = useState(null);
+  useEffect(() => {
+    supabase.rpc('admin_prescricoes', credAdmin()).then(({ data }) => {
+      if (!data || !data.ok) return;
+      const mapa = {};
+      (data.por_marca || []).forEach(r => { mapa[r.marca] = r.n; });
+      setPorMarca(mapa);
+    }).catch(() => {});   // sem rede: fica "—"
+  }, []);
+  return porMarca;
+}
+
 function AbaMedicamentos() {
+  const porMarca = usePrescricoesPorMarca();
   const [meds, setMeds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
@@ -1694,7 +1707,7 @@ function AbaMedicamentos() {
                       onChange={e => setCampo(m.id, 'observacoes', e.target.value)}
                       className={inputClass + ' resize-none'} />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">{"Prescri\u00e7\u00f5es emitidas: "}<strong>{m.prescricoes_emitidas ?? 0}</strong></p>
+                  <p className="text-xs text-gray-400 mt-1">{"Prescri\u00e7\u00f5es registradas: "}<strong>{porMarca ? (porMarca[m.nome_comercial] ?? 0) : '\u2014'}</strong></p>
                 </div>
               ))}
             </div>
@@ -1741,6 +1754,7 @@ const CAMPOS_SUPL = [
 ];
 
 function AbaSuplementos() {
+  const porMarca = usePrescricoesPorMarca();
   const [supls, setSupls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
@@ -1878,7 +1892,7 @@ function AbaSuplementos() {
                       onChange={e => setCampo(s.id, 'observacoes', e.target.value)}
                       className={inputClass + ' resize-none'} />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">{"Prescri\u00e7\u00f5es emitidas: "}<strong>{s.prescricoes_emitidas ?? 0}</strong></p>
+                  <p className="text-xs text-gray-400 mt-1">{"Prescri\u00e7\u00f5es registradas: "}<strong>{porMarca ? (porMarca[s.nome_comercial] ?? 0) : '\u2014'}</strong></p>
                 </div>
               ))}
             </div>
