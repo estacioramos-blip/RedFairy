@@ -389,6 +389,11 @@
       // React não carregou a tempo — o site está quebrado de qualquer forma.
       // Não mostra a faixa e não registra impressão: melhor nenhum dado que
       // dado falso.
+      // (21/10/2026) Mas marca a sessão como vista. Sem isso, quem ia ao app
+      // e voltava recarregava a página do zero: `cliqueRegistrado` é só uma
+      // variável e renascia falso, e cada volta gerava um clique novo, sem
+      // impressão, na mesma sessão (5 cliques órfãos em 2 sessões, ago-out).
+      if (ss && !ehTeste) ss.setItem('obaIntroVista', '1');
     });
   });
 
