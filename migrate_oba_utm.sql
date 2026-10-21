@@ -147,8 +147,15 @@ GRANT EXECUTE ON FUNCTION public.oba_origem_registrar(text,text,text,text,text,t
 --
 --    As visitas vêm de sessões DISTINTAS com impressão — não de linhas, senão
 --    quem recarrega a página vira "duas visitas".
+--
+--    (21/10/2026) Nasceu sem security_invoker e com SELECT ao anon: qualquer
+--    um com a chave pública do site lia o funil por parceiro. Fechada em
+--    migrate_oba_landing_views_fechadas.sql. O WITH abaixo e o REVOKE depois
+--    da view existem para que rodar ESTE arquivo de novo não a reabra —
+--    CREATE OR REPLACE VIEW sem WITH volta security_invoker ao padrão.
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE VIEW public.oba_origem_resumo AS
+CREATE OR REPLACE VIEW public.oba_origem_resumo
+WITH (security_invoker = on) AS
 WITH visitas AS (
   SELECT COALESCE(utm_source, '(direto)')  AS utm_source,
          COALESCE(utm_content, '')         AS utm_content,
@@ -177,6 +184,9 @@ FROM visitas v
 FULL OUTER JOIN conversao c
   ON c.utm_source = v.utm_source AND c.utm_content = v.utm_content
 ORDER BY 5 DESC, 3 DESC;
+
+-- Leitura só pelo SQL Editor (dono). Sem GRANT de propósito.
+REVOKE ALL ON public.oba_origem_resumo FROM PUBLIC, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- VERIFICAÇÃO

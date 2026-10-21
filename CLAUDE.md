@@ -114,8 +114,10 @@ antes dessa data **não é afetado** — mantém os grants que tem.
   `ENABLE ROW LEVEL SECURITY` e das policies. Nada de "o grant vem depois";
 - **função** → `GRANT EXECUTE ON FUNCTION public.nome(tipos) TO ...`, com a
   assinatura completa;
-- **tabela com coluna `serial`/`identity`** → também o grant da **sequence**
-  (`GRANT USAGE, SELECT ON SEQUENCE ...`), senão o INSERT falha;
+- **tabela com coluna `serial`** → também o grant da **sequence**
+  (`GRANT USAGE, SELECT ON SEQUENCE ...`), senão o INSERT falha. Coluna
+  `GENERATED ... AS IDENTITY` **dispensa**: o INSERT não verifica permissão na
+  sequence dela — dar o grant ali é privilégio sem uso;
 - **view** → criada com `WITH (security_invoker = on)`, para obedecer ao RLS de
   quem consulta e não ao do dono.
 
@@ -466,7 +468,17 @@ correto para o teste.
 
 Tabela `oba_landing_eventos` no mesmo Supabase do app, chave anon, RLS
 insert-only. Views de leitura: `oba_landing_resumo` (visitas, cliques e
-abandono por variante) e `oba_landing_por_cta`.
+abandono por variante) e `oba_landing_por_cta`. Criação: `migrate_oba_landing_ab.sql`
+(**reconstruído do banco em 21/10/2026** — o original rodou em agosto e nunca
+foi commitado; a ordem dos 4 arquivos da landing está no cabeçalho dele).
+
+⚠ **As views de leitura são FECHADAS ao `anon` (21/10/2026).** As três antigas
+(`oba_landing_resumo`, `oba_landing_por_cta`, `oba_origem_resumo`) nasceram sem
+`security_invoker` e com SELECT para o anon: com a chave pública do site — que
+está no `intro-ab.js` — qualquer um lia de fora o A/B e o **funil por parceiro**.
+Fechadas em `migrate_oba_landing_views_fechadas.sql`. Leitura só no SQL Editor.
+Ao recriar uma delas, use `WITH (security_invoker = on)`: `CREATE OR REPLACE VIEW`
+sem isso volta a opção ao padrão (o REVOKE sobrevive, a opção não).
 
 Registra 1 impressão por sessão e 1 clique no primeiro CTA tocado.
 "Saiu sem clicar" sai por subtração — evento de saída (`beforeunload`) é
