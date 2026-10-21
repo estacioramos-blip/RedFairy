@@ -102,6 +102,37 @@ Este projeto é um sistema médico em produção. Siga estas regras de colabora�
   inserido direto no banco fica sem autorização nenhuma, invisível para
   qualquer médico. Testar vínculo médico↔paciente exige criar o vínculo antes.
 
+### GRANT explícito em todo objeto novo (21/10/2026)
+
+**Por que existe esta seção:** o Supabase mudou o padrão (discussion #45329).
+**A partir de 30/10/2026**, tabela, view, sequence ou função **nova** no schema
+`public` não fica acessível pelo Data API sem GRANT explícito. O que já existia
+antes dessa data **não é afetado** — mantém os grants que tem.
+
+**Regra — toda migration que cria objeto no `public`:**
+- traz o **GRANT explícito no MESMO arquivo, por objeto**, junto do
+  `ENABLE ROW LEVEL SECURITY` e das policies. Nada de "o grant vem depois";
+- **função** → `GRANT EXECUTE ON FUNCTION public.nome(tipos) TO ...`, com a
+  assinatura completa;
+- **tabela com coluna `serial`/`identity`** → também o grant da **sequence**
+  (`GRANT USAGE, SELECT ON SEQUENCE ...`), senão o INSERT falha;
+- **view** → criada com `WITH (security_invoker = on)`, para obedecer ao RLS de
+  quem consulta e não ao do dono.
+
+⚠ **NUNCA usar grant em massa** (`GRANT ... ON ALL TABLES IN SCHEMA public`,
+`ALL FUNCTIONS`, `ALL SEQUENCES`). Reabriria `autorizacoes_acesso` e
+`acessos_paciente`, fechadas de propósito em setembro. Seria a **quinta vez**
+que essa porta volta por outro caminho neste projeto. Grant é por objeto, com
+nome — dá trabalho de propósito: obriga a decidir quem entra.
+
+**Como aparece quando falta:** erro `42501` "permission denied for table ...",
+com o GRANT necessário no hint. É **barulhento**, não silencioso — diferente do
+RLS sem policy (ver acima), que devolve vazio e parece funcionar.
+
+Funções internas chamadas só de dentro de outra `SECURITY DEFINER` (portões
+como `token_gestao_ok`, gatilhos como `fn_extrato_oba`) não precisam de GRANT
+ao `anon` — e não devem ganhar. Quem não tem `.rpc()` no front não é porta.
+
 ### Programa de indicação — reforma ético-regulatória (09/09/2026)
 
 **Por que existe esta seção:** o médico responsável técnico responde perante o
