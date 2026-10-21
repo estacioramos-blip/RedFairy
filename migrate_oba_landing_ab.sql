@@ -22,6 +22,7 @@
 --   2. migrate_oba_utm.sql                   (colunas utm_*, oba_origem, funil)
 --   3. migrate_oba_landing_desistencia.sql   (tipo 'desistencia' + view)
 --   4. migrate_oba_landing_views_fechadas.sql (fecha as views antigas)
+--   5. migrate_oba_landing_eventos_so_insert.sql (anon só INSERT na tabela)
 --
 -- MODELO: o site grava com a chave ANON (pública, está no intro-ab.js), só
 -- INSERT, com 'Prefer: return=minimal' — por isso o anon não precisa de
@@ -84,6 +85,11 @@ CREATE POLICY oba_landing_insert_anon ON public.oba_landing_eventos
   FOR INSERT TO anon, authenticated
   WITH CHECK (true);
 
+-- Só INSERT (21/10/2026, migrate_oba_landing_eventos_so_insert.sql). O REVOKE
+-- vem antes porque, em banco anterior a 30/10/2026, o Supabase dá TODOS os
+-- privilégios por padrão — e TRUNCATE não passa pelo RLS.
+REVOKE ALL ON TABLE    public.oba_landing_eventos        FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON SEQUENCE public.oba_landing_eventos_id_seq FROM PUBLIC, anon, authenticated;
 GRANT INSERT ON public.oba_landing_eventos TO anon, authenticated;
 
 -- ── 3. Leitura (SQL Editor, como dono) ──────────────────────────────────────

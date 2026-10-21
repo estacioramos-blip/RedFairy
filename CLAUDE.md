@@ -120,6 +120,10 @@ antes dessa data **não é afetado** — mantém os grants que tem.
   sequence dela — dar o grant ali é privilégio sem uso;
 - **view** → criada com `WITH (security_invoker = on)`, para obedecer ao RLS de
   quem consulta e não ao do dono.
+- **tabela que o `anon` só grava** (medição, formulário público) →
+  `REVOKE ALL ... FROM PUBLIC, anon, authenticated` **antes** do
+  `GRANT INSERT`. Até 30/10 o padrão dá TODOS os privilégios, e TRUNCATE não
+  passa pelo RLS. Modelo: `migrate_oba_landing_eventos_so_insert.sql`.
 
 ⚠ **NUNCA usar grant em massa** (`GRANT ... ON ALL TABLES IN SCHEMA public`,
 `ALL FUNCTIONS`, `ALL SEQUENCES`). Reabriria `autorizacoes_acesso` e
@@ -467,10 +471,15 @@ correto para o teste.
 ### Medição
 
 Tabela `oba_landing_eventos` no mesmo Supabase do app, chave anon, RLS
-insert-only. Views de leitura: `oba_landing_resumo` (visitas, cliques e
-abandono por variante) e `oba_landing_por_cta`. Criação: `migrate_oba_landing_ab.sql`
-(**reconstruído do banco em 21/10/2026** — o original rodou em agosto e nunca
-foi commitado; a ordem dos 4 arquivos da landing está no cabeçalho dele).
+insert-only **e privilégio só de INSERT** para anon/authenticated (21/10/2026,
+`migrate_oba_landing_eventos_so_insert.sql` — antes tinham tudo, inclusive
+TRUNCATE, que o RLS não segura). O site grava com `Prefer: return=minimal`;
+trocar por `return=representation`, `select=` ou upsert pede SELECT e quebra
+a gravação calado. Views de leitura: `oba_landing_resumo` (visitas, cliques e
+abandono por variante) e `oba_landing_por_cta`. Criação:
+`migrate_oba_landing_ab.sql` (**reconstruído do banco em 21/10/2026** — o
+original rodou em agosto e nunca foi commitado; a ordem dos arquivos da
+landing está no cabeçalho dele).
 
 ⚠ **As views de leitura são FECHADAS ao `anon` (21/10/2026).** As três antigas
 (`oba_landing_resumo`, `oba_landing_por_cta`, `oba_origem_resumo`) nasceram sem
