@@ -36,6 +36,10 @@
    - 1 evento 'impressao' por sessão, com a variante sorteada
    - 1 evento 'clique' no primeiro CTA tocado
    - "Saiu sem clicar" = impressões − sessões com clique
+   - 1 evento 'desistencia' quando o site não monta em MS_ESPERA_DC e a faixa
+     desiste (21/10/2026, migrate_oba_landing_desistencia.sql). Mede quantas
+     visitas passam dos 4s — antes, quem desistia sem clicar não deixava
+     rastro. Leitura: view `oba_landing_desistencia`.
 
    ORIGEM (UTM) — mora neste mesmo arquivo, seção 2.5, e é INDEPENDENTE da
    faixa: sobrevive se o teste A/B for desligado, porque a captura acontece
@@ -388,7 +392,9 @@
     quandoMontado(mostrar, function () {
       // React não carregou a tempo — o site está quebrado de qualquer forma.
       // Não mostra a faixa e não registra impressão: melhor nenhum dado que
-      // dado falso.
+      // dado falso. Registra a DESISTÊNCIA, que é o dado verdadeiro desta
+      // visita: sem ela, a lentidão do site era invisível.
+      registrar('desistencia');
       // (21/10/2026) Mas marca a sessão como vista. Sem isso, quem ia ao app
       // e voltava recarregava a página do zero: `cliqueRegistrado` é só uma
       // variável e renascia falso, e cada volta gerava um clique novo, sem

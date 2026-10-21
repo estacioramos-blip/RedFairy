@@ -472,6 +472,14 @@ Registra 1 impressão por sessão e 1 clique no primeiro CTA tocado.
 "Saiu sem clicar" sai por subtração — evento de saída (`beforeunload`) é
 pouco confiável no celular e perderia justamente quem mais interessa.
 
+**Desistência (21/10/2026):** quando o site não monta em 4s (`MS_ESPERA_DC`),
+a faixa desiste e registra 1 evento `desistencia` — e grava `obaIntroVista`,
+para quem volta do app não gerar clique órfão. Antes, quem passava dos 4s sem
+clicar não deixava rastro nenhum. Leitura: view `oba_landing_desistencia`
+(conta a partir de 22/10, o 1º dia inteiro com o evento no ar; a taxa é sobre
+quem ficou até os 4s; fechada ao `anon`, leitura no SQL Editor). Migration: `migrate_oba_landing_desistencia.sql`
+— **rodar antes do push do `intro-ab.js`**, senão a constraint recusa o evento.
+
 Os CTAs são identificados por `href`, `data-contato`, `aria-label` e texto
 visível. NÃO dá para usar os `onClick="{{ }}"`: o dc-runtime os compila em
 handlers React e eles somem do DOM.
